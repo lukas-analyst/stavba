@@ -443,3 +443,45 @@ Unresolved issues / Next steps:
 - Google Sheets přímá integrace zatím neimplementována
 - Supabase Auth ještě neaktivní
 - Pro budoucí fázi: e-mail notifikace na termíny, AI asistent pro optimalizaci rozpočtu, fotogalerie dokumentace
+
+---
+Task ID: 18
+Agent: Cron review asistent (Z.ai Code) - devátá revize
+Task: QA testování, stylingová vylepšení (status filter pills), nové funkce (komentáře k budget items)
+
+Work Log:
+- Přečetl worklog, ověřil stabilitu (lint čistý, 0 chyb)
+- QA testování přes agent-browser: všech 7 tabů funguje bez chyb
+- VLM analýza dashboardu: identifikoval oblasti pro zlepšení (filtry, komentáře)
+- Nové funkce:
+  * Status filter v sidebaru: 4 pill tlačítka (Vše/Aktivní/Plánování/Hotovo) s count badge pro každý status
+    - Filtruje projekty dle status (active/planning/completed)
+    - Pill s shadow-sm pro aktivní filtr, hover effect pro ostatní
+    - Count badge ukazuje počet projektů v každém statusu
+  * Komentáře k budget items: Comment model v Prisma schématu (budgetItemId, author, text, createdAt)
+    - GET /api/budget-items/[id]/comments - seznam komentářů
+    - POST /api/budget-items/[id]/comments - přidání komentáře (body: { author, text })
+    - DELETE /api/comments/[id] - smazání komentáře
+    - useComments, useCreateComment, useDeleteComment hooks v api.ts
+    - CommentSection komponenta: seznam komentářů s autor/datum/text, add form (author + text + Send button), delete on hover, scroll area (max-h-48)
+    - CommentSection zobrazena v BudgetItemDialog (jen při editaci existující položky)
+    - Comment count badge v budget tab řádku (sky barva s MessageSquare ikonou)
+    - Budget GET API vrací _count.comments
+- Styling vylepšení:
+  * Status filter pills s flex-1 layout, count badge, shadow-sm pro aktivní
+  * Comment count badge v budget row (sky barva, MessageSquare ikona)
+- Bug fixy: žádné (aplikace byla stabilní)
+- Lint: prošel bez chyb (0 errors, 0 warnings)
+- Verifikace přes Agent Browser: status filter pills (Vše 1, Aktivní 1), comment section v edit dialog (Jméno, Napište komentář) - vše funkční, 0 chyb
+
+Stage Summary:
+- ✅ Aplikace stabilní: 0 runtime chyb, 0 lint chyb
+- ✅ Nové funkce: status filter v sidebaru (4 pills s counts), komentáře k budget items (inline discussion)
+- 🔍 Sidebar má nyní search + status filter pills s count badges
+- 💬 Budget items mají comment section v edit dialogu s add/delete + count badge v tabulce
+
+Unresolved issues / Next steps:
+- Audit log zatím loguje jen update/delete, ne create
+- Google Sheets přímá integrace zatím neimplementována
+- Supabase Auth ještě neaktivní
+- Pro budoucí fázi: e-mail notifikace na termíny, AI asistent pro optimalizaci rozpočtu, fotogalerie dokumentace

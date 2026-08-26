@@ -107,6 +107,18 @@ model BudgetItem {
 
   payments   Payment[]
   timeEntries TimeEntry[]
+  comments   Comment[]
+}
+
+// ===== COMMENTS =====
+// Inline comments/discussion on budget items.
+model Comment {
+  id           String   @id @default(cuid())
+  budgetItemId String
+  budgetItem   BudgetItem @relation(fields: [budgetItemId], references: [id], onDelete: Cascade)
+  author       String   // name of the person commenting
+  text         String
+  createdAt    DateTime @default(now())
 }
 
 // ===== CONTACTS (Workers / Companies / Suppliers) =====

@@ -70,6 +70,7 @@ import {
   GripVertical,
   Download,
   Copy,
+  MessageSquare,
 } from "lucide-react";
 import {
   formatCzk,
@@ -626,8 +627,8 @@ function BudgetRow({
               {item.element}
             </span>
           )}
-          {item._count && (item._count.payments > 0 || item._count.timeEntries > 0) && (
-            <div className="mt-0.5 flex gap-1">
+          {item._count && (item._count.payments > 0 || item._count.timeEntries > 0 || item._count.comments > 0) && (
+            <div className="mt-0.5 flex flex-wrap gap-1">
               {item._count.payments > 0 && (
                 <Badge variant="outline" className="h-4 px-1 text-[10px] text-emerald-700">
                   {item._count.payments} plateb
@@ -636,6 +637,12 @@ function BudgetRow({
               {item._count.timeEntries > 0 && (
                 <Badge variant="outline" className="h-4 px-1 text-[10px] text-violet-700">
                   {item._count.timeEntries} časů
+                </Badge>
+              )}
+              {item._count.comments > 0 && (
+                <Badge variant="outline" className="h-4 px-1 text-[10px] text-sky-700">
+                  <MessageSquare className="mr-0.5 h-2 w-2" />
+                  {item._count.comments}
                 </Badge>
               )}
             </div>

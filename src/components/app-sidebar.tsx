@@ -42,6 +42,7 @@ export function AppSidebar() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "planning" | "completed">("all");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const toggleStar = async (projectId: string, starred: boolean) => {
@@ -60,6 +61,7 @@ export function AppSidebar() {
 
   const sortedProjects = useMemo(() => {
     const filtered = (projects ?? []).filter((p) => {
+      if (statusFilter !== "all" && p.status !== statusFilter) return false;
       if (!search.trim()) return true;
       const q = search.toLowerCase();
       return (
@@ -72,7 +74,7 @@ export function AppSidebar() {
       if (a.starred !== b.starred) return a.starred ? -1 : 1;
       return a.name.localeCompare(b.name);
     });
-  }, [projects, search]);
+  }, [projects, search, statusFilter]);
 
   const projectToDelete = projects?.find((p) => p.id === deleteId);
   const selectedProject = projects?.find((p) => p.id === selectedProjectId);
@@ -123,6 +125,36 @@ export function AppSidebar() {
               <X className="h-3.5 w-3.5" />
             </button>
           )}
+        </div>
+        {/* Status filter pills */}
+        <div className="mb-2 flex items-center gap-0.5 rounded-md border bg-muted/40 p-0.5">
+          {([
+            { id: "all", label: "Vše", count: projects?.length ?? 0 },
+            { id: "active", label: "Aktivní", count: projects?.filter((p) => p.status === "active").length ?? 0 },
+            { id: "planning", label: "Plánování", count: projects?.filter((p) => p.status === "planning").length ?? 0 },
+            { id: "completed", label: "Hotovo", count: projects?.filter((p) => p.status === "completed").length ?? 0 },
+          ] as const).map((opt) => (
+            <button
+              key={opt.id}
+              onClick={() => setStatusFilter(opt.id)}
+              className={cn(
+                "flex flex-1 items-center justify-center gap-1 rounded px-1.5 py-1 text-[11px] font-medium transition-colors",
+                statusFilter === opt.id
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              {opt.label}
+              {opt.count > 0 && (
+                <span className={cn(
+                  "tabular-nums text-[9px]",
+                  statusFilter === opt.id ? "text-muted-foreground" : "text-muted-foreground/60",
+                )}>
+                  {opt.count}
+                </span>
+              )}
+            </button>
+          ))}
         </div>
         <div className="flex items-center justify-between">
           <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">

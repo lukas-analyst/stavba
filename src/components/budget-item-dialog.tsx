@@ -30,6 +30,7 @@ import {
 } from "@/lib/api";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { CommentSection } from "@/components/comment-section";
 
 type Props = {
   open: boolean;
@@ -303,6 +304,9 @@ function BudgetItemForm({
             />
           </div>
         </div>
+
+        {/* Comments section (only when editing an existing item) */}
+        {item && <CommentSection budgetItemId={item.id} />}
 
         <DialogFooter>
           <Button type="button" variant="outline" onClick={onDone}>

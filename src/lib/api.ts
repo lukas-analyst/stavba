@@ -49,7 +49,7 @@ export type BudgetItem = {
   actualCost: number;
   actualHours: number;
   sortOrder: number;
-  _count?: { payments: number; timeEntries: number };
+  _count?: { payments: number; timeEntries: number; comments: number };
 };
 
 export type Contact = {
@@ -708,6 +708,59 @@ export function useDeleteSnapshot(projectId: string) {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["snapshots", projectId] });
+    },
+  });
+}
+
+// ===== Comments =====
+export type Comment = {
+  id: string;
+  budgetItemId: string;
+  author: string;
+  text: string;
+  createdAt: string;
+};
+
+export function useComments(budgetItemId: string | null) {
+  return useQuery<Comment[]>({
+    queryKey: ["comments", budgetItemId],
+    queryFn: async () => {
+      const res = await fetch(`/api/budget-items/${budgetItemId}/comments`);
+      if (!res.ok) throw new Error("Failed to load comments");
+      return res.json();
+    },
+    enabled: !!budgetItemId,
+  });
+}
+
+export function useCreateComment(budgetItemId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: { author: string; text: string }) => {
+      const res = await fetch(`/api/budget-items/${budgetItemId}/comments`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) throw new Error("Failed to create comment");
+      return res.json();
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["comments", budgetItemId] });
+    },
+  });
+}
+
+export function useDeleteComment(budgetItemId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const res = await fetch(`/api/comments/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Failed to delete comment");
+      return res.json();
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["comments", budgetItemId] });
     },
   });
 }

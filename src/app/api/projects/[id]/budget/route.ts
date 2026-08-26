@@ -12,7 +12,7 @@ export async function GET(
       where: { projectId: id },
       orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
       include: {
-        _count: { select: { payments: true, timeEntries: true } },
+        _count: { select: { payments: true, timeEntries: true, comments: true } },
       },
     });
     return NextResponse.json(items);
