@@ -3,6 +3,9 @@
 import {
   useDashboard,
   useSpendingTrend,
+  useSnapshots,
+  useCreateSnapshot,
+  useDeleteSnapshot,
 } from "@/lib/api";
 import {
   Card,
@@ -13,7 +16,9 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useState } from "react";
 import {
   Wallet,
   TrendingDown,
@@ -30,6 +35,8 @@ import {
   CircleAlert,
   PiggyBank,
   CheckCircle2,
+  Camera,
+  Trash2,
 } from "lucide-react";
 import { formatCzk, formatNumber, formatDate, PHASE_COLORS, PHASE_DOT_COLORS } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -630,6 +637,9 @@ export function DashboardTab({ projectId }: { projectId: string }) {
           </div>
         </CardContent>
       </Card>
+
+      {/* Snapshots - plan vs reality comparison */}
+      <SnapshotsCard projectId={projectId} currentTotals={totals} />
     </div>
   );
 }
@@ -685,6 +695,166 @@ function DashboardSkeleton() {
       </div>
       <Skeleton className="h-40" />
     </div>
+  );
+}
+
+// ===== Snapshots Card =====
+function SnapshotsCard({
+  projectId,
+  currentTotals,
+}: {
+  projectId: string;
+  currentTotals: {
+    planTotal: number;
+    actualTotal: number;
+    remaining: number;
+    burnRate: number;
+    hoursTotal: number;
+    completedCount: number;
+    savedTotal: number;
+  };
+}) {
+  const { data: snapshots } = useSnapshots(projectId);
+  const createSnapshot = useCreateSnapshot(projectId);
+  const deleteSnapshot = useDeleteSnapshot(projectId);
+  const [label, setLabel] = useState("");
+
+  const handleCreate = async () => {
+    if (!label.trim()) return;
+    try {
+      await createSnapshot.mutateAsync(label.trim());
+      setLabel("");
+    } catch {
+      /* error handled by mutation */
+    }
+  };
+
+  return (
+    <Card>
+      <CardHeader className="pb-3">
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Camera className="h-4 w-4 text-primary" />
+              Snímky stavu projektu
+            </CardTitle>
+            <CardDescription>
+              Uložte aktuální stav pro porovnání „plán vs. realita" v čase
+            </CardDescription>
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        {/* Create snapshot form */}
+        <div className="flex gap-2">
+          <Input
+            value={label}
+            onChange={(e) => setLabel(e.target.value)}
+            placeholder="např. Konec přípravy, Po demolici…"
+            className="h-8 text-sm"
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && label.trim()) {
+                e.preventDefault();
+                handleCreate();
+              }
+            }}
+          />
+          <Button
+            size="sm"
+            className="h-8 shrink-0"
+            disabled={!label.trim() || createSnapshot.isPending}
+            onClick={handleCreate}
+          >
+            <Camera className="mr-1.5 h-3.5 w-3.5" />
+            {createSnapshot.isPending ? "Ukládám…" : "Uložit snímek"}
+          </Button>
+        </div>
+
+        {/* Snapshots list */}
+        {snapshots && snapshots.length > 0 ? (
+          <div className="space-y-2">
+            {snapshots.map((snap) => {
+              const actualDiff = currentTotals.actualTotal - snap.actualTotal;
+              const burnDiff = currentTotals.burnRate - snap.burnRate;
+              const completedDiff = currentTotals.completedCount - snap.completedCount;
+              return (
+                <div
+                  key={snap.id}
+                  className="group rounded-lg border p-3 transition-colors hover:bg-muted/30"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-semibold truncate">{snap.label}</span>
+                        <Badge variant="secondary" className="shrink-0 text-[10px]">
+                          {formatDate(snap.createdAt)}
+                        </Badge>
+                      </div>
+                      <div className="mt-1.5 grid grid-cols-2 gap-x-4 gap-y-0.5 text-[11px] sm:grid-cols-4">
+                        <div>
+                          <span className="text-muted-foreground">Plán: </span>
+                          <span className="font-medium tabular-nums">{formatCzk(snap.planTotal)}</span>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">Čerpáno: </span>
+                          <span className="font-medium tabular-nums">{formatCzk(snap.actualTotal)}</span>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">Čerpání: </span>
+                          <span className="font-medium tabular-nums">{snap.burnRate.toFixed(0)}%</span>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">Hotovo: </span>
+                          <span className="font-medium tabular-nums">{snap.completedCount}/{snap.itemCount}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => deleteSnapshot.mutate(snap.id)}
+                      className="shrink-0 rounded p-1 text-muted-foreground opacity-0 transition-opacity hover:bg-destructive/10 hover:text-destructive group-hover:opacity-100"
+                      aria-label="Smazat snímek"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                  {/* Diffs vs current */}
+                  <div className="mt-2 flex flex-wrap gap-2 border-t pt-1.5 text-[10px]">
+                    {actualDiff !== 0 && (
+                      <span className={cn(
+                        "flex items-center gap-0.5 font-medium tabular-nums",
+                        actualDiff > 0 ? "text-amber-600" : "text-emerald-600",
+                      )}>
+                        <TrendingUp className="h-2.5 w-2.5" />
+                        {actualDiff > 0 ? "+" : ""}
+                        {formatCzk(actualDiff)} od snímku
+                      </span>
+                    )}
+                    {burnDiff !== 0 && (
+                      <span className={cn(
+                        "font-medium tabular-nums",
+                        burnDiff > 0 ? "text-amber-600" : "text-emerald-600",
+                      )}>
+                        {burnDiff > 0 ? "+" : ""}
+                        {burnDiff.toFixed(1)} % čerpání
+                      </span>
+                    )}
+                    {completedDiff > 0 && (
+                      <span className="font-medium text-emerald-600 tabular-nums">
+                        +{completedDiff} hotových
+                      </span>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="py-6 text-center text-xs text-muted-foreground">
+            Zatím žádné snímky. Uložte první snímek pro sledování vývoje projektu v čase.
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }
 

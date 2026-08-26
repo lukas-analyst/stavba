@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { logChanges } from "@/lib/audit";
 
 // PATCH /api/payments/[id]
 export async function PATCH(
@@ -44,6 +45,22 @@ export async function PATCH(
       },
     });
 
+    // Get projectId for audit log
+    const budgetItem = await db.budgetItem.findUnique({
+      where: { id: existing.budgetItemId },
+      select: { projectId: true },
+    });
+    if (budgetItem) {
+      await logChanges(
+        budgetItem.projectId,
+        "Payment",
+        id,
+        "update",
+        existing as unknown as Record<string, unknown>,
+        updated as unknown as Record<string, unknown>,
+      );
+    }
+
     // Recompute the affected budget item actualCost
     const budgetItemId = existing.budgetItemId;
     const agg = await db.payment.aggregate({
@@ -74,6 +91,23 @@ export async function DELETE(
       return NextResponse.json({ error: "Payment not found" }, { status: 404 });
     }
     const budgetItemId = existing.budgetItemId;
+
+    // Get projectId for audit log before deleting
+    const budgetItem = await db.budgetItem.findUnique({
+      where: { id: budgetItemId },
+      select: { projectId: true },
+    });
+    if (budgetItem) {
+      await logChanges(
+        budgetItem.projectId,
+        "Payment",
+        id,
+        "delete",
+        existing as unknown as Record<string, unknown>,
+        null,
+      );
+    }
+
     await db.payment.delete({ where: { id } });
 
     // Recompute the budget item actualCost

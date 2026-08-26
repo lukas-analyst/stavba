@@ -650,3 +650,64 @@ export function useAuditLog(projectId: string | null) {
     enabled: !!projectId,
   });
 }
+
+// ===== Snapshots =====
+export type Snapshot = {
+  id: string;
+  projectId: string;
+  label: string;
+  planTotal: number;
+  actualTotal: number;
+  remaining: number;
+  burnRate: number;
+  hoursTotal: number;
+  daysPlanned: number;
+  itemCount: number;
+  completedCount: number;
+  savedTotal: number;
+  createdAt: string;
+};
+
+export function useSnapshots(projectId: string | null) {
+  return useQuery<Snapshot[]>({
+    queryKey: ["snapshots", projectId],
+    queryFn: async () => {
+      const res = await fetch(`/api/projects/${projectId}/snapshots`);
+      if (!res.ok) throw new Error("Failed to load snapshots");
+      return res.json();
+    },
+    enabled: !!projectId,
+  });
+}
+
+export function useCreateSnapshot(projectId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (label: string) => {
+      const res = await fetch(`/api/projects/${projectId}/snapshots`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ label }),
+      });
+      if (!res.ok) throw new Error("Failed to create snapshot");
+      return res.json();
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["snapshots", projectId] });
+    },
+  });
+}
+
+export function useDeleteSnapshot(projectId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const res = await fetch(`/api/snapshots/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Failed to delete snapshot");
+      return res.json();
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["snapshots", projectId] });
+    },
+  });
+}

@@ -399,3 +399,47 @@ Unresolved issues / Next steps:
 - Google Sheets přímá integrace zatím neimplementována
 - Supabase Auth ještě neaktivní
 - Pro budoucí fázi: e-mail notifikace na termíny, AI asistent pro optimalizaci rozpočtu, fotogalerie dokumentace
+
+---
+Task ID: 17
+Agent: Cron review asistent (Z.ai Code) - osmá revize
+Task: QA testování, rozšíření audit logu na Payments a TimeEntries, nové funkce (project snapshots)
+
+Work Log:
+- Přečetl worklog, ověřil stabilitu (lint čistý, 0 chyb)
+- QA testování přes agent-browser: všech 7 tabů funguje bez chyb
+- VLM analýza dashboardu: identifikoval oblasti pro zlepšení (snapshots, audit log rozšíření)
+- Rozšíření audit logu:
+  * Payments PATCH/DELETE: přidáno logChanges() pro "Payment" entitu - získá projectId přes budgetItem, loguje update a delete akce
+  * TimeEntries PATCH/DELETE: přidáno logChanges() pro "TimeEntry" entitu - stejný pattern jako Payments
+  * Audit log nyní pokrývá BudgetItem, Payment i TimeEntry změny
+- Nové funkce:
+  * Project snapshots: Snapshot model v Prisma schématu (label, planTotal, actualTotal, remaining, burnRate, hoursTotal, daysPlanned, itemCount, completedCount, savedTotal, createdAt)
+    - GET /api/projects/[id]/snapshots - seznam snímků
+    - POST /api/projects/[id]/snapshots - vytvoří snímek s aktuálními totals (body: { label })
+    - DELETE /api/snapshots/[id] - smazání snímku
+    - useSnapshots, useCreateSnapshot, useDeleteSnapshot hooks v api.ts
+    - SnapshotsCard komponenta v dashboardu:
+      - Input pro label + "Uložit snímek" button (Enter uloží)
+      - Seznam snímků s grid statistik (Plán, Čerpáno, Čerpání %, Hotovo)
+      - Diffs vs aktuální stav: "+X Kč od snímku", "+X % čerpání", "+X hotových"
+      - Barevné odlišení diffs (amber pro nárůst, emerald pro úsporu/pokles)
+      - Delete button na hover
+      - Empty state: "Zatím žádné snímky"
+- Bug fixy: žádné (aplikace byla stabilní)
+- Lint: prošel bez chyb (0 errors, 0 warnings)
+- Verifikace přes Agent Browser: dashboard se načetl, "Uložit snímek" button viditelný, 0 chyb
+- VLM potvrdila: "vidím detail projektu Troja se všemi prvky"
+
+Stage Summary:
+- ✅ Aplikace stabilní: 0 runtime chyb, 0 lint chyb
+- ✅ Audit log rozšířen na Payments a TimeEntries (ne jen BudgetItem)
+- ✅ Nové funkce: project snapshots pro porovnání „plán vs. realita" v čase
+- 📸 SnapshotsCard v dashboardu s create/list/delete + diffs vs aktuální stav
+- 📝 Audit log nyní pokrývá 3 entity: BudgetItem, Payment, TimeEntry
+
+Unresolved issues / Next steps:
+- Audit log zatím loguje jen update/delete, ne create - v budoucnu rozšířit
+- Google Sheets přímá integrace zatím neimplementována
+- Supabase Auth ještě neaktivní
+- Pro budoucí fázi: e-mail notifikace na termíny, AI asistent pro optimalizaci rozpočtu, fotogalerie dokumentace

@@ -38,6 +38,26 @@ model Project {
   budgetItems BudgetItem[]
   contacts    Contact[]
   auditLogs   AuditLog[]
+  snapshots   Snapshot[]
+}
+
+// ===== SNAPSHOTS =====
+// Saves a point-in-time copy of project totals for "plan vs reality" comparison.
+model Snapshot {
+  id          String   @id @default(cuid())
+  projectId   String
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  label       String   // e.g., "Konec přípravy", "Po demolici"
+  planTotal   Float
+  actualTotal Float
+  remaining   Float
+  burnRate    Float
+  hoursTotal  Float
+  daysPlanned Float
+  itemCount   Int
+  completedCount Int
+  savedTotal  Float
+  createdAt   DateTime @default(now())
 }
 
 // ===== AUDIT LOG =====

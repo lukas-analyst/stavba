@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { logChanges } from "@/lib/audit";
 
 // PATCH /api/time-entries/[id]
 export async function PATCH(
@@ -38,6 +39,22 @@ export async function PATCH(
       },
     });
 
+    // Get projectId for audit log
+    const budgetItem = await db.budgetItem.findUnique({
+      where: { id: existing.budgetItemId },
+      select: { projectId: true },
+    });
+    if (budgetItem) {
+      await logChanges(
+        budgetItem.projectId,
+        "TimeEntry",
+        id,
+        "update",
+        existing as unknown as Record<string, unknown>,
+        updated as unknown as Record<string, unknown>,
+      );
+    }
+
     // Recompute affected budget item actualHours
     const budgetItemId = existing.budgetItemId;
     const agg = await db.timeEntry.aggregate({
@@ -68,6 +85,23 @@ export async function DELETE(
       return NextResponse.json({ error: "Time entry not found" }, { status: 404 });
     }
     const budgetItemId = existing.budgetItemId;
+
+    // Get projectId for audit log before deleting
+    const budgetItem = await db.budgetItem.findUnique({
+      where: { id: budgetItemId },
+      select: { projectId: true },
+    });
+    if (budgetItem) {
+      await logChanges(
+        budgetItem.projectId,
+        "TimeEntry",
+        id,
+        "delete",
+        existing as unknown as Record<string, unknown>,
+        null,
+      );
+    }
+
     await db.timeEntry.delete({ where: { id } });
 
     const agg = await db.timeEntry.aggregate({
