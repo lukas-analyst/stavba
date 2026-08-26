@@ -170,3 +170,40 @@ Unresolved issues / Next steps:
 - Google Sheets přímá integrace zatím neimplementována (CSV export slouží jako most)
 - Supabase Auth ještě neaktivní (utility jsou passthrough)
 - Pro budoucí fázi: drag-and-drop reorder (dnd-kit) místo šipek, PDF export faktur, e-mail notifikace na termíny
+
+---
+Task ID: 11
+Agent: Cron review asistent (Z.ai Code) - druhá revize
+Task: QA testování, stylingová vylepšení (tabular-nums, empty states, card shadows), nové funkce (duplikace položky, leaderboard kontaktů, contact-stats API)
+
+Work Log:
+- Přečetl worklog, ověřil stabilitu (lint čistý, 0 chyb)
+- QA testování přes agent-browser: všech 7 tabů funguje bez chyb
+- VLM analýza dashboardu: identifikoval oblasti pro zlepšení (tabulátorové zarovnání čísel, prázdné stavy, vizuální kotvy)
+- Styling vylepšení:
+  * globals.css: tabular-nums utility pro zarovnání čísel, custom scrollbar styling, animate-number transition
+  * Dashboard KPI karty: tabular-nums pro všechna čísla (Plán, Čerpání, Zbývá, Odpracováno, Ušetřeno, Hotovo)
+  * Contacts tab: barevné badge (amber pro platby, violet pro časy) místo neutrálních šedých
+  * Empty states: EmptyStateBox komponenta s ikonou v kruhu, nadpisem, popisem a CTA tlačítkem - aplikováno v Platby, Čas a Kontakty tabech
+- Nové funkce:
+  * Duplikace položky rozpočtu: POST /api/budget-items/[id]/duplicate - vytvoří kopii s "(kopie)" příponou, resetuje completed/actualCost/actualHours, umístí na konec
+  * "Duplikovat" akce v budget row dropdown menu (Copy ikona)
+  * Contact-stats API: GET /api/projects/[id]/contact-stats - agreguje totalPaid, totalHours, paymentCount, timeEntryCount, lastActivity per kontakt + workerStats (pro time entries bez kontaktu)
+  * Leaderboard v Contacts tab: dvě karty "Největší náklady" a "Nejvíce odpracováno" s top 4 přispěvateli, medaile (#1 zvýrazněná), emoji ikony typů
+  * useDuplicateBudgetItem a useContactStats hooks v api.ts
+- Bug fixy: žádné (aplikace byla stabilní)
+- Lint: prošel bez chyb (0 errors, 0 warnings)
+- Verifikace přes Agent Browser: dashboard, budget (duplicate v menu), contacts (leaderboard), payments (empty state) - vše funkční, 0 chyb
+- VLM potvrdila leaderboard: "Největší náklady - žlutý blok, Nejvíce odpracováno - fialový blok s Ing. Pavel Novák 25 h jako #1"
+
+Stage Summary:
+- ✅ Aplikace stabilní: 0 runtime chyb, 0 lint chyb
+- ✅ Styling: tabular-nums pro čísla, custom scrollbar, vylepšené empty states s ikonami a CTA
+- ✅ Nové funkce: duplikace položky rozpočtu, leaderboard kontaktů (náklady + hodiny), contact-stats API
+- 📊 Contacts tab nyní má leaderboard sekci + karty kontaktů s barevnými badge
+- 📝 Budget tab má "Duplikovat" akci v row menu pro rychlé klonování
+
+Unresolved issues / Next steps:
+- Google Sheets přímá integrace zatím neimplementována (CSV export + JSON import/export slouží jako most)
+- Supabase Auth ještě neaktivní (utility jsou passthrough)
+- Pro budoucí fázi: drag-and-drop reorder (dnd-kit), PDF export faktur, e-mail notifikace na termíny, AI asistent pro optimalizaci rozpočtu

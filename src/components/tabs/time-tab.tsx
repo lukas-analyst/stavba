@@ -57,6 +57,7 @@ import {
 } from "lucide-react";
 import { formatNumber, formatDate, WORKER_TYPES, workerTypeLabel } from "@/lib/format";
 import { toast } from "sonner";
+import { EmptyStateBox } from "@/components/empty-state-box";
 
 export function TimeTab({ projectId }: { projectId: string }) {
   const { data: entries, isLoading } = useTimeEntries(projectId);
@@ -181,12 +182,22 @@ export function TimeTab({ projectId }: { projectId: string }) {
       {isLoading ? (
         <Skeleton className="h-96" />
       ) : filtered.length === 0 ? (
-        <div className="rounded-lg border border-dashed py-12 text-center text-sm text-muted-foreground">
-          <Clock className="mx-auto mb-2 h-8 w-8 opacity-40" />
-          {entries?.length === 0
-            ? 'Zatím nebyl zaznamenán žádný čas. Klikněte na „Zaznamenat čas".'
-            : "Žádné záznamy neodpovídají filtru."}
-        </div>
+        <EmptyStateBox
+          icon={Clock}
+          title={entries?.length === 0 ? "Zatím žádné časové záznamy" : "Žádné záznamy neodpovídají filtru"}
+          description={
+            entries?.length === 0
+              ? "Zaznamenávejte čas strávený prací - firma, řemeslník i svépomoc. Podporuje i vícedenní záznamy."
+              : "Zkuste změnit filtr nebo vyhledávání."
+          }
+          action={
+            entries?.length === 0 ? (
+              <Button size="sm" onClick={() => setAddOpen(true)}>
+                <Plus className="mr-1 h-4 w-4" /> Zaznamenat první čas
+              </Button>
+            ) : undefined
+          }
+        />
       ) : (
         <div className="overflow-hidden rounded-lg border">
           <Table>

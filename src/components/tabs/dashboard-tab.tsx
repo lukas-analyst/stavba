@@ -94,7 +94,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
             <Wallet className="h-4 w-4 text-emerald-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{formatCzk(totals.planTotal)}</div>
+            <div className="text-2xl font-bold tabular-nums">{formatCzk(totals.planTotal)}</div>
             <p className="mt-1 text-xs text-muted-foreground">
               {totals.itemCount} položek · {totals.requiredCount} nutných
             </p>
@@ -109,7 +109,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
             <TrendingDown className="h-4 w-4 text-amber-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{formatCzk(totals.actualTotal)}</div>
+            <div className="text-2xl font-bold tabular-nums">{formatCzk(totals.actualTotal)}</div>
             <p className={`mt-1 text-xs font-semibold ${burnColor}`}>
               {burnRate.toFixed(1)} % rozpočtu
             </p>
@@ -128,7 +128,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
             )}
           </CardHeader>
           <CardContent>
-            <div className={`text-2xl font-bold ${totals.remaining < 0 ? "text-rose-600" : ""}`}>
+            <div className={`text-2xl font-bold tabular-nums ${totals.remaining < 0 ? "text-rose-600" : ""}`}>
               {formatCzk(totals.remaining)}
             </div>
             <p className="mt-1 text-xs text-muted-foreground">
@@ -145,7 +145,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
             <Clock className="h-4 w-4 text-violet-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{formatNumber(totals.hoursTotal, " h")}</div>
+            <div className="text-2xl font-bold tabular-nums">{formatNumber(totals.hoursTotal, " h")}</div>
             <p className="mt-1 text-xs text-muted-foreground">
               Plán: {formatNumber(totals.daysPlanned, " dní")}
             </p>
@@ -160,7 +160,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
             <PiggyBank className="h-4 w-4 text-emerald-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-emerald-600">
+            <div className="text-2xl font-bold tabular-nums text-emerald-600">
               {formatCzk(totals.savedTotal)}
             </div>
             <p className="mt-1 text-xs text-muted-foreground">
@@ -177,7 +177,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
             <CheckCircle2 className="h-4 w-4 text-teal-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
+            <div className="text-2xl font-bold tabular-nums">
               {totals.completedCount} / {totals.itemCount}
             </div>
             <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-muted">

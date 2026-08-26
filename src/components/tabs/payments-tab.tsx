@@ -61,6 +61,7 @@ import {
 import { formatCzk, formatDate, PAYMENT_TYPES, paymentTypeLabel } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { EmptyStateBox } from "@/components/empty-state-box";
 
 export function PaymentsTab({ projectId }: { projectId: string }) {
   const { data: payments, isLoading } = usePayments(projectId);
@@ -182,12 +183,22 @@ export function PaymentsTab({ projectId }: { projectId: string }) {
       {isLoading ? (
         <Skeleton className="h-96" />
       ) : filteredStandalone.length === 0 && filteredGroups.length === 0 ? (
-        <div className="rounded-lg border border-dashed py-12 text-center text-sm text-muted-foreground">
-          <Receipt className="mx-auto mb-2 h-8 w-8 opacity-40" />
-          {payments?.length === 0
-            ? 'Zatím nebyly zaznamenány žádné platby. Klikněte na „Přidat platbu".'
-            : "Žádné platby neodpovídají filtru."}
-        </div>
+        <EmptyStateBox
+          icon={Receipt}
+          title={payments?.length === 0 ? "Zatím žádné platby" : "Žádné platby neodpovídají filtru"}
+          description={
+            payments?.length === 0
+              ? "Začněte evidovat platby - účtenky, faktury nebo výplaty za práci. Můžete je rozdělit i do splátek."
+              : "Zkuste změnit filtr nebo vyhledávání."
+          }
+          action={
+            payments?.length === 0 ? (
+              <Button size="sm" onClick={() => setAddOpen(true)}>
+                <Plus className="mr-1 h-4 w-4" /> Přidat první platbu
+              </Button>
+            ) : undefined
+          }
+        />
       ) : (
         <div className="space-y-3">
           {/* Installment groups (invoices with partial payments) */}

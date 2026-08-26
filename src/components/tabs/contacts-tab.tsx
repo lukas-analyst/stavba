@@ -6,6 +6,7 @@ import {
   useCreateContact,
   useUpdateContact,
   useDeleteContact,
+  useContactStats,
   type Contact,
 } from "@/lib/api";
 import { Button } from "@/components/ui/button";
@@ -18,6 +19,7 @@ import {
   Card,
   CardContent,
   CardHeader,
+  CardTitle,
 } from "@/components/ui/card";
 import {
   Dialog,
@@ -51,13 +53,17 @@ import {
   Star,
   Users,
   Loader2,
+  TrendingUp,
+  Clock,
 } from "lucide-react";
-import { CONTACT_TYPES, contactTypeLabel } from "@/lib/format";
+import { CONTACT_TYPES, contactTypeLabel, formatCzk, formatNumber, formatDate } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { EmptyStateBox } from "@/components/empty-state-box";
 
 export function ContactsTab({ projectId }: { projectId: string }) {
   const { data: contacts, isLoading } = useContacts(projectId);
+  const { data: statsData } = useContactStats(projectId);
   const createContact = useCreateContact(projectId);
   const [addOpen, setAddOpen] = useState(false);
   const [editContact, setEditContact] = useState<Contact | null>(null);
@@ -74,6 +80,80 @@ export function ContactsTab({ projectId }: { projectId: string }) {
         </Button>
       </div>
 
+      {/* Leaderboard: top contributors */}
+      {statsData && statsData.contactStats.length > 0 && (
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+          <Card className="border-amber-200/60 dark:border-amber-900/40">
+            <CardHeader className="pb-2">
+              <div className="flex items-center gap-2">
+                <TrendingUp className="h-4 w-4 text-amber-600" />
+                <CardTitle className="text-sm">Největší náklady (celkem zaplaceno)</CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-1.5">
+              {statsData.contactStats
+                .filter((s) => s.totalPaid > 0)
+                .slice(0, 4)
+                .map((s, i) => {
+                  const t = contactTypeLabel(s.type);
+                  return (
+                    <div key={s.contactId} className="flex items-center gap-2 text-xs">
+                      <span className={cn(
+                        "flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold",
+                        i === 0 ? "bg-amber-100 text-amber-700" : "bg-muted text-muted-foreground",
+                      )}>
+                        {i + 1}
+                      </span>
+                      <span className="text-base">{t.emoji}</span>
+                      <span className="flex-1 truncate font-medium">{s.name}</span>
+                      <span className="font-bold text-amber-600 tabular-nums">
+                        {formatCzk(s.totalPaid)}
+                      </span>
+                    </div>
+                  );
+                })}
+              {statsData.contactStats.filter((s) => s.totalPaid > 0).length === 0 && (
+                <p className="text-xs text-muted-foreground">Zatím žádné platby přiřazené kontaktům</p>
+              )}
+            </CardContent>
+          </Card>
+          <Card className="border-violet-200/60 dark:border-violet-900/40">
+            <CardHeader className="pb-2">
+              <div className="flex items-center gap-2">
+                <Clock className="h-4 w-4 text-violet-600" />
+                <CardTitle className="text-sm">Nejvíce odpracováno (hodiny)</CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-1.5">
+              {statsData.workerStats
+                .filter((w) => w.hours > 0)
+                .slice(0, 4)
+                .map((w, i) => {
+                  const t = contactTypeLabel(w.type);
+                  return (
+                    <div key={w.name} className="flex items-center gap-2 text-xs">
+                      <span className={cn(
+                        "flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold",
+                        i === 0 ? "bg-violet-100 text-violet-700" : "bg-muted text-muted-foreground",
+                      )}>
+                        {i + 1}
+                      </span>
+                      <span className="text-base">{t.emoji}</span>
+                      <span className="flex-1 truncate font-medium">{w.name}</span>
+                      <span className="font-bold text-violet-600 tabular-nums">
+                        {formatNumber(w.hours, " h")}
+                      </span>
+                    </div>
+                  );
+                })}
+              {statsData.workerStats.filter((w) => w.hours > 0).length === 0 && (
+                <p className="text-xs text-muted-foreground">Zatím žádné časové záznamy</p>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
       {isLoading ? (
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
           {[1, 2, 3].map((i) => (
@@ -81,10 +161,16 @@ export function ContactsTab({ projectId }: { projectId: string }) {
           ))}
         </div>
       ) : contacts?.length === 0 ? (
-        <div className="rounded-lg border border-dashed py-12 text-center text-sm text-muted-foreground">
-          <Users className="mx-auto mb-2 h-8 w-8 opacity-40" />
-          Zatím žádné kontakty. Přidejte firmy, řemeslníky a dodavatele.
-        </div>
+        <EmptyStateBox
+          icon={Users}
+          title="Zatím žádné kontakty"
+          description="Přidejte firmy, řemeslníky, dodavatele a architekty. Můžete jim přiřazovat platby a časové záznamy."
+          action={
+            <Button size="sm" onClick={() => setAddOpen(true)}>
+              <Plus className="mr-1 h-4 w-4" /> Přidat první kontakt
+            </Button>
+          }
+        />
       ) : (
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
           {contacts?.map((c) => (
@@ -203,14 +289,14 @@ function ContactCard({
           <p className="border-t pt-2 text-[11px] text-muted-foreground">{contact.notes}</p>
         )}
         <div className="flex items-center justify-between border-t pt-2">
-          <div className="flex gap-1">
+          <div className="flex flex-wrap gap-1">
             {contact._count && contact._count.payments > 0 && (
-              <Badge variant="secondary" className="h-4 px-1.5 text-[10px]">
+              <Badge variant="secondary" className="h-4 px-1.5 text-[10px] text-amber-700">
                 {contact._count.payments} plateb
               </Badge>
             )}
             {contact._count && contact._count.timeEntries > 0 && (
-              <Badge variant="secondary" className="h-4 px-1.5 text-[10px]">
+              <Badge variant="secondary" className="h-4 px-1.5 text-[10px] text-violet-700">
                 {contact._count.timeEntries} časů
               </Badge>
             )}

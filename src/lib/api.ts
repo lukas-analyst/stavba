@@ -265,6 +265,21 @@ export function useDeleteBudgetItem(projectId: string) {
   });
 }
 
+export function useDuplicateBudgetItem(projectId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const res = await fetch(`/api/budget-items/${id}/duplicate`, { method: "POST" });
+      if (!res.ok) throw new Error("Failed to duplicate budget item");
+      return res.json();
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["budget", projectId] });
+      qc.invalidateQueries({ queryKey: ["dashboard", projectId] });
+    },
+  });
+}
+
 // Reorder items and/or categories
 export function useReorder(projectId: string) {
   const qc = useQueryClient();
@@ -545,6 +560,38 @@ export function useDashboard(projectId: string | null) {
     queryFn: async () => {
       const res = await fetch(`/api/projects/${projectId}/dashboard`);
       if (!res.ok) throw new Error("Failed to load dashboard");
+      return res.json();
+    },
+    enabled: !!projectId,
+  });
+}
+
+// ===== Contact Stats =====
+export type ContactStat = {
+  contactId: string;
+  name: string;
+  type: string;
+  rating: number | null;
+  totalPaid: number;
+  totalHours: number;
+  paymentCount: number;
+  timeEntryCount: number;
+  lastActivity: string | null;
+};
+
+export type WorkerStat = {
+  name: string;
+  hours: number;
+  entries: number;
+  type: string;
+};
+
+export function useContactStats(projectId: string | null) {
+  return useQuery<{ contactStats: ContactStat[]; workerStats: WorkerStat[] }>({
+    queryKey: ["contactStats", projectId],
+    queryFn: async () => {
+      const res = await fetch(`/api/projects/${projectId}/contact-stats`);
+      if (!res.ok) throw new Error("Failed to load contact stats");
       return res.json();
     },
     enabled: !!projectId,

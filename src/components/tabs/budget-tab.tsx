@@ -5,6 +5,7 @@ import {
   useBudgetItems,
   useUpdateBudgetItem,
   useDeleteBudgetItem,
+  useDuplicateBudgetItem,
   useReorder,
   useProjects,
   useExportCsv,
@@ -68,6 +69,7 @@ import {
   PiggyBank,
   GripVertical,
   Download,
+  Copy,
 } from "lucide-react";
 import {
   formatCzk,
@@ -482,6 +484,7 @@ function BudgetRow({
 }) {
   const updateItem = useUpdateBudgetItem(projectId);
   const deleteItem = useDeleteBudgetItem(projectId);
+  const duplicateItem = useDuplicateBudgetItem(projectId);
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   const overBudget = item.planCost && item.actualCost > item.planCost;
@@ -715,6 +718,18 @@ function BudgetRow({
                 onClick={() => update("completed", !item.completed)}
               >
                 {item.completed ? "Označit jako nedokončené" : "Označit jako hotové"}
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={async () => {
+                  try {
+                    await duplicateItem.mutateAsync(item.id);
+                    toast.success("Položka duplikována");
+                  } catch {
+                    toast.error("Nepodařilo se duplikovat");
+                  }
+                }}
+              >
+                <Copy className="mr-2 h-3.5 w-3.5" /> Duplikovat
               </DropdownMenuItem>
               <DropdownMenuItem
                 className="text-destructive focus:text-destructive"
