@@ -156,8 +156,20 @@ export function PaymentsTab({ projectId }: { projectId: string }) {
             <div className="text-xs text-muted-foreground">
               Součet ({filteredStandalone.length + filteredGroups.length})
             </div>
-            <div className="text-lg font-bold text-amber-600">{formatCzk(totalAmount)}</div>
+            <div className="text-lg font-bold text-amber-600 tabular-nums">{formatCzk(totalAmount)}</div>
           </div>
+          {/* VAT summary */}
+          {(() => {
+            const allPayments = [...filteredStandalone, ...filteredGroups.flatMap((g) => g.installments)];
+            const totalVat = allPayments.reduce((s, p) => s + (p.vatAmount || 0), 0);
+            const hasVat = allPayments.some((p) => p.vatAmount !== null && p.vatAmount !== undefined);
+            return hasVat ? (
+              <div className="text-right">
+                <div className="text-xs text-muted-foreground">z toho DPH</div>
+                <div className="text-sm font-semibold text-sky-600 tabular-nums">{formatCzk(totalVat)}</div>
+              </div>
+            ) : null;
+          })()}
           <Button
             variant="outline"
             size="sm"
@@ -572,8 +584,17 @@ function PaymentRow({
       <TableCell className="text-xs">
         {payment.contact?.name || "—"}
       </TableCell>
-      <TableCell className="text-right text-sm font-semibold text-amber-600">
-        {formatCzk(payment.amount)}
+      <TableCell className="text-right">
+        <div className="flex flex-col items-end">
+          <span className="text-sm font-semibold text-amber-600 tabular-nums">
+            {formatCzk(payment.amount)}
+          </span>
+          {payment.vatRate !== null && payment.vatRate !== undefined && (
+            <span className="text-[10px] text-muted-foreground tabular-nums">
+              vč. DPH {payment.vatRate}%
+            </span>
+          )}
+        </div>
       </TableCell>
       <TableCell>
         <DropdownMenu>
@@ -639,6 +660,7 @@ function PaymentDialog({
   const [vendor, setVendor] = useState("");
   const [invoiceNumber, setInvoiceNumber] = useState("");
   const [description, setDescription] = useState("");
+  const [vatRate, setVatRate] = useState("");
   // Installment mode
   const [isInvoice, setIsInvoice] = useState(false);
   const [invoiceTotal, setInvoiceTotal] = useState("");
@@ -704,6 +726,7 @@ function PaymentDialog({
           budgetItemId,
           contactId: contactId || null,
           amount: amt,
+          vatRate: vatRate || null,
           date,
           type,
           vendor,
@@ -894,6 +917,52 @@ function PaymentDialog({
               />
             </div>
           </div>
+          {/* VAT field */}
+          {!isInvoice && (
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label htmlFor="vatRate">DPH sazba (%)</Label>
+                <Select value={vatRate || "none"} onValueChange={(v) => setVatRate(v === "none" ? "" : v)}>
+                  <SelectTrigger id="vatRate">
+                    <SelectValue placeholder="Bez DPH" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Bez DPH</SelectItem>
+                    <SelectItem value="21">21 % (standardní)</SelectItem>
+                    <SelectItem value="12">12 % (snížená 1)</SelectItem>
+                    <SelectItem value="10">10 % (snížená 2)</SelectItem>
+                    <SelectItem value="0">0 %</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Výpočet DPH</Label>
+                <div className="flex h-9 items-center rounded-md border bg-muted/30 px-3 text-xs text-muted-foreground">
+                  {vatRate && amount ? (
+                    <>
+                      DPH:{" "}
+                      <strong className="ml-1 text-foreground tabular-nums">
+                        {formatCzk(
+                          (Number(amount.replace(",", ".")) * Number(vatRate)) /
+                            (100 + Number(vatRate)),
+                        )}
+                      </strong>
+                      <span className="ml-2">
+                        (Základ:{" "}
+                        {formatCzk(
+                          (Number(amount.replace(",", ".")) * 100) /
+                            (100 + Number(vatRate)),
+                        )}
+                        )
+                      </span>
+                    </>
+                  ) : (
+                    <span>Zadejte částku a DPH sazbu</span>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
           <div className="space-y-2">
             <Label htmlFor="description">Popis</Label>
             <Textarea

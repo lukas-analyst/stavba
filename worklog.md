@@ -362,3 +362,40 @@ Unresolved issues / Next steps:
 - Google Sheets přímá integrace zatím neimplementována
 - Supabase Auth ještě neaktivní
 - Pro budoucí fázi: e-mail notifikace na termíny, AI asistent pro optimalizaci rozpočtu, fotogalerie dokumentace
+
+---
+Task ID: 16
+Agent: Cron review asistent (Z.ai Code) - sedmá revize
+Task: QA testování, bug fix (SelectItem empty value), nové funkce (VAT/DPH sledování v platbách)
+
+Work Log:
+- Přečetl worklog, ověřil stabilitu (lint čistý, 0 chyb)
+- QA testování přes agent-browser: všech 7 tabů funguje bez chyb
+- VLM analýza dashboardu: identifikoval oblasti pro zlepšení (VAT/DPH, fakturace)
+- Bug fix:
+  * SelectItem empty value error: <SelectItem value=""> v VAT selectu způsoboval runtime chybu "A <SelectItem /> must have a value prop that is not an empty string". Opraveno použitím value="none" s onValueChange handlerem který převádí "none" → ""
+- Nové funkce:
+  * VAT/DPH sledování v platbách: Přidáno vatRate a vatAmount pole do Payment modelu v Prisma schématu
+    - payments POST API: přijímá vatRate, automaticky počítá vatAmount = amount * vatRate / (100 + vatRate)
+    - Payment type v api.ts aktualizován o vatRate a vatAmount
+    - PaymentDialog: přidal DPH sazba select (Bez DPH, 21%, 12%, 10%, 0%) s live výpočtem DPH a základu
+    - PaymentRow: zobrazuje "vč. DPH {rate}%" pod částkou pokud má platba VAT
+    - Payments tab toolbar: "z toho DPH" summary pokud nějaká platba má VAT
+    - tabular-nums pro všechny částky v payments tab
+- Bug fixy: SelectItem empty value error (critical runtime bug)
+- Lint: prošel bez chyb (0 errors, 0 warnings)
+- Verifikace přes Agent Browser: payment dialog (DPH select funguje), payments tab (načte se) - vše funkční, 0 chyb
+- VLM potvrdila: "vidím DPH sekci v dialogu pro přidání platby"
+
+Stage Summary:
+- ✅ Aplikace stabilní: 0 runtime chyb, 0 lint chyb
+- ✅ Bug fix: SelectItem empty value runtime error (critical)
+- ✅ Nové funkce: VAT/DPH sledování v platbách s automatickým výpočtem a live preview
+- 💰 Payments tab má nyní DPH sazbu, výpočet DPH a základu, VAT summary v toolbaru
+- 📊 Payment rows zobrazují "vč. DPH {rate}%" pokud má platba VAT
+
+Unresolved issues / Next steps:
+- Audit log zatím loguje jen BudgetItem changes - v budoucnu rozšířit na Payments, TimeEntries, Contacts
+- Google Sheets přímá integrace zatím neimplementována
+- Supabase Auth ještě neaktivní
+- Pro budoucí fázi: e-mail notifikace na termíny, AI asistent pro optimalizaci rozpočtu, fotogalerie dokumentace

@@ -73,6 +73,8 @@ export type Payment = {
   amount: number;
   invoiceTotal: number | null;
   installmentOf: string | null;
+  vatRate: number | null;
+  vatAmount: number | null;
   date: string;
   type: string;
   vendor: string | null;

@@ -41,6 +41,7 @@ export async function POST(
       amount,
       invoiceTotal,
       installmentOf,
+      vatRate,
       date,
       type,
       vendor,
@@ -72,13 +73,23 @@ export async function POST(
       }
     }
 
+    const numAmount = Number(amount);
+    const numVatRate = vatRate !== undefined && vatRate !== null && vatRate !== "" ? Number(vatRate) : null;
+    // Compute VAT amount: if amount includes VAT, vatAmount = amount * vatRate / (100 + vatRate)
+    const numVatAmount =
+      numVatRate !== null && numVatRate > 0
+        ? (numAmount * numVatRate) / (100 + numVatRate)
+        : null;
+
     const payment = await db.payment.create({
       data: {
         budgetItemId,
         contactId: contactId || null,
-        amount: Number(amount),
+        amount: numAmount,
         invoiceTotal: invoiceTotal !== undefined && invoiceTotal !== null && invoiceTotal !== "" ? Number(invoiceTotal) : null,
         installmentOf: installmentOf || null,
+        vatRate: numVatRate,
+        vatAmount: numVatAmount,
         date: date ? new Date(date) : new Date(),
         type: type || "other",
         vendor: vendor?.trim() || null,

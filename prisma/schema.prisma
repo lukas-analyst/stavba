@@ -124,6 +124,8 @@ model Payment {
   amount        Float    // paid amount for this record (0 for a pure invoice parent)
   invoiceTotal  Float?   // the full invoice amount expected (set on parent/installment group)
   installmentOf String?  // parent payment id if this is an installment (plain string, no FK)
+  vatRate       Float?   // VAT rate in percent (e.g., 21 for 21%)
+  vatAmount     Float?   // computed VAT amount (amount * vatRate / (100 + vatRate))
   date          DateTime
   type          String   // receipt, work, material, person, invoice, other
   vendor        String?  // obchod / firma
