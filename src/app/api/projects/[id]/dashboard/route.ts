@@ -44,6 +44,24 @@ export async function GET(
       0,
     );
 
+    // ===== PROJECTION =====
+    // Predicted final cost based on current burn rate of completed items.
+    // For completed items: use actual cost.
+    // For incomplete items: estimate using the average overrun ratio of completed items.
+    const completedWithPlan = completedItems.filter((i) => i.planCost && i.planCost > 0);
+    const avgOverrunRatio =
+      completedWithPlan.length > 0
+        ? completedWithPlan.reduce((s, i) => s + (i.actualCost || 0) / (i.planCost || 1), 0) /
+          completedWithPlan.length
+        : 1;
+    const incompleteItems = items.filter((i) => !i.completed);
+    const projectedRemaining = incompleteItems.reduce(
+      (s, i) => s + (i.planCost || 0) * avgOverrunRatio,
+      0,
+    );
+    const projectedFinal = actualTotal + projectedRemaining;
+    const projectedOverrun = projectedFinal - planTotal;
+
     // ===== BY PHASE =====
     const byPhase = new Map<string, { plan: number; actual: number; hours: number; count: number }>();
     for (const it of items) {
@@ -163,6 +181,9 @@ export async function GET(
         requiredCount: items.filter((i) => i.required).length,
         completedCount: completedItems.length,
         savedTotal,
+        projectedFinal,
+        projectedOverrun,
+        avgOverrunRatio,
       },
       byPhase: Array.from(byPhase.entries()).map(([phase, v]) => ({ phase, ...v })),
       byCategory: Array.from(byCategory.entries())

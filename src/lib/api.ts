@@ -111,6 +111,9 @@ export type Dashboard = {
     requiredCount: number;
     completedCount: number;
     savedTotal: number;
+    projectedFinal: number;
+    projectedOverrun: number;
+    avgOverrunRatio: number;
   };
   byPhase: { phase: string; plan: number; actual: number; hours: number; count: number }[];
   byCategory: { category: string; plan: number; actual: number; hours: number; count: number }[];

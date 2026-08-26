@@ -273,6 +273,95 @@ export function DashboardTab({ projectId }: { projectId: string }) {
         </Card>
       )}
 
+      {/* Budget Projection */}
+      {totals.completedCount > 0 && (
+        <Card className={cn(
+          "border-l-4",
+          totals.projectedOverrun > 0 ? "border-l-rose-500 border-rose-200/60" : "border-l-emerald-500 border-emerald-200/60",
+        )}>
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <TrendingUp className={cn("h-5 w-5", totals.projectedOverrun > 0 ? "text-rose-600" : "text-emerald-600")} />
+                <CardTitle className="text-base">Predikce konečných nákladů</CardTitle>
+              </div>
+              <Badge variant="outline" className="text-[10px]">
+                na základě {totals.completedCount} dokončených
+              </Badge>
+            </div>
+            <CardDescription>
+              Odhad na základě průměrného překročení dokončených položek ({(totals.avgOverrunRatio * 100).toFixed(0)} % plánu)
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+              <div className="space-y-0.5">
+                <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Dosud čerpáno</div>
+                <div className="text-lg font-bold tabular-nums">{formatCzk(totals.actualTotal)}</div>
+              </div>
+              <div className="space-y-0.5">
+                <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Odhad zbytku</div>
+                <div className="text-lg font-bold tabular-nums text-amber-600">
+                  {formatCzk(totals.projectedFinal - totals.actualTotal)}
+                </div>
+              </div>
+              <div className="space-y-0.5">
+                <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Odhad celkem</div>
+                <div className={cn("text-lg font-bold tabular-nums", totals.projectedOverrun > 0 ? "text-rose-600" : "text-emerald-600")}>
+                  {formatCzk(totals.projectedFinal)}
+                </div>
+              </div>
+              <div className="space-y-0.5">
+                <div className="text-[10px] uppercase tracking-wide text-muted-foreground">vs. Plán</div>
+                <div className={cn("text-lg font-bold tabular-nums", totals.projectedOverrun > 0 ? "text-rose-600" : "text-emerald-600")}>
+                  {totals.projectedOverrun > 0 ? "+" : ""}
+                  {formatCzk(totals.projectedOverrun)}
+                </div>
+              </div>
+            </div>
+            {/* Visual comparison bar */}
+            <div className="mt-4 space-y-1.5">
+              <div className="flex items-center justify-between text-[11px]">
+                <span className="text-muted-foreground">Plán → Odhad</span>
+                <span className={cn("font-semibold", totals.projectedOverrun > 0 ? "text-rose-600" : "text-emerald-600")}>
+                  {totals.planTotal > 0 ? ((totals.projectedFinal / totals.planTotal) * 100).toFixed(0) : 0} % plánu
+                </span>
+              </div>
+              <div className="relative h-3 overflow-hidden rounded-full bg-muted">
+                {/* Plan marker (100%) */}
+                <div
+                  className="absolute top-0 bottom-0 w-0.5 bg-foreground/40"
+                  style={{ left: "100%", transform: "translateX(-50%)" }}
+                  title={`Plán: ${formatCzk(totals.planTotal)}`}
+                />
+                {/* Actual + projected bar */}
+                <div className="flex h-full">
+                  <div
+                    className="h-full bg-amber-400"
+                    style={{ width: `${Math.min((totals.actualTotal / Math.max(totals.projectedFinal, 1)) * 100, 100)}%` }}
+                  />
+                  <div
+                    className={cn("h-full", totals.projectedOverrun > 0 ? "bg-rose-400" : "bg-emerald-400")}
+                    style={{ width: `${Math.min(((totals.projectedFinal - totals.actualTotal) / Math.max(totals.projectedFinal, 1)) * 100, 100)}%` }}
+                  />
+                </div>
+              </div>
+              <div className="flex items-center gap-3 text-[10px] text-muted-foreground">
+                <span className="flex items-center gap-1">
+                  <span className="inline-block h-2 w-2 rounded-sm bg-amber-400" /> Čerpáno
+                </span>
+                <span className="flex items-center gap-1">
+                  <span className={cn("inline-block h-2 w-2 rounded-sm", totals.projectedOverrun > 0 ? "bg-rose-400" : "bg-emerald-400")} /> Odhad zbytku
+                </span>
+                <span className="flex items-center gap-1">
+                  <span className="inline-block h-2 w-px bg-foreground/40" /> Plán (100 %)
+                </span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Phase progress cards */}
       <Card>
         <CardHeader className="pb-3">

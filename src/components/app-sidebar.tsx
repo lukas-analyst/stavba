@@ -22,6 +22,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 const STATUS_LABELS: Record<string, { label: string; color: string }> = {
   active: { label: "Aktivní", color: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300" },
@@ -100,6 +101,7 @@ export function AppSidebar() {
             Rozpočet · Čas · Materiál
           </p>
         </div>
+        <ThemeToggle />
       </div>
 
       {/* Projects search + list header */}

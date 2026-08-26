@@ -243,3 +243,41 @@ Unresolved issues / Next steps:
 - Google Sheets přímá integrace zatím neimplementována (CSV export + JSON import/export slouží jako most)
 - Supabase Auth ještě neaktivní (utility jsou passthrough)
 - Pro budoucí fázi: drag-and-drop reorder (dnd-kit), PDF export faktur, e-mail notifikace na termíny, AI asistent pro optimalizaci rozpočtu, fotogalerie dokumentace
+
+---
+Task ID: 13
+Agent: Cron review asistent (Z.ai Code) - čtvrtá revize
+Task: QA testování, stylingová vylepšení (dark mode toggle), nové funkce (predikce překročení rozpočtu)
+
+Work Log:
+- Přečetl worklog, ověřil stabilitu (lint čistý, 0 chyb)
+- QA testování přes agent-browser: všech 7 tabů funguje bez chyb
+- VLM analýza dashboardu: identifikoval oblasti pro zlepšení (dark mode, prediktivní analýza)
+- Styling vylepšení:
+  * Dark mode: ThemeProvider (next-themes) v providers.tsx s attribute="class", defaultTheme="light", enableSystem
+  * ThemeToggle komponenta v sidebar headeru - CSS-based ikona (Sun/Moon) bez hydration mismatch
+  * Aplikace plně podporuje světlý i tmavý motiv (všechny komponenty mají dark: varianty)
+- Nové funkce:
+  * Predikce překročení rozpočtu: dashboard API nyní počítá projectedFinal, projectedOverrun, avgOverrunRatio
+    - avgOverrunRatio = průměr (actualCost/planCost) pro dokončené položky s plánem
+    - projectedRemaining = součet planCost * avgOverrunRatio pro nedokončené položky
+    - projectedFinal = actualTotal + projectedRemaining
+    - projectedOverrun = projectedFinal - planTotal
+  * Budget Projection Card v dashboardu: 4 KPI (čerpáno, odhad zbytku, odhad celkem, vs plán), vizuální comparison bar s plán markerem (100%), legendou, a barevným indikátorem (rose pro překročení, emerald pro úsporu)
+  * Card se zobrazí jen když jsou nějaké dokončené položky (completedCount > 0)
+- Bug fixy: žádné (aplikace byla stabilní)
+- Lint: prošel bez chyb (0 errors, 0 warnings)
+- Verifikace přes Agent Browser: dashboard (projection card), dark mode toggle (přepíná motiv) - vše funkční, 0 chyb
+- VLM potvrdila: "aplikace je v tmavém motivu, vidím přepínač motivu v levém horním rohu"
+
+Stage Summary:
+- ✅ Aplikace stabilní: 0 runtime chyb, 0 lint chyb
+- ✅ Styling: plná podpora dark/light motivu s toggle tlačítkem v sidebaru
+- ✅ Nové funkce: predikce konečných nákladů na základě burn rate dokončených položek
+- 📊 Dashboard nyní má: 6 KPI karet + phase cards + budget projection card + spending trend graf + alerts + 2 grafy + breakdown
+- 🌙 Dark mode plně funkční s CSS-based toggle (bez hydration mismatch)
+
+Unresolved issues / Next steps:
+- Google Sheets přímá integrace zatím neimplementována (CSV export + JSON import/export slouží jako most)
+- Supabase Auth ještě neaktivní (utility jsou passthrough)
+- Pro budoucí fázi: drag-and-drop reorder (dnd-kit), PDF export faktur, e-mail notifikace na termíny, AI asistent pro optimalizaci rozpočtu, fotogalerie dokumentace
