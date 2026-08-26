@@ -485,3 +485,50 @@ Unresolved issues / Next steps:
 - Google Sheets přímá integrace zatím neimplementována
 - Supabase Auth ještě neaktivní
 - Pro budoucí fázi: e-mail notifikace na termíny, AI asistent pro optimalizaci rozpočtu, fotogalerie dokumentace
+
+---
+Task ID: 19
+Agent: Cron review asistent (Z.ai Code) - desátá revize
+Task: QA testování, stylingová vylepšení, nové funkce (globální vyhledávání / command palette)
+
+Work Log:
+- Přečetl worklog, ověřil stabilitu (lint čistý, 0 chyb)
+- QA testování přes agent-browser: všech 7 tabů funguje bez chyb
+- VLM analýza dashboardu: identifikoval oblasti pro zlepšení (globální search, responzivita)
+- Nové funkce:
+  * Globální vyhledávání (Command Palette): Cmd/Ctrl+K otevírá modal dialog pro vyhledávání napříč aplikací
+    - GET /api/search?q=query - prohledává projekty (name, address, description), budget items (category, subcategory, element, note), kontakty (name, role, company, email, phone)
+    - GlobalSearchDialog komponenta s command palette designem:
+      - Search input s auto-focus, ESC pro zavření
+      - Seskupené výsledky: Projekty, Položky rozpočtu, Kontakty
+      - Ikony pro každý typ (FolderKanban, Package, Users)
+      - Klávesnice navigace: ↑↓ pro pohyb, Enter pro výběr
+      - Hover highlight + selected state
+      - Phase badge pro budget items, price badge, starred indicator pro projekty
+      - Empty state s nápovědou
+      - Loading skeleton
+      - Klik na výsledek: přepne na příslušný projekt + tab (dashboard/budget/contacts)
+    - GlobalSearchInner komponenta (key-based remount pattern pro reset při otevření)
+    - Fixed search button v pravém horním rohu s ⌘K kbd indikátorem
+  * Keyboard shortcuts aktualizovány: Cmd+K nyní otevírá global search (místo focus na sidebar search)
+- Styling vylepšení:
+  * Fixed search button v top-right s backdrop-blur, ⌘K kbd badge
+  * Command palette design: clean grouped results, hover states, keyboard navigation hints
+  * Phase color badges ve výsledcích vyhledávání
+- Bug fixy:
+  * setState-in-effect lint errors: refaktoroval GlobalSearchDialog na wrapper + inner component pattern (key-based remount), odstranil useEffect pro reset query
+  * ref-during-render lint error: nahrazen derived state (safeSelectedIndex = Math.min(...))
+- Lint: prošel bez chyb (0 errors, 0 warnings)
+- Verifikace přes Agent Browser: global search button visible, dialog se otevře, zadání "tro" najde projekt Troja, ESC zavírá - vše funkční, 0 chyb
+
+Stage Summary:
+- ✅ Aplikace stabilní: 0 runtime chyb, 0 lint chyb
+- ✅ Nové funkce: globální vyhledávání (command palette) s klávesnicí navigací napříč projekty/položkami/kontakty
+- 🔍 Cmd+K otevírá global search modal s seskupenými výsledky a keyboard navigation
+- ⌨️ Klávesové zkratky: Cmd+K (global search), Cmd+B (sidebar toggle), Cmd+N (new project)
+
+Unresolved issues / Next steps:
+- Audit log zatím loguje jen update/delete, ne create
+- Google Sheets přímá integrace zatím neimplementována
+- Supabase Auth ještě neaktivní
+- Pro budoucí fázi: e-mail notifikace na termíny, AI asistent pro optimalizaci rozpočtu, fotogalerie dokumentace, multi-project comparison view

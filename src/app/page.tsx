@@ -6,8 +6,9 @@ import { useAppStore } from "@/lib/store";
 import { AppSidebar } from "@/components/app-sidebar";
 import { ProjectDetail } from "@/components/project-detail";
 import { EmptyState } from "@/components/empty-state";
+import { GlobalSearchDialog } from "@/components/global-search-dialog";
 import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
-import { Loader2, PanelLeftClose, PanelLeft } from "lucide-react";
+import { Loader2, PanelLeftClose, PanelLeft, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export default function Home() {
@@ -15,14 +16,20 @@ export default function Home() {
   const selectedProjectId = useAppStore((s) => s.selectedProjectId);
   const setSelectedProject = useAppStore((s) => s.setSelectedProject);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
 
   useKeyboardShortcuts();
 
   // Listen for sidebar toggle from keyboard shortcut
   useEffect(() => {
-    const handler = () => setSidebarCollapsed((prev) => !prev);
-    window.addEventListener("stavba:toggle-sidebar", handler);
-    return () => window.removeEventListener("stavba:toggle-sidebar", handler);
+    const toggleHandler = () => setSidebarCollapsed((prev) => !prev);
+    const searchHandler = () => setSearchOpen(true);
+    window.addEventListener("stavba:toggle-sidebar", toggleHandler);
+    window.addEventListener("stavba:global-search", searchHandler);
+    return () => {
+      window.removeEventListener("stavba:toggle-sidebar", toggleHandler);
+      window.removeEventListener("stavba:global-search", searchHandler);
+    };
   }, []);
 
   // Auto-select the starred/first project on initial load
@@ -70,6 +77,19 @@ export default function Home() {
           </button>
         )}
 
+        {/* Global search button (fixed, top-right) */}
+        <button
+          onClick={() => setSearchOpen(true)}
+          className="fixed right-4 top-4 z-30 flex items-center gap-2 rounded-lg border bg-background/80 px-3 py-1.5 text-xs text-muted-foreground shadow-sm backdrop-blur hover:bg-background hover:text-foreground"
+          aria-label="Globální vyhledávání"
+        >
+          <Search className="h-3.5 w-3.5" />
+          <span className="hidden sm:inline">Hledat</span>
+          <kbd className="hidden rounded border bg-muted px-1 py-0.5 text-[10px] sm:inline">
+            ⌘K
+          </kbd>
+        </button>
+
         {isLoading ? (
           <div className="flex h-full items-center justify-center">
             <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -80,6 +100,9 @@ export default function Home() {
           <EmptyState />
         )}
       </main>
+
+      {/* Global search dialog */}
+      <GlobalSearchDialog open={searchOpen} onOpenChange={setSearchOpen} />
     </div>
   );
 }

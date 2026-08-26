@@ -3,24 +3,19 @@
 import { useEffect } from "react";
 
 // Global keyboard shortcuts:
-// - Cmd/Ctrl + K: focus the project search input in the sidebar
+// - Cmd/Ctrl + K: open global search (command palette)
 // - Cmd/Ctrl + B: toggle sidebar visibility (dispatches custom event)
 // - Cmd/Ctrl + N: new project (dispatches custom event)
+// - Cmd/Ctrl + Shift + S: open search in sidebar (focus project filter)
 export function useKeyboardShortcuts() {
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       const isMod = e.metaKey || e.ctrlKey;
 
-      // Cmd/Ctrl + K: focus search
+      // Cmd/Ctrl + K: open global search
       if (isMod && e.key === "k") {
         e.preventDefault();
-        const searchInput = document.querySelector<HTMLInputElement>(
-          'input[placeholder="Hledat projekt…"]',
-        );
-        if (searchInput) {
-          searchInput.focus();
-          searchInput.select();
-        }
+        window.dispatchEvent(new CustomEvent("stavba:global-search"));
       }
 
       // Cmd/Ctrl + B: toggle sidebar
