@@ -10,6 +10,9 @@ import {
   Clock,
   Users,
   CalendarRange,
+  CalendarClock,
+  MapPin,
+  FileText,
 } from "lucide-react";
 import { useAppStore, type TabId } from "@/lib/store";
 import type { Project } from "@/lib/api";
@@ -23,7 +26,8 @@ import { PaymentsTab } from "@/components/tabs/payments-tab";
 import { TimeTab } from "@/components/tabs/time-tab";
 import { ContactsTab } from "@/components/tabs/contacts-tab";
 import { TimelineTab } from "@/components/tabs/timeline-tab";
-import { formatDate } from "@/lib/format";
+import { NotesTab } from "@/components/tabs/notes-tab";
+import { formatDate, daysUntilLabel } from "@/lib/format";
 import { useUpdateProject } from "@/lib/api";
 import { toast } from "sonner";
 
@@ -34,13 +38,30 @@ const TABS: { id: TabId; label: string; icon: React.ComponentType<{ className?: 
   { id: "time", label: "Čas", icon: Clock },
   { id: "contacts", label: "Kontakty", icon: Users },
   { id: "timeline", label: "Časová osa", icon: CalendarRange },
+  { id: "notes", label: "Poznámky", icon: FileText },
 ];
 
-const STATUS_LABELS: Record<string, { label: string; color: string }> = {
-  active: { label: "Aktivní", color: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300" },
-  planning: { label: "Plánování", color: "bg-sky-100 text-sky-700 dark:bg-sky-900/40 dark:text-sky-300" },
-  completed: { label: "Dokončeno", color: "bg-zinc-100 text-zinc-700 dark:bg-zinc-800/40 dark:text-zinc-300" },
-  paused: { label: "Pozastaveno", color: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300" },
+const STATUS_LABELS: Record<string, { label: string; color: string; dot: string }> = {
+  active: {
+    label: "Aktivní",
+    color: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300",
+    dot: "bg-emerald-500",
+  },
+  planning: {
+    label: "Plánování",
+    color: "bg-sky-100 text-sky-700 dark:bg-sky-900/40 dark:text-sky-300",
+    dot: "bg-sky-500",
+  },
+  completed: {
+    label: "Dokončeno",
+    color: "bg-zinc-100 text-zinc-700 dark:bg-zinc-800/40 dark:text-zinc-300",
+    dot: "bg-zinc-400",
+  },
+  paused: {
+    label: "Pozastaveno",
+    color: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300",
+    dot: "bg-amber-500",
+  },
 };
 
 export function ProjectDetail({ project }: { project: Project }) {
@@ -50,6 +71,8 @@ export function ProjectDetail({ project }: { project: Project }) {
   const updateProject = useUpdateProject(project.id);
 
   const status = STATUS_LABELS[project.status] ?? STATUS_LABELS.active;
+  const deadline = daysUntilLabel(project.endDate);
+  const started = daysUntilLabel(project.startDate);
 
   const toggleStar = async () => {
     try {
@@ -60,15 +83,24 @@ export function ProjectDetail({ project }: { project: Project }) {
     }
   };
 
+  const deadlineToneColor: Record<string, string> = {
+    past: "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/30 dark:text-rose-300 dark:border-rose-900",
+    today: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/30 dark:text-amber-300 dark:border-amber-900",
+    soon: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/30 dark:text-amber-300 dark:border-amber-900",
+    future: "bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-950/30 dark:text-sky-300 dark:border-sky-900",
+    none: "",
+  };
+
   return (
     <div className="flex min-h-screen flex-col">
       {/* Project header */}
-      <header className="sticky top-0 z-10 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="px-6 py-4">
+      <header className="sticky top-0 z-10 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/70">
+        <div className="px-6 pt-4 pb-0">
+          {/* Title row */}
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-2">
-                <h2 className="truncate text-2xl font-bold tracking-tight">
+              <div className="flex flex-wrap items-center gap-2">
+                <h2 className="text-2xl font-bold tracking-tight">
                   {project.name}
                 </h2>
                 <button
@@ -78,59 +110,109 @@ export function ProjectDetail({ project }: { project: Project }) {
                 >
                   <Star
                     className={cn(
-                      "h-5 w-5 transition-colors",
+                      "h-4 w-4 transition-colors",
                       project.starred
                         ? "fill-amber-400 text-amber-400"
-                        : "text-muted-foreground",
+                        : "text-muted-foreground/50 hover:text-amber-400",
                     )}
                   />
                 </button>
-                <Badge variant="secondary" className={status.color}>
+                <Badge variant="secondary" className={cn("gap-1", status.color)}>
+                  <span className={cn("h-1.5 w-1.5 rounded-full", status.dot)} />
                   {status.label}
                 </Badge>
+                {deadline.tone !== "none" && (
+                  <Badge
+                    variant="outline"
+                    className={cn("gap-1 border", deadlineToneColor[deadline.tone])}
+                  >
+                    <CalendarClock className="h-3 w-3" />
+                    {deadline.text}
+                  </Badge>
+                )}
               </div>
-              {project.address && (
-                <p className="mt-0.5 text-sm text-muted-foreground">
-                  {project.address}
-                </p>
+
+              {/* Subtitle: address */}
+              {(project.address || project.description) && (
+                <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-0.5">
+                  {project.address && (
+                    <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                      <MapPin className="h-3 w-3" />
+                      {project.address}
+                    </span>
+                  )}
+                  {project.description && (
+                    <span className="text-xs text-muted-foreground/80 line-clamp-1">
+                      {project.description}
+                    </span>
+                  )}
+                </div>
               )}
-              {project.description && (
-                <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-                  {project.description}
-                </p>
-              )}
-              <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
+
+              {/* Stats strip */}
+              <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2 border-t pt-3 text-xs">
                 {project.startDate && (
-                  <span>
-                    Zahájení:{" "}
-                    <strong className="text-foreground">
-                      {formatDate(project.startDate)}
-                    </strong>
-                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <CalendarClock className="h-3.5 w-3.5 text-muted-foreground" />
+                    <span className="text-muted-foreground">Zahájení</span>
+                    <strong className="font-semibold">{formatDate(project.startDate)}</strong>
+                    {started.tone !== "none" && started.days! < 0 && (
+                      <span className="text-muted-foreground/60">({started.text})</span>
+                    )}
+                  </div>
                 )}
                 {project.endDate && (
-                  <span>
-                    Dokončení:{" "}
-                    <strong className="text-foreground">
-                      {formatDate(project.endDate)}
-                    </strong>
-                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <CalendarClock className="h-3.5 w-3.5 text-muted-foreground" />
+                    <span className="text-muted-foreground">Dokončení</span>
+                    <strong className="font-semibold">{formatDate(project.endDate)}</strong>
+                  </div>
                 )}
                 {project._count && (
-                  <span>
-                    {project._count.budgetItems} položek ·{" "}
-                    {project._count.contacts} kontaktů
-                  </span>
+                  <>
+                    <div className="flex items-center gap-1.5">
+                      <Table2 className="h-3.5 w-3.5 text-muted-foreground" />
+                      <strong className="font-semibold">{project._count.budgetItems}</strong>
+                      <span className="text-muted-foreground">položek</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <Users className="h-3.5 w-3.5 text-muted-foreground" />
+                      <strong className="font-semibold">{project._count.contacts}</strong>
+                      <span className="text-muted-foreground">kontaktů</span>
+                    </div>
+                  </>
+                )}
+                {project.stats && (
+                  <>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-muted-foreground">Čerpání</span>
+                      <strong className={cn(
+                        "font-semibold",
+                        project.stats.burnRate > 100 ? "text-rose-600" : project.stats.burnRate > 80 ? "text-amber-600" : "text-emerald-600",
+                      )}>
+                        {project.stats.burnRate.toFixed(0)}%
+                      </strong>
+                      <div className="h-1.5 w-16 overflow-hidden rounded-full bg-muted">
+                        <div
+                          className={cn(
+                            "h-full rounded-full",
+                            project.stats.burnRate > 100 ? "bg-rose-500" : project.stats.burnRate > 80 ? "bg-amber-500" : "bg-emerald-500",
+                          )}
+                          style={{ width: `${Math.min(project.stats.burnRate, 100)}%` }}
+                        />
+                      </div>
+                    </div>
+                  </>
                 )}
               </div>
             </div>
-            <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
+            <Button variant="outline" size="sm" onClick={() => setEditOpen(true)} className="shrink-0">
               <Pencil className="mr-2 h-3.5 w-3.5" /> Upravit
             </Button>
           </div>
 
           {/* Tabs */}
-          <nav className="mt-4 flex gap-1 overflow-x-auto">
+          <nav className="mt-4 flex gap-1 overflow-x-auto border-b">
             {TABS.map((tab) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
@@ -139,14 +221,17 @@ export function ProjectDetail({ project }: { project: Project }) {
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
                   className={cn(
-                    "flex items-center gap-2 whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
+                    "relative flex items-center gap-2 whitespace-nowrap px-4 py-2.5 text-sm font-medium transition-colors",
                     isActive
-                      ? "bg-primary text-primary-foreground shadow-sm"
-                      : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                      ? "text-foreground"
+                      : "text-muted-foreground hover:text-foreground",
                   )}
                 >
                   <Icon className="h-4 w-4" />
                   {tab.label}
+                  {isActive && (
+                    <span className="absolute inset-x-0 -bottom-px h-0.5 bg-primary" />
+                  )}
                 </button>
               );
             })}
@@ -162,6 +247,7 @@ export function ProjectDetail({ project }: { project: Project }) {
         {activeTab === "time" && <TimeTab projectId={project.id} />}
         {activeTab === "contacts" && <ContactsTab projectId={project.id} />}
         {activeTab === "timeline" && <TimelineTab projectId={project.id} />}
+        {activeTab === "notes" && <NotesTab projectId={project.id} />}
       </div>
 
       <ProjectDialog

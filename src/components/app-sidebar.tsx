@@ -1,7 +1,7 @@
 "use client";
 
 import { Star, Plus, Home, Trash2, Loader2, Building2, Download, Upload } from "lucide-react";
-import { useProjects, useDeleteProject, useUpdateProject, useExportState, useImportState } from "@/lib/api";
+import { useProjects, useDeleteProject, useUpdateProject, useExportState, useImportState, useDashboard } from "@/lib/api";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAppStore } from "@/lib/store";
 import { Button } from "@/components/ui/button";
@@ -61,6 +61,7 @@ export function AppSidebar() {
   });
 
   const projectToDelete = projects?.find((p) => p.id === deleteId);
+  const selectedProject = projects?.find((p) => p.id === selectedProjectId);
 
   const handleImport = async (file: File) => {
     try {
@@ -121,10 +122,18 @@ export function AppSidebar() {
               const status = STATUS_LABELS[p.status] ?? STATUS_LABELS.active;
               return (
                 <li key={p.id}>
-                  <button
+                  <div
+                    role="button"
+                    tabIndex={0}
                     onClick={() => setSelectedProject(p.id)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        setSelectedProject(p.id);
+                      }
+                    }}
                     className={cn(
-                      "group relative flex w-full flex-col gap-1 rounded-lg border border-transparent px-3 py-2.5 text-left transition-colors",
+                      "group relative flex w-full cursor-pointer flex-col gap-1 rounded-lg border border-transparent px-3 py-2.5 text-left transition-colors",
                       isActive
                         ? "border-border bg-sidebar-accent text-sidebar-accent-foreground shadow-sm"
                         : "hover:bg-sidebar-accent/60",
@@ -218,13 +227,18 @@ export function AppSidebar() {
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                     </span>
-                  </button>
+                  </div>
                 </li>
               );
             })}
           </ul>
         )}
       </div>
+
+      {/* Mini-stats for the selected project */}
+      {selectedProject && (selectedProject.stats || selectedProject._count) && (
+        <MiniProjectStats projectId={selectedProject.id} />
+      )}
 
       {/* Footer with Export/Import */}
       <div className="border-t px-3 py-3">
@@ -312,5 +326,103 @@ export function AppSidebar() {
         </AlertDialogContent>
       </AlertDialog>
     </aside>
+  );
+}
+
+// ===== Mini project stats widget for the sidebar =====
+function MiniProjectStats({ projectId }: { projectId: string }) {
+  const { data } = useDashboard(projectId);
+
+  if (!data) {
+    return (
+      <div className="border-t px-3 py-3">
+        <div className="h-20 animate-pulse rounded-md bg-muted/50" />
+      </div>
+    );
+  }
+
+  const { totals } = data;
+  const burnTone =
+    totals.burnRate > 100
+      ? "text-rose-600 bg-rose-500"
+      : totals.burnRate > 80
+        ? "text-amber-600 bg-amber-500"
+        : "text-emerald-600 bg-emerald-500";
+  const burnClass = burnTone.split(" ")[1];
+  const completionPct =
+    totals.itemCount > 0 ? (totals.completedCount / totals.itemCount) * 100 : 0;
+
+  return (
+    <div className="border-t px-3 py-3">
+      <div className="mb-2 flex items-center justify-between">
+        <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+          Souhrn projektu
+        </span>
+      </div>
+      <div className="space-y-2 rounded-lg border bg-muted/30 p-2.5">
+        {/* Burn rate */}
+        <div>
+          <div className="mb-1 flex items-center justify-between text-[11px]">
+            <span className="text-muted-foreground">Čerpání rozpočtu</span>
+            <span className={cn("font-semibold", burnTone.split(" ")[0])}>
+              {totals.burnRate.toFixed(0)}%
+            </span>
+          </div>
+          <div className="h-1.5 overflow-hidden rounded-full bg-muted">
+            <div
+              className={cn("h-full rounded-full transition-all", burnClass)}
+              style={{ width: `${Math.min(totals.burnRate, 100)}%` }}
+            />
+          </div>
+        </div>
+        {/* Completion */}
+        <div>
+          <div className="mb-1 flex items-center justify-between text-[11px]">
+            <span className="text-muted-foreground">Dokončeno</span>
+            <span className="font-semibold text-foreground">
+              {totals.completedCount}/{totals.itemCount}
+            </span>
+          </div>
+          <div className="h-1.5 overflow-hidden rounded-full bg-muted">
+            <div
+              className="h-full rounded-full bg-teal-500 transition-all"
+              style={{ width: `${completionPct}%` }}
+            />
+          </div>
+        </div>
+        {/* Quick stats */}
+        <div className="grid grid-cols-2 gap-1.5 pt-1 text-[11px]">
+          <div className="rounded bg-background px-2 py-1">
+            <div className="text-muted-foreground">Zbývá</div>
+            <div
+              className={cn(
+                "font-bold",
+                totals.remaining < 0 ? "text-rose-600" : "text-emerald-600",
+              )}
+            >
+              {formatCzk(totals.remaining)}
+            </div>
+          </div>
+          <div className="rounded bg-background px-2 py-1">
+            <div className="text-muted-foreground">Ušetřeno</div>
+            <div className="font-bold text-emerald-600">
+              {formatCzk(totals.savedTotal)}
+            </div>
+          </div>
+          <div className="rounded bg-background px-2 py-1">
+            <div className="text-muted-foreground">Hodin</div>
+            <div className="font-bold text-violet-600">
+              {new Intl.NumberFormat("cs-CZ", { maximumFractionDigits: 0 }).format(totals.hoursTotal)} h
+            </div>
+          </div>
+          <div className="rounded bg-background px-2 py-1">
+            <div className="text-muted-foreground">Plán dní</div>
+            <div className="font-bold text-sky-600">
+              {new Intl.NumberFormat("cs-CZ", { maximumFractionDigits: 0 }).format(totals.daysPlanned)}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }

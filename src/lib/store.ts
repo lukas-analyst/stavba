@@ -8,7 +8,8 @@ export type TabId =
   | "payments"
   | "time"
   | "contacts"
-  | "timeline";
+  | "timeline"
+  | "notes";
 
 type AppState = {
   selectedProjectId: string | null;

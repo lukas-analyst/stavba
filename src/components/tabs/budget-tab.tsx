@@ -7,6 +7,7 @@ import {
   useDeleteBudgetItem,
   useReorder,
   useProjects,
+  useExportCsv,
   type BudgetItem,
 } from "@/lib/api";
 import {
@@ -66,6 +67,7 @@ import {
   Circle,
   PiggyBank,
   GripVertical,
+  Download,
 } from "lucide-react";
 import {
   formatCzk,
@@ -73,6 +75,8 @@ import {
   formatDate,
   PHASES,
   PHASE_COLORS,
+  PHASE_BORDER_COLORS,
+  PHASE_DOT_COLORS,
 } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -83,8 +87,10 @@ export function BudgetTab({ projectId }: { projectId: string }) {
   const { data: projects } = useProjects();
   const project = projects?.find((p) => p.id === projectId);
   const reorder = useReorder(projectId);
+  const exportCsv = useExportCsv(projectId);
   const [collapsedCats, setCollapsedCats] = useState<Set<string>>(new Set());
   const [phaseFilter, setPhaseFilter] = useState<string>("all");
+  const [completionFilter, setCompletionFilter] = useState<"all" | "todo" | "done">("all");
   const [search, setSearch] = useState("");
   const [addOpen, setAddOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<BudgetItem | null>(null);
@@ -113,6 +119,8 @@ export function BudgetTab({ projectId }: { projectId: string }) {
   const grouped = useMemo(() => {
     const filtered = (items ?? []).filter((it) => {
       if (phaseFilter !== "all" && it.phase !== phaseFilter) return false;
+      if (completionFilter === "done" && !it.completed) return false;
+      if (completionFilter === "todo" && it.completed) return false;
       if (search.trim()) {
         const q = search.toLowerCase();
         const text = `${it.category} ${it.subcategory ?? ""} ${it.note ?? ""} ${it.element ?? ""}`.toLowerCase();
@@ -225,6 +233,27 @@ export function BudgetTab({ projectId }: { projectId: string }) {
             ))}
           </SelectContent>
         </Select>
+        {/* Completion filter pills */}
+        <div className="flex items-center gap-0.5 rounded-md border bg-muted/40 p-0.5">
+          {([
+            { id: "all", label: "Vše" },
+            { id: "todo", label: "Aktivní" },
+            { id: "done", label: "Hotovo" },
+          ] as const).map((opt) => (
+            <button
+              key={opt.id}
+              onClick={() => setCompletionFilter(opt.id)}
+              className={cn(
+                "rounded px-2.5 py-1 text-xs font-medium transition-colors",
+                completionFilter === opt.id
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
         <div className="ml-auto flex items-center gap-3 text-sm">
           <div className="text-right">
             <div className="text-xs text-muted-foreground">Plán</div>
@@ -250,6 +279,22 @@ export function BudgetTab({ projectId }: { projectId: string }) {
             <div className="text-xs text-muted-foreground">Hotovo</div>
             <div className="font-bold">{completedCount}/{items?.length ?? 0}</div>
           </div>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={exportCsv.isPending}
+            onClick={async () => {
+              try {
+                await exportCsv.mutateAsync("budget");
+                toast.success("Rozpočet exportován do CSV");
+              } catch {
+                toast.error("Export selhal");
+              }
+            }}
+            title="Exportovat do CSV (Excel/Google Sheets)"
+          >
+            <Download className="mr-1 h-4 w-4" /> CSV
+          </Button>
           <Button size="sm" onClick={() => setAddOpen(true)}>
             <Plus className="mr-1 h-4 w-4" /> Přidat položku
           </Button>
@@ -452,7 +497,15 @@ function BudgetRow({
   };
 
   return (
-    <TableRow className={cn("group", item.completed && "bg-emerald-50/40 dark:bg-emerald-950/10")}>
+    <TableRow
+      className={cn(
+        "group border-l-2 transition-colors",
+        PHASE_BORDER_COLORS[item.phase] ?? "border-l-zinc-300",
+        item.completed
+          ? "bg-emerald-50/40 dark:bg-emerald-950/10"
+          : "hover:bg-muted/30",
+      )}
+    >
       <TableCell className="px-2">
         <Checkbox
           checked={item.required}

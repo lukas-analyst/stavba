@@ -129,3 +129,44 @@ Unresolved issues / Next steps:
 - Drag-and-drop (dnd-kit) místo šipek pro reorder - šipky fungují spolehlivě, dnd by byl hezčí ale vyžaduje více práce
 - Supabase Auth ještě neaktivní (utility jsou passthrough, připraveno pro budoucí přihlašování)
 - Google Sheets import/export zatím neimplementován (může využít export JSON jako mezistupeň)
+
+---
+Task ID: 10
+Agent: Cron review asistent (Z.ai Code) - první revize
+Task: QA testování, oprava chyb, stylingová vylepšení a nové funkce (CSV export, Poznámky, filtry, mini-stats, phase cards)
+
+Work Log:
+- Přečetl worklog, ověřil že aplikace je stabilní (lint čistý, 0 chyb)
+- QA testování přes agent-browser: všechny taby fungovaly bez chyb
+- VLM analýza budget screenshotu: identifikoval oblasti pro zlepšení (prázdný sidebar, chybějící progress indikátory, lepší hierarchie)
+- Styling vylepšení:
+  * Project header: lepší hierarchie s MapPin ikonou pro adresu, deadline countdown badge ("za X dní"), stats strip s ikonami (Zahájení, Dokončení, položky, kontakty, čerpání s progress barem), podtržené taby místo pozadí
+  * Budget tab: barevný levý okraj řádků dle fáze (PHASE_BORDER_COLORS), hover efekty, completion filter pills (Vše/Aktivní/Hotovo)
+  * Sidebar: MiniProjectStats widget v prázdném prostoru - burn rate, completion progress bar, 4 quick stats (Zbývá, Ušetřeno, Hodiny, Plán dní)
+  * Dashboard: nová sekce "Postup podle fází" s kartami pro každou fázi (progress bar, skutečnost/plán, hodiny, %)
+- Nové funkce:
+  * CSV export API (/api/projects/[id]/export-csv?type=budget|payments|time) - s BOM pro Excel UTF-8, české datumy, vč. Ušetřeno sloupce
+  * CSV export tlačítka v Rozpočet, Platby a Čas tabech
+  * Poznámky tab: markdown editor s auto-save (1.5s debounce), edit/preview modes, markdown toolbar (bold, italic, heading, list, todo, quote, code, link), vlastní markdown renderer, počítadla (slova, řádky, úkoly)
+  * Project.notes pole v DB (Prisma schema + API PATCH)
+  * daysUntilLabel() helper pro lidsky čitelný countdown ("za 5 dní", "před 3 dny", "dnes")
+- Bug fixy:
+  * "button cannot contain nested button" hydratační chyba - změnil project list item z <button> na <div role="button">
+  * ReferenceError: cn not defined v dashboard-tab.tsx - přidal chybějící import cn z utils
+  * setState-in-effect v NotesTab - refaktoroval na derived state pattern (localContent + serverContent + isDirty)
+- Lint: prošel bez chyb (0 errors, 0 warnings)
+- Verifikace přes Agent Browser: dashboard, budget (filtry+CSV), notes (editor+toolbar), payments (CSV) - vše funkční, 0 chyb
+- VLM potvrdila: "vidím nové KPI karty vč. Ušetřeno a Hotovo, sekci Postup podle fází, mini-statistiky v sidebaru"
+
+Stage Summary:
+- ✅ Aplikace stabilní: 0 runtime chyb, 0 lint chyb
+- ✅ Styling výrazně vylepšen: lepší hierarchie, barevné fázové okraje, mini-stats v sidebaru, deadline countdown
+- ✅ Nové funkce: CSV export (budget/payments/time), Poznámky s markdown, completion filter, phase progress cards
+- ✅ Bug fixy: nested button hydration error, missing cn import, setState-in-effect pattern
+- 📊 Dashboard nyní má 6 KPI karet + phase progress sekci + alerts + grafy + breakdown
+- 📝 Poznámky tab s auto-save a markdown podporou (úkoly, nadpisy, seznamy, odkazy)
+
+Unresolved issues / Next steps:
+- Google Sheets přímá integrace zatím neimplementována (CSV export slouží jako most)
+- Supabase Auth ještě neaktivní (utility jsou passthrough)
+- Pro budoucí fázi: drag-and-drop reorder (dnd-kit) místo šipek, PDF export faktur, e-mail notifikace na termíny

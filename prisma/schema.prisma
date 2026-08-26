@@ -30,6 +30,8 @@ model Project {
   endDate       DateTime?
   // JSON array of category names in display order (for reordering categories)
   categoryOrder String?
+  // Free-form markdown notes for the project (decisions, ideas, todos)
+  notes         String?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 

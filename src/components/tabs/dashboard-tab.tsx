@@ -30,7 +30,8 @@ import {
   PiggyBank,
   CheckCircle2,
 } from "lucide-react";
-import { formatCzk, formatNumber, formatDate, PHASE_COLORS } from "@/lib/format";
+import { formatCzk, formatNumber, formatDate, PHASE_COLORS, PHASE_DOT_COLORS } from "@/lib/format";
+import { cn } from "@/lib/utils";
 import { useAppStore } from "@/lib/store";
 import {
   Bar,
@@ -252,6 +253,70 @@ export function DashboardTab({ projectId }: { projectId: string }) {
           </CardContent>
         </Card>
       )}
+
+      {/* Phase progress cards */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base">Postup podle fází</CardTitle>
+          <CardDescription>Rozpad plánu a čerpání pro každou fázi stavby</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {byPhase.map((p) => {
+              const burn = p.plan > 0 ? (p.actual / p.plan) * 100 : 0;
+              const phaseColor = PHASE_COLORS[p.phase] ?? "";
+              const dotColor = PHASE_DOT_COLORS[p.phase] ?? "bg-zinc-400";
+              return (
+                <div
+                  key={p.phase}
+                  className="rounded-lg border bg-card p-3 transition-shadow hover:shadow-sm"
+                >
+                  <div className="mb-2 flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <span className={cn("h-2 w-2 shrink-0 rounded-full", dotColor)} />
+                      <span className="truncate text-xs font-semibold">{p.phase}</span>
+                    </div>
+                    <Badge variant="secondary" className="h-4 shrink-0 px-1 text-[10px]">
+                      {p.count}
+                    </Badge>
+                  </div>
+                  <div className="space-y-1.5">
+                    <div className="flex items-baseline justify-between text-xs">
+                      <span className="text-muted-foreground">Skutečnost / Plán</span>
+                      <span className="font-medium">
+                        {formatCzk(p.actual)}{" "}
+                        <span className="text-muted-foreground">/ {formatCzk(p.plan)}</span>
+                      </span>
+                    </div>
+                    <div className="h-2 overflow-hidden rounded-full bg-muted">
+                      <div
+                        className={cn(
+                          "h-full rounded-full transition-all",
+                          burn > 100 ? "bg-rose-500" : burn > 80 ? "bg-amber-500" : "bg-emerald-500",
+                        )}
+                        style={{ width: `${Math.min(burn, 100)}%` }}
+                      />
+                    </div>
+                    <div className="flex items-center justify-between text-[11px]">
+                      <span className="text-muted-foreground">
+                        {formatNumber(p.hours, " h")}
+                      </span>
+                      <span
+                        className={cn(
+                          "font-semibold",
+                          burn > 100 ? "text-rose-600" : burn > 80 ? "text-amber-600" : "text-emerald-600",
+                        )}
+                      >
+                        {burn.toFixed(0)}%
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Charts */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">

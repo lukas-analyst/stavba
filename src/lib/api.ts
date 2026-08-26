@@ -15,6 +15,7 @@ export type Project = {
   startDate: string | null;
   endDate: string | null;
   categoryOrder: string | null;
+  notes: string | null;
   createdAt: string;
   updatedAt: string;
   _count?: { budgetItems: number; contacts: number };
@@ -333,6 +334,31 @@ export function useImportState() {
     },
     onSuccess: () => {
       qc.invalidateQueries();
+    },
+  });
+}
+
+// ===== CSV Export (per-project) =====
+export function useExportCsv(projectId: string) {
+  return useMutation({
+    mutationFn: async (type: "budget" | "payments" | "time") => {
+      const res = await fetch(`/api/projects/${projectId}/export-csv?type=${type}`);
+      if (!res.ok) throw new Error("Failed to export CSV");
+      const blob = await res.blob();
+      const cd = res.headers.get("content-disposition") || "";
+      const match = cd.match(/filename="?([^"]+)"?/);
+      const filename = match?.[1]
+        ? decodeURIComponent(match[1])
+        : `${projectId}-${type}.csv`;
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      return { filename };
     },
   });
 }

@@ -7,6 +7,7 @@ import {
   useContacts,
   useCreateTimeEntry,
   useDeleteTimeEntry,
+  useExportCsv,
   type TimeEntry,
 } from "@/lib/api";
 import {
@@ -52,6 +53,7 @@ import {
   Search,
   Clock,
   Loader2,
+  Download,
 } from "lucide-react";
 import { formatNumber, formatDate, WORKER_TYPES, workerTypeLabel } from "@/lib/format";
 import { toast } from "sonner";
@@ -62,6 +64,7 @@ export function TimeTab({ projectId }: { projectId: string }) {
   const { data: contacts } = useContacts(projectId);
   const createTimeEntry = useCreateTimeEntry(projectId);
   const deleteTimeEntry = useDeleteTimeEntry(projectId);
+  const exportCsv = useExportCsv(projectId);
   const [addOpen, setAddOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState<string>("all");
@@ -153,6 +156,22 @@ export function TimeTab({ projectId }: { projectId: string }) {
               {formatNumber(totalHours, " h")}
             </div>
           </div>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={exportCsv.isPending || (entries?.length ?? 0) === 0}
+            onClick={async () => {
+              try {
+                await exportCsv.mutateAsync("time");
+                toast.success("Čas exportován do CSV");
+              } catch {
+                toast.error("Export selhal");
+              }
+            }}
+            title="Exportovat do CSV (Excel/Google Sheets)"
+          >
+            <Download className="mr-1 h-4 w-4" /> CSV
+          </Button>
           <Button size="sm" onClick={() => setAddOpen(true)}>
             <Plus className="mr-1 h-4 w-4" /> Zaznamenat čas
           </Button>

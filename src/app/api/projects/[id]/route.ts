@@ -32,7 +32,7 @@ export async function PATCH(
   try {
     const { id } = await params;
     const body = await request.json();
-    const { name, address, description, starred, status, currency, startDate, endDate } = body;
+    const { name, address, description, starred, status, currency, startDate, endDate, notes } = body;
 
     const existing = await db.project.findUnique({ where: { id } });
     if (!existing) {
@@ -50,6 +50,7 @@ export async function PATCH(
         currency: currency !== undefined ? currency : undefined,
         startDate: startDate !== undefined ? (startDate ? new Date(startDate) : null) : undefined,
         endDate: endDate !== undefined ? (endDate ? new Date(endDate) : null) : undefined,
+        notes: notes !== undefined ? (typeof notes === "string" ? notes : null) : undefined,
       },
     });
 

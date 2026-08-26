@@ -39,6 +39,36 @@ export function formatDateShort(date: Date | string | null | undefined): string 
   return new Intl.DateTimeFormat("cs-CZ", { day: "2-digit", month: "2-digit" }).format(d);
 }
 
+// Compute days remaining until a target date (from now)
+export function daysUntil(target: Date | string | null | undefined): number | null {
+  if (!target) return null;
+  const d = typeof target === "string" ? new Date(target) : target;
+  if (isNaN(d.getTime())) return null;
+  const now = new Date();
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const startOfTarget = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  return Math.round((startOfTarget.getTime() - startOfToday.getTime()) / (1000 * 60 * 60 * 24));
+}
+
+// Human-readable "in X days" / "X days ago" / "today"
+export function daysUntilLabel(target: Date | string | null | undefined): { text: string; tone: "past" | "today" | "soon" | "future" | "none"; days: number | null } {
+  const days = daysUntil(target);
+  if (days === null) return { text: "", tone: "none", days: null };
+  if (days === 0) return { text: "dnes", tone: "today", days };
+  if (days < 0) {
+    const abs = Math.abs(days);
+    return {
+      text: abs === 1 ? "včera" : `před ${abs} dny`,
+      tone: "past",
+      days,
+    };
+  }
+  if (days <= 7) return { text: `za ${days} ${days === 1 ? "den" : days < 5 ? "dny" : "dní"}`, tone: "soon", days };
+  if (days <= 30) return { text: `za ${days} dní`, tone: "future", days };
+  if (days <= 365) return { text: `za ${Math.round(days / 30)} měs.`, tone: "future", days };
+  return { text: `za ${Math.round(days / 365)} rok${Math.round(days / 365) === 1 ? "" : "y"}`, tone: "future", days };
+}
+
 // Calculate "burn rate" % = actualCost / planCost * 100
 export function burnRate(actual: number, plan: number | null): number | null {
   if (!plan || plan === 0) return null;
@@ -59,6 +89,25 @@ export const PHASE_COLORS: Record<string, string> = {
   Zabydlování: "bg-emerald-100 text-emerald-800 border-emerald-200 dark:bg-emerald-900/40 dark:text-emerald-200 dark:border-emerald-800",
   "Do budoucna": "bg-violet-100 text-violet-800 border-violet-200 dark:bg-violet-900/40 dark:text-violet-200 dark:border-violet-800",
   Neurčeno: "bg-zinc-100 text-zinc-800 border-zinc-200 dark:bg-zinc-800/40 dark:text-zinc-200 dark:border-zinc-700",
+};
+
+// Phase left-border accent colors (for table rows)
+export const PHASE_BORDER_COLORS: Record<string, string> = {
+  Příprava: "border-l-sky-400",
+  Demolice: "border-l-rose-400",
+  "Hrubá stavba": "border-l-amber-400",
+  Zabydlování: "border-l-emerald-400",
+  "Do budoucna": "border-l-violet-400",
+  Neurčeno: "border-l-zinc-300",
+};
+
+export const PHASE_DOT_COLORS: Record<string, string> = {
+  Příprava: "bg-sky-500",
+  Demolice: "bg-rose-500",
+  "Hrubá stavba": "bg-amber-500",
+  Zabydlování: "bg-emerald-500",
+  "Do budoucna": "bg-violet-500",
+  Neurčeno: "bg-zinc-400",
 };
 
 export const PHASE_ORDER = [
