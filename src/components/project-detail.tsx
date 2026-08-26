@@ -20,6 +20,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ProjectDialog } from "@/components/project-dialog";
+import { PrintReportDialog } from "@/components/print-report-dialog";
 import { DashboardTab } from "@/components/tabs/dashboard-tab";
 import { BudgetTab } from "@/components/tabs/budget-tab";
 import { PaymentsTab } from "@/components/tabs/payments-tab";
@@ -68,6 +69,7 @@ export function ProjectDetail({ project }: { project: Project }) {
   const activeTab = useAppStore((s) => s.activeTab);
   const setActiveTab = useAppStore((s) => s.setActiveTab);
   const [editOpen, setEditOpen] = useState(false);
+  const [reportOpen, setReportOpen] = useState(false);
   const updateProject = useUpdateProject(project.id);
 
   const status = STATUS_LABELS[project.status] ?? STATUS_LABELS.active;
@@ -206,9 +208,19 @@ export function ProjectDetail({ project }: { project: Project }) {
                 )}
               </div>
             </div>
-            <Button variant="outline" size="sm" onClick={() => setEditOpen(true)} className="shrink-0">
-              <Pencil className="mr-2 h-3.5 w-3.5" /> Upravit
-            </Button>
+            <div className="flex shrink-0 gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setReportOpen(true)}
+                className="no-print"
+              >
+                <FileText className="mr-2 h-3.5 w-3.5" /> Report
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
+                <Pencil className="mr-2 h-3.5 w-3.5" /> Upravit
+              </Button>
+            </div>
           </div>
 
           {/* Tabs */}
@@ -254,6 +266,12 @@ export function ProjectDetail({ project }: { project: Project }) {
         open={editOpen}
         onOpenChange={setEditOpen}
         project={project}
+      />
+      <PrintReportDialog
+        open={reportOpen}
+        onOpenChange={setReportOpen}
+        projectId={project.id}
+        projectName={project.name}
       />
     </div>
   );

@@ -96,6 +96,28 @@ export function BudgetTab({ projectId }: { projectId: string }) {
   const [search, setSearch] = useState("");
   const [addOpen, setAddOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<BudgetItem | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const updateItem = useUpdateBudgetItem(projectId);
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const bulkComplete = async () => {
+    const promises = Array.from(selectedIds).map((id) =>
+      updateItem.mutateAsync({ id, data: { completed: true } }),
+    );
+    await Promise.all(promises);
+    toast.success(`${selectedIds.size} položek označeno jako hotové`);
+    setSelectedIds(new Set());
+  };
+
+  const clearSelection = () => setSelectedIds(new Set());
 
   const toggleCat = (cat: string) => {
     setCollapsedCats((prev) => {
@@ -210,6 +232,33 @@ export function BudgetTab({ projectId }: { projectId: string }) {
 
   return (
     <div className="space-y-4">
+      {/* Bulk action bar (appears when items are selected) */}
+      {selectedIds.size > 0 && (
+        <div className="sticky top-[57px] z-20 flex items-center gap-3 rounded-lg border bg-primary/5 px-4 py-2.5 shadow-sm backdrop-blur">
+          <Badge variant="default" className="tabular-nums">
+            {selectedIds.size} vybráno
+          </Badge>
+          <div className="flex gap-2">
+            <Button
+              size="sm"
+              variant="default"
+              onClick={bulkComplete}
+              disabled={updateItem.isPending}
+            >
+              <CheckCircle2 className="mr-1.5 h-3.5 w-3.5" /> Označit jako hotové
+            </Button>
+          </div>
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={clearSelection}
+            className="ml-auto"
+          >
+            Zrušit výběr
+          </Button>
+        </div>
+      )}
+
       {/* Toolbar */}
       <div className="flex flex-wrap items-center gap-2">
         <div className="relative">
@@ -439,6 +488,8 @@ export function BudgetTab({ projectId }: { projectId: string }) {
                           canMoveDown={idx < catItems.length - 1}
                           onMoveUp={() => moveItem(catItems, idx, -1)}
                           onMoveDown={() => moveItem(catItems, idx, 1)}
+                          isSelected={selectedIds.has(item.id)}
+                          onToggleSelect={() => toggleSelect(item.id)}
                         />
                       ))}
                     </TableBody>
@@ -473,6 +524,8 @@ function BudgetRow({
   canMoveDown,
   onMoveUp,
   onMoveDown,
+  isSelected,
+  onToggleSelect,
 }: {
   item: BudgetItem;
   projectId: string;
@@ -481,6 +534,8 @@ function BudgetRow({
   canMoveDown: boolean;
   onMoveUp: () => void;
   onMoveDown: () => void;
+  isSelected: boolean;
+  onToggleSelect: () => void;
 }) {
   const updateItem = useUpdateBudgetItem(projectId);
   const deleteItem = useDeleteBudgetItem(projectId);
@@ -504,6 +559,7 @@ function BudgetRow({
       className={cn(
         "group border-l-2 transition-colors",
         PHASE_BORDER_COLORS[item.phase] ?? "border-l-zinc-300",
+        isSelected && "bg-primary/5",
         item.completed
           ? "bg-emerald-50/40 dark:bg-emerald-950/10"
           : "hover:bg-muted/30",
@@ -517,7 +573,16 @@ function BudgetRow({
         />
       </TableCell>
       <TableCell className="px-1">
-        {/* Completed toggle + reorder */}
+        {/* Selection checkbox */}
+        <Checkbox
+          checked={isSelected}
+          onCheckedChange={onToggleSelect}
+          aria-label="Vybrat položku"
+          className="opacity-0 transition-opacity group-hover:opacity-100 data-[state=checked]:opacity-100"
+        />
+      </TableCell>
+      <TableCell className="px-1">
+        {/* Completed toggle */}
         <div className="flex flex-col items-center gap-0.5">
           <button
             onClick={() => update("completed", !item.completed)}

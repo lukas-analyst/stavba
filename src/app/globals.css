@@ -157,3 +157,52 @@
     transition: color 200ms ease;
   }
 }
+
+/* Print styles for report generation */
+@media print {
+  /* Hide non-essential UI elements */
+  aside,
+  nav,
+  button,
+  .no-print,
+  [aria-label="Notifications"] {
+    display: none !important;
+  }
+
+  /* Reset layout for print */
+  main {
+    overflow: visible !important;
+  }
+
+  body {
+    background: white !important;
+    color: black !important;
+  }
+
+  /* Ensure cards have borders for print */
+  .border,
+  [class*="border-"] {
+    border-color: #ccc !important;
+  }
+
+  /* Force light theme colors */
+  .dark {
+    --background: white;
+    --foreground: black;
+    --card: white;
+    --card-foreground: black;
+    --muted: #f5f5f5;
+    --muted-foreground: #666;
+    --border: #ccc;
+  }
+
+  /* Page breaks */
+  .print-break-before {
+    break-before: page;
+  }
+
+  /* Avoid breaking inside cards */
+  [data-print-card] {
+    break-inside: avoid;
+  }
+}

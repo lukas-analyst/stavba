@@ -281,3 +281,41 @@ Unresolved issues / Next steps:
 - Google Sheets přímá integrace zatím neimplementována (CSV export + JSON import/export slouží jako most)
 - Supabase Auth ještě neaktivní (utility jsou passthrough)
 - Pro budoucí fázi: drag-and-drop reorder (dnd-kit), PDF export faktur, e-mail notifikace na termíny, AI asistent pro optimalizaci rozpočtu, fotogalerie dokumentace
+
+---
+Task ID: 14
+Agent: Cron review asistent (Z.ai Code) - pátá revize
+Task: QA testování, stylingová vylepšení (print CSS), nové funkce (tiskový report, hromadné akce v rozpočtu)
+
+Work Log:
+- Přečetl worklog, ověřil stabilitu (lint čistý, 0 chyb)
+- QA testování přes agent-browser: všech 7 tabů funguje bez chyb
+- VLM analýza dashboardu: identifikoval oblasti pro zlepšení (tiskový report, hromadné akce)
+- Styling vylepšení:
+  * Print CSS v globals.css: @media print skrývá sidebar/nav/tlačítka, force light theme colors, page breaks, break-inside: avoid pro karty
+  * .no-print třída pro prvky které se nemají tisknout
+- Nové funkce:
+  * Tiskový report: PrintReportDialog komponenta s náhledem reportu (projekt header, shrnutí KPI, rozpad fází, rozpad kategorií, upozornění)
+    - Tlačítko "Report" v project header (vedle Upravit)
+    - "Tisk / Uložit jako PDF" button volá window.print() s print CSS styly
+    - Report obsahuje: název/adresa/popis projektu, datum vygenerování, Zahájení/Dokončení, 6 KPI (plán, skutečnost, zbývá, ušetřeno, hotovo, hodiny), tabulka fází (plán/skut/%/hodiny), tabulka kategorií (top 15), upozornění (zpožděné/blížící se/překročené)
+  * Hromadné akce v rozpočtu: multi-select checkboxy (appear on hover), bulk action bar (sticky top) s "N vybráno" badge, "Označit jako hotové" button, "Zrušit výběr"
+    - selectedIds state v BudgetTab
+    - bulkComplete() aplikuje completed:true na všechny vybrané paralelně
+    - Selection checkbox v BudgetRow (opacity-0 → group-hover:opacity-100)
+- Bug fixy: žádné (aplikace byla stabilní)
+- Lint: prošel bez chyb (0 errors, 0 warnings)
+- Verifikace přes Agent Browser: report dialog (náhled + tisk), budget tab (bulk select) - vše funkční, 0 chyb
+- Report dialog obsahuje: "Report projektu", "Shrnutí rozpočtu", "Tisk / Uložit jako PDF"
+
+Stage Summary:
+- ✅ Aplikace stabilní: 0 runtime chyb, 0 lint chyb
+- ✅ Styling: print CSS pro čistý tiskový výstup, .no-print třída
+- ✅ Nové funkce: tiskový report s náhledem (PDF export přes prohlížeč), hromadné označování položek jako hotové
+- 📊 Dashboard/project header má nyní tlačítko "Report" pro generování PDF reportu
+- ✅ Budget tab má multi-select s bulk action barem
+
+Unresolved issues / Next steps:
+- Google Sheets přímá integrace zatím neimplementována (CSV export + JSON import/export slouží jako most)
+- Supabase Auth ještě neaktivní (utility jsou passthrough)
+- Pro budoucí fázi: drag-and-drop reorder (dnd-kit), e-mail notifikace na termíny, AI asistent pro optimalizaci rozpočtu, fotogalerie dokumentace
