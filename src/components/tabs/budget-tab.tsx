@@ -5,6 +5,8 @@ import {
   useBudgetItems,
   useUpdateBudgetItem,
   useDeleteBudgetItem,
+  useReorder,
+  useProjects,
   type BudgetItem,
 } from "@/lib/api";
 import {
@@ -17,6 +19,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -57,6 +60,12 @@ import {
   Filter,
   Search,
   Loader2,
+  ArrowUp,
+  ArrowDown,
+  CheckCircle2,
+  Circle,
+  PiggyBank,
+  GripVertical,
 } from "lucide-react";
 import {
   formatCzk,
@@ -71,6 +80,9 @@ import { BudgetItemDialog } from "@/components/budget-item-dialog";
 
 export function BudgetTab({ projectId }: { projectId: string }) {
   const { data: items, isLoading } = useBudgetItems(projectId);
+  const { data: projects } = useProjects();
+  const project = projects?.find((p) => p.id === projectId);
+  const reorder = useReorder(projectId);
   const [collapsedCats, setCollapsedCats] = useState<Set<string>>(new Set());
   const [phaseFilter, setPhaseFilter] = useState<string>("all");
   const [search, setSearch] = useState("");
@@ -86,7 +98,18 @@ export function BudgetTab({ projectId }: { projectId: string }) {
     });
   };
 
-  // Group items by category, preserving order
+  // Parse the saved category order (JSON string on the project)
+  const savedCategoryOrder = useMemo(() => {
+    if (!project?.categoryOrder) return [];
+    try {
+      const arr = JSON.parse(project.categoryOrder);
+      return Array.isArray(arr) ? (arr as string[]) : [];
+    } catch {
+      return [];
+    }
+  }, [project?.categoryOrder]);
+
+  // Group items by category, preserving order; respect saved category order
   const grouped = useMemo(() => {
     const filtered = (items ?? []).filter((it) => {
       if (phaseFilter !== "all" && it.phase !== phaseFilter) return false;
@@ -103,17 +126,30 @@ export function BudgetTab({ projectId }: { projectId: string }) {
       arr.push(it);
       groups.set(it.category, arr);
     }
-    return Array.from(groups.entries());
-  }, [items, phaseFilter, search]);
+    // Sort categories by saved order; unknown categories go last (alphabetical)
+    const entries = Array.from(groups.entries());
+    entries.sort((a, b) => {
+      const ia = savedCategoryOrder.indexOf(a[0]);
+      const ib = savedCategoryOrder.indexOf(b[0]);
+      if (ia === -1 && ib === -1) return a[0].localeCompare(b[0]);
+      if (ia === -1) return 1;
+      if (ib === -1) return -1;
+      return ia - ib;
+    });
+    return entries;
+  }, [items, phaseFilter, search, savedCategoryOrder]);
 
   // Category totals
   const categoryTotals = useMemo(() => {
-    const map = new Map<string, { plan: number; actual: number; count: number }>();
+    const map = new Map<string, { plan: number; actual: number; count: number; saved: number }>();
     for (const it of items ?? []) {
-      const cur = map.get(it.category) ?? { plan: 0, actual: 0, count: 0 };
+      const cur = map.get(it.category) ?? { plan: 0, actual: 0, count: 0, saved: 0 };
       cur.plan += it.planCost || 0;
       cur.actual += it.actualCost || 0;
       cur.count += 1;
+      if (it.completed) {
+        cur.saved += Math.max(0, (it.planCost || 0) - (it.actualCost || 0));
+      }
       map.set(it.category, cur);
     }
     return map;
@@ -121,6 +157,37 @@ export function BudgetTab({ projectId }: { projectId: string }) {
 
   const grandPlan = (items ?? []).reduce((s, i) => s + (i.planCost || 0), 0);
   const grandActual = (items ?? []).reduce((s, i) => s + (i.actualCost || 0), 0);
+  const grandSaved = (items ?? [])
+    .filter((i) => i.completed)
+    .reduce((s, i) => s + Math.max(0, (i.planCost || 0) - (i.actualCost || 0)), 0);
+  const completedCount = (items ?? []).filter((i) => i.completed).length;
+
+  // ===== Reorder handlers =====
+  const moveItem = (catItems: BudgetItem[], currentIndex: number, direction: -1 | 1) => {
+    const targetIndex = currentIndex + direction;
+    if (targetIndex < 0 || targetIndex >= catItems.length) return;
+    // Swap sortOrder values with the neighbor
+    const a = catItems[currentIndex];
+    const b = catItems[targetIndex];
+    const newItems = [
+      ...catItems.map((it) => ({ id: it.id, sortOrder: it.sortOrder })),
+    ];
+    newItems[currentIndex].sortOrder = b.sortOrder;
+    newItems[targetIndex].sortOrder = a.sortOrder;
+    reorder.mutate({ items: newItems });
+  };
+
+  const moveCategory = (category: string, direction: -1 | 1) => {
+    const currentCats = grouped.map(([c]) => c);
+    // Build full category order including any not currently visible
+    const allCats = Array.from(new Set([...savedCategoryOrder, ...currentCats]));
+    const idx = allCats.indexOf(category);
+    const target = idx + direction;
+    if (target < 0 || target >= allCats.length) return;
+    const reordered = [...allCats];
+    [reordered[idx], reordered[target]] = [reordered[target], reordered[idx]];
+    reorder.mutate({ categoryOrder: reordered });
+  };
 
   if (isLoading) {
     return (
@@ -160,11 +227,11 @@ export function BudgetTab({ projectId }: { projectId: string }) {
         </Select>
         <div className="ml-auto flex items-center gap-3 text-sm">
           <div className="text-right">
-            <div className="text-xs text-muted-foreground">Celkem plán</div>
+            <div className="text-xs text-muted-foreground">Plán</div>
             <div className="font-bold">{formatCzk(grandPlan)}</div>
           </div>
           <div className="text-right">
-            <div className="text-xs text-muted-foreground">Celkem skutečnost</div>
+            <div className="text-xs text-muted-foreground">Skutečnost</div>
             <div className="font-bold text-amber-600">{formatCzk(grandActual)}</div>
           </div>
           <div className="text-right">
@@ -172,6 +239,16 @@ export function BudgetTab({ projectId }: { projectId: string }) {
             <div className={cn("font-bold", grandPlan - grandActual < 0 ? "text-rose-600" : "text-emerald-600")}>
               {formatCzk(grandPlan - grandActual)}
             </div>
+          </div>
+          <div className="text-right">
+            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+              <PiggyBank className="h-3 w-3" /> Ušetřeno
+            </div>
+            <div className="font-bold text-emerald-600">{formatCzk(grandSaved)}</div>
+          </div>
+          <div className="text-right">
+            <div className="text-xs text-muted-foreground">Hotovo</div>
+            <div className="font-bold">{completedCount}/{items?.length ?? 0}</div>
           </div>
           <Button size="sm" onClick={() => setAddOpen(true)}>
             <Plus className="mr-1 h-4 w-4" /> Přidat položku
@@ -186,7 +263,7 @@ export function BudgetTab({ projectId }: { projectId: string }) {
             Žádné položky neodpovídají filtru.
           </div>
         )}
-        {grouped.map(([category, catItems]) => {
+        {grouped.map(([category, catItems], groupIndex) => {
           const collapsed = collapsedCats.has(category);
           const totals = categoryTotals.get(category)!;
           const burn = totals.plan > 0 ? (totals.actual / totals.plan) * 100 : 0;
@@ -198,7 +275,7 @@ export function BudgetTab({ projectId }: { projectId: string }) {
               className="rounded-lg border bg-card"
             >
               <CollapsibleTrigger asChild>
-                <button className="flex w-full items-center gap-2 px-4 py-2.5 text-left hover:bg-muted/50">
+                <button className="group flex w-full items-center gap-2 px-4 py-2.5 text-left hover:bg-muted/50">
                   {collapsed ? (
                     <ChevronRight className="h-4 w-4" />
                   ) : (
@@ -208,6 +285,12 @@ export function BudgetTab({ projectId }: { projectId: string }) {
                   <Badge variant="secondary" className="text-[10px]">
                     {totals.count}
                   </Badge>
+                  {totals.saved > 0 && (
+                    <Badge variant="outline" className="text-[10px] text-emerald-700">
+                      <PiggyBank className="mr-1 h-2.5 w-2.5" />
+                      {formatCzk(totals.saved)}
+                    </Badge>
+                  )}
                   <div className="ml-auto flex items-center gap-4 text-xs">
                     <span className="text-muted-foreground">
                       {formatCzk(totals.actual)} / {formatCzk(totals.plan)}
@@ -230,6 +313,51 @@ export function BudgetTab({ projectId }: { projectId: string }) {
                       {burn.toFixed(0)}%
                     </span>
                   </div>
+                  {/* Category reorder arrows */}
+                  <span className="ml-1 flex flex-col">
+                    <span
+                      role="button"
+                      tabIndex={0}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        moveCategory(category, -1);
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.stopPropagation();
+                          moveCategory(category, -1);
+                        }
+                      }}
+                      className={cn(
+                        "flex h-3.5 w-3.5 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground",
+                        groupIndex === 0 && "pointer-events-none opacity-30",
+                      )}
+                      aria-label="Přesunout kategorii nahoru"
+                    >
+                      <ArrowUp className="h-3 w-3" />
+                    </span>
+                    <span
+                      role="button"
+                      tabIndex={0}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        moveCategory(category, 1);
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.stopPropagation();
+                          moveCategory(category, 1);
+                        }
+                      }}
+                      className={cn(
+                        "flex h-3.5 w-3.5 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground",
+                        groupIndex === grouped.length - 1 && "pointer-events-none opacity-30",
+                      )}
+                      aria-label="Přesunout kategorii dolů"
+                    >
+                      <ArrowDown className="h-3 w-3" />
+                    </span>
+                  </span>
                 </button>
               </CollapsibleTrigger>
               <CollapsibleContent>
@@ -237,6 +365,7 @@ export function BudgetTab({ projectId }: { projectId: string }) {
                   <Table>
                     <TableHeader>
                       <TableRow className="bg-muted/40 hover:bg-muted/40">
+                        <TableHead className="w-8"></TableHead>
                         <TableHead className="w-8"></TableHead>
                         <TableHead className="min-w-[180px]">Položka</TableHead>
                         <TableHead className="w-28">Fáze</TableHead>
@@ -247,17 +376,22 @@ export function BudgetTab({ projectId }: { projectId: string }) {
                         <TableHead className="w-28">Datum od</TableHead>
                         <TableHead className="w-28">Datum do</TableHead>
                         <TableHead className="w-28 text-right">Skut. (Kč)</TableHead>
+                        <TableHead className="w-24 text-right">Ušetřeno</TableHead>
                         <TableHead className="w-20 text-right">Hod.</TableHead>
                         <TableHead className="w-8"></TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {catItems.map((item) => (
+                      {catItems.map((item, idx) => (
                         <BudgetRow
                           key={item.id}
                           item={item}
                           projectId={projectId}
                           onEdit={() => setEditingItem(item)}
+                          canMoveUp={idx > 0}
+                          canMoveDown={idx < catItems.length - 1}
+                          onMoveUp={() => moveItem(catItems, idx, -1)}
+                          onMoveDown={() => moveItem(catItems, idx, 1)}
                         />
                       ))}
                     </TableBody>
@@ -288,24 +422,37 @@ function BudgetRow({
   item,
   projectId,
   onEdit,
+  canMoveUp,
+  canMoveDown,
+  onMoveUp,
+  onMoveDown,
 }: {
   item: BudgetItem;
   projectId: string;
   onEdit: () => void;
+  canMoveUp: boolean;
+  canMoveDown: boolean;
+  onMoveUp: () => void;
+  onMoveDown: () => void;
 }) {
   const updateItem = useUpdateBudgetItem(projectId);
   const deleteItem = useDeleteBudgetItem(projectId);
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   const overBudget = item.planCost && item.actualCost > item.planCost;
-  const burn = item.planCost ? (item.actualCost / item.planCost) * 100 : 0;
+  const saved = item.completed
+    ? Math.max(0, (item.planCost || 0) - (item.actualCost || 0))
+    : null;
+  const overSaved = item.completed && item.planCost
+    ? (item.actualCost || 0) - (item.planCost || 0)
+    : 0;
 
   const update = (field: keyof BudgetItem, value: unknown) => {
     updateItem.mutate({ id: item.id, data: { [field]: value } });
   };
 
   return (
-    <TableRow className="group">
+    <TableRow className={cn("group", item.completed && "bg-emerald-50/40 dark:bg-emerald-950/10")}>
       <TableCell className="px-2">
         <Checkbox
           checked={item.required}
@@ -313,14 +460,46 @@ function BudgetRow({
           aria-label="Nutné"
         />
       </TableCell>
+      <TableCell className="px-1">
+        {/* Completed toggle + reorder */}
+        <div className="flex flex-col items-center gap-0.5">
+          <button
+            onClick={() => update("completed", !item.completed)}
+            className={cn(
+              "rounded p-0.5 transition-colors",
+              item.completed
+                ? "text-emerald-600 hover:text-emerald-700"
+                : "text-muted-foreground/40 hover:text-emerald-600",
+            )}
+            title={item.completed ? "Označit jako nedokončené" : "Označit jako hotové"}
+            aria-label={item.completed ? "Hotovo" : "Označit jako hotovo"}
+          >
+            {item.completed ? (
+              <CheckCircle2 className="h-4 w-4" />
+            ) : (
+              <Circle className="h-4 w-4" />
+            )}
+          </button>
+        </div>
+      </TableCell>
       <TableCell>
         <div className="flex flex-col">
-          <button
-            onClick={onEdit}
-            className="text-left text-sm font-medium hover:underline"
-          >
-            {item.subcategory || "(bez názvu)"}
-          </button>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={onEdit}
+              className={cn(
+                "text-left text-sm font-medium hover:underline",
+                item.completed && "line-through decoration-emerald-500/50",
+              )}
+            >
+              {item.subcategory || "(bez názvu)"}
+            </button>
+            {item.completed && (
+              <Badge variant="outline" className="h-4 px-1 text-[9px] text-emerald-700">
+                Hotovo
+              </Badge>
+            )}
+          </div>
           {item.element && (
             <span className="text-[11px] text-muted-foreground">
               {item.element}
@@ -419,32 +598,80 @@ function BudgetRow({
           </span>
         )}
       </TableCell>
+      <TableCell className="text-right text-[11px]">
+        {item.completed ? (
+          saved !== null && saved > 0 ? (
+            <span className="font-medium text-emerald-600" title="Ušetřeno od plánu">
+              {formatCzk(saved)}
+            </span>
+          ) : overSaved > 0 ? (
+            <span className="font-medium text-rose-600" title="Překročeno oproti plánu">
+              −{formatCzk(overSaved)}
+            </span>
+          ) : (
+            <span className="text-muted-foreground">0 Kč</span>
+          )
+        ) : (
+          <span className="text-muted-foreground/40" title="Označte jako hotové pro výpočet">
+            —
+          </span>
+        )}
+      </TableCell>
       <TableCell className="text-right text-[11px] text-violet-600">
         {item.actualHours > 0 ? formatNumber(item.actualHours, " h") : "—"}
       </TableCell>
       <TableCell>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-7 w-7 opacity-0 group-hover:opacity-100"
+        <div className="flex items-center">
+          <span className="flex flex-col">
+            <button
+              onClick={onMoveUp}
+              disabled={!canMoveUp}
+              className={cn(
+                "flex h-3.5 w-3.5 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground disabled:pointer-events-none disabled:opacity-20",
+              )}
+              aria-label="Přesunout nahoru"
             >
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={onEdit}>
-              Upravit detail
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              className="text-destructive focus:text-destructive"
-              onClick={() => setConfirmDelete(true)}
+              <ArrowUp className="h-3 w-3" />
+            </button>
+            <button
+              onClick={onMoveDown}
+              disabled={!canMoveDown}
+              className={cn(
+                "flex h-3.5 w-3.5 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground disabled:pointer-events-none disabled:opacity-20",
+              )}
+              aria-label="Přesunout dolů"
             >
-              <Trash2 className="mr-2 h-3.5 w-3.5" /> Smazat
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+              <ArrowDown className="h-3 w-3" />
+            </button>
+          </span>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 opacity-0 group-hover:opacity-100"
+              >
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={onEdit}>
+                Upravit detail
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => update("completed", !item.completed)}
+              >
+                {item.completed ? "Označit jako nedokončené" : "Označit jako hotové"}
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className="text-destructive focus:text-destructive"
+                onClick={() => setConfirmDelete(true)}
+              >
+                <Trash2 className="mr-2 h-3.5 w-3.5" /> Smazat
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
         <Dialog open={confirmDelete} onOpenChange={setConfirmDelete}>
           <DialogContent className="max-w-sm">
             <DialogHeader>
@@ -532,9 +759,7 @@ function InlineNumber({
       {value === null || value === undefined ? (
         <span className="text-muted-foreground/50">—</span>
       ) : (
-        <>
-          {formatNumber(value, suffix ?? "")}
-        </>
+        <>{formatNumber(value, suffix ?? "")}</>
       )}
     </button>
   );

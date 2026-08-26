@@ -22,6 +22,14 @@ export async function PATCH(
           body.budgetItemId !== undefined ? body.budgetItemId : undefined,
         contactId: body.contactId !== undefined ? body.contactId || null : undefined,
         amount: body.amount !== undefined ? Number(body.amount) : undefined,
+        invoiceTotal:
+          body.invoiceTotal !== undefined
+            ? body.invoiceTotal === null || body.invoiceTotal === ""
+              ? null
+              : Number(body.invoiceTotal)
+            : undefined,
+        installmentOf:
+          body.installmentOf !== undefined ? body.installmentOf || null : undefined,
         date: body.date !== undefined ? (body.date ? new Date(body.date) : new Date()) : undefined,
         type: body.type !== undefined ? body.type : undefined,
         vendor: body.vendor !== undefined ? (body.vendor?.trim() || null) : undefined,

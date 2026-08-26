@@ -14,6 +14,7 @@ export type Project = {
   totalBudget: number;
   startDate: string | null;
   endDate: string | null;
+  categoryOrder: string | null;
   createdAt: string;
   updatedAt: string;
   _count?: { budgetItems: number; contacts: number };
@@ -36,6 +37,7 @@ export type BudgetItem = {
   element: string | null;
   phase: string;
   required: boolean;
+  completed: boolean;
   note: string | null;
   unitPrice: string | null;
   planCost: number | null;
@@ -68,6 +70,8 @@ export type Payment = {
   budgetItemId: string;
   contactId: string | null;
   amount: number;
+  invoiceTotal: number | null;
+  installmentOf: string | null;
   date: string;
   type: string;
   vendor: string | null;
@@ -84,6 +88,7 @@ export type TimeEntry = {
   workerName: string;
   workerType: string;
   date: string;
+  dateTo: string | null;
   hours: number;
   description: string | null;
   budgetItem?: { id: string; category: string; subcategory: string | null };
@@ -103,6 +108,8 @@ export type Dashboard = {
     daysPlanned: number;
     itemCount: number;
     requiredCount: number;
+    completedCount: number;
+    savedTotal: number;
   };
   byPhase: { phase: string; plan: number; actual: number; hours: number; count: number }[];
   byCategory: { category: string; plan: number; actual: number; hours: number; count: number }[];
@@ -123,6 +130,7 @@ export type Dashboard = {
     actualCost: number;
     planDays: number | null;
     required: boolean;
+    completed: boolean;
   }[];
   recent: {
     payments: Payment[];
@@ -252,6 +260,79 @@ export function useDeleteBudgetItem(projectId: string) {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["budget", projectId] });
       qc.invalidateQueries({ queryKey: ["dashboard", projectId] });
+    },
+  });
+}
+
+// Reorder items and/or categories
+export function useReorder(projectId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: {
+      items?: { id: string; sortOrder: number }[];
+      categoryOrder?: string[];
+    }) => {
+      const res = await fetch(`/api/projects/${projectId}/reorder`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) throw new Error("Failed to reorder");
+      return res.json();
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["budget", projectId] });
+      qc.invalidateQueries({ queryKey: ["projects"] });
+      qc.invalidateQueries({ queryKey: ["dashboard", projectId] });
+    },
+  });
+}
+
+// ===== Export / Import =====
+export function useExportState() {
+  return useMutation({
+    mutationFn: async () => {
+      const res = await fetch("/api/export");
+      if (!res.ok) throw new Error("Failed to export");
+      const blob = await res.blob();
+      // Try to get filename from Content-Disposition
+      const cd = res.headers.get("content-disposition") || "";
+      const match = cd.match(/filename="?([^"]+)"?/);
+      const filename =
+        match?.[1] ?? `stavba-export-${new Date().toISOString().substring(0, 10)}.json`;
+      // Trigger download
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      return { filename };
+    },
+  });
+}
+
+export function useImportState() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (file: File) => {
+      const text = await file.text();
+      const json = JSON.parse(text);
+      const res = await fetch("/api/import", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(json),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || "Failed to import");
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      qc.invalidateQueries();
     },
   });
 }

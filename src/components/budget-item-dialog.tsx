@@ -83,6 +83,7 @@ function BudgetItemForm({
   const [element, setElement] = useState(item?.element ?? "");
   const [phase, setPhase] = useState(item?.phase ?? "Neurčeno");
   const [required, setRequired] = useState(item?.required ?? false);
+  const [completed, setCompleted] = useState(item?.completed ?? false);
   const [note, setNote] = useState(item?.note ?? "");
   const [planCost, setPlanCost] = useState(item?.planCost?.toString() ?? "");
   const [flexibility, setFlexibility] = useState(
@@ -110,6 +111,7 @@ function BudgetItemForm({
         element,
         phase,
         required,
+        completed,
         note,
         planCost: planCost === "" ? null : Number(planCost.replace(",", ".")),
         flexibilityPercent:
@@ -203,7 +205,7 @@ function BudgetItemForm({
               </SelectContent>
             </Select>
           </div>
-          <div className="flex items-end pb-2">
+          <div className="flex flex-col justify-end gap-2 pb-2">
             <div className="flex items-center gap-2">
               <Checkbox
                 id="required"
@@ -211,7 +213,17 @@ function BudgetItemForm({
                 onCheckedChange={(v) => setRequired(v === true)}
               />
               <Label htmlFor="required" className="cursor-pointer">
-                Nutné (nezbytné pro rekonstrukci)
+                Nutné
+              </Label>
+            </div>
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id="completed"
+                checked={completed}
+                onCheckedChange={(v) => setCompleted(v === true)}
+              />
+              <Label htmlFor="completed" className="cursor-pointer">
+                Hotovo
               </Label>
             </div>
           </div>

@@ -23,6 +23,12 @@ export async function PATCH(
         workerName: body.workerName !== undefined ? String(body.workerName).trim() : undefined,
         workerType: body.workerType !== undefined ? body.workerType : undefined,
         date: body.date !== undefined ? (body.date ? new Date(body.date) : new Date()) : undefined,
+        dateTo:
+          body.dateTo !== undefined
+            ? body.dateTo
+              ? new Date(body.dateTo)
+              : null
+            : undefined,
         hours: body.hours !== undefined ? Number(body.hours) : undefined,
         description: body.description !== undefined ? (body.description?.trim() || null) : undefined,
       },

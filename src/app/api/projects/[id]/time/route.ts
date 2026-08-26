@@ -31,7 +31,7 @@ export async function POST(
   try {
     const { id } = await params;
     const body = await request.json();
-    const { budgetItemId, contactId, workerName, workerType, date, hours, description } = body;
+    const { budgetItemId, contactId, workerName, workerType, date, dateTo, hours, description } = body;
 
     if (!budgetItemId) {
       return NextResponse.json({ error: "budgetItemId is required" }, { status: 400 });
@@ -47,13 +47,24 @@ export async function POST(
       return NextResponse.json({ error: "Budget item not found in this project" }, { status: 404 });
     }
 
+    // Validate dateTo >= date if provided
+    const startDate = date ? new Date(date) : new Date();
+    let endDate: Date | null = null;
+    if (dateTo) {
+      endDate = new Date(dateTo);
+      if (endDate < startDate) {
+        return NextResponse.json({ error: "dateTo must be on or after date" }, { status: 400 });
+      }
+    }
+
     const entry = await db.timeEntry.create({
       data: {
         budgetItemId,
         contactId: contactId || null,
         workerName: (workerName || "Neznámý").trim(),
         workerType: workerType || "self",
-        date: date ? new Date(date) : new Date(),
+        date: startDate,
+        dateTo: endDate,
         hours: Number(hours),
         description: description?.trim() || null,
       },

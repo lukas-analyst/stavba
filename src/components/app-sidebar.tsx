@@ -1,13 +1,14 @@
 "use client";
 
-import { Star, Plus, Home, Trash2, Loader2, Building2 } from "lucide-react";
-import { useProjects, useDeleteProject } from "@/lib/api";
+import { Star, Plus, Home, Trash2, Loader2, Building2, Download, Upload } from "lucide-react";
+import { useProjects, useDeleteProject, useUpdateProject, useExportState, useImportState } from "@/lib/api";
+import { useQueryClient } from "@tanstack/react-query";
 import { useAppStore } from "@/lib/store";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { formatCzk } from "@/lib/format";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { ProjectDialog } from "@/components/project-dialog";
 import {
   AlertDialog,
@@ -29,12 +30,30 @@ const STATUS_LABELS: Record<string, { label: string; color: string }> = {
 };
 
 export function AppSidebar() {
+  const qc = useQueryClient();
   const { data: projects, isLoading } = useProjects();
   const deleteProject = useDeleteProject();
+  const exportState = useExportState();
+  const importState = useImportState();
   const selectedProjectId = useAppStore((s) => s.selectedProjectId);
   const setSelectedProject = useAppStore((s) => s.setSelectedProject);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const toggleStar = async (projectId: string, starred: boolean) => {
+    // optimistic: directly call API then refetch
+    try {
+      await fetch(`/api/projects/${projectId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ starred }),
+      });
+      qc.invalidateQueries({ queryKey: ["projects"] });
+    } catch {
+      toast.error("Nepodařilo se upravit hvězdičku");
+    }
+  };
 
   const sortedProjects = [...(projects ?? [])].sort((a, b) => {
     if (a.starred !== b.starred) return a.starred ? -1 : 1;
@@ -42,6 +61,17 @@ export function AppSidebar() {
   });
 
   const projectToDelete = projects?.find((p) => p.id === deleteId);
+
+  const handleImport = async (file: File) => {
+    try {
+      const result = await importState.mutateAsync(file);
+      toast.success(
+        `Import hotový: ${result.projects ?? 0} projektů, ${result.budgetItems ?? 0} položek, ${result.payments ?? 0} plateb`,
+      );
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Import selhal");
+    }
+  };
 
   return (
     <aside className="flex w-80 flex-col border-r bg-sidebar text-sidebar-foreground">
@@ -51,7 +81,7 @@ export function AppSidebar() {
           <Home className="h-5 w-5" />
         </div>
         <div className="flex-1">
-          <h1 className="text-base font-bold leading-tight">RekonstrukcePro</h1>
+          <h1 className="text-base font-bold leading-tight">Stavba</h1>
           <p className="text-[11px] text-muted-foreground leading-tight">
             Rozpočet · Čas · Materiál
           </p>
@@ -112,9 +142,24 @@ export function AppSidebar() {
                           <span className="truncate text-sm font-semibold">
                             {p.name}
                           </span>
-                          {p.starred && (
-                            <Star className="h-3.5 w-3.5 shrink-0 fill-amber-400 text-amber-400" />
-                          )}
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleStar(p.id, !p.starred);
+                            }}
+                            className="rounded p-0.5 hover:bg-muted"
+                            aria-label={p.starred ? "Odebrat hvězdičku" : "Ohvězdičkovat"}
+                          >
+                            <Star
+                              className={cn(
+                                "h-3.5 w-3.5 shrink-0 transition-colors",
+                                p.starred
+                                  ? "fill-amber-400 text-amber-400"
+                                  : "text-muted-foreground/40 hover:text-amber-400",
+                              )}
+                            />
+                          </button>
                         </div>
                         {p.address && (
                           <p className="truncate text-[11px] text-muted-foreground">
@@ -181,13 +226,50 @@ export function AppSidebar() {
         )}
       </div>
 
-      {/* Footer */}
-      <div className="border-t px-4 py-3 text-[11px] text-muted-foreground">
-        <p className="flex items-center gap-1">
-          <span className="inline-block h-2 w-2 rounded-full bg-emerald-500" />
-          Data uložena lokálně (SQLite)
+      {/* Footer with Export/Import */}
+      <div className="border-t px-3 py-3">
+        <div className="flex gap-1.5">
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-7 flex-1 text-xs"
+            disabled={exportState.isPending || (projects?.length ?? 0) === 0}
+            onClick={async () => {
+              try {
+                await exportState.mutateAsync();
+                toast.success("Stav exportován");
+              } catch {
+                toast.error("Export selhal");
+              }
+            }}
+          >
+            <Download className="mr-1.5 h-3.5 w-3.5" /> Export
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-7 flex-1 text-xs"
+            disabled={importState.isPending}
+            onClick={() => fileInputRef.current?.click()}
+          >
+            <Upload className="mr-1.5 h-3.5 w-3.5" /> Import
+          </Button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="application/json,.json"
+            className="hidden"
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (f) handleImport(f);
+              e.target.value = "";
+            }}
+          />
+        </div>
+        <p className="mt-2 flex items-center gap-1 text-[10px] text-muted-foreground">
+          <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500" />
+          Data uložena lokálně · připraveno pro PostgreSQL
         </p>
-        <p className="mt-1">Připraveno pro Google Sheets / PostgreSQL migraci</p>
       </div>
 
       <ProjectDialog open={dialogOpen} onOpenChange={setDialogOpen} />

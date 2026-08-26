@@ -226,7 +226,14 @@ function TimeRow({
   return (
     <TableRow className="group">
       <TableCell className="whitespace-nowrap text-xs text-muted-foreground">
-        {formatDate(entry.date)}
+        <div className="flex flex-col">
+          <span>{formatDate(entry.date)}</span>
+          {entry.dateTo && (
+            <span className="text-[10px] text-violet-600">
+              → {formatDate(entry.dateTo)}
+            </span>
+          )}
+        </div>
       </TableCell>
       <TableCell>
         <div className="flex items-center gap-1.5">
@@ -314,8 +321,22 @@ function TimeDialog({
   const [workerName, setWorkerName] = useState("");
   const [workerType, setWorkerType] = useState("self");
   const [date, setDate] = useState(new Date().toISOString().substring(0, 10));
+  const [dateTo, setDateTo] = useState("");
   const [hours, setHours] = useState("");
   const [description, setDescription] = useState("");
+
+  // Compute day span for display
+  const daySpan = useMemo(() => {
+    if (!dateTo) return 1;
+    const a = new Date(date);
+    const b = new Date(dateTo);
+    if (isNaN(b.getTime())) return 1;
+    const diff = Math.floor((b.getTime() - a.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+    return diff > 0 ? diff : 1;
+  }, [date, dateTo]);
+  const hoursPerDay = hours
+    ? (Number(hours.replace(",", ".")) / daySpan).toFixed(1)
+    : null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -339,6 +360,7 @@ function TimeDialog({
         workerName,
         workerType,
         date,
+        dateTo: dateTo || null,
         hours: h,
         description,
       });
@@ -349,6 +371,7 @@ function TimeDialog({
       setHours("");
       setDescription("");
       setWorkerType("self");
+      setDateTo("");
       onOpenChange(false);
     } catch {
       toast.error("Nepodařilo se zaznamenat čas");
@@ -416,18 +439,23 @@ function TimeDialog({
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
-              <Label htmlFor="hours">Hodiny *</Label>
+              <Label htmlFor="hours">Hodiny celkem *</Label>
               <Input
                 id="hours"
                 value={hours}
                 onChange={(e) => setHours(e.target.value)}
-                placeholder="8"
+                placeholder="40"
                 inputMode="decimal"
                 required
               />
+              {daySpan > 1 && hoursPerDay && (
+                <p className="text-[11px] text-muted-foreground">
+                  ≈ {hoursPerDay} h/den × {daySpan} dní
+                </p>
+              )}
             </div>
             <div className="space-y-2">
-              <Label htmlFor="date">Datum *</Label>
+              <Label htmlFor="date">Datum od *</Label>
               <Input
                 id="date"
                 type="date"
@@ -437,20 +465,38 @@ function TimeDialog({
               />
             </div>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="contact">Přiřadit kontakt (volitelné)</Label>
-            <Select value={contactId} onValueChange={setContactId}>
-              <SelectTrigger id="contact">
-                <SelectValue placeholder="Bez kontaktu" />
-              </SelectTrigger>
-              <SelectContent className="max-h-60">
-                {contacts.map((c) => (
-                  <SelectItem key={c.id} value={c.id}>
-                    {c.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-2">
+              <Label htmlFor="dateTo">Datum do (vícedenní)</Label>
+              <Input
+                id="dateTo"
+                type="date"
+                value={dateTo}
+                min={date}
+                onChange={(e) => setDateTo(e.target.value)}
+                placeholder="(volitelné)"
+              />
+              {dateTo && (
+                <p className="text-[11px] text-muted-foreground">
+                  Práce trvá {daySpan} {daySpan === 1 ? "den" : daySpan < 5 ? "dny" : "dní"}
+                </p>
+              )}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="contact">Kontakt (volitelné)</Label>
+              <Select value={contactId} onValueChange={setContactId}>
+                <SelectTrigger id="contact">
+                  <SelectValue placeholder="Bez kontaktu" />
+                </SelectTrigger>
+                <SelectContent className="max-h-60">
+                  {contacts.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>
+                      {c.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
           <div className="space-y-2">
             <Label htmlFor="description">Popis práce</Label>

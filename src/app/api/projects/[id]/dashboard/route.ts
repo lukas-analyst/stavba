@@ -30,6 +30,13 @@ export async function GET(
     const hoursTotal = items.reduce((s, i) => s + (i.actualHours || 0), 0);
     const daysPlanned = items.reduce((s, i) => s + (i.planDays || 0), 0);
 
+    // "Ušetřeno" — saved vs plan, only counted for completed items where actual < plan
+    const completedItems = items.filter((i) => i.completed);
+    const savedTotal = completedItems.reduce(
+      (s, i) => s + Math.max(0, (i.planCost || 0) - (i.actualCost || 0)),
+      0,
+    );
+
     // Flexibility-adjusted estimate: plan * (1 + flexibility/100)
     // The "vůle" represents how much the price could swing up.
     const worstCase = items.reduce(
@@ -115,6 +122,7 @@ export async function GET(
         actualCost: it.actualCost,
         planDays: it.planDays,
         required: it.required,
+        completed: it.completed,
       }))
       .sort((a, b) => {
         const ad = a.dateFrom?.getTime() ?? 0;
@@ -153,6 +161,8 @@ export async function GET(
         daysPlanned,
         itemCount: items.length,
         requiredCount: items.filter((i) => i.required).length,
+        completedCount: completedItems.length,
+        savedTotal,
       },
       byPhase: Array.from(byPhase.entries()).map(([phase, v]) => ({ phase, ...v })),
       byCategory: Array.from(byCategory.entries())

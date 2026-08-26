@@ -26,6 +26,7 @@ export async function PATCH(
         element: body.element !== undefined ? (body.element?.trim() || null) : undefined,
         phase: body.phase !== undefined ? body.phase : undefined,
         required: body.required !== undefined ? Boolean(body.required) : undefined,
+        completed: body.completed !== undefined ? Boolean(body.completed) : undefined,
         note: body.note !== undefined ? (body.note?.trim() || null) : undefined,
         unitPrice: body.unitPrice !== undefined ? (body.unitPrice?.trim() || null) : undefined,
         planCost: body.planCost !== undefined ? numOrUndef(body.planCost) : undefined,

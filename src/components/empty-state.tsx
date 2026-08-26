@@ -13,10 +13,10 @@ export function EmptyState() {
         <Home className="h-10 w-10" />
       </div>
       <div className="space-y-2">
-        <h2 className="text-2xl font-bold">Vítejte v RekonstrukcePro</h2>
+        <h2 className="text-2xl font-bold">Vítejte v aplikaci Stavba</h2>
         <p className="max-w-md text-muted-foreground">
           Vyberte projekt z postranního panelu, nebo vytvořte nový projekt pro
-          sledování rozpočtu, nákladů, času a materiálu rekonstrukce.
+          sledování rozpočtu, nákladů, času a materiálu stavby a rekonstrukce.
         </p>
       </div>
       <Button size="lg" onClick={() => setOpen(true)}>

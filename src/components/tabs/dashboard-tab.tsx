@@ -27,6 +27,8 @@ import {
   Timer,
   ArrowRight,
   CircleAlert,
+  PiggyBank,
+  CheckCircle2,
 } from "lucide-react";
 import { formatCzk, formatNumber, formatDate, PHASE_COLORS } from "@/lib/format";
 import { useAppStore } from "@/lib/store";
@@ -82,7 +84,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
   return (
     <div className="space-y-6">
       {/* KPI cards */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         <Card className="border-emerald-200/60 bg-gradient-to-br from-emerald-50 to-white dark:border-emerald-900/40 dark:from-emerald-950/30 dark:to-card">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
@@ -146,6 +148,45 @@ export function DashboardTab({ projectId }: { projectId: string }) {
             <p className="mt-1 text-xs text-muted-foreground">
               Plán: {formatNumber(totals.daysPlanned, " dní")}
             </p>
+          </CardContent>
+        </Card>
+
+        <Card className="border-emerald-300/60 bg-gradient-to-br from-emerald-50 to-white dark:border-emerald-800/40 dark:from-emerald-950/30 dark:to-card">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              Ušetřeno
+            </CardTitle>
+            <PiggyBank className="h-4 w-4 text-emerald-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-emerald-600">
+              {formatCzk(totals.savedTotal)}
+            </div>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Od dokončených položek
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="border-teal-200/60 bg-gradient-to-br from-teal-50 to-white dark:border-teal-900/40 dark:from-teal-950/30 dark:to-card">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              Hotovo
+            </CardTitle>
+            <CheckCircle2 className="h-4 w-4 text-teal-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {totals.completedCount} / {totals.itemCount}
+            </div>
+            <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-muted">
+              <div
+                className="h-full rounded-full bg-teal-500"
+                style={{
+                  width: `${totals.itemCount > 0 ? (totals.completedCount / totals.itemCount) * 100 : 0}%`,
+                }}
+              />
+            </div>
           </CardContent>
         </Card>
       </div>

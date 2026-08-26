@@ -23,7 +23,11 @@ export async function GET(
   }
 }
 
-// POST /api/projects/[id]/payments - create a payment
+// POST /api/projects/[id]/payments - create a payment (or an invoice/installment)
+// Body fields:
+//   amount, budgetItemId (required)
+//   invoiceTotal (optional) - if set, this is an invoice with an expected total
+//   installmentOf (optional) - parent payment id, makes this an installment of that invoice
 export async function POST(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
@@ -31,7 +35,18 @@ export async function POST(
   try {
     const { id } = await params;
     const body = await request.json();
-    const { budgetItemId, contactId, amount, date, type, vendor, invoiceNumber, description } = body;
+    const {
+      budgetItemId,
+      contactId,
+      amount,
+      invoiceTotal,
+      installmentOf,
+      date,
+      type,
+      vendor,
+      invoiceNumber,
+      description,
+    } = body;
 
     if (!budgetItemId) {
       return NextResponse.json({ error: "budgetItemId is required" }, { status: 400 });
@@ -40,7 +55,6 @@ export async function POST(
       return NextResponse.json({ error: "Valid amount is required" }, { status: 400 });
     }
 
-    // ensure the budget item belongs to this project
     const item = await db.budgetItem.findFirst({
       where: { id: budgetItemId, projectId: id },
     });
@@ -48,11 +62,23 @@ export async function POST(
       return NextResponse.json({ error: "Budget item not found in this project" }, { status: 404 });
     }
 
+    // If this is an installment, validate the parent exists & belongs to same project
+    if (installmentOf) {
+      const parent = await db.payment.findFirst({
+        where: { id: installmentOf, budgetItem: { projectId: id } },
+      });
+      if (!parent) {
+        return NextResponse.json({ error: "Parent payment not found" }, { status: 404 });
+      }
+    }
+
     const payment = await db.payment.create({
       data: {
         budgetItemId,
         contactId: contactId || null,
         amount: Number(amount),
+        invoiceTotal: invoiceTotal !== undefined && invoiceTotal !== null && invoiceTotal !== "" ? Number(invoiceTotal) : null,
+        installmentOf: installmentOf || null,
         date: date ? new Date(date) : new Date(),
         type: type || "other",
         vendor: vendor?.trim() || null,
@@ -65,7 +91,9 @@ export async function POST(
       },
     });
 
-    // Recompute the budget item actualCost (sum of payments)
+    // Recompute the budget item actualCost.
+    // Important: parent/invoice payments have amount=0 (they are just the "expected total" record),
+    // installments have the actual paid amount. So summing all payments works correctly.
     const agg = await db.payment.aggregate({
       where: { budgetItemId },
       _sum: { amount: true },

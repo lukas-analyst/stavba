@@ -16,14 +16,14 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "RekonstrukcePro — Správa rozpočtu rekonstrukcí",
+  title: "Stavba — Správa rozpočtu staveb",
   description:
-    "Komplexní správa rozpočtu, nákladů a času pro rekonstrukce. Přehled projektů, plateb, práce i materiálu na jednom místě.",
+    "Komplexní správa rozpočtu, nákladů a času pro stavby a rekonstrukce. Přehled projektů, plateb, práce i materiálu na jednom místě.",
   keywords: [
+    "stavba",
     "rekonstrukce",
     "rozpočet",
     "náklady",
-    "stavba",
     "projekt",
     "správa",
   ],

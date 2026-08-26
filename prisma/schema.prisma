@@ -1,5 +1,11 @@
-// Prisma schema for RekonstrukcePro - Budget & Time Tracking
-// for Reconstruction Projects
+// Prisma schema for Stavba - Budget & Time Tracking
+// for Construction / Reconstruction Projects
+//
+// NOTE on PostgreSQL/Supabase migration:
+// To switch to PostgreSQL, change the datasource provider below to "postgresql"
+// and set DATABASE_URL to the Supabase Postgres connection string, then run:
+//   bun run db:push
+// All field types here are PostgreSQL-compatible (no SQLite-only features).
 
 generator client {
   provider = "prisma-client-js"
@@ -12,18 +18,20 @@ datasource db {
 
 // ===== PROJECTS =====
 model Project {
-  id          String   @id @default(cuid())
-  name        String
-  address     String?
-  description String?
-  starred     Boolean  @default(false)
-  status      String   @default("active") // active, planning, completed, paused
-  currency    String   @default("CZK")
-  totalBudget Float    @default(0) // optional overall budget cap
-  startDate   DateTime?
-  endDate     DateTime?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id            String   @id @default(cuid())
+  name          String
+  address       String?
+  description   String?
+  starred       Boolean  @default(false)
+  status        String   @default("active") // active, planning, completed, paused
+  currency      String   @default("CZK")
+  totalBudget   Float    @default(0) // optional overall budget cap
+  startDate     DateTime?
+  endDate       DateTime?
+  // JSON array of category names in display order (for reordering categories)
+  categoryOrder String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   budgetItems BudgetItem[]
   contacts    Contact[]
@@ -40,6 +48,7 @@ model BudgetItem {
   element           String?  // "Prvek / Úkol" - description of the task/element
   phase             String   // Příprava, Demolice, Hrubá stavba, Zabydlování, Do budoucna, Neurčeno
   required          Boolean  @default(false) // "Nutné" - is it mandatory?
+  completed         Boolean  @default(false) // is this item finished?
   note              String?
   unitPrice         String?  // e.g., "1200,- / m"
   // Plan
@@ -81,25 +90,33 @@ model Contact {
 }
 
 // ===== PAYMENTS =====
-// Records actual financial transactions linked to budget items
+// Records actual financial transactions linked to budget items.
+// Supports installments: a "parent" payment represents an invoice with
+// `invoiceTotal` (expected total) and `amount = 0`. Child payments with
+// `installmentOf = parent.id` record each partial payment.
+// Standalone full payments have `installmentOf = null` and `invoiceTotal = null`.
 model Payment {
   id            String   @id @default(cuid())
   budgetItemId  String
   budgetItem    BudgetItem @relation(fields: [budgetItemId], references: [id], onDelete: Cascade)
   contactId     String?
   contact       Contact?   @relation(fields: [contactId], references: [id], onDelete: SetNull)
-  amount        Float
+  amount        Float    // paid amount for this record (0 for a pure invoice parent)
+  invoiceTotal  Float?   // the full invoice amount expected (set on parent/installment group)
+  installmentOf String?  // parent payment id if this is an installment (plain string, no FK)
   date          DateTime
   type          String   // receipt, work, material, person, invoice, other
   vendor        String?  // obchod / firma
   invoiceNumber String?
   description   String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 }
 
 // ===== TIME ENTRIES =====
-// Records actual time worked on tasks, linked to budget items and contacts
+// Records actual time worked on tasks. Supports multi-day entries via `dateTo`.
+// If dateTo is set, the entry spans date..dateTo and `hours` is the total
+// hours across the whole range.
 model TimeEntry {
   id           String   @id @default(cuid())
   budgetItemId String
@@ -109,7 +126,8 @@ model TimeEntry {
   workerName   String   // free-text worker name (for quick entry)
   workerType   String   // company, craftsman, self, family
   date         DateTime
-  hours        Float
+  dateTo       DateTime? // optional end date for multi-day entries
+  hours        Float    // total hours across the range
   description  String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt

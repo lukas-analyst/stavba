@@ -19,7 +19,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
 import { useCreateProject, type Project } from "@/lib/api";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
@@ -52,8 +51,8 @@ function ProjectForm({
   const [name, setName] = useState(project?.name ?? "");
   const [address, setAddress] = useState(project?.address ?? "");
   const [description, setDescription] = useState(project?.description ?? "");
-  const [starred, setStarred] = useState(project?.starred ?? false);
   const [status, setStatus] = useState(project?.status ?? "planning");
+  const [constructionType, setConstructionType] = useState("reconstruction");
   const [startDate, setStartDate] = useState(
     project?.startDate ? project.startDate.substring(0, 10) : "",
   );
@@ -72,7 +71,6 @@ function ProjectForm({
         name,
         address,
         description,
-        starred,
         status,
         startDate: startDate || null,
         endDate: endDate || null,
@@ -91,7 +89,7 @@ function ProjectForm({
           {project ? "Upravit projekt" : "Nový projekt"}
         </DialogTitle>
         <DialogDescription>
-          Vytvořte nový projekt pro rekonstrukci domu nebo bytu.
+          Vytvořte nový projekt pro stavbu nebo rekonstrukci domu, bytu, chalupy.
         </DialogDescription>
       </DialogHeader>
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -139,17 +137,19 @@ function ProjectForm({
               </SelectContent>
             </Select>
           </div>
-          <div className="flex items-end pb-2">
-            <div className="flex items-center gap-2">
-              <Switch
-                id="starred"
-                checked={starred}
-                onCheckedChange={setStarred}
-              />
-              <Label htmlFor="starred" className="cursor-pointer">
-                Ohvězdičkovat
-              </Label>
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="type">Typ stavby</Label>
+            <Select value={constructionType} onValueChange={setConstructionType}>
+              <SelectTrigger id="type">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="reconstruction">Rekonstrukce</SelectItem>
+                <SelectItem value="new_build">Nová stavba</SelectItem>
+                <SelectItem value="extension">Přístavba</SelectItem>
+                <SelectItem value="interior">Interiér</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
         <div className="grid grid-cols-2 gap-3">
