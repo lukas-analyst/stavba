@@ -37,6 +37,24 @@ model Project {
 
   budgetItems BudgetItem[]
   contacts    Contact[]
+  auditLogs   AuditLog[]
+}
+
+// ===== AUDIT LOG =====
+// Records changes to budget items, payments, time entries, contacts, and projects.
+// Each entry captures: entity type, entity ID, action (create/update/delete),
+// field changed, old value, new value, and timestamp.
+model AuditLog {
+  id        String   @id @default(cuid())
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  entityType String  // "BudgetItem", "Payment", "TimeEntry", "Contact", "Project"
+  entityId   String
+  action    String   // "create", "update", "delete"
+  field     String?  // which field changed (null for create/delete)
+  oldValue  String?
+  newValue  String?
+  createdAt DateTime @default(now())
 }
 
 // ===== BUDGET ITEMS =====

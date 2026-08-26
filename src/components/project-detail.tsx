@@ -13,6 +13,7 @@ import {
   CalendarClock,
   MapPin,
   FileText,
+  History,
 } from "lucide-react";
 import { useAppStore, type TabId } from "@/lib/store";
 import type { Project } from "@/lib/api";
@@ -21,6 +22,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ProjectDialog } from "@/components/project-dialog";
 import { PrintReportDialog } from "@/components/print-report-dialog";
+import { AuditLogDialog } from "@/components/audit-log-dialog";
 import { DashboardTab } from "@/components/tabs/dashboard-tab";
 import { BudgetTab } from "@/components/tabs/budget-tab";
 import { PaymentsTab } from "@/components/tabs/payments-tab";
@@ -70,6 +72,7 @@ export function ProjectDetail({ project }: { project: Project }) {
   const setActiveTab = useAppStore((s) => s.setActiveTab);
   const [editOpen, setEditOpen] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
+  const [auditOpen, setAuditOpen] = useState(false);
   const updateProject = useUpdateProject(project.id);
 
   const status = STATUS_LABELS[project.status] ?? STATUS_LABELS.active;
@@ -212,6 +215,15 @@ export function ProjectDetail({ project }: { project: Project }) {
               <Button
                 variant="outline"
                 size="sm"
+                onClick={() => setAuditOpen(true)}
+                className="no-print"
+                title="Historie změn"
+              >
+                <History className="h-3.5 w-3.5" />
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={() => setReportOpen(true)}
                 className="no-print"
               >
@@ -272,6 +284,11 @@ export function ProjectDetail({ project }: { project: Project }) {
         onOpenChange={setReportOpen}
         projectId={project.id}
         projectName={project.name}
+      />
+      <AuditLogDialog
+        open={auditOpen}
+        onOpenChange={setAuditOpen}
+        projectId={project.id}
       />
     </div>
   );

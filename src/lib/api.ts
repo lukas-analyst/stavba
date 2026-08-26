@@ -623,3 +623,28 @@ export function useSpendingTrend(projectId: string | null) {
     enabled: !!projectId,
   });
 }
+
+// ===== Audit Log =====
+export type AuditLog = {
+  id: string;
+  projectId: string;
+  entityType: string;
+  entityId: string;
+  action: string;
+  field: string | null;
+  oldValue: string | null;
+  newValue: string | null;
+  createdAt: string;
+};
+
+export function useAuditLog(projectId: string | null) {
+  return useQuery<AuditLog[]>({
+    queryKey: ["auditLog", projectId],
+    queryFn: async () => {
+      const res = await fetch(`/api/projects/${projectId}/audit?limit=100`);
+      if (!res.ok) throw new Error("Failed to load audit log");
+      return res.json();
+    },
+    enabled: !!projectId,
+  });
+}

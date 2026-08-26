@@ -319,3 +319,46 @@ Unresolved issues / Next steps:
 - Google Sheets přímá integrace zatím neimplementována (CSV export + JSON import/export slouží jako most)
 - Supabase Auth ještě neaktivní (utility jsou passthrough)
 - Pro budoucí fázi: drag-and-drop reorder (dnd-kit), e-mail notifikace na termíny, AI asistent pro optimalizaci rozpočtu, fotogalerie dokumentace
+
+---
+Task ID: 15
+Agent: Cron review asistent (Z.ai Code) - šestá revize
+Task: QA testování, stylingová vylepšení (collapsible sidebar), nové funkce (audit log/historie změn, klávesové zkratky)
+
+Work Log:
+- Přečetl worklog, ověřil stabilitu (lint čistý, 0 chyb)
+- QA testování přes agent-browser: všech 7 tabů funguje bez chyb
+- VLM analýza dashboardu: identifikoval oblasti pro zlepšení (historie změn, klávesové zkratky, responzivita)
+- Nové funkce:
+  * Audit log / historie změn: AuditLog model v Prisma schématu (entityType, entityId, action, field, oldValue, newValue, createdAt)
+    - logChanges() helper v src/lib/audit.ts - porovnává old vs new data, loguje jen změněné fieldy
+    - Integrováno do budget-items PATCH a DELETE routes (automatické logování všech úprav a mazání)
+    - GET /api/projects/[id]/audit endpoint s ?limit parametrem
+    - useAuditLog hook v api.ts
+    - AuditLogDialog komponenta s timeline pohledem - ikony pro create/update/delete (Plus/Pencil/Trash2), barevné odlišení (emerald/sky/rose), field labely v češtině, old→new value diff s strikethrough
+    - Tlačítko "Historie změn" (History ikona) v project header
+  * Klávesové zkratky: useKeyboardShortcuts hook
+    - Cmd/Ctrl+K: focus na search input v sidebaru
+    - Cmd/Ctrl+B: toggle sidebar viditelnosti (custom event)
+    - Cmd/Ctrl+N: new project (custom event, připraveno pro budoucí napojení)
+- Styling vylepšení:
+  * Collapsible sidebar: sidebar lze skrýt/zobrazit pomocí tlačítka "Skrýt panel" / "Zobrazit panel" nebo Cmd+B
+  * Smooth transition animace (w-0 ↔ w-80, duration-200)
+  * Mobile-friendly: na mobilech je collapse button fixed vlevo nahoře
+  * Collapse button je fixed na hraně sidebaru (desktop)
+- Bug fixy: žádné (aplikace byla stabilní)
+- Lint: prošel bez chyb (0 errors, 0 warnings)
+- Verifikace přes Agent Browser: audit log dialog (otevře se, zobrazí "Historie změn"), sidebar collapse (tlačítko funguje), ESC zavírá dialog - vše funkční, 0 chyb
+
+Stage Summary:
+- ✅ Aplikace stabilní: 0 runtime chyb, 0 lint chyb
+- ✅ Nové funkce: audit log s automatickým logováním změn budget items, klávesové zkratky (Cmd+K, Cmd+B, Cmd+N)
+- ✅ Styling: collapsible sidebar s smooth animací, mobile-friendly toggle
+- 📝 Project header má nyní 3 akční tlačítka: Historie změn, Report, Upravit
+- ⌨️ Klávesové zkratky: Cmd+K (search), Cmd+B (sidebar toggle), Cmd+N (new project)
+
+Unresolved issues / Next steps:
+- Audit log zatím loguje jen BudgetItem changes - v budoucnu rozšířit na Payments, TimeEntries, Contacts
+- Google Sheets přímá integrace zatím neimplementována
+- Supabase Auth ještě neaktivní
+- Pro budoucí fázi: e-mail notifikace na termíny, AI asistent pro optimalizaci rozpočtu, fotogalerie dokumentace
