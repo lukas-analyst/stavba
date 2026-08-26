@@ -2,6 +2,7 @@
 
 import {
   useDashboard,
+  useSpendingTrend,
 } from "@/lib/api";
 import {
   Card,
@@ -34,6 +35,8 @@ import { formatCzk, formatNumber, formatDate, PHASE_COLORS, PHASE_DOT_COLORS } f
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/lib/store";
 import {
+  Area,
+  AreaChart,
   Bar,
   BarChart,
   CartesianGrid,
@@ -110,9 +113,25 @@ export function DashboardTab({ projectId }: { projectId: string }) {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold tabular-nums">{formatCzk(totals.actualTotal)}</div>
-            <p className={`mt-1 text-xs font-semibold ${burnColor}`}>
-              {burnRate.toFixed(1)} % rozpočtu
-            </p>
+            <div className="mt-2">
+              <div className="mb-1 flex items-center justify-between text-xs">
+                <span className={`font-semibold ${burnColor}`}>
+                  {burnRate.toFixed(1)} %
+                </span>
+                <span className="text-muted-foreground">
+                  z {formatCzk(totals.planTotal)}
+                </span>
+              </div>
+              <div className="h-1.5 overflow-hidden rounded-full bg-muted">
+                <div
+                  className={cn(
+                    "h-full rounded-full transition-all",
+                    burnRate > 100 ? "bg-rose-500" : burnRate > 80 ? "bg-amber-500" : "bg-emerald-500",
+                  )}
+                  style={{ width: `${Math.min(burnRate, 100)}%` }}
+                />
+              </div>
+            </div>
           </CardContent>
         </Card>
 
@@ -317,6 +336,9 @@ export function DashboardTab({ projectId }: { projectId: string }) {
           </div>
         </CardContent>
       </Card>
+
+      {/* Spending trend (last 12 months) */}
+      <SpendingTrendCard projectId={projectId} />
 
       {/* Charts */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
@@ -574,5 +596,130 @@ function DashboardSkeleton() {
       </div>
       <Skeleton className="h-40" />
     </div>
+  );
+}
+
+// ===== Spending Trend Card (last 12 months) =====
+function SpendingTrendCard({ projectId }: { projectId: string }) {
+  const { data, isLoading } = useSpendingTrend(projectId);
+
+  if (isLoading || !data) {
+    return <Skeleton className="h-64" />;
+  }
+
+  const hasData = data.totals.paymentCount > 0 || data.totals.timeEntryCount > 0;
+  const maxSpend = Math.max(...data.months.map((m) => m.spend), 1);
+
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle className="text-base">Trend výdajů a času</CardTitle>
+            <CardDescription>Posledních 12 měsíců — měsíční utrácení a odpracované hodiny</CardDescription>
+          </div>
+          <div className="flex gap-4 text-right">
+            <div>
+              <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Celkem vydáno</div>
+              <div className="text-sm font-bold tabular-nums text-amber-600">
+                {formatCzk(data.totals.totalSpend)}
+              </div>
+            </div>
+            <div>
+              <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Celkem hodin</div>
+              <div className="text-sm font-bold tabular-nums text-violet-600">
+                {formatNumber(data.totals.totalHours, " h")}
+              </div>
+            </div>
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent>
+        {hasData ? (
+          <div className="h-56">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={data.months} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="spendGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.4} />
+                    <stop offset="95%" stopColor="#f59e0b" stopOpacity={0} />
+                  </linearGradient>
+                  <linearGradient id="hoursGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
+                <XAxis
+                  dataKey="label"
+                  tick={{ fontSize: 10 }}
+                  interval={0}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <YAxis
+                  tick={{ fontSize: 10 }}
+                  tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`}
+                  orientation="right"
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <Tooltip
+                  formatter={(v: number, name: string) => {
+                    if (name === "Výdaje") return formatCzk(v);
+                    return formatNumber(v, " h");
+                  }}
+                  contentStyle={{
+                    backgroundColor: "var(--popover)",
+                    border: "1px solid var(--border)",
+                    borderRadius: "8px",
+                    fontSize: "12px",
+                  }}
+                  labelStyle={{ fontSize: 11, fontWeight: 600 }}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="spend"
+                  name="Výdaje"
+                  stroke="#f59e0b"
+                  strokeWidth={2}
+                  fill="url(#spendGradient)"
+                />
+                <Area
+                  type="monotone"
+                  dataKey="hours"
+                  name="Hodiny"
+                  stroke="#8b5cf6"
+                  strokeWidth={2}
+                  fill="url(#hoursGradient)"
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        ) : (
+          <div className="flex h-56 flex-col items-center justify-center gap-2 text-sm text-muted-foreground">
+            <TrendingDown className="h-8 w-8 opacity-40" />
+            <p>Zatím žádné platby ani časové záznamy.</p>
+            <p className="text-xs">Po přidání plateb a času se zde zobrazí trend za posledních 12 měsíců.</p>
+          </div>
+        )}
+        {/* Mini monthly bars (always visible, even with 0 data) */}
+        <div className="mt-3 flex items-end gap-1 border-t pt-3" style={{ height: "40px" }}>
+          {data.months.map((m, i) => (
+            <div key={i} className="flex flex-1 flex-col items-center gap-0.5">
+              <div
+                className="w-full rounded-sm bg-amber-400/70 transition-all hover:bg-amber-500"
+                style={{
+                  height: `${(m.spend / maxSpend) * 100}%`,
+                  minHeight: m.spend > 0 ? "4px" : "0",
+                }}
+                title={`${m.label}: ${formatCzk(m.spend)}`}
+              />
+              <span className="text-[8px] text-muted-foreground">{m.label[0]}</span>
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
   );
 }

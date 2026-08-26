@@ -207,3 +207,39 @@ Unresolved issues / Next steps:
 - Google Sheets přímá integrace zatím neimplementována (CSV export + JSON import/export slouží jako most)
 - Supabase Auth ještě neaktivní (utility jsou passthrough)
 - Pro budoucí fázi: drag-and-drop reorder (dnd-kit), PDF export faktur, e-mail notifikace na termíny, AI asistent pro optimalizaci rozpočtu
+
+---
+Task ID: 12
+Agent: Cron review asistent (Z.ai Code) - třetí revize
+Task: QA testování, stylingová vylepšení (burn-rate progress bar, search v sidebaru), nové funkce (spending trend graf, vyhledávání projektů)
+
+Work Log:
+- Přečetl worklog, ověřil stabilitu (lint čistý, 0 chyb)
+- QA testování přes agent-browser: všech 7 tabů funguje bez chyb
+- VLM analýza dashboardu: identifikoval oblasti pro zlepšení (progress bar pro čerpání, vyhledávání, graf trendu)
+- Styling vylepšení:
+  * Dashboard KPI karta "Čerpání": přidal progress bar (zelená/amber/rose dle burn rate) s procenty a "z {planTotal}" popisem, ne jen textový údaj
+  * Sidebar: přidal search input "Hledat projekt…" s Search ikonou a X tlačítkem pro vyčištění
+  * Sidebar: counter ukazuje "N/{total}" při filtrování
+  * Sidebar: "no results" state s tlačítkem "Zrušit hledání"
+- Nové funkce:
+  * Spending trend API: GET /api/projects/[id]/spending-trend - vrací měsíční údaje (spend, hours) za posledních 12 měsíců + celkové součty
+  * SpendingTrendCard v dashboardu: AreaChart s gradient výplní (amber pro výdaje, violet pro hodiny), tooltip, pravý Y-axis, plus mini monthly bars vždy viditelné (i s 0 daty)
+  * useSpendingTrend hook v api.ts
+  * Vyhledávání projektů v sidebaru: filtruje dle name, address, description (case-insensitive), s clear buttonem a no-results state
+- Bug fixy: žádné (aplikace byla stabilní)
+- Lint: prošel bez chyb (0 errors, 0 warnings)
+- Verifikace přes Agent Browser: dashboard (trend graf + progress bar), sidebar (search filtruje) - vše funkční, 0 chyb
+- VLM potvrdila: progress bar v kartě Čerpání, search v sidebaru
+
+Stage Summary:
+- ✅ Aplikace stabilní: 0 runtime chyb, 0 lint chyb
+- ✅ Styling: burn-rate progress bar v Čerpání KPI kartě, vylepšené vyhledávání v sidebaru
+- ✅ Nové funkce: spending trend graf (AreaChart + mini bars), vyhledávání projektů s filtrováním
+- 📊 Dashboard nyní má: 6 KPI karet (s progress barem v Čerpání) + phase cards + spending trend graf + alerts + 2 grafy + breakdown
+- 🔍 Sidebar má search s live filtrováním a no-results state
+
+Unresolved issues / Next steps:
+- Google Sheets přímá integrace zatím neimplementována (CSV export + JSON import/export slouží jako most)
+- Supabase Auth ještě neaktivní (utility jsou passthrough)
+- Pro budoucí fázi: drag-and-drop reorder (dnd-kit), PDF export faktur, e-mail notifikace na termíny, AI asistent pro optimalizaci rozpočtu, fotogalerie dokumentace

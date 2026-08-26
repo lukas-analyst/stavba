@@ -1,14 +1,15 @@
 "use client";
 
-import { Star, Plus, Home, Trash2, Loader2, Building2, Download, Upload } from "lucide-react";
+import { Star, Plus, Home, Trash2, Loader2, Building2, Download, Upload, Search, X } from "lucide-react";
 import { useProjects, useDeleteProject, useUpdateProject, useExportState, useImportState, useDashboard } from "@/lib/api";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAppStore } from "@/lib/store";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { formatCzk } from "@/lib/format";
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { ProjectDialog } from "@/components/project-dialog";
 import {
   AlertDialog,
@@ -39,6 +40,7 @@ export function AppSidebar() {
   const setSelectedProject = useAppStore((s) => s.setSelectedProject);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const toggleStar = async (projectId: string, starred: boolean) => {
@@ -55,10 +57,21 @@ export function AppSidebar() {
     }
   };
 
-  const sortedProjects = [...(projects ?? [])].sort((a, b) => {
-    if (a.starred !== b.starred) return a.starred ? -1 : 1;
-    return a.name.localeCompare(b.name);
-  });
+  const sortedProjects = useMemo(() => {
+    const filtered = (projects ?? []).filter((p) => {
+      if (!search.trim()) return true;
+      const q = search.toLowerCase();
+      return (
+        p.name.toLowerCase().includes(q) ||
+        (p.address ?? "").toLowerCase().includes(q) ||
+        (p.description ?? "").toLowerCase().includes(q)
+      );
+    });
+    return filtered.sort((a, b) => {
+      if (a.starred !== b.starred) return a.starred ? -1 : 1;
+      return a.name.localeCompare(b.name);
+    });
+  }, [projects, search]);
 
   const projectToDelete = projects?.find((p) => p.id === deleteId);
   const selectedProject = projects?.find((p) => p.id === selectedProjectId);
@@ -89,19 +102,42 @@ export function AppSidebar() {
         </div>
       </div>
 
-      {/* Projects list */}
-      <div className="flex items-center justify-between px-4 pt-4 pb-2">
-        <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-          Projekty ({sortedProjects.length})
-        </span>
-        <Button
-          size="sm"
-          variant="ghost"
-          className="h-7 px-2 text-xs"
-          onClick={() => setDialogOpen(true)}
-        >
-          <Plus className="mr-1 h-3.5 w-3.5" /> Přidat
-        </Button>
+      {/* Projects search + list header */}
+      <div className="px-3 pt-3 pb-2">
+        <div className="relative mb-2">
+          <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Hledat projekt…"
+            className="h-8 pl-8 pr-7 text-xs"
+          />
+          {search && (
+            <button
+              onClick={() => setSearch("")}
+              className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-0.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+              aria-label="Vyčistit hledání"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          )}
+        </div>
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            Projekty ({sortedProjects.length}
+            {search && (projects?.length ?? 0) !== sortedProjects.length
+              ? `/${projects?.length ?? 0}`
+              : ""})
+          </span>
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-7 px-2 text-xs"
+            onClick={() => setDialogOpen(true)}
+          >
+            <Plus className="mr-1 h-3.5 w-3.5" /> Přidat
+          </Button>
+        </div>
       </div>
 
       <div className="flex-1 overflow-y-auto px-2 pb-2">
@@ -111,9 +147,24 @@ export function AppSidebar() {
           </div>
         ) : sortedProjects.length === 0 ? (
           <div className="px-3 py-8 text-center text-sm text-muted-foreground">
-            Zatím žádné projekty.
-            <br />
-            Klikněte na „Přidat".
+            {search ? (
+              <>
+                Žádné projekty neodpovídají „{search}".
+                <br />
+                <button
+                  onClick={() => setSearch("")}
+                  className="mt-1 text-primary hover:underline"
+                >
+                  Zrušit hledání
+                </button>
+              </>
+            ) : (
+              <>
+                Zatím žádné projekty.
+                <br />
+                Klikněte na „Přidat".
+              </>
+            )}
           </div>
         ) : (
           <ul className="space-y-1">

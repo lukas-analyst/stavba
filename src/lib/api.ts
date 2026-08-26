@@ -597,3 +597,26 @@ export function useContactStats(projectId: string | null) {
     enabled: !!projectId,
   });
 }
+
+// ===== Spending Trend =====
+export type SpendingMonth = {
+  key: string;
+  label: string;
+  spend: number;
+  hours: number;
+};
+
+export function useSpendingTrend(projectId: string | null) {
+  return useQuery<{
+    months: SpendingMonth[];
+    totals: { totalSpend: number; totalHours: number; paymentCount: number; timeEntryCount: number };
+  }>({
+    queryKey: ["spendingTrend", projectId],
+    queryFn: async () => {
+      const res = await fetch(`/api/projects/${projectId}/spending-trend`);
+      if (!res.ok) throw new Error("Failed to load spending trend");
+      return res.json();
+    },
+    enabled: !!projectId,
+  });
+}
