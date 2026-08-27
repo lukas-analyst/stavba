@@ -16,6 +16,25 @@ export async function PATCH(
       return NextResponse.json({ error: "Payment not found" }, { status: 404 });
     }
 
+    // Compute VAT amount if amount or vatRate is being updated
+    let numVatRate: number | null | undefined = undefined;
+    let numVatAmount: number | null | undefined = undefined;
+    if (body.vatRate !== undefined) {
+      numVatRate =
+        body.vatRate === null || body.vatRate === ""
+          ? null
+          : Number(body.vatRate);
+      const effectiveAmount =
+        body.amount !== undefined ? Number(body.amount) : existing.amount;
+      numVatAmount =
+        numVatRate !== null && numVatRate > 0
+          ? (effectiveAmount * numVatRate) / (100 + numVatRate)
+          : null;
+    } else if (body.amount !== undefined && existing.vatRate !== null && existing.vatRate > 0) {
+      // Amount changed but VAT rate unchanged -> recompute VAT amount
+      numVatAmount = (Number(body.amount) * existing.vatRate) / (100 + existing.vatRate);
+    }
+
     const updated = await db.payment.update({
       where: { id },
       data: {
@@ -38,6 +57,8 @@ export async function PATCH(
           body.invoiceNumber !== undefined ? (body.invoiceNumber?.trim() || null) : undefined,
         description:
           body.description !== undefined ? (body.description?.trim() || null) : undefined,
+        vatRate: numVatRate,
+        vatAmount: numVatAmount,
       },
       include: {
         budgetItem: { select: { id: true, category: true, subcategory: true } },

@@ -39,8 +39,10 @@ export type BudgetItem = {
   phase: string;
   required: boolean;
   completed: boolean;
+  rejected: boolean;
   note: string | null;
   unitPrice: string | null;
+  parentId: string | null;
   planCost: number | null;
   flexibilityPercent: number | null;
   planDays: number | null;
@@ -50,6 +52,7 @@ export type BudgetItem = {
   actualHours: number;
   sortOrder: number;
   _count?: { payments: number; timeEntries: number; comments: number };
+  children?: BudgetItem[];
 };
 
 export type Contact = {
@@ -148,6 +151,7 @@ export type Dashboard = {
     planDays: number | null;
     required: boolean;
     completed: boolean;
+    rejected: boolean;
   }[];
   recent: {
     payments: Payment[];

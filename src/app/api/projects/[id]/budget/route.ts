@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 
 // GET /api/projects/[id]/budget - list all budget items for a project
+// Returns items as a flat list; the frontend groups them by category and parent-child.
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ id: string }> },
@@ -22,7 +23,7 @@ export async function GET(
   }
 }
 
-// POST /api/projects/[id]/budget - create a budget item
+// POST /api/projects/[id]/budget - create a budget item (or a child task)
 export async function POST(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
@@ -37,8 +38,10 @@ export async function POST(
       phase,
       required,
       completed,
+      rejected,
       note,
       unitPrice,
+      parentId,
       planCost,
       flexibilityPercent,
       planDays,
@@ -50,6 +53,16 @@ export async function POST(
 
     if (!category || typeof category !== "string" || !category.trim()) {
       return NextResponse.json({ error: "Category is required" }, { status: 400 });
+    }
+
+    // If parentId is set, validate it belongs to this project
+    if (parentId) {
+      const parent = await db.budgetItem.findFirst({
+        where: { id: parentId, projectId: id },
+      });
+      if (!parent) {
+        return NextResponse.json({ error: "Parent item not found in this project" }, { status: 404 });
+      }
     }
 
     const maxOrder = await db.budgetItem.aggregate({
@@ -66,8 +79,10 @@ export async function POST(
         phase: phase || "Neurčeno",
         required: Boolean(required),
         completed: Boolean(completed),
+        rejected: Boolean(rejected),
         note: note?.trim() || null,
         unitPrice: unitPrice?.trim() || null,
+        parentId: parentId || null,
         planCost: planCost !== undefined && planCost !== null && planCost !== "" ? Number(planCost) : null,
         flexibilityPercent:
           flexibilityPercent !== undefined && flexibilityPercent !== null && flexibilityPercent !== ""
@@ -79,6 +94,9 @@ export async function POST(
         actualCost: actualCost !== undefined ? Number(actualCost) : 0,
         actualHours: actualHours !== undefined ? Number(actualHours) : 0,
         sortOrder: (maxOrder._max.sortOrder ?? -1) + 1,
+      },
+      include: {
+        _count: { select: { payments: true, timeEntries: true, comments: true } },
       },
     });
 

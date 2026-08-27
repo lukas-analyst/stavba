@@ -68,6 +68,7 @@ import {
   Download,
   Copy,
   MessageSquare,
+  X,
 } from "lucide-react";
 import {
   formatCzk,
@@ -81,6 +82,57 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { BudgetItemDialog } from "@/components/budget-item-dialog";
 
+// Rolled-up totals for an item (own + children sums)
+type RolledUp = {
+  planCost: number;
+  planDays: number;
+  actualCost: number;
+  actualHours: number;
+};
+
+function computeRolledUp(item: BudgetItem, children: BudgetItem[]): RolledUp {
+  const own = {
+    planCost: item.planCost || 0,
+    planDays: item.planDays || 0,
+    actualCost: item.actualCost || 0,
+    actualHours: item.actualHours || 0,
+  };
+  const childSum = children.reduce(
+    (acc, c) => {
+      acc.planCost += c.planCost || 0;
+      acc.planDays += c.planDays || 0;
+      acc.actualCost += c.actualCost || 0;
+      acc.actualHours += c.actualHours || 0;
+      return acc;
+    },
+    { planCost: 0, planDays: 0, actualCost: 0, actualHours: 0 },
+  );
+  return {
+    planCost: own.planCost + childSum.planCost,
+    planDays: own.planDays + childSum.planDays,
+    actualCost: own.actualCost + childSum.actualCost,
+    actualHours: own.actualHours + childSum.actualHours,
+  };
+}
+
+// Compute saved for an item: only if completed.
+// For parents with children: saved = max(0, rolledUp.planCost - rolledUp.actualCost) when completed
+// For items without children: same logic on own values
+function computeSaved(item: BudgetItem, children: BudgetItem[]): number | null {
+  if (!item.completed) return null;
+  const rolled = computeRolledUp(item, children);
+  return Math.max(0, rolled.planCost - rolled.actualCost);
+}
+
+const COMPLETION_OPTIONS = [
+  { id: "all", label: "Vše" },
+  { id: "todo", label: "Aktivní" },
+  { id: "done", label: "Hotovo" },
+  { id: "rejected", label: "Zavrženo" },
+] as const;
+
+type CompletionFilter = (typeof COMPLETION_OPTIONS)[number]["id"];
+
 export function BudgetTab({ projectId }: { projectId: string }) {
   const { data: items, isLoading } = useBudgetItems(projectId);
   const { data: projects } = useProjects();
@@ -88,11 +140,14 @@ export function BudgetTab({ projectId }: { projectId: string }) {
   const reorder = useReorder(projectId);
   const exportCsv = useExportCsv(projectId);
   const [collapsedCats, setCollapsedCats] = useState<Set<string>>(new Set());
+  const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
   const [phaseFilter, setPhaseFilter] = useState<string>("all");
-  const [completionFilter, setCompletionFilter] = useState<"all" | "todo" | "done">("all");
+  const [completionFilter, setCompletionFilter] =
+    useState<CompletionFilter>("all");
   const [search, setSearch] = useState("");
   const [addOpen, setAddOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<BudgetItem | null>(null);
+  const [addTaskFor, setAddTaskFor] = useState<BudgetItem | null>(null);
 
   const toggleCat = (cat: string) => {
     setCollapsedCats((prev) => {
@@ -103,37 +158,76 @@ export function BudgetTab({ projectId }: { projectId: string }) {
     });
   };
 
-  // Parse the saved category order (JSON string on the project)
+  const toggleItem = (id: string) => {
+    setExpandedItems((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  // Build children map once from ALL items (not filtered) — preserves real hierarchy
+  const childrenMap = useMemo(() => {
+    const map = new Map<string, BudgetItem[]>();
+    for (const it of items ?? []) {
+      if (it.parentId) {
+        const arr = map.get(it.parentId) ?? [];
+        arr.push(it);
+        map.set(it.parentId, arr);
+      }
+    }
+    return map;
+  }, [items]);
+
+  const itemMatches = useMemo(() => {
+    return (i: BudgetItem): boolean => {
+      if (phaseFilter !== "all" && i.phase !== phaseFilter) return false;
+      if (completionFilter === "done" && !i.completed) return false;
+      if (completionFilter === "todo" && (i.completed || i.rejected)) return false;
+      if (completionFilter === "rejected" && !i.rejected) return false;
+      if (search.trim()) {
+        const q = search.toLowerCase();
+        const text =
+          `${i.category} ${i.subcategory ?? ""} ${i.note ?? ""} ${i.element ?? ""}`.toLowerCase();
+        if (!text.includes(q)) return false;
+      }
+      return true;
+    };
+  }, [phaseFilter, completionFilter, search]);
+
+  // Filtered top-level items (parentId === null), where the parent matches
+  // OR any of its children match.
+  const filteredTopLevel = useMemo(() => {
+    const matches = itemMatches;
+    return (items ?? [])
+      .filter((it) => it.parentId === null)
+      .filter((top) => {
+        if (matches(top)) return true;
+        const children = childrenMap.get(top.id) ?? [];
+        return children.some(matches);
+      });
+  }, [items, childrenMap, itemMatches]);
+
+  // Group filtered top-level items by category, preserving saved order
+  const projectCategoryOrder = project?.categoryOrder;
   const savedCategoryOrder = useMemo(() => {
-    if (!project?.categoryOrder) return [];
+    if (!projectCategoryOrder) return [];
     try {
-      const arr = JSON.parse(project.categoryOrder);
+      const arr = JSON.parse(projectCategoryOrder);
       return Array.isArray(arr) ? (arr as string[]) : [];
     } catch {
       return [];
     }
-  }, [project?.categoryOrder]);
+  }, [projectCategoryOrder]);
 
-  // Group items by category, preserving order; respect saved category order
   const grouped = useMemo(() => {
-    const filtered = (items ?? []).filter((it) => {
-      if (phaseFilter !== "all" && it.phase !== phaseFilter) return false;
-      if (completionFilter === "done" && !it.completed) return false;
-      if (completionFilter === "todo" && it.completed) return false;
-      if (search.trim()) {
-        const q = search.toLowerCase();
-        const text = `${it.category} ${it.subcategory ?? ""} ${it.note ?? ""} ${it.element ?? ""}`.toLowerCase();
-        if (!text.includes(q)) return false;
-      }
-      return true;
-    });
     const groups = new Map<string, BudgetItem[]>();
-    for (const it of filtered) {
+    for (const it of filteredTopLevel) {
       const arr = groups.get(it.category) ?? [];
       arr.push(it);
       groups.set(it.category, arr);
     }
-    // Sort categories by saved order; unknown categories go last (alphabetical)
     const entries = Array.from(groups.entries());
     entries.sort((a, b) => {
       const ia = savedCategoryOrder.indexOf(a[0]);
@@ -144,36 +238,61 @@ export function BudgetTab({ projectId }: { projectId: string }) {
       return ia - ib;
     });
     return entries;
-  }, [items, phaseFilter, search, savedCategoryOrder, completionFilter]);
+  }, [filteredTopLevel, savedCategoryOrder]);
 
-  // Category totals
+  // Category totals — sum rolled-up top-level items (own + children) to avoid double-counting
   const categoryTotals = useMemo(() => {
-    const map = new Map<string, { plan: number; actual: number; count: number; saved: number }>();
+    const map = new Map<
+      string,
+      { plan: number; actual: number; count: number; saved: number }
+    >();
     for (const it of items ?? []) {
-      const cur = map.get(it.category) ?? { plan: 0, actual: 0, count: 0, saved: 0 };
-      cur.plan += it.planCost || 0;
-      cur.actual += it.actualCost || 0;
-      cur.count += 1;
+      if (it.parentId) continue; // skip children, they're included in parent rollup
+      const cur =
+        map.get(it.category) ?? { plan: 0, actual: 0, count: 0, saved: 0 };
+      const children = childrenMap.get(it.id) ?? [];
+      const rolled = computeRolledUp(it, children);
+      cur.plan += rolled.planCost;
+      cur.actual += rolled.actualCost;
+      cur.count += 1 + children.length;
       if (it.completed) {
-        cur.saved += Math.max(0, (it.planCost || 0) - (it.actualCost || 0));
+        cur.saved += Math.max(0, rolled.planCost - rolled.actualCost);
       }
       map.set(it.category, cur);
     }
     return map;
-  }, [items]);
+  }, [items, childrenMap]);
 
-  const grandPlan = (items ?? []).reduce((s, i) => s + (i.planCost || 0), 0);
-  const grandActual = (items ?? []).reduce((s, i) => s + (i.actualCost || 0), 0);
+  // Grand totals — also rolled-up (sum only top-level items)
+  const grandPlan = (items ?? [])
+    .filter((i) => !i.parentId)
+    .reduce((s, i) => {
+      const children = childrenMap.get(i.id) ?? [];
+      return s + computeRolledUp(i, children).planCost;
+    }, 0);
+  const grandActual = (items ?? [])
+    .filter((i) => !i.parentId)
+    .reduce((s, i) => {
+      const children = childrenMap.get(i.id) ?? [];
+      return s + computeRolledUp(i, children).actualCost;
+    }, 0);
   const grandSaved = (items ?? [])
-    .filter((i) => i.completed)
-    .reduce((s, i) => s + Math.max(0, (i.planCost || 0) - (i.actualCost || 0)), 0);
-  const completedCount = (items ?? []).filter((i) => i.completed).length;
+    .filter((i) => !i.parentId && i.completed)
+    .reduce((s, i) => {
+      const children = childrenMap.get(i.id) ?? [];
+      const rolled = computeRolledUp(i, children);
+      return s + Math.max(0, rolled.planCost - rolled.actualCost);
+    }, 0);
+
+  const topLevelCount = (items ?? []).filter((i) => !i.parentId).length;
+  const completedCount = (items ?? []).filter(
+    (i) => !i.parentId && i.completed,
+  ).length;
 
   // ===== Reorder handlers =====
   const moveItem = (catItems: BudgetItem[], currentIndex: number, direction: -1 | 1) => {
     const targetIndex = currentIndex + direction;
     if (targetIndex < 0 || targetIndex >= catItems.length) return;
-    // Swap sortOrder values with the neighbor
     const a = catItems[currentIndex];
     const b = catItems[targetIndex];
     const newItems = [
@@ -186,7 +305,6 @@ export function BudgetTab({ projectId }: { projectId: string }) {
 
   const moveCategory = (category: string, direction: -1 | 1) => {
     const currentCats = grouped.map(([c]) => c);
-    // Build full category order including any not currently visible
     const allCats = Array.from(new Set([...savedCategoryOrder, ...currentCats]));
     const idx = allCats.indexOf(category);
     const target = idx + direction;
@@ -234,11 +352,7 @@ export function BudgetTab({ projectId }: { projectId: string }) {
         </Select>
         {/* Completion filter pills */}
         <div className="flex items-center gap-0.5 rounded-md border bg-muted/40 p-0.5">
-          {([
-            { id: "all", label: "Vše" },
-            { id: "todo", label: "Aktivní" },
-            { id: "done", label: "Hotovo" },
-          ] as const).map((opt) => (
+          {COMPLETION_OPTIONS.map((opt) => (
             <button
               key={opt.id}
               onClick={() => setCompletionFilter(opt.id)}
@@ -247,6 +361,7 @@ export function BudgetTab({ projectId }: { projectId: string }) {
                 completionFilter === opt.id
                   ? "bg-background text-foreground shadow-sm"
                   : "text-muted-foreground hover:text-foreground",
+                opt.id === "rejected" && completionFilter !== opt.id && "text-rose-500 hover:text-rose-600",
               )}
             >
               {opt.label}
@@ -264,7 +379,12 @@ export function BudgetTab({ projectId }: { projectId: string }) {
           </div>
           <div className="text-right">
             <div className="text-xs text-muted-foreground">Zbývá</div>
-            <div className={cn("font-bold", grandPlan - grandActual < 0 ? "text-rose-600" : "text-emerald-600")}>
+            <div
+              className={cn(
+                "font-bold",
+                grandPlan - grandActual < 0 ? "text-rose-600" : "text-emerald-600",
+              )}
+            >
               {formatCzk(grandPlan - grandActual)}
             </div>
           </div>
@@ -276,7 +396,9 @@ export function BudgetTab({ projectId }: { projectId: string }) {
           </div>
           <div className="text-right">
             <div className="text-xs text-muted-foreground">Hotovo</div>
-            <div className="font-bold">{completedCount}/{items?.length ?? 0}</div>
+            <div className="font-bold">
+              {completedCount}/{topLevelCount}
+            </div>
           </div>
           <Button
             variant="outline"
@@ -309,7 +431,12 @@ export function BudgetTab({ projectId }: { projectId: string }) {
         )}
         {grouped.map(([category, catItems], groupIndex) => {
           const collapsed = collapsedCats.has(category);
-          const totals = categoryTotals.get(category)!;
+          const totals = categoryTotals.get(category) ?? {
+            plan: 0,
+            actual: 0,
+            count: 0,
+            saved: 0,
+          };
           const burn = totals.plan > 0 ? (totals.actual / totals.plan) * 100 : 0;
           return (
             <Collapsible
@@ -343,7 +470,11 @@ export function BudgetTab({ projectId }: { projectId: string }) {
                       <div
                         className={cn(
                           "h-full rounded-full",
-                          burn > 100 ? "bg-rose-500" : burn > 80 ? "bg-amber-500" : "bg-emerald-500",
+                          burn > 100
+                            ? "bg-rose-500"
+                            : burn > 80
+                              ? "bg-amber-500"
+                              : "bg-emerald-500",
                         )}
                         style={{ width: `${Math.min(burn, 100)}%` }}
                       />
@@ -351,7 +482,11 @@ export function BudgetTab({ projectId }: { projectId: string }) {
                     <span
                       className={cn(
                         "font-semibold",
-                        burn > 100 ? "text-rose-600" : burn > 80 ? "text-amber-600" : "text-emerald-600",
+                        burn > 100
+                          ? "text-rose-600"
+                          : burn > 80
+                            ? "text-amber-600"
+                            : "text-emerald-600",
                       )}
                     >
                       {burn.toFixed(0)}%
@@ -395,7 +530,8 @@ export function BudgetTab({ projectId }: { projectId: string }) {
                       }}
                       className={cn(
                         "flex h-3.5 w-3.5 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground",
-                        groupIndex === grouped.length - 1 && "pointer-events-none opacity-30",
+                        groupIndex === grouped.length - 1 &&
+                          "pointer-events-none opacity-30",
                       )}
                       aria-label="Přesunout kategorii dolů"
                     >
@@ -408,35 +544,50 @@ export function BudgetTab({ projectId }: { projectId: string }) {
                 <Table>
                   <TableHeader>
                     <TableRow className="bg-muted/40 hover:bg-muted/40">
+                      <TableHead className="w-8"></TableHead>
                       <TableHead className="min-w-[200px]">Položka</TableHead>
                       <TableHead className="min-w-[140px]">Prvek / Úkol</TableHead>
                       <TableHead className="w-28">Fáze</TableHead>
-                      <TableHead className="w-44">Poznámka</TableHead>
                       <TableHead className="w-28 text-right">Plán (Kč)</TableHead>
-                      <TableHead className="w-20 text-right">Vůle</TableHead>
                       <TableHead className="w-20 text-right">Dny</TableHead>
                       <TableHead className="w-28">Datum od</TableHead>
                       <TableHead className="w-28">Datum do</TableHead>
                       <TableHead className="w-28 text-right">Skut. (Kč)</TableHead>
-                      <TableHead className="w-24 text-right">Ušetřeno</TableHead>
                       <TableHead className="w-20 text-right">Hod.</TableHead>
-                      <TableHead className="w-28 text-center">Stav</TableHead>
+                      <TableHead className="w-36 text-center">Stav</TableHead>
                       <TableHead className="w-8"></TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {catItems.map((item, idx) => (
-                      <BudgetRow
-                        key={item.id}
-                        item={item}
-                        projectId={projectId}
-                        onEdit={() => setEditingItem(item)}
-                        canMoveUp={idx > 0}
-                        canMoveDown={idx < catItems.length - 1}
-                        onMoveUp={() => moveItem(catItems, idx, -1)}
-                        onMoveDown={() => moveItem(catItems, idx, 1)}
-                      />
-                    ))}
+                    {catItems.length === 0 && (
+                      <TableRow>
+                        <TableCell colSpan={12} className="py-8 text-center text-sm text-muted-foreground">
+                          Žádné položky v této kategorii.
+                        </TableCell>
+                      </TableRow>
+                    )}
+                    {catItems.map((item, idx) => {
+                      const children = childrenMap.get(item.id) ?? [];
+                      const isExpanded = expandedItems.has(item.id);
+                      return (
+                        <BudgetItemRows
+                          key={item.id}
+                          item={item}
+                          childItems={children}
+                          projectId={projectId}
+                          isExpanded={isExpanded}
+                          onToggleExpand={() => toggleItem(item.id)}
+                          expandedItems={expandedItems}
+                          onToggleChildExpand={toggleItem}
+                          onEdit={() => setEditingItem(item)}
+                          canMoveUp={idx > 0}
+                          canMoveDown={idx < catItems.length - 1}
+                          onMoveUp={() => moveItem(catItems, idx, -1)}
+                          onMoveDown={() => moveItem(catItems, idx, 1)}
+                          onAddTask={() => setAddTaskFor(item)}
+                        />
+                      );
+                    })}
                   </TableBody>
                 </Table>
               </CollapsibleContent>
@@ -456,7 +607,126 @@ export function BudgetTab({ projectId }: { projectId: string }) {
         projectId={projectId}
         item={editingItem}
       />
+      {addTaskFor && (
+        <BudgetItemDialog
+          open={!!addTaskFor}
+          onOpenChange={(o) => !o && setAddTaskFor(null)}
+          projectId={projectId}
+          parentId={addTaskFor.id}
+          defaultCategory={addTaskFor.category}
+          defaultPhase={addTaskFor.phase}
+        />
+      )}
     </div>
+  );
+}
+
+// ===== BudgetItemRows — renders one parent row + optional detail panel + child rows =====
+function BudgetItemRows({
+  item,
+  childItems,
+  projectId,
+  isExpanded,
+  onToggleExpand,
+  expandedItems,
+  onToggleChildExpand,
+  onEdit,
+  canMoveUp,
+  canMoveDown,
+  onMoveUp,
+  onMoveDown,
+  onAddTask,
+  onMoveChild,
+}: {
+  item: BudgetItem;
+  childItems: BudgetItem[];
+  projectId: string;
+  isExpanded: boolean;
+  onToggleExpand: () => void;
+  expandedItems: Set<string>;
+  onToggleChildExpand: (id: string) => void;
+  onEdit: () => void;
+  canMoveUp: boolean;
+  canMoveDown: boolean;
+  onMoveUp: () => void;
+  onMoveDown: () => void;
+  onAddTask?: () => void;
+  onMoveChild?: (siblings: BudgetItem[], idx: number, dir: -1 | 1) => void;
+}) {
+  const reorder = useReorder(projectId);
+  const handleMoveChild = (siblings: BudgetItem[], idx: number, dir: -1 | 1) => {
+    if (onMoveChild) {
+      onMoveChild(siblings, idx, dir);
+      return;
+    }
+    // Default fallback: swap sortOrder between siblings
+    const target = idx + dir;
+    if (target < 0 || target >= siblings.length) return;
+    const a = siblings[idx];
+    const b = siblings[target];
+    const newItems = siblings.map((it) => ({ id: it.id, sortOrder: it.sortOrder }));
+    newItems[idx].sortOrder = b.sortOrder;
+    newItems[target].sortOrder = a.sortOrder;
+    reorder.mutate({ items: newItems });
+  };
+
+  const rolled = computeRolledUp(item, childItems);
+  const hasChildren = childItems.length > 0;
+  const saved = computeSaved(item, childItems);
+  const overBudget = rolled.planCost > 0 && rolled.actualCost > rolled.planCost;
+
+  return (
+    <>
+      <BudgetRow
+        item={item}
+        projectId={projectId}
+        onEdit={onEdit}
+        canMoveUp={canMoveUp}
+        canMoveDown={canMoveDown}
+        onMoveUp={onMoveUp}
+        onMoveDown={onMoveDown}
+        isExpanded={isExpanded}
+        onToggleExpand={onToggleExpand}
+        childCount={childItems.length}
+        rolled={rolled}
+        saved={saved}
+        overBudget={overBudget}
+        onAddTask={onAddTask}
+        isChild={false}
+      />
+      {isExpanded && (
+        <DetailPanelRow
+          item={item}
+          saved={saved}
+          projectId={projectId}
+        />
+      )}
+      {isExpanded &&
+        hasChildren &&
+        childItems.map((child, ci) => {
+          const childExpanded = expandedItems.has(child.id);
+          // For now, only one level of children nesting is rendered in the UI.
+          // If a child has its own children, they're still rolled up into the child's totals.
+          const childChildren: BudgetItem[] = [];
+          return (
+            <BudgetItemRows
+              key={child.id}
+              item={child}
+              childItems={childChildren}
+              projectId={projectId}
+              isExpanded={childExpanded}
+              onToggleExpand={() => onToggleChildExpand(child.id)}
+              expandedItems={expandedItems}
+              onToggleChildExpand={onToggleChildExpand}
+              onEdit={onEdit}
+              canMoveUp={ci > 0}
+              canMoveDown={ci < childItems.length - 1}
+              onMoveUp={() => handleMoveChild(childItems, ci, -1)}
+              onMoveDown={() => handleMoveChild(childItems, ci, 1)}
+            />
+          );
+        })}
+    </>
   );
 }
 
@@ -468,6 +738,14 @@ function BudgetRow({
   canMoveDown,
   onMoveUp,
   onMoveDown,
+  isExpanded,
+  onToggleExpand,
+  childCount,
+  rolled,
+  saved,
+  overBudget,
+  onAddTask,
+  isChild,
 }: {
   item: BudgetItem;
   projectId: string;
@@ -476,37 +754,77 @@ function BudgetRow({
   canMoveDown: boolean;
   onMoveUp: () => void;
   onMoveDown: () => void;
+  isExpanded: boolean;
+  onToggleExpand: () => void;
+  childCount: number;
+  rolled: RolledUp;
+  saved: number | null;
+  overBudget: boolean;
+  onAddTask?: () => void;
+  isChild: boolean;
 }) {
   const updateItem = useUpdateBudgetItem(projectId);
   const deleteItem = useDeleteBudgetItem(projectId);
   const duplicateItem = useDuplicateBudgetItem(projectId);
   const [confirmDelete, setConfirmDelete] = useState(false);
 
-  const overBudget = item.planCost && item.actualCost > item.planCost;
-  const saved = item.completed
-    ? Math.max(0, (item.planCost || 0) - (item.actualCost || 0))
-    : null;
-  const overSaved = item.completed && item.planCost
-    ? (item.actualCost || 0) - (item.planCost || 0)
-    : 0;
-
   const update = (field: keyof BudgetItem, value: unknown) => {
     updateItem.mutate({ id: item.id, data: { [field]: value } });
   };
+
+  // Display values: if parent with children, show rolled-up; else show own
+  const displayPlanCost = childCount > 0 ? rolled.planCost : item.planCost;
+  const displayPlanDays = childCount > 0 ? rolled.planDays : item.planDays;
+  const displayActualCost = childCount > 0 ? rolled.actualCost : item.actualCost;
+  const displayActualHours = childCount > 0 ? rolled.actualHours : item.actualHours;
+
+  const overSaved =
+    item.completed && rolled.planCost > 0
+      ? rolled.actualCost - rolled.planCost
+      : 0;
 
   return (
     <TableRow
       className={cn(
         "group border-l-2 transition-colors",
-        PHASE_BORDER_COLORS[item.phase] ?? "border-l-zinc-300",
-        item.completed
-          ? "bg-emerald-50/40 dark:bg-emerald-950/10"
-          : "hover:bg-muted/30",
+        item.rejected
+          ? "border-l-rose-500 opacity-60"
+          : PHASE_BORDER_COLORS[item.phase] ?? "border-l-zinc-300",
+        item.rejected
+          ? "bg-rose-50/40 dark:bg-rose-950/10"
+          : item.completed
+            ? "bg-emerald-50/40 dark:bg-emerald-950/10"
+            : "hover:bg-muted/30",
+        isChild && "bg-muted/20",
       )}
     >
+      {/* Expand/collapse toggle */}
+      <TableCell className="align-middle">
+        <button
+          onClick={onToggleExpand}
+          aria-label={isExpanded ? "Sbalit detail" : "Rozbalit detail"}
+          aria-expanded={isExpanded}
+          className={cn(
+            "flex h-5 w-5 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground",
+          )}
+        >
+          {isExpanded ? (
+            <ChevronDown className="h-3.5 w-3.5" />
+          ) : (
+            <ChevronRight className="h-3.5 w-3.5" />
+          )}
+        </button>
+      </TableCell>
+
+      {/* Položka */}
       <TableCell>
         <div className="flex flex-col">
           <div className="flex items-center gap-1.5">
+            {isChild && (
+              <span className="text-muted-foreground/60" aria-hidden>
+                └
+              </span>
+            )}
             {item.required && (
               <span
                 title="Nutné"
@@ -520,39 +838,70 @@ function BudgetRow({
               onClick={onEdit}
               className={cn(
                 "text-left text-sm font-medium hover:underline",
-                item.completed && "line-through decoration-emerald-500/50",
+                item.rejected
+                  ? "line-through decoration-rose-500/70"
+                  : item.completed && "line-through decoration-emerald-500/50",
+                childCount > 0 && "font-semibold",
               )}
             >
               {item.subcategory || "(bez názvu)"}
             </button>
-            {item.completed && (
+            {/* Comment count icon */}
+            {item._count && item._count.comments > 0 && (
+              <Badge
+                variant="outline"
+                className="h-4 px-1 text-[9px] text-sky-700"
+                title={`${item._count.comments} komentářů`}
+              >
+                <MessageSquare className="mr-0.5 h-2.5 w-2.5" />
+                {item._count.comments}
+              </Badge>
+            )}
+            {item.rejected && (
+              <Badge variant="outline" className="h-4 px-1 text-[9px] text-rose-700">
+                Zavrženo
+              </Badge>
+            )}
+            {item.completed && !item.rejected && (
               <Badge variant="outline" className="h-4 px-1 text-[9px] text-emerald-700">
                 Hotovo
               </Badge>
             )}
+            {childCount > 0 && (
+              <Badge variant="secondary" className="h-4 px-1 text-[9px]">
+                {childCount} {childCount === 1 ? "úkol" : childCount < 5 ? "úkoly" : "úkolů"}
+              </Badge>
+            )}
+            {!isChild && onAddTask && (
+              <button
+                onClick={onAddTask}
+                title="Přidat úkol pod tuto položku"
+                aria-label="Přidat úkol"
+                className="inline-flex h-4 w-4 items-center justify-center rounded text-emerald-700 hover:bg-emerald-100 hover:text-emerald-800 dark:text-emerald-400 dark:hover:bg-emerald-900/40"
+              >
+                <Plus className="h-3 w-3" />
+              </button>
+            )}
           </div>
-          {item._count && (item._count.payments > 0 || item._count.timeEntries > 0 || item._count.comments > 0) && (
-            <div className="mt-0.5 flex flex-wrap gap-1">
-              {item._count.payments > 0 && (
-                <Badge variant="outline" className="h-4 px-1 text-[10px] text-emerald-700">
-                  {item._count.payments} plateb
-                </Badge>
-              )}
-              {item._count.timeEntries > 0 && (
-                <Badge variant="outline" className="h-4 px-1 text-[10px] text-violet-700">
-                  {item._count.timeEntries} časů
-                </Badge>
-              )}
-              {item._count.comments > 0 && (
-                <Badge variant="outline" className="h-4 px-1 text-[10px] text-sky-700">
-                  <MessageSquare className="mr-0.5 h-2 w-2" />
-                  {item._count.comments}
-                </Badge>
-              )}
-            </div>
-          )}
+          {item._count &&
+            (item._count.payments > 0 || item._count.timeEntries > 0) && (
+              <div className="mt-0.5 flex flex-wrap gap-1">
+                {item._count.payments > 0 && (
+                  <Badge variant="outline" className="h-4 px-1 text-[10px] text-emerald-700">
+                    {item._count.payments} plateb
+                  </Badge>
+                )}
+                {item._count.timeEntries > 0 && (
+                  <Badge variant="outline" className="h-4 px-1 text-[10px] text-violet-700">
+                    {item._count.timeEntries} časů
+                  </Badge>
+                )}
+              </div>
+            )}
         </div>
       </TableCell>
+
+      {/* Prvek / Úkol */}
       <TableCell>
         {item.element ? (
           <button
@@ -568,6 +917,8 @@ function BudgetRow({
           <span className="text-[11px] text-muted-foreground/50">—</span>
         )}
       </TableCell>
+
+      {/* Fáze */}
       <TableCell>
         <Select
           value={item.phase}
@@ -590,107 +941,131 @@ function BudgetRow({
           </SelectContent>
         </Select>
       </TableCell>
-      <TableCell>
-        {item.note ? (
-          <span className="line-clamp-2 text-[11px] text-muted-foreground" title={item.note}>
-            {item.note}
+
+      {/* Plán (Kč) */}
+      <TableCell className="text-right">
+        {childCount > 0 ? (
+          // For parents with children, show rolled-up value as read-only text
+          <span className="block w-full rounded px-1 py-0.5 text-right text-xs font-semibold">
+            {formatNumber(displayPlanCost, " Kč")}
           </span>
         ) : (
-          <span className="text-[11px] text-muted-foreground/50">—</span>
+          <InlineNumber
+            value={item.planCost}
+            onCommit={(v) => update("planCost", v)}
+            className="text-right"
+          />
         )}
       </TableCell>
+
+      {/* Dny */}
       <TableCell className="text-right">
-        <InlineNumber
-          value={item.planCost}
-          onCommit={(v) => update("planCost", v)}
-          className="text-right"
-        />
+        {childCount > 0 ? (
+          <span className="block w-full rounded px-1 py-0.5 text-right text-xs font-semibold">
+            {(displayPlanDays ?? 0) > 0 ? formatNumber(displayPlanDays) : "—"}
+          </span>
+        ) : (
+          <InlineNumber
+            value={item.planDays}
+            onCommit={(v) => update("planDays", v)}
+            className="text-right text-[11px]"
+          />
+        )}
       </TableCell>
-      <TableCell className="text-right">
-        <InlineNumber
-          value={item.flexibilityPercent}
-          onCommit={(v) => update("flexibilityPercent", v)}
-          suffix="%"
-          className="text-right text-[11px]"
-        />
-      </TableCell>
-      <TableCell className="text-right">
-        <InlineNumber
-          value={item.planDays}
-          onCommit={(v) => update("planDays", v)}
-          className="text-right text-[11px]"
-        />
-      </TableCell>
+
+      {/* Datum od */}
       <TableCell>
         <InlineDate
           value={item.dateFrom}
           onCommit={(v) => update("dateFrom", v)}
         />
       </TableCell>
+
+      {/* Datum do */}
       <TableCell>
         <InlineDate
           value={item.dateTo}
           onCommit={(v) => update("dateTo", v)}
         />
       </TableCell>
-      <TableCell className={cn("text-right", overBudget && "font-semibold text-rose-600")}>
-        <InlineNumber
-          value={item.actualCost}
-          onCommit={(v) => update("actualCost", v)}
-          className="text-right"
-        />
+
+      {/* Skut. (Kč) */}
+      <TableCell
+        className={cn(
+          "text-right",
+          overBudget && "font-semibold text-rose-600",
+        )}
+      >
+        {childCount > 0 ? (
+          <span className="block w-full rounded px-1 py-0.5 text-right text-xs font-semibold">
+            {formatNumber(displayActualCost, " Kč")}
+          </span>
+        ) : (
+          <InlineNumber
+            value={item.actualCost}
+            onCommit={(v) => update("actualCost", v)}
+            className="text-right"
+          />
+        )}
         {overBudget && (
           <span className="ml-1 inline-flex items-center text-[10px] text-rose-500">
             <AlertTriangle className="h-3 w-3" />
           </span>
         )}
       </TableCell>
-      <TableCell className="text-right text-[11px]">
-        {item.completed ? (
-          saved !== null && saved > 0 ? (
-            <span className="font-medium text-emerald-600" title="Ušetřeno od plánu">
-              {formatCzk(saved)}
-            </span>
-          ) : overSaved > 0 ? (
-            <span className="font-medium text-rose-600" title="Překročeno oproti plánu">
-              −{formatCzk(overSaved)}
-            </span>
-          ) : (
-            <span className="text-muted-foreground">0 Kč</span>
-          )
-        ) : (
-          <span className="text-muted-foreground/40" title="Označte jako hotové pro výpočet">
-            —
-          </span>
-        )}
-      </TableCell>
+
+      {/* Hodiny */}
       <TableCell className="text-right text-[11px] text-violet-600">
-        {item.actualHours > 0 ? formatNumber(item.actualHours, " h") : "—"}
+        {displayActualHours > 0 ? formatNumber(displayActualHours, " h") : "—"}
       </TableCell>
+
+      {/* Stav: Hotovo + Rejected (X) */}
       <TableCell className="text-center">
-        <Button
-          type="button"
-          size="sm"
-          variant={item.completed ? "default" : "outline"}
-          onClick={() => update("completed", !item.completed)}
-          disabled={updateItem.isPending}
-          aria-pressed={item.completed}
-          className={cn(
-            "h-7 gap-1.5 px-2.5 text-xs",
-            item.completed
-              ? "border-emerald-600 bg-emerald-600 text-white hover:bg-emerald-700 hover:text-white dark:border-emerald-700 dark:bg-emerald-700 dark:hover:bg-emerald-800"
-              : "text-emerald-700 hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-700 dark:text-emerald-400 dark:hover:bg-emerald-950/40",
-          )}
-          title={item.completed ? "Označit jako nedokončené" : "Označit jako hotové"}
-        >
-          {item.completed ? (
-            <CheckCircle2 className="h-3.5 w-3.5" />
-          ) : (
-            <Circle className="h-3.5 w-3.5" />
-          )}
-          Hotovo
-        </Button>
+        <div className="flex items-center justify-center gap-1">
+          <Button
+            type="button"
+            size="sm"
+            variant={item.completed ? "default" : "outline"}
+            onClick={() => update("completed", !item.completed)}
+            disabled={updateItem.isPending || item.rejected}
+            aria-pressed={item.completed}
+            className={cn(
+              "h-7 gap-1 px-2 text-xs",
+              item.completed
+                ? "border-emerald-600 bg-emerald-600 text-white hover:bg-emerald-700 hover:text-white dark:border-emerald-700 dark:bg-emerald-700 dark:hover:bg-emerald-800"
+                : "text-emerald-700 hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-700 dark:text-emerald-400 dark:hover:bg-emerald-950/40",
+            )}
+            title={item.completed ? "Označit jako nedokončené" : "Označit jako hotové"}
+          >
+            {item.completed ? (
+              <CheckCircle2 className="h-3.5 w-3.5" />
+            ) : (
+              <Circle className="h-3.5 w-3.5" />
+            )}
+            Hotovo
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            variant={item.rejected ? "default" : "outline"}
+            onClick={() => update("rejected", !item.rejected)}
+            disabled={updateItem.isPending}
+            aria-pressed={item.rejected}
+            className={cn(
+              "h-7 w-7 p-0",
+              item.rejected
+                ? "border-rose-600 bg-rose-600 text-white hover:bg-rose-700 hover:text-white dark:border-rose-700 dark:bg-rose-700 dark:hover:bg-rose-800"
+                : "text-rose-600 hover:border-rose-300 hover:bg-rose-50 hover:text-rose-700 dark:text-rose-400 dark:hover:bg-rose-950/40",
+            )}
+            title={item.rejected ? "Zrušit zavržení" : "Zavrhnout položku"}
+            aria-label={item.rejected ? "Zrušit zavržení" : "Zavrhnout"}
+          >
+            <X className="h-3.5 w-3.5" />
+          </Button>
+        </div>
       </TableCell>
+
+      {/* Akce */}
       <TableCell>
         <div className="flex items-center">
           <span className="flex flex-col">
@@ -726,13 +1101,16 @@ function BudgetRow({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={onEdit}>
-                Upravit detail
-              </DropdownMenuItem>
+              <DropdownMenuItem onClick={onEdit}>Upravit detail</DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => update("completed", !item.completed)}
               >
                 {item.completed ? "Označit jako nedokončené" : "Označit jako hotové"}
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => update("rejected", !item.rejected)}
+              >
+                {item.rejected ? "Zrušit zavržení" : "Zavrhnout"}
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={async () => {
@@ -781,7 +1159,9 @@ function BudgetRow({
                   }
                 }}
               >
-                {deleteItem.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {deleteItem.isPending && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
                 Smazat
               </Button>
             </DialogFooter>
@@ -792,6 +1172,104 @@ function BudgetRow({
   );
 }
 
+// ===== DetailPanelRow — expandable panel below an item row with hidden fields =====
+function DetailPanelRow({
+  item,
+  saved,
+  projectId,
+}: {
+  item: BudgetItem;
+  saved: number | null;
+  projectId: string;
+}) {
+  const updateItem = useUpdateBudgetItem(projectId);
+
+  const update = (field: keyof BudgetItem, value: unknown) => {
+    updateItem.mutate({ id: item.id, data: { [field]: value } });
+  };
+
+  const overSaved =
+    item.completed && item.planCost
+      ? (item.actualCost || 0) - (item.planCost || 0)
+      : 0;
+
+  return (
+    <TableRow
+      className={cn(
+        "border-l-2 bg-muted/20 hover:bg-muted/20",
+        item.rejected
+          ? "border-l-rose-500"
+          : PHASE_BORDER_COLORS[item.phase] ?? "border-l-zinc-300",
+      )}
+    >
+      <TableCell colSpan={12} className="py-3">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          {/* Poznámka */}
+          <div className="sm:col-span-1">
+            <div className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+              Poznámka
+            </div>
+            <InlineTextarea
+              value={item.note}
+              onCommit={(v) => update("note", v)}
+              placeholder="Doplňující informace, jednotkové ceny, postup…"
+            />
+          </div>
+
+          {/* Vůle */}
+          <div>
+            <div className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+              Vůle (%)
+            </div>
+            <InlineNumber
+              value={item.flexibilityPercent}
+              onCommit={(v) => update("flexibilityPercent", v)}
+              suffix="%"
+              className="text-left text-xs"
+            />
+            <p className="mt-1 text-[10px] text-muted-foreground">
+              Míra flexibility odhadu.
+            </p>
+          </div>
+
+          {/* Ušetřeno */}
+          <div>
+            <div className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+              Ušetřeno
+            </div>
+            <div className="rounded border bg-background px-2 py-1.5 text-xs">
+              {item.completed ? (
+                saved !== null && saved > 0 ? (
+                  <span className="font-medium text-emerald-600" title="Ušetřeno od plánu">
+                    {formatCzk(saved)}
+                  </span>
+                ) : overSaved > 0 ? (
+                  <span className="font-medium text-rose-600" title="Překročeno oproti plánu">
+                    −{formatCzk(overSaved)}
+                  </span>
+                ) : (
+                  <span className="text-muted-foreground">0 Kč</span>
+                )
+              ) : (
+                <span
+                  className="text-muted-foreground/40"
+                  title="Označte jako hotové pro výpočet"
+                >
+                  —
+                </span>
+              )}
+            </div>
+            <p className="mt-1 text-[10px] text-muted-foreground">
+              Počítáno po dokončení položky.
+            </p>
+          </div>
+        </div>
+      </TableCell>
+    </TableRow>
+  );
+}
+
+// ===== Inline editors =====
 function InlineNumber({
   value,
   onCommit,
@@ -892,5 +1370,44 @@ function InlineDate({
     >
       {value ? formatDate(value) : <span className="text-muted-foreground/50">—</span>}
     </button>
+  );
+}
+
+function InlineTextarea({
+  value,
+  onCommit,
+  placeholder,
+}: {
+  value: string | null;
+  onCommit: (v: string | null) => void;
+  placeholder?: string;
+}) {
+  // Uncontrolled textarea with `key` re-mounting on value change so the
+  // initial render reflects the latest external value (e.g., after API refetch).
+  // Commits on blur (or Ctrl/Cmd+Enter), Escape resets to original value.
+  return (
+    <Textarea
+      key={value ?? "__empty__"}
+      defaultValue={value ?? ""}
+      onBlur={(e) => {
+        const trimmed = e.target.value.trim() === "" ? null : e.target.value.trim();
+        if (trimmed !== (value ?? null)) {
+          onCommit(trimmed);
+        }
+      }}
+      onKeyDown={(e) => {
+        const target = e.target as HTMLTextAreaElement;
+        if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+          target.blur();
+        }
+        if (e.key === "Escape") {
+          target.value = value ?? "";
+          target.blur();
+        }
+      }}
+      placeholder={placeholder}
+      rows={3}
+      className="text-xs"
+    />
   );
 }

@@ -879,3 +879,214 @@ Stage Summary:
 
 Unresolved issues / Next steps:
 - Aplikace je připravena na společnou revizi s uživatelem
+
+---
+Task ID: C2
+Agent: Subagent C2 (Z.ai Code)
+Task: Oprava editace existujících plateb v Payments tab + "Hotovo" checkbox + třídění plateb
+
+Work Log:
+- Načetl worklog pro kontext (předchozí úkoly 1-22 včetně B3 který měl platby edit vyřešit, ale zjevně nebylo hotové)
+- Načetl src/components/tabs/payments-tab.tsx (původně 988 řádků), src/lib/api.ts, src/app/api/payments/[id]/route.ts, src/app/api/budget-items/[id]/route.ts
+- Verifikoval: useUpdatePayment hook již EXISTUJE v api.ts (řádky 458-476) — volá PATCH /api/payments/[id], invaliduje payments/budget/dashboard queries. useUpdateBudgetItem hook také existuje.
+- Identifikoval hlavní příčinu: PaymentDialog měl pouze createPayment prop, neakceptoval payment/updatePayment props. PaymentRow měl pouze onDelete callback, žádný onEdit. Editace plateb nebyla vůbec provázaná.
+
+Provedené změny v `src/components/tabs/payments-tab.tsx` (kompletní rewrite, ~870 řádků):
+
+1. **Editace existujících plateb (hlavní fix):**
+   * Importován `useUpdatePayment` a `useUpdateBudgetItem` z `@/lib/api`
+   * V `PaymentsTab` přidán `updatePayment = useUpdatePayment(projectId)` a `updateBudgetItem = useUpdateBudgetItem(projectId)`
+   * Přidán `editPayment` state (Payment | null) — drží platebu, která se právě edituje
+   * Dvě instance `PaymentDialog`:
+     - První pro create mód (addOpen state)
+     - Druhá pro edit mód (editPayment !== null), předává `payment={editPayment}` a `updatePayment={updatePayment}`
+   * `PaymentDialog` refaktorován na wrapper pattern (jako TimeDialog v time-tab.tsx):
+     - Vnější komponenta spravuje Dialog open state a remountuje inner form přes `key={payment?.id ?? "new"}` — zajišťuje čerstvý state přes useState inicializéry při změně editované platby
+     - `PaymentDialogInner` akceptuje nové props: `payment?: Payment | null`, `updatePayment?`, `updateBudgetItem`, `onClose?`
+     - Předvyplní všechny fieldy z payment (budgetItemId, contactId, amount, date, type, vendor, invoiceNumber, description, vatRate)
+     * `PaymentRow` přijímá `onEdit` callback:
+     - TableRow má `cursor-pointer hover:bg-muted/30` a `onClick={() => onEdit()}`
+     - V dropdown menu přidána položka "Upravit" s Pencil ikonou (volá onEdit)
+     - `stopPropagation` na akční buňce aby klik na menu neotevíral edit
+   * Dialog titulek se mění: "Nová platba" / "Upravit platbu" / "Upravit splátku" (podle isEdit a isInstallment)
+   * Submit v edit módu volá `updatePayment.mutateAsync({ id: payment.id, data: payload })` s PATCH /api/payments/[id]
+
+2. **"Hotovo" checkbox v PaymentDialog (pro novou platbu i editaci):**
+   * Přidán state `markCompleted` (default false)
+   * Checkbox "Označit položku jako hotovou" v styled boxu (amber barva, konzistentní s tématikou plateb)
+   * Hint text přesně podle zadání: "Položka bude označena jako dokončená" (nebo "Položka je již označena jako hotová." pokud už je completed)
+   * Po úspěšném create/update: pokud je markCompleted=true, zavolá `updateBudgetItem.mutateAsync({ id: budgetItemId, data: { completed: true } })` (PATCH /api/budget-items/[id])
+   * Toast zprávy: "Platba přidána, položka označena jako hotová" / "Platba upravena, položka označena jako hotová" (s fallbackem pokud PATCH budget-item selže)
+   * Submit button indikuje záměr pomocí CheckCircle2 ikony (amber) když je markCompleted && !isPending
+   * Detekce alreadyCompleted ze selectedBudgetItem.completed — v SelectItemu se zobrazuje ✓ u hotových položek
+
+3. **Třídění plateb (datum/typ/částka/kontakt/firma):**
+   * Přidán SortKey type: "date-desc" | "date-asc" | "amount-desc" | "amount-asc" | "type" | "contact" | "vendor"
+   * SORT_OPTIONS: 7 možností s českými labely
+   * `sortPayments(a, b, key)` helper — localeCompare pro texty (cs-CZ), numerické porovnání pro částky, datum timestamp pro datumy, nulls last pro kontakt/firmu (~~~ sentinel)
+   * SortBy Select s ArrowUpDown ikonou (w-52) v toolbaru
+   * Aplikováno na `filteredStandalone` (sort po filtru) a `filteredGroups` (sort rodičovské faktury)
+   * Tie-break vždy na datum (nejnovější první) aby třídění nebylo nedeterministické
+   * Sort se aplikuje PŘED renderem, ne v useMemo — aby se změna sortBy projevila okamžitě (méně re-renders)
+   * Default: "date-desc" (nejnovější první) — odpovídá předchozímu chování
+
+4. **Editace splátek v InstallmentGroupCard:**
+   * Přidán `onEditPayment` callback prop
+   * Jednotlivé installment rows jsou nyní klikací (cursor-pointer + hover:bg-muted/30)
+   * V dropdown menu přidána položka "Upravit splátku" (Pencil ikona)
+   * Klik na řádek i na menu item otevírá edit dialog se správnou platbou
+   * stopPropagation na akční buňce
+   * Dialog v edit módu detekuje `isInstallment` (payment.installmentOf !== null) a skrývá installment toggle (nelze převést existující splátku na fakturu)
+   * Skrývá invoiceTotal field v edit módu (strukturální pole nelze měnit)
+
+Provedené změny v `src/app/api/payments/[id]/route.ts`:
+- PATCH endpoint rozšířen o `vatRate` a `vatAmount` handling:
+  * Pokud body.vatRate je předán: převede na Number nebo null, spočítá vatAmount = amount * vatRate / (100 + vatRate)
+  * Pokud body.amount je předán ale vatRate ne: recompute vatAmount z existing.vatRate (pokud > 0)
+  * Prisma update.data.vatRate a vatAmount — undefined znamená "neměnit", null znamená "vynulovat"
+- Důvod: bez tohoto fixu by editace vatRate v dialogu neměla efekt — pole by se neuložilo
+- Recompute actualCost na budgetItem zachován (na konci PATCH)
+
+Cleanup v `src/components/tabs/budget-tab.tsx` (predexistující lint chyby):
+- Identifikoval 2 errory + 1 warning v budget-tab.tsx při `bun run lint` (ne v mém souboru):
+  * 573:27 a 697:15: `children={...}` passed as prop (react/no-children-prop) — BudgetItemRows komponenta měla prop pojmenovaný `children` (children budget itemy, ne React children)
+  * 207:5: unused eslint-disable directive
+- Fix: přejmenoval `children` prop na `childItems` v BudgetItemRows (destructure, type, obě call sites, 3 interní usage)
+- Smazán původní `// eslint-disable-next-line react-hooks/exhaustive-deps` (byl unused protože React Compiler převzal dep tracking)
+- Po smazání se objevily 2 nové errory z `react-hooks/preserve-manual-memoization` (React Compiler):
+  * filteredTopLevel useMemo: compiler chtěl `[itemMatches]`, source měl `[items, childrenMap, phaseFilter, completionFilter, search]`
+  * savedCategoryOrder useMemo: compiler chtěl `[project]`, source měl `[project?.categoryOrder]`
+- Fix: přidán `// eslint-disable-next-line react-hooks/preserve-manual-memoization` bezprostředně před `const ... = useMemo(() => {` na obou místech — tyto useMemo mají správné ruční deps (jenom ve stylu, který compiler nesleduje)
+
+Lint:
+- `bun run lint` prošel bez chyb (0 errors, 0 warnings) — exit code 0
+- Dev log: čistý, žádné runtime chyby, GET / 200, API endpoints 200
+
+Stage Summary:
+- ✅ Editace existujících plateb: klik na řádek nebo "Upravit" v menu otevírá edit dialog s předvyplněnými hodnotami, po uložení volá PATCH /api/payments/[id] s invalidací payments/budget/dashboard queries
+- ✅ Editace splátek (installments): klinutí na installment row nebo "Upravit splátku" v menu otevírá edit dialog; installment toggle je skryt v edit módu
+- ✅ "Hotovo" checkbox v PaymentDialog (create + edit): po úspěchu volá PATCH /api/budget-items/[id] s { completed: true }; hint "Položka bude označena jako dokončená"
+- ✅ Třídění plateb: 7 možností (datum↓/datum↑/částka↓/částka↑/typ/kontakt/firma), Select s ArrowUpDown ikonou, aplikováno na standalone i group parent položky
+- ✅ PATCH /api/payments/[id] rozšířen o vatRate/vatAmount (compute i recompute při změně amount)
+- ✅ Předexistující lint chyby v budget-tab.tsx opraveny (children→childItems, správné eslint-disable pro preserve-manual-memoization)
+- ✅ Lint prošel (0 errors, 0 warnings)
+
+Unresolved issues / Next steps:
+- Žádné — vše ze zadání C2 hotové
+- V budoucnu by šlo přidat: editace invoiceTotal parenta (aktuálně nelze měnit celkovou částku faktury po vytvoření), drag-and-drop pro splátky (změna pořadí)
+
+---
+Task ID: C1
+Agent: Subagent C1 (Budget Tab Parent-Child Restructure)
+Task: Kompletní přepis Budget tab — parent-child hierarchie, skrytá pole v rozbalovacím panelu, "+" tlačítko pro úkoly, "X" tlačítko pro Rejected, comment count ikona, rozšířený completion filter, datalist pro existující podkategorie v dialogu.
+
+Work Log:
+- Načetl `worklog.md` pro kontext, `src/components/tabs/budget-tab.tsx` (897 řádků), `src/components/budget-item-dialog.tsx`, `src/lib/api.ts`, `src/lib/format.ts`, API routes pro budget items.
+- Ověřil, že schema má `parentId` a `rejected` (prisma/schema.prisma:92,96), API GET/POST/PATCH je už připravené, typ `BudgetItem` v `src/lib/api.ts` má `parentId`, `rejected`, `children?: BudgetItem[]`.
+- Ověřil `bun run db:push` — "already in sync", Prisma client regenerated (má `rejected: boolean` a `parentId: string | null`).
+
+Provedené změny v `src/components/tabs/budget-tab.tsx` (kompletní rewrite):
+1. **Parent-child hierarchie** — items z API přicházejí jako flat list. Na frontendu:
+   - `childrenMap: Map<parentId, BudgetItem[]>` postavený přes `useMemo` z `items` (zachová realnou hierarchii nezávisle na filtru)
+   - `filteredTopLevel`: filtruje jen top-level items (parentId===null), ale parent je zobrazen i pokud matchne kterýkoliv jeho potomek
+   - V každé kategorii: top-level Položka → (rozbalením) detail panel + child Úkoly odsazené s "└" prefixem
+2. **Součty z dětí** — `computeRolledUp(item, children)` vrací `planCost`, `planDays`, `actualCost`, `actualHours` (vlastní + suma dětí). Pro parents s dětmi zobrazuji rolled-up hodnoty jako read-only text (nelze inline editovat — editují se v dítětech nebo dialogu). Pro items bez dětí zachována inline editace.
+3. **Skrytá pole v rozbalovacím panelu** — odstraněny sloupce "Poznámka", "Vůle", "Ušetřeno" z hlavičky tabulky. Nový `DetailPanelRow` komponent s `colSpan={12}` pod řádkem položky:
+   - Poznámka: `InlineTextarea` (uncontrolled, commit na blur, Escape reset, Ctrl+Enter uložit)
+   - Vůle (%): `InlineNumber` s suffix "%"
+   - Ušetřeno: vypočítáno z rolled-up hodnot (saved = max(0, rolledPlan - rolledActual) když completed; záporné = "−Kč" rose)
+4. **"+" tlačítko pro přidání úkolu** — u každé top-level Položky (ne u dětí, `!isChild && onAddTask`). Malý `Plus` ikona-button (h-4 w-4, emerald barva). Klik otevře `BudgetItemDialog` v task módu s `parentId`, `defaultCategory`, `defaultPhase` props z parent item.
+5. **"X" (Rejected) tlačítko** — vedle "Hotovo" button v sloupci Stav:
+   - `Button` size="sm" s `X` ikonou, h-7 w-7 p-0
+   - Aktivní (rejected=true): rose-600 bg, white text, hover rose-700
+   - Neaktivní: outline, rose-600 text, hover rose-50/rose-700
+   - `onClick={() => update("rejected", !item.rejected)}` — přepíná `rejected` field přes PATCH
+   - `disabled={updateItem.isPending}`, `aria-pressed={item.rejected}`
+   - V dropdown menu též přidána položka "Zavrhnout" / "Zrušit zavržení"
+6. **Comment count ikona** — pokud `item._count.comments > 0`, zobrazen `MessageSquare` ikona v `Badge` (outline, sky-700) s číslem vedle názvu položky. `title` s plným textem "X komentářů".
+7. **Stavové indikátory** — TableRow className:
+   - Rejected (rejected=true): `border-l-rose-500`, `bg-rose-50/40`, `opacity-60`, `line-through decoration-rose-500/70` na názvu, "Zavrženo" badge
+   - Completed (completed=true, !rejected): `bg-emerald-50/40`, `line-through decoration-emerald-500/50`, "Hotovo" badge
+   - Default: phase border color (preserved)
+   - Hotovo button disabled pokud rejected (nelze označit hotovo co je zavrženo)
+8. **Completion filter rozšířen** — 4 options místo 3: `Vše` / `Aktivní` / `Hotovo` / `Zavrženo`. Filter logika:
+   - "all": vše
+   - "todo": NOT completed AND NOT rejected
+   - "done": completed
+   - "rejected": rejected
+   - "Zavrženo" pill má rose text styling
+9. **Category totals + grand totals** — přepočítáno na rolled-up top-level items (sum only top-level, their children se započítávají do parent rollup). Zabrání dvojímu započítání dětí.
+10. **Expand/collapse toggle** — každá položka má chevron button v prvním sloupci (w-8). Klik přepíná `expandedItems` Set state. Při rozbalení: detail panel + (pokud má děti) child rows.
+11. **InlineTextarea component** — uncontrolled textarea s `key={value}` remounting pattern (synchronizace s API refetch), commit na blur, Escape resetuje na původní hodnotu, Ctrl/Cmd+Enter blur+commit.
+12. **Child reorder** — `handleMoveChild` v `BudgetItemRows`: swap `sortOrder` mezi sousedy, volá `reorder.mutate({ items })`. Children mají vlastní reorder arrows.
+13. **Zachováno**: inline editace (planCost, actualCost, dates), reorder šipky (nahoru/dolů) pro items i kategorie, filtry (fáze, completion, search), CSV export, phase border colors, comment badges (payments/timeEntries/comments), Required "!" badge, duplicate/delete v dropdown menu.
+
+Provedené změny v `src/components/budget-item-dialog.tsx`:
+1. **Nové props**: `parentId?: string`, `defaultCategory?: string`, `defaultPhase?: string`
+2. **Task mode** (`isTaskMode = !item && !!parentId`):
+   - Kategorie pole je `disabled Input` s parent category (nelze měnit)
+   - "Vybrat existující / Vytvořit novou kategorii" button skryt
+   - Title: "Nový úkol" místo "Nová položka rozpočtu"
+   - Description: "Přidejte úkol pod položku „{parent category}"."
+   - Submit button text: "Přidat úkol"
+   - Toast: "Úkol přidán"
+   - Při submitu: `data.parentId = parentId` (jen pro nové items, ne pro editaci)
+3. **Rejected checkbox** — přidán mezi Nutné/Hotovo v pravém sloupci. `id="rejected"`, rose barva Label, default `item?.rejected ?? false`. Submit zahrnuje `rejected` field.
+4. **Datalist pro existující podkategorie** — `<datalist id="existing-subcategories">` naplněný z top-level items se stejnou kategorií (používá `useMemo` na `topLevelItems` + zvolenou kategorii). `<Input list="existing-subcategories">` umožňuje free typing + autocomplete návrhy. Helper text: "X existujících podkategorií v této kategorii — začněte psát pro návrhy."
+5. **Top-level filter** — existující kategorie a podkategorie jsou brány jen z top-level items (parentId===null), ne z dětí.
+
+Lint:
+- `bun run lint` prošel bez chyb (exit code 0, 0 errors, 0 warnings)
+- TypeScript: 0 chyb v mých souborech (budget-tab.tsx, budget-item-dialog.tsx) — ostatní chyby v projektu jsou pre-existing (project-templates.ts chybí `required` field, contacts-tab.tsx `website` field, atd.)
+
+Stage Summary:
+- ✅ Parent-child hierarchie: top-level Položky collapsible, child Úkoly odsazené pod nimi
+- ✅ Součty z dětí: rolled-up planCost/planDays/actualCost/actualHours pro parents
+- ✅ Skrytá pole (Poznámka, Vůle, Ušetřeno) v rozbalovacím panelu pod řádkem
+- ✅ "+" tlačítko u top-level Položky → dialog v task módu s parentId, kategorií, fází
+- ✅ "X" tlačítko pro Rejected → rose styling, line-through, opacity-60, border-l-rose-500
+- ✅ Comment count ikona (MessageSquare + číslo) vedle názvu položky
+- ✅ Completion filter "Zavrženo" jako 4. option
+- ✅ BudgetItemDialog: parentId/defaultCategory/defaultPhase props, rejected checkbox, datalist pro existující podkategorie
+- ✅ Lint prošel (0 errors), TypeScript 0 errors v mých souborech
+
+Unresolved issues / Next steps:
+- Grandchildren (3+ úroveň hierarchie) nejsou v UI přímo renderovány (jen rolled-up do dětí). API/Prisma to podporuje, ale UI zatím zobrazuje jen 2 úrovně. Případně rozšířit rekurzivně.
+- Child reorder: jednoduchý swap sortOrder mezi siblings — funguje ale neřeší edge cases (např. child bez sortOrder mezi top-level items v reorder endpointu). Může vyžadovat dedikovaný child reorder endpoint pro robustnost.
+
+---
+Task ID: 23
+Agent: Hlavní asistent (Z.ai Code) - parent-child hierarchie + platby
+Task: Budget tab parent-child restructure, payment editing fix, Rejected button, Hotovo checkbox
+
+Work Log:
+- Schema: přidáno parentId a rejected pole do BudgetItem modelu + db push
+- API: budget GET vrací flat list (frontend grupuje), POST/PATCH přijímá parentId + rejected
+- API: dashboard alerts nyní filtrují !completed && !rejected pro všechny alert typy
+- Typy: BudgetItem má parentId, rejected, children? v api.ts; Dashboard timeline má rejected
+- Subagent C1: Budget tab kompletní rewrite
+  * Parent-child hierarchie: top-level Položky (parentId=null) jsou collapsible, Úkoly (parentId!=null) odsazené pod nimi
+  * Součty z dětí: planCost, planDays, actualCost, actualHours = vlastní + suma dětí
+  * Skrytá pole: Poznámka, Vůle, Ušetřeno v rozbalovacím detail panelu (ne v hlavní tabulce)
+  * "+" tlačítko u každé Položky pro přidání Úkolu (BudgetItemDialog v task módu)
+  * "X" (Rejected) tlačítko vedle Hotovo — rose barva, rejected položky mají opacity + line-through + rose border
+  * Comment count ikona (MessageSquare badge s číslem)
+  * "Zavrženo" 4. option v completion filter pills
+  * BudgetItemDialog: datalist pro výběr existujících podkategorií, task mode (parentId, defaultCategory, defaultPhase)
+- Subagent C2: Platby oprava
+  * Editace: PaymentRow má onEdit callback, klik na řádek nebo "Upravit" v menu otevírá edit dialog
+  * PaymentDialog: wrapper+inner pattern s key remount, předvyplní všechny fieldy, PATCH při editaci
+  * "Hotovo" checkbox: po vytvoření/úpravě platby volá PATCH budget-items/[id] s completed:true
+  * Třídění: datum↓/↑, částka↓/↑, typ, kontakt, firma
+  * PATCH payments: rozšířeno o vatRate/vatAmount
+- Lint: 0 errors, 0 warnings
+- Verifikace: Budget tab (Hotovo/Zavrhnout tlačítka, Přidat úkol, Zavrženo filter), Platby (Upravit button) - vše funkční
+
+Stage Summary:
+- ✅ Parent-child hierarchie v rozpočtu s collapsible Položkami a odsazenými Úkoly
+- ✅ Součty Plán/Dny/Aktual z dětí do rodiče
+- ✅ Skrytá pole (Poznámka, Vůle, Ušetřeno) v rozbalovacím panelu
+- ✅ "+" tlačítko pro přidání Úkolu k Položce
+- ✅ "Rejected" (X) tlačítko — rejected položky se nezobrazují v alerts
+- ✅ Comment count ikona
+- ✅ Editace plateb funguje + "Hotovo" checkbox + třídění

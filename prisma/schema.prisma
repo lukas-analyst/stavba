@@ -89,8 +89,11 @@ model BudgetItem {
   phase             String   // Příprava, Demolice, Hrubá stavba, Zabydlování, Do budoucna, Neurčeno
   required          Boolean  @default(false) // "Nutné" - is it mandatory?
   completed         Boolean  @default(false) // is this item finished?
+  rejected          Boolean  @default(false) // is this item rejected/cancelled?
   note              String?
   unitPrice         String?  // e.g., "1200,- / m"
+  // Parent-child relationship: if parentId is set, this is a "task" under a parent item
+  parentId          String?  // null = top-level item, non-null = child task
   // Plan
   planCost          Float?   // Plán (Kč)
   flexibilityPercent Float?  // Vůle (%) - how flexible the estimate is

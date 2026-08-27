@@ -125,6 +125,8 @@ export async function GET(
     const in30 = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
     const upcoming = items.filter(
       (it) =>
+        !it.completed &&
+        !it.rejected &&
         it.dateFrom &&
         it.dateFrom >= now &&
         it.dateFrom <= in30 &&
@@ -134,6 +136,8 @@ export async function GET(
     // 2) Overdue items (dateTo in past, actualCost < planCost, not fully paid)
     const overdue = items.filter(
       (it) =>
+        !it.completed &&
+        !it.rejected &&
         it.dateTo &&
         it.dateTo < now &&
         it.planCost &&
@@ -142,12 +146,14 @@ export async function GET(
 
     // 3) Over-budget items (actualCost > planCost)
     const overBudget = items.filter(
-      (it) => it.planCost && it.actualCost > it.planCost,
+      (it) => !it.completed && !it.rejected && it.planCost && it.actualCost > it.planCost,
     );
 
     // 4) Items without dates (need scheduling)
     const unscheduled = items.filter(
       (it) =>
+        !it.completed &&
+        !it.rejected &&
         !it.dateFrom &&
         !it.dateTo &&
         (it.planCost || 0) > 0 &&
@@ -171,6 +177,7 @@ export async function GET(
         planDays: it.planDays,
         required: it.required,
         completed: it.completed,
+        rejected: it.rejected,
       }))
       .sort((a, b) => {
         const ad = a.dateFrom?.getTime() ?? 0;
