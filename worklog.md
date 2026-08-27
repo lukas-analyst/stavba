@@ -532,3 +532,45 @@ Unresolved issues / Next steps:
 - Google Sheets přímá integrace zatím neimplementována
 - Supabase Auth ještě neaktivní
 - Pro budoucí fázi: e-mail notifikace na termíny, AI asistent pro optimalizaci rozpočtu, fotogalerie dokumentace, multi-project comparison view
+
+---
+Task ID: 20
+Agent: Hlavní asistent (Z.ai Code) - mobilní responzivita
+Task: Odstranění Supabase middleware (runtime error), mobilní responzivita (hamburger drawer, responzivní layout)
+
+Work Log:
+- Odstranil src/middleware.ts který způsoboval runtime error "Your project's URL and Key are required to create a Supabase client!" - middleware se snažil inicializovat Supabase klienta na každý request i když nepoužíváme Supabase pro data
+- Mobilní responzivita:
+  * page.tsx: kompletně přepsán s desktop/mobile rozlišením
+    - Desktop (md+): sidebar je inline (w-80), lze skrýt přes "Skrýt panel" button na hraně nebo Cmd+B
+    - Mobile (<md): sidebar je drawer (overlay) - defaultně zavřený, otevře se přes hamburger menu v mobilním top bar
+    - Mobilní top bar: hamburger menu vlevo, název projektu uprostřed, search ikona vpravo
+    - Backdrop overlay (bg-black/50 backdrop-blur) při otevřeném draweru, klik zavře drawer
+    - Drawer se zavře při výběru projektu (onSelectProject callback)
+  * app-sidebar.tsx: přidán onSelectProject prop pro callback při výběru projektu (zavře mobilní drawer), h-full pro správnou výšku v draweru
+  * project-detail.tsx: responzivní úpravy
+    - Padding: px-4 na mobilu, px-6 na desktopu
+    - Nadpis: text-xl na mobilu, text-2xl na desktopu
+    - Tlačítka (Historie/Report/Upravit): jen ikony na mobilu (px-2), ikony+text na desktopu (px-3, hidden md:inline)
+    - Stats strip: menší gap na mobilu (gap-x-4 → md:gap-x-5)
+    - Taby: shrink-0, jen ikony na mobilu (hidden sm:inline pro label), scrollbar-thin, menší padding na mobilu
+    - Tab content padding: px-4 py-4 na mobilu, md:px-6 md:py-6 na desktopu
+  * dashboard-tab.tsx: KPI karty grid
+    - grid-cols-2 na mobilu (2 karty vedle sebe), md:grid-cols-3, lg:grid-cols-6
+    - Menší gap na mobilu (gap-2 → sm:gap-3 → lg:gap-4)
+    - KPI hodnoty: text-lg na mobilu, md:text-2xl na desktopu
+- Lint: prošel bez chyb (0 errors, 0 warnings)
+- Verifikace přes Agent Browser:
+  * Mobile (390x844 - iPhone 14): hamburger menu, mobilní top bar, 2-sloupcový KPI grid, drawer se otevře se seznamem projektů, 0 chyb
+  * Desktop (1280x800): sidebar visible, collapse/expand funguje, 0 chyb
+  * VLM potvrdila: "Aplikace je plně responzivní, hamburger menu v levém horním rohu, 2-sloupcový grid karet"
+
+Stage Summary:
+- ✅ Bug fix: Supabase middleware runtime error odstraněn
+- ✅ Mobilní responzivita: hamburger drawer, mobilní top bar, responzivní KPI grid, ikonové taby
+- ✅ Desktop: beze změny funkčnosti, sidebar collapse funguje
+- 📱 Aplikace je plně použitelná na mobilu (390px+) i desktopu (1280px+)
+
+Unresolved issues / Next steps:
+- Google Sheets přímá integrace zatím neimplementována
+- Pro budoucí fázi: e-mail notifikace, AI asistent, fotogalerie dokumentace

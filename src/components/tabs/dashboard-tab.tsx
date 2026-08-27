@@ -95,7 +95,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
   return (
     <div className="space-y-6">
       {/* KPI cards */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+      <div className="grid grid-cols-2 gap-2 sm:gap-3 md:grid-cols-3 lg:grid-cols-6 lg:gap-4">
         <Card className="border-emerald-200/60 bg-gradient-to-br from-emerald-50 to-white dark:border-emerald-900/40 dark:from-emerald-950/30 dark:to-card">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
@@ -104,7 +104,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
             <Wallet className="h-4 w-4 text-emerald-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold tabular-nums">{formatCzk(totals.planTotal)}</div>
+            <div className="text-lg font-bold tabular-nums md:text-2xl">{formatCzk(totals.planTotal)}</div>
             <p className="mt-1 text-xs text-muted-foreground">
               {totals.itemCount} položek · {totals.requiredCount} nutných
             </p>
@@ -119,7 +119,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
             <TrendingDown className="h-4 w-4 text-amber-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold tabular-nums">{formatCzk(totals.actualTotal)}</div>
+            <div className="text-lg font-bold tabular-nums md:text-2xl">{formatCzk(totals.actualTotal)}</div>
             <div className="mt-2">
               <div className="mb-1 flex items-center justify-between text-xs">
                 <span className={`font-semibold ${burnColor}`}>
@@ -154,7 +154,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
             )}
           </CardHeader>
           <CardContent>
-            <div className={`text-2xl font-bold tabular-nums ${totals.remaining < 0 ? "text-rose-600" : ""}`}>
+            <div className={`text-lg font-bold tabular-nums md:text-2xl ${totals.remaining < 0 ? "text-rose-600" : ""}`}>
               {formatCzk(totals.remaining)}
             </div>
             <p className="mt-1 text-xs text-muted-foreground">
@@ -171,7 +171,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
             <Clock className="h-4 w-4 text-violet-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold tabular-nums">{formatNumber(totals.hoursTotal, " h")}</div>
+            <div className="text-lg font-bold tabular-nums md:text-2xl">{formatNumber(totals.hoursTotal, " h")}</div>
             <p className="mt-1 text-xs text-muted-foreground">
               Plán: {formatNumber(totals.daysPlanned, " dní")}
             </p>
@@ -186,7 +186,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
             <PiggyBank className="h-4 w-4 text-emerald-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold tabular-nums text-emerald-600">
+            <div className="text-lg font-bold tabular-nums md:text-2xl text-emerald-600">
               {formatCzk(totals.savedTotal)}
             </div>
             <p className="mt-1 text-xs text-muted-foreground">
@@ -203,7 +203,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
             <CheckCircle2 className="h-4 w-4 text-teal-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold tabular-nums">
+            <div className="text-lg font-bold tabular-nums md:text-2xl">
               {totals.completedCount} / {totals.itemCount}
             </div>
             <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-muted">

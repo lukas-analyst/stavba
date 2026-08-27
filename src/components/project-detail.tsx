@@ -100,12 +100,12 @@ export function ProjectDetail({ project }: { project: Project }) {
     <div className="flex min-h-screen flex-col">
       {/* Project header */}
       <header className="sticky top-0 z-10 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/70">
-        <div className="px-6 pt-4 pb-0">
+        <div className="px-4 pt-4 pb-0 md:px-6">
           {/* Title row */}
-          <div className="flex items-start justify-between gap-4">
+          <div className="flex items-start justify-between gap-2 md:gap-4">
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2">
-                <h2 className="text-2xl font-bold tracking-tight">
+                <h2 className="text-xl font-bold tracking-tight md:text-2xl">
                   {project.name}
                 </h2>
                 <button
@@ -155,7 +155,7 @@ export function ProjectDetail({ project }: { project: Project }) {
               )}
 
               {/* Stats strip */}
-              <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2 border-t pt-3 text-xs">
+              <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 border-t pt-2.5 text-xs md:gap-x-5 md:gap-y-2 md:pt-3">
                 {project.startDate && (
                   <div className="flex items-center gap-1.5">
                     <CalendarClock className="h-3.5 w-3.5 text-muted-foreground" />
@@ -211,12 +211,12 @@ export function ProjectDetail({ project }: { project: Project }) {
                 )}
               </div>
             </div>
-            <div className="flex shrink-0 gap-2">
+            <div className="flex shrink-0 gap-1.5 md:gap-2">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setAuditOpen(true)}
-                className="no-print"
+                className="no-print px-2 md:px-3"
                 title="Historie změn"
               >
                 <History className="h-3.5 w-3.5" />
@@ -225,18 +225,20 @@ export function ProjectDetail({ project }: { project: Project }) {
                 variant="outline"
                 size="sm"
                 onClick={() => setReportOpen(true)}
-                className="no-print"
+                className="no-print px-2 md:px-3"
               >
-                <FileText className="mr-2 h-3.5 w-3.5" /> Report
+                <FileText className="h-3.5 w-3.5" />
+                <span className="ml-1.5 hidden md:inline">Report</span>
               </Button>
-              <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
-                <Pencil className="mr-2 h-3.5 w-3.5" /> Upravit
+              <Button variant="outline" size="sm" onClick={() => setEditOpen(true)} className="px-2 md:px-3">
+                <Pencil className="h-3.5 w-3.5" />
+                <span className="ml-1.5 hidden md:inline">Upravit</span>
               </Button>
             </div>
           </div>
 
           {/* Tabs */}
-          <nav className="mt-4 flex gap-1 overflow-x-auto border-b">
+          <nav className="mt-3 flex gap-1 overflow-x-auto border-b md:mt-4 scrollbar-thin">
             {TABS.map((tab) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
@@ -245,14 +247,14 @@ export function ProjectDetail({ project }: { project: Project }) {
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
                   className={cn(
-                    "relative flex items-center gap-2 whitespace-nowrap px-4 py-2.5 text-sm font-medium transition-colors",
+                    "relative flex shrink-0 items-center gap-1.5 whitespace-nowrap px-3 py-2.5 text-sm font-medium transition-colors md:gap-2 md:px-4",
                     isActive
                       ? "text-foreground"
                       : "text-muted-foreground hover:text-foreground",
                   )}
                 >
                   <Icon className="h-4 w-4" />
-                  {tab.label}
+                  <span className="hidden sm:inline">{tab.label}</span>
                   {isActive && (
                     <span className="absolute inset-x-0 -bottom-px h-0.5 bg-primary" />
                   )}
@@ -264,7 +266,7 @@ export function ProjectDetail({ project }: { project: Project }) {
       </header>
 
       {/* Tab content */}
-      <div className="flex-1 px-6 py-6">
+      <div className="flex-1 px-4 py-4 md:px-6 md:py-6">
         {activeTab === "dashboard" && <DashboardTab projectId={project.id} />}
         {activeTab === "budget" && <BudgetTab projectId={project.id} />}
         {activeTab === "payments" && <PaymentsTab projectId={project.id} />}

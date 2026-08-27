@@ -31,19 +31,25 @@ const STATUS_LABELS: Record<string, { label: string; color: string }> = {
   paused: { label: "Pozastaveno", color: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300" },
 };
 
-export function AppSidebar() {
+export function AppSidebar({ onSelectProject }: { onSelectProject?: (id: string) => void } = {}) {
   const qc = useQueryClient();
   const { data: projects, isLoading } = useProjects();
   const deleteProject = useDeleteProject();
   const exportState = useExportState();
   const importState = useImportState();
   const selectedProjectId = useAppStore((s) => s.selectedProjectId);
-  const setSelectedProject = useAppStore((s) => s.setSelectedProject);
+  const setSelectedProjectRaw = useAppStore((s) => s.setSelectedProject);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "planning" | "completed">("all");
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Wrapper that also calls the optional onSelectProject callback (for closing mobile drawer)
+  const setSelectedProject = (id: string) => {
+    setSelectedProjectRaw(id);
+    onSelectProject?.(id);
+  };
 
   const toggleStar = async (projectId: string, starred: boolean) => {
     // optimistic: directly call API then refetch
@@ -91,7 +97,7 @@ export function AppSidebar() {
   };
 
   return (
-    <aside className="flex w-80 flex-col border-r bg-sidebar text-sidebar-foreground">
+    <aside className="flex h-full w-80 flex-col border-r bg-sidebar text-sidebar-foreground">
       {/* Header */}
       <div className="flex items-center gap-2 border-b px-5 py-4">
         <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
