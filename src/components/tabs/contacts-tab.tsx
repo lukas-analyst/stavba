@@ -7,7 +7,9 @@ import {
   useUpdateContact,
   useDeleteContact,
   useContactStats,
+  useExportCsv,
   type Contact,
+  type ContactStat,
 } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,9 +17,12 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
 import {
   Card,
   CardContent,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -50,13 +55,26 @@ import {
   Phone,
   Mail,
   Building2,
+  Globe,
   Star,
   Users,
   Loader2,
   TrendingUp,
   Clock,
+  Download,
+  ExternalLink,
+  Wallet,
+  Clock3,
+  PackageCheck,
+  CalendarClock,
 } from "lucide-react";
-import { CONTACT_TYPES, contactTypeLabel, formatCzk, formatNumber, formatDate } from "@/lib/format";
+import {
+  CONTACT_TYPES,
+  contactTypeLabel,
+  formatCzk,
+  formatNumber,
+  formatDate,
+} from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { EmptyStateBox } from "@/components/empty-state-box";
@@ -65,8 +83,18 @@ export function ContactsTab({ projectId }: { projectId: string }) {
   const { data: contacts, isLoading } = useContacts(projectId);
   const { data: statsData } = useContactStats(projectId);
   const createContact = useCreateContact(projectId);
+  const exportCsv = useExportCsv(projectId);
   const [addOpen, setAddOpen] = useState(false);
   const [editContact, setEditContact] = useState<Contact | null>(null);
+  const [detailContact, setDetailContact] = useState<Contact | null>(null);
+
+  // Build a lookup of contactId → stat for quick access in cards
+  const statsByContactId = new Map<string, ContactStat>();
+  if (statsData) {
+    for (const s of statsData.contactStats) {
+      statsByContactId.set(s.contactId, s);
+    }
+  }
 
   return (
     <div className="space-y-4">
@@ -75,9 +103,27 @@ export function ContactsTab({ projectId }: { projectId: string }) {
           <Users className="h-4 w-4" />
           {contacts?.length ?? 0} kontaktů v projektu
         </div>
-        <Button size="sm" onClick={() => setAddOpen(true)}>
-          <Plus className="mr-1 h-4 w-4" /> Přidat kontakt
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={exportCsv.isPending || (contacts?.length ?? 0) === 0}
+            onClick={async () => {
+              try {
+                await exportCsv.mutateAsync("contacts");
+                toast.success("Kontakty exportovány do CSV");
+              } catch {
+                toast.error("Export selhal");
+              }
+            }}
+            title="Exportovat do CSV (Excel/Google Sheets)"
+          >
+            <Download className="mr-1 h-4 w-4" /> CSV
+          </Button>
+          <Button size="sm" onClick={() => setAddOpen(true)}>
+            <Plus className="mr-1 h-4 w-4" /> Přidat kontakt
+          </Button>
+        </div>
       </div>
 
       {/* Leaderboard: top contributors */}
@@ -178,7 +224,9 @@ export function ContactsTab({ projectId }: { projectId: string }) {
               key={c.id}
               contact={c}
               projectId={projectId}
+              stat={statsByContactId.get(c.id)}
               onEdit={() => setEditContact(c)}
+              onOpenDetail={() => setDetailContact(c)}
             />
           ))}
         </div>
@@ -196,25 +244,58 @@ export function ContactsTab({ projectId }: { projectId: string }) {
         projectId={projectId}
         contact={editContact}
       />
+      <ContactDetailDialog
+        contact={detailContact}
+        stat={detailContact ? statsByContactId.get(detailContact.id) ?? null : null}
+        open={!!detailContact}
+        onOpenChange={(o) => !o && setDetailContact(null)}
+        onEdit={() => {
+          if (detailContact) {
+            setEditContact(detailContact);
+            setDetailContact(null);
+          }
+        }}
+      />
     </div>
   );
+}
+
+/**
+ * Normalize a website input into a full URL.
+ * Accepts "www.firma.cz", "firma.cz", or "https://firma.cz".
+ */
+function normalizeWebsite(raw: string): string | null {
+  const trimmed = raw.trim();
+  if (!trimmed) return null;
+  if (/^https?:\/\//i.test(trimmed)) return trimmed;
+  return `https://${trimmed}`;
 }
 
 function ContactCard({
   contact,
   projectId,
+  stat,
   onEdit,
+  onOpenDetail,
 }: {
   contact: Contact;
   projectId: string;
+  stat?: ContactStat;
   onEdit: () => void;
+  onOpenDetail: () => void;
 }) {
   const deleteContact = useDeleteContact(projectId);
   const [confirm, setConfirm] = useState(false);
   const t = contactTypeLabel(contact.type);
 
+  const hasStats =
+    stat && (stat.totalPaid > 0 || stat.totalHours > 0 || stat.paymentCount > 0 || stat.timeEntryCount > 0);
+
   return (
-    <Card className="group relative overflow-hidden">
+    <Card
+      className="group relative cursor-pointer overflow-hidden transition-shadow hover:shadow-md"
+      onClick={onOpenDetail}
+    >
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div className="flex items-start gap-2">
@@ -239,17 +320,26 @@ function ContactCard({
                 variant="ghost"
                 size="icon"
                 className="h-7 w-7 opacity-0 group-hover:opacity-100"
+                onClick={(e) => e.stopPropagation()}
               >
                 <MoreHorizontal className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={onEdit}>
+            <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+              <DropdownMenuItem
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEdit();
+                }}
+              >
                 <Pencil className="mr-2 h-3.5 w-3.5" /> Upravit
               </DropdownMenuItem>
               <DropdownMenuItem
                 className="text-destructive focus:text-destructive"
-                onClick={() => setConfirm(true)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setConfirm(true);
+                }}
               >
                 <Trash2 className="mr-2 h-3.5 w-3.5" /> Smazat
               </DropdownMenuItem>
@@ -270,6 +360,7 @@ function ContactCard({
         {contact.phone && (
           <a
             href={`tel:${contact.phone}`}
+            onClick={(e) => e.stopPropagation()}
             className="flex items-center gap-1.5 text-xs hover:text-primary"
           >
             <Phone className="h-3 w-3 text-muted-foreground" />
@@ -279,30 +370,63 @@ function ContactCard({
         {contact.email && (
           <a
             href={`mailto:${contact.email}`}
+            onClick={(e) => e.stopPropagation()}
             className="flex items-center gap-1.5 text-xs hover:text-primary"
           >
             <Mail className="h-3 w-3 text-muted-foreground" />
             <span className="truncate">{contact.email}</span>
           </a>
         )}
+        {contact.website && (
+          <a
+            href={normalizeWebsite(contact.website) ?? "#"}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(e) => e.stopPropagation()}
+            className="flex items-center gap-1.5 text-xs hover:text-primary"
+          >
+            <Globe className="h-3 w-3 text-muted-foreground" />
+            <span className="truncate">{contact.website}</span>
+            <ExternalLink className="h-3 w-3 shrink-0 text-muted-foreground/60" />
+          </a>
+        )}
         {contact.notes && (
           <p className="border-t pt-2 text-[11px] text-muted-foreground">{contact.notes}</p>
         )}
-        <div className="flex items-center justify-between border-t pt-2">
-          <div className="flex flex-wrap gap-1">
-            {contact._count && contact._count.payments > 0 && (
-              <Badge variant="secondary" className="h-4 px-1.5 text-[10px] text-amber-700">
-                {contact._count.payments} plateb
-              </Badge>
-            )}
-            {contact._count && contact._count.timeEntries > 0 && (
-              <Badge variant="secondary" className="h-4 px-1.5 text-[10px] text-violet-700">
-                {contact._count.timeEntries} časů
-              </Badge>
-            )}
-          </div>
+      </CardContent>
+      {(hasStats || contact.rating) && (
+        <CardFooter className="flex flex-col items-stretch gap-2 pt-0">
+          {hasStats && (
+            <div className="grid grid-cols-2 gap-2 border-t pt-2">
+              <StatPill
+                icon={<Wallet className="h-3 w-3" />}
+                label="Zaplaceno"
+                value={stat!.totalPaid > 0 ? formatCzk(stat!.totalPaid) : "—"}
+                tone="amber"
+              />
+              <StatPill
+                icon={<Clock3 className="h-3 w-3" />}
+                label="Hodiny"
+                value={stat!.totalHours > 0 ? formatNumber(stat!.totalHours, " h") : "—"}
+                tone="violet"
+              />
+              <StatPill
+                icon={<PackageCheck className="h-3 w-3" />}
+                label="Plateb"
+                value={stat!.paymentCount > 0 ? String(stat!.paymentCount) : "—"}
+                tone="amber"
+              />
+              <StatPill
+                icon={<Clock3 className="h-3 w-3" />}
+                label="Časů"
+                value={stat!.timeEntryCount > 0 ? String(stat!.timeEntryCount) : "—"}
+                tone="violet"
+              />
+            </div>
+          )}
+          {!hasStats && contact.rating && <div className="border-t" />}
           {contact.rating && (
-            <div className="flex items-center gap-0.5">
+            <div className="flex items-center justify-end gap-0.5">
               {[1, 2, 3, 4, 5].map((s) => (
                 <Star
                   key={s}
@@ -316,8 +440,8 @@ function ContactCard({
               ))}
             </div>
           )}
-        </div>
-      </CardContent>
+        </CardFooter>
+      )}
 
       <Dialog open={confirm} onOpenChange={setConfirm}>
         <DialogContent className="max-w-sm">
@@ -351,6 +475,305 @@ function ContactCard({
         </DialogContent>
       </Dialog>
     </Card>
+  );
+}
+
+function StatPill({
+  icon,
+  label,
+  value,
+  tone,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  tone: "amber" | "violet";
+}) {
+  const toneClasses =
+    tone === "amber"
+      ? "bg-amber-50 text-amber-700 dark:bg-amber-950/30 dark:text-amber-300"
+      : "bg-violet-50 text-violet-700 dark:bg-violet-950/30 dark:text-violet-300";
+  return (
+    <div className={cn("flex items-center gap-1.5 rounded-md px-2 py-1 text-[11px]", toneClasses)}>
+      {icon}
+      <span className="text-muted-foreground/80">{label}:</span>
+      <span className="ml-auto font-bold tabular-nums">{value}</span>
+    </div>
+  );
+}
+
+function ContactDetailDialog({
+  contact,
+  stat,
+  open,
+  onOpenChange,
+  onEdit,
+}: {
+  contact: Contact | null;
+  stat: ContactStat | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onEdit: () => void;
+}) {
+  if (!contact) return null;
+  const t = contactTypeLabel(contact.type);
+  const totalItems = stat?.budgetItems?.length ?? 0;
+  const lastActivity = stat?.lastActivity;
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-h-[90vh] max-w-2xl overflow-hidden p-0">
+        <div className="flex max-h-[90vh] flex-col">
+          {/* Header */}
+          <DialogHeader className="border-b px-6 py-4">
+            <div className="flex items-start gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-muted text-xl">
+                {t.emoji}
+              </div>
+              <div className="min-w-0 flex-1">
+                <DialogTitle className="truncate text-lg">{contact.name}</DialogTitle>
+                <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                  <Badge variant="outline" className="text-[10px]">{t.label}</Badge>
+                  {contact.role && (
+                    <span className="text-xs text-muted-foreground">{contact.role}</span>
+                  )}
+                  {contact.rating && (
+                    <div className="flex items-center gap-0.5">
+                      {[1, 2, 3, 4, 5].map((s) => (
+                        <Star
+                          key={s}
+                          className={cn(
+                            "h-3 w-3",
+                            s <= contact.rating!
+                              ? "fill-amber-400 text-amber-400"
+                              : "text-muted-foreground/30",
+                          )}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+              <Button variant="outline" size="sm" onClick={onEdit}>
+                <Pencil className="mr-1.5 h-3.5 w-3.5" /> Upravit
+              </Button>
+            </div>
+          </DialogHeader>
+
+          <ScrollArea className="flex-1">
+            <div className="space-y-5 px-6 py-5">
+              {/* Kontakt info */}
+              <section className="space-y-2">
+                <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  Kontakt
+                </h4>
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                  {contact.company && (
+                    <DetailRow icon={<Building2 className="h-3.5 w-3.5" />} label="Firma" value={contact.company} />
+                  )}
+                  {contact.phone && (
+                    <DetailRow
+                      icon={<Phone className="h-3.5 w-3.5" />}
+                      label="Telefon"
+                      value={contact.phone}
+                      href={`tel:${contact.phone}`}
+                    />
+                  )}
+                  {contact.email && (
+                    <DetailRow
+                      icon={<Mail className="h-3.5 w-3.5" />}
+                      label="E-mail"
+                      value={contact.email}
+                      href={`mailto:${contact.email}`}
+                    />
+                  )}
+                  {contact.website && (
+                    <DetailRow
+                      icon={<Globe className="h-3.5 w-3.5" />}
+                      label="Web"
+                      value={contact.website}
+                      href={normalizeWebsite(contact.website) ?? "#"}
+                      external
+                    />
+                  )}
+                  {lastActivity && (
+                    <DetailRow
+                      icon={<CalendarClock className="h-3.5 w-3.5" />}
+                      label="Poslední aktivita"
+                      value={formatDate(lastActivity)}
+                    />
+                  )}
+                </div>
+                {contact.notes && (
+                  <div className="rounded-md border bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
+                    {contact.notes}
+                  </div>
+                )}
+              </section>
+
+              <Separator />
+
+              {/* Souhrn času a financí */}
+              <section className="space-y-2">
+                <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  Souhrn času a financí
+                </h4>
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                  <DetailStat
+                    icon={<Wallet className="h-4 w-4" />}
+                    label="Celkem zaplaceno"
+                    value={stat ? formatCzk(stat.totalPaid) : "—"}
+                    tone="amber"
+                  />
+                  <DetailStat
+                    icon={<Clock3 className="h-4 w-4" />}
+                    label="Celkem hodin"
+                    value={stat ? formatNumber(stat.totalHours, " h") : "—"}
+                    tone="violet"
+                  />
+                  <DetailStat
+                    icon={<PackageCheck className="h-4 w-4" />}
+                    label="Počet plateb"
+                    value={stat ? String(stat.paymentCount) : "—"}
+                    tone="amber"
+                  />
+                  <DetailStat
+                    icon={<Clock3 className="h-4 w-4" />}
+                    label="Časových záznamů"
+                    value={stat ? String(stat.timeEntryCount) : "—"}
+                    tone="violet"
+                  />
+                </div>
+              </section>
+
+              <Separator />
+
+              {/* Položky rozpočtu na kterých kontakt pracoval */}
+              <section className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    Položky rozpočtu
+                  </h4>
+                  <Badge variant="secondary" className="text-[10px]">
+                    {totalItems} {totalItems === 1 ? "položka" : totalItems >= 2 && totalItems <= 4 ? "položky" : "položek"}
+                  </Badge>
+                </div>
+                {stat && stat.budgetItems.length > 0 ? (
+                  <div className="overflow-hidden rounded-md border">
+                    <table className="w-full text-xs">
+                      <thead className="bg-muted/50">
+                        <tr>
+                          <th className="px-2 py-1.5 text-left font-medium text-muted-foreground">Kategorie / Prvek</th>
+                          <th className="px-2 py-1.5 text-right font-medium text-muted-foreground">Fáze</th>
+                          <th className="px-2 py-1.5 text-right font-medium text-muted-foreground">Kč</th>
+                          <th className="px-2 py-1.5 text-right font-medium text-muted-foreground">Hodiny</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {stat.budgetItems.map((bi) => (
+                          <tr key={bi.budgetItemId} className="border-t">
+                            <td className="px-2 py-1.5">
+                              <div className="font-medium">{bi.category}</div>
+                              {bi.subcategory && (
+                                <div className="text-[10px] text-muted-foreground">{bi.subcategory}</div>
+                              )}
+                              {bi.element && (
+                                <div className="text-[10px] text-muted-foreground">{bi.element}</div>
+                              )}
+                            </td>
+                            <td className="px-2 py-1.5 text-right">
+                              <Badge variant="outline" className="text-[10px]">{bi.phase}</Badge>
+                            </td>
+                            <td className="px-2 py-1.5 text-right tabular-nums font-semibold text-amber-700 dark:text-amber-400">
+                              {bi.amount > 0 ? formatCzk(bi.amount) : "—"}
+                            </td>
+                            <td className="px-2 py-1.5 text-right tabular-nums font-semibold text-violet-700 dark:text-violet-400">
+                              {bi.hours > 0 ? formatNumber(bi.hours, " h") : "—"}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <div className="rounded-md border border-dashed bg-muted/20 px-3 py-6 text-center text-xs text-muted-foreground">
+                    Kontakt zatím nepracoval na žádné položce rozpočtu.
+                  </div>
+                )}
+              </section>
+            </div>
+          </ScrollArea>
+
+          <DialogFooter className="border-t px-6 py-3">
+            <Button variant="outline" onClick={() => onOpenChange(false)}>
+              Zavřít
+            </Button>
+          </DialogFooter>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function DetailRow({
+  icon,
+  label,
+  value,
+  href,
+  external,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  href?: string;
+  external?: boolean;
+}) {
+  const content = (
+    <div className="flex items-center gap-2 rounded-md border bg-card px-2.5 py-1.5">
+      <span className="text-muted-foreground">{icon}</span>
+      <div className="min-w-0">
+        <div className="text-[10px] uppercase tracking-wide text-muted-foreground">{label}</div>
+        <div className="truncate text-xs font-medium">{value}</div>
+      </div>
+      {external && <ExternalLink className="ml-auto h-3 w-3 shrink-0 text-muted-foreground/60" />}
+    </div>
+  );
+  if (!href) return content;
+  return (
+    <a
+      href={href}
+      target={external ? "_blank" : undefined}
+      rel={external ? "noopener noreferrer" : undefined}
+      className="block hover:opacity-80"
+    >
+      {content}
+    </a>
+  );
+}
+
+function DetailStat({
+  icon,
+  label,
+  value,
+  tone,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  tone: "amber" | "violet";
+}) {
+  const toneClasses =
+    tone === "amber"
+      ? "border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-300"
+      : "border-violet-200 bg-violet-50 text-violet-800 dark:border-violet-900/50 dark:bg-violet-950/30 dark:text-violet-300";
+  return (
+    <div className={cn("rounded-md border px-3 py-2", toneClasses)}>
+      <div className="flex items-center gap-1.5">
+        {icon}
+        <span className="text-[10px] uppercase tracking-wide opacity-80">{label}</span>
+      </div>
+      <div className="mt-1 text-sm font-bold tabular-nums">{value}</div>
+    </div>
   );
 }
 
@@ -402,6 +825,7 @@ function ContactForm({
   const [company, setCompany] = useState(contact?.company ?? "");
   const [phone, setPhone] = useState(contact?.phone ?? "");
   const [email, setEmail] = useState(contact?.email ?? "");
+  const [website, setWebsite] = useState(contact?.website ?? "");
   const [notes, setNotes] = useState(contact?.notes ?? "");
   const [rating, setRating] = useState<number | null>(contact?.rating ?? null);
 
@@ -419,6 +843,7 @@ function ContactForm({
         company,
         phone,
         email,
+        website,
         notes,
         rating,
       };
@@ -509,6 +934,19 @@ function ContactForm({
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="email@domena.cz"
+              />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="website">Web</Label>
+            <div className="relative">
+              <Globe className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                id="website"
+                value={website}
+                onChange={(e) => setWebsite(e.target.value)}
+                placeholder="např. www.firma.cz"
+                className="pl-9"
               />
             </div>
           </div>

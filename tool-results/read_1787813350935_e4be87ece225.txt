@@ -1,0 +1,990 @@
+     1→     1→"use client";
+     2→     2→
+     3→     3→import { useState, useMemo } from "react";
+     4→     4→import {
+     5→     5→  usePayments,
+     6→     6→  useBudgetItems,
+     7→     7→  useContacts,
+     8→     8→  useCreatePayment,
+     9→     9→  useDeletePayment,
+    10→    10→  useExportCsv,
+    11→    11→  type Payment,
+    12→    12→} from "@/lib/api";
+    13→    13→import {
+    14→    14→  Table,
+    15→    15→  TableBody,
+    16→    16→  TableCell,
+    17→    17→  TableHead,
+    18→    18→  TableHeader,
+    19→    19→  TableRow,
+    20→    20→} from "@/components/ui/table";
+    21→    21→import { Button } from "@/components/ui/button";
+    22→    22→import { Input } from "@/components/ui/input";
+    23→    23→import { Label } from "@/components/ui/label";
+    24→    24→import { Textarea } from "@/components/ui/textarea";
+    25→    25→import { Badge } from "@/components/ui/badge";
+    26→    26→import { Skeleton } from "@/components/ui/skeleton";
+    27→    27→import {
+    28→    28→  Dialog,
+    29→    29→  DialogContent,
+    30→    30→  DialogDescription,
+    31→    31→  DialogFooter,
+    32→    32→  DialogHeader,
+    33→    33→  DialogTitle,
+    34→    34→} from "@/components/ui/dialog";
+    35→    35→import {
+    36→    36→  Select,
+    37→    37→  SelectContent,
+    38→    38→  SelectItem,
+    39→    39→  SelectTrigger,
+    40→    40→  SelectValue,
+    41→    41→} from "@/components/ui/select";
+    42→    42→import {
+    43→    43→  DropdownMenu,
+    44→    44→  DropdownMenuContent,
+    45→    45→  DropdownMenuItem,
+    46→    46→  DropdownMenuTrigger,
+    47→    47→} from "@/components/ui/dropdown-menu";
+    48→    48→import { Checkbox } from "@/components/ui/checkbox";
+    49→    49→import {
+    50→    50→  Plus,
+    51→    51→  Trash2,
+    52→    52→  MoreHorizontal,
+    53→    53→  Search,
+    54→    54→  Receipt,
+    55→    55→  Loader2,
+    56→    56→  FileText,
+    57→    57→  Layers,
+    58→    58→  CircleDollarSign,
+    59→    59→  Download,
+    60→    60→} from "lucide-react";
+    61→    61→import { formatCzk, formatDate, PAYMENT_TYPES, paymentTypeLabel } from "@/lib/format";
+    62→    62→import { cn } from "@/lib/utils";
+    63→    63→import { toast } from "sonner";
+    64→    64→import { EmptyStateBox } from "@/components/empty-state-box";
+    65→    65→
+    66→    66→export function PaymentsTab({ projectId }: { projectId: string }) {
+    67→    67→  const { data: payments, isLoading } = usePayments(projectId);
+    68→    68→  const { data: budgetItems } = useBudgetItems(projectId);
+    69→    69→  const { data: contacts } = useContacts(projectId);
+    70→    70→  const createPayment = useCreatePayment(projectId);
+    71→    71→  const deletePayment = useDeletePayment(projectId);
+    72→    72→  const exportCsv = useExportCsv(projectId);
+    73→    73→  const [addOpen, setAddOpen] = useState(false);
+    74→    74→  const [search, setSearch] = useState("");
+    75→    75→  const [typeFilter, setTypeFilter] = useState<string>("all");
+    76→    76→
+    77→    77→  // Group payments: standalone payments + installment groups
+    78→    78→  // A "parent" payment is one that has installments (other payments point to it via installmentOf).
+    79→    79→  // A standalone payment has installmentOf === null and no children.
+    80→    80→  const { standalone, groups } = useMemo(() => {
+    81→    81→    const childrenByParent = new Map<string, Payment[]>();
+    82→    82→    const parentIds = new Set<string>();
+    83→    83→    for (const p of payments ?? []) {
+    84→    84→      if (p.installmentOf) {
+    85→    85→        parentIds.add(p.installmentOf);
+    86→    86→        const arr = childrenByParent.get(p.installmentOf) ?? [];
+    87→    87→        arr.push(p);
+    88→    88→        childrenByParent.set(p.installmentOf, arr);
+    89→    89→      }
+    90→    90→    }
+    91→    91→    const standalone: Payment[] = [];
+    92→    92→    const groups: { parent: Payment; installments: Payment[] }[] = [];
+    93→    93→    for (const p of payments ?? []) {
+    94→    94→      if (parentIds.has(p.id)) {
+    95→    95→        const children = (childrenByParent.get(p.id) ?? []).sort(
+    96→    96→          (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
+    97→    97→        );
+    98→    98→        groups.push({ parent: p, installments: children });
+    99→    99→      } else if (!p.installmentOf) {
+   100→   100→        standalone.push(p);
+   101→   101→      }
+   102→   102→    }
+   103→   103→    // sort
+   104→   104→    standalone.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+   105→   105→    groups.sort(
+   106→   106→      (a, b) => new Date(b.parent.date).getTime() - new Date(a.parent.date).getTime(),
+   107→   107→    );
+   108→   108→    return { standalone, groups };
+   109→   109→  }, [payments]);
+   110→   110→
+   111→   111→  // Apply filters to both lists
+   112→   112→  const filterFn = (p: Payment) => {
+   113→   113→    if (typeFilter !== "all" && p.type !== typeFilter) return false;
+   114→   114→    if (search.trim()) {
+   115→   115→      const q = search.toLowerCase();
+   116→   116→      const text = `${p.description ?? ""} ${p.vendor ?? ""} ${p.budgetItem?.category ?? ""} ${p.budgetItem?.subcategory ?? ""} ${p.contact?.name ?? ""}`.toLowerCase();
+   117→   117→      if (!text.includes(q)) return false;
+   118→   118→    }
+   119→   119→    return true;
+   120→   120→  };
+   121→   121→  const filteredStandalone = standalone.filter(filterFn);
+   122→   122→  const filteredGroups = groups.filter((g) => filterFn(g.parent));
+   123→   123→
+   124→   124→  const totalAmount = [
+   125→   125→    ...filteredStandalone,
+   126→   126→    ...filteredGroups.flatMap((g) => g.installments),
+   127→   127→  ].reduce((s, p) => s + p.amount, 0);
+   128→   128→
+   129→   129→  return (
+   130→   130→    <div className="space-y-4">
+   131→   131→      <div className="flex flex-wrap items-center gap-2">
+   132→   132→        <div className="relative">
+   133→   133→          <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+   134→   134→          <Input
+   135→   135→            value={search}
+   136→   136→            onChange={(e) => setSearch(e.target.value)}
+   137→   137→            placeholder="Hledat platbu…"
+   138→   138→            className="h-9 w-56 pl-8"
+   139→   139→          />
+   140→   140→        </div>
+   141→   141→        <Select value={typeFilter} onValueChange={setTypeFilter}>
+   142→   142→          <SelectTrigger className="h-9 w-44">
+   143→   143→            <SelectValue />
+   144→   144→          </SelectTrigger>
+   145→   145→          <SelectContent>
+   146→   146→            <SelectItem value="all">Všechny typy</SelectItem>
+   147→   147→            {PAYMENT_TYPES.map((t) => (
+   148→   148→              <SelectItem key={t.value} value={t.value}>
+   149→   149→                {t.emoji} {t.label}
+   150→   150→              </SelectItem>
+   151→   151→            ))}
+   152→   152→          </SelectContent>
+   153→   153→        </Select>
+   154→   154→        <div className="ml-auto flex items-center gap-3 text-sm">
+   155→   155→          <div className="text-right">
+   156→   156→            <div className="text-xs text-muted-foreground">
+   157→   157→              Součet ({filteredStandalone.length + filteredGroups.length})
+   158→   158→            </div>
+   159→   159→            <div className="text-lg font-bold text-amber-600 tabular-nums">{formatCzk(totalAmount)}</div>
+   160→   160→          </div>
+   161→   161→          {/* VAT summary */}
+   162→   162→          {(() => {
+   163→   163→            const allPayments = [...filteredStandalone, ...filteredGroups.flatMap((g) => g.installments)];
+   164→   164→            const totalVat = allPayments.reduce((s, p) => s + (p.vatAmount || 0), 0);
+   165→   165→            const hasVat = allPayments.some((p) => p.vatAmount !== null && p.vatAmount !== undefined);
+   166→   166→            return hasVat ? (
+   167→   167→              <div className="text-right">
+   168→   168→                <div className="text-xs text-muted-foreground">z toho DPH</div>
+   169→   169→                <div className="text-sm font-semibold text-sky-600 tabular-nums">{formatCzk(totalVat)}</div>
+   170→   170→              </div>
+   171→   171→            ) : null;
+   172→   172→          })()}
+   173→   173→          <Button
+   174→   174→            variant="outline"
+   175→   175→            size="sm"
+   176→   176→            disabled={exportCsv.isPending || (payments?.length ?? 0) === 0}
+   177→   177→            onClick={async () => {
+   178→   178→              try {
+   179→   179→                await exportCsv.mutateAsync("payments");
+   180→   180→                toast.success("Platby exportovány do CSV");
+   181→   181→              } catch {
+   182→   182→                toast.error("Export selhal");
+   183→   183→              }
+   184→   184→            }}
+   185→   185→            title="Exportovat do CSV (Excel/Google Sheets)"
+   186→   186→          >
+   187→   187→            <Download className="mr-1 h-4 w-4" /> CSV
+   188→   188→          </Button>
+   189→   189→          <Button size="sm" onClick={() => setAddOpen(true)}>
+   190→   190→            <Plus className="mr-1 h-4 w-4" /> Přidat platbu
+   191→   191→          </Button>
+   192→   192→        </div>
+   193→   193→      </div>
+   194→   194→
+   195→   195→      {isLoading ? (
+   196→   196→        <Skeleton className="h-96" />
+   197→   197→      ) : filteredStandalone.length === 0 && filteredGroups.length === 0 ? (
+   198→   198→        <EmptyStateBox
+   199→   199→          icon={Receipt}
+   200→   200→          title={payments?.length === 0 ? "Zatím žádné platby" : "Žádné platby neodpovídají filtru"}
+   201→   201→          description={
+   202→   202→            payments?.length === 0
+   203→   203→              ? "Začněte evidovat platby - účtenky, faktury nebo výplaty za práci. Můžete je rozdělit i do splátek."
+   204→   204→              : "Zkuste změnit filtr nebo vyhledávání."
+   205→   205→          }
+   206→   206→          action={
+   207→   207→            payments?.length === 0 ? (
+   208→   208→              <Button size="sm" onClick={() => setAddOpen(true)}>
+   209→   209→                <Plus className="mr-1 h-4 w-4" /> Přidat první platbu
+   210→   210→              </Button>
+   211→   211→            ) : undefined
+   212→   212→          }
+   213→   213→        />
+   214→   214→      ) : (
+   215→   215→        <div className="space-y-3">
+   216→   216→          {/* Installment groups (invoices with partial payments) */}
+   217→   217→          {filteredGroups.map(({ parent, installments }) => (
+   218→   218→            <InstallmentGroupCard
+   219→   219→              key={parent.id}
+   220→   220→              parent={parent}
+   221→   221→              installments={installments}
+   222→   222→              onDeletePayment={async (id) => {
+   223→   223→                try {
+   224→   224→                  await deletePayment.mutateAsync(id);
+   225→   225→                  toast.success("Platba smazána");
+   226→   226→                } catch {
+   227→   227→                  toast.error("Nepodařilo se smazat");
+   228→   228→                }
+   229→   229→              }}
+   230→   230→              onAddInstallment={async (data) => {
+   231→   231→                try {
+   232→   232→                  await createPayment.mutateAsync(data);
+   233→   233→                  toast.success("Splátka přidána");
+   234→   234→                } catch {
+   235→   235→                  toast.error("Nepodařilo se přidat splátku");
+   236→   236→                }
+   237→   237→              }}
+   238→   238→            />
+   239→   239→          ))}
+   240→   240→
+   241→   241→          {/* Standalone payments */}
+   242→   242→          {filteredStandalone.length > 0 && (
+   243→   243→            <div className="overflow-hidden rounded-lg border">
+   244→   244→              <Table>
+   245→   245→                <TableHeader>
+   246→   246→                  <TableRow className="bg-muted/40 hover:bg-muted/40">
+   247→   247→                    <TableHead className="w-28">Datum</TableHead>
+   248→   248→                    <TableHead className="w-32">Typ</TableHead>
+   249→   249→                    <TableHead className="min-w-[220px]">Položka rozpočtu</TableHead>
+   250→   250→                    <TableHead className="min-w-[160px]">Popis / Firma</TableHead>
+   251→   251→                    <TableHead>Osoba / Kontakt</TableHead>
+   252→   252→                    <TableHead className="text-right">Částka</TableHead>
+   253→   253→                    <TableHead className="w-8"></TableHead>
+   254→   254→                  </TableRow>
+   255→   255→                </TableHeader>
+   256→   256→                <TableBody>
+   257→   257→                  {filteredStandalone.map((p) => (
+   258→   258→                    <PaymentRow
+   259→   259→                      key={p.id}
+   260→   260→                      payment={p}
+   261→   261→                      onDelete={async () => {
+   262→   262→                        try {
+   263→   263→                          await deletePayment.mutateAsync(p.id);
+   264→   264→                          toast.success("Platba smazána");
+   265→   265→                        } catch {
+   266→   266→                          toast.error("Nepodařilo se smazat");
+   267→   267→                        }
+   268→   268→                      }}
+   269→   269→                    />
+   270→   270→                  ))}
+   271→   271→                </TableBody>
+   272→   272→              </Table>
+   273→   273→            </div>
+   274→   274→          )}
+   275→   275→        </div>
+   276→   276→      )}
+   277→   277→
+   278→   278→      <PaymentDialog
+   279→   279→        open={addOpen}
+   280→   280→        onOpenChange={setAddOpen}
+   281→   281→        projectId={projectId}
+   282→   282→        budgetItems={budgetItems ?? []}
+   283→   283→        contacts={contacts ?? []}
+   284→   284→        createPayment={createPayment}
+   285→   285→      />
+   286→   286→    </div>
+   287→   287→  );
+   288→   288→}
+   289→   289→
+   290→   290→// ===== Installment group card =====
+   291→   291→function InstallmentGroupCard({
+   292→   292→  parent,
+   293→   293→  installments,
+   294→   294→  onDeletePayment,
+   295→   295→  onAddInstallment,
+   296→   296→}: {
+   297→   297→  parent: Payment;
+   298→   298→  installments: Payment[];
+   299→   299→  onDeletePayment: (id: string) => void;
+   300→   300→  onAddInstallment: (data: {
+   301→   301→    budgetItemId: string;
+   302→   302→    amount: number;
+   303→   303→    installmentOf: string;
+   304→   304→    date: string;
+   305→   305→    type: string;
+   306→   306→    description?: string;
+   307→   307→  }) => Promise<void>;
+   308→   308→}) {
+   309→   309→  const [expanded, setExpanded] = useState(true);
+   310→   310→  const [addOpen, setAddOpen] = useState(false);
+   311→   311→  const [amount, setAmount] = useState("");
+   312→   312→  const [date, setDate] = useState(new Date().toISOString().substring(0, 10));
+   313→   313→  const [description, setDescription] = useState("");
+   314→   314→  const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+   315→   315→  const [submitting, setSubmitting] = useState(false);
+   316→   316→
+   317→   317→  const invoiceTotal = parent.invoiceTotal ?? parent.amount;
+   318→   318→  const paidTotal = installments.reduce((s, i) => s + i.amount, 0);
+   319→   319→  const remaining = invoiceTotal - paidTotal;
+   320→   320→  const percent = invoiceTotal > 0 ? (paidTotal / invoiceTotal) * 100 : 0;
+   321→   321→  const t = paymentTypeLabel(parent.type);
+   322→   322→
+   323→   323→  return (
+   324→   324→    <div className="overflow-hidden rounded-lg border border-amber-200 bg-amber-50/30 dark:border-amber-900/40 dark:bg-amber-950/10">
+   325→   325→      {/* Header row: invoice summary */}
+   326→   326→      <div
+   327→   327→        className="flex cursor-pointer items-center gap-3 px-4 py-3 hover:bg-amber-50/60 dark:hover:bg-amber-950/20"
+   328→   328→        onClick={() => setExpanded(!expanded)}
+   329→   329→      >
+   330→   330→        <FileText className="h-5 w-5 shrink-0 text-amber-600" />
+   331→   331→        <div className="min-w-0 flex-1">
+   332→   332→          <div className="flex flex-wrap items-center gap-2">
+   333→   333→            <span className="text-sm font-bold">
+   334→   334→              {parent.budgetItem?.subcategory || parent.budgetItem?.category}
+   335→   335→            </span>
+   336→   336→            <Badge variant="outline" className="text-[10px]">
+   337→   337→              <Layers className="mr-1 h-2.5 w-2.5" /> Faktura ve splátkách
+   338→   338→            </Badge>
+   339→   339→            {parent.invoiceNumber && (
+   340→   340→              <Badge variant="secondary" className="text-[10px]">
+   341→   341→                {parent.invoiceNumber}
+   342→   342→              </Badge>
+   343→   343→            )}
+   344→   344→            {parent.vendor && (
+   345→   345→              <span className="text-[11px] text-muted-foreground">{parent.vendor}</span>
+   346→   346→            )}
+   347→   347→          </div>
+   348→   348→          <div className="mt-0.5 text-[11px] text-muted-foreground">
+   349→   349→            {parent.budgetItem?.category} · {t.emoji} {t.label} · vystavena {formatDate(parent.date)}
+   350→   350→          </div>
+   351→   351→        </div>
+   352→   352→        <div className="flex items-center gap-4 text-xs">
+   353→   353→          <div className="text-right">
+   354→   354→            <div className="text-[10px] text-muted-foreground">Zaplaceno</div>
+   355→   355→            <div className="font-bold text-emerald-600">{formatCzk(paidTotal)}</div>
+   356→   356→          </div>
+   357→   357→          <div className="text-right">
+   358→   358→            <div className="text-[10px] text-muted-foreground">Faktura</div>
+   359→   359→            <div className="font-bold">{formatCzk(invoiceTotal)}</div>
+   360→   360→          </div>
+   361→   361→          <div className="text-right">
+   362→   362→            <div className="text-[10px] text-muted-foreground">Zbývá</div>
+   363→   363→            <div className={cn("font-bold", remaining > 0 ? "text-amber-600" : "text-emerald-600")}>
+   364→   364→              {formatCzk(remaining)}
+   365→   365→            </div>
+   366→   366→          </div>
+   367→   367→          <div className="w-24">
+   368→   368→            <div className="h-2 overflow-hidden rounded-full bg-muted">
+   369→   369→              <div
+   370→   370→                className={cn(
+   371→   371→                  "h-full rounded-full transition-all",
+   372→   372→                  percent >= 100 ? "bg-emerald-500" : percent >= 50 ? "bg-amber-500" : "bg-sky-500",
+   373→   373→                )}
+   374→   374→                style={{ width: `${Math.min(percent, 100)}%` }}
+   375→   375→              />
+   376→   376→            </div>
+   377→   377→            <div className="mt-0.5 text-center text-[10px] text-muted-foreground">
+   378→   378→              {percent.toFixed(0)} %
+   379→   379→            </div>
+   380→   380→          </div>
+   381→   381→        </div>
+   382→   382→      </div>
+   383→   383→
+   384→   384→      {expanded && (
+   385→   385→        <div className="border-t bg-card">
+   386→   386→          {/* Installments list */}
+   387→   387→          <div className="overflow-x-auto">
+   388→   388→            <Table>
+   389→   389→              <TableHeader>
+   390→   390→                <TableRow className="bg-muted/30 hover:bg-muted/30">
+   391→   391→                  <TableHead className="w-32">Datum splátky</TableHead>
+   392→   392→                  <TableHead className="min-w-[160px]">Popis</TableHead>
+   393→   393→                  <TableHead>Kontakt</TableHead>
+   394→   394→                  <TableHead className="text-right">Částka</TableHead>
+   395→   395→                  <TableHead className="w-8"></TableHead>
+   396→   396→                </TableRow>
+   397→   397→              </TableHeader>
+   398→   398→              <TableBody>
+   399→   399→                {installments.map((inst, i) => (
+   400→   400→                  <TableRow key={inst.id} className="group">
+   401→   401→                    <TableCell className="whitespace-nowrap text-xs text-muted-foreground">
+   402→   402→                      <span className="mr-1.5 inline-flex h-4 w-4 items-center justify-center rounded-full bg-amber-100 text-[9px] font-bold text-amber-700">
+   403→   403→                        {i + 1}
+   404→   404→                      </span>
+   405→   405→                      {formatDate(inst.date)}
+   406→   406→                    </TableCell>
+   407→   407→                    <TableCell className="text-xs">
+   408→   408→                      {inst.description || "—"}
+   409→   409→                    </TableCell>
+   410→   410→                    <TableCell className="text-xs">
+   411→   411→                      {inst.contact?.name || "—"}
+   412→   412→                    </TableCell>
+   413→   413→                    <TableCell className="text-right text-sm font-semibold text-amber-600">
+   414→   414→                      {formatCzk(inst.amount)}
+   415→   415→                    </TableCell>
+   416→   416→                    <TableCell>
+   417→   417→                      <DropdownMenu>
+   418→   418→                        <DropdownMenuTrigger asChild>
+   419→   419→                          <Button variant="ghost" size="icon" className="h-7 w-7 opacity-0 group-hover:opacity-100">
+   420→   420→                            <MoreHorizontal className="h-4 w-4" />
+   421→   421→                          </Button>
+   422→   422→                        </DropdownMenuTrigger>
+   423→   423→                        <DropdownMenuContent align="end">
+   424→   424→                          <DropdownMenuItem
+   425→   425→                            className="text-destructive focus:text-destructive"
+   426→   426→                            onClick={() => setConfirmDelete(inst.id)}
+   427→   427→                          >
+   428→   428→                            <Trash2 className="mr-2 h-3.5 w-3.5" /> Smazat splátku
+   429→   429→                          </DropdownMenuItem>
+   430→   430→                        </DropdownMenuContent>
+   431→   431→                      </DropdownMenu>
+   432→   432→                    </TableCell>
+   433→   433→                  </TableRow>
+   434→   434→                ))}
+   435→   435→                {installments.length === 0 && (
+   436→   436→                  <TableRow>
+   437→   437→                    <TableCell colSpan={5} className="py-4 text-center text-xs text-muted-foreground">
+   438→   438→                      Zatím žádné splátky. Přidejte první splátku níže.
+   439→   439→                    </TableCell>
+   440→   440→                  </TableRow>
+   441→   441→                )}
+   442→   442→              </TableBody>
+   443→   443→            </Table>
+   444→   444→          </div>
+   445→   445→
+   446→   446→          {/* Add installment form */}
+   447→   447→          <div className="border-t bg-muted/20 px-4 py-3">
+   448→   448→            <div className="flex flex-wrap items-end gap-2">
+   449→   449→              <div className="space-y-1">
+   450→   450→                <Label htmlFor={`amt-${parent.id}`} className="text-[11px]">Částka (Kč) *</Label>
+   451→   451→                <Input
+   452→   452→                  id={`amt-${parent.id}`}
+   453→   453→                  value={amount}
+   454→   454→                  onChange={(e) => setAmount(e.target.value)}
+   455→   455→                  placeholder={remaining > 0 ? String(remaining) : "0"}
+   456→   456→                  className="h-8 w-32 text-sm"
+   457→   457→                  inputMode="decimal"
+   458→   458→                />
+   459→   459→              </div>
+   460→   460→              <div className="space-y-1">
+   461→   461→                <Label htmlFor={`dt-${parent.id}`} className="text-[11px]">Datum *</Label>
+   462→   462→                <Input
+   463→   463→                  id={`dt-${parent.id}`}
+   464→   464→                  type="date"
+   465→   465→                  value={date}
+   466→   466→                  onChange={(e) => setDate(e.target.value)}
+   467→   467→                  className="h-8 w-36 text-sm"
+   468→   468→                />
+   469→   469→              </div>
+   470→   470→              <div className="space-y-1 flex-1 min-w-[160px]">
+   471→   471→                <Label htmlFor={`ds-${parent.id}`} className="text-[11px]">Popis</Label>
+   472→   472→                <Input
+   473→   473→                  id={`ds-${parent.id}`}
+   474→   474→                  value={description}
+   475→   475→                  onChange={(e) => setDescription(e.target.value)}
+   476→   476→                  placeholder="např. 1. záloha"
+   477→   477→                  className="h-8 text-sm"
+   478→   478→                />
+   479→   479→              </div>
+   480→   480→              <Button
+   481→   481→                size="sm"
+   482→   482→                className="h-8"
+   483→   483→                disabled={!amount || Number(amount.replace(",", ".")) <= 0 || submitting}
+   484→   484→                onClick={async () => {
+   485→   485→                  const amt = Number(amount.replace(",", "."));
+   486→   486→                  if (!amt || amt <= 0) {
+   487→   487→                    toast.error("Zadejte platnou částku");
+   488→   488→                    return;
+   489→   489→                  }
+   490→   490→                  setSubmitting(true);
+   491→   491→                  try {
+   492→   492→                    await onAddInstallment({
+   493→   493→                      budgetItemId: parent.budgetItemId,
+   494→   494→                      amount: amt,
+   495→   495→                      installmentOf: parent.id,
+   496→   496→                      date,
+   497→   497→                      type: parent.type,
+   498→   498→                      description: description || undefined,
+   499→   499→                    });
+   500→   500→                    setAmount("");
+   501→   501→                    setDescription("");
+   502→   502→                    setDate(new Date().toISOString().substring(0, 10));
+   503→   503→                  } finally {
+   504→   504→                    setSubmitting(false);
+   505→   505→                  }
+   506→   506→                }}
+   507→   507→              >
+   508→   508→                {submitting && <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" />}
+   509→   509→                <Plus className="mr-1 h-3.5 w-3.5" /> Přidat splátku
+   510→   510→              </Button>
+   511→   511→            </div>
+   512→   512→          </div>
+   513→   513→        </div>
+   514→   514→      )}
+   515→   515→
+   516→   516→      <Dialog open={!!confirmDelete} onOpenChange={(o) => !o && setConfirmDelete(null)}>
+   517→   517→        <DialogContent className="max-w-sm">
+   518→   518→          <DialogHeader>
+   519→   519→            <DialogTitle>Smazat splátku?</DialogTitle>
+   520→   520→            <DialogDescription>
+   521→   521→              Opravdu chcete smazat tuto splátku?
+   522→   522→            </DialogDescription>
+   523→   523→          </DialogHeader>
+   524→   524→          <DialogFooter>
+   525→   525→            <Button variant="outline" onClick={() => setConfirmDelete(null)}>Zrušit</Button>
+   526→   526→            <Button
+   527→   527→              variant="destructive"
+   528→   528→              onClick={() => {
+   529→   529→                if (confirmDelete) onDeletePayment(confirmDelete);
+   530→   530→                setConfirmDelete(null);
+   531→   531→              }}
+   532→   532→            >
+   533→   533→              Smazat
+   534→   534→            </Button>
+   535→   535→          </DialogFooter>
+   536→   536→        </DialogContent>
+   537→   537→      </Dialog>
+   538→   538→    </div>
+   539→   539→  );
+   540→   540→}
+   541→   541→
+   542→   542→// ===== Standalone payment row =====
+   543→   543→function PaymentRow({
+   544→   544→  payment,
+   545→   545→  onDelete,
+   546→   546→}: {
+   547→   547→  payment: Payment;
+   548→   548→  onDelete: () => void;
+   549→   549→}) {
+   550→   550→  const [confirm, setConfirm] = useState(false);
+   551→   551→  const t = paymentTypeLabel(payment.type);
+   552→   552→
+   553→   553→  return (
+   554→   554→    <TableRow className="group">
+   555→   555→      <TableCell className="whitespace-nowrap text-xs text-muted-foreground">
+   556→   556→        {formatDate(payment.date)}
+   557→   557→      </TableCell>
+   558→   558→      <TableCell>
+   559→   559→        <Badge variant="outline" className="text-[10px]">
+   560→   560→          {t.emoji} {t.label}
+   561→   561→        </Badge>
+   562→   562→      </TableCell>
+   563→   563→      <TableCell>
+   564→   564→        <div className="flex flex-col">
+   565→   565→          <span className="text-xs font-medium">
+   566→   566→            {payment.budgetItem?.subcategory || payment.budgetItem?.category}
+   567→   567→          </span>
+   568→   568→          <span className="text-[10px] text-muted-foreground">
+   569→   569→            {payment.budgetItem?.category}
+   570→   570→          </span>
+   571→   571→        </div>
+   572→   572→      </TableCell>
+   573→   573→      <TableCell>
+   574→   574→        <div className="flex flex-col">
+   575→   575→          <span className="text-xs">{payment.description || "—"}</span>
+   576→   576→          {payment.vendor && (
+   577→   577→            <span className="text-[10px] text-muted-foreground">
+   578→   578→              {payment.vendor}
+   579→   579→              {payment.invoiceNumber ? ` · ${payment.invoiceNumber}` : ""}
+   580→   580→            </span>
+   581→   581→          )}
+   582→   582→        </div>
+   583→   583→      </TableCell>
+   584→   584→      <TableCell className="text-xs">
+   585→   585→        {payment.contact?.name || "—"}
+   586→   586→      </TableCell>
+   587→   587→      <TableCell className="text-right">
+   588→   588→        <div className="flex flex-col items-end">
+   589→   589→          <span className="text-sm font-semibold text-amber-600 tabular-nums">
+   590→   590→            {formatCzk(payment.amount)}
+   591→   591→          </span>
+   592→   592→          {payment.vatRate !== null && payment.vatRate !== undefined && (
+   593→   593→            <span className="text-[10px] text-muted-foreground tabular-nums">
+   594→   594→              vč. DPH {payment.vatRate}%
+   595→   595→            </span>
+   596→   596→          )}
+   597→   597→        </div>
+   598→   598→      </TableCell>
+   599→   599→      <TableCell>
+   600→   600→        <DropdownMenu>
+   601→   601→          <DropdownMenuTrigger asChild>
+   602→   602→            <Button variant="ghost" size="icon" className="h-7 w-7 opacity-0 group-hover:opacity-100">
+   603→   603→              <MoreHorizontal className="h-4 w-4" />
+   604→   604→            </Button>
+   605→   605→          </DropdownMenuTrigger>
+   606→   606→          <DropdownMenuContent align="end">
+   607→   607→            <DropdownMenuItem
+   608→   608→              className="text-destructive focus:text-destructive"
+   609→   609→              onClick={() => setConfirm(true)}
+   610→   610→            >
+   611→   611→              <Trash2 className="mr-2 h-3.5 w-3.5" /> Smazat
+   612→   612→            </DropdownMenuItem>
+   613→   613→          </DropdownMenuContent>
+   614→   614→        </DropdownMenu>
+   615→   615→        <Dialog open={confirm} onOpenChange={setConfirm}>
+   616→   616→          <DialogContent className="max-w-sm">
+   617→   617→            <DialogHeader>
+   618→   618→              <DialogTitle>Smazat platbu?</DialogTitle>
+   619→   619→              <DialogDescription>
+   620→   620→                Opravdu chcete smazat platbu{" "}
+   621→   621→                <strong>{formatCzk(payment.amount)}</strong>?
+   622→   622→              </DialogDescription>
+   623→   623→            </DialogHeader>
+   624→   624→            <DialogFooter>
+   625→   625→              <Button variant="outline" onClick={() => setConfirm(false)}>
+   626→   626→                Zrušit
+   627→   627→              </Button>
+   628→   628→              <Button variant="destructive" onClick={() => { setConfirm(false); onDelete(); }}>
+   629→   629→                Smazat
+   630→   630→              </Button>
+   631→   631→            </DialogFooter>
+   632→   632→          </DialogContent>
+   633→   633→        </Dialog>
+   634→   634→      </TableCell>
+   635→   635→    </TableRow>
+   636→   636→  );
+   637→   637→}
+   638→   638→
+   639→   639→// ===== Payment creation dialog =====
+   640→   640→function PaymentDialog({
+   641→   641→  open,
+   642→   642→  onOpenChange,
+   643→   643→  projectId,
+   644→   644→  budgetItems,
+   645→   645→  contacts,
+   646→   646→  createPayment,
+   647→   647→}: {
+   648→   648→  open: boolean;
+   649→   649→  onOpenChange: (open: boolean) => void;
+   650→   650→  projectId: string;
+   651→   651→  budgetItems: { id: string; category: string; subcategory: string | null }[];
+   652→   652→  contacts: { id: string; name: string; type: string }[];
+   653→   653→  createPayment: ReturnType<typeof useCreatePayment>;
+   654→   654→}) {
+   655→   655→  const [budgetItemId, setBudgetItemId] = useState("");
+   656→   656→  const [contactId, setContactId] = useState("");
+   657→   657→  const [amount, setAmount] = useState("");
+   658→   658→  const [date, setDate] = useState(new Date().toISOString().substring(0, 10));
+   659→   659→  const [type, setType] = useState("receipt");
+   660→   660→  const [vendor, setVendor] = useState("");
+   661→   661→  const [invoiceNumber, setInvoiceNumber] = useState("");
+   662→   662→  const [description, setDescription] = useState("");
+   663→   663→  const [vatRate, setVatRate] = useState("");
+   664→   664→  // Installment mode
+   665→   665→  const [isInvoice, setIsInvoice] = useState(false);
+   666→   666→  const [invoiceTotal, setInvoiceTotal] = useState("");
+   667→   667→
+   668→   668→  const handleSubmit = async (e: React.FormEvent) => {
+   669→   669→    e.preventDefault();
+   670→   670→    if (!budgetItemId) {
+   671→   671→      toast.error("Vyberte položku rozpočtu");
+   672→   672→      return;
+   673→   673→    }
+   674→   674→    const amt = Number(amount.replace(",", "."));
+   675→   675→    if (!amt || amt <= 0) {
+   676→   676→      toast.error("Zadejte platnou částku");
+   677→   677→      return;
+   678→   678→    }
+   679→   679→    if (isInvoice) {
+   680→   680→      const inv = Number(invoiceTotal.replace(",", "."));
+   681→   681→      if (!inv || inv <= 0) {
+   682→   682→        toast.error("Zadejte platnou celkovou částku faktury");
+   683→   683→        return;
+   684→   684→      }
+   685→   685→    }
+   686→   686→    try {
+   687→   687→      if (isInvoice) {
+   688→   688→        // Create the parent invoice record (amount = first installment,
+   689→   689→        // invoiceTotal = the full expected). If first installment < invoiceTotal,
+   690→   690→        // the parent represents the invoice and this first payment is recorded
+   691→   691→        // as the first installment (child).
+   692→   692→        const inv = Number(invoiceTotal.replace(",", "."));
+   693→   693→        // 1. Create parent invoice with amount=0 (just the expected total)
+   694→   694→        const parentRes = await fetch(`/api/projects/${projectId}/payments`, {
+   695→   695→          method: "POST",
+   696→   696→          headers: { "Content-Type": "application/json" },
+   697→   697→          body: JSON.stringify({
+   698→   698→            budgetItemId,
+   699→   699→            contactId: contactId || null,
+   700→   700→            amount: 0, // parent holds invoiceTotal, not a paid amount
+   701→   701→            invoiceTotal: inv,
+   702→   702→            installmentOf: null,
+   703→   703→            date,
+   704→   704→            type,
+   705→   705→            vendor,
+   706→   706→            invoiceNumber,
+   707→   707→            description,
+   708→   708→          }),
+   709→   709→        });
+   710→   710→        if (!parentRes.ok) throw new Error("Failed to create invoice");
+   711→   711→        const parent = await parentRes.json();
+   712→   712→        // 2. Create the first installment as a child
+   713→   713→        if (amt > 0) {
+   714→   714→          await createPayment.mutateAsync({
+   715→   715→            budgetItemId,
+   716→   716→            contactId: contactId || null,
+   717→   717→            amount: amt,
+   718→   718→            installmentOf: parent.id,
+   719→   719→            date,
+   720→   720→            type,
+   721→   721→            description: "1. splátka",
+   722→   722→          });
+   723→   723→        }
+   724→   724→      } else {
+   725→   725→        await createPayment.mutateAsync({
+   726→   726→          budgetItemId,
+   727→   727→          contactId: contactId || null,
+   728→   728→          amount: amt,
+   729→   729→          vatRate: vatRate || null,
+   730→   730→          date,
+   731→   731→          type,
+   732→   732→          vendor,
+   733→   733→          invoiceNumber,
+   734→   734→          description,
+   735→   735→        });
+   736→   736→      }
+   737→   737→      toast.success(isInvoice ? "Faktura se splátkami vytvořena" : "Platba přidána");
+   738→   738→      setBudgetItemId("");
+   739→   739→      setContactId("");
+   740→   740→      setAmount("");
+   741→   741→      setVendor("");
+   742→   742→      setInvoiceNumber("");
+   743→   743→      setDescription("");
+   744→   744→      setType("receipt");
+   745→   745→      setIsInvoice(false);
+   746→   746→      setInvoiceTotal("");
+   747→   747→      onOpenChange(false);
+   748→   748→    } catch {
+   749→   749→      toast.error("Nepodařilo se přidat platbu");
+   750→   750→    }
+   751→   751→  };
+   752→   752→
+   753→   753→  return (
+   754→   754→    <Dialog
+   755→   755→      open={open}
+   756→   756→      onOpenChange={(o) => {
+   757→   757→        if (!o) {
+   758→   758→          setBudgetItemId("");
+   759→   759→          setContactId("");
+   760→   760→          setAmount("");
+   761→   761→          setVendor("");
+   762→   762→          setInvoiceNumber("");
+   763→   763→          setDescription("");
+   764→   764→          setType("receipt");
+   765→   765→          setIsInvoice(false);
+   766→   766→          setInvoiceTotal("");
+   767→   767→        }
+   768→   768→        onOpenChange(o);
+   769→   769→      }}
+   770→   770→    >
+   771→   771→      <DialogContent className="max-w-lg">
+   772→   772→        <DialogHeader>
+   773→   773→          <DialogTitle>Nová platba</DialogTitle>
+   774→   774→          <DialogDescription>
+   775→   775→            Zaznamenejte platbu - účtenku, fakturu nebo výplatu za práci.
+   776→   776→          </DialogDescription>
+   777→   777→        </DialogHeader>
+   778→   778→        <form onSubmit={handleSubmit} className="space-y-4">
+   779→   779→          <div className="space-y-2">
+   780→   780→            <Label htmlFor="budgetItem">Položka rozpočtu *</Label>
+   781→   781→            <Select value={budgetItemId} onValueChange={setBudgetItemId}>
+   782→   782→              <SelectTrigger id="budgetItem">
+   783→   783→                <SelectValue placeholder="Vyberte položku…" />
+   784→   784→              </SelectTrigger>
+   785→   785→              <SelectContent className="max-h-72">
+   786→   786→                {budgetItems.map((b) => (
+   787→   787→                  <SelectItem key={b.id} value={b.id}>
+   788→   788→                    {b.category}
+   789→   789→                    {b.subcategory ? ` / ${b.subcategory}` : ""}
+   790→   790→                  </SelectItem>
+   791→   791→                ))}
+   792→   792→              </SelectContent>
+   793→   793→            </Select>
+   794→   794→          </div>
+   795→   795→
+   796→   796→          {/* Installment toggle */}
+   797→   797→          <div className="flex items-center gap-2 rounded-md border bg-muted/30 p-2">
+   798→   798→            <Checkbox
+   799→   799→              id="isInvoice"
+   800→   800→              checked={isInvoice}
+   801→   801→              onCheckedChange={(v) => setIsInvoice(v === true)}
+   802→   802→            />
+   803→   803→            <Label htmlFor="isInvoice" className="cursor-pointer text-xs">
+   804→   804→              <CircleDollarSign className="mr-1 inline h-3.5 w-3.5" />
+   805→   805→              Platba ve splátkách (faktura s více platbami)
+   806→   806→            </Label>
+   807→   807→          </div>
+   808→   808→
+   809→   809→          {isInvoice ? (
+   810→   810→            <div className="grid grid-cols-2 gap-3">
+   811→   811→              <div className="space-y-2">
+   812→   812→                <Label htmlFor="invoiceTotal">Faktura celkem (Kč) *</Label>
+   813→   813→                <Input
+   814→   814→                  id="invoiceTotal"
+   815→   815→                  value={invoiceTotal}
+   816→   816→                  onChange={(e) => setInvoiceTotal(e.target.value)}
+   817→   817→                  placeholder="150000"
+   818→   818→                  inputMode="decimal"
+   819→   819→                />
+   820→   820→              </div>
+   821→   821→              <div className="space-y-2">
+   822→   822→                <Label htmlFor="amount">1. splátka (Kč) *</Label>
+   823→   823→                <Input
+   824→   824→                  id="amount"
+   825→   825→                  value={amount}
+   826→   826→                  onChange={(e) => setAmount(e.target.value)}
+   827→   827→                  placeholder="50000"
+   828→   828→                  inputMode="decimal"
+   829→   829→                />
+   830→   830→              </div>
+   831→   831→            </div>
+   832→   832→          ) : (
+   833→   833→            <div className="grid grid-cols-2 gap-3">
+   834→   834→              <div className="space-y-2">
+   835→   835→                <Label htmlFor="amount">Částka (Kč) *</Label>
+   836→   836→                <Input
+   837→   837→                  id="amount"
+   838→   838→                  value={amount}
+   839→   839→                  onChange={(e) => setAmount(e.target.value)}
+   840→   840→                  placeholder="25000"
+   841→   841→                  inputMode="decimal"
+   842→   842→                />
+   843→   843→              </div>
+   844→   844→              <div className="space-y-2">
+   845→   845→                <Label htmlFor="date">Datum *</Label>
+   846→   846→                <Input
+   847→   847→                  id="date"
+   848→   848→                  type="date"
+   849→   849→                  value={date}
+   850→   850→                  onChange={(e) => setDate(e.target.value)}
+   851→   851→                />
+   852→   852→              </div>
+   853→   853→            </div>
+   854→   854→          )}
+   855→   855→
+   856→   856→          {isInvoice && (
+   857→   857→            <div className="space-y-2">
+   858→   858→              <Label htmlFor="date">Datum faktury *</Label>
+   859→   859→              <Input
+   860→   860→                id="date"
+   861→   861→                type="date"
+   862→   862→                value={date}
+   863→   863→                onChange={(e) => setDate(e.target.value)}
+   864→   864→              />
+   865→   865→            </div>
+   866→   866→          )}
+   867→   867→
+   868→   868→          <div className="grid grid-cols-2 gap-3">
+   869→   869→            <div className="space-y-2">
+   870→   870→              <Label htmlFor="type">Typ</Label>
+   871→   871→              <Select value={type} onValueChange={setType}>
+   872→   872→                <SelectTrigger id="type">
+   873→   873→                  <SelectValue />
+   874→   874→                </SelectTrigger>
+   875→   875→                <SelectContent>
+   876→   876→                  {PAYMENT_TYPES.map((t) => (
+   877→   877→                    <SelectItem key={t.value} value={t.value}>
+   878→   878→                      {t.emoji} {t.label}
+   879→   879→                    </SelectItem>
+   880→   880→                  ))}
+   881→   881→                </SelectContent>
+   882→   882→              </Select>
+   883→   883→            </div>
+   884→   884→            <div className="space-y-2">
+   885→   885→              <Label htmlFor="contact">Kontakt (volitelné)</Label>
+   886→   886→              <Select value={contactId} onValueChange={setContactId}>
+   887→   887→                <SelectTrigger id="contact">
+   888→   888→                  <SelectValue placeholder="Bez kontaktu" />
+   889→   889→                </SelectTrigger>
+   890→   890→                <SelectContent className="max-h-60">
+   891→   891→                  {contacts.map((c) => (
+   892→   892→                    <SelectItem key={c.id} value={c.id}>
+   893→   893→                      {c.name}
+   894→   894→                    </SelectItem>
+   895→   895→                  ))}
+   896→   896→                </SelectContent>
+   897→   897→              </Select>
+   898→   898→            </div>
+   899→   899→          </div>
+   900→   900→          <div className="grid grid-cols-2 gap-3">
+   901→   901→            <div className="space-y-2">
+   902→   902→              <Label htmlFor="vendor">Firma / Obchod</Label>
+   903→   903→              <Input
+   904→   904→                id="vendor"
+   905→   905→                value={vendor}
+   906→   906→                onChange={(e) => setVendor(e.target.value)}
+   907→   907→                placeholder="např. Hornbach"
+   908→   908→              />
+   909→   909→            </div>
+   910→   910→            <div className="space-y-2">
+   911→   911→              <Label htmlFor="invoiceNumber">Číslo faktury/účtenky</Label>
+   912→   912→              <Input
+   913→   913→                id="invoiceNumber"
+   914→   914→                value={invoiceNumber}
+   915→   915→                onChange={(e) => setInvoiceNumber(e.target.value)}
+   916→   916→                placeholder="2024-001"
+   917→   917→              />
+   918→   918→            </div>
+   919→   919→          </div>
+   920→   920→          {/* VAT field */}
+   921→   921→          {!isInvoice && (
+   922→   922→            <div className="grid grid-cols-2 gap-3">
+   923→   923→              <div className="space-y-2">
+   924→   924→                <Label htmlFor="vatRate">DPH sazba (%)</Label>
+   925→   925→                <Select value={vatRate || "none"} onValueChange={(v) => setVatRate(v === "none" ? "" : v)}>
+   926→   926→                  <SelectTrigger id="vatRate">
+   927→   927→                    <SelectValue placeholder="Bez DPH" />
+   928→   928→                  </SelectTrigger>
+   929→   929→                  <SelectContent>
+   930→   930→                    <SelectItem value="none">Bez DPH</SelectItem>
+   931→   931→                    <SelectItem value="21">21 % (standardní)</SelectItem>
+   932→   932→                    <SelectItem value="12">12 % (snížená 1)</SelectItem>
+   933→   933→                    <SelectItem value="10">10 % (snížená 2)</SelectItem>
+   934→   934→                    <SelectItem value="0">0 %</SelectItem>
+   935→   935→                  </SelectContent>
+   936→   936→                </Select>
+   937→   937→              </div>
+   938→   938→              <div className="space-y-2">
+   939→   939→                <Label>Výpočet DPH</Label>
+   940→   940→                <div className="flex h-9 items-center rounded-md border bg-muted/30 px-3 text-xs text-muted-foreground">
+   941→   941→                  {vatRate && amount ? (
+   942→   942→                    <>
+   943→   943→                      DPH:{" "}
+   944→   944→                      <strong className="ml-1 text-foreground tabular-nums">
+   945→   945→                        {formatCzk(
+   946→   946→                          (Number(amount.replace(",", ".")) * Number(vatRate)) /
+   947→   947→                            (100 + Number(vatRate)),
+   948→   948→                        )}
+   949→   949→                      </strong>
+   950→   950→                      <span className="ml-2">
+   951→   951→                        (Základ:{" "}
+   952→   952→                        {formatCzk(
+   953→   953→                          (Number(amount.replace(",", ".")) * 100) /
+   954→   954→                            (100 + Number(vatRate)),
+   955→   955→                        )}
+   956→   956→                        )
+   957→   957→                      </span>
+   958→   958→                    </>
+   959→   959→                  ) : (
+   960→   960→                    <span>Zadejte částku a DPH sazbu</span>
+   961→   961→                  )}
+   962→   962→                </div>
+   963→   963→              </div>
+   964→   964→            </div>
+   965→   965→          )}
+   966→   966→          <div className="space-y-2">
+   967→   967→            <Label htmlFor="description">Popis</Label>
+   968→   968→            <Textarea
+   969→   969→              id="description"
+   970→   970→              value={description}
+   971→   971→              onChange={(e) => setDescription(e.target.value)}
+   972→   972→              placeholder="Co bylo koupeno / zaplaceno…"
+   973→   973→              rows={2}
+   974→   974→            />
+   975→   975→          </div>
+   976→   976→          <DialogFooter>
+   977→   977→            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+   978→   978→              Zrušit
+   979→   979→            </Button>
+   980→   980→            <Button type="submit" disabled={createPayment.isPending}>
+   981→   981→              {createPayment.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+   982→   982→              {isInvoice ? "Vytvořit fakturu" : "Přidat platbu"}
+   983→   983→            </Button>
+   984→   984→          </DialogFooter>
+   985→   985→        </form>
+   986→   986→      </DialogContent>
+   987→   987→    </Dialog>
+   988→   988→  );
+   989→   989→}
+   990→   990→

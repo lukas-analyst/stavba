@@ -19,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useCreateProject, type Project } from "@/lib/api";
+import { useCreateProject, useUpdateProject, type Project } from "@/lib/api";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { useState } from "react";
@@ -48,6 +48,7 @@ function ProjectForm({
   onDone: () => void;
 }) {
   const createProject = useCreateProject();
+  const updateProject = useUpdateProject(project?.id ?? "");
   const [name, setName] = useState(project?.name ?? "");
   const [address, setAddress] = useState(project?.address ?? "");
   const [description, setDescription] = useState(project?.description ?? "");
@@ -60,6 +61,9 @@ function ProjectForm({
     project?.endDate ? project.endDate.substring(0, 10) : "",
   );
 
+  const isEditMode = !!project;
+  const isLoading = createProject.isPending || updateProject.isPending;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) {
@@ -67,18 +71,24 @@ function ProjectForm({
       return;
     }
     try {
-      await createProject.mutateAsync({
+      const data = {
         name,
         address,
         description,
         status,
         startDate: startDate || null,
         endDate: endDate || null,
-      });
-      toast.success("Projekt byl vytvořen");
+      };
+      if (isEditMode && project) {
+        await updateProject.mutateAsync(data);
+        toast.success("Projekt byl upraven");
+      } else {
+        await createProject.mutateAsync(data);
+        toast.success("Projekt byl vytvořen");
+      }
       onDone();
     } catch {
-      toast.error("Nepodařilo se vytvořit projekt");
+      toast.error(isEditMode ? "Nepodařilo se upravit projekt" : "Nepodařilo se vytvořit projekt");
     }
   };
 
@@ -89,7 +99,9 @@ function ProjectForm({
           {project ? "Upravit projekt" : "Nový projekt"}
         </DialogTitle>
         <DialogDescription>
-          Vytvořte nový projekt pro stavbu nebo rekonstrukci domu, bytu, chalupy.
+          {isEditMode
+            ? "Upravte název, popis a termíny projektu."
+            : "Vytvořte nový projekt pro stavbu nebo rekonstrukci domu, bytu, chalupy."}
         </DialogDescription>
       </DialogHeader>
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -176,11 +188,11 @@ function ProjectForm({
           <Button type="button" variant="outline" onClick={onDone}>
             Zrušit
           </Button>
-          <Button type="submit" disabled={createProject.isPending}>
-            {createProject.isPending && (
+          <Button type="submit" disabled={isLoading}>
+            {isLoading && (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             )}
-            {project ? "Uložit změny" : "Vytvořit projekt"}
+            {isEditMode ? "Uložit změny" : "Vytvořit projekt"}
           </Button>
         </DialogFooter>
       </form>

@@ -1,0 +1,954 @@
+     1→"use client";
+     2→
+     3→import { useState, useMemo } from "react";
+     4→import {
+     5→  useBudgetItems,
+     6→  useUpdateBudgetItem,
+     7→  useDeleteBudgetItem,
+     8→  useDuplicateBudgetItem,
+     9→  useReorder,
+    10→  useProjects,
+    11→  useExportCsv,
+    12→  type BudgetItem,
+    13→} from "@/lib/api";
+    14→import {
+    15→  Table,
+    16→  TableBody,
+    17→  TableCell,
+    18→  TableHead,
+    19→  TableHeader,
+    20→  TableRow,
+    21→} from "@/components/ui/table";
+    22→import { Button } from "@/components/ui/button";
+    23→import { Input } from "@/components/ui/input";
+    24→import { Label } from "@/components/ui/label";
+    25→import { Textarea } from "@/components/ui/textarea";
+    26→import { Badge } from "@/components/ui/badge";
+    27→import { Checkbox } from "@/components/ui/checkbox";
+    28→import {
+    29→  Select,
+    30→  SelectContent,
+    31→  SelectItem,
+    32→  SelectTrigger,
+    33→  SelectValue,
+    34→} from "@/components/ui/select";
+    35→import {
+    36→  Collapsible,
+    37→  CollapsibleContent,
+    38→  CollapsibleTrigger,
+    39→} from "@/components/ui/collapsible";
+    40→import {
+    41→  Dialog,
+    42→  DialogContent,
+    43→  DialogFooter,
+    44→  DialogHeader,
+    45→  DialogTitle,
+    46→  DialogDescription,
+    47→} from "@/components/ui/dialog";
+    48→import {
+    49→  DropdownMenu,
+    50→  DropdownMenuContent,
+    51→  DropdownMenuItem,
+    52→  DropdownMenuTrigger,
+    53→} from "@/components/ui/dropdown-menu";
+    54→import { Skeleton } from "@/components/ui/skeleton";
+    55→import {
+    56→  ChevronDown,
+    57→  ChevronRight,
+    58→  Plus,
+    59→  Trash2,
+    60→  MoreHorizontal,
+    61→  AlertTriangle,
+    62→  Filter,
+    63→  Search,
+    64→  Loader2,
+    65→  ArrowUp,
+    66→  ArrowDown,
+    67→  CheckCircle2,
+    68→  Circle,
+    69→  PiggyBank,
+    70→  GripVertical,
+    71→  Download,
+    72→  Copy,
+    73→  MessageSquare,
+    74→} from "lucide-react";
+    75→import {
+    76→  formatCzk,
+    77→  formatNumber,
+    78→  formatDate,
+    79→  PHASES,
+    80→  PHASE_COLORS,
+    81→  PHASE_BORDER_COLORS,
+    82→  PHASE_DOT_COLORS,
+    83→} from "@/lib/format";
+    84→import { cn } from "@/lib/utils";
+    85→import { toast } from "sonner";
+    86→import { BudgetItemDialog } from "@/components/budget-item-dialog";
+    87→
+    88→export function BudgetTab({ projectId }: { projectId: string }) {
+    89→  const { data: items, isLoading } = useBudgetItems(projectId);
+    90→  const { data: projects } = useProjects();
+    91→  const project = projects?.find((p) => p.id === projectId);
+    92→  const reorder = useReorder(projectId);
+    93→  const exportCsv = useExportCsv(projectId);
+    94→  const [collapsedCats, setCollapsedCats] = useState<Set<string>>(new Set());
+    95→  const [phaseFilter, setPhaseFilter] = useState<string>("all");
+    96→  const [completionFilter, setCompletionFilter] = useState<"all" | "todo" | "done">("all");
+    97→  const [search, setSearch] = useState("");
+    98→  const [addOpen, setAddOpen] = useState(false);
+    99→  const [editingItem, setEditingItem] = useState<BudgetItem | null>(null);
+   100→  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+   101→  const updateItem = useUpdateBudgetItem(projectId);
+   102→
+   103→  const toggleSelect = (id: string) => {
+   104→    setSelectedIds((prev) => {
+   105→      const next = new Set(prev);
+   106→      if (next.has(id)) next.delete(id);
+   107→      else next.add(id);
+   108→      return next;
+   109→    });
+   110→  };
+   111→
+   112→  const bulkComplete = async () => {
+   113→    const promises = Array.from(selectedIds).map((id) =>
+   114→      updateItem.mutateAsync({ id, data: { completed: true } }),
+   115→    );
+   116→    await Promise.all(promises);
+   117→    toast.success(`${selectedIds.size} položek označeno jako hotové`);
+   118→    setSelectedIds(new Set());
+   119→  };
+   120→
+   121→  const clearSelection = () => setSelectedIds(new Set());
+   122→
+   123→  const toggleCat = (cat: string) => {
+   124→    setCollapsedCats((prev) => {
+   125→      const next = new Set(prev);
+   126→      if (next.has(cat)) next.delete(cat);
+   127→      else next.add(cat);
+   128→      return next;
+   129→    });
+   130→  };
+   131→
+   132→  // Parse the saved category order (JSON string on the project)
+   133→  const savedCategoryOrder = useMemo(() => {
+   134→    if (!project?.categoryOrder) return [];
+   135→    try {
+   136→      const arr = JSON.parse(project.categoryOrder);
+   137→      return Array.isArray(arr) ? (arr as string[]) : [];
+   138→    } catch {
+   139→      return [];
+   140→    }
+   141→  }, [project?.categoryOrder]);
+   142→
+   143→  // Group items by category, preserving order; respect saved category order
+   144→  const grouped = useMemo(() => {
+   145→    const filtered = (items ?? []).filter((it) => {
+   146→      if (phaseFilter !== "all" && it.phase !== phaseFilter) return false;
+   147→      if (completionFilter === "done" && !it.completed) return false;
+   148→      if (completionFilter === "todo" && it.completed) return false;
+   149→      if (search.trim()) {
+   150→        const q = search.toLowerCase();
+   151→        const text = `${it.category} ${it.subcategory ?? ""} ${it.note ?? ""} ${it.element ?? ""}`.toLowerCase();
+   152→        if (!text.includes(q)) return false;
+   153→      }
+   154→      return true;
+   155→    });
+   156→    const groups = new Map<string, BudgetItem[]>();
+   157→    for (const it of filtered) {
+   158→      const arr = groups.get(it.category) ?? [];
+   159→      arr.push(it);
+   160→      groups.set(it.category, arr);
+   161→    }
+   162→    // Sort categories by saved order; unknown categories go last (alphabetical)
+   163→    const entries = Array.from(groups.entries());
+   164→    entries.sort((a, b) => {
+   165→      const ia = savedCategoryOrder.indexOf(a[0]);
+   166→      const ib = savedCategoryOrder.indexOf(b[0]);
+   167→      if (ia === -1 && ib === -1) return a[0].localeCompare(b[0]);
+   168→      if (ia === -1) return 1;
+   169→      if (ib === -1) return -1;
+   170→      return ia - ib;
+   171→    });
+   172→    return entries;
+   173→  }, [items, phaseFilter, search, savedCategoryOrder, completionFilter]);
+   174→
+   175→  // Category totals
+   176→  const categoryTotals = useMemo(() => {
+   177→    const map = new Map<string, { plan: number; actual: number; count: number; saved: number }>();
+   178→    for (const it of items ?? []) {
+   179→      const cur = map.get(it.category) ?? { plan: 0, actual: 0, count: 0, saved: 0 };
+   180→      cur.plan += it.planCost || 0;
+   181→      cur.actual += it.actualCost || 0;
+   182→      cur.count += 1;
+   183→      if (it.completed) {
+   184→        cur.saved += Math.max(0, (it.planCost || 0) - (it.actualCost || 0));
+   185→      }
+   186→      map.set(it.category, cur);
+   187→    }
+   188→    return map;
+   189→  }, [items]);
+   190→
+   191→  const grandPlan = (items ?? []).reduce((s, i) => s + (i.planCost || 0), 0);
+   192→  const grandActual = (items ?? []).reduce((s, i) => s + (i.actualCost || 0), 0);
+   193→  const grandSaved = (items ?? [])
+   194→    .filter((i) => i.completed)
+   195→    .reduce((s, i) => s + Math.max(0, (i.planCost || 0) - (i.actualCost || 0)), 0);
+   196→  const completedCount = (items ?? []).filter((i) => i.completed).length;
+   197→
+   198→  // ===== Reorder handlers =====
+   199→  const moveItem = (catItems: BudgetItem[], currentIndex: number, direction: -1 | 1) => {
+   200→    const targetIndex = currentIndex + direction;
+   201→    if (targetIndex < 0 || targetIndex >= catItems.length) return;
+   202→    // Swap sortOrder values with the neighbor
+   203→    const a = catItems[currentIndex];
+   204→    const b = catItems[targetIndex];
+   205→    const newItems = [
+   206→      ...catItems.map((it) => ({ id: it.id, sortOrder: it.sortOrder })),
+   207→    ];
+   208→    newItems[currentIndex].sortOrder = b.sortOrder;
+   209→    newItems[targetIndex].sortOrder = a.sortOrder;
+   210→    reorder.mutate({ items: newItems });
+   211→  };
+   212→
+   213→  const moveCategory = (category: string, direction: -1 | 1) => {
+   214→    const currentCats = grouped.map(([c]) => c);
+   215→    // Build full category order including any not currently visible
+   216→    const allCats = Array.from(new Set([...savedCategoryOrder, ...currentCats]));
+   217→    const idx = allCats.indexOf(category);
+   218→    const target = idx + direction;
+   219→    if (target < 0 || target >= allCats.length) return;
+   220→    const reordered = [...allCats];
+   221→    [reordered[idx], reordered[target]] = [reordered[target], reordered[idx]];
+   222→    reorder.mutate({ categoryOrder: reordered });
+   223→  };
+   224→
+   225→  if (isLoading) {
+   226→    return (
+   227→      <div className="space-y-3">
+   228→        <Skeleton className="h-10" />
+   229→        <Skeleton className="h-96" />
+   230→      </div>
+   231→    );
+   232→  }
+   233→
+   234→  return (
+   235→    <div className="space-y-4">
+   236→      {/* Bulk action bar (appears when items are selected) */}
+   237→      {selectedIds.size > 0 && (
+   238→        <div className="sticky top-[57px] z-20 flex items-center gap-3 rounded-lg border bg-primary/5 px-4 py-2.5 shadow-sm backdrop-blur">
+   239→          <Badge variant="default" className="tabular-nums">
+   240→            {selectedIds.size} vybráno
+   241→          </Badge>
+   242→          <div className="flex gap-2">
+   243→            <Button
+   244→              size="sm"
+   245→              variant="default"
+   246→              onClick={bulkComplete}
+   247→              disabled={updateItem.isPending}
+   248→            >
+   249→              <CheckCircle2 className="mr-1.5 h-3.5 w-3.5" /> Označit jako hotové
+   250→            </Button>
+   251→          </div>
+   252→          <Button
+   253→            size="sm"
+   254→            variant="ghost"
+   255→            onClick={clearSelection}
+   256→            className="ml-auto"
+   257→          >
+   258→            Zrušit výběr
+   259→          </Button>
+   260→        </div>
+   261→      )}
+   262→
+   263→      {/* Toolbar */}
+   264→      <div className="flex flex-wrap items-center gap-2">
+   265→        <div className="relative">
+   266→          <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+   267→          <Input
+   268→            value={search}
+   269→            onChange={(e) => setSearch(e.target.value)}
+   270→            placeholder="Hledat položku…"
+   271→            className="h-9 w-56 pl-8"
+   272→          />
+   273→        </div>
+   274→        <Select value={phaseFilter} onValueChange={setPhaseFilter}>
+   275→          <SelectTrigger className="h-9 w-44">
+   276→            <Filter className="mr-2 h-3.5 w-3.5" />
+   277→            <SelectValue />
+   278→          </SelectTrigger>
+   279→          <SelectContent>
+   280→            <SelectItem value="all">Všechny fáze</SelectItem>
+   281→            {PHASES.map((p) => (
+   282→              <SelectItem key={p} value={p}>
+   283→                {p}
+   284→              </SelectItem>
+   285→            ))}
+   286→          </SelectContent>
+   287→        </Select>
+   288→        {/* Completion filter pills */}
+   289→        <div className="flex items-center gap-0.5 rounded-md border bg-muted/40 p-0.5">
+   290→          {([
+   291→            { id: "all", label: "Vše" },
+   292→            { id: "todo", label: "Aktivní" },
+   293→            { id: "done", label: "Hotovo" },
+   294→          ] as const).map((opt) => (
+   295→            <button
+   296→              key={opt.id}
+   297→              onClick={() => setCompletionFilter(opt.id)}
+   298→              className={cn(
+   299→                "rounded px-2.5 py-1 text-xs font-medium transition-colors",
+   300→                completionFilter === opt.id
+   301→                  ? "bg-background text-foreground shadow-sm"
+   302→                  : "text-muted-foreground hover:text-foreground",
+   303→              )}
+   304→            >
+   305→              {opt.label}
+   306→            </button>
+   307→          ))}
+   308→        </div>
+   309→        <div className="ml-auto flex items-center gap-3 text-sm">
+   310→          <div className="text-right">
+   311→            <div className="text-xs text-muted-foreground">Plán</div>
+   312→            <div className="font-bold">{formatCzk(grandPlan)}</div>
+   313→          </div>
+   314→          <div className="text-right">
+   315→            <div className="text-xs text-muted-foreground">Skutečnost</div>
+   316→            <div className="font-bold text-amber-600">{formatCzk(grandActual)}</div>
+   317→          </div>
+   318→          <div className="text-right">
+   319→            <div className="text-xs text-muted-foreground">Zbývá</div>
+   320→            <div className={cn("font-bold", grandPlan - grandActual < 0 ? "text-rose-600" : "text-emerald-600")}>
+   321→              {formatCzk(grandPlan - grandActual)}
+   322→            </div>
+   323→          </div>
+   324→          <div className="text-right">
+   325→            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+   326→              <PiggyBank className="h-3 w-3" /> Ušetřeno
+   327→            </div>
+   328→            <div className="font-bold text-emerald-600">{formatCzk(grandSaved)}</div>
+   329→          </div>
+   330→          <div className="text-right">
+   331→            <div className="text-xs text-muted-foreground">Hotovo</div>
+   332→            <div className="font-bold">{completedCount}/{items?.length ?? 0}</div>
+   333→          </div>
+   334→          <Button
+   335→            variant="outline"
+   336→            size="sm"
+   337→            disabled={exportCsv.isPending}
+   338→            onClick={async () => {
+   339→              try {
+   340→                await exportCsv.mutateAsync("budget");
+   341→                toast.success("Rozpočet exportován do CSV");
+   342→              } catch {
+   343→                toast.error("Export selhal");
+   344→              }
+   345→            }}
+   346→            title="Exportovat do CSV (Excel/Google Sheets)"
+   347→          >
+   348→            <Download className="mr-1 h-4 w-4" /> CSV
+   349→          </Button>
+   350→          <Button size="sm" onClick={() => setAddOpen(true)}>
+   351→            <Plus className="mr-1 h-4 w-4" /> Přidat položku
+   352→          </Button>
+   353→        </div>
+   354→      </div>
+   355→
+   356→      {/* Budget table grouped by category */}
+   357→      <div className="space-y-3">
+   358→        {grouped.length === 0 && (
+   359→          <div className="rounded-lg border border-dashed py-12 text-center text-sm text-muted-foreground">
+   360→            Žádné položky neodpovídají filtru.
+   361→          </div>
+   362→        )}
+   363→        {grouped.map(([category, catItems], groupIndex) => {
+   364→          const collapsed = collapsedCats.has(category);
+   365→          const totals = categoryTotals.get(category)!;
+   366→          const burn = totals.plan > 0 ? (totals.actual / totals.plan) * 100 : 0;
+   367→          return (
+   368→            <Collapsible
+   369→              key={category}
+   370→              open={!collapsed}
+   371→              onOpenChange={() => toggleCat(category)}
+   372→              className="rounded-lg border bg-card"
+   373→            >
+   374→              <CollapsibleTrigger asChild>
+   375→                <button className="group flex w-full items-center gap-2 px-4 py-2.5 text-left hover:bg-muted/50">
+   376→                  {collapsed ? (
+   377→                    <ChevronRight className="h-4 w-4" />
+   378→                  ) : (
+   379→                    <ChevronDown className="h-4 w-4" />
+   380→                  )}
+   381→                  <span className="text-sm font-bold">{category}</span>
+   382→                  <Badge variant="secondary" className="text-[10px]">
+   383→                    {totals.count}
+   384→                  </Badge>
+   385→                  {totals.saved > 0 && (
+   386→                    <Badge variant="outline" className="text-[10px] text-emerald-700">
+   387→                      <PiggyBank className="mr-1 h-2.5 w-2.5" />
+   388→                      {formatCzk(totals.saved)}
+   389→                    </Badge>
+   390→                  )}
+   391→                  <div className="ml-auto flex items-center gap-4 text-xs">
+   392→                    <span className="text-muted-foreground">
+   393→                      {formatCzk(totals.actual)} / {formatCzk(totals.plan)}
+   394→                    </span>
+   395→                    <div className="h-1.5 w-24 overflow-hidden rounded-full bg-muted">
+   396→                      <div
+   397→                        className={cn(
+   398→                          "h-full rounded-full",
+   399→                          burn > 100 ? "bg-rose-500" : burn > 80 ? "bg-amber-500" : "bg-emerald-500",
+   400→                        )}
+   401→                        style={{ width: `${Math.min(burn, 100)}%` }}
+   402→                      />
+   403→                    </div>
+   404→                    <span
+   405→                      className={cn(
+   406→                        "font-semibold",
+   407→                        burn > 100 ? "text-rose-600" : burn > 80 ? "text-amber-600" : "text-emerald-600",
+   408→                      )}
+   409→                    >
+   410→                      {burn.toFixed(0)}%
+   411→                    </span>
+   412→                  </div>
+   413→                  {/* Category reorder arrows */}
+   414→                  <span className="ml-1 flex flex-col">
+   415→                    <span
+   416→                      role="button"
+   417→                      tabIndex={0}
+   418→                      onClick={(e) => {
+   419→                        e.stopPropagation();
+   420→                        moveCategory(category, -1);
+   421→                      }}
+   422→                      onKeyDown={(e) => {
+   423→                        if (e.key === "Enter") {
+   424→                          e.stopPropagation();
+   425→                          moveCategory(category, -1);
+   426→                        }
+   427→                      }}
+   428→                      className={cn(
+   429→                        "flex h-3.5 w-3.5 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground",
+   430→                        groupIndex === 0 && "pointer-events-none opacity-30",
+   431→                      )}
+   432→                      aria-label="Přesunout kategorii nahoru"
+   433→                    >
+   434→                      <ArrowUp className="h-3 w-3" />
+   435→                    </span>
+   436→                    <span
+   437→                      role="button"
+   438→                      tabIndex={0}
+   439→                      onClick={(e) => {
+   440→                        e.stopPropagation();
+   441→                        moveCategory(category, 1);
+   442→                      }}
+   443→                      onKeyDown={(e) => {
+   444→                        if (e.key === "Enter") {
+   445→                          e.stopPropagation();
+   446→                          moveCategory(category, 1);
+   447→                        }
+   448→                      }}
+   449→                      className={cn(
+   450→                        "flex h-3.5 w-3.5 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground",
+   451→                        groupIndex === grouped.length - 1 && "pointer-events-none opacity-30",
+   452→                      )}
+   453→                      aria-label="Přesunout kategorii dolů"
+   454→                    >
+   455→                      <ArrowDown className="h-3 w-3" />
+   456→                    </span>
+   457→                  </span>
+   458→                </button>
+   459→              </CollapsibleTrigger>
+   460→              <CollapsibleContent>
+   461→                <div className="overflow-x-auto">
+   462→                  <Table>
+   463→                    <TableHeader>
+   464→                      <TableRow className="bg-muted/40 hover:bg-muted/40">
+   465→                        <TableHead className="w-8"></TableHead>
+   466→                        <TableHead className="w-8"></TableHead>
+   467→                        <TableHead className="min-w-[180px]">Položka</TableHead>
+   468→                        <TableHead className="w-28">Fáze</TableHead>
+   469→                        <TableHead className="w-44">Poznámka</TableHead>
+   470→                        <TableHead className="w-28 text-right">Plán (Kč)</TableHead>
+   471→                        <TableHead className="w-20 text-right">Vůle</TableHead>
+   472→                        <TableHead className="w-20 text-right">Dny</TableHead>
+   473→                        <TableHead className="w-28">Datum od</TableHead>
+   474→                        <TableHead className="w-28">Datum do</TableHead>
+   475→                        <TableHead className="w-28 text-right">Skut. (Kč)</TableHead>
+   476→                        <TableHead className="w-24 text-right">Ušetřeno</TableHead>
+   477→                        <TableHead className="w-20 text-right">Hod.</TableHead>
+   478→                        <TableHead className="w-8"></TableHead>
+   479→                      </TableRow>
+   480→                    </TableHeader>
+   481→                    <TableBody>
+   482→                      {catItems.map((item, idx) => (
+   483→                        <BudgetRow
+   484→                          key={item.id}
+   485→                          item={item}
+   486→                          projectId={projectId}
+   487→                          onEdit={() => setEditingItem(item)}
+   488→                          canMoveUp={idx > 0}
+   489→                          canMoveDown={idx < catItems.length - 1}
+   490→                          onMoveUp={() => moveItem(catItems, idx, -1)}
+   491→                          onMoveDown={() => moveItem(catItems, idx, 1)}
+   492→                          isSelected={selectedIds.has(item.id)}
+   493→                          onToggleSelect={() => toggleSelect(item.id)}
+   494→                        />
+   495→                      ))}
+   496→                    </TableBody>
+   497→                  </Table>
+   498→                </div>
+   499→              </CollapsibleContent>
+   500→            </Collapsible>
+   501→          );
+   502→        })}
+   503→      </div>
+   504→
+   505→      <BudgetItemDialog
+   506→        open={addOpen}
+   507→        onOpenChange={setAddOpen}
+   508→        projectId={projectId}
+   509→      />
+   510→      <BudgetItemDialog
+   511→        open={!!editingItem}
+   512→        onOpenChange={(o) => !o && setEditingItem(null)}
+   513→        projectId={projectId}
+   514→        item={editingItem}
+   515→      />
+   516→    </div>
+   517→  );
+   518→}
+   519→
+   520→function BudgetRow({
+   521→  item,
+   522→  projectId,
+   523→  onEdit,
+   524→  canMoveUp,
+   525→  canMoveDown,
+   526→  onMoveUp,
+   527→  onMoveDown,
+   528→  isSelected,
+   529→  onToggleSelect,
+   530→}: {
+   531→  item: BudgetItem;
+   532→  projectId: string;
+   533→  onEdit: () => void;
+   534→  canMoveUp: boolean;
+   535→  canMoveDown: boolean;
+   536→  onMoveUp: () => void;
+   537→  onMoveDown: () => void;
+   538→  isSelected: boolean;
+   539→  onToggleSelect: () => void;
+   540→}) {
+   541→  const updateItem = useUpdateBudgetItem(projectId);
+   542→  const deleteItem = useDeleteBudgetItem(projectId);
+   543→  const duplicateItem = useDuplicateBudgetItem(projectId);
+   544→  const [confirmDelete, setConfirmDelete] = useState(false);
+   545→
+   546→  const overBudget = item.planCost && item.actualCost > item.planCost;
+   547→  const saved = item.completed
+   548→    ? Math.max(0, (item.planCost || 0) - (item.actualCost || 0))
+   549→    : null;
+   550→  const overSaved = item.completed && item.planCost
+   551→    ? (item.actualCost || 0) - (item.planCost || 0)
+   552→    : 0;
+   553→
+   554→  const update = (field: keyof BudgetItem, value: unknown) => {
+   555→    updateItem.mutate({ id: item.id, data: { [field]: value } });
+   556→  };
+   557→
+   558→  return (
+   559→    <TableRow
+   560→      className={cn(
+   561→        "group border-l-2 transition-colors",
+   562→        PHASE_BORDER_COLORS[item.phase] ?? "border-l-zinc-300",
+   563→        isSelected && "bg-primary/5",
+   564→        item.completed
+   565→          ? "bg-emerald-50/40 dark:bg-emerald-950/10"
+   566→          : "hover:bg-muted/30",
+   567→      )}
+   568→    >
+   569→      <TableCell className="px-2">
+   570→        <Checkbox
+   571→          checked={item.required}
+   572→          onCheckedChange={(v) => update("required", v === true)}
+   573→          aria-label="Nutné"
+   574→        />
+   575→      </TableCell>
+   576→      <TableCell className="px-1">
+   577→        {/* Selection checkbox */}
+   578→        <Checkbox
+   579→          checked={isSelected}
+   580→          onCheckedChange={onToggleSelect}
+   581→          aria-label="Vybrat položku"
+   582→          className="opacity-0 transition-opacity group-hover:opacity-100 data-[state=checked]:opacity-100"
+   583→        />
+   584→      </TableCell>
+   585→      <TableCell className="px-1">
+   586→        {/* Completed toggle */}
+   587→        <div className="flex flex-col items-center gap-0.5">
+   588→          <button
+   589→            onClick={() => update("completed", !item.completed)}
+   590→            className={cn(
+   591→              "rounded p-0.5 transition-colors",
+   592→              item.completed
+   593→                ? "text-emerald-600 hover:text-emerald-700"
+   594→                : "text-muted-foreground/40 hover:text-emerald-600",
+   595→            )}
+   596→            title={item.completed ? "Označit jako nedokončené" : "Označit jako hotové"}
+   597→            aria-label={item.completed ? "Hotovo" : "Označit jako hotovo"}
+   598→          >
+   599→            {item.completed ? (
+   600→              <CheckCircle2 className="h-4 w-4" />
+   601→            ) : (
+   602→              <Circle className="h-4 w-4" />
+   603→            )}
+   604→          </button>
+   605→        </div>
+   606→      </TableCell>
+   607→      <TableCell>
+   608→        <div className="flex flex-col">
+   609→          <div className="flex items-center gap-1">
+   610→            <button
+   611→              onClick={onEdit}
+   612→              className={cn(
+   613→                "text-left text-sm font-medium hover:underline",
+   614→                item.completed && "line-through decoration-emerald-500/50",
+   615→              )}
+   616→            >
+   617→              {item.subcategory || "(bez názvu)"}
+   618→            </button>
+   619→            {item.completed && (
+   620→              <Badge variant="outline" className="h-4 px-1 text-[9px] text-emerald-700">
+   621→                Hotovo
+   622→              </Badge>
+   623→            )}
+   624→          </div>
+   625→          {item.element && (
+   626→            <span className="text-[11px] text-muted-foreground">
+   627→              {item.element}
+   628→            </span>
+   629→          )}
+   630→          {item._count && (item._count.payments > 0 || item._count.timeEntries > 0 || item._count.comments > 0) && (
+   631→            <div className="mt-0.5 flex flex-wrap gap-1">
+   632→              {item._count.payments > 0 && (
+   633→                <Badge variant="outline" className="h-4 px-1 text-[10px] text-emerald-700">
+   634→                  {item._count.payments} plateb
+   635→                </Badge>
+   636→              )}
+   637→              {item._count.timeEntries > 0 && (
+   638→                <Badge variant="outline" className="h-4 px-1 text-[10px] text-violet-700">
+   639→                  {item._count.timeEntries} časů
+   640→                </Badge>
+   641→              )}
+   642→              {item._count.comments > 0 && (
+   643→                <Badge variant="outline" className="h-4 px-1 text-[10px] text-sky-700">
+   644→                  <MessageSquare className="mr-0.5 h-2 w-2" />
+   645→                  {item._count.comments}
+   646→                </Badge>
+   647→              )}
+   648→            </div>
+   649→          )}
+   650→        </div>
+   651→      </TableCell>
+   652→      <TableCell>
+   653→        <Select
+   654→          value={item.phase}
+   655→          onValueChange={(v) => update("phase", v)}
+   656→        >
+   657→          <SelectTrigger className="h-7 border-0 px-1 text-[11px] shadow-none hover:bg-muted">
+   658→            <Badge
+   659→              variant="outline"
+   660→              className={cn("h-5 px-1.5 text-[10px]", PHASE_COLORS[item.phase] ?? "")}
+   661→            >
+   662→              {item.phase}
+   663→            </Badge>
+   664→          </SelectTrigger>
+   665→          <SelectContent>
+   666→            {PHASES.map((p) => (
+   667→              <SelectItem key={p} value={p}>
+   668→                {p}
+   669→              </SelectItem>
+   670→            ))}
+   671→          </SelectContent>
+   672→        </Select>
+   673→      </TableCell>
+   674→      <TableCell>
+   675→        {item.note ? (
+   676→          <span className="line-clamp-2 text-[11px] text-muted-foreground" title={item.note}>
+   677→            {item.note}
+   678→          </span>
+   679→        ) : (
+   680→          <span className="text-[11px] text-muted-foreground/50">—</span>
+   681→        )}
+   682→      </TableCell>
+   683→      <TableCell className="text-right">
+   684→        <InlineNumber
+   685→          value={item.planCost}
+   686→          onCommit={(v) => update("planCost", v)}
+   687→          className="text-right"
+   688→        />
+   689→      </TableCell>
+   690→      <TableCell className="text-right">
+   691→        <InlineNumber
+   692→          value={item.flexibilityPercent}
+   693→          onCommit={(v) => update("flexibilityPercent", v)}
+   694→          suffix="%"
+   695→          className="text-right text-[11px]"
+   696→        />
+   697→      </TableCell>
+   698→      <TableCell className="text-right">
+   699→        <InlineNumber
+   700→          value={item.planDays}
+   701→          onCommit={(v) => update("planDays", v)}
+   702→          className="text-right text-[11px]"
+   703→        />
+   704→      </TableCell>
+   705→      <TableCell>
+   706→        <InlineDate
+   707→          value={item.dateFrom}
+   708→          onCommit={(v) => update("dateFrom", v)}
+   709→        />
+   710→      </TableCell>
+   711→      <TableCell>
+   712→        <InlineDate
+   713→          value={item.dateTo}
+   714→          onCommit={(v) => update("dateTo", v)}
+   715→        />
+   716→      </TableCell>
+   717→      <TableCell className={cn("text-right", overBudget && "font-semibold text-rose-600")}>
+   718→        <InlineNumber
+   719→          value={item.actualCost}
+   720→          onCommit={(v) => update("actualCost", v)}
+   721→          className="text-right"
+   722→        />
+   723→        {overBudget && (
+   724→          <span className="ml-1 inline-flex items-center text-[10px] text-rose-500">
+   725→            <AlertTriangle className="h-3 w-3" />
+   726→          </span>
+   727→        )}
+   728→      </TableCell>
+   729→      <TableCell className="text-right text-[11px]">
+   730→        {item.completed ? (
+   731→          saved !== null && saved > 0 ? (
+   732→            <span className="font-medium text-emerald-600" title="Ušetřeno od plánu">
+   733→              {formatCzk(saved)}
+   734→            </span>
+   735→          ) : overSaved > 0 ? (
+   736→            <span className="font-medium text-rose-600" title="Překročeno oproti plánu">
+   737→              −{formatCzk(overSaved)}
+   738→            </span>
+   739→          ) : (
+   740→            <span className="text-muted-foreground">0 Kč</span>
+   741→          )
+   742→        ) : (
+   743→          <span className="text-muted-foreground/40" title="Označte jako hotové pro výpočet">
+   744→            —
+   745→          </span>
+   746→        )}
+   747→      </TableCell>
+   748→      <TableCell className="text-right text-[11px] text-violet-600">
+   749→        {item.actualHours > 0 ? formatNumber(item.actualHours, " h") : "—"}
+   750→      </TableCell>
+   751→      <TableCell>
+   752→        <div className="flex items-center">
+   753→          <span className="flex flex-col">
+   754→            <button
+   755→              onClick={onMoveUp}
+   756→              disabled={!canMoveUp}
+   757→              className={cn(
+   758→                "flex h-3.5 w-3.5 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground disabled:pointer-events-none disabled:opacity-20",
+   759→              )}
+   760→              aria-label="Přesunout nahoru"
+   761→            >
+   762→              <ArrowUp className="h-3 w-3" />
+   763→            </button>
+   764→            <button
+   765→              onClick={onMoveDown}
+   766→              disabled={!canMoveDown}
+   767→              className={cn(
+   768→                "flex h-3.5 w-3.5 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground disabled:pointer-events-none disabled:opacity-20",
+   769→              )}
+   770→              aria-label="Přesunout dolů"
+   771→            >
+   772→              <ArrowDown className="h-3 w-3" />
+   773→            </button>
+   774→          </span>
+   775→          <DropdownMenu>
+   776→            <DropdownMenuTrigger asChild>
+   777→              <Button
+   778→                variant="ghost"
+   779→                size="icon"
+   780→                className="h-7 w-7 opacity-0 group-hover:opacity-100"
+   781→              >
+   782→                <MoreHorizontal className="h-4 w-4" />
+   783→              </Button>
+   784→            </DropdownMenuTrigger>
+   785→            <DropdownMenuContent align="end">
+   786→              <DropdownMenuItem onClick={onEdit}>
+   787→                Upravit detail
+   788→              </DropdownMenuItem>
+   789→              <DropdownMenuItem
+   790→                onClick={() => update("completed", !item.completed)}
+   791→              >
+   792→                {item.completed ? "Označit jako nedokončené" : "Označit jako hotové"}
+   793→              </DropdownMenuItem>
+   794→              <DropdownMenuItem
+   795→                onClick={async () => {
+   796→                  try {
+   797→                    await duplicateItem.mutateAsync(item.id);
+   798→                    toast.success("Položka duplikována");
+   799→                  } catch {
+   800→                    toast.error("Nepodařilo se duplikovat");
+   801→                  }
+   802→                }}
+   803→              >
+   804→                <Copy className="mr-2 h-3.5 w-3.5" /> Duplikovat
+   805→              </DropdownMenuItem>
+   806→              <DropdownMenuItem
+   807→                className="text-destructive focus:text-destructive"
+   808→                onClick={() => setConfirmDelete(true)}
+   809→              >
+   810→                <Trash2 className="mr-2 h-3.5 w-3.5" /> Smazat
+   811→              </DropdownMenuItem>
+   812→            </DropdownMenuContent>
+   813→          </DropdownMenu>
+   814→        </div>
+   815→        <Dialog open={confirmDelete} onOpenChange={setConfirmDelete}>
+   816→          <DialogContent className="max-w-sm">
+   817→            <DialogHeader>
+   818→              <DialogTitle>Smazat položku?</DialogTitle>
+   819→              <DialogDescription>
+   820→                Opravdu chcete smazat <strong>{item.subcategory || item.category}</strong>?
+   821→                Smažou se i související platby a časové záznamy.
+   822→              </DialogDescription>
+   823→            </DialogHeader>
+   824→            <DialogFooter>
+   825→              <Button variant="outline" onClick={() => setConfirmDelete(false)}>
+   826→                Zrušit
+   827→              </Button>
+   828→              <Button
+   829→                variant="destructive"
+   830→                disabled={deleteItem.isPending}
+   831→                onClick={async () => {
+   832→                  try {
+   833→                    await deleteItem.mutateAsync(item.id);
+   834→                    toast.success("Položka smazána");
+   835→                    setConfirmDelete(false);
+   836→                  } catch {
+   837→                    toast.error("Nepodařilo se smazat");
+   838→                  }
+   839→                }}
+   840→              >
+   841→                {deleteItem.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+   842→                Smazat
+   843→              </Button>
+   844→            </DialogFooter>
+   845→          </DialogContent>
+   846→        </Dialog>
+   847→      </TableCell>
+   848→    </TableRow>
+   849→  );
+   850→}
+   851→
+   852→function InlineNumber({
+   853→  value,
+   854→  onCommit,
+   855→  suffix,
+   856→  className,
+   857→}: {
+   858→  value: number | null;
+   859→  onCommit: (v: number | null) => void;
+   860→  suffix?: string;
+   861→  className?: string;
+   862→}) {
+   863→  const [editing, setEditing] = useState(false);
+   864→  const [draft, setDraft] = useState(value?.toString() ?? "");
+   865→
+   866→  if (editing) {
+   867→    return (
+   868→      <Input
+   869→        autoFocus
+   870→        value={draft}
+   871→        onChange={(e) => setDraft(e.target.value)}
+   872→        onBlur={() => {
+   873→          setEditing(false);
+   874→          const n = draft.trim() === "" ? null : Number(draft.replace(",", "."));
+   875→          if (n !== value && (n === null || !isNaN(n))) onCommit(n);
+   876→        }}
+   877→        onKeyDown={(e) => {
+   878→          if (e.key === "Enter") (e.target as HTMLInputElement).blur();
+   879→          if (e.key === "Escape") {
+   880→            setDraft(value?.toString() ?? "");
+   881→            setEditing(false);
+   882→          }
+   883→        }}
+   884→        className={cn("h-7 w-20 text-xs", className)}
+   885→      />
+   886→    );
+   887→  }
+   888→  return (
+   889→    <button
+   890→      onClick={() => {
+   891→        setDraft(value?.toString() ?? "");
+   892→        setEditing(true);
+   893→      }}
+   894→      className={cn(
+   895→        "block w-full rounded px-1 py-0.5 text-right text-xs hover:bg-muted",
+   896→        className,
+   897→      )}
+   898→    >
+   899→      {value === null || value === undefined ? (
+   900→        <span className="text-muted-foreground/50">—</span>
+   901→      ) : (
+   902→        <>{formatNumber(value, suffix ?? "")}</>
+   903→      )}
+   904→    </button>
+   905→  );
+   906→}
+   907→
+   908→function InlineDate({
+   909→  value,
+   910→  onCommit,
+   911→}: {
+   912→  value: string | null;
+   913→  onCommit: (v: string | null) => void;
+   914→}) {
+   915→  const [editing, setEditing] = useState(false);
+   916→  const [draft, setDraft] = useState(value ? value.substring(0, 10) : "");
+   917→
+   918→  if (editing) {
+   919→    return (
+   920→      <Input
+   921→        type="date"
+   922→        autoFocus
+   923→        value={draft}
+   924→        onChange={(e) => setDraft(e.target.value)}
+   925→        onBlur={() => {
+   926→          setEditing(false);
+   927→          if (draft !== (value ? value.substring(0, 10) : "")) {
+   928→            onCommit(draft || null);
+   929→          }
+   930→        }}
+   931→        onKeyDown={(e) => {
+   932→          if (e.key === "Enter") (e.target as HTMLInputElement).blur();
+   933→          if (e.key === "Escape") {
+   934→            setDraft(value ? value.substring(0, 10) : "");
+   935→            setEditing(false);
+   936→          }
+   937→        }}
+   938→        className="h-7 w-36 text-xs"
+   939→      />
+   940→    );
+   941→  }
+   942→  return (
+   943→    <button
+   944→      onClick={() => {
+   945→        setDraft(value ? value.substring(0, 10) : "");
+   946→        setEditing(true);
+   947→      }}
+   948→      className="block w-full rounded px-1 py-0.5 text-left text-xs hover:bg-muted"
+   949→    >
+   950→      {value ? formatDate(value) : <span className="text-muted-foreground/50">—</span>}
+   951→    </button>
+   952→  );
+   953→}
+   954→

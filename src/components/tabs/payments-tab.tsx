@@ -384,8 +384,7 @@ function InstallmentGroupCard({
       {expanded && (
         <div className="border-t bg-card">
           {/* Installments list */}
-          <div className="overflow-x-auto">
-            <Table>
+          <Table>
               <TableHeader>
                 <TableRow className="bg-muted/30 hover:bg-muted/30">
                   <TableHead className="w-32">Datum splátky</TableHead>
@@ -441,7 +440,6 @@ function InstallmentGroupCard({
                 )}
               </TableBody>
             </Table>
-          </div>
 
           {/* Add installment form */}
           <div className="border-t bg-muted/20 px-4 py-3">

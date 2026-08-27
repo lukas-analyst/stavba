@@ -361,7 +361,7 @@ export function useImportState() {
 // ===== CSV Export (per-project) =====
 export function useExportCsv(projectId: string) {
   return useMutation({
-    mutationFn: async (type: "budget" | "payments" | "time") => {
+    mutationFn: async (type: "budget" | "payments" | "time" | "contacts") => {
       const res = await fetch(`/api/projects/${projectId}/export-csv?type=${type}`);
       if (!res.ok) throw new Error("Failed to export CSV");
       const blob = await res.blob();
@@ -475,6 +475,26 @@ export function useCreateTimeEntry(projectId: string) {
         body: JSON.stringify(data),
       });
       if (!res.ok) throw new Error("Failed to create time entry");
+      return res.json();
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["time", projectId] });
+      qc.invalidateQueries({ queryKey: ["budget", projectId] });
+      qc.invalidateQueries({ queryKey: ["dashboard", projectId] });
+    },
+  });
+}
+
+export function useUpdateTimeEntry(projectId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: Partial<TimeEntry> & { hours?: number } }) => {
+      const res = await fetch(`/api/time-entries/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) throw new Error("Failed to update time entry");
       return res.json();
     },
     onSuccess: () => {

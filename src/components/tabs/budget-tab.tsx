@@ -21,10 +21,8 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -67,7 +65,6 @@ import {
   CheckCircle2,
   Circle,
   PiggyBank,
-  GripVertical,
   Download,
   Copy,
   MessageSquare,
@@ -79,7 +76,6 @@ import {
   PHASES,
   PHASE_COLORS,
   PHASE_BORDER_COLORS,
-  PHASE_DOT_COLORS,
 } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -97,28 +93,6 @@ export function BudgetTab({ projectId }: { projectId: string }) {
   const [search, setSearch] = useState("");
   const [addOpen, setAddOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<BudgetItem | null>(null);
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const updateItem = useUpdateBudgetItem(projectId);
-
-  const toggleSelect = (id: string) => {
-    setSelectedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  };
-
-  const bulkComplete = async () => {
-    const promises = Array.from(selectedIds).map((id) =>
-      updateItem.mutateAsync({ id, data: { completed: true } }),
-    );
-    await Promise.all(promises);
-    toast.success(`${selectedIds.size} položek označeno jako hotové`);
-    setSelectedIds(new Set());
-  };
-
-  const clearSelection = () => setSelectedIds(new Set());
 
   const toggleCat = (cat: string) => {
     setCollapsedCats((prev) => {
@@ -170,7 +144,7 @@ export function BudgetTab({ projectId }: { projectId: string }) {
       return ia - ib;
     });
     return entries;
-  }, [items, phaseFilter, search, savedCategoryOrder]);
+  }, [items, phaseFilter, search, savedCategoryOrder, completionFilter]);
 
   // Category totals
   const categoryTotals = useMemo(() => {
@@ -233,33 +207,6 @@ export function BudgetTab({ projectId }: { projectId: string }) {
 
   return (
     <div className="space-y-4">
-      {/* Bulk action bar (appears when items are selected) */}
-      {selectedIds.size > 0 && (
-        <div className="sticky top-[57px] z-20 flex items-center gap-3 rounded-lg border bg-primary/5 px-4 py-2.5 shadow-sm backdrop-blur">
-          <Badge variant="default" className="tabular-nums">
-            {selectedIds.size} vybráno
-          </Badge>
-          <div className="flex gap-2">
-            <Button
-              size="sm"
-              variant="default"
-              onClick={bulkComplete}
-              disabled={updateItem.isPending}
-            >
-              <CheckCircle2 className="mr-1.5 h-3.5 w-3.5" /> Označit jako hotové
-            </Button>
-          </div>
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={clearSelection}
-            className="ml-auto"
-          >
-            Zrušit výběr
-          </Button>
-        </div>
-      )}
-
       {/* Toolbar */}
       <div className="flex flex-wrap items-center gap-2">
         <div className="relative">
@@ -458,44 +405,40 @@ export function BudgetTab({ projectId }: { projectId: string }) {
                 </button>
               </CollapsibleTrigger>
               <CollapsibleContent>
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow className="bg-muted/40 hover:bg-muted/40">
-                        <TableHead className="w-8"></TableHead>
-                        <TableHead className="w-8"></TableHead>
-                        <TableHead className="min-w-[180px]">Položka</TableHead>
-                        <TableHead className="w-28">Fáze</TableHead>
-                        <TableHead className="w-44">Poznámka</TableHead>
-                        <TableHead className="w-28 text-right">Plán (Kč)</TableHead>
-                        <TableHead className="w-20 text-right">Vůle</TableHead>
-                        <TableHead className="w-20 text-right">Dny</TableHead>
-                        <TableHead className="w-28">Datum od</TableHead>
-                        <TableHead className="w-28">Datum do</TableHead>
-                        <TableHead className="w-28 text-right">Skut. (Kč)</TableHead>
-                        <TableHead className="w-24 text-right">Ušetřeno</TableHead>
-                        <TableHead className="w-20 text-right">Hod.</TableHead>
-                        <TableHead className="w-8"></TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {catItems.map((item, idx) => (
-                        <BudgetRow
-                          key={item.id}
-                          item={item}
-                          projectId={projectId}
-                          onEdit={() => setEditingItem(item)}
-                          canMoveUp={idx > 0}
-                          canMoveDown={idx < catItems.length - 1}
-                          onMoveUp={() => moveItem(catItems, idx, -1)}
-                          onMoveDown={() => moveItem(catItems, idx, 1)}
-                          isSelected={selectedIds.has(item.id)}
-                          onToggleSelect={() => toggleSelect(item.id)}
-                        />
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-muted/40 hover:bg-muted/40">
+                      <TableHead className="min-w-[200px]">Položka</TableHead>
+                      <TableHead className="min-w-[140px]">Prvek / Úkol</TableHead>
+                      <TableHead className="w-28">Fáze</TableHead>
+                      <TableHead className="w-44">Poznámka</TableHead>
+                      <TableHead className="w-28 text-right">Plán (Kč)</TableHead>
+                      <TableHead className="w-20 text-right">Vůle</TableHead>
+                      <TableHead className="w-20 text-right">Dny</TableHead>
+                      <TableHead className="w-28">Datum od</TableHead>
+                      <TableHead className="w-28">Datum do</TableHead>
+                      <TableHead className="w-28 text-right">Skut. (Kč)</TableHead>
+                      <TableHead className="w-24 text-right">Ušetřeno</TableHead>
+                      <TableHead className="w-20 text-right">Hod.</TableHead>
+                      <TableHead className="w-28 text-center">Stav</TableHead>
+                      <TableHead className="w-8"></TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {catItems.map((item, idx) => (
+                      <BudgetRow
+                        key={item.id}
+                        item={item}
+                        projectId={projectId}
+                        onEdit={() => setEditingItem(item)}
+                        canMoveUp={idx > 0}
+                        canMoveDown={idx < catItems.length - 1}
+                        onMoveUp={() => moveItem(catItems, idx, -1)}
+                        onMoveDown={() => moveItem(catItems, idx, 1)}
+                      />
+                    ))}
+                  </TableBody>
+                </Table>
               </CollapsibleContent>
             </Collapsible>
           );
@@ -525,8 +468,6 @@ function BudgetRow({
   canMoveDown,
   onMoveUp,
   onMoveDown,
-  isSelected,
-  onToggleSelect,
 }: {
   item: BudgetItem;
   projectId: string;
@@ -535,8 +476,6 @@ function BudgetRow({
   canMoveDown: boolean;
   onMoveUp: () => void;
   onMoveDown: () => void;
-  isSelected: boolean;
-  onToggleSelect: () => void;
 }) {
   const updateItem = useUpdateBudgetItem(projectId);
   const deleteItem = useDeleteBudgetItem(projectId);
@@ -560,53 +499,23 @@ function BudgetRow({
       className={cn(
         "group border-l-2 transition-colors",
         PHASE_BORDER_COLORS[item.phase] ?? "border-l-zinc-300",
-        isSelected && "bg-primary/5",
         item.completed
           ? "bg-emerald-50/40 dark:bg-emerald-950/10"
           : "hover:bg-muted/30",
       )}
     >
-      <TableCell className="px-2">
-        <Checkbox
-          checked={item.required}
-          onCheckedChange={(v) => update("required", v === true)}
-          aria-label="Nutné"
-        />
-      </TableCell>
-      <TableCell className="px-1">
-        {/* Selection checkbox */}
-        <Checkbox
-          checked={isSelected}
-          onCheckedChange={onToggleSelect}
-          aria-label="Vybrat položku"
-          className="opacity-0 transition-opacity group-hover:opacity-100 data-[state=checked]:opacity-100"
-        />
-      </TableCell>
-      <TableCell className="px-1">
-        {/* Completed toggle */}
-        <div className="flex flex-col items-center gap-0.5">
-          <button
-            onClick={() => update("completed", !item.completed)}
-            className={cn(
-              "rounded p-0.5 transition-colors",
-              item.completed
-                ? "text-emerald-600 hover:text-emerald-700"
-                : "text-muted-foreground/40 hover:text-emerald-600",
-            )}
-            title={item.completed ? "Označit jako nedokončené" : "Označit jako hotové"}
-            aria-label={item.completed ? "Hotovo" : "Označit jako hotovo"}
-          >
-            {item.completed ? (
-              <CheckCircle2 className="h-4 w-4" />
-            ) : (
-              <Circle className="h-4 w-4" />
-            )}
-          </button>
-        </div>
-      </TableCell>
       <TableCell>
         <div className="flex flex-col">
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1.5">
+            {item.required && (
+              <span
+                title="Nutné"
+                aria-label="Nutné"
+                className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-rose-100 text-[10px] font-bold leading-none text-rose-700 dark:bg-rose-900/40 dark:text-rose-300"
+              >
+                !
+              </span>
+            )}
             <button
               onClick={onEdit}
               className={cn(
@@ -622,11 +531,6 @@ function BudgetRow({
               </Badge>
             )}
           </div>
-          {item.element && (
-            <span className="text-[11px] text-muted-foreground">
-              {item.element}
-            </span>
-          )}
           {item._count && (item._count.payments > 0 || item._count.timeEntries > 0 || item._count.comments > 0) && (
             <div className="mt-0.5 flex flex-wrap gap-1">
               {item._count.payments > 0 && (
@@ -648,6 +552,21 @@ function BudgetRow({
             </div>
           )}
         </div>
+      </TableCell>
+      <TableCell>
+        {item.element ? (
+          <button
+            onClick={onEdit}
+            className="block w-full text-left hover:underline"
+            title={item.element}
+          >
+            <span className="line-clamp-2 text-xs text-foreground/80">
+              {item.element}
+            </span>
+          </button>
+        ) : (
+          <span className="text-[11px] text-muted-foreground/50">—</span>
+        )}
       </TableCell>
       <TableCell>
         <Select
@@ -747,6 +666,30 @@ function BudgetRow({
       </TableCell>
       <TableCell className="text-right text-[11px] text-violet-600">
         {item.actualHours > 0 ? formatNumber(item.actualHours, " h") : "—"}
+      </TableCell>
+      <TableCell className="text-center">
+        <Button
+          type="button"
+          size="sm"
+          variant={item.completed ? "default" : "outline"}
+          onClick={() => update("completed", !item.completed)}
+          disabled={updateItem.isPending}
+          aria-pressed={item.completed}
+          className={cn(
+            "h-7 gap-1.5 px-2.5 text-xs",
+            item.completed
+              ? "border-emerald-600 bg-emerald-600 text-white hover:bg-emerald-700 hover:text-white dark:border-emerald-700 dark:bg-emerald-700 dark:hover:bg-emerald-800"
+              : "text-emerald-700 hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-700 dark:text-emerald-400 dark:hover:bg-emerald-950/40",
+          )}
+          title={item.completed ? "Označit jako nedokončené" : "Označit jako hotové"}
+        >
+          {item.completed ? (
+            <CheckCircle2 className="h-3.5 w-3.5" />
+          ) : (
+            <Circle className="h-3.5 w-3.5" />
+          )}
+          Hotovo
+        </Button>
       </TableCell>
       <TableCell>
         <div className="flex items-center">

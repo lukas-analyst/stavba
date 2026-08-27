@@ -1,0 +1,985 @@
+     1→"use client";
+     2→
+     3→import {
+     4→  useDashboard,
+     5→  useSpendingTrend,
+     6→  useSnapshots,
+     7→  useCreateSnapshot,
+     8→  useDeleteSnapshot,
+     9→} from "@/lib/api";
+    10→import {
+    11→  Card,
+    12→  CardContent,
+    13→  CardDescription,
+    14→  CardHeader,
+    15→  CardTitle,
+    16→} from "@/components/ui/card";
+    17→import { Badge } from "@/components/ui/badge";
+    18→import { Button } from "@/components/ui/button";
+    19→import { Input } from "@/components/ui/input";
+    20→import { Skeleton } from "@/components/ui/skeleton";
+    21→import { useState } from "react";
+    22→import {
+    23→  Wallet,
+    24→  TrendingDown,
+    25→  TrendingUp,
+    26→  Clock,
+    27→  AlertTriangle,
+    28→  CalendarClock,
+    29→  Package,
+    30→  Users2,
+    31→  ListChecks,
+    32→  Receipt,
+    33→  Timer,
+    34→  ArrowRight,
+    35→  CircleAlert,
+    36→  PiggyBank,
+    37→  CheckCircle2,
+    38→  Camera,
+    39→  Trash2,
+    40→} from "lucide-react";
+    41→import { formatCzk, formatNumber, formatDate, PHASE_COLORS, PHASE_DOT_COLORS } from "@/lib/format";
+    42→import { cn } from "@/lib/utils";
+    43→import { useAppStore } from "@/lib/store";
+    44→import {
+    45→  Area,
+    46→  AreaChart,
+    47→  Bar,
+    48→  BarChart,
+    49→  CartesianGrid,
+    50→  Cell,
+    51→  Legend,
+    52→  Pie,
+    53→  PieChart,
+    54→  ResponsiveContainer,
+    55→  Tooltip,
+    56→  XAxis,
+    57→  YAxis,
+    58→} from "recharts";
+    59→
+    60→const PIE_COLORS = ["#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#06b6d4", "#64748b", "#ec4899", "#84cc16"];
+    61→
+    62→export function DashboardTab({ projectId }: { projectId: string }) {
+    63→  const { data, isLoading } = useDashboard(projectId);
+    64→  const setActiveTab = useAppStore((s) => s.setActiveTab);
+    65→
+    66→  if (isLoading || !data) {
+    67→    return <DashboardSkeleton />;
+    68→  }
+    69→
+    70→  const { totals, byPhase, byCategory, alerts, recent } = data;
+    71→  const burnRate = totals.burnRate;
+    72→  const burnColor =
+    73→    burnRate > 100 ? "text-rose-600" : burnRate > 80 ? "text-amber-600" : "text-emerald-600";
+    74→
+    75→  const totalAlerts =
+    76→    alerts.upcoming.length + alerts.overdue.length + alerts.overBudget.length + alerts.unscheduled.length;
+    77→
+    78→  // Pie chart data
+    79→  const pieData = byCategory
+    80→    .filter((c) => c.plan > 0)
+    81→    .map((c) => ({ name: c.category, value: c.plan }));
+    82→
+    83→  // Bar chart data: plan vs actual by phase
+    84→  const phaseData = byPhase
+    85→    .map((p) => ({
+    86→      phase: p.phase,
+    87→      Plán: p.plan,
+    88→      Skutečnost: p.actual,
+    89→    }))
+    90→    .sort((a, b) => {
+    91→      const order = ["Příprava", "Demolice", "Hrubá stavba", "Zabydlování", "Do budoucna", "Neurčeno"];
+    92→      return order.indexOf(a.phase) - order.indexOf(b.phase);
+    93→    });
+    94→
+    95→  return (
+    96→    <div className="space-y-6">
+    97→      {/* KPI cards */}
+    98→      <div className="grid grid-cols-2 gap-2 sm:gap-3 md:grid-cols-3 lg:grid-cols-6 lg:gap-4">
+    99→        <Card className="border-emerald-200/60 bg-gradient-to-br from-emerald-50 to-white dark:border-emerald-900/40 dark:from-emerald-950/30 dark:to-card">
+   100→          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+   101→            <CardTitle className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+   102→              Plán rozpočtu
+   103→            </CardTitle>
+   104→            <Wallet className="h-4 w-4 text-emerald-600" />
+   105→          </CardHeader>
+   106→          <CardContent>
+   107→            <div className="text-lg font-bold tabular-nums md:text-2xl">{formatCzk(totals.planTotal)}</div>
+   108→            <p className="mt-1 text-xs text-muted-foreground">
+   109→              {totals.itemCount} položek · {totals.requiredCount} nutných
+   110→            </p>
+   111→          </CardContent>
+   112→        </Card>
+   113→
+   114→        <Card className="border-amber-200/60 bg-gradient-to-br from-amber-50 to-white dark:border-amber-900/40 dark:from-amber-950/30 dark:to-card">
+   115→          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+   116→            <CardTitle className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+   117→              Čerpání
+   118→            </CardTitle>
+   119→            <TrendingDown className="h-4 w-4 text-amber-600" />
+   120→          </CardHeader>
+   121→          <CardContent>
+   122→            <div className="text-lg font-bold tabular-nums md:text-2xl">{formatCzk(totals.actualTotal)}</div>
+   123→            <div className="mt-2">
+   124→              <div className="mb-1 flex items-center justify-between text-xs">
+   125→                <span className={`font-semibold ${burnColor}`}>
+   126→                  {burnRate.toFixed(1)} %
+   127→                </span>
+   128→                <span className="text-muted-foreground">
+   129→                  z {formatCzk(totals.planTotal)}
+   130→                </span>
+   131→              </div>
+   132→              <div className="h-1.5 overflow-hidden rounded-full bg-muted">
+   133→                <div
+   134→                  className={cn(
+   135→                    "h-full rounded-full transition-all",
+   136→                    burnRate > 100 ? "bg-rose-500" : burnRate > 80 ? "bg-amber-500" : "bg-emerald-500",
+   137→                  )}
+   138→                  style={{ width: `${Math.min(burnRate, 100)}%` }}
+   139→                />
+   140→              </div>
+   141→            </div>
+   142→          </CardContent>
+   143→        </Card>
+   144→
+   145→        <Card className={totals.remaining >= 0 ? "border-sky-200/60 bg-gradient-to-br from-sky-50 to-white dark:border-sky-900/40 dark:from-sky-950/30 dark:to-card" : "border-rose-200/60 bg-gradient-to-br from-rose-50 to-white dark:border-rose-900/40 dark:from-rose-950/30 dark:to-card"}>
+   146→          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+   147→            <CardTitle className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+   148→              Zbývá v rozpočtu
+   149→            </CardTitle>
+   150→            {totals.remaining >= 0 ? (
+   151→              <TrendingUp className="h-4 w-4 text-sky-600" />
+   152→            ) : (
+   153→              <TrendingDown className="h-4 w-4 text-rose-600" />
+   154→            )}
+   155→          </CardHeader>
+   156→          <CardContent>
+   157→            <div className={`text-lg font-bold tabular-nums md:text-2xl ${totals.remaining < 0 ? "text-rose-600" : ""}`}>
+   158→              {formatCzk(totals.remaining)}
+   159→            </div>
+   160→            <p className="mt-1 text-xs text-muted-foreground">
+   161→              Nejhorší scénář: {formatCzk(totals.worstCase)}
+   162→            </p>
+   163→          </CardContent>
+   164→        </Card>
+   165→
+   166→        <Card className="border-violet-200/60 bg-gradient-to-br from-violet-50 to-white dark:border-violet-900/40 dark:from-violet-950/30 dark:to-card">
+   167→          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+   168→            <CardTitle className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+   169→              Odpracováno
+   170→            </CardTitle>
+   171→            <Clock className="h-4 w-4 text-violet-600" />
+   172→          </CardHeader>
+   173→          <CardContent>
+   174→            <div className="text-lg font-bold tabular-nums md:text-2xl">{formatNumber(totals.hoursTotal, " h")}</div>
+   175→            <p className="mt-1 text-xs text-muted-foreground">
+   176→              Plán: {formatNumber(totals.daysPlanned, " dní")}
+   177→            </p>
+   178→          </CardContent>
+   179→        </Card>
+   180→
+   181→        <Card className="border-emerald-300/60 bg-gradient-to-br from-emerald-50 to-white dark:border-emerald-800/40 dark:from-emerald-950/30 dark:to-card">
+   182→          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+   183→            <CardTitle className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+   184→              Ušetřeno
+   185→            </CardTitle>
+   186→            <PiggyBank className="h-4 w-4 text-emerald-600" />
+   187→          </CardHeader>
+   188→          <CardContent>
+   189→            <div className="text-lg font-bold tabular-nums md:text-2xl text-emerald-600">
+   190→              {formatCzk(totals.savedTotal)}
+   191→            </div>
+   192→            <p className="mt-1 text-xs text-muted-foreground">
+   193→              Od dokončených položek
+   194→            </p>
+   195→          </CardContent>
+   196→        </Card>
+   197→
+   198→        <Card className="border-teal-200/60 bg-gradient-to-br from-teal-50 to-white dark:border-teal-900/40 dark:from-teal-950/30 dark:to-card">
+   199→          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+   200→            <CardTitle className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+   201→              Hotovo
+   202→            </CardTitle>
+   203→            <CheckCircle2 className="h-4 w-4 text-teal-600" />
+   204→          </CardHeader>
+   205→          <CardContent>
+   206→            <div className="text-lg font-bold tabular-nums md:text-2xl">
+   207→              {totals.completedCount} / {totals.itemCount}
+   208→            </div>
+   209→            <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-muted">
+   210→              <div
+   211→                className="h-full rounded-full bg-teal-500"
+   212→                style={{
+   213→                  width: `${totals.itemCount > 0 ? (totals.completedCount / totals.itemCount) * 100 : 0}%`,
+   214→                }}
+   215→              />
+   216→            </div>
+   217→          </CardContent>
+   218→        </Card>
+   219→      </div>
+   220→
+   221→      {/* Alerts banner */}
+   222→      {totalAlerts > 0 && (
+   223→        <Card className="border-amber-200 bg-amber-50/50 dark:border-amber-900/40 dark:bg-amber-950/20">
+   224→          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+   225→            <div className="flex items-center gap-2">
+   226→              <CircleAlert className="h-5 w-5 text-amber-600" />
+   227→              <CardTitle className="text-base">Upozornění a akce ({totalAlerts})</CardTitle>
+   228→            </div>
+   229→          </CardHeader>
+   230→          <CardContent className="space-y-3">
+   231→            {alerts.upcoming.length > 0 && (
+   232→              <AlertGroup
+   233→                icon={<CalendarClock className="h-4 w-4" />}
+   234→                title="Blížící se termíny (do 30 dní)"
+   235→                color="text-sky-600"
+   236→                items={alerts.upcoming.map((it) => ({
+   237→                  id: it.id,
+   238→                  primary: it.subcategory || it.category,
+   239→                  secondary: `Začátek ${formatDate(it.dateFrom)} · ${formatCzk(it.planCost)}`,
+   240→                }))}
+   241→              />
+   242→            )}
+   243→            {alerts.overdue.length > 0 && (
+   244→              <AlertGroup
+   245→                icon={<AlertTriangle className="h-4 w-4" />}
+   246→                title="Zpožděné položky"
+   247→                color="text-rose-600"
+   248→                items={alerts.overdue.map((it) => ({
+   249→                  id: it.id,
+   250→                  primary: it.subcategory || it.category,
+   251→                  secondary: `Termín ${formatDate(it.dateTo)} · čerpáno ${formatCzk(it.actualCost)} / ${formatCzk(it.planCost)}`,
+   252→                }))}
+   253→              />
+   254→            )}
+   255→            {alerts.overBudget.length > 0 && (
+   256→              <AlertGroup
+   257→                icon={<TrendingDown className="h-4 w-4" />}
+   258→                title="Překročen rozpočet"
+   259→                color="text-rose-600"
+   260→                items={alerts.overBudget.map((it) => ({
+   261→                  id: it.id,
+   262→                  primary: it.subcategory || it.category,
+   263→                  secondary: `${formatCzk(it.actualCost)} z ${formatCzk(it.planCost)} (+${formatCzk((it.actualCost || 0) - (it.planCost || 0))})`,
+   264→                }))}
+   265→              />
+   266→            )}
+   267→            {alerts.unscheduled.length > 0 && (
+   268→              <AlertGroup
+   269→                icon={<CalendarClock className="h-4 w-4" />}
+   270→                title="Neplánované (bez termínu)"
+   271→                color="text-amber-600"
+   272→                items={alerts.unscheduled.map((it) => ({
+   273→                  id: it.id,
+   274→                  primary: it.subcategory || it.category,
+   275→                  secondary: `${formatCzk(it.planCost)} · ${it.phase}`,
+   276→                }))}
+   277→              />
+   278→            )}
+   279→          </CardContent>
+   280→        </Card>
+   281→      )}
+   282→
+   283→      {/* Budget Projection */}
+   284→      {totals.completedCount > 0 && (
+   285→        <Card className={cn(
+   286→          "border-l-4",
+   287→          totals.projectedOverrun > 0 ? "border-l-rose-500 border-rose-200/60" : "border-l-emerald-500 border-emerald-200/60",
+   288→        )}>
+   289→          <CardHeader className="pb-3">
+   290→            <div className="flex items-center justify-between">
+   291→              <div className="flex items-center gap-2">
+   292→                <TrendingUp className={cn("h-5 w-5", totals.projectedOverrun > 0 ? "text-rose-600" : "text-emerald-600")} />
+   293→                <CardTitle className="text-base">Predikce konečných nákladů</CardTitle>
+   294→              </div>
+   295→              <Badge variant="outline" className="text-[10px]">
+   296→                na základě {totals.completedCount} dokončených
+   297→              </Badge>
+   298→            </div>
+   299→            <CardDescription>
+   300→              Odhad na základě průměrného překročení dokončených položek ({(totals.avgOverrunRatio * 100).toFixed(0)} % plánu)
+   301→            </CardDescription>
+   302→          </CardHeader>
+   303→          <CardContent>
+   304→            <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+   305→              <div className="space-y-0.5">
+   306→                <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Dosud čerpáno</div>
+   307→                <div className="text-lg font-bold tabular-nums">{formatCzk(totals.actualTotal)}</div>
+   308→              </div>
+   309→              <div className="space-y-0.5">
+   310→                <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Odhad zbytku</div>
+   311→                <div className="text-lg font-bold tabular-nums text-amber-600">
+   312→                  {formatCzk(totals.projectedFinal - totals.actualTotal)}
+   313→                </div>
+   314→              </div>
+   315→              <div className="space-y-0.5">
+   316→                <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Odhad celkem</div>
+   317→                <div className={cn("text-lg font-bold tabular-nums", totals.projectedOverrun > 0 ? "text-rose-600" : "text-emerald-600")}>
+   318→                  {formatCzk(totals.projectedFinal)}
+   319→                </div>
+   320→              </div>
+   321→              <div className="space-y-0.5">
+   322→                <div className="text-[10px] uppercase tracking-wide text-muted-foreground">vs. Plán</div>
+   323→                <div className={cn("text-lg font-bold tabular-nums", totals.projectedOverrun > 0 ? "text-rose-600" : "text-emerald-600")}>
+   324→                  {totals.projectedOverrun > 0 ? "+" : ""}
+   325→                  {formatCzk(totals.projectedOverrun)}
+   326→                </div>
+   327→              </div>
+   328→            </div>
+   329→            {/* Visual comparison bar */}
+   330→            <div className="mt-4 space-y-1.5">
+   331→              <div className="flex items-center justify-between text-[11px]">
+   332→                <span className="text-muted-foreground">Plán → Odhad</span>
+   333→                <span className={cn("font-semibold", totals.projectedOverrun > 0 ? "text-rose-600" : "text-emerald-600")}>
+   334→                  {totals.planTotal > 0 ? ((totals.projectedFinal / totals.planTotal) * 100).toFixed(0) : 0} % plánu
+   335→                </span>
+   336→              </div>
+   337→              <div className="relative h-3 overflow-hidden rounded-full bg-muted">
+   338→                {/* Plan marker (100%) */}
+   339→                <div
+   340→                  className="absolute top-0 bottom-0 w-0.5 bg-foreground/40"
+   341→                  style={{ left: "100%", transform: "translateX(-50%)" }}
+   342→                  title={`Plán: ${formatCzk(totals.planTotal)}`}
+   343→                />
+   344→                {/* Actual + projected bar */}
+   345→                <div className="flex h-full">
+   346→                  <div
+   347→                    className="h-full bg-amber-400"
+   348→                    style={{ width: `${Math.min((totals.actualTotal / Math.max(totals.projectedFinal, 1)) * 100, 100)}%` }}
+   349→                  />
+   350→                  <div
+   351→                    className={cn("h-full", totals.projectedOverrun > 0 ? "bg-rose-400" : "bg-emerald-400")}
+   352→                    style={{ width: `${Math.min(((totals.projectedFinal - totals.actualTotal) / Math.max(totals.projectedFinal, 1)) * 100, 100)}%` }}
+   353→                  />
+   354→                </div>
+   355→              </div>
+   356→              <div className="flex items-center gap-3 text-[10px] text-muted-foreground">
+   357→                <span className="flex items-center gap-1">
+   358→                  <span className="inline-block h-2 w-2 rounded-sm bg-amber-400" /> Čerpáno
+   359→                </span>
+   360→                <span className="flex items-center gap-1">
+   361→                  <span className={cn("inline-block h-2 w-2 rounded-sm", totals.projectedOverrun > 0 ? "bg-rose-400" : "bg-emerald-400")} /> Odhad zbytku
+   362→                </span>
+   363→                <span className="flex items-center gap-1">
+   364→                  <span className="inline-block h-2 w-px bg-foreground/40" /> Plán (100 %)
+   365→                </span>
+   366→              </div>
+   367→            </div>
+   368→          </CardContent>
+   369→        </Card>
+   370→      )}
+   371→
+   372→      {/* Phase progress cards */}
+   373→      <Card>
+   374→        <CardHeader className="pb-3">
+   375→          <CardTitle className="text-base">Postup podle fází</CardTitle>
+   376→          <CardDescription>Rozpad plánu a čerpání pro každou fázi stavby</CardDescription>
+   377→        </CardHeader>
+   378→        <CardContent>
+   379→          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+   380→            {byPhase.map((p) => {
+   381→              const burn = p.plan > 0 ? (p.actual / p.plan) * 100 : 0;
+   382→              const phaseColor = PHASE_COLORS[p.phase] ?? "";
+   383→              const dotColor = PHASE_DOT_COLORS[p.phase] ?? "bg-zinc-400";
+   384→              return (
+   385→                <div
+   386→                  key={p.phase}
+   387→                  className="rounded-lg border bg-card p-3 transition-shadow hover:shadow-sm"
+   388→                >
+   389→                  <div className="mb-2 flex items-center justify-between gap-2">
+   390→                    <div className="flex items-center gap-1.5 min-w-0">
+   391→                      <span className={cn("h-2 w-2 shrink-0 rounded-full", dotColor)} />
+   392→                      <span className="truncate text-xs font-semibold">{p.phase}</span>
+   393→                    </div>
+   394→                    <Badge variant="secondary" className="h-4 shrink-0 px-1 text-[10px]">
+   395→                      {p.count}
+   396→                    </Badge>
+   397→                  </div>
+   398→                  <div className="space-y-1.5">
+   399→                    <div className="flex items-baseline justify-between text-xs">
+   400→                      <span className="text-muted-foreground">Skutečnost / Plán</span>
+   401→                      <span className="font-medium">
+   402→                        {formatCzk(p.actual)}{" "}
+   403→                        <span className="text-muted-foreground">/ {formatCzk(p.plan)}</span>
+   404→                      </span>
+   405→                    </div>
+   406→                    <div className="h-2 overflow-hidden rounded-full bg-muted">
+   407→                      <div
+   408→                        className={cn(
+   409→                          "h-full rounded-full transition-all",
+   410→                          burn > 100 ? "bg-rose-500" : burn > 80 ? "bg-amber-500" : "bg-emerald-500",
+   411→                        )}
+   412→                        style={{ width: `${Math.min(burn, 100)}%` }}
+   413→                      />
+   414→                    </div>
+   415→                    <div className="flex items-center justify-between text-[11px]">
+   416→                      <span className="text-muted-foreground">
+   417→                        {formatNumber(p.hours, " h")}
+   418→                      </span>
+   419→                      <span
+   420→                        className={cn(
+   421→                          "font-semibold",
+   422→                          burn > 100 ? "text-rose-600" : burn > 80 ? "text-amber-600" : "text-emerald-600",
+   423→                        )}
+   424→                      >
+   425→                        {burn.toFixed(0)}%
+   426→                      </span>
+   427→                    </div>
+   428→                  </div>
+   429→                </div>
+   430→              );
+   431→            })}
+   432→          </div>
+   433→        </CardContent>
+   434→      </Card>
+   435→
+   436→      {/* Spending trend (last 12 months) */}
+   437→      <SpendingTrendCard projectId={projectId} />
+   438→
+   439→      {/* Charts */}
+   440→      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+   441→        <Card>
+   442→          <CardHeader>
+   443→            <CardTitle className="text-base">Rozpočet podle fáze</CardTitle>
+   444→            <CardDescription>Plán vs skutečnost pro každou fázi projektu</CardDescription>
+   445→          </CardHeader>
+   446→          <CardContent>
+   447→            <div className="h-72">
+   448→              <ResponsiveContainer width="100%" height="100%">
+   449→                <BarChart data={phaseData} margin={{ top: 10, right: 10, left: 0, bottom: 10 }}>
+   450→                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
+   451→                  <XAxis dataKey="phase" tick={{ fontSize: 11 }} interval={0} angle={-15} textAnchor="end" height={60} />
+   452→                  <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
+   453→                  <Tooltip
+   454→                    formatter={(v: number) => formatCzk(v)}
+   455→                    contentStyle={{
+   456→                      backgroundColor: "var(--popover)",
+   457→                      border: "1px solid var(--border)",
+   458→                      borderRadius: "8px",
+   459→                      fontSize: "12px",
+   460→                    }}
+   461→                  />
+   462→                  <Legend wrapperStyle={{ fontSize: 12 }} />
+   463→                  <Bar dataKey="Plán" fill="#06b6d4" radius={[4, 4, 0, 0]} />
+   464→                  <Bar dataKey="Skutečnost" fill="#f59e0b" radius={[4, 4, 0, 0]} />
+   465→                </BarChart>
+   466→              </ResponsiveContainer>
+   467→            </div>
+   468→          </CardContent>
+   469→        </Card>
+   470→
+   471→        <Card>
+   472→          <CardHeader>
+   473→            <CardTitle className="text-base">Rozpočet podle kategorie</CardTitle>
+   474→            <CardDescription>Podíl plánovaných nákladů na jednotlivých kategoriích</CardDescription>
+   475→          </CardHeader>
+   476→          <CardContent>
+   477→            <div className="h-72">
+   478→              <ResponsiveContainer width="100%" height="100%">
+   479→                <PieChart>
+   480→                  <Pie
+   481→                    data={pieData}
+   482→                    cx="50%"
+   483→                    cy="50%"
+   484→                    labelLine={false}
+   485→                    outerRadius={90}
+   486→                    innerRadius={40}
+   487→                    dataKey="value"
+   488→                    label={({ name, percent }) =>
+   489→                      percent && percent > 0.05 ? `${(percent * 100).toFixed(0)}%` : ""
+   490→                    }
+   491→                    labelStyle={{ fontSize: 11 }}
+   492→                  >
+   493→                    {pieData.map((_, i) => (
+   494→                      <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
+   495→                    ))}
+   496→                  </Pie>
+   497→                  <Tooltip
+   498→                    formatter={(v: number) => formatCzk(v)}
+   499→                    contentStyle={{
+   500→                      backgroundColor: "var(--popover)",
+   501→                      border: "1px solid var(--border)",
+   502→                      borderRadius: "8px",
+   503→                      fontSize: "12px",
+   504→                    }}
+   505→                  />
+   506→                  <Legend
+   507→                    wrapperStyle={{ fontSize: 11 }}
+   508→                    layout="vertical"
+   509→                    align="right"
+   510→                    verticalAlign="middle"
+   511→                  />
+   512→                </PieChart>
+   513→              </ResponsiveContainer>
+   514→            </div>
+   515→          </CardContent>
+   516→        </Card>
+   517→      </div>
+   518→
+   519→      {/* Quick stats grid */}
+   520→      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+   521→        <Card>
+   522→          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+   523→            <CardTitle className="text-sm font-medium">Položky rozpočtu</CardTitle>
+   524→            <ListChecks className="h-4 w-4 text-muted-foreground" />
+   525→          </CardHeader>
+   526→          <CardContent>
+   527→            <div className="text-xl font-bold">{totals.itemCount}</div>
+   528→            <div className="mt-2 flex flex-wrap gap-1">
+   529→              {byPhase.map((p) => (
+   530→                <Badge
+   531→                  key={p.phase}
+   532→                  variant="outline"
+   533→                  className={`text-[10px] ${PHASE_COLORS[p.phase] ?? ""}`}
+   534→                >
+   535→                  {p.phase}: {p.count}
+   536→                </Badge>
+   537→              ))}
+   538→            </div>
+   539→          </CardContent>
+   540→        </Card>
+   541→
+   542→        <Card>
+   543→          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+   544→            <CardTitle className="text-sm font-medium">Poslední platby</CardTitle>
+   545→            <Receipt className="h-4 w-4 text-muted-foreground" />
+   546→          </CardHeader>
+   547→          <CardContent className="space-y-1.5">
+   548→            {recent.payments.length === 0 ? (
+   549→              <p className="text-xs text-muted-foreground">Zatím žádné platby</p>
+   550→            ) : (
+   551→              recent.payments.map((p) => (
+   552→                <div key={p.id} className="flex items-center justify-between text-xs">
+   553→                  <span className="truncate">
+   554→                    {p.budgetItem?.subcategory || p.budgetItem?.category}
+   555→                  </span>
+   556→                  <span className="ml-2 font-medium text-emerald-600">
+   557→                    {formatCzk(p.amount)}
+   558→                  </span>
+   559→                </div>
+   560→              ))
+   561→            )}
+   562→            <Button
+   563→              variant="ghost"
+   564→              size="sm"
+   565→              className="mt-1 h-7 w-full justify-between px-2 text-xs"
+   566→              onClick={() => setActiveTab("payments")}
+   567→            >
+   568→              Zobrazit platby <ArrowRight className="h-3 w-3" />
+   569→            </Button>
+   570→          </CardContent>
+   571→        </Card>
+   572→
+   573→        <Card>
+   574→          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+   575→            <CardTitle className="text-sm font-medium">Poslední časové záznamy</CardTitle>
+   576→            <Timer className="h-4 w-4 text-muted-foreground" />
+   577→          </CardHeader>
+   578→          <CardContent className="space-y-1.5">
+   579→            {recent.timeEntries.length === 0 ? (
+   580→              <p className="text-xs text-muted-foreground">Zatím žádné záznamy</p>
+   581→            ) : (
+   582→              recent.timeEntries.map((t) => (
+   583→                <div key={t.id} className="flex items-center justify-between text-xs">
+   584→                  <span className="truncate">
+   585→                    {t.workerName} · {t.budgetItem?.subcategory || t.budgetItem?.category}
+   586→                  </span>
+   587→                  <span className="ml-2 font-medium text-violet-600">
+   588→                    {formatNumber(t.hours, " h")}
+   589→                  </span>
+   590→                </div>
+   591→              ))
+   592→            )}
+   593→            <Button
+   594→              variant="ghost"
+   595→              size="sm"
+   596→              className="mt-1 h-7 w-full justify-between px-2 text-xs"
+   597→              onClick={() => setActiveTab("time")}
+   598→            >
+   599→              Zobrazit čas <ArrowRight className="h-3 w-3" />
+   600→            </Button>
+   601→          </CardContent>
+   602→        </Card>
+   603→      </div>
+   604→
+   605→      {/* Categories breakdown */}
+   606→      <Card>
+   607→        <CardHeader>
+   608→          <CardTitle className="text-base">Náklady podle kategorie</CardTitle>
+   609→          <CardDescription>Detailní rozpad plánu a skutečnosti</CardDescription>
+   610→        </CardHeader>
+   611→        <CardContent>
+   612→          <div className="space-y-3">
+   613→            {byCategory.map((c) => {
+   614→              const burn = c.plan > 0 ? (c.actual / c.plan) * 100 : 0;
+   615→              const color =
+   616→                burn > 100 ? "bg-rose-500" : burn > 80 ? "bg-amber-500" : "bg-emerald-500";
+   617→              return (
+   618→                <div key={c.category} className="grid grid-cols-12 items-center gap-3">
+   619→                  <div className="col-span-3 truncate text-sm font-medium">
+   620→                    {c.category}
+   621→                  </div>
+   622→                  <div className="col-span-6">
+   623→                    <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
+   624→                      <div
+   625→                        className={`h-full rounded-full ${color}`}
+   626→                        style={{ width: `${Math.min(burn, 100)}%` }}
+   627→                      />
+   628→                    </div>
+   629→                  </div>
+   630→                  <div className="col-span-3 text-right text-xs">
+   631→                    <span className="font-medium">{formatCzk(c.actual)}</span>
+   632→                    <span className="text-muted-foreground"> / {formatCzk(c.plan)}</span>
+   633→                  </div>
+   634→                </div>
+   635→              );
+   636→            })}
+   637→          </div>
+   638→        </CardContent>
+   639→      </Card>
+   640→
+   641→      {/* Snapshots - plan vs reality comparison */}
+   642→      <SnapshotsCard projectId={projectId} currentTotals={totals} />
+   643→    </div>
+   644→  );
+   645→}
+   646→
+   647→function AlertGroup({
+   648→  icon,
+   649→  title,
+   650→  color,
+   651→  items,
+   652→}: {
+   653→  icon: React.ReactNode;
+   654→  title: string;
+   655→  color: string;
+   656→  items: { id: string; primary: string; secondary: string }[];
+   657→}) {
+   658→  return (
+   659→    <div>
+   660→      <div className={`flex items-center gap-1.5 ${color}`}>
+   661→        {icon}
+   662→        <span className="text-xs font-semibold">{title}</span>
+   663→        <Badge variant="secondary" className="ml-1 h-4 px-1.5 text-[10px]">
+   664→          {items.length}
+   665→        </Badge>
+   666→      </div>
+   667→      <ul className="mt-1.5 space-y-1 pl-5">
+   668→        {items.slice(0, 4).map((it) => (
+   669→          <li key={it.id} className="text-xs">
+   670→            <span className="font-medium">{it.primary}</span>{" "}
+   671→            <span className="text-muted-foreground">— {it.secondary}</span>
+   672→          </li>
+   673→        ))}
+   674→        {items.length > 4 && (
+   675→          <li className="text-xs text-muted-foreground">
+   676→            … a dalších {items.length - 4}
+   677→          </li>
+   678→        )}
+   679→      </ul>
+   680→    </div>
+   681→  );
+   682→}
+   683→
+   684→function DashboardSkeleton() {
+   685→  return (
+   686→    <div className="space-y-6">
+   687→      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+   688→        {[1, 2, 3, 4].map((i) => (
+   689→          <Skeleton key={i} className="h-28" />
+   690→        ))}
+   691→      </div>
+   692→      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+   693→        <Skeleton className="h-80" />
+   694→        <Skeleton className="h-80" />
+   695→      </div>
+   696→      <Skeleton className="h-40" />
+   697→    </div>
+   698→  );
+   699→}
+   700→
+   701→// ===== Snapshots Card =====
+   702→function SnapshotsCard({
+   703→  projectId,
+   704→  currentTotals,
+   705→}: {
+   706→  projectId: string;
+   707→  currentTotals: {
+   708→    planTotal: number;
+   709→    actualTotal: number;
+   710→    remaining: number;
+   711→    burnRate: number;
+   712→    hoursTotal: number;
+   713→    completedCount: number;
+   714→    savedTotal: number;
+   715→  };
+   716→}) {
+   717→  const { data: snapshots } = useSnapshots(projectId);
+   718→  const createSnapshot = useCreateSnapshot(projectId);
+   719→  const deleteSnapshot = useDeleteSnapshot(projectId);
+   720→  const [label, setLabel] = useState("");
+   721→
+   722→  const handleCreate = async () => {
+   723→    if (!label.trim()) return;
+   724→    try {
+   725→      await createSnapshot.mutateAsync(label.trim());
+   726→      setLabel("");
+   727→    } catch {
+   728→      /* error handled by mutation */
+   729→    }
+   730→  };
+   731→
+   732→  return (
+   733→    <Card>
+   734→      <CardHeader className="pb-3">
+   735→        <div className="flex items-center justify-between">
+   736→          <div>
+   737→            <CardTitle className="flex items-center gap-2 text-base">
+   738→              <Camera className="h-4 w-4 text-primary" />
+   739→              Snímky stavu projektu
+   740→            </CardTitle>
+   741→            <CardDescription>
+   742→              Uložte aktuální stav pro porovnání „plán vs. realita" v čase
+   743→            </CardDescription>
+   744→          </div>
+   745→        </div>
+   746→      </CardHeader>
+   747→      <CardContent className="space-y-3">
+   748→        {/* Create snapshot form */}
+   749→        <div className="flex gap-2">
+   750→          <Input
+   751→            value={label}
+   752→            onChange={(e) => setLabel(e.target.value)}
+   753→            placeholder="např. Konec přípravy, Po demolici…"
+   754→            className="h-8 text-sm"
+   755→            onKeyDown={(e) => {
+   756→              if (e.key === "Enter" && label.trim()) {
+   757→                e.preventDefault();
+   758→                handleCreate();
+   759→              }
+   760→            }}
+   761→          />
+   762→          <Button
+   763→            size="sm"
+   764→            className="h-8 shrink-0"
+   765→            disabled={!label.trim() || createSnapshot.isPending}
+   766→            onClick={handleCreate}
+   767→          >
+   768→            <Camera className="mr-1.5 h-3.5 w-3.5" />
+   769→            {createSnapshot.isPending ? "Ukládám…" : "Uložit snímek"}
+   770→          </Button>
+   771→        </div>
+   772→
+   773→        {/* Snapshots list */}
+   774→        {snapshots && snapshots.length > 0 ? (
+   775→          <div className="space-y-2">
+   776→            {snapshots.map((snap) => {
+   777→              const actualDiff = currentTotals.actualTotal - snap.actualTotal;
+   778→              const burnDiff = currentTotals.burnRate - snap.burnRate;
+   779→              const completedDiff = currentTotals.completedCount - snap.completedCount;
+   780→              return (
+   781→                <div
+   782→                  key={snap.id}
+   783→                  className="group rounded-lg border p-3 transition-colors hover:bg-muted/30"
+   784→                >
+   785→                  <div className="flex items-start justify-between gap-2">
+   786→                    <div className="min-w-0 flex-1">
+   787→                      <div className="flex items-center gap-2">
+   788→                        <span className="text-sm font-semibold truncate">{snap.label}</span>
+   789→                        <Badge variant="secondary" className="shrink-0 text-[10px]">
+   790→                          {formatDate(snap.createdAt)}
+   791→                        </Badge>
+   792→                      </div>
+   793→                      <div className="mt-1.5 grid grid-cols-2 gap-x-4 gap-y-0.5 text-[11px] sm:grid-cols-4">
+   794→                        <div>
+   795→                          <span className="text-muted-foreground">Plán: </span>
+   796→                          <span className="font-medium tabular-nums">{formatCzk(snap.planTotal)}</span>
+   797→                        </div>
+   798→                        <div>
+   799→                          <span className="text-muted-foreground">Čerpáno: </span>
+   800→                          <span className="font-medium tabular-nums">{formatCzk(snap.actualTotal)}</span>
+   801→                        </div>
+   802→                        <div>
+   803→                          <span className="text-muted-foreground">Čerpání: </span>
+   804→                          <span className="font-medium tabular-nums">{snap.burnRate.toFixed(0)}%</span>
+   805→                        </div>
+   806→                        <div>
+   807→                          <span className="text-muted-foreground">Hotovo: </span>
+   808→                          <span className="font-medium tabular-nums">{snap.completedCount}/{snap.itemCount}</span>
+   809→                        </div>
+   810→                      </div>
+   811→                    </div>
+   812→                    <button
+   813→                      onClick={() => deleteSnapshot.mutate(snap.id)}
+   814→                      className="shrink-0 rounded p-1 text-muted-foreground opacity-0 transition-opacity hover:bg-destructive/10 hover:text-destructive group-hover:opacity-100"
+   815→                      aria-label="Smazat snímek"
+   816→                    >
+   817→                      <Trash2 className="h-3.5 w-3.5" />
+   818→                    </button>
+   819→                  </div>
+   820→                  {/* Diffs vs current */}
+   821→                  <div className="mt-2 flex flex-wrap gap-2 border-t pt-1.5 text-[10px]">
+   822→                    {actualDiff !== 0 && (
+   823→                      <span className={cn(
+   824→                        "flex items-center gap-0.5 font-medium tabular-nums",
+   825→                        actualDiff > 0 ? "text-amber-600" : "text-emerald-600",
+   826→                      )}>
+   827→                        <TrendingUp className="h-2.5 w-2.5" />
+   828→                        {actualDiff > 0 ? "+" : ""}
+   829→                        {formatCzk(actualDiff)} od snímku
+   830→                      </span>
+   831→                    )}
+   832→                    {burnDiff !== 0 && (
+   833→                      <span className={cn(
+   834→                        "font-medium tabular-nums",
+   835→                        burnDiff > 0 ? "text-amber-600" : "text-emerald-600",
+   836→                      )}>
+   837→                        {burnDiff > 0 ? "+" : ""}
+   838→                        {burnDiff.toFixed(1)} % čerpání
+   839→                      </span>
+   840→                    )}
+   841→                    {completedDiff > 0 && (
+   842→                      <span className="font-medium text-emerald-600 tabular-nums">
+   843→                        +{completedDiff} hotových
+   844→                      </span>
+   845→                    )}
+   846→                  </div>
+   847→                </div>
+   848→              );
+   849→            })}
+   850→          </div>
+   851→        ) : (
+   852→          <div className="py-6 text-center text-xs text-muted-foreground">
+   853→            Zatím žádné snímky. Uložte první snímek pro sledování vývoje projektu v čase.
+   854→          </div>
+   855→        )}
+   856→      </CardContent>
+   857→    </Card>
+   858→  );
+   859→}
+   860→
+   861→// ===== Spending Trend Card (last 12 months) =====
+   862→function SpendingTrendCard({ projectId }: { projectId: string }) {
+   863→  const { data, isLoading } = useSpendingTrend(projectId);
+   864→
+   865→  if (isLoading || !data) {
+   866→    return <Skeleton className="h-64" />;
+   867→  }
+   868→
+   869→  const hasData = data.totals.paymentCount > 0 || data.totals.timeEntryCount > 0;
+   870→  const maxSpend = Math.max(...data.months.map((m) => m.spend), 1);
+   871→
+   872→  return (
+   873→    <Card>
+   874→      <CardHeader>
+   875→        <div className="flex items-center justify-between">
+   876→          <div>
+   877→            <CardTitle className="text-base">Trend výdajů a času</CardTitle>
+   878→            <CardDescription>Posledních 12 měsíců — měsíční utrácení a odpracované hodiny</CardDescription>
+   879→          </div>
+   880→          <div className="flex gap-4 text-right">
+   881→            <div>
+   882→              <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Celkem vydáno</div>
+   883→              <div className="text-sm font-bold tabular-nums text-amber-600">
+   884→                {formatCzk(data.totals.totalSpend)}
+   885→              </div>
+   886→            </div>
+   887→            <div>
+   888→              <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Celkem hodin</div>
+   889→              <div className="text-sm font-bold tabular-nums text-violet-600">
+   890→                {formatNumber(data.totals.totalHours, " h")}
+   891→              </div>
+   892→            </div>
+   893→          </div>
+   894→        </div>
+   895→      </CardHeader>
+   896→      <CardContent>
+   897→        {hasData ? (
+   898→          <div className="h-56">
+   899→            <ResponsiveContainer width="100%" height="100%">
+   900→              <AreaChart data={data.months} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
+   901→                <defs>
+   902→                  <linearGradient id="spendGradient" x1="0" y1="0" x2="0" y2="1">
+   903→                    <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.4} />
+   904→                    <stop offset="95%" stopColor="#f59e0b" stopOpacity={0} />
+   905→                  </linearGradient>
+   906→                  <linearGradient id="hoursGradient" x1="0" y1="0" x2="0" y2="1">
+   907→                    <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.3} />
+   908→                    <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
+   909→                  </linearGradient>
+   910→                </defs>
+   911→                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
+   912→                <XAxis
+   913→                  dataKey="label"
+   914→                  tick={{ fontSize: 10 }}
+   915→                  interval={0}
+   916→                  axisLine={false}
+   917→                  tickLine={false}
+   918→                />
+   919→                <YAxis
+   920→                  tick={{ fontSize: 10 }}
+   921→                  tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`}
+   922→                  orientation="right"
+   923→                  axisLine={false}
+   924→                  tickLine={false}
+   925→                />
+   926→                <Tooltip
+   927→                  formatter={(v: number, name: string) => {
+   928→                    if (name === "Výdaje") return formatCzk(v);
+   929→                    return formatNumber(v, " h");
+   930→                  }}
+   931→                  contentStyle={{
+   932→                    backgroundColor: "var(--popover)",
+   933→                    border: "1px solid var(--border)",
+   934→                    borderRadius: "8px",
+   935→                    fontSize: "12px",
+   936→                  }}
+   937→                  labelStyle={{ fontSize: 11, fontWeight: 600 }}
+   938→                />
+   939→                <Area
+   940→                  type="monotone"
+   941→                  dataKey="spend"
+   942→                  name="Výdaje"
+   943→                  stroke="#f59e0b"
+   944→                  strokeWidth={2}
+   945→                  fill="url(#spendGradient)"
+   946→                />
+   947→                <Area
+   948→                  type="monotone"
+   949→                  dataKey="hours"
+   950→                  name="Hodiny"
+   951→                  stroke="#8b5cf6"
+   952→                  strokeWidth={2}
+   953→                  fill="url(#hoursGradient)"
+   954→                />
+   955→              </AreaChart>
+   956→            </ResponsiveContainer>
+   957→          </div>
+   958→        ) : (
+   959→          <div className="flex h-56 flex-col items-center justify-center gap-2 text-sm text-muted-foreground">
+   960→            <TrendingDown className="h-8 w-8 opacity-40" />
+   961→            <p>Zatím žádné platby ani časové záznamy.</p>
+   962→            <p className="text-xs">Po přidání plateb a času se zde zobrazí trend za posledních 12 měsíců.</p>
+   963→          </div>
+   964→        )}
+   965→        {/* Mini monthly bars (always visible, even with 0 data) */}
+   966→        <div className="mt-3 flex items-end gap-1 border-t pt-3" style={{ height: "40px" }}>
+   967→          {data.months.map((m, i) => (
+   968→            <div key={i} className="flex flex-1 flex-col items-center gap-0.5">
+   969→              <div
+   970→                className="w-full rounded-sm bg-amber-400/70 transition-all hover:bg-amber-500"
+   971→                style={{
+   972→                  height: `${(m.spend / maxSpend) * 100}%`,
+   973→                  minHeight: m.spend > 0 ? "4px" : "0",
+   974→                }}
+   975→                title={`${m.label}: ${formatCzk(m.spend)}`}
+   976→              />
+   977→              <span className="text-[8px] text-muted-foreground">{m.label[0]}</span>
+   978→            </div>
+   979→          ))}
+   980→        </div>
+   981→      </CardContent>
+   982→    </Card>
+   983→  );
+   984→}
+   985→
