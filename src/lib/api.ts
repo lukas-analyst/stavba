@@ -117,7 +117,18 @@ export type Dashboard = {
     projectedOverrun: number;
     avgOverrunRatio: number;
   };
-  byPhase: { phase: string; plan: number; actual: number; hours: number; count: number }[];
+  byPhase: {
+    phase: string;
+    plan: number;
+    actual: number;
+    hours: number;
+    plannedHours: number;
+    count: number;
+    completedCount: number;
+    worstCase: number;
+    costOverrun: number;
+    timeOverrun: number;
+  }[];
   byCategory: { category: string; plan: number; actual: number; hours: number; count: number }[];
   alerts: {
     upcoming: BudgetItem[];
@@ -166,6 +177,30 @@ export function useCreateProject() {
         body: JSON.stringify(data),
       });
       if (!res.ok) throw new Error("Failed to create project");
+      return res.json();
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["projects"] }),
+  });
+}
+
+export function useCreateProjectFromTemplate() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: {
+      name: string;
+      address?: string;
+      description?: string;
+      templateType: string;
+      scope?: string;
+      startDate?: string;
+      endDate?: string;
+    }) => {
+      const res = await fetch("/api/projects/from-template", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) throw new Error("Failed to create project from template");
       return res.json();
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["projects"] }),

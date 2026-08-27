@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import { formatCzk } from "@/lib/format";
 import { useMemo, useRef, useState } from "react";
 import { ProjectDialog } from "@/components/project-dialog";
+import { NewProjectDialog } from "@/components/new-project-dialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -40,6 +41,7 @@ export function AppSidebar({ onSelectProject }: { onSelectProject?: (id: string)
   const selectedProjectId = useAppStore((s) => s.selectedProjectId);
   const setSelectedProjectRaw = useAppStore((s) => s.setSelectedProject);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [newDialogOpen, setNewDialogOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "planning" | "completed">("all");
@@ -173,7 +175,7 @@ export function AppSidebar({ onSelectProject }: { onSelectProject?: (id: string)
             size="sm"
             variant="ghost"
             className="h-7 px-2 text-xs"
-            onClick={() => setDialogOpen(true)}
+            onClick={() => setNewDialogOpen(true)}
           >
             <Plus className="mr-1 h-3.5 w-3.5" /> Přidat
           </Button>
@@ -378,6 +380,7 @@ export function AppSidebar({ onSelectProject }: { onSelectProject?: (id: string)
       </div>
 
       <ProjectDialog open={dialogOpen} onOpenChange={setDialogOpen} />
+      <NewProjectDialog open={newDialogOpen} onOpenChange={setNewDialogOpen} />
 
       <AlertDialog
         open={!!deleteId}

@@ -838,3 +838,44 @@ Stage Summary:
 Unresolved issues / Next steps:
 - Šablony projektů podle typu výstavby (nová stavba/rekonstrukce/interiér) - neimplementováno
 - Fáze: časová složka (overrun) - částečně hotovo (B6 přidal worstCase), ale časový overrun per fáze ještě není
+
+---
+Task ID: 22
+Agent: Hlavní asistent (Z.ai Code) - šablony a fáze
+Task: Šablony projektů podle typu výstavby + časový/finanční overrun per fáze
+
+Work Log:
+- Šablony projektů:
+  * src/lib/project-templates.ts: 4 šablony (Rekonstrukce, Nová stavba, Interiér, Přístavba) s předvyplněnými budget items (kategorie, podkategorie, fáze, plánované částky, vůle, dny, poznámky)
+    - Rekonstrukce má askScope=true (částečná/kompletní/strukturní) - při částečné se vyfiltrují jen relevantní items
+    - Nová stavba: 27 položek od zemních prací po fasádu a mobiliář
+    - Interiér: 16 položek (malování, podlahy, kuchyň, koupelna)
+    - Přístavba: 15 položek
+  * POST /api/projects/from-template: vytvoří projekt + nasype budget items ze šablony
+  * useCreateProjectFromTemplate hook v api.ts
+  * NewProjectDialog: 2-krokový wizard
+    - Krok 1: název, adresa, popis, datum + výběr "Ze šablony" nebo "Kopírovat existující"
+    - Krok 2: výběr typu stavby (4 karty s ikonami a preview počtu položek a plán), scope pro rekonstrukci, nebo výběr zdrojového projektu ke kopírování
+    - Náhled položek šablony (scrollable)
+    - Při kopírování: vytvoří prázdný projekt + zkopíruje budget items (reset completed/actuals)
+  * Sidebar "Přidat" tlačítko nyní otevírá NewProjectDialog místo původního ProjectDialog
+- Časový a finanční overrun per fáze:
+  * Dashboard API: byPhase agregace rozšířena o plannedHours (planDays*8), completedCount, worstCase (s vůlí), costOverrun, timeOverrun
+  * Dashboard typ v api.ts: byPhase rozšířen o plannedHours, completedCount, worstCase, costOverrun, timeOverrun
+  * Phase progress cards v dashboardu:
+    - Finance progress bar (emerald/amber/rose)
+    - Čas progress bar (violet/amber/rose) — pokud má fáze plánované hodiny
+    - Overrun indikátory: +Kč (rose) pro cost overrun, +h (amber) pro time overrun
+    - Completed count badge (X/N ✓)
+    - Rose border pokud actual > worstCase (překročeno i s vůlí)
+- Lint: prošel bez chyb (0 errors, 0 warnings)
+- Verifikace: NewProject dialog (Ze šablony / Kopírovat existující), dashboard phase cards - vše funkční, 0 chyb
+
+Stage Summary:
+- ✅ Šablony projektů: 4 typy (rekonstrukce/nová stavba/interiér/přístavba) s předvyplněnými položkami
+- ✅ Kopírování existujícího projektu (včetně budget items)
+- ✅ Fáze: časový i finanční overrun zobrazen v phase progress cards
+- ✅ Vůle zpracována v worstCase (border indikace překročení)
+
+Unresolved issues / Next steps:
+- Aplikace je připravena na společnou revizi s uživatelem

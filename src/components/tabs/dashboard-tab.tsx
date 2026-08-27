@@ -379,26 +379,39 @@ export function DashboardTab({ projectId }: { projectId: string }) {
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {byPhase.map((p) => {
               const burn = p.plan > 0 ? (p.actual / p.plan) * 100 : 0;
+              const timeBurn = p.plannedHours > 0 ? (p.hours / p.plannedHours) * 100 : 0;
               const phaseColor = PHASE_COLORS[p.phase] ?? "";
               const dotColor = PHASE_DOT_COLORS[p.phase] ?? "bg-zinc-400";
+              const hasOverrun = p.costOverrun > 0 || p.timeOverrun > 0;
               return (
                 <div
                   key={p.phase}
-                  className="rounded-lg border bg-card p-3 transition-shadow hover:shadow-sm"
+                  className={cn(
+                    "rounded-lg border bg-card p-3 transition-shadow hover:shadow-sm",
+                    p.actual > p.worstCase && "border-rose-300 dark:border-rose-800",
+                  )}
                 >
                   <div className="mb-2 flex items-center justify-between gap-2">
                     <div className="flex items-center gap-1.5 min-w-0">
                       <span className={cn("h-2 w-2 shrink-0 rounded-full", dotColor)} />
                       <span className="truncate text-xs font-semibold">{p.phase}</span>
                     </div>
-                    <Badge variant="secondary" className="h-4 shrink-0 px-1 text-[10px]">
-                      {p.count}
-                    </Badge>
+                    <div className="flex shrink-0 items-center gap-1">
+                      {p.completedCount > 0 && (
+                        <Badge variant="outline" className="h-4 px-1 text-[10px] text-emerald-700">
+                          {p.completedCount}/{p.count} ✓
+                        </Badge>
+                      )}
+                      <Badge variant="secondary" className="h-4 px-1 text-[10px]">
+                        {p.count}
+                      </Badge>
+                    </div>
                   </div>
                   <div className="space-y-1.5">
+                    {/* Financial progress */}
                     <div className="flex items-baseline justify-between text-xs">
-                      <span className="text-muted-foreground">Skutečnost / Plán</span>
-                      <span className="font-medium">
+                      <span className="text-muted-foreground">Finance</span>
+                      <span className="font-medium tabular-nums">
                         {formatCzk(p.actual)}{" "}
                         <span className="text-muted-foreground">/ {formatCzk(p.plan)}</span>
                       </span>
@@ -412,18 +425,47 @@ export function DashboardTab({ projectId }: { projectId: string }) {
                         style={{ width: `${Math.min(burn, 100)}%` }}
                       />
                     </div>
-                    <div className="flex items-center justify-between text-[11px]">
+                    {/* Time progress */}
+                    {p.plannedHours > 0 && (
+                      <>
+                        <div className="flex items-baseline justify-between text-xs">
+                          <span className="text-muted-foreground">Čas</span>
+                          <span className="font-medium tabular-nums">
+                            {formatNumber(p.hours, " h")}{" "}
+                            <span className="text-muted-foreground">/ {formatNumber(p.plannedHours, " h")}</span>
+                          </span>
+                        </div>
+                        <div className="h-2 overflow-hidden rounded-full bg-muted">
+                          <div
+                            className={cn(
+                              "h-full rounded-full transition-all",
+                              timeBurn > 100 ? "bg-rose-500" : timeBurn > 80 ? "bg-amber-500" : "bg-violet-500",
+                            )}
+                            style={{ width: `${Math.min(timeBurn, 100)}%` }}
+                          />
+                        </div>
+                      </>
+                    )}
+                    {/* Overrun indicators */}
+                    <div className="flex items-center justify-between pt-0.5 text-[10px]">
                       <span className="text-muted-foreground">
-                        {formatNumber(p.hours, " h")}
+                        {burn.toFixed(0)}% fin
+                        {p.plannedHours > 0 && ` · ${timeBurn.toFixed(0)}% čas`}
                       </span>
-                      <span
-                        className={cn(
-                          "font-semibold",
-                          burn > 100 ? "text-rose-600" : burn > 80 ? "text-amber-600" : "text-emerald-600",
-                        )}
-                      >
-                        {burn.toFixed(0)}%
-                      </span>
+                      {hasOverrun && (
+                        <div className="flex gap-1.5">
+                          {p.costOverrun > 0 && (
+                            <span className="font-semibold text-rose-600 tabular-nums">
+                              +{formatCzk(p.costOverrun)}
+                            </span>
+                          )}
+                          {p.timeOverrun > 0 && (
+                            <span className="font-semibold text-amber-600 tabular-nums">
+                              +{formatNumber(p.timeOverrun, " h")}
+                            </span>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>

@@ -63,14 +63,44 @@ export async function GET(
     const projectedOverrun = projectedFinal - planTotal;
 
     // ===== BY PHASE =====
-    const byPhase = new Map<string, { plan: number; actual: number; hours: number; count: number }>();
+    const byPhase = new Map<string, {
+      plan: number;
+      actual: number;
+      hours: number;
+      plannedHours: number;
+      count: number;
+      completedCount: number;
+      worstCase: number;
+      costOverrun: number;
+      timeOverrun: number;
+    }>();
     for (const it of items) {
       const key = it.phase || "Neurčeno";
-      const cur = byPhase.get(key) || { plan: 0, actual: 0, hours: 0, count: 0 };
+      const cur = byPhase.get(key) || {
+        plan: 0,
+        actual: 0,
+        hours: 0,
+        plannedHours: 0,
+        count: 0,
+        completedCount: 0,
+        worstCase: 0,
+        costOverrun: 0,
+        timeOverrun: 0,
+      };
       cur.plan += it.planCost || 0;
       cur.actual += it.actualCost || 0;
       cur.hours += it.actualHours || 0;
+      // Estimate planned hours from planDays (assume 8h/day as default)
+      cur.plannedHours += (it.planDays || 0) * 8;
       cur.count += 1;
+      if (it.completed) cur.completedCount += 1;
+      cur.worstCase += (it.planCost || 0) * (1 + (it.flexibilityPercent || 0) / 100);
+      // Cost overrun: max(0, actual - plan)
+      cur.costOverrun += Math.max(0, (it.actualCost || 0) - (it.planCost || 0));
+      // Time overrun: items where actualHours > plannedHours
+      const plannedH = (it.planDays || 0) * 8;
+      const actualH = it.actualHours || 0;
+      cur.timeOverrun += Math.max(0, actualH - plannedH);
       byPhase.set(key, cur);
     }
 
