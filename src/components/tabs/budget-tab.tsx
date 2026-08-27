@@ -76,7 +76,7 @@ import {
   formatDate,
   PHASES,
   PHASE_COLORS,
-  PHASE_BORDER_COLORS,
+  PHASE_BG_COLORS,
 } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -544,7 +544,7 @@ export function BudgetTab({ projectId }: { projectId: string }) {
                 <Table>
                   <TableHeader>
                     <TableRow className="bg-muted/40 hover:bg-muted/40">
-                      <TableHead className="w-8"></TableHead>
+                      <TableHead className="w-12"></TableHead>
                       <TableHead className="min-w-[200px]">Položka</TableHead>
                       <TableHead className="min-w-[140px]">Prvek / Úkol</TableHead>
                       <TableHead className="w-28">Fáze</TableHead>
@@ -615,6 +615,7 @@ export function BudgetTab({ projectId }: { projectId: string }) {
           parentId={addTaskFor.id}
           defaultCategory={addTaskFor.category}
           defaultPhase={addTaskFor.phase}
+          defaultSubcategory={addTaskFor.subcategory ?? undefined}
         />
       )}
     </div>
@@ -637,6 +638,7 @@ function BudgetItemRows({
   onMoveDown,
   onAddTask,
   onMoveChild,
+  isChild = false,
 }: {
   item: BudgetItem;
   childItems: BudgetItem[];
@@ -652,6 +654,7 @@ function BudgetItemRows({
   onMoveDown: () => void;
   onAddTask?: () => void;
   onMoveChild?: (siblings: BudgetItem[], idx: number, dir: -1 | 1) => void;
+  isChild?: boolean;
 }) {
   const reorder = useReorder(projectId);
   const handleMoveChild = (siblings: BudgetItem[], idx: number, dir: -1 | 1) => {
@@ -692,9 +695,10 @@ function BudgetItemRows({
         saved={saved}
         overBudget={overBudget}
         onAddTask={onAddTask}
-        isChild={false}
+        isChild={isChild}
       />
-      {isExpanded && (
+      {/* Detail panel (notes/flexibility/saved) only for parents — children are thinner */}
+      {isExpanded && !isChild && (
         <DetailPanelRow
           item={item}
           saved={saved}
@@ -703,6 +707,7 @@ function BudgetItemRows({
       )}
       {isExpanded &&
         hasChildren &&
+        !isChild &&
         childItems.map((child, ci) => {
           const childExpanded = expandedItems.has(child.id);
           // For now, only one level of children nesting is rendered in the UI.
@@ -723,6 +728,7 @@ function BudgetItemRows({
               canMoveDown={ci < childItems.length - 1}
               onMoveUp={() => handleMoveChild(childItems, ci, -1)}
               onMoveDown={() => handleMoveChild(childItems, ci, 1)}
+              isChild
             />
           );
         })}
@@ -786,45 +792,60 @@ function BudgetRow({
   return (
     <TableRow
       className={cn(
-        "group border-l-2 transition-colors",
-        item.rejected
-          ? "border-l-rose-500 opacity-60"
-          : PHASE_BORDER_COLORS[item.phase] ?? "border-l-zinc-300",
-        item.rejected
-          ? "bg-rose-50/40 dark:bg-rose-950/10"
-          : item.completed
-            ? "bg-emerald-50/40 dark:bg-emerald-950/10"
-            : "hover:bg-muted/30",
-        isChild && "bg-muted/20",
+        "group transition-colors",
+        isChild
+          ? cn(
+              "bg-muted/30 hover:bg-muted/40",
+              item.rejected && "opacity-70",
+            )
+          : cn(
+              item.rejected
+                ? "opacity-60 bg-rose-50/40 dark:bg-rose-950/10"
+                : item.completed
+                  ? "bg-emerald-50/40 dark:bg-emerald-950/10"
+                  : "hover:bg-muted/30",
+            ),
       )}
     >
-      {/* Expand/collapse toggle */}
-      <TableCell className="align-middle">
-        <button
-          onClick={onToggleExpand}
-          aria-label={isExpanded ? "Sbalit detail" : "Rozbalit detail"}
-          aria-expanded={isExpanded}
-          className={cn(
-            "flex h-5 w-5 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground",
-          )}
-        >
-          {isExpanded ? (
-            <ChevronDown className="h-3.5 w-3.5" />
-          ) : (
-            <ChevronRight className="h-3.5 w-3.5" />
-          )}
-        </button>
-      </TableCell>
+      {/* Expand/collapse toggle (parents) OR indented └ marker (children) */}
+      {isChild ? (
+        <TableCell className="align-middle pl-8">
+          <span aria-hidden className="select-none text-muted-foreground/60">
+            └
+          </span>
+        </TableCell>
+      ) : (
+        <TableCell className="relative align-middle">
+          {/* Colored left stripe — absolute positioned so the line stays straight
+              even at the rounded bottom-left corner of the category card. */}
+          <div
+            aria-hidden
+            className={cn(
+              "absolute inset-y-0 left-0 w-1",
+              item.rejected
+                ? "bg-rose-500"
+                : PHASE_BG_COLORS[item.phase] ?? "bg-zinc-300",
+            )}
+          />
+          <button
+            onClick={onToggleExpand}
+            aria-label={isExpanded ? "Sbalit detail" : "Rozbalit detail"}
+            aria-expanded={isExpanded}
+            className="relative flex h-5 w-5 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground"
+          >
+            {isExpanded ? (
+              <ChevronDown className="h-3.5 w-3.5" />
+            ) : (
+              <ChevronRight className="h-3.5 w-3.5" />
+            )}
+          </button>
+        </TableCell>
+      )}
 
       {/* Položka */}
       <TableCell>
         <div className="flex flex-col">
           <div className="flex items-center gap-1.5">
-            {isChild && (
-              <span className="text-muted-foreground/60" aria-hidden>
-                └
-              </span>
-            )}
             {item.required && (
               <span
                 title="Nutné"
@@ -837,14 +858,18 @@ function BudgetRow({
             <button
               onClick={onEdit}
               className={cn(
-                "text-left text-sm font-medium hover:underline",
+                "text-left font-medium hover:underline",
+                isChild ? "text-xs" : "text-sm",
                 item.rejected
                   ? "line-through decoration-rose-500/70"
                   : item.completed && "line-through decoration-emerald-500/50",
                 childCount > 0 && "font-semibold",
               )}
             >
-              {item.subcategory || "(bez názvu)"}
+              {/* Children display their element (task name) instead of subcategory */}
+              {isChild
+                ? (item.element || item.subcategory || "(bez názvu)")
+                : (item.subcategory || "(bez názvu)")}
             </button>
             {/* Comment count icon */}
             {item._count && item._count.comments > 0 && (
@@ -901,9 +926,9 @@ function BudgetRow({
         </div>
       </TableCell>
 
-      {/* Prvek / Úkol */}
+      {/* Prvek / Úkol (empty for children — element is shown in the Položka column) */}
       <TableCell>
-        {item.element ? (
+        {isChild ? null : item.element ? (
           <button
             onClick={onEdit}
             className="block w-full text-left hover:underline"
@@ -1194,15 +1219,19 @@ function DetailPanelRow({
       : 0;
 
   return (
-    <TableRow
-      className={cn(
-        "border-l-2 bg-muted/20 hover:bg-muted/20",
-        item.rejected
-          ? "border-l-rose-500"
-          : PHASE_BORDER_COLORS[item.phase] ?? "border-l-zinc-300",
-      )}
-    >
-      <TableCell colSpan={12} className="py-3">
+    <TableRow className="bg-muted/20 hover:bg-muted/20">
+      <TableCell colSpan={12} className="relative py-3">
+        {/* Colored left stripe — absolute positioned to match the parent row's stripe
+            and avoid rounded-corner clipping at the bottom of the category card. */}
+        <div
+          aria-hidden
+          className={cn(
+            "absolute inset-y-0 left-0 w-1",
+            item.rejected
+              ? "bg-rose-500"
+              : PHASE_BG_COLORS[item.phase] ?? "bg-zinc-300",
+          )}
+        />
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           {/* Poznámka */}
           <div className="sm:col-span-1">

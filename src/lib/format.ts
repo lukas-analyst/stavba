@@ -101,6 +101,17 @@ export const PHASE_BORDER_COLORS: Record<string, string> = {
   Neurčeno: "border-l-zinc-300",
 };
 
+// Phase background colors used for absolute-positioned colored stripes
+// (replaces border-l-2 to avoid rounded-corner clipping at the last row of a category).
+export const PHASE_BG_COLORS: Record<string, string> = {
+  Příprava: "bg-sky-400",
+  Demolice: "bg-rose-400",
+  "Hrubá stavba": "bg-amber-400",
+  Zabydlování: "bg-emerald-400",
+  "Do budoucna": "bg-violet-400",
+  Neurčeno: "bg-zinc-300",
+};
+
 export const PHASE_DOT_COLORS: Record<string, string> = {
   Příprava: "bg-sky-500",
   Demolice: "bg-rose-500",

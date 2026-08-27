@@ -1090,3 +1090,182 @@ Stage Summary:
 - ✅ "Rejected" (X) tlačítko — rejected položky se nezobrazují v alerts
 - ✅ Comment count ikona
 - ✅ Editace plateb funguje + "Hotovo" checkbox + třídění
+
+---
+Task ID: D2
+Agent: Subagent D2 (Z.ai Code)
+Task: Odstranit interaktivní drag/resize z Gantt bars + opravit sticky header overflow
+
+Kontext:
+- Přečten worklog.md (Tasks 1-23) + agent-ctx/B2-gantt-drag-fix.md.
+- Aplikace "RekonstrukcePro" — Next.js 16 + Prisma + shadcn/ui. Timeline tab má GanttBar s drag/resize přes pointer events API.
+- User požadoval odstranění veškeré interaktivní manipulace (drag/resize) — pouze dvojklik → DateEditDialog.
+
+Work Log:
+1. **GanttBar komponenta kompletně zjednodušena** (`src/components/tabs/timeline-tab.tsx`):
+   - Odstraněny všechny pointer event handlery: `handlePointerDown`, `handlePointerMove`, `handlePointerUp`, `handlePointerCancel`.
+   - Odstraněny resize handlery (levý `w-1.5 cursor-ew-resize` a pravý podmíněný `width > 40`).
+   - Odstraněn drag state: `dragging` useState, `startXRef`, `dragMovedRef`, `lastSavedDaysRef` refs, `pxToDays` helper.
+   - Odstraněn `touchAction: "none"` style (už není potřeba bez drag).
+   - Ponechán `onDoubleClick` — volá `setEditingItem(it.id)` → otevírá `DateEditDialog`.
+   - Ponechán `title` attribute s plným tooltipem (název, datumy, cena, hotovo flag).
+   - Bar nyní má `cursor-pointer` a hover efekt (`hover:shadow-md hover:brightness-105`).
+   - `onDoubleClick` destrukturován z props (původně chyběl — TS error).
+
+2. **GanttBar props pročištěny**:
+   - Odstraněny `onMove`, `onResizeStart`, `onResizeEnd`, `onDragEnd` z type definice i z místa volání v TimelineTab.
+   - Ponechány `isPast`, `isFuture`, `zoom` v type (parent je stále předává — nezměněno volání, jen GanttBar je nepoužívá).
+   - Volání v TimelineTab zredukováno z 18 props na 9 (pouze data + `onDoubleClick`).
+
+3. **TimelineTab cleanup**:
+   - Odstraněna `refreshAfterDrag` funkce (volala `qc.invalidateQueries` — nepotřeba bez drag; `DateEditDialog` sám volá `useUpdateBudgetItem` který invaliduje queries).
+   - Odstraněn `qc = useQueryClient()` a jeho import z `@tanstack/react-query`.
+   - Odstraněn `useRef` z React imports (nepoužíváno).
+   - Odstraněn `Move` icon import z lucide-react.
+   - Odstraněn "Táhněte pro posun" hint v legendě (s `Move` ikonou).
+   - Odstraněn `updateBudgetItemDates` helper (nepoužíváno — DateEditDialog volá API přes `useUpdateBudgetItem`).
+   - Přeorganizováno: `MONTHS_SHORT`/`MONTHS_LONG` konstanty přesunuty těsně před `GanttBar` funkci.
+
+4. **Sticky header overflow fix** (`src/components/project-detail.tsx`):
+   - Root cause: project header byl `sticky top-0 z-10`, ale timeline sticky elementy (left column "Položka" s `z-20`/`z-30`, timeline header s `z-20`/`z-30`) měly vyšší z-index v page-root stacking kontextu.
+   - Fix: `z-10` → `z-40` na project header. Nyní project header sedí nad všemi timeline elementy (max z-30 v timeline).
+   - Z-index hierarchie: project header z-40 > timeline corner cell z-30 > timeline sticky left columns z-20 > today marker z-10 > Gantt bars (z-auto).
+
+5. **DateEditDialog ponechán beze změny**:
+   - Stále fetchuje aktuální datumy z `/api/projects/[id]/budget`, předvyplní `dateFrom`/`dateTo` inputy.
+   - `handleSave` volá `updateItem.mutateAsync` (useUpdateBudgetItem hook) → invaliduje `["budget", projectId]` query → timeline se refetchne.
+
+Lint status:
+- `bun run lint` → **0 errors, 0 warnings** ✓
+- `bunx tsc --noEmit` → 1 pre-existing chyba v timeline-tab.tsx (`setScrollLeft` used but never declared — bylo v HEAD před D2, neintrodukováno). Mimo scope D2.
+- Dev log: poslední kompilace 200 OK, žádné runtime chyby.
+
+Files modified:
+- `src/components/tabs/timeline-tab.tsx` (769 → 640 řádků, -129 řádků)
+- `src/components/project-detail.tsx` (z-index bump 1 řádek)
+
+Stage Summary:
+- ✅ Gantt bars: žádný drag, žádné resize handlery, pouze dvojklik otevírá DateEditDialog
+- ✅ `cursor-pointer` + hover efekt na barech
+- ✅ Tooltip (`title` attribute) s plnými informacemi
+- ✅ Project sticky header `z-40` — nad všemi timeline elementy při scrollu
+- ✅ Lint prošel (0 errors), TypeScript 0 errors v mých změnách
+
+---
+Task ID: D1
+Agent: Subagent D1 (Budget Tab — Hierarchy UI & Subcategory Prefill)
+Datum: 2027-08-27
+Soubory: `src/components/tabs/budget-tab.tsx`, `src/components/budget-item-dialog.tsx`, `src/lib/format.ts`
+
+## Co bylo provedeno (3 požadavky)
+
+### 1. Předvyplnění Podkategorie při přidávání Úkolu
+- `src/components/budget-item-dialog.tsx`:
+  - Přidán nový prop `defaultSubcategory?: string` do `Props` i do `BudgetItemForm`.
+  - Prop se propaguje z `BudgetItemDialog` → `BudgetItemForm`.
+  - `subcategory` state inicializován jako `item?.subcategory ?? defaultSubcategory ?? ""` (dříve bez fallbacku na `defaultSubcategory`).
+- `src/components/tabs/budget-tab.tsx` (řádek ~619):
+  - Při otevírání "Nový úkol" dialogu z `+` tlačítka položky předán `defaultSubcategory={addTaskFor.subcategory ?? undefined}`.
+  - User tedy vidí předvyplněnou Podkategorii z rodičovské Položky a může ji upravit nebo ponechat.
+
+### 2. UI redesign pro zobrazení úkolů (children)
+Refaktoroval jsem `BudgetItemRows` + `BudgetRow` tak, aby děti (úkoly) měly vlastní vizuální styl:
+
+**`BudgetItemRows` (rows 626–738):**
+- Nový prop `isChild?: boolean` (default false).
+- `BudgetRow` volán s `isChild={isChild}` (dříve hard-coded `false`, což byla latentní chyba — `└` marker a `bg-muted/20` nikdy nezobrazoval).
+- `DetailPanelRow` se vykreslí POUZE pro parenty (`!isChild`), děti zůstanou tenké.
+- Rekurzivní render děti → `BudgetItemRows` volán s `isChild` (children nepotřebují svůj detail panel ani další vnoření).
+- Vnořování omezeno na 1 úroveň (`!isChild` v podmínce pro rekurzi — striktní guard).
+
+**`BudgetRow` (rows 739–1200):**
+- TableRow className:
+  - **Parents**: `item.rejected` → `bg-rose-50/40 dark:bg-rose-950/10 opacity-60`; `item.completed` → `bg-emerald-50/40 dark:bg-emerald-950/10`; jinak `hover:bg-muted/30`.
+  - **Children**: `bg-muted/30 hover:bg-muted/40` + `opacity-70` pokud rejected (zachoval jsem vizuální distinkci).
+- První TableCell (expand/collapse):
+  - **Parents**: `relative` buňka s absolutním barevným pruhem + chevron tlačítko `relative`.
+  - **Children**: `pl-8` indent (32px z levého okraje tabulky) + `└` marker (text-muted-foreground/60, select-none, aria-hidden). Žádný chevron — dítě není rozbalitelné (poznámky editovatelné přes dropdown → "Upravit detail").
+- Položka cell:
+  - **Parents**: zobrazuje `item.subcategory` jako hlavní název (jako dříve).
+  - **Children**: zobrazuje `item.element` (název úkolu), fallback na `item.subcategory` a pak `(bez názvu)`.
+  - **Children**: `text-xs` (menší text) místo `text-sm`.
+- Prvek cell:
+  - **Parents**: zobrazuje `item.element` (jako dříve).
+  - **Children**: prázdná buňka (`null`) — element je už v Položka sloupci.
+- Hlavička tabulky: první sloupec rozšířen z `w-8` (32px) na `w-12` (48px) aby se `└` marker s `pl-8` vlezl do buňky bez overflow.
+
+Vzhled odpovídá specifikaci:
+```
+▾ Demoliční práce (Položka — parent, s plánem 100000 Kč, barevný pruh vlevo)
+  └ Kontejnery (Úkol — dítě, odsazené pl-8, bg-muted/30, tenčí)
+  └ Demolice topení (Úkol — dítě, odsazené, tenčí)
+```
+
+### 3. Oprava zakulaceného borderu na poslední položce
+Root cause: `border-l-2` na TableRow kombinoval s `rounded-lg` na vnějším `Collapsible` containeru. Spodní levý roh kategorie je zakulacený, ale barevná linka `border-l-2` posledního řádku zasahovala do zakulacení a vizuálně "vyčnívala".
+
+**Fix:** Nahrazen `border-l-2` absolutně pozicovaným barevným pruhem (`<div>` s `absolute inset-y-0 left-0 w-1`).
+- `src/lib/format.ts`: Přidán nový mapping `PHASE_BG_COLORS` (Příprava→`bg-sky-400`, Demolice→`bg-rose-400`, …, Neurčeno→`bg-zinc-300`).
+- `BudgetRow` (parent):
+  - Smazán `border-l-2` a `PHASE_BORDER_COLORS[item.phase]` z TableRow className.
+  - Přidán `<div aria-hidden className="absolute inset-y-0 left-0 w-1 {phaseColor}" />` do první TableCell (která má `relative`).
+  - Rejected items: `bg-rose-500`, jinak phase barva.
+- `DetailPanelRow`:
+  - Smazán `border-l-2` z TableRow className.
+  - Přidán absolutní barevný pruh do `colSpan={12}` TableCell (která má `relative py-3`).
+  - Stejná barva jako parent — vizuální kontinuita pruhu přes parent + detail panel.
+- Import `PHASE_BORDER_COLORS` odstraněn z `budget-tab.tsx` (už se nepoužívá v tomto souboru, ale zůstává v `format.ts` pro jiné moduly).
+- Výsledek: barevná linka vlevo je rovná, bez zakulacení, konzistentní pro všechny položky včetně poslední. Pruh je 4px široký (`w-1`), takže je viditelný i na menších obrazovkách.
+
+## Zachované funkce
+- Inline editace (Plán, Dny, Datumy, Skutečnost, Hodiny) pro parenty i děti.
+- Reorder šipky (nahoru/dolů) pro parenty i děti.
+- Filtry (search, fáze, completion pills) beze změny.
+- CSV export tlačítko.
+- Comment count badge, Hotovo/Zavrženo badges, "X úkolů" badge (pouze pro parenty — auto-skryté pro děti protože childCount=0).
+- Rejected button (X) pro parenty i děti.
+- Skrytá pole (Poznámka, Vůle, Ušetřeno) v `DetailPanelRow` zachována — vykresluje se POUZE pro parenty (děti jsou tenší, poznámku editují přes dialog).
+- Category reorder arrows, burn-rate progress bar v hlavičce kategorie.
+- BudgetItemDialog comment section (při editaci existující položky).
+
+## Lint status
+- `bun run lint` → **EXIT_CODE=0** (0 errors, 0 warnings). ✓
+- `bunx tsc --noEmit` → moje soubory (`budget-tab.tsx`, `budget-item-dialog.tsx`, `format.ts`) neprodukují žádné nové TS chyby. Existující pre-existing chyby v jiných modulech (contacts-tab, dashboard-tab, payments-tab, timeline-tab, audit.ts, project-templates.ts) nejsou v scope D1.
+
+## Soubory modifikované
+- `src/lib/format.ts` (+10 řádků: PHASE_BG_COLORS mapping)
+- `src/components/budget-item-dialog.tsx` (+6 řádků: defaultSubcategory prop + inicializace state)
+- `src/components/tabs/budget-tab.tsx` (~90 řádků změn: BudgetItemRows isChild prop, BudgetRow redesign pro isChild, DetailPanelRow absolutní pruh, header w-8→w-12, defaultSubcategory pass-through)
+
+## Poznámky pro další agenty
+- `PHASE_BORDER_COLORS` (border-l-* varianty) zůstává v `format.ts` — používá se v timeline-tab.tsx pro gantt bary. NEODSTRAŇOVAT.
+- `PHASE_BG_COLORS` je nový mapping se `bg-*` variantami — používá se výhradně pro absolutní pruhy v budget-tab.
+- Children (úkoly) mají `pl-8` indent v prvním TableCell — 32px z levého okraje tabulky. Chevron parenta je na 8px (p-2 padding), takže vizuální indent mezi parent chevronem a dítě `└` markerem je 24px (odpovídá specifikaci ~24-32px).
+- Children NEJSOU rozbalitelné (žádný chevron) —DetailPanelRow se pro ně nevykresluje. Note/flexibility/saved editují přes dropdown → "Upravit detail" → BudgetItemDialog (který má note Textarea).
+- `onAddTask` prop je v rekurzivním volání pro děti `undefined`, takže `+` tlačítko se u dětí automaticky skryje (již dříve implementováno přes `{!isChild && onAddTask && (...)}` guard).
+
+---
+Task ID: 24
+Agent: Hlavní asistent (Z.ai Code) - budget UI redesign + timeline zjednodušení
+Task: Budget tab UI redesign (odsazené úkoly, předvyplněná podkategorie, oprava borderu), Timeline zjednodušení (odstranění drag/resize, oprava sticky header)
+
+Work Log:
+- Subagent D1: Budget tab UI redesign
+  * Předvyplněná Podkategorie: defaultSubcategory prop v BudgetItemDialog, předává se z + tlačítka
+  * Úkoly odsazené: isChild prop v BudgetItemRows, pl-8 indent, └ marker, bg-muted/30, text-xs
+  * Úkoly nezobrazují kategorii/podkategorii — jen element (název úkolu) a hodnoty
+  * Oprava borderu: odstraněn border-l-2 z TableRow, nahrazen absolutním div (w-1) v první TableCell — rovná linka bez zakulacení
+  * PHASE_BG_COLORS přidán do format.ts pro absolutní pruh
+- Subagent D2: Timeline zjednodušení
+  * Odstraněn drag/resize: smazány všechny pointer event handlery, resize handles, drag state, touchAction
+  * Ponechán dvojklik → DateEditDialog s přesnými datumy
+  * cursor-pointer + hover efekt na Gantt bars
+  * Odstraněny onMove/onResizeStart/onResizeEnd/onDragEnd props, refreshAfterDrag, useQueryClient
+  * Sticky header fix: z-10 → z-40 v project-detail.tsx (header nad všemi timeline elementy)
+  * Timeline z 769 → 640 řádků (-129)
+- Lint: 0 errors, 0 warnings
+- Verifikace: Budget tab (načte se), Timeline (načte se, scroll bez překryvu) - vše funkční, 0 chyb
+
+Stage Summary:
+- ✅ Budget: úkoly odsazené a vizuálně oddělené, předvyplněná podkategorie, opravený border
+- ✅ Timeline: odstraněn drag/resize, jen dvojklik pro datumy, opraven sticky header overflow

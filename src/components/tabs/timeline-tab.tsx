@@ -1,8 +1,7 @@
 "use client";
 
-import { useState, useMemo, useRef, useEffect } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useDashboard, useUpdateBudgetItem } from "@/lib/api";
-import { useQueryClient } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -21,7 +20,6 @@ import {
   CalendarRange,
   CalendarDays,
   CheckCircle2,
-  Move,
 } from "lucide-react";
 import { formatDate, formatCzk, PHASE_COLORS } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -39,16 +37,9 @@ const UNIT_WIDTH: Record<ZoomLevel, number> = {
 const DAY_MS = 1000 * 60 * 60 * 24;
 
 export function TimelineTab({ projectId }: { projectId: string }) {
-  const qc = useQueryClient();
   const { data, isLoading } = useDashboard(projectId);
   const [zoom, setZoom] = useState<ZoomLevel>("months");
   const [editingItem, setEditingItem] = useState<string | null>(null);
-
-  // After a drag/resize, refresh dashboard + budget queries
-  const refreshAfterDrag = () => {
-    qc.invalidateQueries({ queryKey: ["dashboard", projectId] });
-    qc.invalidateQueries({ queryKey: ["budget", projectId] });
-  };
 
   // Compute the date range that covers all timeline items
   const { items, rangeStart, rangeEnd, totalUnits } = useMemo(() => {
@@ -289,9 +280,6 @@ export function TimelineTab({ projectId }: { projectId: string }) {
         </div>
         <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
           <span className="flex items-center gap-1">
-            <Move className="h-3 w-3" /> Táhněte pro posun
-          </span>
-          <span className="flex items-center gap-1">
             <span className="inline-block h-2 w-2 rounded-full bg-rose-500" /> Dnes
           </span>
           <span>Dvojklik = upravit datumy</span>
@@ -423,22 +411,6 @@ export function TimelineTab({ projectId }: { projectId: string }) {
                               isPast={isPast}
                               isFuture={isFuture}
                               zoom={zoom}
-                              onMove={(deltaDays) => {
-                                const newFrom = new Date(start.getTime() + deltaDays * DAY_MS);
-                                const newTo = new Date(end.getTime() + deltaDays * DAY_MS);
-                                return updateBudgetItemDates(it.id, newFrom, newTo);
-                              }}
-                              onResizeStart={(deltaDays) => {
-                                const newFrom = new Date(start.getTime() + deltaDays * DAY_MS);
-                                if (newFrom > end) return Promise.resolve();
-                                return updateBudgetItemDates(it.id, newFrom, end);
-                              }}
-                              onResizeEnd={(deltaDays) => {
-                                const newTo = new Date(end.getTime() + deltaDays * DAY_MS);
-                                if (newTo < start) return Promise.resolve();
-                                return updateBudgetItemDates(it.id, start, newTo);
-                              }}
-                              onDragEnd={refreshAfterDrag}
                               onDoubleClick={() => setEditingItem(it.id)}
                             />
                           </div>
@@ -517,42 +489,19 @@ export function TimelineTab({ projectId }: { projectId: string }) {
   );
 }
 
-// Helper to update budget item dates via API
-async function updateBudgetItemDates(
-  itemId: string,
-  dateFrom: Date,
-  dateTo: Date,
-) {
-  await fetch(`/api/budget-items/${itemId}`, {
-    method: "PATCH",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      dateFrom: dateFrom.toISOString(),
-      dateTo: dateTo.toISOString(),
-    }),
-  });
-}
-
+// ===== Gantt bar (double-click only — no drag/resize) =====
 const MONTHS_SHORT = ["Led", "Úno", "Bře", "Dub", "Kvě", "Čvn", "Čvc", "Srp", "Zář", "Říj", "Lis", "Pro"];
 const MONTHS_LONG = [
   "Leden", "Únor", "Březen", "Duben", "Květen", "Červen",
   "Červenec", "Srpen", "Září", "Říjen", "Listopad", "Prosinec",
 ];
 
-// ===== Gantt bar with drag/resize =====
 function GanttBar({
   item,
   startOffset,
   widthUnits,
   unitW,
   isActive,
-  isPast,
-  isFuture,
-  zoom,
-  onMove,
-  onResizeStart,
-  onResizeEnd,
-  onDragEnd,
   onDoubleClick,
 }: {
   item: {
@@ -572,62 +521,8 @@ function GanttBar({
   isPast: boolean;
   isFuture: boolean;
   zoom: ZoomLevel;
-  onMove: (deltaDays: number) => Promise<void>;
-  onResizeStart: (deltaDays: number) => Promise<void>;
-  onResizeEnd: (deltaDays: number) => Promise<void>;
-  onDragEnd: () => void;
   onDoubleClick: () => void;
 }) {
-  const [dragging, setDragging] = useState<null | "move" | "resize-start" | "resize-end">(null);
-  const startXRef = useRef(0);
-  const dragMovedRef = useRef(false);
-  const lastSavedDaysRef = useRef(0);
-
-  // Convert pixel delta to day delta based on zoom
-  const pxToDays = (px: number) => {
-    if (zoom === "days") return px / unitW;
-    if (zoom === "months") return (px / unitW) * 30;
-    if (zoom === "quarters") return (px / unitW) * 90;
-    return (px / unitW) * 365;
-  };
-
-  const handlePointerDown = (mode: "move" | "resize-start" | "resize-end") => (e: React.PointerEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setDragging(mode);
-    startXRef.current = e.clientX;
-    dragMovedRef.current = false;
-    lastSavedDaysRef.current = 0;
-    (e.target as HTMLElement).setPointerCapture(e.pointerId);
-  };
-
-  const handlePointerMove = (e: React.PointerEvent) => {
-    if (!dragging) return;
-    const dx = e.clientX - startXRef.current;
-    if (Math.abs(dx) > 3) dragMovedRef.current = true;
-    // Throttle saves: save when delta crosses a day boundary
-    const totalDays = pxToDays(dx);
-    const daysToApply = Math.round(totalDays) - lastSavedDaysRef.current;
-    if (daysToApply === 0) return;
-    lastSavedDaysRef.current = Math.round(totalDays);
-    if (dragging === "move") onMove(daysToApply);
-    else if (dragging === "resize-start") onResizeStart(daysToApply);
-    else if (dragging === "resize-end") onResizeEnd(daysToApply);
-  };
-
-  const handlePointerUp = (e: React.PointerEvent) => {
-    if (dragging) {
-      try {
-        (e.target as HTMLElement).releasePointerCapture(e.pointerId);
-      } catch {
-        // ignore
-      }
-      // After a drag/resize completes, refresh queries
-      onDragEnd();
-    }
-    setDragging(null);
-  };
-
   const width = widthUnits * unitW;
   const left = startOffset * unitW;
   const barColor = PHASE_COLORS[item.phase] ?? "";
@@ -635,51 +530,26 @@ function GanttBar({
   return (
     <div
       className={cn(
-        "absolute top-1/2 flex h-7 -translate-y-1/2 items-center overflow-hidden rounded-md border shadow-sm transition-shadow",
+        "absolute top-1/2 flex h-7 -translate-y-1/2 cursor-pointer items-center overflow-hidden rounded-md border shadow-sm transition-shadow hover:shadow-md hover:brightness-105",
         barColor,
         isActive && "ring-2 ring-offset-1",
-        dragging === "move" && "cursor-grabbing shadow-lg",
         item.completed && "opacity-70",
       )}
       style={{
         left: `${left}px`,
         width: `${Math.max(width, 24)}px`,
         minWidth: 24,
-        cursor: dragging === "move" ? "grabbing" : "grab",
-        touchAction: "none",
       }}
-      onPointerDown={dragging ? undefined : handlePointerDown("move")}
-      onPointerMove={handlePointerMove}
-      onPointerUp={handlePointerUp}
-      onPointerCancel={handlePointerUp}
       onDoubleClick={(e) => {
         e.stopPropagation();
-        if (!dragMovedRef.current) onDoubleClick();
+        onDoubleClick();
       }}
       title={`${item.subcategory || item.category}\n${formatDate(item.dateFrom)} — ${formatDate(item.dateTo)}\n${formatCzk(item.planCost)}${item.completed ? " · Hotovo" : ""}`}
     >
-      {/* Left resize handle */}
-      <span
-        className="flex h-full w-1.5 cursor-ew-resize items-center justify-center bg-black/10 hover:bg-black/20"
-        onPointerDown={handlePointerDown("resize-start")}
-        onPointerMove={handlePointerMove}
-        onPointerUp={handlePointerUp}
-        onPointerCancel={handlePointerUp}
-      />
       <span className="flex-1 truncate px-1.5 text-[10px] font-medium">
         {item.subcategory || item.category}
         {item.completed && " ✓"}
       </span>
-      {/* Right resize handle */}
-      {width > 40 && (
-        <span
-          className="flex h-full w-1.5 cursor-ew-resize items-center justify-center bg-black/10 hover:bg-black/20"
-          onPointerDown={handlePointerDown("resize-end")}
-          onPointerMove={handlePointerMove}
-          onPointerUp={handlePointerUp}
-          onPointerCancel={handlePointerUp}
-        />
-      )}
     </div>
   );
 }

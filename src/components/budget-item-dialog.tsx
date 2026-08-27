@@ -41,6 +41,8 @@ type Props = {
   parentId?: string;
   defaultCategory?: string;
   defaultPhase?: string;
+  /** Pre-filled subcategory (typically inherited from the parent item when adding a task). */
+  defaultSubcategory?: string;
 };
 
 export function BudgetItemDialog({
@@ -51,6 +53,7 @@ export function BudgetItemDialog({
   parentId,
   defaultCategory,
   defaultPhase,
+  defaultSubcategory,
 }: Props) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -63,6 +66,7 @@ export function BudgetItemDialog({
             parentId={parentId}
             defaultCategory={defaultCategory}
             defaultPhase={defaultPhase}
+            defaultSubcategory={defaultSubcategory}
             onDone={() => onOpenChange(false)}
           />
         )}
@@ -77,6 +81,7 @@ function BudgetItemForm({
   parentId,
   defaultCategory,
   defaultPhase,
+  defaultSubcategory,
   onDone,
 }: {
   projectId: string;
@@ -84,6 +89,7 @@ function BudgetItemForm({
   parentId?: string;
   defaultCategory?: string;
   defaultPhase?: string;
+  defaultSubcategory?: string;
   onDone: () => void;
 }) {
   const { data: items } = useBudgetItems(projectId);
@@ -115,7 +121,9 @@ function BudgetItemForm({
   const [isCustomCat, setIsCustomCat] = useState(
     item ? !existingCategories.includes(item.category) : false,
   );
-  const [subcategory, setSubcategory] = useState(item?.subcategory ?? "");
+  const [subcategory, setSubcategory] = useState(
+    item?.subcategory ?? defaultSubcategory ?? "",
+  );
   const [element, setElement] = useState(item?.element ?? "");
   const [phase, setPhase] = useState(item?.phase ?? defaultPhase ?? "Neurčeno");
   const [required, setRequired] = useState(item?.required ?? false);

@@ -99,7 +99,7 @@ export function ProjectDetail({ project }: { project: Project }) {
   return (
     <div className="flex min-h-screen flex-col">
       {/* Project header */}
-      <header className="sticky top-0 z-10 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/70">
+      <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/70">
         <div className="px-4 pt-4 pb-0 md:px-6">
           {/* Title row */}
           <div className="flex items-start justify-between gap-2 md:gap-4">
