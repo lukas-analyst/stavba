@@ -125,7 +125,14 @@ function BudgetItemForm({
   const [subcategory, setSubcategory] = useState(
     item?.subcategory ?? defaultSubcategory ?? "",
   );
-  const [element, setElement] = useState(item?.element ?? "");
+  // For child items (tasks), the displayed name in the budget table is
+  // `item.element || item.subcategory`. If a child has no `element` set but
+  // has a `subcategory` (typically inherited from the parent), seed the
+  // element input with the subcategory value so the user can see and edit
+  // the existing text rather than starting from an empty field.
+  const [element, setElement] = useState(
+    item?.element ?? (item?.parentId ? (item.subcategory ?? "") : ""),
+  );
   const [phase, setPhase] = useState(item?.phase ?? defaultPhase ?? "Neurčeno");
   const [required, setRequired] = useState(item?.required ?? false);
   const [completed, setCompleted] = useState(item?.completed ?? false);
@@ -338,12 +345,12 @@ function BudgetItemForm({
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="element">Prvek / Úkol</Label>
+          <Label htmlFor="element">Úkol</Label>
           <Input
             id="element"
             value={element}
             onChange={(e) => setElement(e.target.value)}
-            placeholder="např. HW Systém / Podřezání / Injektáž"
+            placeholder={item?.parentId ? "např. Podřezání / Injektáž / Montáž" : "např. HW Systém / Podřezání / Injektáž"}
           />
         </div>
 

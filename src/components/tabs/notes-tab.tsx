@@ -1,403 +1,254 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { useProjects, useUpdateProject } from "@/lib/api";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState } from "react";
+import {
+  useNotes,
+  useCreateNote,
+  useDeleteNote,
+  type Note,
+} from "@/lib/api";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
-import { toast } from "sonner";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import {
-  FileText,
-  Save,
+  StickyNote,
+  Plus,
+  Trash2,
   Loader2,
-  Eye,
-  Pencil,
-  List,
-  ListOrdered,
-  CheckSquare,
-  Quote,
-  Bold,
-  Italic,
-  Code,
-  Link2,
+  User,
 } from "lucide-react";
+import { formatDate } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
-export function NotesTab({ projectId }: { projectId: string }) {
-  return <NotesTabInner key={projectId} projectId={projectId} />;
+// localStorage key for remembering the user's chosen author name across
+// sessions and across projects.
+const AUTHOR_LS_KEY = "stavba.notes.author";
+
+// Read the remembered author once at module init. We don't use a
+// `useEffect` + `setState` pattern here because that triggers cascading
+// renders (and ESLint flags it). Reading during the lazy initializer of
+// `useState` runs only on the very first render of this component and
+// never again, which is exactly what we want.
+function readSavedAuthor(): string {
+  try {
+    return localStorage.getItem(AUTHOR_LS_KEY) ?? "";
+  } catch {
+    return "";
+  }
 }
 
-function NotesTabInner({ projectId }: { projectId: string }) {
-  const { data: projects } = useProjects();
-  const project = projects?.find((p) => p.id === projectId);
-  const updateProject = useUpdateProject(projectId);
-  const [localContent, setLocalContent] = useState<string | null>(null);
-  const [mode, setMode] = useState<"edit" | "preview">("edit");
-  const [savedAt, setSavedAt] = useState<Date | null>(null);
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+export function NotesTab({ projectId }: { projectId: string }) {
+  const { data: notes, isLoading } = useNotes(projectId);
+  const createNote = useCreateNote(projectId);
+  const deleteNote = useDeleteNote(projectId);
 
-  // Server content from the project; localContent is null until user edits
-  const serverContent = project?.notes ?? "";
-  const content = localContent ?? serverContent;
-  const isDirty = localContent !== null && localContent !== serverContent;
+  // Author is remembered in localStorage so the user doesn't have to retype
+  // their name on every visit / every project.
+  const [author, setAuthor] = useState<string>(readSavedAuthor);
+  const [text, setText] = useState<string>("");
 
-  // Auto-save with debounce (only when content differs from server)
-  useEffect(() => {
-    if (!project || !isDirty) return;
-
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(async () => {
-      try {
-        await updateProject.mutateAsync({ notes: localContent });
-        setSavedAt(new Date());
-      } catch {
-        toast.error("Nepodařilo se uložit poznámky");
+  const persistAuthor = (value: string) => {
+    setAuthor(value);
+    try {
+      if (value.trim()) {
+        localStorage.setItem(AUTHOR_LS_KEY, value.trim());
+      } else {
+        localStorage.removeItem(AUTHOR_LS_KEY);
       }
-    }, 1500);
-
-    return () => {
-      if (debounceRef.current) clearTimeout(debounceRef.current);
-    };
-  }, [localContent, isDirty, project, updateProject]);
-
-  const setContent = (val: string) => setLocalContent(val);
-
-  const insertSyntax = (before: string, after: string = "") => {
-    const textarea = document.getElementById("notes-textarea") as HTMLTextAreaElement | null;
-    if (!textarea) return;
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    const selected = content.substring(start, end);
-    const newContent =
-      content.substring(0, start) + before + selected + after + content.substring(end);
-    setContent(newContent);
-    // Restore focus and selection
-    setTimeout(() => {
-      textarea.focus();
-      textarea.selectionStart = start + before.length;
-      textarea.selectionEnd = end + before.length;
-    }, 0);
+    } catch {
+      // ignore
+    }
   };
 
-  const wordCount = content.trim() ? content.trim().split(/\s+/).length : 0;
-  const charCount = content.length;
-  const lineCount = content.split("\n").length;
-  const todoCount = (content.match(/^[-*]\s\[\s\]/gm) || []).length;
-  const doneCount = (content.match(/^[-*]\s\[x\]/gim) || []).length;
+  const handleSubmit = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!text.trim()) return;
+    try {
+      await createNote.mutateAsync({
+        author: author.trim() || "Anonym",
+        text: text.trim(),
+      });
+      setText("");
+    } catch {
+      toast.error("Nepodařilo se přidat poznámku");
+    }
+  };
 
-  // Show a skeleton while the projects list is still loading on the very
-  // first paint — otherwise the textarea would briefly render empty and
-  // flash the placeholder before the server content arrives.
-  if (!projects) {
-    return (
-      <div className="space-y-4">
-        <div className="flex flex-wrap items-center gap-2">
-          <Skeleton className="h-8 w-40" />
-          <Skeleton className="h-8 w-40" />
-        </div>
-        <Skeleton className="h-[60vh] w-full" />
-      </div>
-    );
-  }
+  const handleDelete = async (id: string) => {
+    try {
+      await deleteNote.mutateAsync(id);
+      toast.success("Poznámka smazána");
+    } catch {
+      toast.error("Nepodařilo se smazat poznámku");
+    }
+  };
+
+  // Ctrl/Cmd+Enter in the textarea submits the note.
+  const handleTextKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+      e.preventDefault();
+      handleSubmit();
+    }
+  };
 
   return (
     <div className="space-y-4">
-      {/* Toolbar */}
-      <div className="flex flex-wrap items-center gap-2">
-        <div className="flex items-center gap-0.5 rounded-md border bg-muted/40 p-0.5">
-          <button
-            onClick={() => setMode("edit")}
-            className={cn(
-              "flex items-center gap-1.5 rounded px-2.5 py-1 text-xs font-medium transition-colors",
-              mode === "edit"
-                ? "bg-background text-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground",
-            )}
-          >
-            <Pencil className="h-3.5 w-3.5" /> Upravit
-          </button>
-          <button
-            onClick={() => setMode("preview")}
-            className={cn(
-              "flex items-center gap-1.5 rounded px-2.5 py-1 text-xs font-medium transition-colors",
-              mode === "preview"
-                ? "bg-background text-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground",
-            )}
-          >
-            <Eye className="h-3.5 w-3.5" /> Náhled
-          </button>
+      {/* Add note form */}
+      <form
+        onSubmit={handleSubmit}
+        className="space-y-3 rounded-lg border bg-card p-4 shadow-sm"
+      >
+        <div className="flex items-center gap-2">
+          <StickyNote className="h-4 w-4 text-primary" />
+          <h3 className="text-sm font-semibold">Nová poznámka</h3>
         </div>
-
-        {/* Markdown toolbar (edit mode only) */}
-        {mode === "edit" && (
-          <div className="flex items-center gap-0.5 rounded-md border bg-muted/40 p-0.5">
-            <button
-              onClick={() => insertSyntax("**", "**")}
-              className="rounded p-1.5 text-muted-foreground hover:bg-background hover:text-foreground"
-              title="Tučně"
-            >
-              <Bold className="h-3.5 w-3.5" />
-            </button>
-            <button
-              onClick={() => insertSyntax("*", "*")}
-              className="rounded p-1.5 text-muted-foreground hover:bg-background hover:text-foreground"
-              title="Kurzíva"
-            >
-              <Italic className="h-3.5 w-3.5" />
-            </button>
-            <button
-              onClick={() => insertSyntax("\n## ", "")}
-              className="rounded p-1.5 text-muted-foreground hover:bg-background hover:text-foreground"
-              title="Nadpis"
-            >
-              <span className="text-xs font-bold">H</span>
-            </button>
-            <button
-              onClick={() => insertSyntax("\n- ", "")}
-              className="rounded p-1.5 text-muted-foreground hover:bg-background hover:text-foreground"
-              title="Odrážka"
-            >
-              <List className="h-3.5 w-3.5" />
-            </button>
-            <button
-              onClick={() => insertSyntax("\n1. ", "")}
-              className="rounded p-1.5 text-muted-foreground hover:bg-background hover:text-foreground"
-              title="Číslovaný seznam"
-            >
-              <ListOrdered className="h-3.5 w-3.5" />
-            </button>
-            <button
-              onClick={() => insertSyntax("\n- [ ] ", "")}
-              className="rounded p-1.5 text-muted-foreground hover:bg-background hover:text-foreground"
-              title="Úkol (checkbox)"
-            >
-              <CheckSquare className="h-3.5 w-3.5" />
-            </button>
-            <button
-              onClick={() => insertSyntax("\n> ", "")}
-              className="rounded p-1.5 text-muted-foreground hover:bg-background hover:text-foreground"
-              title="Citace"
-            >
-              <Quote className="h-3.5 w-3.5" />
-            </button>
-            <button
-              onClick={() => insertSyntax("`", "`")}
-              className="rounded p-1.5 text-muted-foreground hover:bg-background hover:text-foreground"
-              title="Kód"
-            >
-              <Code className="h-3.5 w-3.5" />
-            </button>
-            <button
-              onClick={() => insertSyntax("[", "](url)")}
-              className="rounded p-1.5 text-muted-foreground hover:bg-background hover:text-foreground"
-              title="Odkaz"
-            >
-              <Link2 className="h-3.5 w-3.5" />
-            </button>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-[200px_1fr]">
+          <div className="space-y-1">
+            <label htmlFor="note-author" className="text-xs font-medium text-muted-foreground">
+              Jméno autora
+            </label>
+            <Input
+              id="note-author"
+              value={author}
+              onChange={(e) => persistAuthor(e.target.value)}
+              placeholder="např. Pavel"
+              className="h-9 text-sm"
+              maxLength={100}
+            />
+            <p className="text-[10px] text-muted-foreground">
+              Jméno si pamatujeme pro příště.
+            </p>
           </div>
-        )}
-
-        <div className="ml-auto flex items-center gap-3 text-xs text-muted-foreground">
-          {todoCount > 0 && (
-            <span className="flex items-center gap-1">
-              <CheckSquare className="h-3 w-3" />
-              {doneCount}/{todoCount} úkolů
-            </span>
-          )}
-          <span>{wordCount} slov</span>
-          <span>{lineCount} řádků</span>
-          {updateProject.isPending ? (
-            <span className="flex items-center gap-1 text-amber-600">
-              <Loader2 className="h-3 w-3 animate-spin" /> Ukládám…
-            </span>
-          ) : savedAt ? (
-            <span className="text-emerald-600">Uloženo</span>
-          ) : null}
+          <div className="space-y-1">
+            <label htmlFor="note-text" className="text-xs font-medium text-muted-foreground">
+              Text poznámky
+            </label>
+            <Textarea
+              id="note-text"
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              onKeyDown={handleTextKeyDown}
+              placeholder="Sem napište poznámku k projektu — rozhodnutí, nápad, úkol, zprávu… (Ctrl+Enter = přidat)"
+              rows={3}
+              className="resize-y text-sm"
+            />
+          </div>
         </div>
-      </div>
-
-      {/* Editor / Preview */}
-      {mode === "edit" ? (
-        <Textarea
-          id="notes-textarea"
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          placeholder="Sem si pište poznámky k projektu — rozhodnutí, nápady, úkoly, kontakty, odkazy…
-
-Podporuje Markdown:
-## Nadpis
-- odrážka
-1. číslovaný seznam
-- [ ] úkol
-**tučně** *kurzíva* `kód`
-> citace
-[odkaz](https://…)"
-          className="min-h-[60vh] resize-y font-mono text-sm leading-relaxed"
-        />
-      ) : (
-        <Card>
-          <CardContent className="prose prose-sm max-w-none dark:prose-invert">
-            {content.trim() ? (
-              <MarkdownPreview content={content} />
+        <div className="flex items-center justify-between gap-2">
+          <p className="text-[11px] text-muted-foreground">
+            {notes?.length ?? 0} {notes?.length === 1 ? "poznámka" : (notes?.length ?? 0) >= 2 && (notes?.length ?? 0) <= 4 ? "poznámky" : "poznámek"}
+          </p>
+          <Button
+            type="submit"
+            size="sm"
+            disabled={!text.trim() || createNote.isPending}
+          >
+            {createNote.isPending ? (
+              <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
             ) : (
-              <p className="py-12 text-center text-sm text-muted-foreground">
-                Zatím žádné poznámky. Přepněte do režimu „Upravit".
-              </p>
+              <Plus className="mr-1.5 h-4 w-4" />
             )}
-          </CardContent>
-        </Card>
-      )}
+            Přidat
+          </Button>
+        </div>
+      </form>
 
-      {/* Footer hints */}
-      <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border bg-muted/30 px-4 py-2.5 text-[11px] text-muted-foreground">
-        <div className="flex items-center gap-1.5">
-          <FileText className="h-3.5 w-3.5" />
-          <span>Poznámky se ukládají automaticky (1.5s po zadání). Podporují Markdown.</span>
+      {/* Notes list (newest first) */}
+      {isLoading ? (
+        <div className="space-y-3">
+          {[1, 2, 3].map((i) => (
+            <Skeleton key={i} className="h-24" />
+          ))}
         </div>
-        <div>
-          {charCount} znaků
+      ) : notes && notes.length > 0 ? (
+        <div className="space-y-3">
+          {notes.map((n) => (
+            <NoteCard
+              key={n.id}
+              note={n}
+              onDelete={() => handleDelete(n.id)}
+              isDeleting={deleteNote.isPending}
+            />
+          ))}
         </div>
-      </div>
+      ) : (
+        <div className="rounded-lg border border-dashed py-12 text-center text-sm text-muted-foreground">
+          <StickyNote className="mx-auto mb-2 h-8 w-8 opacity-40" />
+          Zatím žádné poznámky. Napište první poznámku výše.
+        </div>
+      )}
     </div>
   );
 }
 
-// Minimal markdown renderer (headings, bold, italic, lists, todos, code, quotes, links)
-function MarkdownPreview({ content }: { content: string }) {
-  const lines = content.split("\n");
-  const blocks: React.ReactNode[] = [];
-  let listBuffer: React.ReactNode[] = [];
-  let listType: "ul" | "ol" | null = null;
+function NoteCard({
+  note,
+  onDelete,
+  isDeleting,
+}: {
+  note: Note;
+  onDelete: () => void;
+  isDeleting: boolean;
+}) {
+  // Build a 2-letter fallback for the avatar from the author's name.
+  const initials = note.author
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((s) => s[0]?.toUpperCase() ?? "")
+    .join("") || "?";
 
-  const flushList = (key: string) => {
-    if (listBuffer.length > 0) {
-      const items = listBuffer;
-      listBuffer = [];
-      const Tag = listType ?? "ul";
-      blocks.push(
-        Tag === "ul" ? (
-          <ul key={key} className="my-2 ml-5 list-disc space-y-0.5">
-            {items}
-          </ul>
-        ) : (
-          <ol key={key} className="my-2 ml-5 list-decimal space-y-0.5">
-            {items}
-          </ol>
-        ),
-      );
-      listType = null;
-    }
-  };
-
-  const renderInline = (text: string, keyPrefix: string): React.ReactNode => {
-    // Process: bold, italic, code, links
-    const parts: React.ReactNode[] = [];
-    let remaining = text;
-    let idx = 0;
-    const regex = /(\*\*([^*]+)\*\*|\*([^*]+)\*|`([^`]+)`|\[([^\]]+)\]\(([^)]+)\))/;
-    while (remaining.length > 0) {
-      const m = regex.exec(remaining);
-      if (!m) {
-        parts.push(remaining);
-        break;
-      }
-      if (m.index > 0) parts.push(remaining.substring(0, m.index));
-      if (m[2]) {
-        parts.push(<strong key={`${keyPrefix}-b-${idx}`}>{m[2]}</strong>);
-      } else if (m[3]) {
-        parts.push(<em key={`${keyPrefix}-i-${idx}`}>{m[3]}</em>);
-      } else if (m[4]) {
-        parts.push(
-          <code key={`${keyPrefix}-c-${idx}`} className="rounded bg-muted px-1 py-0.5 text-[0.85em] font-mono">
-            {m[4]}
-          </code>,
-        );
-      } else if (m[5] && m[6]) {
-        parts.push(
-          <a key={`${keyPrefix}-l-${idx}`} href={m[6]} target="_blank" rel="noopener noreferrer" className="text-primary underline hover:no-underline">
-            {m[5]}
-          </a>,
-        );
-      }
-      remaining = remaining.substring(m.index + m[0].length);
-      idx++;
-    }
-    return <>{parts}</>;
-  };
-
-  lines.forEach((line, i) => {
-    const key = `block-${i}`;
-    // Heading
-    const h = line.match(/^(#{1,4})\s+(.+)$/);
-    if (h) {
-      flushList(`${key}-flush`);
-      const level = h[1].length;
-      const sizes = ["text-xl font-bold", "text-lg font-bold", "text-base font-semibold", "text-sm font-semibold"];
-      blocks.push(
-        <div key={key} className={`mt-3 mb-1 ${sizes[level - 1]}`}>
-          {renderInline(h[2], key)}
-        </div>,
-      );
-      return;
-    }
-    // Todo
-    const todo = line.match(/^[-*]\s\[\s([x\s]?)\]\s+(.+)$/i);
-    if (todo) {
-      listType = "ul";
-      const done = todo[1].toLowerCase() === "x";
-      listBuffer.push(
-        <li key={`${key}-li`} className="list-none">
-          <label className="flex items-start gap-2">
-            <input type="checkbox" defaultChecked={done} className="mt-0.5" readOnly />
-            <span className={done ? "line-through text-muted-foreground" : ""}>
-              {renderInline(todo[2], key)}
+  return (
+    <div className="group relative rounded-lg border bg-card p-4 shadow-sm transition-shadow hover:shadow-md">
+      <div className="flex items-start gap-3">
+        <Avatar className="h-9 w-9 shrink-0">
+          <AvatarFallback className="bg-primary/10 text-xs font-semibold text-primary">
+            {initials}
+          </AvatarFallback>
+        </Avatar>
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="flex items-center gap-1 text-sm font-semibold">
+              <User className="h-3 w-3 text-muted-foreground" />
+              {note.author}
             </span>
-          </label>
-        </li>,
-      );
-      return;
-    }
-    // Unordered list
-    const ul = line.match(/^[-*]\s+(.+)$/);
-    if (ul) {
-      listType = "ul";
-      listBuffer.push(<li key={`${key}-li`}>{renderInline(ul[1], key)}</li>);
-      return;
-    }
-    // Ordered list
-    const ol = line.match(/^\d+\.\s+(.+)$/);
-    if (ol) {
-      listType = "ol";
-      listBuffer.push(<li key={`${key}-li`}>{renderInline(ol[1], key)}</li>);
-      return;
-    }
-    // Quote
-    const q = line.match(/^>\s+(.+)$/);
-    if (q) {
-      flushList(`${key}-flush`);
-      blocks.push(
-        <blockquote key={key} className="my-2 border-l-4 border-muted-foreground/30 pl-3 italic text-muted-foreground">
-          {renderInline(q[1], key)}
-        </blockquote>,
-      );
-      return;
-    }
-    // Empty line
-    if (line.trim() === "") {
-      flushList(`${key}-flush`);
-      return;
-    }
-    // Paragraph
-    flushList(`${key}-flush`);
-    blocks.push(
-      <p key={key} className="my-1 leading-relaxed">
-        {renderInline(line, key)}
-      </p>,
-    );
-  });
-  flushList("final");
-
-  return <div>{blocks}</div>;
+            <Badge variant="secondary" className="text-[10px] font-normal">
+              {formatDate(note.createdAt, {
+                day: "2-digit",
+                month: "2-digit",
+                year: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
+            </Badge>
+          </div>
+          <p className="mt-1.5 whitespace-pre-wrap break-words text-sm leading-relaxed text-foreground/90">
+            {note.text}
+          </p>
+        </div>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className={cn(
+            "h-7 w-7 shrink-0 text-muted-foreground opacity-0 transition-opacity hover:bg-destructive/10 hover:text-destructive group-hover:opacity-100",
+            isDeleting && "opacity-100",
+          )}
+          onClick={onDelete}
+          aria-label="Smazat poznámku"
+          disabled={isDeleting}
+        >
+          {isDeleting ? (
+            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+          ) : (
+            <Trash2 className="h-3.5 w-3.5" />
+          )}
+        </Button>
+      </div>
+    </div>
+  );
 }

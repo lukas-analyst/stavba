@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   useComments,
   useCreateComment,
@@ -11,7 +11,6 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatDate } from "@/lib/format";
 import { MessageSquare, Trash2, Loader2, Send } from "lucide-react";
-import { cn } from "@/lib/utils";
 
 export function CommentSection({ budgetItemId }: { budgetItemId: string }) {
   const { data: comments, isLoading } = useComments(budgetItemId);
@@ -19,6 +18,17 @@ export function CommentSection({ budgetItemId }: { budgetItemId: string }) {
   const deleteComment = useDeleteComment(budgetItemId);
   const [author, setAuthor] = useState("");
   const [text, setText] = useState("");
+  const listRef = useRef<HTMLDivElement | null>(null);
+
+  // Auto-scroll to the bottom whenever the comment list grows
+  // (initial load + after a user submits a new comment) so the latest
+  // message is always visible without the user having to scroll.
+  useEffect(() => {
+    const el = listRef.current;
+    if (el) {
+      el.scrollTop = el.scrollHeight;
+    }
+  }, [comments]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,7 +61,10 @@ export function CommentSection({ budgetItemId }: { budgetItemId: string }) {
           ))}
         </div>
       ) : comments && comments.length > 0 ? (
-        <div className="scrollbar-none max-h-48 space-y-2 overflow-y-auto pr-1">
+        <div
+          ref={listRef}
+          className="scrollbar-none max-h-48 space-y-2 overflow-y-auto pr-1"
+        >
           {comments.map((c) => (
             <div
               key={c.id}
@@ -72,7 +85,7 @@ export function CommentSection({ budgetItemId }: { budgetItemId: string }) {
                   </button>
                 </div>
               </div>
-              <p className="mt-0.5 text-muted-foreground">{c.text}</p>
+              <p className="mt-0.5 whitespace-pre-wrap text-muted-foreground">{c.text}</p>
             </div>
           ))}
         </div>

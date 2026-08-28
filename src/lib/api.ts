@@ -365,6 +365,71 @@ export function useDuplicateBudgetItem(projectId: string) {
 export function useReorder(projectId: string) {
   const qc = useQueryClient();
   return useMutation({
+    onMutate: async (data: {
+      items?: { id: string; sortOrder: number }[];
+      categoryOrder?: string[];
+    }) => {
+      // Snapshot both caches for rollback
+      const previousItems = qc.getQueryData<BudgetItem[]>(["budget", projectId]);
+      const previousProjects = qc.getQueryData<Project[]>(["projects"]);
+
+      // Cancel any outgoing refetches so they don't overwrite our optimistic state.
+      await qc.cancelQueries({ queryKey: ["budget", projectId] });
+      await qc.cancelQueries({ queryKey: ["projects"] });
+
+      // Optimistically update item sortOrder in the budget cache so the
+      // UI reorders instantly while the PATCH is in flight.
+      if (data.items && previousItems) {
+        const sortOrderMap = new Map(data.items.map((it) => [it.id, it.sortOrder]));
+        qc.setQueryData<BudgetItem[]>(["budget", projectId], (old) => {
+          if (!old) return old;
+          const updated = old.map((it) =>
+            sortOrderMap.has(it.id)
+              ? { ...it, sortOrder: sortOrderMap.get(it.id)! }
+              : it,
+          );
+          // Re-sort by sortOrder (matching the API's `orderBy:
+          // [sortOrder asc, createdAt asc]`) so the optimistic cache is
+          // visually in the new order before the refetch lands.
+          return [...updated].sort((a, b) => {
+            const sa = a.sortOrder ?? 0;
+            const sb = b.sortOrder ?? 0;
+            if (sa !== sb) return sa - sb;
+            const ta = new Date(a.createdAt).getTime();
+            const tb = new Date(b.createdAt).getTime();
+            return ta - tb;
+          });
+        });
+      }
+
+      // Optimistically update the project's `categoryOrder` JSON field so
+      // categories reorder instantly in the budget table.
+      if (data.categoryOrder && previousProjects) {
+        const newCategoryOrder = JSON.stringify(data.categoryOrder);
+        qc.setQueryData<Project[]>(["projects"], (old) =>
+          old?.map((p) =>
+            p.id === projectId ? { ...p, categoryOrder: newCategoryOrder } : p,
+          ),
+        );
+      }
+
+      return { previousItems, previousProjects };
+    },
+    onError: (_err, _vars, context) => {
+      // Rollback to the snapshots on failure so the UI doesn't show a
+      // reordered state that the server rejected.
+      if (context?.previousItems) {
+        qc.setQueryData(["budget", projectId], context.previousItems);
+      }
+      if (context?.previousProjects) {
+        qc.setQueryData(["projects"], context.previousProjects);
+      }
+    },
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: ["budget", projectId] });
+      qc.invalidateQueries({ queryKey: ["projects"] });
+      qc.invalidateQueries({ queryKey: ["dashboard", projectId] });
+    },
     mutationFn: async (data: {
       items?: { id: string; sortOrder: number }[];
       categoryOrder?: string[];
@@ -376,11 +441,6 @@ export function useReorder(projectId: string) {
       });
       if (!res.ok) throw new Error("Failed to reorder");
       return res.json();
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["budget", projectId] });
-      qc.invalidateQueries({ queryKey: ["projects"] });
-      qc.invalidateQueries({ queryKey: ["dashboard", projectId] });
     },
   });
 }
@@ -903,6 +963,107 @@ export function useDeleteComment(budgetItemId: string) {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["comments", budgetItemId] });
+    },
+  });
+}
+
+// ===== Notes (per-project plain-text notes with author + timestamp) =====
+export type Note = {
+  id: string;
+  projectId: string;
+  author: string;
+  text: string;
+  createdAt: string;
+};
+
+export function useNotes(projectId: string | null) {
+  return useQuery<Note[]>({
+    queryKey: ["notes", projectId],
+    queryFn: async () => {
+      const res = await fetch(`/api/projects/${projectId}/notes`);
+      if (!res.ok) throw new Error("Failed to load notes");
+      return res.json();
+    },
+    enabled: !!projectId,
+    // Always show the latest notes when the tab is opened.
+    staleTime: 0,
+    refetchOnMount: "always",
+  });
+}
+
+export function useCreateNote(projectId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: { author: string; text: string }) => {
+      const res = await fetch(`/api/projects/${projectId}/notes`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) throw new Error("Failed to create note");
+      return res.json();
+    },
+    onMutate: async (data) => {
+      await qc.cancelQueries({ queryKey: ["notes", projectId] });
+      const previousNotes = qc.getQueryData<Note[]>(["notes", projectId]);
+      // Optimistically prepend the new note so it appears at the top of
+      // the list immediately. We use a temp id and the current time so
+      // the UI has something to render while the POST is in flight.
+      const optimistic: Note = {
+        id: `temp-${Date.now()}`,
+        projectId,
+        author: (data.author || "Anonym").trim().slice(0, 100) || "Anonym",
+        text: data.text.trim(),
+        createdAt: new Date().toISOString(),
+      };
+      qc.setQueryData<Note[]>(["notes", projectId], (old) => [
+        optimistic,
+        ...(old ?? []),
+      ]);
+      return { previousNotes, optimisticId: optimistic.id };
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previousNotes) {
+        qc.setQueryData(["notes", projectId], context.previousNotes);
+      }
+    },
+    onSuccess: (created, _vars, context) => {
+      // Replace the temp optimistic note with the real one returned by the API.
+      if (context?.optimisticId) {
+        qc.setQueryData<Note[]>(["notes", projectId], (old) =>
+          old?.map((n) => (n.id === context.optimisticId ? created : n)),
+        );
+      }
+    },
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: ["notes", projectId] });
+    },
+  });
+}
+
+export function useDeleteNote(projectId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    onMutate: async (id: string) => {
+      await qc.cancelQueries({ queryKey: ["notes", projectId] });
+      const previousNotes = qc.getQueryData<Note[]>(["notes", projectId]);
+      qc.setQueryData<Note[]>(["notes", projectId], (old) =>
+        old?.filter((n) => n.id !== id),
+      );
+      return { previousNotes };
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previousNotes) {
+        qc.setQueryData(["notes", projectId], context.previousNotes);
+      }
+    },
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: ["notes", projectId] });
+    },
+    mutationFn: async (id: string) => {
+      const res = await fetch(`/api/notes/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Failed to delete note");
+      return res.json();
     },
   });
 }

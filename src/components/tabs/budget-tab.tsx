@@ -567,7 +567,7 @@ export function BudgetTab({ projectId }: { projectId: string }) {
                     <TableRow className="bg-muted/40 hover:bg-muted/40">
                       <TableHead className="w-12"></TableHead>
                       <TableHead className="min-w-[200px]">Položka</TableHead>
-                      <TableHead className="min-w-[140px]">Prvek / Úkol</TableHead>
+                      <TableHead className="min-w-[140px]">Úkol</TableHead>
                       <TableHead className="w-28">Fáze</TableHead>
                       <TableHead className="w-28 text-right">Plán (Kč)</TableHead>
                       <TableHead className="w-20 text-right">Dny</TableHead>

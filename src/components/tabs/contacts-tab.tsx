@@ -554,7 +554,6 @@ function ContactDetailDialog({
 }) {
   if (!contact) return null;
   const t = contactTypeLabel(contact.type);
-  const totalItems = stat?.budgetItems?.length ?? 0;
   const lastActivity = stat?.lastActivity;
 
   return (
@@ -695,62 +694,6 @@ function ContactDetailDialog({
                     tone="violet"
                   />
                 </div>
-              </section>
-
-              <Separator />
-
-              {/* Položky rozpočtu na kterých kontakt pracoval */}
-              <section className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                    Položky rozpočtu
-                  </h4>
-                  <Badge variant="secondary" className="text-[10px]">
-                    {totalItems} {totalItems === 1 ? "položka" : totalItems >= 2 && totalItems <= 4 ? "položky" : "položek"}
-                  </Badge>
-                </div>
-                {stat && stat.budgetItems.length > 0 ? (
-                  <div className="overflow-hidden rounded-md border">
-                    <table className="w-full text-xs">
-                      <thead className="bg-muted/50">
-                        <tr>
-                          <th className="px-2 py-1.5 text-left font-medium text-muted-foreground">Kategorie / Prvek</th>
-                          <th className="px-2 py-1.5 text-right font-medium text-muted-foreground">Fáze</th>
-                          <th className="px-2 py-1.5 text-right font-medium text-muted-foreground">Kč</th>
-                          <th className="px-2 py-1.5 text-right font-medium text-muted-foreground">Hodiny</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {stat.budgetItems.map((bi) => (
-                          <tr key={bi.budgetItemId} className="border-t">
-                            <td className="px-2 py-1.5">
-                              <div className="font-medium">{bi.category}</div>
-                              {bi.subcategory && (
-                                <div className="text-[10px] text-muted-foreground">{bi.subcategory}</div>
-                              )}
-                              {bi.element && (
-                                <div className="text-[10px] text-muted-foreground">{bi.element}</div>
-                              )}
-                            </td>
-                            <td className="px-2 py-1.5 text-right">
-                              <Badge variant="outline" className="text-[10px]">{bi.phase}</Badge>
-                            </td>
-                            <td className="px-2 py-1.5 text-right tabular-nums font-semibold text-amber-700 dark:text-amber-400">
-                              {bi.amount > 0 ? formatCzk(bi.amount) : "—"}
-                            </td>
-                            <td className="px-2 py-1.5 text-right tabular-nums font-semibold text-violet-700 dark:text-violet-400">
-                              {bi.hours > 0 ? formatNumber(bi.hours, " h") : "—"}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                ) : (
-                  <div className="rounded-md border border-dashed bg-muted/20 px-3 py-6 text-center text-xs text-muted-foreground">
-                    Kontakt zatím nepracoval na žádné položce rozpočtu.
-                  </div>
-                )}
               </section>
             </div>
           </ScrollArea>
