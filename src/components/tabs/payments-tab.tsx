@@ -443,7 +443,8 @@ function InstallmentGroupCard({
   const [submitting, setSubmitting] = useState(false);
 
   const invoiceTotal = parent.invoiceTotal ?? parent.amount;
-  const paidTotal = installments.reduce((s, i) => s + i.amount, 0);
+  // Parent's amount is the first installment; children are additional installments
+  const paidTotal = parent.amount + installments.reduce((s, i) => s + i.amount, 0);
   const remaining = invoiceTotal - paidTotal;
   const percent = invoiceTotal > 0 ? (paidTotal / invoiceTotal) * 100 : 0;
   const t = paymentTypeLabel(parent.type);
@@ -535,6 +536,49 @@ function InstallmentGroupCard({
                 </TableRow>
               </TableHeader>
               <TableBody>
+                {/* First installment = parent payment (has its own amount + invoiceTotal) */}
+                <TableRow
+                  key={parent.id}
+                  className="group cursor-pointer hover:bg-muted/30"
+                  onClick={() => onEditPayment(parent)}
+                >
+                  <TableCell className="whitespace-nowrap text-xs text-muted-foreground">
+                    <span className="mr-1.5 inline-flex h-4 w-4 items-center justify-center rounded-full bg-emerald-100 text-[9px] font-bold text-emerald-700">
+                      1
+                    </span>
+                    {formatDate(parent.date)}
+                  </TableCell>
+                  <TableCell className="text-xs">
+                    {parent.description || "1. splátka"}
+                  </TableCell>
+                  <TableCell className="text-xs">
+                    {parent.contact?.name || "—"}
+                  </TableCell>
+                  <TableCell className="text-right text-sm font-semibold text-emerald-600">
+                    {formatCzk(parent.amount)}
+                  </TableCell>
+                  <TableCell onClick={(e) => e.stopPropagation()}>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-7 w-7 opacity-0 group-hover:opacity-100">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => onEditPayment(parent)}>
+                          <Pencil className="mr-2 h-3.5 w-3.5" /> Upravit
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          className="text-destructive focus:text-destructive"
+                          onClick={() => setConfirmDelete(parent.id)}
+                        >
+                          <Trash2 className="mr-2 h-3.5 w-3.5" /> Smazat
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+                {/* Additional installments (children) */}
                 {installments.map((inst, i) => (
                   <TableRow
                     key={inst.id}
@@ -543,7 +587,7 @@ function InstallmentGroupCard({
                   >
                     <TableCell className="whitespace-nowrap text-xs text-muted-foreground">
                       <span className="mr-1.5 inline-flex h-4 w-4 items-center justify-center rounded-full bg-amber-100 text-[9px] font-bold text-amber-700">
-                        {i + 1}
+                        {i + 2}
                       </span>
                       {formatDate(inst.date)}
                     </TableCell>
@@ -875,7 +919,9 @@ function PaymentDialogInner({
       return;
     }
     const amt = Number(amount.replace(",", "."));
-    if (!amt || amt <= 0) {
+    // Allow amount=0 only when editing an installment parent (has invoiceTotal and no installmentOf)
+    const isInstallmentParent = isEdit && payment?.invoiceTotal != null && payment?.installmentOf == null;
+    if ((!amt || amt <= 0) && !isInstallmentParent) {
       toast.error("Zadejte platnou částku");
       return;
     }
@@ -892,6 +938,8 @@ function PaymentDialogInner({
           invoiceNumber: invoiceNumber || null,
           description: description || null,
           vatRate: vatRate || null,
+          // Preserve invoiceTotal if this is an installment parent
+          ...(payment.invoiceTotal != null ? { invoiceTotal: payment.invoiceTotal } : {}),
         };
         await updatePayment.mutateAsync({ id: payment.id, data: payload });
         if (markCompleted) {
@@ -916,37 +964,21 @@ function PaymentDialogInner({
           toast.error("Zadejte platnou celkovou částku faktury");
           return;
         }
-        // 1. Create parent invoice with amount=0 (just the expected total)
-        const parentRes = await fetch(`/api/projects/${projectId}/payments`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            budgetItemId,
-            contactId: contactId || null,
-            amount: 0,
-            invoiceTotal: inv,
-            installmentOf: null,
-            date,
-            type,
-            vendor,
-            invoiceNumber,
-            description,
-          }),
+        // Create ONE payment that IS the first installment + has invoiceTotal
+        // Additional installments can be added later with installmentOf = this payment
+        await createPayment.mutateAsync({
+          budgetItemId,
+          contactId: contactId || null,
+          amount: amt, // first installment amount (not 0!)
+          invoiceTotal: inv, // full invoice amount
+          installmentOf: null, // this IS the parent
+          vatRate: vatRate || null,
+          date,
+          type,
+          vendor,
+          invoiceNumber,
+          description: description || "1. splátka",
         });
-        if (!parentRes.ok) throw new Error("Failed to create invoice");
-        const parent = await parentRes.json();
-        // 2. Create the first installment as a child
-        if (amt > 0) {
-          await createPayment.mutateAsync({
-            budgetItemId,
-            contactId: contactId || null,
-            amount: amt,
-            installmentOf: parent.id,
-            date,
-            type,
-            description: "1. splátka",
-          });
-        }
         if (markCompleted) {
           try {
             await updateBudgetItem.mutateAsync({ id: budgetItemId, data: { completed: true } });
