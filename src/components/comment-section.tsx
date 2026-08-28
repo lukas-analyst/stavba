@@ -51,7 +51,7 @@ export function CommentSection({ budgetItemId }: { budgetItemId: string }) {
           ))}
         </div>
       ) : comments && comments.length > 0 ? (
-        <div className="max-h-48 space-y-2 overflow-y-auto scrollbar-thin pr-1">
+        <div className="scrollbar-none max-h-48 space-y-2 overflow-y-auto pr-1">
           {comments.map((c) => (
             <div
               key={c.id}

@@ -681,7 +681,11 @@ export function useDeleteContact(projectId: string) {
       if (!res.ok) throw new Error("Failed to delete contact");
       return res.json();
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["contacts", projectId] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["contacts", projectId] });
+      qc.invalidateQueries({ queryKey: ["contactStats", projectId] });
+      qc.invalidateQueries({ queryKey: ["dashboard", projectId] });
+    },
   });
 }
 
@@ -857,6 +861,11 @@ export function useComments(budgetItemId: string | null) {
       return res.json();
     },
     enabled: !!budgetItemId,
+    // Comments are conversation-like and users expect to always see the
+    // latest ones when they open a dialog. Force a refetch on every mount
+    // and treat the data as immediately stale.
+    staleTime: 0,
+    refetchOnMount: "always",
   });
 }
 
@@ -873,6 +882,9 @@ export function useCreateComment(budgetItemId: string) {
       return res.json();
     },
     onSuccess: () => {
+      // Remove any cached data first, then invalidate so the query
+      // refetches from the server even if staleTime was non-zero.
+      qc.removeQueries({ queryKey: ["comments", budgetItemId] });
       qc.invalidateQueries({ queryKey: ["comments", budgetItemId] });
     },
   });

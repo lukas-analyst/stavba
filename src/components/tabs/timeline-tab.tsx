@@ -207,7 +207,21 @@ export function TimelineTab({ projectId }: { projectId: string }) {
   const unitW = UNIT_WIDTH[zoom];
 
   if (isLoading) {
-    return <Skeleton className="h-96" />;
+    return (
+      <div className="space-y-4">
+        {/* Controls skeleton */}
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <Skeleton className="h-8 w-72" />
+          <div className="flex items-center gap-2">
+            <Skeleton className="h-8 w-24" />
+            <Skeleton className="h-8 w-24" />
+            <Skeleton className="h-8 w-24" />
+          </div>
+        </div>
+        {/* Gantt skeleton */}
+        <Skeleton className="h-96 w-full" />
+      </div>
+    );
   }
 
   if (items.length === 0) {

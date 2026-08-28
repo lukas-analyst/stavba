@@ -158,7 +158,7 @@ function HomeContent() {
       {!desktopCollapsed && (
         <button
           onClick={() => setDesktopCollapsed(true)}
-          className="fixed left-[319px] top-1/2 z-30 hidden h-6 w-5 items-center justify-center rounded-r-md border border-l-0 bg-background shadow-sm hover:bg-muted md:flex"
+          className="fixed left-[319px] top-1/2 z-50 hidden h-6 w-5 items-center justify-center rounded-r-md border border-l-0 bg-background shadow-sm hover:bg-muted md:flex"
           aria-label="Skrýt panel"
         >
           <PanelLeftClose className="h-3.5 w-3.5" />
@@ -167,8 +167,9 @@ function HomeContent() {
       {desktopCollapsed && (
         <button
           onClick={() => setDesktopCollapsed(false)}
-          className="fixed left-3 top-3 z-30 hidden h-9 w-9 items-center justify-center rounded-lg border bg-background shadow-sm hover:bg-muted md:flex"
+          className="fixed left-3 top-4 z-50 hidden h-10 w-10 items-center justify-center rounded-lg border bg-background shadow-md hover:bg-muted md:flex"
           aria-label="Zobrazit panel"
+          title="Zobrazit panel"
         >
           <PanelLeft className="h-4 w-4" />
         </button>
@@ -203,7 +204,7 @@ function HomeContent() {
         </div>
       </div>
 
-      <main className="flex-1 overflow-y-auto">
+      <main className={cn("flex-1 overflow-y-auto", desktopCollapsed && "md:pl-14")}>
         {/* Mobile top bar with hamburger + search */}
         <div className="sticky top-0 z-20 flex items-center gap-2 border-b bg-background/95 px-3 py-2 backdrop-blur md:hidden">
           <button

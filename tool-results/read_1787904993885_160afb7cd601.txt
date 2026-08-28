@@ -1,0 +1,1014 @@
+     1→"use client";
+     2→
+     3→import { useState } from "react";
+     4→import {
+     5→  useContacts,
+     6→  useCreateContact,
+     7→  useUpdateContact,
+     8→  useDeleteContact,
+     9→  useContactStats,
+    10→  useExportCsv,
+    11→  type Contact,
+    12→  type ContactStat,
+    13→} from "@/lib/api";
+    14→import { Button } from "@/components/ui/button";
+    15→import { Input } from "@/components/ui/input";
+    16→import { Label } from "@/components/ui/label";
+    17→import { Textarea } from "@/components/ui/textarea";
+    18→import { Badge } from "@/components/ui/badge";
+    19→import { Skeleton } from "@/components/ui/skeleton";
+    20→import { ScrollArea } from "@/components/ui/scroll-area";
+    21→import { Separator } from "@/components/ui/separator";
+    22→import {
+    23→  Card,
+    24→  CardContent,
+    25→  CardFooter,
+    26→  CardHeader,
+    27→  CardTitle,
+    28→} from "@/components/ui/card";
+    29→import {
+    30→  Dialog,
+    31→  DialogContent,
+    32→  DialogDescription,
+    33→  DialogFooter,
+    34→  DialogHeader,
+    35→  DialogTitle,
+    36→} from "@/components/ui/dialog";
+    37→import {
+    38→  Select,
+    39→  SelectContent,
+    40→  SelectItem,
+    41→  SelectTrigger,
+    42→  SelectValue,
+    43→} from "@/components/ui/select";
+    44→import {
+    45→  DropdownMenu,
+    46→  DropdownMenuContent,
+    47→  DropdownMenuItem,
+    48→  DropdownMenuTrigger,
+    49→} from "@/components/ui/dropdown-menu";
+    50→import {
+    51→  Plus,
+    52→  Pencil,
+    53→  Trash2,
+    54→  MoreHorizontal,
+    55→  Phone,
+    56→  Mail,
+    57→  Building2,
+    58→  Globe,
+    59→  Star,
+    60→  Users,
+    61→  Loader2,
+    62→  TrendingUp,
+    63→  Clock,
+    64→  Download,
+    65→  ExternalLink,
+    66→  Wallet,
+    67→  Clock3,
+    68→  PackageCheck,
+    69→  CalendarClock,
+    70→} from "lucide-react";
+    71→import {
+    72→  CONTACT_TYPES,
+    73→  contactTypeLabel,
+    74→  formatCzk,
+    75→  formatNumber,
+    76→  formatDate,
+    77→} from "@/lib/format";
+    78→import { cn } from "@/lib/utils";
+    79→import { toast } from "sonner";
+    80→import { EmptyStateBox } from "@/components/empty-state-box";
+    81→
+    82→export function ContactsTab({ projectId }: { projectId: string }) {
+    83→  const { data: contacts, isLoading } = useContacts(projectId);
+    84→  const { data: statsData } = useContactStats(projectId);
+    85→  const createContact = useCreateContact(projectId);
+    86→  const exportCsv = useExportCsv(projectId);
+    87→  const [addOpen, setAddOpen] = useState(false);
+    88→  const [editContact, setEditContact] = useState<Contact | null>(null);
+    89→  const [detailContact, setDetailContact] = useState<Contact | null>(null);
+    90→
+    91→  // Build a lookup of contactId → stat for quick access in cards
+    92→  const statsByContactId = new Map<string, ContactStat>();
+    93→  if (statsData) {
+    94→    for (const s of statsData.contactStats) {
+    95→      statsByContactId.set(s.contactId, s);
+    96→    }
+    97→  }
+    98→
+    99→  return (
+   100→    <div className="space-y-4">
+   101→      <div className="flex items-center justify-between">
+   102→        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+   103→          <Users className="h-4 w-4" />
+   104→          {contacts?.length ?? 0} kontaktů v projektu
+   105→        </div>
+   106→        <div className="flex items-center gap-2">
+   107→          <Button
+   108→            variant="outline"
+   109→            size="sm"
+   110→            disabled={exportCsv.isPending || (contacts?.length ?? 0) === 0}
+   111→            onClick={async () => {
+   112→              try {
+   113→                await exportCsv.mutateAsync("contacts");
+   114→                toast.success("Kontakty exportovány do CSV");
+   115→              } catch {
+   116→                toast.error("Export selhal");
+   117→              }
+   118→            }}
+   119→            title="Exportovat do CSV (Excel/Google Sheets)"
+   120→          >
+   121→            <Download className="mr-1 h-4 w-4" /> CSV
+   122→          </Button>
+   123→          <Button size="sm" onClick={() => setAddOpen(true)}>
+   124→            <Plus className="mr-1 h-4 w-4" /> Přidat kontakt
+   125→          </Button>
+   126→        </div>
+   127→      </div>
+   128→
+   129→      {/* Leaderboard: top contributors */}
+   130→      {statsData && statsData.contactStats.length > 0 && (
+   131→        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+   132→          <Card className="border-amber-200/60 dark:border-amber-900/40">
+   133→            <CardHeader className="pb-2">
+   134→              <div className="flex items-center gap-2">
+   135→                <TrendingUp className="h-4 w-4 text-amber-600" />
+   136→                <CardTitle className="text-sm">Největší náklady (celkem zaplaceno)</CardTitle>
+   137→              </div>
+   138→            </CardHeader>
+   139→            <CardContent className="space-y-1.5">
+   140→              {statsData.contactStats
+   141→                .filter((s) => s.totalPaid > 0)
+   142→                .slice(0, 4)
+   143→                .map((s, i) => {
+   144→                  const t = contactTypeLabel(s.type);
+   145→                  return (
+   146→                    <div key={s.contactId} className="flex items-center gap-2 text-xs">
+   147→                      <span className={cn(
+   148→                        "flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold",
+   149→                        i === 0 ? "bg-amber-100 text-amber-700" : "bg-muted text-muted-foreground",
+   150→                      )}>
+   151→                        {i + 1}
+   152→                      </span>
+   153→                      <span className="text-base">{t.emoji}</span>
+   154→                      <span className="flex-1 truncate font-medium">{s.name}</span>
+   155→                      <span className="font-bold text-amber-600 tabular-nums">
+   156→                        {formatCzk(s.totalPaid)}
+   157→                      </span>
+   158→                    </div>
+   159→                  );
+   160→                })}
+   161→              {statsData.contactStats.filter((s) => s.totalPaid > 0).length === 0 && (
+   162→                <p className="text-xs text-muted-foreground">Zatím žádné platby přiřazené kontaktům</p>
+   163→              )}
+   164→            </CardContent>
+   165→          </Card>
+   166→          <Card className="border-violet-200/60 dark:border-violet-900/40">
+   167→            <CardHeader className="pb-2">
+   168→              <div className="flex items-center gap-2">
+   169→                <Clock className="h-4 w-4 text-violet-600" />
+   170→                <CardTitle className="text-sm">Nejvíce odpracováno (hodiny)</CardTitle>
+   171→              </div>
+   172→            </CardHeader>
+   173→            <CardContent className="space-y-1.5">
+   174→              {statsData.workerStats
+   175→                .filter((w) => w.hours > 0)
+   176→                .slice(0, 4)
+   177→                .map((w, i) => {
+   178→                  const t = contactTypeLabel(w.type);
+   179→                  return (
+   180→                    <div key={w.name} className="flex items-center gap-2 text-xs">
+   181→                      <span className={cn(
+   182→                        "flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold",
+   183→                        i === 0 ? "bg-violet-100 text-violet-700" : "bg-muted text-muted-foreground",
+   184→                      )}>
+   185→                        {i + 1}
+   186→                      </span>
+   187→                      <span className="text-base">{t.emoji}</span>
+   188→                      <span className="flex-1 truncate font-medium">{w.name}</span>
+   189→                      <span className="font-bold text-violet-600 tabular-nums">
+   190→                        {formatNumber(w.hours, " h")}
+   191→                      </span>
+   192→                    </div>
+   193→                  );
+   194→                })}
+   195→              {statsData.workerStats.filter((w) => w.hours > 0).length === 0 && (
+   196→                <p className="text-xs text-muted-foreground">Zatím žádné časové záznamy</p>
+   197→              )}
+   198→            </CardContent>
+   199→          </Card>
+   200→        </div>
+   201→      )}
+   202→
+   203→      {isLoading ? (
+   204→        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
+   205→          {[1, 2, 3].map((i) => (
+   206→            <Skeleton key={i} className="h-40" />
+   207→          ))}
+   208→        </div>
+   209→      ) : contacts?.length === 0 ? (
+   210→        <EmptyStateBox
+   211→          icon={Users}
+   212→          title="Zatím žádné kontakty"
+   213→          description="Přidejte firmy, řemeslníky, dodavatele a architekty. Můžete jim přiřazovat platby a časové záznamy."
+   214→          action={
+   215→            <Button size="sm" onClick={() => setAddOpen(true)}>
+   216→              <Plus className="mr-1 h-4 w-4" /> Přidat první kontakt
+   217→            </Button>
+   218→          }
+   219→        />
+   220→      ) : (
+   221→        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
+   222→          {contacts?.map((c) => (
+   223→            <ContactCard
+   224→              key={c.id}
+   225→              contact={c}
+   226→              projectId={projectId}
+   227→              stat={statsByContactId.get(c.id)}
+   228→              onEdit={() => setEditContact(c)}
+   229→              onOpenDetail={() => setDetailContact(c)}
+   230→            />
+   231→          ))}
+   232→        </div>
+   233→      )}
+   234→
+   235→      <ContactDialog
+   236→        open={addOpen}
+   237→        onOpenChange={setAddOpen}
+   238→        projectId={projectId}
+   239→        createContact={createContact}
+   240→      />
+   241→      <ContactDialog
+   242→        open={!!editContact}
+   243→        onOpenChange={(o) => !o && setEditContact(null)}
+   244→        projectId={projectId}
+   245→        contact={editContact}
+   246→      />
+   247→      <ContactDetailDialog
+   248→        contact={detailContact}
+   249→        stat={detailContact ? statsByContactId.get(detailContact.id) ?? null : null}
+   250→        open={!!detailContact}
+   251→        onOpenChange={(o) => !o && setDetailContact(null)}
+   252→        onEdit={() => {
+   253→          if (detailContact) {
+   254→            setEditContact(detailContact);
+   255→            setDetailContact(null);
+   256→          }
+   257→        }}
+   258→      />
+   259→    </div>
+   260→  );
+   261→}
+   262→
+   263→/**
+   264→ * Normalize a website input into a full URL.
+   265→ * Accepts "www.firma.cz", "firma.cz", or "https://firma.cz".
+   266→ */
+   267→function normalizeWebsite(raw: string): string | null {
+   268→  const trimmed = raw.trim();
+   269→  if (!trimmed) return null;
+   270→  if (/^https?:\/\//i.test(trimmed)) return trimmed;
+   271→  return `https://${trimmed}`;
+   272→}
+   273→
+   274→function ContactCard({
+   275→  contact,
+   276→  projectId,
+   277→  stat,
+   278→  onEdit,
+   279→  onOpenDetail,
+   280→}: {
+   281→  contact: Contact;
+   282→  projectId: string;
+   283→  stat?: ContactStat;
+   284→  onEdit: () => void;
+   285→  onOpenDetail: () => void;
+   286→}) {
+   287→  const deleteContact = useDeleteContact(projectId);
+   288→  const [confirm, setConfirm] = useState(false);
+   289→  const t = contactTypeLabel(contact.type);
+   290→
+   291→  const hasStats =
+   292→    stat && (stat.totalPaid > 0 || stat.totalHours > 0 || stat.paymentCount > 0 || stat.timeEntryCount > 0);
+   293→
+   294→  return (
+   295→    <Card
+   296→      className="group relative cursor-pointer overflow-hidden transition-shadow hover:shadow-md"
+   297→      onClick={onOpenDetail}
+   298→    >
+   299→      <CardHeader className="pb-3">
+   300→        <div className="flex items-start justify-between">
+   301→          <div className="flex items-start gap-2">
+   302→            <div
+   303→              className={cn(
+   304→                "flex h-10 w-10 items-center justify-center rounded-lg text-lg",
+   305→                "bg-muted",
+   306→              )}
+   307→            >
+   308→              {t.emoji}
+   309→            </div>
+   310→            <div className="min-w-0">
+   311→              <h3 className="truncate text-sm font-bold">{contact.name}</h3>
+   312→              <Badge variant="outline" className="mt-0.5 text-[10px]">
+   313→                {t.label}
+   314→              </Badge>
+   315→            </div>
+   316→          </div>
+   317→          <DropdownMenu>
+   318→            <DropdownMenuTrigger asChild>
+   319→              <Button
+   320→                variant="ghost"
+   321→                size="icon"
+   322→                className="h-7 w-7 opacity-0 group-hover:opacity-100"
+   323→                onClick={(e) => e.stopPropagation()}
+   324→              >
+   325→                <MoreHorizontal className="h-4 w-4" />
+   326→              </Button>
+   327→            </DropdownMenuTrigger>
+   328→            <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+   329→              <DropdownMenuItem
+   330→                onClick={(e) => {
+   331→                  e.stopPropagation();
+   332→                  onEdit();
+   333→                }}
+   334→              >
+   335→                <Pencil className="mr-2 h-3.5 w-3.5" /> Upravit
+   336→              </DropdownMenuItem>
+   337→              <DropdownMenuItem
+   338→                className="text-destructive focus:text-destructive"
+   339→                onClick={(e) => {
+   340→                  e.stopPropagation();
+   341→                  setConfirm(true);
+   342→                }}
+   343→              >
+   344→                <Trash2 className="mr-2 h-3.5 w-3.5" /> Smazat
+   345→              </DropdownMenuItem>
+   346→            </DropdownMenuContent>
+   347→          </DropdownMenu>
+   348→        </div>
+   349→      </CardHeader>
+   350→      <CardContent className="space-y-2">
+   351→        {contact.role && (
+   352→          <p className="text-xs font-medium text-muted-foreground">{contact.role}</p>
+   353→        )}
+   354→        {contact.company && (
+   355→          <div className="flex items-center gap-1.5 text-xs">
+   356→            <Building2 className="h-3 w-3 text-muted-foreground" />
+   357→            <span className="truncate">{contact.company}</span>
+   358→          </div>
+   359→        )}
+   360→        {contact.phone && (
+   361→          <a
+   362→            href={`tel:${contact.phone}`}
+   363→            onClick={(e) => e.stopPropagation()}
+   364→            className="flex items-center gap-1.5 text-xs hover:text-primary"
+   365→          >
+   366→            <Phone className="h-3 w-3 text-muted-foreground" />
+   367→            <span>{contact.phone}</span>
+   368→          </a>
+   369→        )}
+   370→        {contact.email && (
+   371→          <a
+   372→            href={`mailto:${contact.email}`}
+   373→            onClick={(e) => e.stopPropagation()}
+   374→            className="flex items-center gap-1.5 text-xs hover:text-primary"
+   375→          >
+   376→            <Mail className="h-3 w-3 text-muted-foreground" />
+   377→            <span className="truncate">{contact.email}</span>
+   378→          </a>
+   379→        )}
+   380→        {contact.website && (
+   381→          <a
+   382→            href={normalizeWebsite(contact.website) ?? "#"}
+   383→            target="_blank"
+   384→            rel="noopener noreferrer"
+   385→            onClick={(e) => e.stopPropagation()}
+   386→            className="flex items-center gap-1.5 text-xs hover:text-primary"
+   387→          >
+   388→            <Globe className="h-3 w-3 text-muted-foreground" />
+   389→            <span className="truncate">{contact.website}</span>
+   390→            <ExternalLink className="h-3 w-3 shrink-0 text-muted-foreground/60" />
+   391→          </a>
+   392→        )}
+   393→        {contact.notes && (
+   394→          <p className="border-t pt-2 text-[11px] text-muted-foreground">{contact.notes}</p>
+   395→        )}
+   396→      </CardContent>
+   397→      {(hasStats || contact.rating) && (
+   398→        <CardFooter className="flex flex-col items-stretch gap-2 pt-0">
+   399→          {hasStats && (
+   400→            <div className="grid grid-cols-2 gap-2 border-t pt-2">
+   401→              <StatPill
+   402→                icon={<Wallet className="h-3 w-3" />}
+   403→                label="Zaplaceno"
+   404→                value={stat!.totalPaid > 0 ? formatCzk(stat!.totalPaid) : "—"}
+   405→                tone="amber"
+   406→              />
+   407→              <StatPill
+   408→                icon={<Clock3 className="h-3 w-3" />}
+   409→                label="Hodiny"
+   410→                value={stat!.totalHours > 0 ? formatNumber(stat!.totalHours, " h") : "—"}
+   411→                tone="violet"
+   412→              />
+   413→              <StatPill
+   414→                icon={<PackageCheck className="h-3 w-3" />}
+   415→                label="Plateb"
+   416→                value={stat!.paymentCount > 0 ? String(stat!.paymentCount) : "—"}
+   417→                tone="amber"
+   418→              />
+   419→              <StatPill
+   420→                icon={<Clock3 className="h-3 w-3" />}
+   421→                label="Časů"
+   422→                value={stat!.timeEntryCount > 0 ? String(stat!.timeEntryCount) : "—"}
+   423→                tone="violet"
+   424→              />
+   425→            </div>
+   426→          )}
+   427→          {!hasStats && contact.rating && <div className="border-t" />}
+   428→          {contact.rating && (
+   429→            <div className="flex items-center justify-end gap-0.5">
+   430→              {[1, 2, 3, 4, 5].map((s) => (
+   431→                <Star
+   432→                  key={s}
+   433→                  className={cn(
+   434→                    "h-3 w-3",
+   435→                    s <= contact.rating!
+   436→                      ? "fill-amber-400 text-amber-400"
+   437→                      : "text-muted-foreground/30",
+   438→                  )}
+   439→                />
+   440→              ))}
+   441→            </div>
+   442→          )}
+   443→        </CardFooter>
+   444→      )}
+   445→
+   446→      <Dialog open={confirm} onOpenChange={setConfirm}>
+   447→        <DialogContent className="max-w-sm">
+   448→          <DialogHeader>
+   449→            <DialogTitle>Smazat kontakt?</DialogTitle>
+   450→            <DialogDescription>
+   451→              Opravdu chcete smazat kontakt <strong>{contact.name}</strong>?
+   452→            </DialogDescription>
+   453→          </DialogHeader>
+   454→          <DialogFooter>
+   455→            <Button variant="outline" onClick={() => setConfirm(false)}>
+   456→              Zrušit
+   457→            </Button>
+   458→            <Button
+   459→              variant="destructive"
+   460→              disabled={deleteContact.isPending}
+   461→              onClick={async () => {
+   462→                try {
+   463→                  await deleteContact.mutateAsync(contact.id);
+   464→                  toast.success("Kontakt smazán");
+   465→                  setConfirm(false);
+   466→                } catch {
+   467→                  toast.error("Nepodařilo se smazat");
+   468→                }
+   469→              }}
+   470→            >
+   471→              {deleteContact.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+   472→              Smazat
+   473→            </Button>
+   474→          </DialogFooter>
+   475→        </DialogContent>
+   476→      </Dialog>
+   477→    </Card>
+   478→  );
+   479→}
+   480→
+   481→function StatPill({
+   482→  icon,
+   483→  label,
+   484→  value,
+   485→  tone,
+   486→}: {
+   487→  icon: React.ReactNode;
+   488→  label: string;
+   489→  value: string;
+   490→  tone: "amber" | "violet";
+   491→}) {
+   492→  const toneClasses =
+   493→    tone === "amber"
+   494→      ? "bg-amber-50 text-amber-700 dark:bg-amber-950/30 dark:text-amber-300"
+   495→      : "bg-violet-50 text-violet-700 dark:bg-violet-950/30 dark:text-violet-300";
+   496→  return (
+   497→    <div className={cn("flex items-center gap-1.5 rounded-md px-2 py-1 text-[11px]", toneClasses)}>
+   498→      {icon}
+   499→      <span className="text-muted-foreground/80">{label}:</span>
+   500→      <span className="ml-auto font-bold tabular-nums">{value}</span>
+   501→    </div>
+   502→  );
+   503→}
+   504→
+   505→function ContactDetailDialog({
+   506→  contact,
+   507→  stat,
+   508→  open,
+   509→  onOpenChange,
+   510→  onEdit,
+   511→}: {
+   512→  contact: Contact | null;
+   513→  stat: ContactStat | null;
+   514→  open: boolean;
+   515→  onOpenChange: (open: boolean) => void;
+   516→  onEdit: () => void;
+   517→}) {
+   518→  if (!contact) return null;
+   519→  const t = contactTypeLabel(contact.type);
+   520→  const totalItems = stat?.budgetItems?.length ?? 0;
+   521→  const lastActivity = stat?.lastActivity;
+   522→
+   523→  return (
+   524→    <Dialog open={open} onOpenChange={onOpenChange}>
+   525→      <DialogContent className="max-h-[90vh] max-w-2xl overflow-hidden p-0">
+   526→        <div className="flex max-h-[90vh] flex-col">
+   527→          {/* Header */}
+   528→          <DialogHeader className="border-b px-6 py-4">
+   529→            <div className="flex items-start gap-3">
+   530→              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-muted text-xl">
+   531→                {t.emoji}
+   532→              </div>
+   533→              <div className="min-w-0 flex-1">
+   534→                <DialogTitle className="truncate text-lg">{contact.name}</DialogTitle>
+   535→                <div className="mt-1 flex flex-wrap items-center gap-1.5">
+   536→                  <Badge variant="outline" className="text-[10px]">{t.label}</Badge>
+   537→                  {contact.role && (
+   538→                    <span className="text-xs text-muted-foreground">{contact.role}</span>
+   539→                  )}
+   540→                  {contact.rating && (
+   541→                    <div className="flex items-center gap-0.5">
+   542→                      {[1, 2, 3, 4, 5].map((s) => (
+   543→                        <Star
+   544→                          key={s}
+   545→                          className={cn(
+   546→                            "h-3 w-3",
+   547→                            s <= contact.rating!
+   548→                              ? "fill-amber-400 text-amber-400"
+   549→                              : "text-muted-foreground/30",
+   550→                          )}
+   551→                        />
+   552→                      ))}
+   553→                    </div>
+   554→                  )}
+   555→                </div>
+   556→              </div>
+   557→              <Button variant="outline" size="sm" onClick={onEdit}>
+   558→                <Pencil className="mr-1.5 h-3.5 w-3.5" /> Upravit
+   559→              </Button>
+   560→            </div>
+   561→          </DialogHeader>
+   562→
+   563→          <ScrollArea className="flex-1">
+   564→            <div className="space-y-5 px-6 py-5">
+   565→              {/* Kontakt info */}
+   566→              <section className="space-y-2">
+   567→                <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+   568→                  Kontakt
+   569→                </h4>
+   570→                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+   571→                  {contact.company && (
+   572→                    <DetailRow icon={<Building2 className="h-3.5 w-3.5" />} label="Firma" value={contact.company} />
+   573→                  )}
+   574→                  {contact.phone && (
+   575→                    <DetailRow
+   576→                      icon={<Phone className="h-3.5 w-3.5" />}
+   577→                      label="Telefon"
+   578→                      value={contact.phone}
+   579→                      href={`tel:${contact.phone}`}
+   580→                    />
+   581→                  )}
+   582→                  {contact.email && (
+   583→                    <DetailRow
+   584→                      icon={<Mail className="h-3.5 w-3.5" />}
+   585→                      label="E-mail"
+   586→                      value={contact.email}
+   587→                      href={`mailto:${contact.email}`}
+   588→                    />
+   589→                  )}
+   590→                  {contact.website && (
+   591→                    <DetailRow
+   592→                      icon={<Globe className="h-3.5 w-3.5" />}
+   593→                      label="Web"
+   594→                      value={contact.website}
+   595→                      href={normalizeWebsite(contact.website) ?? "#"}
+   596→                      external
+   597→                    />
+   598→                  )}
+   599→                  {lastActivity && (
+   600→                    <DetailRow
+   601→                      icon={<CalendarClock className="h-3.5 w-3.5" />}
+   602→                      label="Poslední aktivita"
+   603→                      value={formatDate(lastActivity)}
+   604→                    />
+   605→                  )}
+   606→                </div>
+   607→                {contact.notes && (
+   608→                  <div className="rounded-md border bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
+   609→                    {contact.notes}
+   610→                  </div>
+   611→                )}
+   612→              </section>
+   613→
+   614→              <Separator />
+   615→
+   616→              {/* Souhrn času a financí */}
+   617→              <section className="space-y-2">
+   618→                <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+   619→                  Souhrn času a financí
+   620→                </h4>
+   621→                <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+   622→                  <DetailStat
+   623→                    icon={<Wallet className="h-4 w-4" />}
+   624→                    label="Celkem zaplaceno"
+   625→                    value={stat ? formatCzk(stat.totalPaid) : "—"}
+   626→                    tone="amber"
+   627→                  />
+   628→                  <DetailStat
+   629→                    icon={<Clock3 className="h-4 w-4" />}
+   630→                    label="Celkem hodin"
+   631→                    value={stat ? formatNumber(stat.totalHours, " h") : "—"}
+   632→                    tone="violet"
+   633→                  />
+   634→                  <DetailStat
+   635→                    icon={<PackageCheck className="h-4 w-4" />}
+   636→                    label="Počet plateb"
+   637→                    value={stat ? String(stat.paymentCount) : "—"}
+   638→                    tone="amber"
+   639→                  />
+   640→                  <DetailStat
+   641→                    icon={<Clock3 className="h-4 w-4" />}
+   642→                    label="Časových záznamů"
+   643→                    value={stat ? String(stat.timeEntryCount) : "—"}
+   644→                    tone="violet"
+   645→                  />
+   646→                </div>
+   647→              </section>
+   648→
+   649→              <Separator />
+   650→
+   651→              {/* Položky rozpočtu na kterých kontakt pracoval */}
+   652→              <section className="space-y-2">
+   653→                <div className="flex items-center justify-between">
+   654→                  <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+   655→                    Položky rozpočtu
+   656→                  </h4>
+   657→                  <Badge variant="secondary" className="text-[10px]">
+   658→                    {totalItems} {totalItems === 1 ? "položka" : totalItems >= 2 && totalItems <= 4 ? "položky" : "položek"}
+   659→                  </Badge>
+   660→                </div>
+   661→                {stat && stat.budgetItems.length > 0 ? (
+   662→                  <div className="overflow-hidden rounded-md border">
+   663→                    <table className="w-full text-xs">
+   664→                      <thead className="bg-muted/50">
+   665→                        <tr>
+   666→                          <th className="px-2 py-1.5 text-left font-medium text-muted-foreground">Kategorie / Prvek</th>
+   667→                          <th className="px-2 py-1.5 text-right font-medium text-muted-foreground">Fáze</th>
+   668→                          <th className="px-2 py-1.5 text-right font-medium text-muted-foreground">Kč</th>
+   669→                          <th className="px-2 py-1.5 text-right font-medium text-muted-foreground">Hodiny</th>
+   670→                        </tr>
+   671→                      </thead>
+   672→                      <tbody>
+   673→                        {stat.budgetItems.map((bi) => (
+   674→                          <tr key={bi.budgetItemId} className="border-t">
+   675→                            <td className="px-2 py-1.5">
+   676→                              <div className="font-medium">{bi.category}</div>
+   677→                              {bi.subcategory && (
+   678→                                <div className="text-[10px] text-muted-foreground">{bi.subcategory}</div>
+   679→                              )}
+   680→                              {bi.element && (
+   681→                                <div className="text-[10px] text-muted-foreground">{bi.element}</div>
+   682→                              )}
+   683→                            </td>
+   684→                            <td className="px-2 py-1.5 text-right">
+   685→                              <Badge variant="outline" className="text-[10px]">{bi.phase}</Badge>
+   686→                            </td>
+   687→                            <td className="px-2 py-1.5 text-right tabular-nums font-semibold text-amber-700 dark:text-amber-400">
+   688→                              {bi.amount > 0 ? formatCzk(bi.amount) : "—"}
+   689→                            </td>
+   690→                            <td className="px-2 py-1.5 text-right tabular-nums font-semibold text-violet-700 dark:text-violet-400">
+   691→                              {bi.hours > 0 ? formatNumber(bi.hours, " h") : "—"}
+   692→                            </td>
+   693→                          </tr>
+   694→                        ))}
+   695→                      </tbody>
+   696→                    </table>
+   697→                  </div>
+   698→                ) : (
+   699→                  <div className="rounded-md border border-dashed bg-muted/20 px-3 py-6 text-center text-xs text-muted-foreground">
+   700→                    Kontakt zatím nepracoval na žádné položce rozpočtu.
+   701→                  </div>
+   702→                )}
+   703→              </section>
+   704→            </div>
+   705→          </ScrollArea>
+   706→
+   707→          <DialogFooter className="border-t px-6 py-3">
+   708→            <Button variant="outline" onClick={() => onOpenChange(false)}>
+   709→              Zavřít
+   710→            </Button>
+   711→          </DialogFooter>
+   712→        </div>
+   713→      </DialogContent>
+   714→    </Dialog>
+   715→  );
+   716→}
+   717→
+   718→function DetailRow({
+   719→  icon,
+   720→  label,
+   721→  value,
+   722→  href,
+   723→  external,
+   724→}: {
+   725→  icon: React.ReactNode;
+   726→  label: string;
+   727→  value: string;
+   728→  href?: string;
+   729→  external?: boolean;
+   730→}) {
+   731→  const content = (
+   732→    <div className="flex items-center gap-2 rounded-md border bg-card px-2.5 py-1.5">
+   733→      <span className="text-muted-foreground">{icon}</span>
+   734→      <div className="min-w-0">
+   735→        <div className="text-[10px] uppercase tracking-wide text-muted-foreground">{label}</div>
+   736→        <div className="truncate text-xs font-medium">{value}</div>
+   737→      </div>
+   738→      {external && <ExternalLink className="ml-auto h-3 w-3 shrink-0 text-muted-foreground/60" />}
+   739→    </div>
+   740→  );
+   741→  if (!href) return content;
+   742→  return (
+   743→    <a
+   744→      href={href}
+   745→      target={external ? "_blank" : undefined}
+   746→      rel={external ? "noopener noreferrer" : undefined}
+   747→      className="block hover:opacity-80"
+   748→    >
+   749→      {content}
+   750→    </a>
+   751→  );
+   752→}
+   753→
+   754→function DetailStat({
+   755→  icon,
+   756→  label,
+   757→  value,
+   758→  tone,
+   759→}: {
+   760→  icon: React.ReactNode;
+   761→  label: string;
+   762→  value: string;
+   763→  tone: "amber" | "violet";
+   764→}) {
+   765→  const toneClasses =
+   766→    tone === "amber"
+   767→      ? "border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-300"
+   768→      : "border-violet-200 bg-violet-50 text-violet-800 dark:border-violet-900/50 dark:bg-violet-950/30 dark:text-violet-300";
+   769→  return (
+   770→    <div className={cn("rounded-md border px-3 py-2", toneClasses)}>
+   771→      <div className="flex items-center gap-1.5">
+   772→        {icon}
+   773→        <span className="text-[10px] uppercase tracking-wide opacity-80">{label}</span>
+   774→      </div>
+   775→      <div className="mt-1 text-sm font-bold tabular-nums">{value}</div>
+   776→    </div>
+   777→  );
+   778→}
+   779→
+   780→function ContactDialog({
+   781→  open,
+   782→  onOpenChange,
+   783→  projectId,
+   784→  contact,
+   785→  createContact,
+   786→}: {
+   787→  open: boolean;
+   788→  onOpenChange: (open: boolean) => void;
+   789→  projectId: string;
+   790→  contact?: Contact | null;
+   791→  createContact?: ReturnType<typeof useCreateContact>;
+   792→}) {
+   793→  return (
+   794→    <Dialog open={open} onOpenChange={onOpenChange}>
+   795→      <DialogContent className="max-w-lg">
+   796→        {open && (
+   797→          <ContactForm
+   798→            key={contact?.id ?? "new"}
+   799→            projectId={projectId}
+   800→            contact={contact}
+   801→            createContact={createContact}
+   802→            onDone={() => onOpenChange(false)}
+   803→          />
+   804→        )}
+   805→      </DialogContent>
+   806→    </Dialog>
+   807→  );
+   808→}
+   809→
+   810→function ContactForm({
+   811→  projectId,
+   812→  contact,
+   813→  createContact,
+   814→  onDone,
+   815→}: {
+   816→  projectId: string;
+   817→  contact?: Contact | null;
+   818→  createContact?: ReturnType<typeof useCreateContact>;
+   819→  onDone: () => void;
+   820→}) {
+   821→  const updateContact = useUpdateContact(projectId);
+   822→  const [name, setName] = useState(contact?.name ?? "");
+   823→  const [type, setType] = useState(contact?.type ?? "company");
+   824→  const [role, setRole] = useState(contact?.role ?? "");
+   825→  const [company, setCompany] = useState(contact?.company ?? "");
+   826→  const [phone, setPhone] = useState(contact?.phone ?? "");
+   827→  const [email, setEmail] = useState(contact?.email ?? "");
+   828→  const [website, setWebsite] = useState(contact?.website ?? "");
+   829→  const [notes, setNotes] = useState(contact?.notes ?? "");
+   830→  const [rating, setRating] = useState<number | null>(contact?.rating ?? null);
+   831→
+   832→  const handleSubmit = async (e: React.FormEvent) => {
+   833→    e.preventDefault();
+   834→    if (!name.trim()) {
+   835→      toast.error("Jméno je povinné");
+   836→      return;
+   837→    }
+   838→    try {
+   839→      const data = {
+   840→        name,
+   841→        type,
+   842→        role,
+   843→        company,
+   844→        phone,
+   845→        email,
+   846→        website,
+   847→        notes,
+   848→        rating,
+   849→      };
+   850→      if (contact) {
+   851→        await updateContact.mutateAsync({ id: contact.id, data });
+   852→        toast.success("Kontakt upraven");
+   853→      } else if (createContact) {
+   854→        await createContact.mutateAsync(data);
+   855→        toast.success("Kontakt přidán");
+   856→      }
+   857→      onDone();
+   858→    } catch {
+   859→      toast.error("Nepodařilo se uložit kontakt");
+   860→    }
+   861→  };
+   862→
+   863→  return (
+   864→    <>
+   865→      <DialogHeader>
+   866→        <DialogTitle>{contact ? "Upravit kontakt" : "Nový kontakt"}</DialogTitle>
+   867→        <DialogDescription>
+   868→          Firma, řemeslník, dodavatel, architekt nebo svépomoc.
+   869→        </DialogDescription>
+   870→      </DialogHeader>
+   871→      <form onSubmit={handleSubmit} className="space-y-4">
+   872→          <div className="grid grid-cols-2 gap-3">
+   873→            <div className="space-y-2">
+   874→              <Label htmlFor="name">Jméno / Název *</Label>
+   875→              <Input
+   876→                id="name"
+   877→                value={name}
+   878→                onChange={(e) => setName(e.target.value)}
+   879→                placeholder="např. Pavel Novák"
+   880→                required
+   881→              />
+   882→            </div>
+   883→            <div className="space-y-2">
+   884→              <Label htmlFor="type">Typ</Label>
+   885→              <Select value={type} onValueChange={setType}>
+   886→                <SelectTrigger id="type">
+   887→                  <SelectValue />
+   888→                </SelectTrigger>
+   889→                <SelectContent>
+   890→                  {CONTACT_TYPES.map((t) => (
+   891→                    <SelectItem key={t.value} value={t.value}>
+   892→                      {t.emoji} {t.label}
+   893→                    </SelectItem>
+   894→                  ))}
+   895→                </SelectContent>
+   896→              </Select>
+   897→            </div>
+   898→          </div>
+   899→          <div className="grid grid-cols-2 gap-3">
+   900→            <div className="space-y-2">
+   901→              <Label htmlFor="role">Role / Obor</Label>
+   902→              <Input
+   903→                id="role"
+   904→                value={role}
+   905→                onChange={(e) => setRole(e.target.value)}
+   906→                placeholder="např. Zedník, Elektrikář"
+   907→              />
+   908→            </div>
+   909→            <div className="space-y-2">
+   910→              <Label htmlFor="company">Firma (volitelné)</Label>
+   911→              <Input
+   912→                id="company"
+   913→                value={company}
+   914→                onChange={(e) => setCompany(e.target.value)}
+   915→                placeholder="např. Stavby s.r.o."
+   916→              />
+   917→            </div>
+   918→          </div>
+   919→          <div className="grid grid-cols-2 gap-3">
+   920→            <div className="space-y-2">
+   921→              <Label htmlFor="phone">Telefon</Label>
+   922→              <Input
+   923→                id="phone"
+   924→                value={phone}
+   925→                onChange={(e) => setPhone(e.target.value)}
+   926→                placeholder="+420 …"
+   927→              />
+   928→            </div>
+   929→            <div className="space-y-2">
+   930→              <Label htmlFor="email">E-mail</Label>
+   931→              <Input
+   932→                id="email"
+   933→                type="email"
+   934→                value={email}
+   935→                onChange={(e) => setEmail(e.target.value)}
+   936→                placeholder="email@domena.cz"
+   937→              />
+   938→            </div>
+   939→          </div>
+   940→          <div className="space-y-2">
+   941→            <Label htmlFor="website">Web</Label>
+   942→            <div className="relative">
+   943→              <Globe className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+   944→              <Input
+   945→                id="website"
+   946→                value={website}
+   947→                onChange={(e) => setWebsite(e.target.value)}
+   948→                placeholder="např. www.firma.cz"
+   949→                className="pl-9"
+   950→              />
+   951→            </div>
+   952→          </div>
+   953→          <div className="space-y-2">
+   954→            <Label>Hodnocení</Label>
+   955→            <div className="flex gap-1">
+   956→              {[1, 2, 3, 4, 5].map((s) => (
+   957→                <button
+   958→                  key={s}
+   959→                  type="button"
+   960→                  onClick={() => setRating(rating === s ? null : s)}
+   961→                  className="p-1"
+   962→                >
+   963→                  <Star
+   964→                    className={cn(
+   965→                      "h-5 w-5 transition-colors",
+   966→                      rating && s <= rating
+   967→                        ? "fill-amber-400 text-amber-400"
+   968→                        : "text-muted-foreground/40 hover:text-amber-300",
+   969→                    )}
+   970→                  />
+   971→                </button>
+   972→              ))}
+   973→              {rating && (
+   974→                <Button
+   975→                  type="button"
+   976→                  variant="ghost"
+   977→                  size="sm"
+   978→                  className="ml-2 h-6 text-xs"
+   979→                  onClick={() => setRating(null)}
+   980→                >
+   981→                  Zrušit
+   982→                </Button>
+   983→              )}
+   984→            </div>
+   985→          </div>
+   986→          <div className="space-y-2">
+   987→            <Label htmlFor="notes">Poznámky</Label>
+   988→            <Textarea
+   989→              id="notes"
+   990→              value={notes}
+   991→              onChange={(e) => setNotes(e.target.value)}
+   992→              placeholder="Zkušenosti, reference, postup práce…"
+   993→              rows={2}
+   994→            />
+   995→          </div>
+   996→          <DialogFooter>
+   997→            <Button type="button" variant="outline" onClick={onDone}>
+   998→              Zrušit
+   999→            </Button>
+  1000→            <Button
+  1001→              type="submit"
+  1002→              disabled={createContact?.isPending || updateContact.isPending}
+  1003→            >
+  1004→              {(createContact?.isPending || updateContact.isPending) && (
+  1005→                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+  1006→              )}
+  1007→              {contact ? "Uložit" : "Přidat kontakt"}
+  1008→            </Button>
+  1009→          </DialogFooter>
+  1010→        </form>
+  1011→      </>
+  1012→  );
+  1013→}
+  1014→

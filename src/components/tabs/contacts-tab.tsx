@@ -227,6 +227,18 @@ export function ContactsTab({ projectId }: { projectId: string }) {
               stat={statsByContactId.get(c.id)}
               onEdit={() => setEditContact(c)}
               onOpenDetail={() => setDetailContact(c)}
+              onDelete={(deletedId) => {
+                // Close any open dialogs that reference the deleted contact
+                // before React Query refetches and removes the card from the
+                // DOM. Otherwise the detail/edit dialog would render with a
+                // stale `contact` reference and could crash.
+                if (detailContact?.id === deletedId) {
+                  setDetailContact(null);
+                }
+                if (editContact?.id === deletedId) {
+                  setEditContact(null);
+                }
+              }}
             />
           ))}
         </div>
@@ -277,12 +289,14 @@ function ContactCard({
   stat,
   onEdit,
   onOpenDetail,
+  onDelete,
 }: {
   contact: Contact;
   projectId: string;
   stat?: ContactStat;
   onEdit: () => void;
   onOpenDetail: () => void;
+  onDelete?: (deletedId: string) => void;
 }) {
   const deleteContact = useDeleteContact(projectId);
   const [confirm, setConfirm] = useState(false);
@@ -460,6 +474,12 @@ function ContactCard({
               disabled={deleteContact.isPending}
               onClick={async () => {
                 try {
+                  // Close any open dialogs that reference this contact
+                  // BEFORE the mutation fires, so the React Query
+                  // invalidation (which removes the card from the DOM)
+                  // does not race with the dialog rendering a stale
+                  // contact reference.
+                  onDelete?.(contact.id);
                   await deleteContact.mutateAsync(contact.id);
                   toast.success("Kontakt smazán");
                   setConfirm(false);

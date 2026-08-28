@@ -15,10 +15,14 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const APP_TITLE = "Stavba — Správa rozpočtu staveb";
+const APP_DESCRIPTION =
+  "Komplexní správa rozpočtu, nákladů a času pro stavby a rekonstrukce. Přehled projektů, plateb, práce i materiálu na jednom místě.";
+
 export const metadata: Metadata = {
-  title: "Stavba — Správa rozpočtu staveb",
-  description:
-    "Komplexní správa rozpočtu, nákladů a času pro stavby a rekonstrukce. Přehled projektů, plateb, práce i materiálu na jednom místě.",
+  title: APP_TITLE,
+  description: APP_DESCRIPTION,
+  applicationName: "Stavba",
   keywords: [
     "stavba",
     "rekonstrukce",
@@ -27,6 +31,39 @@ export const metadata: Metadata = {
     "projekt",
     "správa",
   ],
+  authors: [{ name: "Stavba" }],
+  icons: {
+    icon: [
+      { url: "/logo.svg", type: "image/svg+xml" },
+    ],
+    shortcut: ["/logo.svg"],
+    apple: ["/logo.svg"],
+  },
+  openGraph: {
+    title: APP_TITLE,
+    description: APP_DESCRIPTION,
+    type: "website",
+    locale: "cs_CZ",
+    siteName: "Stavba",
+    images: [
+      {
+        url: "/logo.svg",
+        width: 256,
+        height: 256,
+        alt: "Stavba",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary",
+    title: APP_TITLE,
+    description: APP_DESCRIPTION,
+    images: ["/logo.svg"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
 };
 
 export default function RootLayout({

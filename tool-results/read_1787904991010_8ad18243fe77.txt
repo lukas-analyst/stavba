@@ -1,0 +1,898 @@
+     1→"use client";
+     2→
+     3→import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+     4→
+     5→// ===== Types =====
+     6→export type Project = {
+     7→  id: string;
+     8→  name: string;
+     9→  address: string | null;
+    10→  description: string | null;
+    11→  starred: boolean;
+    12→  status: string;
+    13→  currency: string;
+    14→  totalBudget: number;
+    15→  startDate: string | null;
+    16→  endDate: string | null;
+    17→  categoryOrder: string | null;
+    18→  notes: string | null;
+    19→  createdAt: string;
+    20→  updatedAt: string;
+    21→  _count?: { budgetItems: number; contacts: number };
+    22→  stats?: {
+    23→    planTotal: number;
+    24→    actualTotal: number;
+    25→    remaining: number;
+    26→    burnRate: number;
+    27→    hoursTotal: number;
+    28→    daysPlanned: number;
+    29→    itemCount: number;
+    30→  };
+    31→};
+    32→
+    33→export type BudgetItem = {
+    34→  id: string;
+    35→  projectId: string;
+    36→  category: string;
+    37→  subcategory: string | null;
+    38→  element: string | null;
+    39→  phase: string;
+    40→  required: boolean;
+    41→  completed: boolean;
+    42→  rejected: boolean;
+    43→  note: string | null;
+    44→  unitPrice: string | null;
+    45→  parentId: string | null;
+    46→  planCost: number | null;
+    47→  flexibilityPercent: number | null;
+    48→  planDays: number | null;
+    49→  dateFrom: string | null;
+    50→  dateTo: string | null;
+    51→  actualCost: number;
+    52→  actualHours: number;
+    53→  sortOrder: number;
+    54→  _count?: { payments: number; timeEntries: number; comments: number };
+    55→  children?: BudgetItem[];
+    56→};
+    57→
+    58→export type Contact = {
+    59→  id: string;
+    60→  projectId: string;
+    61→  name: string;
+    62→  type: string;
+    63→  role: string | null;
+    64→  phone: string | null;
+    65→  email: string | null;
+    66→  company: string | null;
+    67→  notes: string | null;
+    68→  rating: number | null;
+    69→  _count?: { timeEntries: number; payments: number };
+    70→};
+    71→
+    72→export type Payment = {
+    73→  id: string;
+    74→  budgetItemId: string;
+    75→  contactId: string | null;
+    76→  amount: number;
+    77→  invoiceTotal: number | null;
+    78→  installmentOf: string | null;
+    79→  vatRate: number | null;
+    80→  vatAmount: number | null;
+    81→  date: string;
+    82→  type: string;
+    83→  vendor: string | null;
+    84→  invoiceNumber: string | null;
+    85→  description: string | null;
+    86→  budgetItem?: { id: string; category: string; subcategory: string | null };
+    87→  contact?: { id: string; name: string; type: string } | null;
+    88→};
+    89→
+    90→export type TimeEntry = {
+    91→  id: string;
+    92→  budgetItemId: string;
+    93→  contactId: string | null;
+    94→  workerName: string;
+    95→  workerType: string;
+    96→  date: string;
+    97→  dateTo: string | null;
+    98→  hours: number;
+    99→  description: string | null;
+   100→  budgetItem?: { id: string; category: string; subcategory: string | null };
+   101→  contact?: { id: string; name: string; type: string } | null;
+   102→};
+   103→
+   104→export type Dashboard = {
+   105→  project: Project;
+   106→  totals: {
+   107→    planTotal: number;
+   108→    actualTotal: number;
+   109→    remaining: number;
+   110→    burnRate: number;
+   111→    worstCase: number;
+   112→    worstCaseRemaining: number;
+   113→    hoursTotal: number;
+   114→    daysPlanned: number;
+   115→    itemCount: number;
+   116→    requiredCount: number;
+   117→    completedCount: number;
+   118→    savedTotal: number;
+   119→    projectedFinal: number;
+   120→    projectedOverrun: number;
+   121→    avgOverrunRatio: number;
+   122→  };
+   123→  byPhase: {
+   124→    phase: string;
+   125→    plan: number;
+   126→    actual: number;
+   127→    hours: number;
+   128→    plannedHours: number;
+   129→    count: number;
+   130→    completedCount: number;
+   131→    worstCase: number;
+   132→    costOverrun: number;
+   133→    timeOverrun: number;
+   134→  }[];
+   135→  byCategory: { category: string; plan: number; actual: number; hours: number; count: number }[];
+   136→  alerts: {
+   137→    upcoming: BudgetItem[];
+   138→    overdue: BudgetItem[];
+   139→    overBudget: BudgetItem[];
+   140→    unscheduled: BudgetItem[];
+   141→  };
+   142→  timeline: {
+   143→    id: string;
+   144→    category: string;
+   145→    subcategory: string | null;
+   146→    phase: string;
+   147→    dateFrom: string | null;
+   148→    dateTo: string | null;
+   149→    planCost: number | null;
+   150→    actualCost: number;
+   151→    planDays: number | null;
+   152→    required: boolean;
+   153→    completed: boolean;
+   154→    rejected: boolean;
+   155→  }[];
+   156→  recent: {
+   157→    payments: Payment[];
+   158→    timeEntries: TimeEntry[];
+   159→  };
+   160→};
+   161→
+   162→// ===== Projects =====
+   163→export function useProjects() {
+   164→  return useQuery<Project[]>({
+   165→    queryKey: ["projects"],
+   166→    queryFn: async () => {
+   167→      const res = await fetch("/api/projects");
+   168→      if (!res.ok) throw new Error("Failed to load projects");
+   169→      return res.json();
+   170→    },
+   171→  });
+   172→}
+   173→
+   174→export function useCreateProject() {
+   175→  const qc = useQueryClient();
+   176→  return useMutation({
+   177→    mutationFn: async (data: Partial<Project>) => {
+   178→      const res = await fetch("/api/projects", {
+   179→        method: "POST",
+   180→        headers: { "Content-Type": "application/json" },
+   181→        body: JSON.stringify(data),
+   182→      });
+   183→      if (!res.ok) throw new Error("Failed to create project");
+   184→      return res.json();
+   185→    },
+   186→    onSuccess: () => qc.invalidateQueries({ queryKey: ["projects"] }),
+   187→  });
+   188→}
+   189→
+   190→export function useCreateProjectFromTemplate() {
+   191→  const qc = useQueryClient();
+   192→  return useMutation({
+   193→    mutationFn: async (data: {
+   194→      name: string;
+   195→      address?: string;
+   196→      description?: string;
+   197→      templateType: string;
+   198→      scope?: string;
+   199→      startDate?: string;
+   200→      endDate?: string;
+   201→    }) => {
+   202→      const res = await fetch("/api/projects/from-template", {
+   203→        method: "POST",
+   204→        headers: { "Content-Type": "application/json" },
+   205→        body: JSON.stringify(data),
+   206→      });
+   207→      if (!res.ok) throw new Error("Failed to create project from template");
+   208→      return res.json();
+   209→    },
+   210→    onSuccess: () => qc.invalidateQueries({ queryKey: ["projects"] }),
+   211→  });
+   212→}
+   213→
+   214→export function useUpdateProject(id: string) {
+   215→  const qc = useQueryClient();
+   216→  return useMutation({
+   217→    onMutate: async (data: Partial<Project>) => {
+   218→      // Cancel outgoing refetches so they don't overwrite our optimistic update
+   219→      await qc.cancelQueries({ queryKey: ["projects"] });
+   220→      // Snapshot previous value for rollback
+   221→      const previousProjects = qc.getQueryData<Project[]>(["projects"]);
+   222→      // Optimistically update the matching project in the list cache
+   223→      qc.setQueryData<Project[]>(["projects"], (old) =>
+   224→        old?.map((p) => (p.id === id ? { ...p, ...data } : p))
+   225→      );
+   226→      return { previousProjects };
+   227→    },
+   228→    onError: (_err, _vars, context) => {
+   229→      // Rollback to the snapshot on failure
+   230→      if (context?.previousProjects) {
+   231→        qc.setQueryData(["projects"], context.previousProjects);
+   232→      }
+   233→    },
+   234→    onSettled: () => {
+   235→      qc.invalidateQueries({ queryKey: ["projects"] });
+   236→      qc.invalidateQueries({ queryKey: ["project", id] });
+   237→      qc.invalidateQueries({ queryKey: ["dashboard", id] });
+   238→    },
+   239→    mutationFn: async (data: Partial<Project>) => {
+   240→      const res = await fetch(`/api/projects/${id}`, {
+   241→        method: "PATCH",
+   242→        headers: { "Content-Type": "application/json" },
+   243→        body: JSON.stringify(data),
+   244→      });
+   245→      if (!res.ok) throw new Error("Failed to update project");
+   246→      return res.json();
+   247→    },
+   248→  });
+   249→}
+   250→
+   251→export function useDeleteProject() {
+   252→  const qc = useQueryClient();
+   253→  return useMutation({
+   254→    mutationFn: async (id: string) => {
+   255→      const res = await fetch(`/api/projects/${id}`, { method: "DELETE" });
+   256→      if (!res.ok) throw new Error("Failed to delete project");
+   257→      return res.json();
+   258→    },
+   259→    onSuccess: () => qc.invalidateQueries({ queryKey: ["projects"] }),
+   260→  });
+   261→}
+   262→
+   263→// ===== Budget Items =====
+   264→export function useBudgetItems(projectId: string | null) {
+   265→  return useQuery<BudgetItem[]>({
+   266→    queryKey: ["budget", projectId],
+   267→    queryFn: async () => {
+   268→      const res = await fetch(`/api/projects/${projectId}/budget`);
+   269→      if (!res.ok) throw new Error("Failed to load budget");
+   270→      return res.json();
+   271→    },
+   272→    enabled: !!projectId,
+   273→  });
+   274→}
+   275→
+   276→export function useCreateBudgetItem(projectId: string) {
+   277→  const qc = useQueryClient();
+   278→  return useMutation({
+   279→    mutationFn: async (data: Partial<BudgetItem>) => {
+   280→      const res = await fetch(`/api/projects/${projectId}/budget`, {
+   281→        method: "POST",
+   282→        headers: { "Content-Type": "application/json" },
+   283→        body: JSON.stringify(data),
+   284→      });
+   285→      if (!res.ok) throw new Error("Failed to create budget item");
+   286→      return res.json();
+   287→    },
+   288→    onSuccess: () => {
+   289→      qc.invalidateQueries({ queryKey: ["budget", projectId] });
+   290→      qc.invalidateQueries({ queryKey: ["dashboard", projectId] });
+   291→    },
+   292→  });
+   293→}
+   294→
+   295→export function useUpdateBudgetItem(projectId: string) {
+   296→  const qc = useQueryClient();
+   297→  return useMutation({
+   298→    onMutate: async ({ id, data }) => {
+   299→      // Cancel outgoing refetches so they don't overwrite our optimistic update
+   300→      await qc.cancelQueries({ queryKey: ["budget", projectId] });
+   301→      // Snapshot previous value for rollback
+   302→      const previousItems = qc.getQueryData<BudgetItem[]>(["budget", projectId]);
+   303→      // Optimistically update the matching item in the cache
+   304→      qc.setQueryData<BudgetItem[]>(["budget", projectId], (old) =>
+   305→        old?.map((item) => (item.id === id ? { ...item, ...data } : item))
+   306→      );
+   307→      return { previousItems };
+   308→    },
+   309→    onError: (_err, _vars, context) => {
+   310→      // Rollback to the snapshot on failure
+   311→      if (context?.previousItems) {
+   312→        qc.setQueryData(["budget", projectId], context.previousItems);
+   313→      }
+   314→    },
+   315→    onSettled: () => {
+   316→      qc.invalidateQueries({ queryKey: ["budget", projectId] });
+   317→      qc.invalidateQueries({ queryKey: ["dashboard", projectId] });
+   318→    },
+   319→    mutationFn: async ({ id, data }: { id: string; data: Partial<BudgetItem> }) => {
+   320→      const res = await fetch(`/api/budget-items/${id}`, {
+   321→        method: "PATCH",
+   322→        headers: { "Content-Type": "application/json" },
+   323→        body: JSON.stringify(data),
+   324→      });
+   325→      if (!res.ok) throw new Error("Failed to update budget item");
+   326→      return res.json();
+   327→    },
+   328→  });
+   329→}
+   330→
+   331→export function useDeleteBudgetItem(projectId: string) {
+   332→  const qc = useQueryClient();
+   333→  return useMutation({
+   334→    mutationFn: async (id: string) => {
+   335→      const res = await fetch(`/api/budget-items/${id}`, { method: "DELETE" });
+   336→      if (!res.ok) throw new Error("Failed to delete budget item");
+   337→      return res.json();
+   338→    },
+   339→    onSuccess: () => {
+   340→      qc.invalidateQueries({ queryKey: ["budget", projectId] });
+   341→      qc.invalidateQueries({ queryKey: ["dashboard", projectId] });
+   342→    },
+   343→  });
+   344→}
+   345→
+   346→export function useDuplicateBudgetItem(projectId: string) {
+   347→  const qc = useQueryClient();
+   348→  return useMutation({
+   349→    mutationFn: async (id: string) => {
+   350→      const res = await fetch(`/api/budget-items/${id}/duplicate`, { method: "POST" });
+   351→      if (!res.ok) throw new Error("Failed to duplicate budget item");
+   352→      return res.json();
+   353→    },
+   354→    onSuccess: () => {
+   355→      qc.invalidateQueries({ queryKey: ["budget", projectId] });
+   356→      qc.invalidateQueries({ queryKey: ["dashboard", projectId] });
+   357→    },
+   358→  });
+   359→}
+   360→
+   361→// Reorder items and/or categories
+   362→export function useReorder(projectId: string) {
+   363→  const qc = useQueryClient();
+   364→  return useMutation({
+   365→    mutationFn: async (data: {
+   366→      items?: { id: string; sortOrder: number }[];
+   367→      categoryOrder?: string[];
+   368→    }) => {
+   369→      const res = await fetch(`/api/projects/${projectId}/reorder`, {
+   370→        method: "PATCH",
+   371→        headers: { "Content-Type": "application/json" },
+   372→        body: JSON.stringify(data),
+   373→      });
+   374→      if (!res.ok) throw new Error("Failed to reorder");
+   375→      return res.json();
+   376→    },
+   377→    onSuccess: () => {
+   378→      qc.invalidateQueries({ queryKey: ["budget", projectId] });
+   379→      qc.invalidateQueries({ queryKey: ["projects"] });
+   380→      qc.invalidateQueries({ queryKey: ["dashboard", projectId] });
+   381→    },
+   382→  });
+   383→}
+   384→
+   385→// ===== Export / Import =====
+   386→export function useExportState() {
+   387→  return useMutation({
+   388→    mutationFn: async () => {
+   389→      const res = await fetch("/api/export");
+   390→      if (!res.ok) throw new Error("Failed to export");
+   391→      const blob = await res.blob();
+   392→      // Try to get filename from Content-Disposition
+   393→      const cd = res.headers.get("content-disposition") || "";
+   394→      const match = cd.match(/filename="?([^"]+)"?/);
+   395→      const filename =
+   396→        match?.[1] ?? `stavba-export-${new Date().toISOString().substring(0, 10)}.json`;
+   397→      // Trigger download
+   398→      const url = URL.createObjectURL(blob);
+   399→      const a = document.createElement("a");
+   400→      a.href = url;
+   401→      a.download = filename;
+   402→      document.body.appendChild(a);
+   403→      a.click();
+   404→      document.body.removeChild(a);
+   405→      URL.revokeObjectURL(url);
+   406→      return { filename };
+   407→    },
+   408→  });
+   409→}
+   410→
+   411→export function useImportState() {
+   412→  const qc = useQueryClient();
+   413→  return useMutation({
+   414→    mutationFn: async (file: File) => {
+   415→      const text = await file.text();
+   416→      const json = JSON.parse(text);
+   417→      const res = await fetch("/api/import", {
+   418→        method: "POST",
+   419→        headers: { "Content-Type": "application/json" },
+   420→        body: JSON.stringify(json),
+   421→      });
+   422→      if (!res.ok) {
+   423→        const err = await res.json().catch(() => ({}));
+   424→        throw new Error(err.error || "Failed to import");
+   425→      }
+   426→      return res.json();
+   427→    },
+   428→    onSuccess: () => {
+   429→      qc.invalidateQueries();
+   430→    },
+   431→  });
+   432→}
+   433→
+   434→// ===== CSV Export (per-project) =====
+   435→export function useExportCsv(projectId: string) {
+   436→  return useMutation({
+   437→    mutationFn: async (type: "budget" | "payments" | "time" | "contacts") => {
+   438→      const res = await fetch(`/api/projects/${projectId}/export-csv?type=${type}`);
+   439→      if (!res.ok) throw new Error("Failed to export CSV");
+   440→      const blob = await res.blob();
+   441→      const cd = res.headers.get("content-disposition") || "";
+   442→      const match = cd.match(/filename="?([^"]+)"?/);
+   443→      const filename = match?.[1]
+   444→        ? decodeURIComponent(match[1])
+   445→        : `${projectId}-${type}.csv`;
+   446→      const url = URL.createObjectURL(blob);
+   447→      const a = document.createElement("a");
+   448→      a.href = url;
+   449→      a.download = filename;
+   450→      document.body.appendChild(a);
+   451→      a.click();
+   452→      document.body.removeChild(a);
+   453→      URL.revokeObjectURL(url);
+   454→      return { filename };
+   455→    },
+   456→  });
+   457→}
+   458→
+   459→// ===== Payments =====
+   460→export function usePayments(projectId: string | null) {
+   461→  return useQuery<Payment[]>({
+   462→    queryKey: ["payments", projectId],
+   463→    queryFn: async () => {
+   464→      const res = await fetch(`/api/projects/${projectId}/payments`);
+   465→      if (!res.ok) throw new Error("Failed to load payments");
+   466→      return res.json();
+   467→    },
+   468→    enabled: !!projectId,
+   469→  });
+   470→}
+   471→
+   472→export function useCreatePayment(projectId: string) {
+   473→  const qc = useQueryClient();
+   474→  return useMutation({
+   475→    mutationFn: async (data: Partial<Payment> & { amount: number; budgetItemId: string }) => {
+   476→      const res = await fetch(`/api/projects/${projectId}/payments`, {
+   477→        method: "POST",
+   478→        headers: { "Content-Type": "application/json" },
+   479→        body: JSON.stringify(data),
+   480→      });
+   481→      if (!res.ok) throw new Error("Failed to create payment");
+   482→      return res.json();
+   483→    },
+   484→    onSuccess: () => {
+   485→      qc.invalidateQueries({ queryKey: ["payments", projectId] });
+   486→      qc.invalidateQueries({ queryKey: ["budget", projectId] });
+   487→      qc.invalidateQueries({ queryKey: ["dashboard", projectId] });
+   488→    },
+   489→  });
+   490→}
+   491→
+   492→export function useUpdatePayment(projectId: string) {
+   493→  const qc = useQueryClient();
+   494→  return useMutation({
+   495→    onMutate: async ({ id, data }) => {
+   496→      // Cancel outgoing refetches so they don't overwrite our optimistic update
+   497→      await qc.cancelQueries({ queryKey: ["payments", projectId] });
+   498→      // Snapshot previous value for rollback
+   499→      const previousPayments = qc.getQueryData<Payment[]>(["payments", projectId]);
+   500→      // Optimistically update the matching payment in the cache
+   501→      qc.setQueryData<Payment[]>(["payments", projectId], (old) =>
+   502→        old?.map((p) => (p.id === id ? { ...p, ...data } : p))
+   503→      );
+   504→      return { previousPayments };
+   505→    },
+   506→    onError: (_err, _vars, context) => {
+   507→      // Rollback to the snapshot on failure
+   508→      if (context?.previousPayments) {
+   509→        qc.setQueryData(["payments", projectId], context.previousPayments);
+   510→      }
+   511→    },
+   512→    onSettled: () => {
+   513→      qc.invalidateQueries({ queryKey: ["payments", projectId] });
+   514→      qc.invalidateQueries({ queryKey: ["budget", projectId] });
+   515→      qc.invalidateQueries({ queryKey: ["dashboard", projectId] });
+   516→    },
+   517→    mutationFn: async ({ id, data }: { id: string; data: Partial<Payment> }) => {
+   518→      const res = await fetch(`/api/payments/${id}`, {
+   519→        method: "PATCH",
+   520→        headers: { "Content-Type": "application/json" },
+   521→        body: JSON.stringify(data),
+   522→      });
+   523→      if (!res.ok) throw new Error("Failed to update payment");
+   524→      return res.json();
+   525→    },
+   526→  });
+   527→}
+   528→
+   529→export function useDeletePayment(projectId: string) {
+   530→  const qc = useQueryClient();
+   531→  return useMutation({
+   532→    mutationFn: async (id: string) => {
+   533→      const res = await fetch(`/api/payments/${id}`, { method: "DELETE" });
+   534→      if (!res.ok) throw new Error("Failed to delete payment");
+   535→      return res.json();
+   536→    },
+   537→    onSuccess: () => {
+   538→      qc.invalidateQueries({ queryKey: ["payments", projectId] });
+   539→      qc.invalidateQueries({ queryKey: ["budget", projectId] });
+   540→      qc.invalidateQueries({ queryKey: ["dashboard", projectId] });
+   541→    },
+   542→  });
+   543→}
+   544→
+   545→// ===== Time Entries =====
+   546→export function useTimeEntries(projectId: string | null) {
+   547→  return useQuery<TimeEntry[]>({
+   548→    queryKey: ["time", projectId],
+   549→    queryFn: async () => {
+   550→      const res = await fetch(`/api/projects/${projectId}/time`);
+   551→      if (!res.ok) throw new Error("Failed to load time entries");
+   552→      return res.json();
+   553→    },
+   554→    enabled: !!projectId,
+   555→  });
+   556→}
+   557→
+   558→export function useCreateTimeEntry(projectId: string) {
+   559→  const qc = useQueryClient();
+   560→  return useMutation({
+   561→    mutationFn: async (data: Partial<TimeEntry> & { hours: number; budgetItemId: string }) => {
+   562→      const res = await fetch(`/api/projects/${projectId}/time`, {
+   563→        method: "POST",
+   564→        headers: { "Content-Type": "application/json" },
+   565→        body: JSON.stringify(data),
+   566→      });
+   567→      if (!res.ok) throw new Error("Failed to create time entry");
+   568→      return res.json();
+   569→    },
+   570→    onSuccess: () => {
+   571→      qc.invalidateQueries({ queryKey: ["time", projectId] });
+   572→      qc.invalidateQueries({ queryKey: ["budget", projectId] });
+   573→      qc.invalidateQueries({ queryKey: ["dashboard", projectId] });
+   574→    },
+   575→  });
+   576→}
+   577→
+   578→export function useUpdateTimeEntry(projectId: string) {
+   579→  const qc = useQueryClient();
+   580→  return useMutation({
+   581→    onMutate: async ({ id, data }) => {
+   582→      // Cancel outgoing refetches so they don't overwrite our optimistic update
+   583→      await qc.cancelQueries({ queryKey: ["time", projectId] });
+   584→      // Snapshot previous value for rollback
+   585→      const previousEntries = qc.getQueryData<TimeEntry[]>(["time", projectId]);
+   586→      // Optimistically update the matching entry in the cache
+   587→      qc.setQueryData<TimeEntry[]>(["time", projectId], (old) =>
+   588→        old?.map((e) => (e.id === id ? { ...e, ...data } : e))
+   589→      );
+   590→      return { previousEntries };
+   591→    },
+   592→    onError: (_err, _vars, context) => {
+   593→      // Rollback to the snapshot on failure
+   594→      if (context?.previousEntries) {
+   595→        qc.setQueryData(["time", projectId], context.previousEntries);
+   596→      }
+   597→    },
+   598→    onSettled: () => {
+   599→      qc.invalidateQueries({ queryKey: ["time", projectId] });
+   600→      qc.invalidateQueries({ queryKey: ["budget", projectId] });
+   601→      qc.invalidateQueries({ queryKey: ["dashboard", projectId] });
+   602→    },
+   603→    mutationFn: async ({ id, data }: { id: string; data: Partial<TimeEntry> & { hours?: number } }) => {
+   604→      const res = await fetch(`/api/time-entries/${id}`, {
+   605→        method: "PATCH",
+   606→        headers: { "Content-Type": "application/json" },
+   607→        body: JSON.stringify(data),
+   608→      });
+   609→      if (!res.ok) throw new Error("Failed to update time entry");
+   610→      return res.json();
+   611→    },
+   612→  });
+   613→}
+   614→
+   615→export function useDeleteTimeEntry(projectId: string) {
+   616→  const qc = useQueryClient();
+   617→  return useMutation({
+   618→    mutationFn: async (id: string) => {
+   619→      const res = await fetch(`/api/time-entries/${id}`, { method: "DELETE" });
+   620→      if (!res.ok) throw new Error("Failed to delete time entry");
+   621→      return res.json();
+   622→    },
+   623→    onSuccess: () => {
+   624→      qc.invalidateQueries({ queryKey: ["time", projectId] });
+   625→      qc.invalidateQueries({ queryKey: ["budget", projectId] });
+   626→      qc.invalidateQueries({ queryKey: ["dashboard", projectId] });
+   627→    },
+   628→  });
+   629→}
+   630→
+   631→// ===== Contacts =====
+   632→export function useContacts(projectId: string | null) {
+   633→  return useQuery<Contact[]>({
+   634→    queryKey: ["contacts", projectId],
+   635→    queryFn: async () => {
+   636→      const res = await fetch(`/api/projects/${projectId}/contacts`);
+   637→      if (!res.ok) throw new Error("Failed to load contacts");
+   638→      return res.json();
+   639→    },
+   640→    enabled: !!projectId,
+   641→  });
+   642→}
+   643→
+   644→export function useCreateContact(projectId: string) {
+   645→  const qc = useQueryClient();
+   646→  return useMutation({
+   647→    mutationFn: async (data: Partial<Contact>) => {
+   648→      const res = await fetch(`/api/projects/${projectId}/contacts`, {
+   649→        method: "POST",
+   650→        headers: { "Content-Type": "application/json" },
+   651→        body: JSON.stringify(data),
+   652→      });
+   653→      if (!res.ok) throw new Error("Failed to create contact");
+   654→      return res.json();
+   655→    },
+   656→    onSuccess: () => qc.invalidateQueries({ queryKey: ["contacts", projectId] }),
+   657→  });
+   658→}
+   659→
+   660→export function useUpdateContact(projectId: string) {
+   661→  const qc = useQueryClient();
+   662→  return useMutation({
+   663→    mutationFn: async ({ id, data }: { id: string; data: Partial<Contact> }) => {
+   664→      const res = await fetch(`/api/contacts/${id}`, {
+   665→        method: "PATCH",
+   666→        headers: { "Content-Type": "application/json" },
+   667→        body: JSON.stringify(data),
+   668→      });
+   669→      if (!res.ok) throw new Error("Failed to update contact");
+   670→      return res.json();
+   671→    },
+   672→    onSuccess: () => qc.invalidateQueries({ queryKey: ["contacts", projectId] }),
+   673→  });
+   674→}
+   675→
+   676→export function useDeleteContact(projectId: string) {
+   677→  const qc = useQueryClient();
+   678→  return useMutation({
+   679→    mutationFn: async (id: string) => {
+   680→      const res = await fetch(`/api/contacts/${id}`, { method: "DELETE" });
+   681→      if (!res.ok) throw new Error("Failed to delete contact");
+   682→      return res.json();
+   683→    },
+   684→    onSuccess: () => {
+   685→      qc.invalidateQueries({ queryKey: ["contacts", projectId] });
+   686→      qc.invalidateQueries({ queryKey: ["contactStats", projectId] });
+   687→      qc.invalidateQueries({ queryKey: ["dashboard", projectId] });
+   688→    },
+   689→  });
+   690→}
+   691→
+   692→// ===== Dashboard =====
+   693→export function useDashboard(projectId: string | null) {
+   694→  return useQuery<Dashboard>({
+   695→    queryKey: ["dashboard", projectId],
+   696→    queryFn: async () => {
+   697→      const res = await fetch(`/api/projects/${projectId}/dashboard`);
+   698→      if (!res.ok) throw new Error("Failed to load dashboard");
+   699→      return res.json();
+   700→    },
+   701→    enabled: !!projectId,
+   702→  });
+   703→}
+   704→
+   705→// ===== Contact Stats =====
+   706→export type ContactStat = {
+   707→  contactId: string;
+   708→  name: string;
+   709→  type: string;
+   710→  rating: number | null;
+   711→  totalPaid: number;
+   712→  totalHours: number;
+   713→  paymentCount: number;
+   714→  timeEntryCount: number;
+   715→  lastActivity: string | null;
+   716→};
+   717→
+   718→export type WorkerStat = {
+   719→  name: string;
+   720→  hours: number;
+   721→  entries: number;
+   722→  type: string;
+   723→};
+   724→
+   725→export function useContactStats(projectId: string | null) {
+   726→  return useQuery<{ contactStats: ContactStat[]; workerStats: WorkerStat[] }>({
+   727→    queryKey: ["contactStats", projectId],
+   728→    queryFn: async () => {
+   729→      const res = await fetch(`/api/projects/${projectId}/contact-stats`);
+   730→      if (!res.ok) throw new Error("Failed to load contact stats");
+   731→      return res.json();
+   732→    },
+   733→    enabled: !!projectId,
+   734→  });
+   735→}
+   736→
+   737→// ===== Spending Trend =====
+   738→export type SpendingMonth = {
+   739→  key: string;
+   740→  label: string;
+   741→  spend: number;
+   742→  hours: number;
+   743→};
+   744→
+   745→export function useSpendingTrend(projectId: string | null) {
+   746→  return useQuery<{
+   747→    months: SpendingMonth[];
+   748→    totals: { totalSpend: number; totalHours: number; paymentCount: number; timeEntryCount: number };
+   749→  }>({
+   750→    queryKey: ["spendingTrend", projectId],
+   751→    queryFn: async () => {
+   752→      const res = await fetch(`/api/projects/${projectId}/spending-trend`);
+   753→      if (!res.ok) throw new Error("Failed to load spending trend");
+   754→      return res.json();
+   755→    },
+   756→    enabled: !!projectId,
+   757→  });
+   758→}
+   759→
+   760→// ===== Audit Log =====
+   761→export type AuditLog = {
+   762→  id: string;
+   763→  projectId: string;
+   764→  entityType: string;
+   765→  entityId: string;
+   766→  action: string;
+   767→  field: string | null;
+   768→  oldValue: string | null;
+   769→  newValue: string | null;
+   770→  createdAt: string;
+   771→};
+   772→
+   773→export function useAuditLog(projectId: string | null) {
+   774→  return useQuery<AuditLog[]>({
+   775→    queryKey: ["auditLog", projectId],
+   776→    queryFn: async () => {
+   777→      const res = await fetch(`/api/projects/${projectId}/audit?limit=100`);
+   778→      if (!res.ok) throw new Error("Failed to load audit log");
+   779→      return res.json();
+   780→    },
+   781→    enabled: !!projectId,
+   782→  });
+   783→}
+   784→
+   785→// ===== Snapshots =====
+   786→export type Snapshot = {
+   787→  id: string;
+   788→  projectId: string;
+   789→  label: string;
+   790→  planTotal: number;
+   791→  actualTotal: number;
+   792→  remaining: number;
+   793→  burnRate: number;
+   794→  hoursTotal: number;
+   795→  daysPlanned: number;
+   796→  itemCount: number;
+   797→  completedCount: number;
+   798→  savedTotal: number;
+   799→  createdAt: string;
+   800→};
+   801→
+   802→export function useSnapshots(projectId: string | null) {
+   803→  return useQuery<Snapshot[]>({
+   804→    queryKey: ["snapshots", projectId],
+   805→    queryFn: async () => {
+   806→      const res = await fetch(`/api/projects/${projectId}/snapshots`);
+   807→      if (!res.ok) throw new Error("Failed to load snapshots");
+   808→      return res.json();
+   809→    },
+   810→    enabled: !!projectId,
+   811→  });
+   812→}
+   813→
+   814→export function useCreateSnapshot(projectId: string) {
+   815→  const qc = useQueryClient();
+   816→  return useMutation({
+   817→    mutationFn: async (label: string) => {
+   818→      const res = await fetch(`/api/projects/${projectId}/snapshots`, {
+   819→        method: "POST",
+   820→        headers: { "Content-Type": "application/json" },
+   821→        body: JSON.stringify({ label }),
+   822→      });
+   823→      if (!res.ok) throw new Error("Failed to create snapshot");
+   824→      return res.json();
+   825→    },
+   826→    onSuccess: () => {
+   827→      qc.invalidateQueries({ queryKey: ["snapshots", projectId] });
+   828→    },
+   829→  });
+   830→}
+   831→
+   832→export function useDeleteSnapshot(projectId: string) {
+   833→  const qc = useQueryClient();
+   834→  return useMutation({
+   835→    mutationFn: async (id: string) => {
+   836→      const res = await fetch(`/api/snapshots/${id}`, { method: "DELETE" });
+   837→      if (!res.ok) throw new Error("Failed to delete snapshot");
+   838→      return res.json();
+   839→    },
+   840→    onSuccess: () => {
+   841→      qc.invalidateQueries({ queryKey: ["snapshots", projectId] });
+   842→    },
+   843→  });
+   844→}
+   845→
+   846→// ===== Comments =====
+   847→export type Comment = {
+   848→  id: string;
+   849→  budgetItemId: string;
+   850→  author: string;
+   851→  text: string;
+   852→  createdAt: string;
+   853→};
+   854→
+   855→export function useComments(budgetItemId: string | null) {
+   856→  return useQuery<Comment[]>({
+   857→    queryKey: ["comments", budgetItemId],
+   858→    queryFn: async () => {
+   859→      const res = await fetch(`/api/budget-items/${budgetItemId}/comments`);
+   860→      if (!res.ok) throw new Error("Failed to load comments");
+   861→      return res.json();
+   862→    },
+   863→    enabled: !!budgetItemId,
+   864→  });
+   865→}
+   866→
+   867→export function useCreateComment(budgetItemId: string) {
+   868→  const qc = useQueryClient();
+   869→  return useMutation({
+   870→    mutationFn: async (data: { author: string; text: string }) => {
+   871→      const res = await fetch(`/api/budget-items/${budgetItemId}/comments`, {
+   872→        method: "POST",
+   873→        headers: { "Content-Type": "application/json" },
+   874→        body: JSON.stringify(data),
+   875→      });
+   876→      if (!res.ok) throw new Error("Failed to create comment");
+   877→      return res.json();
+   878→    },
+   879→    onSuccess: () => {
+   880→      qc.invalidateQueries({ queryKey: ["comments", budgetItemId] });
+   881→    },
+   882→  });
+   883→}
+   884→
+   885→export function useDeleteComment(budgetItemId: string) {
+   886→  const qc = useQueryClient();
+   887→  return useMutation({
+   888→    mutationFn: async (id: string) => {
+   889→      const res = await fetch(`/api/comments/${id}`, { method: "DELETE" });
+   890→      if (!res.ok) throw new Error("Failed to delete comment");
+   891→      return res.json();
+   892→    },
+   893→    onSuccess: () => {
+   894→      qc.invalidateQueries({ queryKey: ["comments", budgetItemId] });
+   895→    },
+   896→  });
+   897→}
+   898→

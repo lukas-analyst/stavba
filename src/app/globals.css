@@ -149,6 +149,17 @@
   .scrollbar-thin::-webkit-scrollbar-thumb:hover {
     background-color: color-mix(in oklch, var(--muted-foreground) 50%, transparent);
   }
+
+  /* Hide scrollbar entirely while keeping the element scrollable.
+     Useful for horizontal tab strips where the scrollbar would otherwise
+     take vertical space and look out of place. */
+  .scrollbar-none {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 /* Smooth number transitions */

@@ -86,6 +86,21 @@ function NotesTabInner({ projectId }: { projectId: string }) {
   const todoCount = (content.match(/^[-*]\s\[\s\]/gm) || []).length;
   const doneCount = (content.match(/^[-*]\s\[x\]/gim) || []).length;
 
+  // Show a skeleton while the projects list is still loading on the very
+  // first paint — otherwise the textarea would briefly render empty and
+  // flash the placeholder before the server content arrives.
+  if (!projects) {
+    return (
+      <div className="space-y-4">
+        <div className="flex flex-wrap items-center gap-2">
+          <Skeleton className="h-8 w-40" />
+          <Skeleton className="h-8 w-40" />
+        </div>
+        <Skeleton className="h-[60vh] w-full" />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
       {/* Toolbar */}

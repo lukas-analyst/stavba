@@ -21,6 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Separator } from "@/components/ui/separator";
 import { PHASES } from "@/lib/format";
 import {
   useBudgetItems,
@@ -412,7 +413,14 @@ function BudgetItemForm({
         </div>
 
         {/* Comments section (only when editing an existing item) */}
-        {item && <CommentSection budgetItemId={item.id} />}
+        {item && (
+          <>
+            <Separator className="mt-2" />
+            <div className="pt-2">
+              <CommentSection budgetItemId={item.id} />
+            </div>
+          </>
+        )}
 
         <DialogFooter>
           <Button type="button" variant="outline" onClick={onDone}>

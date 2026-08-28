@@ -340,7 +340,7 @@ export function ProjectDetail({ project }: { project: Project }) {
           </div>
 
           {/* Tabs */}
-          <nav className="mt-3 flex gap-1 overflow-x-auto border-b md:mt-4 scrollbar-thin">
+          <nav className="scrollbar-none mt-3 flex gap-1 overflow-x-auto border-b md:mt-4">
             {TABS.map((tab) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;

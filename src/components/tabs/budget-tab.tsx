@@ -317,8 +317,29 @@ export function BudgetTab({ projectId }: { projectId: string }) {
   if (isLoading) {
     return (
       <div className="space-y-3">
-        <Skeleton className="h-10" />
-        <Skeleton className="h-96" />
+        {/* Toolbar skeleton */}
+        <div className="flex flex-wrap items-center gap-2">
+          <Skeleton className="h-9 w-56" />
+          <Skeleton className="h-9 w-44" />
+          <Skeleton className="h-9 w-64" />
+          <div className="ml-auto flex items-center gap-3">
+            <Skeleton className="h-9 w-20" />
+            <Skeleton className="h-9 w-20" />
+            <Skeleton className="h-9 w-20" />
+            <Skeleton className="h-9 w-20" />
+          </div>
+        </div>
+        {/* Table skeleton */}
+        <div className="overflow-hidden rounded-lg border">
+          <div className="border-b bg-muted/40 px-4 py-2.5">
+            <Skeleton className="h-4 w-full" />
+          </div>
+          {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+            <div key={i} className="border-b px-4 py-3">
+              <Skeleton className="h-5 w-full" />
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
