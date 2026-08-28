@@ -1269,3 +1269,31 @@ Work Log:
 Stage Summary:
 - ✅ Budget: úkoly odsazené a vizuálně oddělené, předvyplněná podkategorie, opravený border
 - ✅ Timeline: odstraněn drag/resize, jen dvojklik pro datumy, opraven sticky header overflow
+
+---
+Task ID: 25
+Agent: Hlavní asistent (Z.ai Code) - migrace na Neon PostgreSQL
+Task: Přepnutí z lokální SQLite na cloudovou Neon PostgreSQL databázi
+
+Work Log:
+- Problém: Sandbox prostředí se resetuje mezi sessions → lokální SQLite data (db/custom.db) se ztrácejí
+- Supabase PostgreSQL nepřipojitelná: direct connection má jen IPv6 (sandbox nepodporuje IPv6), Supavisor pooler hlásí "tenant not found"
+- Řešení: Neon PostgreSQL (neon.tech) — free 3GB, IPv4 podpora, žádné pauzování
+- Změny:
+  * .env: DATABASE_URL nastaven na Neon connection string (sslmode=require)
+  * schema.prisma: provider změněn z "sqlite" na "postgresql"
+  * db.ts: přidán fallback pro načítání DATABASE_URL z .env souboru (pro prostředí kde env není auto-loaded)
+  * package.json: dev script aktualizován s explicitním DATABASE_URL
+  * db:push: schéma pushnuto do Neon (9.84s) — všechny tabulky vytvořeny
+  * seed.ts: 49 budget items + 3 kontakty naséedováno do Neon (projekt Troja)
+- Verifikace:
+  * API: GET /api/projects → 1 projekt (Troja, starred=True)
+  * API: GET /api/projects/{id}/budget → 49 položek
+  * Agent Browser: Dashboard načetl bez chyb, Rozpočet tab funguje, 0 runtime chyb
+- Lint: 0 errors
+
+Stage Summary:
+- ✅ Databáze: Neon PostgreSQL (ep-quiet-breeze-b1x58rmg-pooler.c-5.eu-central-1.aws.neon.tech)
+- ✅ Data: 1 projekt (Troja), 49 položek rozpočtu, 3 kontakty
+- ✅ Data nyní přežijí restart sandboxu — jsou v cloude!
+- ✅ Free tier: 3GB storage, 100h compute/měs, bez pauzování
