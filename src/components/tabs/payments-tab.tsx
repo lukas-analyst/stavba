@@ -147,14 +147,13 @@ export function PaymentsTab({ projectId }: { projectId: string }) {
   const [sortBy, setSortBy] = useState<SortKey>("date-desc");
 
   // Group payments: standalone payments + installment groups
-  // A "parent" payment is one that has installments (other payments point to it via installmentOf).
-  // A standalone payment has installmentOf === null and no children.
+  // A payment is an "installment parent" if it has invoiceTotal != null (regardless of children).
+  // A "standalone" payment has installmentOf === null and invoiceTotal === null.
+  // Children (additional installments) have installmentOf = parent.id.
   const { standalone, groups } = useMemo(() => {
     const childrenByParent = new Map<string, Payment[]>();
-    const parentIds = new Set<string>();
     for (const p of payments ?? []) {
       if (p.installmentOf) {
-        parentIds.add(p.installmentOf);
         const arr = childrenByParent.get(p.installmentOf) ?? [];
         arr.push(p);
         childrenByParent.set(p.installmentOf, arr);
@@ -163,14 +162,23 @@ export function PaymentsTab({ projectId }: { projectId: string }) {
     const standalone: Payment[] = [];
     const groups: { parent: Payment; installments: Payment[] }[] = [];
     for (const p of payments ?? []) {
-      if (parentIds.has(p.id)) {
+      // A payment is an installment parent if:
+      // - it has invoiceTotal != null, OR
+      // - other payments point to it via installmentOf
+      const hasChildren = childrenByParent.has(p.id);
+      const isInstallmentParent = (p.invoiceTotal != null) || hasChildren;
+      
+      if (isInstallmentParent && !p.installmentOf) {
+        // This is a parent (installment group)
         const children = (childrenByParent.get(p.id) ?? []).slice().sort(
           (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
         );
         groups.push({ parent: p, installments: children });
       } else if (!p.installmentOf) {
+        // Standalone payment (no invoiceTotal, no children)
         standalone.push(p);
       }
+      // If p.installmentOf is set, it's a child — already in childrenByParent, skip
     }
     return { standalone, groups };
   }, [payments]);
@@ -196,7 +204,7 @@ export function PaymentsTab({ projectId }: { projectId: string }) {
 
   const totalAmount = [
     ...filteredStandalone,
-    ...filteredGroups.flatMap((g) => g.installments),
+    ...filteredGroups.flatMap((g) => [g.parent, ...g.installments]),
   ].reduce((s, p) => s + p.amount, 0);
 
   return (
@@ -246,7 +254,7 @@ export function PaymentsTab({ projectId }: { projectId: string }) {
           </div>
           {/* VAT summary */}
           {(() => {
-            const allPayments = [...filteredStandalone, ...filteredGroups.flatMap((g) => g.installments)];
+            const allPayments = [...filteredStandalone, ...filteredGroups.flatMap((g) => [g.parent, ...g.installments])];
             const totalVat = allPayments.reduce((s, p) => s + (p.vatAmount || 0), 0);
             const hasVat = allPayments.some((p) => p.vatAmount !== null && p.vatAmount !== undefined);
             return hasVat ? (
