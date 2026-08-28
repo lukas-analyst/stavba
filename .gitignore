@@ -52,3 +52,19 @@ prompt
 server.log
 # Skills directory
 /skills/
+# Cleanup — do not track these
+tool-results/
+agent-ctx/
+.zscripts/
+examples/
+download/
+backups/
+mini-services/
+tests/
+upload/
+Caddyfile
+db/custom.db
+qa-*.png
+s2-*.png
+screenshot-*.png
+supabase-schema.sql
