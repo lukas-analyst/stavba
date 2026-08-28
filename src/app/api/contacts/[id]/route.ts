@@ -24,6 +24,9 @@ export async function PATCH(
         phone: body.phone !== undefined ? (body.phone?.trim() || null) : undefined,
         email: body.email !== undefined ? (body.email?.trim() || null) : undefined,
         company: body.company !== undefined ? (body.company?.trim() || null) : undefined,
+        ico: body.ico !== undefined ? (body.ico?.trim() || null) : undefined,
+        dic: body.dic !== undefined ? (body.dic?.trim() || null) : undefined,
+        website: body.website !== undefined ? (body.website?.trim() || null) : undefined,
         notes: body.notes !== undefined ? (body.notes?.trim() || null) : undefined,
         rating:
           body.rating !== undefined

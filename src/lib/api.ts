@@ -64,6 +64,9 @@ export type Contact = {
   phone: string | null;
   email: string | null;
   company: string | null;
+  ico: string | null;
+  dic: string | null;
+  website: string | null;
   notes: string | null;
   rating: number | null;
   _count?: { timeEntries: number; payments: number };

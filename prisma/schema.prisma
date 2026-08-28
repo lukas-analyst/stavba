@@ -151,6 +151,9 @@ model Contact {
   phone     String?
   email     String?
   company   String?
+  ico       String?  // IČO (Identifikační číslo organizace)
+  dic       String?  // DIČ (Daňové identifikační číslo)
+  website   String?
   notes     String?
   rating    Int?     // 1-5 stars
   createdAt DateTime @default(now())

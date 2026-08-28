@@ -67,7 +67,10 @@ import {
   Clock3,
   PackageCheck,
   CalendarClock,
+  Search,
+  Hash,
 } from "lucide-react";
+import { AresSearch, type AresCompany } from "@/components/ares-search";
 import {
   CONTACT_TYPES,
   contactTypeLabel,
@@ -371,6 +374,20 @@ function ContactCard({
             <span className="truncate">{contact.company}</span>
           </div>
         )}
+        {(contact.ico || contact.dic) && (
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] text-muted-foreground">
+            {contact.ico && (
+              <span className="tabular-nums">
+                IČO: <span className="font-medium text-foreground/80">{contact.ico}</span>
+              </span>
+            )}
+            {contact.dic && (
+              <span className="tabular-nums">
+                DIČ: <span className="font-medium text-foreground/80">{contact.dic}</span>
+              </span>
+            )}
+          </div>
+        )}
         {contact.phone && (
           <a
             href={`tel:${contact.phone}`}
@@ -590,6 +607,20 @@ function ContactDetailDialog({
                 <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                   {contact.company && (
                     <DetailRow icon={<Building2 className="h-3.5 w-3.5" />} label="Firma" value={contact.company} />
+                  )}
+                  {contact.ico && (
+                    <DetailRow
+                      icon={<Hash className="h-3.5 w-3.5" />}
+                      label="IČO"
+                      value={contact.ico}
+                    />
+                  )}
+                  {contact.dic && (
+                    <DetailRow
+                      icon={<Hash className="h-3.5 w-3.5" />}
+                      label="DIČ"
+                      value={contact.dic}
+                    />
                   )}
                   {contact.phone && (
                     <DetailRow
@@ -843,11 +874,32 @@ function ContactForm({
   const [type, setType] = useState(contact?.type ?? "company");
   const [role, setRole] = useState(contact?.role ?? "");
   const [company, setCompany] = useState(contact?.company ?? "");
+  const [ico, setIco] = useState(contact?.ico ?? "");
+  const [dic, setDic] = useState(contact?.dic ?? "");
   const [phone, setPhone] = useState(contact?.phone ?? "");
   const [email, setEmail] = useState(contact?.email ?? "");
   const [website, setWebsite] = useState(contact?.website ?? "");
   const [notes, setNotes] = useState(contact?.notes ?? "");
   const [rating, setRating] = useState<number | null>(contact?.rating ?? null);
+
+  // Handle ARES company selection — prefill name, company, IČO, DIČ and type.
+  // ARES returns only companies, so type defaults to "company".
+  const handleAresSelect = (c: AresCompany) => {
+    setName(c.name);
+    setCompany(c.name);
+    setIco(c.ico);
+    setDic(c.dic ?? "");
+    setType("company");
+    // If the contact form has notes and ARES returned an address, append it
+    // so the user keeps the info without overwriting existing notes.
+    if (c.address) {
+      setNotes((prev) => {
+        const trimmedPrev = prev.trim();
+        const addrLine = `Adresa (ARES): ${c.address}`;
+        return trimmedPrev ? `${trimmedPrev}\n${addrLine}` : addrLine;
+      });
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -861,6 +913,8 @@ function ContactForm({
         type,
         role,
         company,
+        ico,
+        dic,
         phone,
         email,
         website,
@@ -889,6 +943,19 @@ function ContactForm({
         </DialogDescription>
       </DialogHeader>
       <form onSubmit={handleSubmit} className="space-y-4">
+        {/* ARES search — načte data firmy z registru */}
+        {!contact && (
+          <div className="space-y-1.5 rounded-md border bg-muted/30 p-3">
+            <Label className="flex items-center gap-1.5 text-xs">
+              <Search className="h-3 w-3" />
+              Načíst z ARES registru
+            </Label>
+            <p className="text-[11px] text-muted-foreground">
+              Vyhledejte firmu podle IČO nebo názvu a predvyplňte pole.
+            </p>
+            <AresSearch onSelect={handleAresSelect} />
+          </div>
+        )}
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
               <Label htmlFor="name">Jméno / Název *</Label>
@@ -933,6 +1000,30 @@ function ContactForm({
                 value={company}
                 onChange={(e) => setCompany(e.target.value)}
                 placeholder="např. Stavby s.r.o."
+              />
+            </div>
+          </div>
+          {/* IČO / DIČ — identifikátory firmy (předvyplněno z ARES) */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-2">
+              <Label htmlFor="ico">IČO</Label>
+              <Input
+                id="ico"
+                value={ico}
+                onChange={(e) => setIco(e.target.value)}
+                placeholder="např. 12345678"
+                inputMode="numeric"
+                autoComplete="off"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="dic">DIČ</Label>
+              <Input
+                id="dic"
+                value={dic}
+                onChange={(e) => setDic(e.target.value)}
+                placeholder="např. CZ12345678"
+                autoComplete="off"
               />
             </div>
           </div>

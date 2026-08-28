@@ -30,7 +30,7 @@ export async function POST(
   try {
     const { id } = await params;
     const body = await request.json();
-    const { name, type, role, phone, email, company, notes, rating } = body;
+    const { name, type, role, phone, email, company, ico, dic, website, notes, rating } = body;
 
     if (!name || typeof name !== "string" || !name.trim()) {
       return NextResponse.json({ error: "Name is required" }, { status: 400 });
@@ -45,6 +45,9 @@ export async function POST(
         phone: phone?.trim() || null,
         email: email?.trim() || null,
         company: company?.trim() || null,
+        ico: ico?.trim() || null,
+        dic: dic?.trim() || null,
+        website: website?.trim() || null,
         notes: notes?.trim() || null,
         rating: rating !== undefined && rating !== null ? Number(rating) : null,
       },
