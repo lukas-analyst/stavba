@@ -40,8 +40,6 @@ type Props = {
   parentId?: string;
   defaultCategory?: string;
   defaultPhase?: string;
-  /** Pre-filled subcategory (typically inherited from the parent item when adding a task). */
-  defaultSubcategory?: string;
 };
 
 export function BudgetItemDialog({
@@ -52,7 +50,6 @@ export function BudgetItemDialog({
   parentId,
   defaultCategory,
   defaultPhase,
-  defaultSubcategory,
 }: Props) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -65,7 +62,6 @@ export function BudgetItemDialog({
             parentId={parentId}
             defaultCategory={defaultCategory}
             defaultPhase={defaultPhase}
-            defaultSubcategory={defaultSubcategory}
             onDone={() => onOpenChange(false)}
           />
         )}
@@ -80,7 +76,6 @@ function BudgetItemForm({
   parentId,
   defaultCategory,
   defaultPhase,
-  defaultSubcategory,
   onDone,
 }: {
   projectId: string;
@@ -88,7 +83,6 @@ function BudgetItemForm({
   parentId?: string;
   defaultCategory?: string;
   defaultPhase?: string;
-  defaultSubcategory?: string;
   onDone: () => void;
 }) {
   const { data: items } = useBudgetItems(projectId);
@@ -107,10 +101,11 @@ function BudgetItemForm({
     [topLevelItems],
   );
 
-  // Determine "task mode": if parentId is set (and we're not editing an existing item)
-  const isTaskMode = !item && !!parentId;
+  // Determine "task mode": editing an existing child item, or creating a new
+  // child item with a parentId prop set. In task mode, category & phase are
+  // inherited from the parent (locked) and we don't show the dependsOn picker.
+  const isTaskMode = (!!item && !!item.parentId) || (!item && !!parentId);
 
-  // In task mode, category is fixed to parent's category
   const [category, setCategory] = useState(
     item?.category ?? defaultCategory ?? "",
   );
@@ -120,17 +115,9 @@ function BudgetItemForm({
   const [isCustomCat, setIsCustomCat] = useState(
     item ? !existingCategories.includes(item.category) : false,
   );
-  const [subcategory, setSubcategory] = useState(
-    item?.subcategory ?? defaultSubcategory ?? "",
-  );
-  // For child items (tasks), the displayed name in the budget table is
-  // `item.element || item.subcategory`. If a child has no `element` set but
-  // has a `subcategory` (typically inherited from the parent), seed the
-  // element input with the subcategory value so the user can see and edit
-  // the existing text rather than starting from an empty field.
-  const [element, setElement] = useState(
-    item?.element ?? (item?.parentId ? (item.subcategory ?? "") : ""),
-  );
+  // For Položka: subcategory is the item name (label "Název položky").
+  // For Úkol: subcategory is the task name (label "Název úkolu").
+  const [subcategory, setSubcategory] = useState(item?.subcategory ?? "");
   const [phase, setPhase] = useState(item?.phase ?? defaultPhase ?? "Neurčeno");
   const [required, setRequired] = useState(item?.required ?? false);
   const [completed, setCompleted] = useState(item?.completed ?? false);
@@ -149,6 +136,7 @@ function BudgetItemForm({
   );
   // Optional dependency on another top-level item — used to auto-fill dateFrom
   // from the referenced item's dateTo. Sentinel "__none__" represents "no dep".
+  // Only relevant for Položka (top-level) mode — tasks inherit it from parent.
   const [dependsOnId, setDependsOnId] = useState<string>(
     item?.dependsOnId ?? "__none__",
   );
@@ -200,7 +188,7 @@ function BudgetItemForm({
     e.preventDefault();
     // In task mode, always use the parent's category (defaultCategory)
     const finalCategory = isTaskMode
-      ? (defaultCategory ?? "")
+      ? (item?.category ?? defaultCategory ?? "")
       : isCustomCat
         ? customCategory.trim()
         : category;
@@ -211,8 +199,11 @@ function BudgetItemForm({
     try {
       const data: Partial<BudgetItem> = {
         category: finalCategory,
-        subcategory,
-        element,
+        subcategory: subcategory.trim() || null,
+        // The `element` field is no longer used in the UI — Položky don't have
+        // it, and Úkoly use `subcategory` as their name. Always null it out
+        // to keep the database consistent.
+        element: null,
         phase,
         required,
         completed,
@@ -224,7 +215,11 @@ function BudgetItemForm({
         planDays: planDays === "" ? null : Number(planDays.replace(",", ".")),
         dateFrom: dateFrom || null,
         dateTo: dateTo || null,
-        dependsOnId: dependsOnId === "__none__" ? null : dependsOnId,
+        dependsOnId: isTaskMode
+          ? (item?.dependsOnId ?? null)
+          : dependsOnId === "__none__"
+            ? null
+            : dependsOnId,
       };
       // Set parentId only when creating new (not when editing — preserve existing)
       if (!item && parentId) {
@@ -232,7 +227,7 @@ function BudgetItemForm({
       }
       if (item) {
         await updateItem.mutateAsync({ id: item.id, data });
-        toast.success("Položka upravena");
+        toast.success(isTaskMode ? "Úkol upraven" : "Položka upravena");
       } else {
         await createItem.mutateAsync(data);
         toast.success(isTaskMode ? "Úkol přidán" : "Položka přidána");
@@ -243,51 +238,77 @@ function BudgetItemForm({
     }
   };
 
+  const submitLabel = item
+    ? isTaskMode
+      ? "Uložit úkol"
+      : "Uložit změny"
+    : isTaskMode
+      ? "Přidat úkol"
+      : "Přidat položku";
+
   return (
     <>
       <DialogHeader>
         <DialogTitle>
-          {item
-            ? "Upravit položku rozpočtu"
-            : isTaskMode
-              ? "Nový úkol"
-              : "Nová položka rozpočtu"}
+          {isTaskMode
+            ? item
+              ? "Upravit úkol"
+              : "Nový úkol"
+            : item
+              ? "Upravit položku"
+              : "Nová položka"}
         </DialogTitle>
         <DialogDescription>
           {isTaskMode
-            ? `Přidejte úkol pod položku „${defaultCategory ?? ""}".`
-            : item?.subcategory || "Přidejte novou položku do rozpočtu projektu."}
+            ? `Úkol pod položkou „${defaultCategory ?? ""}"`
+            : "Přidejte novou položku do rozpočtu projektu."}
         </DialogDescription>
       </DialogHeader>
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="grid grid-cols-2 gap-3">
+        {isTaskMode ? (
+          // ===== Task mode: only the task name (subcategory) =====
           <div className="space-y-2">
-            <Label htmlFor="category">Kategorie *</Label>
-            {isTaskMode ? (
-              // In task mode, category is locked to parent's category
-              <Input value={defaultCategory ?? ""} disabled />
-            ) : !isCustomCat ? (
-              <Select value={category} onValueChange={setCategory}>
-                <SelectTrigger id="category">
-                  <SelectValue placeholder="Vyberte kategorii" />
-                </SelectTrigger>
-                <SelectContent>
-                  {existingCategories.map((c) => (
-                    <SelectItem key={c} value={c}>
-                      {c}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            ) : (
-              <Input
-                value={customCategory}
-                onChange={(e) => setCustomCategory(e.target.value)}
-                placeholder="Nová kategorie"
-                autoFocus
-              />
-            )}
-            {!isTaskMode && (
+            <Label htmlFor="subcategory">Název úkolu *</Label>
+            <Input
+              id="subcategory"
+              value={subcategory}
+              onChange={(e) => setSubcategory(e.target.value)}
+              placeholder="např. Vyklízení sklepa"
+              list="existing-subcategories"
+              autoFocus
+            />
+            <datalist id="existing-subcategories">
+              {existingSubcategories.map((s) => (
+                <option key={s} value={s} />
+              ))}
+            </datalist>
+          </div>
+        ) : (
+          // ===== Item mode: category + subcategory (název položky) =====
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-2">
+              <Label htmlFor="category">Kategorie *</Label>
+              {!isCustomCat ? (
+                <Select value={category} onValueChange={setCategory}>
+                  <SelectTrigger id="category">
+                    <SelectValue placeholder="Vyberte kategorii" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {existingCategories.map((c) => (
+                      <SelectItem key={c} value={c}>
+                        {c}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <Input
+                  value={customCategory}
+                  onChange={(e) => setCustomCategory(e.target.value)}
+                  placeholder="Nová kategorie"
+                  autoFocus
+                />
+              )}
               <Button
                 type="button"
                 variant="link"
@@ -297,59 +318,35 @@ function BudgetItemForm({
               >
                 {isCustomCat ? "Vybrat existující" : "+ Vytvořit novou kategorii"}
               </Button>
-            )}
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="subcategory">Podkategorie / název</Label>
-            {/* Use datalist to allow free typing + autocomplete from existing subcategories */}
-            <Input
-              id="subcategory"
-              value={subcategory}
-              onChange={(e) => setSubcategory(e.target.value)}
-              placeholder="např. Hydroizolace - projekt"
-              list="existing-subcategories"
-            />
-            <datalist id="existing-subcategories">
-              {existingSubcategories.map((s) => (
-                <option key={s} value={s} />
-              ))}
-            </datalist>
-            {existingSubcategories.length > 0 && (
-              <p className="text-[10px] text-muted-foreground">
-                {existingSubcategories.length} existujících podkategorií v této kategorii —
-                začněte psát pro návrhy.
-              </p>
-            )}
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-3">
-          <div className="space-y-2">
-            <Label htmlFor="phase">Fáze</Label>
-            <Select value={phase} onValueChange={setPhase}>
-              <SelectTrigger id="phase">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {PHASES.map((p) => (
-                  <SelectItem key={p} value={p}>
-                    {p}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="flex flex-col justify-end gap-2 pb-2">
-            <div className="flex items-center gap-2">
-              <Checkbox
-                id="required"
-                checked={required}
-                onCheckedChange={(v) => setRequired(v === true)}
-              />
-              <Label htmlFor="required" className="cursor-pointer">
-                Nutné
-              </Label>
             </div>
+            <div className="space-y-2">
+              <Label htmlFor="subcategory">Název položky</Label>
+              {/* Use datalist to allow free typing + autocomplete from existing subcategories */}
+              <Input
+                id="subcategory"
+                value={subcategory}
+                onChange={(e) => setSubcategory(e.target.value)}
+                placeholder="např. Hydroizolace - projekt"
+                list="existing-subcategories"
+              />
+              <datalist id="existing-subcategories">
+                {existingSubcategories.map((s) => (
+                  <option key={s} value={s} />
+                ))}
+              </datalist>
+              {existingSubcategories.length > 0 && (
+                <p className="text-[10px] text-muted-foreground">
+                  {existingSubcategories.length} existujících podkategorií v této kategorii —
+                  začněte psát pro návrhy.
+                </p>
+              )}
+            </div>
+          </div>
+        )}
+
+        {isTaskMode ? (
+          // ===== Task mode: only Hotovo + Zavrženo (no Fáze, no Nutné) =====
+          <div className="flex items-center gap-6">
             <div className="flex items-center gap-2">
               <Checkbox
                 id="completed"
@@ -371,17 +368,58 @@ function BudgetItemForm({
               </Label>
             </div>
           </div>
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="element">Úkol</Label>
-          <Input
-            id="element"
-            value={element}
-            onChange={(e) => setElement(e.target.value)}
-            placeholder={item?.parentId ? "např. Podřezání / Injektáž / Montáž" : "např. HW Systém / Podřezání / Injektáž"}
-          />
-        </div>
+        ) : (
+          // ===== Item mode: Fáze + Nutné/Hotovo/Zavrženo =====
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-2">
+              <Label htmlFor="phase">Fáze</Label>
+              <Select value={phase} onValueChange={setPhase}>
+                <SelectTrigger id="phase">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {PHASES.map((p) => (
+                    <SelectItem key={p} value={p}>
+                      {p}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex flex-col justify-end gap-2 pb-2">
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="required"
+                  checked={required}
+                  onCheckedChange={(v) => setRequired(v === true)}
+                />
+                <Label htmlFor="required" className="cursor-pointer">
+                  Nutné
+                </Label>
+              </div>
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="completed"
+                  checked={completed}
+                  onCheckedChange={(v) => setCompleted(v === true)}
+                />
+                <Label htmlFor="completed" className="cursor-pointer">
+                  Hotovo
+                </Label>
+              </div>
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="rejected"
+                  checked={rejected}
+                  onCheckedChange={(v) => setRejected(v === true)}
+                />
+                <Label htmlFor="rejected" className="cursor-pointer text-rose-700 dark:text-rose-400">
+                  Zavrženo
+                </Label>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="space-y-2">
           <Label htmlFor="note">Poznámka</Label>
@@ -448,26 +486,28 @@ function BudgetItemForm({
           </div>
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="dependsOn">Navazuje na</Label>
-          <Select value={dependsOnId} onValueChange={handleDependsOnChange}>
-            <SelectTrigger id="dependsOn">
-              <SelectValue placeholder="— žádná závislost —" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="__none__">— žádná závislost —</SelectItem>
-              {dependsOnOptions.map((i) => (
-                <SelectItem key={i.id} value={i.id}>
-                  {i.subcategory || i.category}
-                  {i.dateTo ? ` (do ${i.dateTo.substring(0, 10)})` : ""}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <p className="text-[10px] text-muted-foreground">
-            Při výběru se Datum od automaticky doplní z Datum do vybrané položky.
-          </p>
-        </div>
+        {!isTaskMode && (
+          <div className="space-y-2">
+            <Label htmlFor="dependsOn">Navazuje na</Label>
+            <Select value={dependsOnId} onValueChange={handleDependsOnChange}>
+              <SelectTrigger id="dependsOn">
+                <SelectValue placeholder="— žádná závislost —" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__none__">— žádná závislost —</SelectItem>
+                {dependsOnOptions.map((i) => (
+                  <SelectItem key={i.id} value={i.id}>
+                    {i.subcategory || i.category}
+                    {i.dateTo ? ` (do ${i.dateTo.substring(0, 10)})` : ""}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-[10px] text-muted-foreground">
+              Při výběru se Datum od automaticky doplní z Datum do vybrané položky.
+            </p>
+          </div>
+        )}
 
         <DialogFooter>
           <Button type="button" variant="outline" onClick={onDone}>
@@ -480,11 +520,7 @@ function BudgetItemForm({
             {(createItem.isPending || updateItem.isPending) && (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             )}
-            {item
-              ? "Uložit změny"
-              : isTaskMode
-                ? "Přidat úkol"
-                : "Přidat položku"}
+            {submitLabel}
           </Button>
         </DialogFooter>
       </form>

@@ -169,50 +169,112 @@
   }
 }
 
-/* Print styles for report generation */
+/* ============================================================
+   Print / PDF export styles
+   ------------------------------------------------------------
+   Activated only when `body.printing` class is added right
+   before `window.print()` is invoked (see PrintReportDialog).
+   When inactive, the page prints with normal browser defaults.
+   ============================================================ */
 @media print {
-  /* Hide non-essential UI elements */
-  aside,
-  nav,
-  button,
-  .no-print,
-  [aria-label="Notifications"] {
+  /* Force light theme + neutral background for the printed document */
+  html,
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+
+  /* Keep badge / phase colors in the saved PDF (Chrome honors this) */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Hide every element visually by default when printing the report */
+  body.printing * {
+    visibility: hidden !important;
+  }
+
+  /* Reveal only the report subtree */
+  body.printing .print-report,
+  body.printing .print-report * {
+    visibility: visible !important;
+  }
+
+  /* The dialog is rendered through a Radix portal at the end of <body>.
+     Its overlay + close button would otherwise overlay the report —
+     drop them entirely. */
+  body.printing [data-slot="dialog-overlay"],
+  body.printing [data-slot="dialog-close"] {
     display: none !important;
   }
 
-  /* Reset layout for print */
-  main {
+  /* Neutralize the dialog content's fixed centering so the report can
+     flow from the top-left of the page. */
+  body.printing [data-slot="dialog-content"] {
+    position: static !important;
+    inset: auto !important;
+    transform: none !important;
+    max-height: none !important;
+    max-width: none !important;
+    width: 100% !important;
     overflow: visible !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+    background: #ffffff !important;
+    border-radius: 0 !important;
   }
 
-  body {
-    background: white !important;
-    color: black !important;
+  /* The report container takes the full page width and starts at the top */
+  body.printing .print-report {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    border: none !important;
+    box-shadow: none !important;
+    background: #ffffff !important;
+    padding: 0 !important;
   }
 
-  /* Ensure cards have borders for print */
-  .border,
-  [class*="border-"] {
-    border-color: #ccc !important;
+  /* Hide the dialog footer (Zavřít / Stáhnout PDF buttons) in the PDF */
+  body.printing .no-print {
+    display: none !important;
   }
 
-  /* Force light theme colors */
-  .dark {
-    --background: white;
-    --foreground: black;
-    --card: white;
-    --card-foreground: black;
-    --muted: #f5f5f5;
-    --muted-foreground: #666;
-    --border: #ccc;
+  /* A4 page geometry */
+  @page {
+    size: A4;
+    margin: 15mm;
   }
 
-  /* Page breaks */
+  /* Section page breaks (opt-in via class) */
   .print-break-before {
     break-before: page;
   }
 
-  /* Avoid breaking inside cards */
+  /* Avoid splitting small sections across pages */
+  body.printing .print-section {
+    break-inside: avoid;
+  }
+
+  /* Compact tables for print */
+  body.printing table {
+    font-size: 10pt;
+    border-collapse: collapse;
+  }
+  body.printing th,
+  body.printing td {
+    border-color: #cccccc !important;
+  }
+  body.printing th {
+    background: #f0f0f0 !important;
+    color: #000000 !important;
+  }
+
+  /* Legacy helper preserved for any other callers */
   [data-print-card] {
     break-inside: avoid;
   }

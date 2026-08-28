@@ -188,7 +188,7 @@ export function BudgetTab({ projectId }: { projectId: string }) {
       if (search.trim()) {
         const q = search.toLowerCase();
         const text =
-          `${i.category} ${i.subcategory ?? ""} ${i.note ?? ""} ${i.element ?? ""}`.toLowerCase();
+          `${i.category} ${i.subcategory ?? ""} ${i.note ?? ""}`.toLowerCase();
         if (!text.includes(q)) return false;
       }
       return true;
@@ -566,7 +566,6 @@ export function BudgetTab({ projectId }: { projectId: string }) {
                     <TableRow className="bg-muted/40 hover:bg-muted/40">
                       <TableHead className="w-12"></TableHead>
                       <TableHead className="min-w-[200px]">Položka</TableHead>
-                      <TableHead className="min-w-[140px]">Úkol</TableHead>
                       <TableHead className="w-28">Fáze</TableHead>
                       <TableHead className="w-28 text-right">Plán (Kč)</TableHead>
                       <TableHead className="w-20 text-right">Dny</TableHead>
@@ -581,7 +580,7 @@ export function BudgetTab({ projectId }: { projectId: string }) {
                   <TableBody>
                     {catItems.length === 0 && (
                       <TableRow>
-                        <TableCell colSpan={12} className="py-8 text-center text-sm text-muted-foreground">
+                        <TableCell colSpan={11} className="py-8 text-center text-sm text-muted-foreground">
                           Žádné položky v této kategorii.
                         </TableCell>
                       </TableRow>
@@ -599,7 +598,7 @@ export function BudgetTab({ projectId }: { projectId: string }) {
                           onToggleExpand={() => toggleItem(item.id)}
                           expandedItems={expandedItems}
                           onToggleChildExpand={toggleItem}
-                          onEdit={() => setEditingItem(item)}
+                          onEdit={setEditingItem}
                           canMoveUp={idx > 0}
                           canMoveDown={idx < catItems.length - 1}
                           onMoveUp={() => moveItem(catItems, idx, -1)}
@@ -635,7 +634,6 @@ export function BudgetTab({ projectId }: { projectId: string }) {
           parentId={addTaskFor.id}
           defaultCategory={addTaskFor.category}
           defaultPhase={addTaskFor.phase}
-          defaultSubcategory={addTaskFor.subcategory ?? undefined}
         />
       )}
     </div>
@@ -667,7 +665,7 @@ function BudgetItemRows({
   onToggleExpand: () => void;
   expandedItems: Set<string>;
   onToggleChildExpand: (id: string) => void;
-  onEdit: () => void;
+  onEdit: (item: BudgetItem) => void;
   canMoveUp: boolean;
   canMoveDown: boolean;
   onMoveUp: () => void;
@@ -775,7 +773,7 @@ function BudgetRow({
 }: {
   item: BudgetItem;
   projectId: string;
-  onEdit: () => void;
+  onEdit: (item: BudgetItem) => void;
   canMoveUp: boolean;
   canMoveDown: boolean;
   onMoveUp: () => void;
@@ -876,7 +874,7 @@ function BudgetRow({
               </span>
             )}
             <button
-              onClick={onEdit}
+              onClick={() => onEdit(item)}
               className={cn(
                 "text-left font-medium hover:underline",
                 isChild ? "text-xs" : "text-sm",
@@ -886,10 +884,8 @@ function BudgetRow({
                 childCount > 0 && "font-semibold",
               )}
             >
-              {/* Children display their element (task name) instead of subcategory */}
-              {isChild
-                ? (item.element || item.subcategory || "(bez názvu)")
-                : (item.subcategory || "(bez názvu)")}
+              {/* Both Položka and Úkol display their subcategory as the name */}
+              {item.subcategory || "(bez názvu)"}
             </button>
             {item.rejected && (
               <Badge variant="outline" className="h-4 px-1 text-[9px] text-rose-700">
@@ -933,23 +929,6 @@ function BudgetRow({
               </div>
             )}
         </div>
-      </TableCell>
-
-      {/* Prvek / Úkol (empty for children — element is shown in the Položka column) */}
-      <TableCell>
-        {isChild ? null : item.element ? (
-          <button
-            onClick={onEdit}
-            className="block w-full text-left hover:underline"
-            title={item.element}
-          >
-            <span className="line-clamp-2 text-xs text-foreground/80">
-              {item.element}
-            </span>
-          </button>
-        ) : (
-          <span className="text-[11px] text-muted-foreground/50">—</span>
-        )}
       </TableCell>
 
       {/* Fáze */}
@@ -1135,7 +1114,7 @@ function BudgetRow({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={onEdit}>Upravit detail</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onEdit(item)}>Upravit detail</DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => update("completed", !item.completed)}
               >
@@ -1229,7 +1208,7 @@ function DetailPanelRow({
 
   return (
     <TableRow className="bg-muted/20 hover:bg-muted/20">
-      <TableCell colSpan={12} className="relative py-3">
+      <TableCell colSpan={11} className="relative py-3">
         {/* Colored left stripe — absolute positioned to match the parent row's stripe
             and avoid rounded-corner clipping at the bottom of the category card. */}
         <div
