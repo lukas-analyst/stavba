@@ -477,6 +477,18 @@ function InstallmentGroupCard({
             {parent.budgetItem?.category} · {t.emoji} {t.label} · vystavena {formatDate(parent.date)}
           </div>
         </div>
+        {/* Edit invoice button */}
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onEditPayment(parent);
+          }}
+          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md border bg-background text-muted-foreground hover:bg-muted hover:text-foreground"
+          title="Upravit fakturu (typ, číslo, firma…)"
+          aria-label="Upravit fakturu"
+        >
+          <Pencil className="h-3.5 w-3.5" />
+        </button>
         <div className="flex items-center gap-4 text-xs">
           <div className="text-right">
             <div className="text-[10px] text-muted-foreground">Zaplaceno</div>

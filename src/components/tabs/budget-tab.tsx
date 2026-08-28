@@ -863,8 +863,11 @@ function BudgetRow({
         </TableCell>
       )}
 
-      {/* Položka */}
-      <TableCell>
+      {/* Položka / Úkol */}
+      <TableCell
+        className={isChild ? "cursor-pointer" : ""}
+        onClick={isChild ? () => onEdit(item) : undefined}
+      >
         <div className="flex flex-col">
           <div className="flex items-center gap-1.5">
             {item.required && (
@@ -876,10 +879,10 @@ function BudgetRow({
                 !
               </span>
             )}
-            <button
-              onClick={() => onEdit(item)}
+            <span
               className={cn(
-                "text-left font-medium hover:underline",
+                "text-left font-medium",
+                isChild ? "cursor-pointer hover:underline" : "",
                 isChild ? "text-xs" : "text-sm",
                 item.rejected
                   ? "line-through decoration-rose-500/70"
@@ -887,9 +890,8 @@ function BudgetRow({
                 childCount > 0 && "font-semibold",
               )}
             >
-              {/* Both Položka and Úkol display their subcategory as the name */}
               {item.subcategory || "(bez názvu)"}
-            </button>
+            </span>
             {item.rejected && (
               <Badge variant="outline" className="h-4 px-1 text-[9px] text-rose-700">
                 Zavrženo
@@ -919,7 +921,11 @@ function BudgetRow({
               <div className="mt-0.5 flex flex-wrap gap-1">
                 {item._count.payments > 0 && (
                   <Badge variant="outline" className="h-4 px-1 text-[10px] text-emerald-700">
-                    {item._count.payments} plateb
+                    {item._count.payments === 1
+                      ? "1 platba"
+                      : item._count.payments < 5
+                        ? `${item._count.payments} platby`
+                        : `${item._count.payments} plateb`}
                   </Badge>
                 )}
                 {item._count.timeEntries > 0 && (
