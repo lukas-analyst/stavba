@@ -634,6 +634,7 @@ export function BudgetTab({ projectId }: { projectId: string }) {
           parentId={addTaskFor.id}
           defaultCategory={addTaskFor.category}
           defaultPhase={addTaskFor.phase}
+          parentItemName={addTaskFor.subcategory ?? addTaskFor.category}
         />
       )}
     </div>
@@ -833,9 +834,11 @@ function BudgetRow({
           </span>
         </TableCell>
       ) : (
-        <TableCell className="relative align-middle">
-          {/* Colored left stripe — absolute positioned so the line stays straight
-              even at the rounded bottom-left corner of the category card. */}
+        <TableCell
+          className="relative align-middle cursor-pointer"
+          onClick={onToggleExpand}
+        >
+          {/* Colored left stripe */}
           <div
             aria-hidden
             className={cn(
@@ -845,18 +848,18 @@ function BudgetRow({
                 : PHASE_BG_COLORS[item.phase] ?? "bg-zinc-300",
             )}
           />
-          <button
-            onClick={onToggleExpand}
-            aria-label={isExpanded ? "Sbalit detail" : "Rozbalit detail"}
-            aria-expanded={isExpanded}
-            className="relative flex h-5 w-5 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground"
-          >
-            {isExpanded ? (
-              <ChevronDown className="h-3.5 w-3.5" />
-            ) : (
-              <ChevronRight className="h-3.5 w-3.5" />
-            )}
-          </button>
+          <div className="relative flex items-center gap-1">
+            <span className="flex h-5 w-5 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground">
+              {isExpanded ? (
+                <ChevronDown className="h-4 w-4" />
+              ) : (
+                <ChevronRight className="h-4 w-4" />
+              )}
+            </span>
+            <span className="text-[10px] text-muted-foreground/60">
+              {childCount > 0 ? `${childCount} ${childCount === 1 ? "úkol" : childCount < 5 ? "úkoly" : "úkolů"}` : ""}
+            </span>
+          </div>
         </TableCell>
       )}
 
@@ -897,19 +900,17 @@ function BudgetRow({
                 Hotovo
               </Badge>
             )}
-            {childCount > 0 && (
-              <Badge variant="secondary" className="h-4 px-1 text-[9px]">
-                {childCount} {childCount === 1 ? "úkol" : childCount < 5 ? "úkoly" : "úkolů"}
-              </Badge>
-            )}
             {!isChild && onAddTask && (
               <button
-                onClick={onAddTask}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onAddTask();
+                }}
                 title="Přidat úkol pod tuto položku"
                 aria-label="Přidat úkol"
-                className="inline-flex h-4 w-4 items-center justify-center rounded text-emerald-700 hover:bg-emerald-100 hover:text-emerald-800 dark:text-emerald-400 dark:hover:bg-emerald-900/40"
+                className="inline-flex h-6 w-6 items-center justify-center rounded-md text-emerald-700 transition-colors hover:bg-emerald-100 hover:text-emerald-800 dark:text-emerald-400 dark:hover:bg-emerald-900/40"
               >
-                <Plus className="h-3 w-3" />
+                <Plus className="h-4 w-4" />
               </button>
             )}
           </div>

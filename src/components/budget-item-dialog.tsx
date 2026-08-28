@@ -40,6 +40,8 @@ type Props = {
   parentId?: string;
   defaultCategory?: string;
   defaultPhase?: string;
+  defaultSubcategory?: string;
+  parentItemName?: string;
 };
 
 export function BudgetItemDialog({
@@ -50,6 +52,7 @@ export function BudgetItemDialog({
   parentId,
   defaultCategory,
   defaultPhase,
+  parentItemName,
 }: Props) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -62,6 +65,7 @@ export function BudgetItemDialog({
             parentId={parentId}
             defaultCategory={defaultCategory}
             defaultPhase={defaultPhase}
+            parentItemName={parentItemName}
             onDone={() => onOpenChange(false)}
           />
         )}
@@ -76,6 +80,7 @@ function BudgetItemForm({
   parentId,
   defaultCategory,
   defaultPhase,
+  parentItemName,
   onDone,
 }: {
   projectId: string;
@@ -83,6 +88,7 @@ function BudgetItemForm({
   parentId?: string;
   defaultCategory?: string;
   defaultPhase?: string;
+  parentItemName?: string;
   onDone: () => void;
 }) {
   const { data: items } = useBudgetItems(projectId);
@@ -105,6 +111,10 @@ function BudgetItemForm({
   // child item with a parentId prop set. In task mode, category & phase are
   // inherited from the parent (locked) and we don't show the dependsOn picker.
   const isTaskMode = (!!item && !!item.parentId) || (!item && !!parentId);
+
+  // Find parent item name for the dialog description
+  const parentName = parentItemName
+    ?? (item?.parentId ? (items ?? []).find((i) => i.id === item.parentId)?.subcategory ?? "" : "");
 
   const [category, setCategory] = useState(
     item?.category ?? defaultCategory ?? "",
@@ -260,7 +270,7 @@ function BudgetItemForm({
         </DialogTitle>
         <DialogDescription>
           {isTaskMode
-            ? `Úkol pod položkou „${defaultCategory ?? ""}"`
+            ? `Úkol pod položkou „${parentName}"`
             : "Přidejte novou položku do rozpočtu projektu."}
         </DialogDescription>
       </DialogHeader>
