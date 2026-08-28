@@ -1428,3 +1428,24 @@ Stage Summary:
 - ✅ Hover nad tab tlačítky spustí prefetch pro daný tab (i keyboard focus).
 - ✅ Při zobrazení Dashboardu se na pozadí nacachují budget items + payments pro rychlý přepnut na nejčastější taby.
 - ✅ Lint 0 errors / 0 warnings.
+
+---
+Task ID: 26
+Agent: Hlavní asistent (Z.ai Code) - optimalizace aplikace
+Task: DB indexy, URL parametry, optimistic updates, prefetch
+
+Work Log:
+- Subagent O1: DB indexy — 20 @@index direktiv v Prisma schématu (BudgetItem 8, Payment 4, TimeEntry 3, Contact 1, AuditLog 2, Comment 1, Snapshot 1), db push, prisma generate
+- Subagent O2: URL parametry — ?project={id}&tab={tab} v URL, synchronizace s Zustand store, Suspense wrapper pro useSearchParams
+- Subagent O3: Optimistic updates — useUpdateBudgetItem, useUpdateProject, useUpdatePayment, useUpdateTimeEntry s onMutate/onError/onSettled patternem
+- Subagent O3: Prefetch — hover nad tab tlačítky prefetchne data, dashboard na pozadí prefetchně budget a payments
+- Lint: 0 errors, 0 warnings
+- Verifikace: URL params fungují (?project=...&tab=budget), 0 runtime chyb
+- Push na GitHub: commit 579ed2f
+
+Stage Summary:
+- ✅ 20 DB indexů pro rychlejší dotazy
+- ✅ URL parametry pro sdíletelné odkazy
+- ✅ Optimistic updates — instant UI při editaci
+- ✅ Prefetch na hover + background prefetch
+- ✅ Vercel auto-deploy se spustí z GitHub push
