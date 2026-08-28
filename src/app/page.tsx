@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { useProjects } from "@/lib/api";
-import { useAppStore } from "@/lib/store";
+import { useAppStore, type TabId } from "@/lib/store";
 import { AppSidebar } from "@/components/app-sidebar";
 import { ProjectDetail } from "@/components/project-detail";
 import { EmptyState } from "@/components/empty-state";
@@ -11,10 +12,52 @@ import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
 import { Loader2, PanelLeftClose, PanelLeft, Search, Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+// Valid tab ids — used to validate the `?tab=` URL param.
+const VALID_TABS: ReadonlySet<TabId> = new Set<TabId>([
+  "dashboard",
+  "budget",
+  "payments",
+  "time",
+  "contacts",
+  "timeline",
+  "notes",
+]);
+
+/**
+ * Next.js 16 requires `useSearchParams()` to be wrapped in a Suspense
+ * boundary so that static rendering can bail out gracefully. We split the
+ * page into a thin wrapper that only provides the Suspense fallback and a
+ * `HomeContent` component that does the real work.
+ */
 export default function Home() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex h-screen w-full items-center justify-center bg-muted/30">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </div>
+      }
+    >
+      <HomeContent />
+    </Suspense>
+  );
+}
+
+function HomeContent() {
   const { data: projects, isLoading } = useProjects();
   const selectedProjectId = useAppStore((s) => s.selectedProjectId);
+  const activeTab = useAppStore((s) => s.activeTab);
   const setSelectedProject = useAppStore((s) => s.setSelectedProject);
+  const setActiveTab = useAppStore((s) => s.setActiveTab);
+
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+
+  // Guards the URL-write effect so it does not run before the initial
+  // URL-read effect has had a chance to hydrate the store from query params.
+  const hasInitializedRef = useRef(false);
+
   // Desktop: sidebar can be collapsed via the edge button or Cmd+B
   const [desktopCollapsed, setDesktopCollapsed] = useState(false);
   // Mobile: sidebar is a drawer (overlay), closed by default
@@ -42,6 +85,45 @@ export default function Home() {
     };
   }, []);
 
+  // === URL → Store sync (one-time, on mount) ===
+  // Read `?project=` and `?tab=` from the URL and apply them to the store
+  // so that shareable links land the user on the right project/tab.
+  useEffect(() => {
+    const urlProject = searchParams.get("project");
+    const urlTab = searchParams.get("tab");
+
+    if (urlProject) {
+      setSelectedProject(urlProject);
+    }
+    // Validate the tab against the known list so a mistyped URL does not
+    // leave the app in an undefined tab state.
+    if (urlTab && VALID_TABS.has(urlTab as TabId)) {
+      setActiveTab(urlTab as TabId);
+    }
+  }, []); // run once on mount — see comment above
+
+  // === Store → URL sync (after the initial mount) ===
+  // Whenever the selected project or active tab changes, mirror the change
+  // into the URL using `router.replace` so we don't pollute the back-button
+  // history on every interaction.
+  useEffect(() => {
+    // Skip the very first run — the URL is already authoritative at mount
+    // time and writing back the (possibly auto-selected) defaults would
+    // create a `?tab=dashboard` flicker.
+    if (!hasInitializedRef.current) {
+      hasInitializedRef.current = true;
+      return;
+    }
+
+    const params = new URLSearchParams();
+    if (selectedProjectId) params.set("project", selectedProjectId);
+    if (activeTab) params.set("tab", activeTab);
+
+    const query = params.toString();
+    const nextUrl = query ? `${pathname}?${query}` : pathname;
+    router.replace(nextUrl);
+  }, [selectedProjectId, activeTab, pathname, router]);
+
   // Close mobile drawer when a project is selected
   const handleSelectProject = (id: string) => {
     setSelectedProject(id);
@@ -49,6 +131,8 @@ export default function Home() {
   };
 
   // Auto-select the starred/first project on initial load
+  // (only fires when no project is selected — e.g. when the URL had no
+  // `?project=` param, preserving the original "auto-select" behaviour).
   useEffect(() => {
     if (!selectedProjectId && projects && projects.length > 0) {
       const starred = projects.find((p) => p.starred);

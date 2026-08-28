@@ -1,11 +1,11 @@
 import { PrismaClient } from '@prisma/client'
+import fs from 'fs'
+import path from 'path'
 
 // Ensure DATABASE_URL is set (fallback for environments where .env isn't auto-loaded)
 if (!process.env.DATABASE_URL) {
   // Try loading from .env file manually
   try {
-    const fs = require('fs')
-    const path = require('path')
     const envPath = path.join(process.cwd(), '.env')
     if (fs.existsSync(envPath)) {
       const envContent = fs.readFileSync(envPath, 'utf-8')

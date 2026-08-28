@@ -214,6 +214,28 @@ export function useCreateProjectFromTemplate() {
 export function useUpdateProject(id: string) {
   const qc = useQueryClient();
   return useMutation({
+    onMutate: async (data: Partial<Project>) => {
+      // Cancel outgoing refetches so they don't overwrite our optimistic update
+      await qc.cancelQueries({ queryKey: ["projects"] });
+      // Snapshot previous value for rollback
+      const previousProjects = qc.getQueryData<Project[]>(["projects"]);
+      // Optimistically update the matching project in the list cache
+      qc.setQueryData<Project[]>(["projects"], (old) =>
+        old?.map((p) => (p.id === id ? { ...p, ...data } : p))
+      );
+      return { previousProjects };
+    },
+    onError: (_err, _vars, context) => {
+      // Rollback to the snapshot on failure
+      if (context?.previousProjects) {
+        qc.setQueryData(["projects"], context.previousProjects);
+      }
+    },
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: ["projects"] });
+      qc.invalidateQueries({ queryKey: ["project", id] });
+      qc.invalidateQueries({ queryKey: ["dashboard", id] });
+    },
     mutationFn: async (data: Partial<Project>) => {
       const res = await fetch(`/api/projects/${id}`, {
         method: "PATCH",
@@ -222,11 +244,6 @@ export function useUpdateProject(id: string) {
       });
       if (!res.ok) throw new Error("Failed to update project");
       return res.json();
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["projects"] });
-      qc.invalidateQueries({ queryKey: ["project", id] });
-      qc.invalidateQueries({ queryKey: ["dashboard", id] });
     },
   });
 }
@@ -278,6 +295,27 @@ export function useCreateBudgetItem(projectId: string) {
 export function useUpdateBudgetItem(projectId: string) {
   const qc = useQueryClient();
   return useMutation({
+    onMutate: async ({ id, data }) => {
+      // Cancel outgoing refetches so they don't overwrite our optimistic update
+      await qc.cancelQueries({ queryKey: ["budget", projectId] });
+      // Snapshot previous value for rollback
+      const previousItems = qc.getQueryData<BudgetItem[]>(["budget", projectId]);
+      // Optimistically update the matching item in the cache
+      qc.setQueryData<BudgetItem[]>(["budget", projectId], (old) =>
+        old?.map((item) => (item.id === id ? { ...item, ...data } : item))
+      );
+      return { previousItems };
+    },
+    onError: (_err, _vars, context) => {
+      // Rollback to the snapshot on failure
+      if (context?.previousItems) {
+        qc.setQueryData(["budget", projectId], context.previousItems);
+      }
+    },
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: ["budget", projectId] });
+      qc.invalidateQueries({ queryKey: ["dashboard", projectId] });
+    },
     mutationFn: async ({ id, data }: { id: string; data: Partial<BudgetItem> }) => {
       const res = await fetch(`/api/budget-items/${id}`, {
         method: "PATCH",
@@ -286,10 +324,6 @@ export function useUpdateBudgetItem(projectId: string) {
       });
       if (!res.ok) throw new Error("Failed to update budget item");
       return res.json();
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["budget", projectId] });
-      qc.invalidateQueries({ queryKey: ["dashboard", projectId] });
     },
   });
 }
@@ -458,6 +492,28 @@ export function useCreatePayment(projectId: string) {
 export function useUpdatePayment(projectId: string) {
   const qc = useQueryClient();
   return useMutation({
+    onMutate: async ({ id, data }) => {
+      // Cancel outgoing refetches so they don't overwrite our optimistic update
+      await qc.cancelQueries({ queryKey: ["payments", projectId] });
+      // Snapshot previous value for rollback
+      const previousPayments = qc.getQueryData<Payment[]>(["payments", projectId]);
+      // Optimistically update the matching payment in the cache
+      qc.setQueryData<Payment[]>(["payments", projectId], (old) =>
+        old?.map((p) => (p.id === id ? { ...p, ...data } : p))
+      );
+      return { previousPayments };
+    },
+    onError: (_err, _vars, context) => {
+      // Rollback to the snapshot on failure
+      if (context?.previousPayments) {
+        qc.setQueryData(["payments", projectId], context.previousPayments);
+      }
+    },
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: ["payments", projectId] });
+      qc.invalidateQueries({ queryKey: ["budget", projectId] });
+      qc.invalidateQueries({ queryKey: ["dashboard", projectId] });
+    },
     mutationFn: async ({ id, data }: { id: string; data: Partial<Payment> }) => {
       const res = await fetch(`/api/payments/${id}`, {
         method: "PATCH",
@@ -466,11 +522,6 @@ export function useUpdatePayment(projectId: string) {
       });
       if (!res.ok) throw new Error("Failed to update payment");
       return res.json();
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["payments", projectId] });
-      qc.invalidateQueries({ queryKey: ["budget", projectId] });
-      qc.invalidateQueries({ queryKey: ["dashboard", projectId] });
     },
   });
 }
@@ -527,6 +578,28 @@ export function useCreateTimeEntry(projectId: string) {
 export function useUpdateTimeEntry(projectId: string) {
   const qc = useQueryClient();
   return useMutation({
+    onMutate: async ({ id, data }) => {
+      // Cancel outgoing refetches so they don't overwrite our optimistic update
+      await qc.cancelQueries({ queryKey: ["time", projectId] });
+      // Snapshot previous value for rollback
+      const previousEntries = qc.getQueryData<TimeEntry[]>(["time", projectId]);
+      // Optimistically update the matching entry in the cache
+      qc.setQueryData<TimeEntry[]>(["time", projectId], (old) =>
+        old?.map((e) => (e.id === id ? { ...e, ...data } : e))
+      );
+      return { previousEntries };
+    },
+    onError: (_err, _vars, context) => {
+      // Rollback to the snapshot on failure
+      if (context?.previousEntries) {
+        qc.setQueryData(["time", projectId], context.previousEntries);
+      }
+    },
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: ["time", projectId] });
+      qc.invalidateQueries({ queryKey: ["budget", projectId] });
+      qc.invalidateQueries({ queryKey: ["dashboard", projectId] });
+    },
     mutationFn: async ({ id, data }: { id: string; data: Partial<TimeEntry> & { hours?: number } }) => {
       const res = await fetch(`/api/time-entries/${id}`, {
         method: "PATCH",
@@ -535,11 +608,6 @@ export function useUpdateTimeEntry(projectId: string) {
       });
       if (!res.ok) throw new Error("Failed to update time entry");
       return res.json();
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["time", projectId] });
-      qc.invalidateQueries({ queryKey: ["budget", projectId] });
-      qc.invalidateQueries({ queryKey: ["dashboard", projectId] });
     },
   });
 }

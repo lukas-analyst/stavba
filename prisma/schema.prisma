@@ -58,6 +58,8 @@ model Snapshot {
   completedCount Int
   savedTotal  Float
   createdAt   DateTime @default(now())
+
+  @@index([projectId])
 }
 
 // ===== AUDIT LOG =====
@@ -75,6 +77,9 @@ model AuditLog {
   oldValue  String?
   newValue  String?
   createdAt DateTime @default(now())
+
+  @@index([projectId])
+  @@index([createdAt])
 }
 
 // ===== BUDGET ITEMS =====
@@ -111,6 +116,15 @@ model BudgetItem {
   payments   Payment[]
   timeEntries TimeEntry[]
   comments   Comment[]
+
+  @@index([projectId])
+  @@index([parentId])
+  @@index([phase])
+  @@index([category])
+  @@index([completed])
+  @@index([sortOrder])
+  @@index([dateFrom])
+  @@index([dateTo])
 }
 
 // ===== COMMENTS =====
@@ -122,6 +136,8 @@ model Comment {
   author       String   // name of the person commenting
   text         String
   createdAt    DateTime @default(now())
+
+  @@index([budgetItemId])
 }
 
 // ===== CONTACTS (Workers / Companies / Suppliers) =====
@@ -142,6 +158,8 @@ model Contact {
 
   timeEntries TimeEntry[]
   payments    Payment[]
+
+  @@index([projectId])
 }
 
 // ===== PAYMENTS =====
@@ -168,6 +186,11 @@ model Payment {
   description   String?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
+
+  @@index([budgetItemId])
+  @@index([contactId])
+  @@index([date])
+  @@index([installmentOf])
 }
 
 // ===== TIME ENTRIES =====
@@ -188,4 +211,8 @@ model TimeEntry {
   description  String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+
+  @@index([budgetItemId])
+  @@index([contactId])
+  @@index([date])
 }

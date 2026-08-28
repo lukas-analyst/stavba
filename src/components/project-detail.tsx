@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   Star,
   Pencil,
@@ -74,6 +75,7 @@ export function ProjectDetail({ project }: { project: Project }) {
   const [reportOpen, setReportOpen] = useState(false);
   const [auditOpen, setAuditOpen] = useState(false);
   const updateProject = useUpdateProject(project.id);
+  const qc = useQueryClient();
 
   const status = STATUS_LABELS[project.status] ?? STATUS_LABELS.active;
   const deadline = daysUntilLabel(project.endDate);
@@ -95,6 +97,106 @@ export function ProjectDetail({ project }: { project: Project }) {
     future: "bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-950/30 dark:text-sky-300 dark:border-sky-900",
     none: "",
   };
+
+  // === Prefetch on hover ===
+  // When the user hovers a tab button, eagerly fetch the data for that tab
+  // so the switch is instant. `prefetchQuery` is a no-op if the query is
+  // already cached or in flight, so it's safe to call repeatedly.
+  const prefetchTab = (tabId: TabId) => {
+    const pid = project.id;
+    switch (tabId) {
+      case "dashboard":
+        qc.prefetchQuery({
+          queryKey: ["dashboard", pid],
+          queryFn: async () => {
+            const res = await fetch(`/api/projects/${pid}/dashboard`);
+            if (!res.ok) throw new Error("Failed to load dashboard");
+            return res.json();
+          },
+        });
+        break;
+      case "budget":
+        qc.prefetchQuery({
+          queryKey: ["budget", pid],
+          queryFn: async () => {
+            const res = await fetch(`/api/projects/${pid}/budget`);
+            if (!res.ok) throw new Error("Failed to load budget");
+            return res.json();
+          },
+        });
+        break;
+      case "payments":
+        qc.prefetchQuery({
+          queryKey: ["payments", pid],
+          queryFn: async () => {
+            const res = await fetch(`/api/projects/${pid}/payments`);
+            if (!res.ok) throw new Error("Failed to load payments");
+            return res.json();
+          },
+        });
+        break;
+      case "time":
+        qc.prefetchQuery({
+          queryKey: ["time", pid],
+          queryFn: async () => {
+            const res = await fetch(`/api/projects/${pid}/time`);
+            if (!res.ok) throw new Error("Failed to load time entries");
+            return res.json();
+          },
+        });
+        break;
+      case "contacts":
+        qc.prefetchQuery({
+          queryKey: ["contacts", pid],
+          queryFn: async () => {
+            const res = await fetch(`/api/projects/${pid}/contacts`);
+            if (!res.ok) throw new Error("Failed to load contacts");
+            return res.json();
+          },
+        });
+        break;
+      case "timeline":
+        // Timeline tab uses the dashboard aggregate, so prefetch it.
+        qc.prefetchQuery({
+          queryKey: ["dashboard", pid],
+          queryFn: async () => {
+            const res = await fetch(`/api/projects/${pid}/dashboard`);
+            if (!res.ok) throw new Error("Failed to load dashboard");
+            return res.json();
+          },
+        });
+        break;
+      case "notes":
+        // Notes tab reads from the projects list (already loaded globally).
+        // No extra prefetch needed.
+        break;
+    }
+  };
+
+  // === Background prefetch when Dashboard loads ===
+  // While the user is on the Dashboard, warm up the budget items and
+  // payments queries in the background so the most likely next tab switches
+  // (Budget / Payments) feel instant.
+  useEffect(() => {
+    if (activeTab !== "dashboard") return;
+    const pid = project.id;
+    qc.prefetchQuery({
+      queryKey: ["budget", pid],
+      queryFn: async () => {
+        const res = await fetch(`/api/projects/${pid}/budget`);
+        if (!res.ok) throw new Error("Failed to load budget");
+        return res.json();
+      },
+    });
+    qc.prefetchQuery({
+      queryKey: ["payments", pid],
+      queryFn: async () => {
+        const res = await fetch(`/api/projects/${pid}/payments`);
+        if (!res.ok) throw new Error("Failed to load payments");
+        return res.json();
+      },
+    });
+  }, [activeTab, project.id, qc]);
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -246,6 +348,8 @@ export function ProjectDetail({ project }: { project: Project }) {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
+                  onMouseEnter={() => prefetchTab(tab.id)}
+                  onFocus={() => prefetchTab(tab.id)}
                   className={cn(
                     "relative flex shrink-0 items-center gap-1.5 whitespace-nowrap px-3 py-2.5 text-sm font-medium transition-colors md:gap-2 md:px-4",
                     isActive

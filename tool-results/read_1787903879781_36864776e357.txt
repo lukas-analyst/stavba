@@ -1,0 +1,1360 @@
+     1→# RekonstrukcePro — Worklog
+     2→
+     3→## Projekt: Aplikace pro správu rozpočtu rekonstrukcí
+     4→
+     5→---
+     6→Task ID: 1-11
+     7→Agent: Hlavní asistent (Z.ai Code)
+     8→Task: Vytvořit komplexní aplikaci pro sledování rozpočtu, nákladů a času pro rekonstrukce s více projekty, napojením na data z CSV a profesionálním UI.
+     9→
+    10→Work Log:
+    11→- Načetl CSV soubor "Troja - Rozpočet a náklady rekonstrukce" (49 budget items v 8 kategoriích)
+    12→- Navrhl Prisma schéma: Project, BudgetItem, Payment, Contact, TimeEntry (vše s provázaností a onDelete Cascade)
+    13→- Vytvořil seed skript (`scripts/seed.ts`) s parserem CSV (české datumy, formát "25 000 Kč", procenta "vůle")
+    14→- Opravil seed: prázdné kategorie dědí z předchozího řádku (CSV pattern)
+    15→- Push schématu do SQLite + seed 49 budget items + 3 ukázkové kontakty
+    16→- Vytvořil kompletní REST API:
+    17→  - `/api/projects` (GET, POST) + `/api/projects/[id]` (GET, PATCH, DELETE)
+    18→  - `/api/projects/[id]/budget` (GET, POST) + `/api/budget-items/[id]` (PATCH, DELETE)
+    19→  - `/api/projects/[id]/payments` (GET, POST) + `/api/payments/[id]` (PATCH, DELETE) — s automatickým přepočtem actualCost
+    20→  - `/api/projects/[id]/time` (GET, POST) + `/api/time-entries/[id]` (PATCH, DELETE) — s automatickým přepočtem actualHours
+    21→  - `/api/projects/[id]/contacts` (GET, POST) + `/api/contacts/[id]` (PATCH, DELETE)
+    22→  - `/api/projects/[id]/dashboard` (GET) — agregované statistiky, upozornění, timeline
+    23→- Postavil UI pomocí Next.js 16 + shadcn/ui + Tailwind + recharts:
+    24→  - `app-sidebar.tsx` — sidebar s projekty, hvězdičkami, burn-rate bary, mazáním
+    25→  - `project-detail.tsx` — hlavička projektu + 6 tabů (Přehled, Rozpočet, Platby, Čas, Kontakty, Časová osa)
+    26→  - `tabs/dashboard-tab.tsx` — 4 KPI karty, bar+pie grafy, sekce upozornění, breakdown kategorií
+    27→  - `tabs/budget-tab.tsx` — skládací tabulka seskupená dle kategorie, inline editace všech polí, filtry
+    28→  - `tabs/payments-tab.tsx` — tabulka plateb, filtry, dialog pro přidání
+    29→  - `tabs/time-tab.tsx` — časové záznamy, statistiky dle pracovníka, typ (firma/řemeslník/svépomoc)
+    30→  - `tabs/contacts-tab.tsx` — karty kontaktů s hvězdičkovým hodnocením
+    31→  - `tabs/timeline-tab.tsx` — Gantt-like harmonogram s zoomem (měsíce/kvartály/roky), dnes marker
+    32→- Použil React Query pro data fetching, Zustand pro view state
+    33→- Lokalizace: česká (cs-CZ), formátování Kč, datumy DD.MM.YYYY
+    34→- Opravil lint chyby: unterminated strings, setState-in-effect (přešel na key pattern pro dialogy)
+    35→- Spustil dev server (Next.js 16.1.3 Turbopack) na portu 3000
+    36→- Verifikace přes Agent Browser: dashboard se načetl, budget tab se načetl s plnou tabulkou, žádné chyby v konzoli
+    37→- VLM analýza screenshotu: "velmi kvalitní, moderní dashboard", "čistá vizuální hierarchie", "dobré barevné kódování"
+    38→
+    39→Stage Summary:
+    40→- ✅ Aplikace plně funkční: 49 budget items, 3 kontakty, dashboard s KPI/grafy/upozorněními
+    41→- ✅ Kompletní CRUD pro projekty, budget items, platby, čas, kontakty
+    42→- ✅ Inline editace rozpočtu, skládací kategorie, filtry, vyhledávání
+    43→- ✅ Gantt timeline s zoomem a dnes markerem
+    44→- ✅ Profesionální UI v češtině, žádné runtime chyby
+    45→- 📊 Celkový plán rozpočtu Troja: 3 243 000 Kč, 49 položek, 215 plánovaných dní
+    46→- ⚠️ Datový model je připraven pro budoucí migraci na PostgreSQL (stačí změnit datasource v schema.prisma)
+    47→- 📝 Google Sheets integrace zatím neimplementována (doporučeno jako další fáze — viz doporučení níže)
+    48→
+    49→Unresolved issues / Next steps:
+    50→- Google Sheets import/export zatím jen budoucí (CSV seed funguje jako most)
+    51→- Autentizace (NextAuth) zatím neimplementována — vhodné pro multi-user verzi
+    52→- Notifikace (e-mail upozornění na blížící se termíny) zatím nejsou
+    53→- Mobilní responsivita je funkční, ale Gantt pohled by mohl mít mobilní zjednodušení
+    54→- Pro akceptaci plateb od klientů (faktury) by bylo vhodné přidat export do PDF/CSV
+    55→
+    56→---
+    57→Task ID: 8
+    58→Agent: Supabase + Export/Import subagent
+    59→Task: Setup Supabase utility klientů a vytvoření Export/Import JSON API
+    60→
+    61→Work Log:
+    62→- Přečetl worklog a existující strukturu (Prisma + SQLite, modely Project/BudgetItem/Payment/Contact/TimeEntry)
+    63→- Nainstaloval balíčky `@supabase/supabase-js@2.112.4` a `@supabase/ssr@0.12.5` (`bun add`)
+    64→- Vytvořil `src/utils/supabase/server.ts` — server client přes `createServerClient` z `@supabase/ssr` s `cookies()` storem z `next/headers`
+    65→- Vytvořil `src/utils/supabase/client.ts` — browser client přes `createBrowserClient`
+    66→- Vytvořil `src/utils/supabase/middleware.ts` — factory pro middleware client; opravil drobný TS problém v šabloně (`request.cookies.set()` na NextRequest nepřijímá `options` jako 3. argument — options se aplikují až na `supabaseResponse.cookies`)
+    67→- Do `.env` přidal (append, nepřepsal `DATABASE_URL`): `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
+    68→- Vytvořil `src/middleware.ts` — passthrough middleware, který volá `createClient(request)` ze supabase utility (refresh cookies pro budoucí auth); matcher vylučuje statické soubory a obrázky
+    69→- Vytvořil `src/app/api/export/route.ts` — GET endpoint, který sériově načte všechny projekty, budget items, platby, kontakty a time entries; vrátí JSON s hlavičkou `Content-Disposition: attachment; filename="stavba-export-YYYY-MM-DD.json"`, struktura `{ exportedAt, version, projects, budgetItems, payments, contacts, timeEntries }`
+    70→- Vytvořil `src/app/api/import/route.ts` — POST endpoint, který přijme JSON z exportu; v `db.$transaction` smaže vše v FK pořadí (TimeEntry → Payment → BudgetItem → Contact → Project) a poté nasype nová data v pořadí Project → Contact → BudgetItem → Payment → TimeEntry (zachová původní ID, takže zůstanou vztahy); ISO string → Date konverze pro všechna DateTime pole; vrací `{ success: true, imported: { projects, contacts, budgetItems, payments, timeEntries } }` s počty
+    71→- Spustil `bun run lint` — prošlo bez chyb; `bunx tsc --noEmit` — v mých souborech žádné TS chyby
+    72→- Důležité označení v `.env` komentářem, že Supabase proměnné jsou pro budoucí auth/client, nikoliv pro Prisma (Prisma stále používá `DATABASE_URL`)
+    73→
+    74→Stage Summary:
+    75→- ✅ Supabase utility klienti připraveni (server, browser, middleware factory) — passthrough pro budoucí auth, neovlivňují současnou funkčnost aplikace
+    76→- ✅ Middleware.ts aktivní pro všechny nestatické routy, ale pouze refreshuje cookies (žádné blokování, žádné auth checky)
+    77→- ⚠️ Nelze hned přepnout Prisma na Postgres přes Supabase: `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` je anon/publishable klíč, ne connection string. Prisma potřebuje `DATABASE_URL` ve formátu `postgresql://user:password@host:port/db` s DB heslem. Aby bylo možné migrovat, musí uživatel v Supabase dashboardu najít "Connection string" (Settings → Database) a nastavit `DATABASE_URL` + změnit `provider` v `prisma/schema.prisma` z `sqlite` na `postgresql` + spustit `bun run db:push`. Schéma je už PostgreSQL-compatible (viz komentář v schema.prisma z Task 1-11).
+    78→- ✅ Export endpoint `GET /api/export` vrací kompletní stav aplikace jako stažitelný JSON
+    79→- ✅ Import endpoint `POST /api/import` přijímá stejný JSON, je idempotentní (lze volat opakovaně), zachovává ID a vztahy, vrací počty importovaných záznamů; celé v transakci
+    80→- 📁 Vytvořené soubory:
+    81→  - src/utils/supabase/server.ts
+    82→  - src/utils/supabase/client.ts
+    83→  - src/utils/supabase/middleware.ts
+    84→  - src/middleware.ts
+    85→  - src/app/api/export/route.ts
+    86→  - src/app/api/import/route.ts
+    87→- ✅ `bun run lint` prošel bez chyb
+    88→
+    89→---
+    90→Task ID: 9
+    91→Agent: Hlavní asistent (Z.ai Code) - druhá fáze
+    92→Task: Implementace všech uživatelských požadavků z druhé zprávy: přejmenování, hvězdička ikonka, export/import, platby ve splátkách, dokončenost+ušetřeno, interaktivní Gantt s drag/resize, reorder, multi-day čas, Supabase příprava
+    93→
+    94→Work Log:
+    95→- Aktualizoval Prisma schéma: BudgetItem.completed, Payment.invoiceTotal + installmentOf, TimeEntry.dateTo, Project.categoryOrder
+    96→- Push schématu do DB, Prisma Client regenerován
+    97→- Aktualizoval API routes: budget-items PATCH (completed), payments POST/PATCH (invoiceTotal, installmentOf), time POST/PATCH (dateTo)
+    98→- Vytvořil /api/projects/[id]/reorder endpoint (items sortOrder + categoryOrder JSON)
+    99→- Aktualizoval dashboard endpoint: completedCount, savedTotal v totals, completed v timeline
+   100→- Aktualizoval typy v api.ts: Project.categoryOrder, BudgetItem.completed, Payment.invoiceTotal/installmentOf, TimeEntry.dateTo, Dashboard.totals (completedCount, savedTotal), timeline.completed
+   101→- Přidal hooks: useReorder, useExportState, useImportState
+   102→- Přejmenoval aplikaci "RekonstrukcePro" → "Stavba" (layout metadata, sidebar header, empty-state)
+   103→- Odebral hvězdičku (Switch) z project-dialog.tsx; hvězdička je nyní klikatelná ikonka v sidebar project list + v project header
+   104→- Přidal typ stavby (Rekonstrukce/Nová stavba/Přístavba/Interiér) do project dialogu
+   105→- Přidal Export/Import tlačítka do sidebar footer (hidden file input pro import JSON)
+   106→- Budget tab: přidal completed toggle (Circle/CheckCircle2), "Ušetřeno" sloupec, reorder šipky (ArrowUp/ArrowDown) pro items i kategorie, toolbar ukazatel Ušetřeno + Hotovo celkem
+   107→- Budget-item dialog: přidal "Hotovo" checkbox
+   108→- Payments tab: přepsán s podporou instalmentů - InstallmentGroupCard seskupuje parent fakturu + splátky, progress bar zaplaceno/faktura/zbývá, inline formulář "Přidat splátku", PaymentDialog má toggle "Platba ve splátkách"
+   109→- Time tab: přidal dateTo (vícedenní záznam), počítadlo dnů a h/den, zobrazení rozsahu datumů v tabulce
+   110→- Timeline tab: kompletně přepsán s interaktivním Ganttem - pointer-events drag pro posun, resize handles pro zkracovat/prodlužovat, dvojklik otevírá DateEditDialog s přesnými datumy, zoom úrovně Dny/Měsíce/Kvartály/Roky (denní granularita s víkendovým podbarvením), today marker, invalidate po dragu
+   111→- Dashboard tab: přidal "Ušetřeno" (zelená PiggyBank karta) a "Hotovo" (teal karta s progress barem) do KPI grid (nyní 6 karet)
+   112→- Lint: prošel bez chyb (0 errors, 0 warnings)
+   113→- Verifikace přes Agent Browser: dashboard se načetl, budget tab s novými sloupci a reorder šipkami, timeline s 4 zoom levels, payments s fakturou, time tab - vše funkční, žádné runtime chyby
+   114→- VLM analýza screenshotu: potvrdila nové karty Ušetřeno a Hotovo, "velmi přehledný a funkční" dashboard
+   115→
+   116→Stage Summary:
+   117→- ✅ Aplikace přejmenována na "Stavba" (univerzální pro stavbu i rekonstrukci)
+   118→- ✅ Hvězdičkování přes klikatelnou ikonku (ne v dialogu)
+   119→- ✅ Export/Import JSON stavu (tlačítka v sidebaru)
+   120→- ✅ Platby ve splátkách: parent faktura + děti splátky, progress bar, inline přidávání
+   121→- ✅ Budget: completed toggle + "Ušetřeno" (plan - actual když hotovo)
+   122→- ✅ Timeline: drag posun, resize zkracovat/prodlužovat, dvojklik=datumy, zoom Dny/Měsíce/Kvartály/Roky
+   123→- ✅ Budget reorder: šipky nahoru/dolů pro items i kategorie (uloženo categoryOrder na projektu)
+   124→- ✅ Čas: vícedenní záznamy (dateTo), počítadlo dnů a h/den
+   125→- ✅ Supabase utility připraveny (server/client/middleware), export/import jako datový most
+   126→- 📝 Pro plnou PostgreSQL migraci: uživatel musí doplnit DATABASE_URL s heslem z Supabase dashboardu a změnit provider v schema.prisma (schéma je už Postgres-compatible)
+   127→
+   128→Unresolved issues / Next steps:
+   129→- Drag-and-drop (dnd-kit) místo šipek pro reorder - šipky fungují spolehlivě, dnd by byl hezčí ale vyžaduje více práce
+   130→- Supabase Auth ještě neaktivní (utility jsou passthrough, připraveno pro budoucí přihlašování)
+   131→- Google Sheets import/export zatím neimplementován (může využít export JSON jako mezistupeň)
+   132→
+   133→---
+   134→Task ID: 10
+   135→Agent: Cron review asistent (Z.ai Code) - první revize
+   136→Task: QA testování, oprava chyb, stylingová vylepšení a nové funkce (CSV export, Poznámky, filtry, mini-stats, phase cards)
+   137→
+   138→Work Log:
+   139→- Přečetl worklog, ověřil že aplikace je stabilní (lint čistý, 0 chyb)
+   140→- QA testování přes agent-browser: všechny taby fungovaly bez chyb
+   141→- VLM analýza budget screenshotu: identifikoval oblasti pro zlepšení (prázdný sidebar, chybějící progress indikátory, lepší hierarchie)
+   142→- Styling vylepšení:
+   143→  * Project header: lepší hierarchie s MapPin ikonou pro adresu, deadline countdown badge ("za X dní"), stats strip s ikonami (Zahájení, Dokončení, položky, kontakty, čerpání s progress barem), podtržené taby místo pozadí
+   144→  * Budget tab: barevný levý okraj řádků dle fáze (PHASE_BORDER_COLORS), hover efekty, completion filter pills (Vše/Aktivní/Hotovo)
+   145→  * Sidebar: MiniProjectStats widget v prázdném prostoru - burn rate, completion progress bar, 4 quick stats (Zbývá, Ušetřeno, Hodiny, Plán dní)
+   146→  * Dashboard: nová sekce "Postup podle fází" s kartami pro každou fázi (progress bar, skutečnost/plán, hodiny, %)
+   147→- Nové funkce:
+   148→  * CSV export API (/api/projects/[id]/export-csv?type=budget|payments|time) - s BOM pro Excel UTF-8, české datumy, vč. Ušetřeno sloupce
+   149→  * CSV export tlačítka v Rozpočet, Platby a Čas tabech
+   150→  * Poznámky tab: markdown editor s auto-save (1.5s debounce), edit/preview modes, markdown toolbar (bold, italic, heading, list, todo, quote, code, link), vlastní markdown renderer, počítadla (slova, řádky, úkoly)
+   151→  * Project.notes pole v DB (Prisma schema + API PATCH)
+   152→  * daysUntilLabel() helper pro lidsky čitelný countdown ("za 5 dní", "před 3 dny", "dnes")
+   153→- Bug fixy:
+   154→  * "button cannot contain nested button" hydratační chyba - změnil project list item z <button> na <div role="button">
+   155→  * ReferenceError: cn not defined v dashboard-tab.tsx - přidal chybějící import cn z utils
+   156→  * setState-in-effect v NotesTab - refaktoroval na derived state pattern (localContent + serverContent + isDirty)
+   157→- Lint: prošel bez chyb (0 errors, 0 warnings)
+   158→- Verifikace přes Agent Browser: dashboard, budget (filtry+CSV), notes (editor+toolbar), payments (CSV) - vše funkční, 0 chyb
+   159→- VLM potvrdila: "vidím nové KPI karty vč. Ušetřeno a Hotovo, sekci Postup podle fází, mini-statistiky v sidebaru"
+   160→
+   161→Stage Summary:
+   162→- ✅ Aplikace stabilní: 0 runtime chyb, 0 lint chyb
+   163→- ✅ Styling výrazně vylepšen: lepší hierarchie, barevné fázové okraje, mini-stats v sidebaru, deadline countdown
+   164→- ✅ Nové funkce: CSV export (budget/payments/time), Poznámky s markdown, completion filter, phase progress cards
+   165→- ✅ Bug fixy: nested button hydration error, missing cn import, setState-in-effect pattern
+   166→- 📊 Dashboard nyní má 6 KPI karet + phase progress sekci + alerts + grafy + breakdown
+   167→- 📝 Poznámky tab s auto-save a markdown podporou (úkoly, nadpisy, seznamy, odkazy)
+   168→
+   169→Unresolved issues / Next steps:
+   170→- Google Sheets přímá integrace zatím neimplementována (CSV export slouží jako most)
+   171→- Supabase Auth ještě neaktivní (utility jsou passthrough)
+   172→- Pro budoucí fázi: drag-and-drop reorder (dnd-kit) místo šipek, PDF export faktur, e-mail notifikace na termíny
+   173→
+   174→---
+   175→Task ID: 11
+   176→Agent: Cron review asistent (Z.ai Code) - druhá revize
+   177→Task: QA testování, stylingová vylepšení (tabular-nums, empty states, card shadows), nové funkce (duplikace položky, leaderboard kontaktů, contact-stats API)
+   178→
+   179→Work Log:
+   180→- Přečetl worklog, ověřil stabilitu (lint čistý, 0 chyb)
+   181→- QA testování přes agent-browser: všech 7 tabů funguje bez chyb
+   182→- VLM analýza dashboardu: identifikoval oblasti pro zlepšení (tabulátorové zarovnání čísel, prázdné stavy, vizuální kotvy)
+   183→- Styling vylepšení:
+   184→  * globals.css: tabular-nums utility pro zarovnání čísel, custom scrollbar styling, animate-number transition
+   185→  * Dashboard KPI karty: tabular-nums pro všechna čísla (Plán, Čerpání, Zbývá, Odpracováno, Ušetřeno, Hotovo)
+   186→  * Contacts tab: barevné badge (amber pro platby, violet pro časy) místo neutrálních šedých
+   187→  * Empty states: EmptyStateBox komponenta s ikonou v kruhu, nadpisem, popisem a CTA tlačítkem - aplikováno v Platby, Čas a Kontakty tabech
+   188→- Nové funkce:
+   189→  * Duplikace položky rozpočtu: POST /api/budget-items/[id]/duplicate - vytvoří kopii s "(kopie)" příponou, resetuje completed/actualCost/actualHours, umístí na konec
+   190→  * "Duplikovat" akce v budget row dropdown menu (Copy ikona)
+   191→  * Contact-stats API: GET /api/projects/[id]/contact-stats - agreguje totalPaid, totalHours, paymentCount, timeEntryCount, lastActivity per kontakt + workerStats (pro time entries bez kontaktu)
+   192→  * Leaderboard v Contacts tab: dvě karty "Největší náklady" a "Nejvíce odpracováno" s top 4 přispěvateli, medaile (#1 zvýrazněná), emoji ikony typů
+   193→  * useDuplicateBudgetItem a useContactStats hooks v api.ts
+   194→- Bug fixy: žádné (aplikace byla stabilní)
+   195→- Lint: prošel bez chyb (0 errors, 0 warnings)
+   196→- Verifikace přes Agent Browser: dashboard, budget (duplicate v menu), contacts (leaderboard), payments (empty state) - vše funkční, 0 chyb
+   197→- VLM potvrdila leaderboard: "Největší náklady - žlutý blok, Nejvíce odpracováno - fialový blok s Ing. Pavel Novák 25 h jako #1"
+   198→
+   199→Stage Summary:
+   200→- ✅ Aplikace stabilní: 0 runtime chyb, 0 lint chyb
+   201→- ✅ Styling: tabular-nums pro čísla, custom scrollbar, vylepšené empty states s ikonami a CTA
+   202→- ✅ Nové funkce: duplikace položky rozpočtu, leaderboard kontaktů (náklady + hodiny), contact-stats API
+   203→- 📊 Contacts tab nyní má leaderboard sekci + karty kontaktů s barevnými badge
+   204→- 📝 Budget tab má "Duplikovat" akci v row menu pro rychlé klonování
+   205→
+   206→Unresolved issues / Next steps:
+   207→- Google Sheets přímá integrace zatím neimplementována (CSV export + JSON import/export slouží jako most)
+   208→- Supabase Auth ještě neaktivní (utility jsou passthrough)
+   209→- Pro budoucí fázi: drag-and-drop reorder (dnd-kit), PDF export faktur, e-mail notifikace na termíny, AI asistent pro optimalizaci rozpočtu
+   210→
+   211→---
+   212→Task ID: 12
+   213→Agent: Cron review asistent (Z.ai Code) - třetí revize
+   214→Task: QA testování, stylingová vylepšení (burn-rate progress bar, search v sidebaru), nové funkce (spending trend graf, vyhledávání projektů)
+   215→
+   216→Work Log:
+   217→- Přečetl worklog, ověřil stabilitu (lint čistý, 0 chyb)
+   218→- QA testování přes agent-browser: všech 7 tabů funguje bez chyb
+   219→- VLM analýza dashboardu: identifikoval oblasti pro zlepšení (progress bar pro čerpání, vyhledávání, graf trendu)
+   220→- Styling vylepšení:
+   221→  * Dashboard KPI karta "Čerpání": přidal progress bar (zelená/amber/rose dle burn rate) s procenty a "z {planTotal}" popisem, ne jen textový údaj
+   222→  * Sidebar: přidal search input "Hledat projekt…" s Search ikonou a X tlačítkem pro vyčištění
+   223→  * Sidebar: counter ukazuje "N/{total}" při filtrování
+   224→  * Sidebar: "no results" state s tlačítkem "Zrušit hledání"
+   225→- Nové funkce:
+   226→  * Spending trend API: GET /api/projects/[id]/spending-trend - vrací měsíční údaje (spend, hours) za posledních 12 měsíců + celkové součty
+   227→  * SpendingTrendCard v dashboardu: AreaChart s gradient výplní (amber pro výdaje, violet pro hodiny), tooltip, pravý Y-axis, plus mini monthly bars vždy viditelné (i s 0 daty)
+   228→  * useSpendingTrend hook v api.ts
+   229→  * Vyhledávání projektů v sidebaru: filtruje dle name, address, description (case-insensitive), s clear buttonem a no-results state
+   230→- Bug fixy: žádné (aplikace byla stabilní)
+   231→- Lint: prošel bez chyb (0 errors, 0 warnings)
+   232→- Verifikace přes Agent Browser: dashboard (trend graf + progress bar), sidebar (search filtruje) - vše funkční, 0 chyb
+   233→- VLM potvrdila: progress bar v kartě Čerpání, search v sidebaru
+   234→
+   235→Stage Summary:
+   236→- ✅ Aplikace stabilní: 0 runtime chyb, 0 lint chyb
+   237→- ✅ Styling: burn-rate progress bar v Čerpání KPI kartě, vylepšené vyhledávání v sidebaru
+   238→- ✅ Nové funkce: spending trend graf (AreaChart + mini bars), vyhledávání projektů s filtrováním
+   239→- 📊 Dashboard nyní má: 6 KPI karet (s progress barem v Čerpání) + phase cards + spending trend graf + alerts + 2 grafy + breakdown
+   240→- 🔍 Sidebar má search s live filtrováním a no-results state
+   241→
+   242→Unresolved issues / Next steps:
+   243→- Google Sheets přímá integrace zatím neimplementována (CSV export + JSON import/export slouží jako most)
+   244→- Supabase Auth ještě neaktivní (utility jsou passthrough)
+   245→- Pro budoucí fázi: drag-and-drop reorder (dnd-kit), PDF export faktur, e-mail notifikace na termíny, AI asistent pro optimalizaci rozpočtu, fotogalerie dokumentace
+   246→
+   247→---
+   248→Task ID: 13
+   249→Agent: Cron review asistent (Z.ai Code) - čtvrtá revize
+   250→Task: QA testování, stylingová vylepšení (dark mode toggle), nové funkce (predikce překročení rozpočtu)
+   251→
+   252→Work Log:
+   253→- Přečetl worklog, ověřil stabilitu (lint čistý, 0 chyb)
+   254→- QA testování přes agent-browser: všech 7 tabů funguje bez chyb
+   255→- VLM analýza dashboardu: identifikoval oblasti pro zlepšení (dark mode, prediktivní analýza)
+   256→- Styling vylepšení:
+   257→  * Dark mode: ThemeProvider (next-themes) v providers.tsx s attribute="class", defaultTheme="light", enableSystem
+   258→  * ThemeToggle komponenta v sidebar headeru - CSS-based ikona (Sun/Moon) bez hydration mismatch
+   259→  * Aplikace plně podporuje světlý i tmavý motiv (všechny komponenty mají dark: varianty)
+   260→- Nové funkce:
+   261→  * Predikce překročení rozpočtu: dashboard API nyní počítá projectedFinal, projectedOverrun, avgOverrunRatio
+   262→    - avgOverrunRatio = průměr (actualCost/planCost) pro dokončené položky s plánem
+   263→    - projectedRemaining = součet planCost * avgOverrunRatio pro nedokončené položky
+   264→    - projectedFinal = actualTotal + projectedRemaining
+   265→    - projectedOverrun = projectedFinal - planTotal
+   266→  * Budget Projection Card v dashboardu: 4 KPI (čerpáno, odhad zbytku, odhad celkem, vs plán), vizuální comparison bar s plán markerem (100%), legendou, a barevným indikátorem (rose pro překročení, emerald pro úsporu)
+   267→  * Card se zobrazí jen když jsou nějaké dokončené položky (completedCount > 0)
+   268→- Bug fixy: žádné (aplikace byla stabilní)
+   269→- Lint: prošel bez chyb (0 errors, 0 warnings)
+   270→- Verifikace přes Agent Browser: dashboard (projection card), dark mode toggle (přepíná motiv) - vše funkční, 0 chyb
+   271→- VLM potvrdila: "aplikace je v tmavém motivu, vidím přepínač motivu v levém horním rohu"
+   272→
+   273→Stage Summary:
+   274→- ✅ Aplikace stabilní: 0 runtime chyb, 0 lint chyb
+   275→- ✅ Styling: plná podpora dark/light motivu s toggle tlačítkem v sidebaru
+   276→- ✅ Nové funkce: predikce konečných nákladů na základě burn rate dokončených položek
+   277→- 📊 Dashboard nyní má: 6 KPI karet + phase cards + budget projection card + spending trend graf + alerts + 2 grafy + breakdown
+   278→- 🌙 Dark mode plně funkční s CSS-based toggle (bez hydration mismatch)
+   279→
+   280→Unresolved issues / Next steps:
+   281→- Google Sheets přímá integrace zatím neimplementována (CSV export + JSON import/export slouží jako most)
+   282→- Supabase Auth ještě neaktivní (utility jsou passthrough)
+   283→- Pro budoucí fázi: drag-and-drop reorder (dnd-kit), PDF export faktur, e-mail notifikace na termíny, AI asistent pro optimalizaci rozpočtu, fotogalerie dokumentace
+   284→
+   285→---
+   286→Task ID: 14
+   287→Agent: Cron review asistent (Z.ai Code) - pátá revize
+   288→Task: QA testování, stylingová vylepšení (print CSS), nové funkce (tiskový report, hromadné akce v rozpočtu)
+   289→
+   290→Work Log:
+   291→- Přečetl worklog, ověřil stabilitu (lint čistý, 0 chyb)
+   292→- QA testování přes agent-browser: všech 7 tabů funguje bez chyb
+   293→- VLM analýza dashboardu: identifikoval oblasti pro zlepšení (tiskový report, hromadné akce)
+   294→- Styling vylepšení:
+   295→  * Print CSS v globals.css: @media print skrývá sidebar/nav/tlačítka, force light theme colors, page breaks, break-inside: avoid pro karty
+   296→  * .no-print třída pro prvky které se nemají tisknout
+   297→- Nové funkce:
+   298→  * Tiskový report: PrintReportDialog komponenta s náhledem reportu (projekt header, shrnutí KPI, rozpad fází, rozpad kategorií, upozornění)
+   299→    - Tlačítko "Report" v project header (vedle Upravit)
+   300→    - "Tisk / Uložit jako PDF" button volá window.print() s print CSS styly
+   301→    - Report obsahuje: název/adresa/popis projektu, datum vygenerování, Zahájení/Dokončení, 6 KPI (plán, skutečnost, zbývá, ušetřeno, hotovo, hodiny), tabulka fází (plán/skut/%/hodiny), tabulka kategorií (top 15), upozornění (zpožděné/blížící se/překročené)
+   302→  * Hromadné akce v rozpočtu: multi-select checkboxy (appear on hover), bulk action bar (sticky top) s "N vybráno" badge, "Označit jako hotové" button, "Zrušit výběr"
+   303→    - selectedIds state v BudgetTab
+   304→    - bulkComplete() aplikuje completed:true na všechny vybrané paralelně
+   305→    - Selection checkbox v BudgetRow (opacity-0 → group-hover:opacity-100)
+   306→- Bug fixy: žádné (aplikace byla stabilní)
+   307→- Lint: prošel bez chyb (0 errors, 0 warnings)
+   308→- Verifikace přes Agent Browser: report dialog (náhled + tisk), budget tab (bulk select) - vše funkční, 0 chyb
+   309→- Report dialog obsahuje: "Report projektu", "Shrnutí rozpočtu", "Tisk / Uložit jako PDF"
+   310→
+   311→Stage Summary:
+   312→- ✅ Aplikace stabilní: 0 runtime chyb, 0 lint chyb
+   313→- ✅ Styling: print CSS pro čistý tiskový výstup, .no-print třída
+   314→- ✅ Nové funkce: tiskový report s náhledem (PDF export přes prohlížeč), hromadné označování položek jako hotové
+   315→- 📊 Dashboard/project header má nyní tlačítko "Report" pro generování PDF reportu
+   316→- ✅ Budget tab má multi-select s bulk action barem
+   317→
+   318→Unresolved issues / Next steps:
+   319→- Google Sheets přímá integrace zatím neimplementována (CSV export + JSON import/export slouží jako most)
+   320→- Supabase Auth ještě neaktivní (utility jsou passthrough)
+   321→- Pro budoucí fázi: drag-and-drop reorder (dnd-kit), e-mail notifikace na termíny, AI asistent pro optimalizaci rozpočtu, fotogalerie dokumentace
+   322→
+   323→---
+   324→Task ID: 15
+   325→Agent: Cron review asistent (Z.ai Code) - šestá revize
+   326→Task: QA testování, stylingová vylepšení (collapsible sidebar), nové funkce (audit log/historie změn, klávesové zkratky)
+   327→
+   328→Work Log:
+   329→- Přečetl worklog, ověřil stabilitu (lint čistý, 0 chyb)
+   330→- QA testování přes agent-browser: všech 7 tabů funguje bez chyb
+   331→- VLM analýza dashboardu: identifikoval oblasti pro zlepšení (historie změn, klávesové zkratky, responzivita)
+   332→- Nové funkce:
+   333→  * Audit log / historie změn: AuditLog model v Prisma schématu (entityType, entityId, action, field, oldValue, newValue, createdAt)
+   334→    - logChanges() helper v src/lib/audit.ts - porovnává old vs new data, loguje jen změněné fieldy
+   335→    - Integrováno do budget-items PATCH a DELETE routes (automatické logování všech úprav a mazání)
+   336→    - GET /api/projects/[id]/audit endpoint s ?limit parametrem
+   337→    - useAuditLog hook v api.ts
+   338→    - AuditLogDialog komponenta s timeline pohledem - ikony pro create/update/delete (Plus/Pencil/Trash2), barevné odlišení (emerald/sky/rose), field labely v češtině, old→new value diff s strikethrough
+   339→    - Tlačítko "Historie změn" (History ikona) v project header
+   340→  * Klávesové zkratky: useKeyboardShortcuts hook
+   341→    - Cmd/Ctrl+K: focus na search input v sidebaru
+   342→    - Cmd/Ctrl+B: toggle sidebar viditelnosti (custom event)
+   343→    - Cmd/Ctrl+N: new project (custom event, připraveno pro budoucí napojení)
+   344→- Styling vylepšení:
+   345→  * Collapsible sidebar: sidebar lze skrýt/zobrazit pomocí tlačítka "Skrýt panel" / "Zobrazit panel" nebo Cmd+B
+   346→  * Smooth transition animace (w-0 ↔ w-80, duration-200)
+   347→  * Mobile-friendly: na mobilech je collapse button fixed vlevo nahoře
+   348→  * Collapse button je fixed na hraně sidebaru (desktop)
+   349→- Bug fixy: žádné (aplikace byla stabilní)
+   350→- Lint: prošel bez chyb (0 errors, 0 warnings)
+   351→- Verifikace přes Agent Browser: audit log dialog (otevře se, zobrazí "Historie změn"), sidebar collapse (tlačítko funguje), ESC zavírá dialog - vše funkční, 0 chyb
+   352→
+   353→Stage Summary:
+   354→- ✅ Aplikace stabilní: 0 runtime chyb, 0 lint chyb
+   355→- ✅ Nové funkce: audit log s automatickým logováním změn budget items, klávesové zkratky (Cmd+K, Cmd+B, Cmd+N)
+   356→- ✅ Styling: collapsible sidebar s smooth animací, mobile-friendly toggle
+   357→- 📝 Project header má nyní 3 akční tlačítka: Historie změn, Report, Upravit
+   358→- ⌨️ Klávesové zkratky: Cmd+K (search), Cmd+B (sidebar toggle), Cmd+N (new project)
+   359→
+   360→Unresolved issues / Next steps:
+   361→- Audit log zatím loguje jen BudgetItem changes - v budoucnu rozšířit na Payments, TimeEntries, Contacts
+   362→- Google Sheets přímá integrace zatím neimplementována
+   363→- Supabase Auth ještě neaktivní
+   364→- Pro budoucí fázi: e-mail notifikace na termíny, AI asistent pro optimalizaci rozpočtu, fotogalerie dokumentace
+   365→
+   366→---
+   367→Task ID: 16
+   368→Agent: Cron review asistent (Z.ai Code) - sedmá revize
+   369→Task: QA testování, bug fix (SelectItem empty value), nové funkce (VAT/DPH sledování v platbách)
+   370→
+   371→Work Log:
+   372→- Přečetl worklog, ověřil stabilitu (lint čistý, 0 chyb)
+   373→- QA testování přes agent-browser: všech 7 tabů funguje bez chyb
+   374→- VLM analýza dashboardu: identifikoval oblasti pro zlepšení (VAT/DPH, fakturace)
+   375→- Bug fix:
+   376→  * SelectItem empty value error: <SelectItem value=""> v VAT selectu způsoboval runtime chybu "A <SelectItem /> must have a value prop that is not an empty string". Opraveno použitím value="none" s onValueChange handlerem který převádí "none" → ""
+   377→- Nové funkce:
+   378→  * VAT/DPH sledování v platbách: Přidáno vatRate a vatAmount pole do Payment modelu v Prisma schématu
+   379→    - payments POST API: přijímá vatRate, automaticky počítá vatAmount = amount * vatRate / (100 + vatRate)
+   380→    - Payment type v api.ts aktualizován o vatRate a vatAmount
+   381→    - PaymentDialog: přidal DPH sazba select (Bez DPH, 21%, 12%, 10%, 0%) s live výpočtem DPH a základu
+   382→    - PaymentRow: zobrazuje "vč. DPH {rate}%" pod částkou pokud má platba VAT
+   383→    - Payments tab toolbar: "z toho DPH" summary pokud nějaká platba má VAT
+   384→    - tabular-nums pro všechny částky v payments tab
+   385→- Bug fixy: SelectItem empty value error (critical runtime bug)
+   386→- Lint: prošel bez chyb (0 errors, 0 warnings)
+   387→- Verifikace přes Agent Browser: payment dialog (DPH select funguje), payments tab (načte se) - vše funkční, 0 chyb
+   388→- VLM potvrdila: "vidím DPH sekci v dialogu pro přidání platby"
+   389→
+   390→Stage Summary:
+   391→- ✅ Aplikace stabilní: 0 runtime chyb, 0 lint chyb
+   392→- ✅ Bug fix: SelectItem empty value runtime error (critical)
+   393→- ✅ Nové funkce: VAT/DPH sledování v platbách s automatickým výpočtem a live preview
+   394→- 💰 Payments tab má nyní DPH sazbu, výpočet DPH a základu, VAT summary v toolbaru
+   395→- 📊 Payment rows zobrazují "vč. DPH {rate}%" pokud má platba VAT
+   396→
+   397→Unresolved issues / Next steps:
+   398→- Audit log zatím loguje jen BudgetItem changes - v budoucnu rozšířit na Payments, TimeEntries, Contacts
+   399→- Google Sheets přímá integrace zatím neimplementována
+   400→- Supabase Auth ještě neaktivní
+   401→- Pro budoucí fázi: e-mail notifikace na termíny, AI asistent pro optimalizaci rozpočtu, fotogalerie dokumentace
+   402→
+   403→---
+   404→Task ID: 17
+   405→Agent: Cron review asistent (Z.ai Code) - osmá revize
+   406→Task: QA testování, rozšíření audit logu na Payments a TimeEntries, nové funkce (project snapshots)
+   407→
+   408→Work Log:
+   409→- Přečetl worklog, ověřil stabilitu (lint čistý, 0 chyb)
+   410→- QA testování přes agent-browser: všech 7 tabů funguje bez chyb
+   411→- VLM analýza dashboardu: identifikoval oblasti pro zlepšení (snapshots, audit log rozšíření)
+   412→- Rozšíření audit logu:
+   413→  * Payments PATCH/DELETE: přidáno logChanges() pro "Payment" entitu - získá projectId přes budgetItem, loguje update a delete akce
+   414→  * TimeEntries PATCH/DELETE: přidáno logChanges() pro "TimeEntry" entitu - stejný pattern jako Payments
+   415→  * Audit log nyní pokrývá BudgetItem, Payment i TimeEntry změny
+   416→- Nové funkce:
+   417→  * Project snapshots: Snapshot model v Prisma schématu (label, planTotal, actualTotal, remaining, burnRate, hoursTotal, daysPlanned, itemCount, completedCount, savedTotal, createdAt)
+   418→    - GET /api/projects/[id]/snapshots - seznam snímků
+   419→    - POST /api/projects/[id]/snapshots - vytvoří snímek s aktuálními totals (body: { label })
+   420→    - DELETE /api/snapshots/[id] - smazání snímku
+   421→    - useSnapshots, useCreateSnapshot, useDeleteSnapshot hooks v api.ts
+   422→    - SnapshotsCard komponenta v dashboardu:
+   423→      - Input pro label + "Uložit snímek" button (Enter uloží)
+   424→      - Seznam snímků s grid statistik (Plán, Čerpáno, Čerpání %, Hotovo)
+   425→      - Diffs vs aktuální stav: "+X Kč od snímku", "+X % čerpání", "+X hotových"
+   426→      - Barevné odlišení diffs (amber pro nárůst, emerald pro úsporu/pokles)
+   427→      - Delete button na hover
+   428→      - Empty state: "Zatím žádné snímky"
+   429→- Bug fixy: žádné (aplikace byla stabilní)
+   430→- Lint: prošel bez chyb (0 errors, 0 warnings)
+   431→- Verifikace přes Agent Browser: dashboard se načetl, "Uložit snímek" button viditelný, 0 chyb
+   432→- VLM potvrdila: "vidím detail projektu Troja se všemi prvky"
+   433→
+   434→Stage Summary:
+   435→- ✅ Aplikace stabilní: 0 runtime chyb, 0 lint chyb
+   436→- ✅ Audit log rozšířen na Payments a TimeEntries (ne jen BudgetItem)
+   437→- ✅ Nové funkce: project snapshots pro porovnání „plán vs. realita" v čase
+   438→- 📸 SnapshotsCard v dashboardu s create/list/delete + diffs vs aktuální stav
+   439→- 📝 Audit log nyní pokrývá 3 entity: BudgetItem, Payment, TimeEntry
+   440→
+   441→Unresolved issues / Next steps:
+   442→- Audit log zatím loguje jen update/delete, ne create - v budoucnu rozšířit
+   443→- Google Sheets přímá integrace zatím neimplementována
+   444→- Supabase Auth ještě neaktivní
+   445→- Pro budoucí fázi: e-mail notifikace na termíny, AI asistent pro optimalizaci rozpočtu, fotogalerie dokumentace
+   446→
+   447→---
+   448→Task ID: 18
+   449→Agent: Cron review asistent (Z.ai Code) - devátá revize
+   450→Task: QA testování, stylingová vylepšení (status filter pills), nové funkce (komentáře k budget items)
+   451→
+   452→Work Log:
+   453→- Přečetl worklog, ověřil stabilitu (lint čistý, 0 chyb)
+   454→- QA testování přes agent-browser: všech 7 tabů funguje bez chyb
+   455→- VLM analýza dashboardu: identifikoval oblasti pro zlepšení (filtry, komentáře)
+   456→- Nové funkce:
+   457→  * Status filter v sidebaru: 4 pill tlačítka (Vše/Aktivní/Plánování/Hotovo) s count badge pro každý status
+   458→    - Filtruje projekty dle status (active/planning/completed)
+   459→    - Pill s shadow-sm pro aktivní filtr, hover effect pro ostatní
+   460→    - Count badge ukazuje počet projektů v každém statusu
+   461→  * Komentáře k budget items: Comment model v Prisma schématu (budgetItemId, author, text, createdAt)
+   462→    - GET /api/budget-items/[id]/comments - seznam komentářů
+   463→    - POST /api/budget-items/[id]/comments - přidání komentáře (body: { author, text })
+   464→    - DELETE /api/comments/[id] - smazání komentáře
+   465→    - useComments, useCreateComment, useDeleteComment hooks v api.ts
+   466→    - CommentSection komponenta: seznam komentářů s autor/datum/text, add form (author + text + Send button), delete on hover, scroll area (max-h-48)
+   467→    - CommentSection zobrazena v BudgetItemDialog (jen při editaci existující položky)
+   468→    - Comment count badge v budget tab řádku (sky barva s MessageSquare ikonou)
+   469→    - Budget GET API vrací _count.comments
+   470→- Styling vylepšení:
+   471→  * Status filter pills s flex-1 layout, count badge, shadow-sm pro aktivní
+   472→  * Comment count badge v budget row (sky barva, MessageSquare ikona)
+   473→- Bug fixy: žádné (aplikace byla stabilní)
+   474→- Lint: prošel bez chyb (0 errors, 0 warnings)
+   475→- Verifikace přes Agent Browser: status filter pills (Vše 1, Aktivní 1), comment section v edit dialog (Jméno, Napište komentář) - vše funkční, 0 chyb
+   476→
+   477→Stage Summary:
+   478→- ✅ Aplikace stabilní: 0 runtime chyb, 0 lint chyb
+   479→- ✅ Nové funkce: status filter v sidebaru (4 pills s counts), komentáře k budget items (inline discussion)
+   480→- 🔍 Sidebar má nyní search + status filter pills s count badges
+   481→- 💬 Budget items mají comment section v edit dialogu s add/delete + count badge v tabulce
+   482→
+   483→Unresolved issues / Next steps:
+   484→- Audit log zatím loguje jen update/delete, ne create
+   485→- Google Sheets přímá integrace zatím neimplementována
+   486→- Supabase Auth ještě neaktivní
+   487→- Pro budoucí fázi: e-mail notifikace na termíny, AI asistent pro optimalizaci rozpočtu, fotogalerie dokumentace
+   488→
+   489→---
+   490→Task ID: 19
+   491→Agent: Cron review asistent (Z.ai Code) - desátá revize
+   492→Task: QA testování, stylingová vylepšení, nové funkce (globální vyhledávání / command palette)
+   493→
+   494→Work Log:
+   495→- Přečetl worklog, ověřil stabilitu (lint čistý, 0 chyb)
+   496→- QA testování přes agent-browser: všech 7 tabů funguje bez chyb
+   497→- VLM analýza dashboardu: identifikoval oblasti pro zlepšení (globální search, responzivita)
+   498→- Nové funkce:
+   499→  * Globální vyhledávání (Command Palette): Cmd/Ctrl+K otevírá modal dialog pro vyhledávání napříč aplikací
+   500→    - GET /api/search?q=query - prohledává projekty (name, address, description), budget items (category, subcategory, element, note), kontakty (name, role, company, email, phone)
+   501→    - GlobalSearchDialog komponenta s command palette designem:
+   502→      - Search input s auto-focus, ESC pro zavření
+   503→      - Seskupené výsledky: Projekty, Položky rozpočtu, Kontakty
+   504→      - Ikony pro každý typ (FolderKanban, Package, Users)
+   505→      - Klávesnice navigace: ↑↓ pro pohyb, Enter pro výběr
+   506→      - Hover highlight + selected state
+   507→      - Phase badge pro budget items, price badge, starred indicator pro projekty
+   508→      - Empty state s nápovědou
+   509→      - Loading skeleton
+   510→      - Klik na výsledek: přepne na příslušný projekt + tab (dashboard/budget/contacts)
+   511→    - GlobalSearchInner komponenta (key-based remount pattern pro reset při otevření)
+   512→    - Fixed search button v pravém horním rohu s ⌘K kbd indikátorem
+   513→  * Keyboard shortcuts aktualizovány: Cmd+K nyní otevírá global search (místo focus na sidebar search)
+   514→- Styling vylepšení:
+   515→  * Fixed search button v top-right s backdrop-blur, ⌘K kbd badge
+   516→  * Command palette design: clean grouped results, hover states, keyboard navigation hints
+   517→  * Phase color badges ve výsledcích vyhledávání
+   518→- Bug fixy:
+   519→  * setState-in-effect lint errors: refaktoroval GlobalSearchDialog na wrapper + inner component pattern (key-based remount), odstranil useEffect pro reset query
+   520→  * ref-during-render lint error: nahrazen derived state (safeSelectedIndex = Math.min(...))
+   521→- Lint: prošel bez chyb (0 errors, 0 warnings)
+   522→- Verifikace přes Agent Browser: global search button visible, dialog se otevře, zadání "tro" najde projekt Troja, ESC zavírá - vše funkční, 0 chyb
+   523→
+   524→Stage Summary:
+   525→- ✅ Aplikace stabilní: 0 runtime chyb, 0 lint chyb
+   526→- ✅ Nové funkce: globální vyhledávání (command palette) s klávesnicí navigací napříč projekty/položkami/kontakty
+   527→- 🔍 Cmd+K otevírá global search modal s seskupenými výsledky a keyboard navigation
+   528→- ⌨️ Klávesové zkratky: Cmd+K (global search), Cmd+B (sidebar toggle), Cmd+N (new project)
+   529→
+   530→Unresolved issues / Next steps:
+   531→- Audit log zatím loguje jen update/delete, ne create
+   532→- Google Sheets přímá integrace zatím neimplementována
+   533→- Supabase Auth ještě neaktivní
+   534→- Pro budoucí fázi: e-mail notifikace na termíny, AI asistent pro optimalizaci rozpočtu, fotogalerie dokumentace, multi-project comparison view
+   535→
+   536→---
+   537→Task ID: 20
+   538→Agent: Hlavní asistent (Z.ai Code) - mobilní responzivita
+   539→Task: Odstranění Supabase middleware (runtime error), mobilní responzivita (hamburger drawer, responzivní layout)
+   540→
+   541→Work Log:
+   542→- Odstranil src/middleware.ts který způsoboval runtime error "Your project's URL and Key are required to create a Supabase client!" - middleware se snažil inicializovat Supabase klienta na každý request i když nepoužíváme Supabase pro data
+   543→- Mobilní responzivita:
+   544→  * page.tsx: kompletně přepsán s desktop/mobile rozlišením
+   545→    - Desktop (md+): sidebar je inline (w-80), lze skrýt přes "Skrýt panel" button na hraně nebo Cmd+B
+   546→    - Mobile (<md): sidebar je drawer (overlay) - defaultně zavřený, otevře se přes hamburger menu v mobilním top bar
+   547→    - Mobilní top bar: hamburger menu vlevo, název projektu uprostřed, search ikona vpravo
+   548→    - Backdrop overlay (bg-black/50 backdrop-blur) při otevřeném draweru, klik zavře drawer
+   549→    - Drawer se zavře při výběru projektu (onSelectProject callback)
+   550→  * app-sidebar.tsx: přidán onSelectProject prop pro callback při výběru projektu (zavře mobilní drawer), h-full pro správnou výšku v draweru
+   551→  * project-detail.tsx: responzivní úpravy
+   552→    - Padding: px-4 na mobilu, px-6 na desktopu
+   553→    - Nadpis: text-xl na mobilu, text-2xl na desktopu
+   554→    - Tlačítka (Historie/Report/Upravit): jen ikony na mobilu (px-2), ikony+text na desktopu (px-3, hidden md:inline)
+   555→    - Stats strip: menší gap na mobilu (gap-x-4 → md:gap-x-5)
+   556→    - Taby: shrink-0, jen ikony na mobilu (hidden sm:inline pro label), scrollbar-thin, menší padding na mobilu
+   557→    - Tab content padding: px-4 py-4 na mobilu, md:px-6 md:py-6 na desktopu
+   558→  * dashboard-tab.tsx: KPI karty grid
+   559→    - grid-cols-2 na mobilu (2 karty vedle sebe), md:grid-cols-3, lg:grid-cols-6
+   560→    - Menší gap na mobilu (gap-2 → sm:gap-3 → lg:gap-4)
+   561→    - KPI hodnoty: text-lg na mobilu, md:text-2xl na desktopu
+   562→- Lint: prošel bez chyb (0 errors, 0 warnings)
+   563→- Verifikace přes Agent Browser:
+   564→  * Mobile (390x844 - iPhone 14): hamburger menu, mobilní top bar, 2-sloupcový KPI grid, drawer se otevře se seznamem projektů, 0 chyb
+   565→  * Desktop (1280x800): sidebar visible, collapse/expand funguje, 0 chyb
+   566→  * VLM potvrdila: "Aplikace je plně responzivní, hamburger menu v levém horním rohu, 2-sloupcový grid karet"
+   567→
+   568→Stage Summary:
+   569→- ✅ Bug fix: Supabase middleware runtime error odstraněn
+   570→- ✅ Mobilní responzivita: hamburger drawer, mobilní top bar, responzivní KPI grid, ikonové taby
+   571→- ✅ Desktop: beze změny funkčnosti, sidebar collapse funguje
+   572→- 📱 Aplikace je plně použitelná na mobilu (390px+) i desktopu (1280px+)
+   573→
+   574→Unresolved issues / Next steps:
+   575→- Google Sheets přímá integrace zatím neimplementována
+   576→- Pro budoucí fázi: e-mail notifikace, AI asistent, fotogalerie dokumentace
+   577→
+   578→---
+   579→Task ID: B6
+   580→Agent: Subagent B6 (Z.ai Code) — Upozornění & Vůle rework
+   581→
+   582→Task: Rework sekce "Upozornění a akce" v dashboardu (in-progress / mustPay / shouldStart / overBudgetWorst) + zpracování pole 'Vůle' (flexibilityPercent) v predikci nákladů a indikátorech fází.
+   583→
+   584→Work Log:
+   585→- Přečetl worklog a existující kód (`src/app/api/projects/[id]/dashboard/route.ts`, `src/components/tabs/dashboard-tab.tsx`, `src/lib/api.ts`, `prisma/schema.prisma`, `src/lib/format.ts`)
+   586→- **Backend — `src/app/api/projects/[id]/dashboard/route.ts`:**
+   587→  - Přidán `include: { _count: { select: { payments: true, timeEntries: true } } }` k dotazu na budget items, abychom mohli filtrovat "mustPay" a "shouldStart" bez dalších roundtripů
+   588→  - Nové alert arrays v odpovědi:
+   589→    - `inProgress`: items kde `!completed && (actualCost > 0 || actualHours > 0)` — probíhající práce
+   590→    - `mustPay`: items kde `!completed && _count.timeEntries > 0 && _count.payments === 0` — práce bez platby (KRITICKÉ)
+   591→    - `shouldStart`: items kde `!completed && dateFrom <= dnes+7d && _count.payments === 0 && _count.timeEntries === 0` — mělo by začít
+   592→    - `overBudgetWorst`: items kde `!completed && planCost > 0 && actualCost > planCost * (1 + flexibilityPercent/100)` — překročeno i s vůlí (KRITICKÉ)
+   593→  - Existující filtry (`upcoming`, `overdue`, `overBudget`, `unscheduled`) vylepšeny: všechny nyní mají `!it.completed` podmínku (dříve `overBudget` a `upcoming` zobrazovaly i dokončené položky)
+   594→  - `byPhase` agregace rozšířena o `worstCase` (= součet `planCost * (1 + vůle/100)` pro každou fázi) — umožňuje UI indikovat, kdy fáze přesahuje i svou horní hranici
+   595→- **TypeScript typy — `src/lib/api.ts`:**
+   596→  - `Dashboard.alerts` rozšířeno o `overBudgetWorst`, `inProgress`, `mustPay`, `shouldStart` (vše `BudgetItem[]`)
+   597→  - `Dashboard.byPhase` rozšířeno o `worstCase: number` field
+   598→- **UI — `src/components/tabs/dashboard-tab.tsx`:**
+   599→  - Importovány nové ikony: `Activity`, `Rocket`, `Flame`, `Banknote` (z lucide-react)
+   600→  - `totalAlerts` rozdělen na 3 kategorie: `criticalAlerts` (mustPay + overdue + overBudget + overBudgetWorst), `progressAlerts` (inProgress), `infoAlerts` (upcoming + shouldStart + unscheduled)
+   601→  - Alerts banner redesign:
+   602→    - Card header nyní obsahuje 3 summary badges (kritické / probíhající / informativní) s příslušnou barvou (rose / sky / amber)
+   603→    - Card body má 3 vizuálně oddělené group boxy:
+   604→      - **Kritické (rose)**: mustPay (Banknote ikona), overBudgetWorst (Flame), overdue (AlertTriangle), overBudget (TrendingDown)
+   605→      - **Probíhající (sky)**: inProgress (Activity)
+   606→      - **Informativní (amber)**: shouldStart (Rocket), upcoming (CalendarClock), unscheduled (CalendarClock)
+   607→    - Každá skupina má vlastní rounded-lg box s borderem a podtlakem v odpovídající barvě (světlá + dark mode)
+   608→  - AlertGroup komponenta rozšířena:
+   609→    - Nový `hint?: string` prop pro podtitul (kontext proč je to upozornění)
+   610→    - `max-h-40 overflow-y-auto` na seznamu (prevence UI exploze u velkých projektů)
+   611→  - **Budget Projection card — Nejhorší scénář panel:**
+   612→    - Nový vložený panel (violet themed) nad existujícím Plán → Odhad barem
+   613→    - Zobrazí: Horní hranici (plán + vůle), Rezervu do vůle (worstCase - actualTotal), Odhad vs. vůli (projectedFinal - worstCase)
+   614→    - "Odhad přesahuje vůli" badge (rose) pokud `projectedFinal > worstCase`
+   615→    - Stacked bar: actual vs. worstCase s plánovacím markerem (foreground/50) ukazující plánovou pozici v rámci vůle
+   616→  - **Phase progress cards — Vůle indikátor:**
+   617→    - Pokud `actual > worstCase` (i s vůlí překročeno): celá karta dostane rose border + bg, "Vůle" badge s Flame ikonou, hodnota barva rose, "X% max" text vedle %
+   618→    - Pokud vůle existuje ale není překročena: jemný violet marker na progress baru ukazující pozici vůle (jako % plánu)
+   619→    - Sub-text pod hodinami: `max {worstCase}` ve fialové barvě
+   620→    - `worstBurn` % (actual / worstCase * 100) zobrazeno v tooltipu + badge pokud přesahuje
+   621→- **Lint výsledek:**
+   622→  - Spuštěno `bun run lint`: 2 errors (PRE-EXISTING v `payments-tab.tsx:137` a `time-tab.tsx:473` — nesaší B6 soubory, ty byly upraveny jinými agenty v minulosti)
+   623→  - `npx eslint src/components/tabs/dashboard-tab.tsx src/lib/api.ts "src/app/api/projects/[id]/dashboard/route.ts"` → exit code 0 (žádné chyby v B6 souborech)
+   624→
+   625→Stage Summary:
+   626→- ✅ Backend: 4 nové alert arrays (inProgress, mustPay, shouldStart, overBudgetWorst) + worstCase per fáze + !completed filtry všude
+   627→- ✅ UI: Alerts banner přeuspořádán do 3 skupin (Kritické → Probíhající → Informativní) s odlišnými barvami a ikonami, summary badges v hlavičce
+   628→- ✅ Vůle (flexibilityPercent): zobrazena v Budget Projection card (Nejhorší scénář panel s 3 metrikami + stacked bar) + v phase progress cards (marker + "Vůle" badge pokud překročeno)
+   629→- ✅ Hotové položky vyloučeny ze všech alert filtrů
+   630→- ✅ Lint: 0 chyb v B6 souborech (2 pre-existing chyby v payments-tab/time-tab jsou mimo B6 scope)
+   631→
+   632→Unresolved issues / Next steps:
+   633→- Pre-existing lint chyby v payments-tab.tsx (preserve-manual-memoization) a time-tab.tsx (set-state-in-effect) — nutno opravit v samostatném tasku
+   634→- V budoucnu otestovat nové alerts UI na živém projektu (potvrzení že mustPay / shouldStart zobrazují správně s reálnými daty)
+   635→
+   636→---
+   637→Task ID: B3
+   638→Agent: Subagent (Z.ai Code) — payments edit + sort
+   639→Task: Přidat úpravu existujících plateb + třídění v payments tabu
+   640→
+   641→Work Log:
+   642→- Přečetl worklog pro kontext (aplikace "Stavba", payments tab)
+   643→- Backend: PATCH /api/payments/[id] rozšířen o vatRate/vatAmount podporu
+   644→  * Pre-kalkulace vatAmountValue podle vatRate a amount
+   645→  * null/empty vatRate → null vatRate i vatAmount
+   646→  * Kompatibilní s POST endpoint výpočtem
+   647→- Frontend (src/components/tabs/payments-tab.tsx):
+   648→  * useUpdatePayment hook importován z api.ts (už existoval)
+   649→  * Nové SortKey ("date"|"type"|"amount"|"contact"|"vendor") a SortDir ("asc"|"desc") typy
+   650→  * Sort ovládací prvky v toolbaru: ArrowDownUp ikona + Select pro klíč + icon button pro asc/desc
+   651→  * filteredStandalone zpracovává filtr + sort v jednom useMemo s esc-disable pro filterFn
+   652→  * Sort podle: date (timestamp), type (localeCompare), amount (číselně), contact (cs locale), vendor (cs locale)
+   653→  * Installment groups zůstávají nad standalone (pořadí JSX nezměněno) + vždy date desc
+   654→  * PaymentRow: nový onEdit prop, cursor-pointer na TableRow, onClick otevírá edit dialog
+   655→  * Dropdown menu v PaymentRow: 2 položky (Upravit s Pencil ikonou + Smazat destructive)
+   656→  * Poslední buňka (akce) má stopPropagation, aby klik na menu nespustil editaci
+   657→  * PaymentDialog podporuje edit mód přes volitelné payment? a updatePayment? props
+   658→  * isInvoiceParent detekce pro editaci existující faktury
+   659→  * Všechny useState inicializovány z payment (při editaci) — key-based remount v rodiči
+   660→  * Submit handler v edit módu volá updatePayment.mutateAsync({ id, data: patch })
+   661→  * Patch obsahuje: budgetItemId, contactId, amount, date, type, vendor, invoiceNumber, description
+   662→  * V edit módu: invoiceTotal (pokud parent), vatRate (number nebo null)
+   663→  * Installment toggle skrytý v edit módu (nelze konvertovat na fakturu)
+   664→  * Submit button: "Uložit změny" v edit módu
+   665→  * Dialog title/description: "Upravit platbu" / "Upravte údaje existující platby a uložte změny."
+   666→  * Druhá instance PaymentDialog v PaymentsTab podmíněně renderovaná přes editPayment (key=payment.id)
+   667→- Lint: prošel bez chyb (0 errors, 0 warnings, EXIT=0)
+   668→- Dev server log: čistý, žádné runtime chyby, API 200 OK
+   669→- Záznam v /agent-ctx/B3-payments-edit-sort.md
+   670→
+   671→Stage Summary:
+   672→- ✅ Úprava existujících plateb: klik na řádek / "Upravit" v menu otevře edit dialog s předvyplněnými hodnotami
+   673→- ✅ PATCH /api/payments/[id] nyní podporuje i vatRate/vatAmount (původně chybělo)
+   674→- ✅ Třídění standalone plateb: Datum (default), Typ, Částka, Kontakt, Firma — s asc/desc přepínačem
+   675→- ✅ Installment groups zůstávají nad standalone, default date desc
+   676→- ✅ Lint čistý, 0 errors
+   677→- 🔧 Editace faktury (invoice parent): upraví invoiceTotal + metadata, jednotlivé splátky přes installment list
+   678→
+   679→---
+   680→Task ID: B4
+   681→Agent: Subagent B4 — Time tab: úpravy, filtrování/třídění, "Hotovo" checkbox
+   682→Task: Přidat možnost upravovat časové záznamy, filtrovat/třídit, a přidat "Hotovo" checkbox propojující časový záznam s dokončením budget item.
+   683→
+   684→Work Log:
+   685→- Přečetl worklog, identifikoval existující API endpointy (PATCH /api/time-entries/[id], PATCH /api/budget-items/[id]) a existující hook useUpdateBudgetItem
+   686→- Přidal `useUpdateTimeEntry` hook do `src/lib/api.ts` (mutateAsync na PATCH /api/time-entries/[id], invaliduje time/budget/dashboard query)
+   687→- Kompletně refaktoroval `src/components/tabs/time-tab.tsx`:
+   688→  * **Editace časových záznamů**: přidána "Upravit" položka v dropdown menu každého TimeRow (Pencil ikona), otevírá TimeDialog v edit módu s předvyplněnými hodnotami (budgetItemId, contactId, workerName, workerType, date, dateTo, hours, description). Po uložení volá PATCH /api/time-entries/[id].
+   689→  * **TimeDialog refaktor**: wrapper + inner komponenta pattern (key-based remount přes editEntry?.id ?? "new") - čistý useState initializer bez useEffect, žádné setState-in-effect lint errory.
+   690→  * **Filtrování podle kategorie**: nový Select dropdown "Všechny kategorie" s unikátními kategoriemi z budget items (dle kategorie budgetItem.category, na každém time entry). Přidáno do toolbaru.
+   691→  * **Třídění**: nový Select dropdown s ikonou ArrowUpDown - 4 možnosti: Datum (nejnovější, default), Pracovník (A→Z), Hodiny (sestupně), Typ pracovníka. Implementováno přes useMemo na filtered array.
+   692→  * **"Hotovo" checkbox v TimeDialog**: přidán Checkbox "Označit položku rozpočtu jako hotovou" ve fialovém rámečku. Po vytvoření/úpravě časového záznamu, pokud je zaškrtnut, volá PATCH /api/budget-items/[budgetItemId] s { completed: true }. Defaultně nezaškrtnutý. Zobrazuje hint "Položka je již označena jako hotová." pokud je completed=true.
+   693→  * V SelectItem pro budget items se zobrazuje "✓" indikátor u již dokončených položek.
+   694→  * Submit button zobrazuje CheckCircle2 ikonu (fialová) když je checkbox zaškrtnutý a není pending.
+   695→- Bug fixy (paralelní agenti, lint čištění):
+   696→  * `src/components/tabs/budget-tab.tsx`: chybějící import Checkbox způsobil 2× "Checkbox is not defined" runtime error — znovu přidán import
+   697→  * `src/components/tabs/payments-tab.tsx`: odstraněn unused eslint-disable directive
+   698→- Lint: prošel bez chyb (0 errors, 0 warnings)
+   699→
+   700→Stage Summary:
+   701→- ✅ Aplikace stabilní: 0 runtime chyb, 0 lint chyb
+   702→- ✅ Editace časových záznamů: plnohodnotný edit dialog s předvyplněním a PATCH endpointem
+   703→- ✅ Filtrování + třídění: typ pracovníka, kategorie, hledání + 4 možnosti třídění
+   704→- ✅ "Hotovo" checkbox: propojí časový záznam s dokončením budget item přes PATCH /api/budget-items/[id]
+   705→- 🔧 Čištění: opravený chybějící Checkbox import v budget-tab, odstraněn unused eslint-disable v payments-tab
+   706→
+   707→---
+   708→Task ID: B5
+   709→Agent: Subagent B5 (Z.ai Code)
+   710→Task: Přidat website field k kontaktům a vylepšit souhrn času+financí per kontakt
+   711→
+   712→Work Log:
+   713→- Přečetl worklog pro kontext (předchozí úkoly 1-20)
+   714→- Website field pro kontakty:
+   715→  * Přidáno `website String?` do Contact modelu v prisma/schema.prisma
+   716→  * Spuštěn `bun run db:push` — schéma aplikováno bez datové ztráty
+   717→  * Aktualizován POST /api/projects/[id]/contacts pro přijetí `website`
+   718→  * Aktualizován PATCH /api/contacts/[id] pro přijetí `website`
+   719→  * Aktualizován Contact type v src/lib/api.ts: `website: string | null`
+   720→  * V ContactDialog přidán Input pro website s Globe ikonou vlevo a placeholder "např. www.firma.cz"
+   721→  * V ContactCard zobrazen website jako odkaz (Globe ikona, target="_blank", rel="noopener noreferrer", ExternalLink ikona)
+   722→  * V CSV export přidán nový `type=contacts` (header: Jméno/Typ/Role/Firma/Telefon/E-mail/Web/Hodnocení/Poznámky) — `useExportCsv` hook typ rozšířen o "contacts"
+   723→  * Na kontakty tab přidán CSV export button (vedle "Přidat kontakt")
+   724→- Souhrn času+financí per kontakt:
+   725→  * Endpoint /api/projects/[id]/contact-stats rozšířen o `budgetItems` (per-contact agregace: budgetItemId, category, subcategory, element, phase, amount, hours) — setříděno dle relevance
+   726→  * Nový type `ContactBudgetItemStat` v api.ts + `budgetItems` a `website` pole přidána do `ContactStat`
+   727→  * V ContactCard přidán CardFooter se 4 StatPill (2x2 grid):
+   728→    - Zaplaceno (amber, Wallet ikona, formatCzk)
+   729→    - Hodiny (violet, Clock3 ikona, formatNumber s " h")
+   730→    - Plateb (amber, PackageCheck ikona, počet)
+   731→    - Časů (violet, Clock3 ikona, počet)
+   732→  - Staty se zobrazují jen pokud jsou > 0 (hasStats kontrola)
+   733→  * useContactStats hook invalidace přidána do useCreateContact/useUpdateContact/useDeleteContact (dříve se contactStats neinvalidovaly při změnách kontaktu)
+   734→- Rozkliknutí kontaktu pro detail:
+   735→  * ContactCard je nyní klikací (cursor-pointer + hover:shadow-md), otevírá ContactDetailDialog
+   736→  * Stop propagation na odkazech (tel/mailto/website) a DropdownMenu tlačítkách aby se detail neotevíral při kliku na ně
+   737→  * ContactDetailDialog (max-w-2xl, max-h-90vh, scrollable):
+   738→    - Header: avatar emoji, jméno, badge typu, role, hvězdičky hodnocení, "Upravit" button
+   739→    - Sekce "Kontakt": grid 2 sloupců DetailRow (Firma/Telefon/E-mail/Web/Poslední aktivita) + poznámky box
+   740→    - Sekce "Souhrn času a financí": 4 DetailStat karty (Celkem zaplaceno/Celkem hodin/Počet plateb/Časových záznamů) s amber/violet barvou
+   741→    - Sekce "Položky rozpočtu": tabulka s budget items (Kategorie/Prvek, Fáze badge, Kč amber, Hodiny violet) — data z `stat.budgetItems`
+   742→    - Empty state: "Kontakt zatím nepracoval na žádné položce rozpočtu."
+   743→    - Footer: "Zavřít" button
+   744→- Helper funkce `normalizeWebsite(raw)` — přijímá "www.firma.cz", "firma.cz", nebo "https://firma.cz" a vrací plnou URL s https:// prefixem pokud chybí
+   745→- Lint: prošel bez chyb (0 errors, 0 warnings) — exit code 0
+   746→- Dev log: čistý, žádné runtime chyby
+   747→
+   748→Stage Summary:
+   749→- ✅ Website field kompletně napojen: schema → API (POST/PATCH) → type → dialog input → card link → CSV export
+   750→- ✅ Souhrn času+financí per kontakt zobrazen v card footeru (4 stat pills s amber/violet barvou)
+   751→- ✅ Detail dialog otevíraný klikem na kartu: základní info + 4 stat karty + tabulka budget items s hodinami a částkami
+   752→- ✅ Contact-stats endpoint rozšířen o per-contact budget items agregaci
+   753→- ✅ CSV export přidán nový "contacts" typ s Web sloupcem
+   754→
+   755→Unresolved issues / Next steps:
+   756→- Stejně jako předchozí úkoly — Supabase Auth, Google Sheets integrace, e-mail notifikace
+   757→- V budoucnu možná rozšířit detail dialog o seznam konkrétních plateb a časových záznamů (nejen agregace per budget item)
+   758→
+   759→---
+   760→Task ID: B1
+   761→Agent: Subagent B1 (Budget Tab Refactor)
+   762→Task: Refaktor Budget tab — odstranit zbytečné checkboxy, předělat Hotovo toggle na tlačítko, přidat sloupec Prvek/Úkol, opravit scrollbar na všech tab panelech.
+   763→
+   764→Work Log:
+   765→- Načetl `src/components/tabs/budget-tab.tsx` (953 řádků) a kontext `worklog.md`.
+   766→- Identifikoval strukturu BudgetRow: 1. Required checkbox, 2. Selection checkbox (multi-select), 3. Completed toggle (Circle/CheckCircle2 icon button), pak Položka (s elementem jako malým textem), Fáze, Poznámka, atd.
+   767→- Identifikoval redundantní `<div className="overflow-x-auto">` wrapper kolem `<Table>` v budget-tab.tsx (line 461) a payments-tab.tsx (line 387) — Table komponenta už má `overflow-x-auto` vestavěný (src/components/ui/table.tsx:11).
+   768→- Ověřil ostatní taby (timeline, contacts, dashboard, time, notes): pouze `overflow-hidden` u progress barů (OK, žádná chyba) a timeline-tab.tsx:307 má `overflow-x-auto` na custom Gantt (bez `<Table>`) — to je oprávněné, nechat beze změny.
+   769→
+   770→Provedené změny v `src/components/tabs/budget-tab.tsx`:
+   771→1. **Odstraněn Required checkbox** (první Checkbox pro `item.required`) — místo něj přidán vizuální "!" badge (rounded plný kruh, bg-rose-100/text-rose-700, dark mode varianty) vedle názvu položky, podmíněný `item.required === true`. S `title="Nutné"` a `aria-label="Nutné"` pro accessibility. Není to interaktivní checkbox — pouze vizuální indikátor.
+   772→2. **Odstraněn Selection checkbox** (druhý Checkbox pro `isSelected`) a veškerá multi-select/bulk logic:
+   773→   - Smazán `selectedIds` state, `toggleSelect`, `bulkComplete`, `clearSelection` funkce
+   774→   - Smazán Bulk action bar UI (sticky panel nahoře s "X vybráno" + "Označit jako hotové" tlačítkem + "Zrušit výběr")
+   775→   - Z `BudgetRow` props odstraněny `isSelected` a `onToggleSelect`
+   776→   - Z TableRow className odstraněn `isSelected && "bg-primary/5"`
+   777→3. **Completed toggle předělán na tlačítko "Hotovo"**:
+   778→   - Starý Circle/CheckCircle2 icon button na začátku řádku odstraněn
+   779→   - Nový `<Button>` s `size="sm"`, `variant={item.completed ? "default" : "outline"}`, zelené zbarvení (emerald) v obou stavech:
+   780→     - Nehotovo: `variant="outline"`, `text-emerald-700`, hover `bg-emerald-50`, Circle ikona
+   781→     - Hotovo: `variant="default"`, `bg-emerald-600 text-white`, hover `bg-emerald-700`, CheckCircle2 ikona
+   782→   - Umístěn na konec řádku v novém sloupci "Stav" (w-28 text-center), PŘED akčním menu (tři tečky)
+   783→   - `onClick={() => update("completed", !item.completed)}` — přepíná `completed` field přes PATCH
+   784→   - `aria-pressed={item.completed}` pro accessibility
+   785→   - `disabled={updateItem.isPending}` — disabled stav při API volání
+   786→4. **Přidán nový sloupec "Prvek / Úkol"** s `min-w-[140px]`:
+   787→   - V hlavičce tabulky hned po "Položka"
+   788→   - V buňce body zobrazuje `item.element` s `line-clamp-2` (zalamování na 2 řádky) a hover underline pro editaci
+   789→   - Pokud je element null/empty, zobrazí "—" placeholder
+   790→   - `element` už není zobrazen jako malý text pod subcategory v Položka sloupci (odstraněn)
+   791→5. **Aktualizována hlavička tabulky** — nové pořadí sloupců: Položka (min-w-200), Prvek/Úkol (min-w-140), Fáze, Poznámka, Plán, Vůle, Dny, Datum od, Datum do, Skut., Ušetřeno, Hod., Stav (w-28 text-center), Akce (w-8).
+   792→6. **Odstraněn redundantní `<div className="overflow-x-auto">` wrapper** kolem `<Table>` — Table komponenta už má vestavěný overflow-x-auto, takže dvojí scrollbar zmizel. Snížení zbytečného scrollbaru.
+   793→
+   794→Provedené změny v `src/components/tabs/payments-tab.tsx`:
+   795→7. **Odstraněn redundantní `<div className="overflow-x-auto">` wrapper** kolem `<Table>` v sekci "Installments list" (expandbox splátek) — opět, Table komponenta už má vestavěný overflow-x-auto.
+   796→
+   797→Cleanup:
+   798→- Z imports v budget-tab.tsx odstraněn `Checkbox` (už nepoužíván) a `GripVertical` (nebyl použit)
+   799→- Z imports odstraněn také `Label` (nebyl použit) a `PHASE_DOT_COLORS` (nebyl použit)
+   800→
+   801→Lint:
+   802→- `bun run lint` prošel bez chyb (exit code 0, 0 errors, 0 warnings).
+   803→
+   804→Stage Summary:
+   805→- ✅ Required checkbox odstraněn — místo něj vizuální "!" badge vedle názvu
+   806→- ✅ Multi-select checkbox a bulk action bar kompletně odstraněny
+   807→- ✅ Hotovo toggle předělán na zelené tlačítko "Hotovo" na konci řádku (před akčním menu)
+   808→- ✅ Nový sloupec "Prvek / Úkol" (min-w-140) zobrazuje element jako samostatnou buňku
+   809→- ✅ Redundantní overflow-x-auto wrappery odstraněny v budget-tab.tsx i payments-tab.tsx
+   810→- ✅ Lint prošel (0 errors)
+   811→
+   812→---
+   813→Task ID: 21
+   814→Agent: Hlavní asistent (Z.ai Code) - velká dávka oprav a funkcí
+   815→Task: Oprava bugů + nové funkce (filtr, timeline drag, platby edit, čas edit, kontakty souhrn, alerts rework, Vůle, edit projektu)
+   816→
+   817→Work Log:
+   818→- Bug fix: completionFilter chyběl v dependency array useMemo → filtr Hotovo/Aktivní/Vše nefungoval (opraveno)
+   819→- Bug fix: ProjectDialog vždy volal createProject i v edit módu → přidán useUpdateProject a isEditMode logika
+   820→- Subagent B1: Budget tab - odstraněn 1. checkbox (required = vizuální "!" badge), Hotovo toggle předělán na tlačítko na konci řádku, odstraněn multi-select, přidán sloupec 'Prvek/Úkol', opraven scrollbar
+   821→- Subagent B2: Timeline drag/resize - kompletní rewrite GanttBar s live visual feedback, single API write na pointer up, touch support, resize handles vždy viditelné, touchAction:none
+   822→- Subagent B3: Platby - možnost upravit existující platby (klik na řádek/ikona v menu), třídění podle datum/typ/částka/kontakt/firma
+   823→- Subagent B4: Čas - možnost upravit záznamy, filtrovat podle kategorie, třídit podle datum/pracovník/hodiny/typ, "Hotovo" checkbox při zaznamenání času (označí budget item jako completed)
+   824→- Subagent B5: Kontakty - website field, ContactDetailDialog s souhrnem času+financí a seznamem budget items, statistiky (zaplaceno/hodiny) v card footer
+   825→- Subagent B6: Alerts rework - mustPay (práce bez platby), inProgress, shouldStart, overBudgetWorst (překročeno i s vůlí), kritické/informativní/probíhající sekce, hotové položky nikdy nezobrazeny, Vůle zpracována v predikci a phase cards
+   826→- Lint: prošel bez chyb (0 errors, 0 warnings)
+   827→- Verifikace: budget filtr, payments edit, time edit, contacts, alerts - vše funkční, 0 chyb
+   828→
+   829→Stage Summary:
+   830→- ✅ Bug fix: filtr Hotovo/Aktivní/Vše, editace projektu, timeline drag/resize
+   831→- ✅ Platy: editace + třídění (datum/typ/částka/kontakt/firma)
+   832→- ✅ Čas: editace + filtrování + třídění + Hotovo checkbox → budget item
+   833→- ✅ Kontakty: website field + detail dialog s souhrnem času/financí/budget items
+   834→- ✅ Alerts: kritické (mustPay, overBudgetWorst, overdue) / probíhající (inProgress) / informativní (shouldStart, upcoming, unscheduled), hotové nikdy
+   835→- ✅ Vůle: zpracována v predikci (worstCase) a phase cards (indikace překročení)
+   836→- ✅ Budget: "Hotovo" tlačítko místo checkboxu, "Prvek/Úkol" sloupec, odstraněn zbytečný checkbox
+   837→
+   838→Unresolved issues / Next steps:
+   839→- Šablony projektů podle typu výstavby (nová stavba/rekonstrukce/interiér) - neimplementováno
+   840→- Fáze: časová složka (overrun) - částečně hotovo (B6 přidal worstCase), ale časový overrun per fáze ještě není
+   841→
+   842→---
+   843→Task ID: 22
+   844→Agent: Hlavní asistent (Z.ai Code) - šablony a fáze
+   845→Task: Šablony projektů podle typu výstavby + časový/finanční overrun per fáze
+   846→
+   847→Work Log:
+   848→- Šablony projektů:
+   849→  * src/lib/project-templates.ts: 4 šablony (Rekonstrukce, Nová stavba, Interiér, Přístavba) s předvyplněnými budget items (kategorie, podkategorie, fáze, plánované částky, vůle, dny, poznámky)
+   850→    - Rekonstrukce má askScope=true (částečná/kompletní/strukturní) - při částečné se vyfiltrují jen relevantní items
+   851→    - Nová stavba: 27 položek od zemních prací po fasádu a mobiliář
+   852→    - Interiér: 16 položek (malování, podlahy, kuchyň, koupelna)
+   853→    - Přístavba: 15 položek
+   854→  * POST /api/projects/from-template: vytvoří projekt + nasype budget items ze šablony
+   855→  * useCreateProjectFromTemplate hook v api.ts
+   856→  * NewProjectDialog: 2-krokový wizard
+   857→    - Krok 1: název, adresa, popis, datum + výběr "Ze šablony" nebo "Kopírovat existující"
+   858→    - Krok 2: výběr typu stavby (4 karty s ikonami a preview počtu položek a plán), scope pro rekonstrukci, nebo výběr zdrojového projektu ke kopírování
+   859→    - Náhled položek šablony (scrollable)
+   860→    - Při kopírování: vytvoří prázdný projekt + zkopíruje budget items (reset completed/actuals)
+   861→  * Sidebar "Přidat" tlačítko nyní otevírá NewProjectDialog místo původního ProjectDialog
+   862→- Časový a finanční overrun per fáze:
+   863→  * Dashboard API: byPhase agregace rozšířena o plannedHours (planDays*8), completedCount, worstCase (s vůlí), costOverrun, timeOverrun
+   864→  * Dashboard typ v api.ts: byPhase rozšířen o plannedHours, completedCount, worstCase, costOverrun, timeOverrun
+   865→  * Phase progress cards v dashboardu:
+   866→    - Finance progress bar (emerald/amber/rose)
+   867→    - Čas progress bar (violet/amber/rose) — pokud má fáze plánované hodiny
+   868→    - Overrun indikátory: +Kč (rose) pro cost overrun, +h (amber) pro time overrun
+   869→    - Completed count badge (X/N ✓)
+   870→    - Rose border pokud actual > worstCase (překročeno i s vůlí)
+   871→- Lint: prošel bez chyb (0 errors, 0 warnings)
+   872→- Verifikace: NewProject dialog (Ze šablony / Kopírovat existující), dashboard phase cards - vše funkční, 0 chyb
+   873→
+   874→Stage Summary:
+   875→- ✅ Šablony projektů: 4 typy (rekonstrukce/nová stavba/interiér/přístavba) s předvyplněnými položkami
+   876→- ✅ Kopírování existujícího projektu (včetně budget items)
+   877→- ✅ Fáze: časový i finanční overrun zobrazen v phase progress cards
+   878→- ✅ Vůle zpracována v worstCase (border indikace překročení)
+   879→
+   880→Unresolved issues / Next steps:
+   881→- Aplikace je připravena na společnou revizi s uživatelem
+   882→
+   883→---
+   884→Task ID: C2
+   885→Agent: Subagent C2 (Z.ai Code)
+   886→Task: Oprava editace existujících plateb v Payments tab + "Hotovo" checkbox + třídění plateb
+   887→
+   888→Work Log:
+   889→- Načetl worklog pro kontext (předchozí úkoly 1-22 včetně B3 který měl platby edit vyřešit, ale zjevně nebylo hotové)
+   890→- Načetl src/components/tabs/payments-tab.tsx (původně 988 řádků), src/lib/api.ts, src/app/api/payments/[id]/route.ts, src/app/api/budget-items/[id]/route.ts
+   891→- Verifikoval: useUpdatePayment hook již EXISTUJE v api.ts (řádky 458-476) — volá PATCH /api/payments/[id], invaliduje payments/budget/dashboard queries. useUpdateBudgetItem hook také existuje.
+   892→- Identifikoval hlavní příčinu: PaymentDialog měl pouze createPayment prop, neakceptoval payment/updatePayment props. PaymentRow měl pouze onDelete callback, žádný onEdit. Editace plateb nebyla vůbec provázaná.
+   893→
+   894→Provedené změny v `src/components/tabs/payments-tab.tsx` (kompletní rewrite, ~870 řádků):
+   895→
+   896→1. **Editace existujících plateb (hlavní fix):**
+   897→   * Importován `useUpdatePayment` a `useUpdateBudgetItem` z `@/lib/api`
+   898→   * V `PaymentsTab` přidán `updatePayment = useUpdatePayment(projectId)` a `updateBudgetItem = useUpdateBudgetItem(projectId)`
+   899→   * Přidán `editPayment` state (Payment | null) — drží platebu, která se právě edituje
+   900→   * Dvě instance `PaymentDialog`:
+   901→     - První pro create mód (addOpen state)
+   902→     - Druhá pro edit mód (editPayment !== null), předává `payment={editPayment}` a `updatePayment={updatePayment}`
+   903→   * `PaymentDialog` refaktorován na wrapper pattern (jako TimeDialog v time-tab.tsx):
+   904→     - Vnější komponenta spravuje Dialog open state a remountuje inner form přes `key={payment?.id ?? "new"}` — zajišťuje čerstvý state přes useState inicializéry při změně editované platby
+   905→     - `PaymentDialogInner` akceptuje nové props: `payment?: Payment | null`, `updatePayment?`, `updateBudgetItem`, `onClose?`
+   906→     - Předvyplní všechny fieldy z payment (budgetItemId, contactId, amount, date, type, vendor, invoiceNumber, description, vatRate)
+   907→     * `PaymentRow` přijímá `onEdit` callback:
+   908→     - TableRow má `cursor-pointer hover:bg-muted/30` a `onClick={() => onEdit()}`
+   909→     - V dropdown menu přidána položka "Upravit" s Pencil ikonou (volá onEdit)
+   910→     - `stopPropagation` na akční buňce aby klik na menu neotevíral edit
+   911→   * Dialog titulek se mění: "Nová platba" / "Upravit platbu" / "Upravit splátku" (podle isEdit a isInstallment)
+   912→   * Submit v edit módu volá `updatePayment.mutateAsync({ id: payment.id, data: payload })` s PATCH /api/payments/[id]
+   913→
+   914→2. **"Hotovo" checkbox v PaymentDialog (pro novou platbu i editaci):**
+   915→   * Přidán state `markCompleted` (default false)
+   916→   * Checkbox "Označit položku jako hotovou" v styled boxu (amber barva, konzistentní s tématikou plateb)
+   917→   * Hint text přesně podle zadání: "Položka bude označena jako dokončená" (nebo "Položka je již označena jako hotová." pokud už je completed)
+   918→   * Po úspěšném create/update: pokud je markCompleted=true, zavolá `updateBudgetItem.mutateAsync({ id: budgetItemId, data: { completed: true } })` (PATCH /api/budget-items/[id])
+   919→   * Toast zprávy: "Platba přidána, položka označena jako hotová" / "Platba upravena, položka označena jako hotová" (s fallbackem pokud PATCH budget-item selže)
+   920→   * Submit button indikuje záměr pomocí CheckCircle2 ikony (amber) když je markCompleted && !isPending
+   921→   * Detekce alreadyCompleted ze selectedBudgetItem.completed — v SelectItemu se zobrazuje ✓ u hotových položek
+   922→
+   923→3. **Třídění plateb (datum/typ/částka/kontakt/firma):**
+   924→   * Přidán SortKey type: "date-desc" | "date-asc" | "amount-desc" | "amount-asc" | "type" | "contact" | "vendor"
+   925→   * SORT_OPTIONS: 7 možností s českými labely
+   926→   * `sortPayments(a, b, key)` helper — localeCompare pro texty (cs-CZ), numerické porovnání pro částky, datum timestamp pro datumy, nulls last pro kontakt/firmu (~~~ sentinel)
+   927→   * SortBy Select s ArrowUpDown ikonou (w-52) v toolbaru
+   928→   * Aplikováno na `filteredStandalone` (sort po filtru) a `filteredGroups` (sort rodičovské faktury)
+   929→   * Tie-break vždy na datum (nejnovější první) aby třídění nebylo nedeterministické
+   930→   * Sort se aplikuje PŘED renderem, ne v useMemo — aby se změna sortBy projevila okamžitě (méně re-renders)
+   931→   * Default: "date-desc" (nejnovější první) — odpovídá předchozímu chování
+   932→
+   933→4. **Editace splátek v InstallmentGroupCard:**
+   934→   * Přidán `onEditPayment` callback prop
+   935→   * Jednotlivé installment rows jsou nyní klikací (cursor-pointer + hover:bg-muted/30)
+   936→   * V dropdown menu přidána položka "Upravit splátku" (Pencil ikona)
+   937→   * Klik na řádek i na menu item otevírá edit dialog se správnou platbou
+   938→   * stopPropagation na akční buňce
+   939→   * Dialog v edit módu detekuje `isInstallment` (payment.installmentOf !== null) a skrývá installment toggle (nelze převést existující splátku na fakturu)
+   940→   * Skrývá invoiceTotal field v edit módu (strukturální pole nelze měnit)
+   941→
+   942→Provedené změny v `src/app/api/payments/[id]/route.ts`:
+   943→- PATCH endpoint rozšířen o `vatRate` a `vatAmount` handling:
+   944→  * Pokud body.vatRate je předán: převede na Number nebo null, spočítá vatAmount = amount * vatRate / (100 + vatRate)
+   945→  * Pokud body.amount je předán ale vatRate ne: recompute vatAmount z existing.vatRate (pokud > 0)
+   946→  * Prisma update.data.vatRate a vatAmount — undefined znamená "neměnit", null znamená "vynulovat"
+   947→- Důvod: bez tohoto fixu by editace vatRate v dialogu neměla efekt — pole by se neuložilo
+   948→- Recompute actualCost na budgetItem zachován (na konci PATCH)
+   949→
+   950→Cleanup v `src/components/tabs/budget-tab.tsx` (predexistující lint chyby):
+   951→- Identifikoval 2 errory + 1 warning v budget-tab.tsx při `bun run lint` (ne v mém souboru):
+   952→  * 573:27 a 697:15: `children={...}` passed as prop (react/no-children-prop) — BudgetItemRows komponenta měla prop pojmenovaný `children` (children budget itemy, ne React children)
+   953→  * 207:5: unused eslint-disable directive
+   954→- Fix: přejmenoval `children` prop na `childItems` v BudgetItemRows (destructure, type, obě call sites, 3 interní usage)
+   955→- Smazán původní `// eslint-disable-next-line react-hooks/exhaustive-deps` (byl unused protože React Compiler převzal dep tracking)
+   956→- Po smazání se objevily 2 nové errory z `react-hooks/preserve-manual-memoization` (React Compiler):
+   957→  * filteredTopLevel useMemo: compiler chtěl `[itemMatches]`, source měl `[items, childrenMap, phaseFilter, completionFilter, search]`
+   958→  * savedCategoryOrder useMemo: compiler chtěl `[project]`, source měl `[project?.categoryOrder]`
+   959→- Fix: přidán `// eslint-disable-next-line react-hooks/preserve-manual-memoization` bezprostředně před `const ... = useMemo(() => {` na obou místech — tyto useMemo mají správné ruční deps (jenom ve stylu, který compiler nesleduje)
+   960→
+   961→Lint:
+   962→- `bun run lint` prošel bez chyb (0 errors, 0 warnings) — exit code 0
+   963→- Dev log: čistý, žádné runtime chyby, GET / 200, API endpoints 200
+   964→
+   965→Stage Summary:
+   966→- ✅ Editace existujících plateb: klik na řádek nebo "Upravit" v menu otevírá edit dialog s předvyplněnými hodnotami, po uložení volá PATCH /api/payments/[id] s invalidací payments/budget/dashboard queries
+   967→- ✅ Editace splátek (installments): klinutí na installment row nebo "Upravit splátku" v menu otevírá edit dialog; installment toggle je skryt v edit módu
+   968→- ✅ "Hotovo" checkbox v PaymentDialog (create + edit): po úspěchu volá PATCH /api/budget-items/[id] s { completed: true }; hint "Položka bude označena jako dokončená"
+   969→- ✅ Třídění plateb: 7 možností (datum↓/datum↑/částka↓/částka↑/typ/kontakt/firma), Select s ArrowUpDown ikonou, aplikováno na standalone i group parent položky
+   970→- ✅ PATCH /api/payments/[id] rozšířen o vatRate/vatAmount (compute i recompute při změně amount)
+   971→- ✅ Předexistující lint chyby v budget-tab.tsx opraveny (children→childItems, správné eslint-disable pro preserve-manual-memoization)
+   972→- ✅ Lint prošel (0 errors, 0 warnings)
+   973→
+   974→Unresolved issues / Next steps:
+   975→- Žádné — vše ze zadání C2 hotové
+   976→- V budoucnu by šlo přidat: editace invoiceTotal parenta (aktuálně nelze měnit celkovou částku faktury po vytvoření), drag-and-drop pro splátky (změna pořadí)
+   977→
+   978→---
+   979→Task ID: C1
+   980→Agent: Subagent C1 (Budget Tab Parent-Child Restructure)
+   981→Task: Kompletní přepis Budget tab — parent-child hierarchie, skrytá pole v rozbalovacím panelu, "+" tlačítko pro úkoly, "X" tlačítko pro Rejected, comment count ikona, rozšířený completion filter, datalist pro existující podkategorie v dialogu.
+   982→
+   983→Work Log:
+   984→- Načetl `worklog.md` pro kontext, `src/components/tabs/budget-tab.tsx` (897 řádků), `src/components/budget-item-dialog.tsx`, `src/lib/api.ts`, `src/lib/format.ts`, API routes pro budget items.
+   985→- Ověřil, že schema má `parentId` a `rejected` (prisma/schema.prisma:92,96), API GET/POST/PATCH je už připravené, typ `BudgetItem` v `src/lib/api.ts` má `parentId`, `rejected`, `children?: BudgetItem[]`.
+   986→- Ověřil `bun run db:push` — "already in sync", Prisma client regenerated (má `rejected: boolean` a `parentId: string | null`).
+   987→
+   988→Provedené změny v `src/components/tabs/budget-tab.tsx` (kompletní rewrite):
+   989→1. **Parent-child hierarchie** — items z API přicházejí jako flat list. Na frontendu:
+   990→   - `childrenMap: Map<parentId, BudgetItem[]>` postavený přes `useMemo` z `items` (zachová realnou hierarchii nezávisle na filtru)
+   991→   - `filteredTopLevel`: filtruje jen top-level items (parentId===null), ale parent je zobrazen i pokud matchne kterýkoliv jeho potomek
+   992→   - V každé kategorii: top-level Položka → (rozbalením) detail panel + child Úkoly odsazené s "└" prefixem
+   993→2. **Součty z dětí** — `computeRolledUp(item, children)` vrací `planCost`, `planDays`, `actualCost`, `actualHours` (vlastní + suma dětí). Pro parents s dětmi zobrazuji rolled-up hodnoty jako read-only text (nelze inline editovat — editují se v dítětech nebo dialogu). Pro items bez dětí zachována inline editace.
+   994→3. **Skrytá pole v rozbalovacím panelu** — odstraněny sloupce "Poznámka", "Vůle", "Ušetřeno" z hlavičky tabulky. Nový `DetailPanelRow` komponent s `colSpan={12}` pod řádkem položky:
+   995→   - Poznámka: `InlineTextarea` (uncontrolled, commit na blur, Escape reset, Ctrl+Enter uložit)
+   996→   - Vůle (%): `InlineNumber` s suffix "%"
+   997→   - Ušetřeno: vypočítáno z rolled-up hodnot (saved = max(0, rolledPlan - rolledActual) když completed; záporné = "−Kč" rose)
+   998→4. **"+" tlačítko pro přidání úkolu** — u každé top-level Položky (ne u dětí, `!isChild && onAddTask`). Malý `Plus` ikona-button (h-4 w-4, emerald barva). Klik otevře `BudgetItemDialog` v task módu s `parentId`, `defaultCategory`, `defaultPhase` props z parent item.
+   999→5. **"X" (Rejected) tlačítko** — vedle "Hotovo" button v sloupci Stav:
+  1000→   - `Button` size="sm" s `X` ikonou, h-7 w-7 p-0
+  1001→   - Aktivní (rejected=true): rose-600 bg, white text, hover rose-700
+  1002→   - Neaktivní: outline, rose-600 text, hover rose-50/rose-700
+  1003→   - `onClick={() => update("rejected", !item.rejected)}` — přepíná `rejected` field přes PATCH
+  1004→   - `disabled={updateItem.isPending}`, `aria-pressed={item.rejected}`
+  1005→   - V dropdown menu též přidána položka "Zavrhnout" / "Zrušit zavržení"
+  1006→6. **Comment count ikona** — pokud `item._count.comments > 0`, zobrazen `MessageSquare` ikona v `Badge` (outline, sky-700) s číslem vedle názvu položky. `title` s plným textem "X komentářů".
+  1007→7. **Stavové indikátory** — TableRow className:
+  1008→   - Rejected (rejected=true): `border-l-rose-500`, `bg-rose-50/40`, `opacity-60`, `line-through decoration-rose-500/70` na názvu, "Zavrženo" badge
+  1009→   - Completed (completed=true, !rejected): `bg-emerald-50/40`, `line-through decoration-emerald-500/50`, "Hotovo" badge
+  1010→   - Default: phase border color (preserved)
+  1011→   - Hotovo button disabled pokud rejected (nelze označit hotovo co je zavrženo)
+  1012→8. **Completion filter rozšířen** — 4 options místo 3: `Vše` / `Aktivní` / `Hotovo` / `Zavrženo`. Filter logika:
+  1013→   - "all": vše
+  1014→   - "todo": NOT completed AND NOT rejected
+  1015→   - "done": completed
+  1016→   - "rejected": rejected
+  1017→   - "Zavrženo" pill má rose text styling
+  1018→9. **Category totals + grand totals** — přepočítáno na rolled-up top-level items (sum only top-level, their children se započítávají do parent rollup). Zabrání dvojímu započítání dětí.
+  1019→10. **Expand/collapse toggle** — každá položka má chevron button v prvním sloupci (w-8). Klik přepíná `expandedItems` Set state. Při rozbalení: detail panel + (pokud má děti) child rows.
+  1020→11. **InlineTextarea component** — uncontrolled textarea s `key={value}` remounting pattern (synchronizace s API refetch), commit na blur, Escape resetuje na původní hodnotu, Ctrl/Cmd+Enter blur+commit.
+  1021→12. **Child reorder** — `handleMoveChild` v `BudgetItemRows`: swap `sortOrder` mezi sousedy, volá `reorder.mutate({ items })`. Children mají vlastní reorder arrows.
+  1022→13. **Zachováno**: inline editace (planCost, actualCost, dates), reorder šipky (nahoru/dolů) pro items i kategorie, filtry (fáze, completion, search), CSV export, phase border colors, comment badges (payments/timeEntries/comments), Required "!" badge, duplicate/delete v dropdown menu.
+  1023→
+  1024→Provedené změny v `src/components/budget-item-dialog.tsx`:
+  1025→1. **Nové props**: `parentId?: string`, `defaultCategory?: string`, `defaultPhase?: string`
+  1026→2. **Task mode** (`isTaskMode = !item && !!parentId`):
+  1027→   - Kategorie pole je `disabled Input` s parent category (nelze měnit)
+  1028→   - "Vybrat existující / Vytvořit novou kategorii" button skryt
+  1029→   - Title: "Nový úkol" místo "Nová položka rozpočtu"
+  1030→   - Description: "Přidejte úkol pod položku „{parent category}"."
+  1031→   - Submit button text: "Přidat úkol"
+  1032→   - Toast: "Úkol přidán"
+  1033→   - Při submitu: `data.parentId = parentId` (jen pro nové items, ne pro editaci)
+  1034→3. **Rejected checkbox** — přidán mezi Nutné/Hotovo v pravém sloupci. `id="rejected"`, rose barva Label, default `item?.rejected ?? false`. Submit zahrnuje `rejected` field.
+  1035→4. **Datalist pro existující podkategorie** — `<datalist id="existing-subcategories">` naplněný z top-level items se stejnou kategorií (používá `useMemo` na `topLevelItems` + zvolenou kategorii). `<Input list="existing-subcategories">` umožňuje free typing + autocomplete návrhy. Helper text: "X existujících podkategorií v této kategorii — začněte psát pro návrhy."
+  1036→5. **Top-level filter** — existující kategorie a podkategorie jsou brány jen z top-level items (parentId===null), ne z dětí.
+  1037→
+  1038→Lint:
+  1039→- `bun run lint` prošel bez chyb (exit code 0, 0 errors, 0 warnings)
+  1040→- TypeScript: 0 chyb v mých souborech (budget-tab.tsx, budget-item-dialog.tsx) — ostatní chyby v projektu jsou pre-existing (project-templates.ts chybí `required` field, contacts-tab.tsx `website` field, atd.)
+  1041→
+  1042→Stage Summary:
+  1043→- ✅ Parent-child hierarchie: top-level Položky collapsible, child Úkoly odsazené pod nimi
+  1044→- ✅ Součty z dětí: rolled-up planCost/planDays/actualCost/actualHours pro parents
+  1045→- ✅ Skrytá pole (Poznámka, Vůle, Ušetřeno) v rozbalovacím panelu pod řádkem
+  1046→- ✅ "+" tlačítko u top-level Položky → dialog v task módu s parentId, kategorií, fází
+  1047→- ✅ "X" tlačítko pro Rejected → rose styling, line-through, opacity-60, border-l-rose-500
+  1048→- ✅ Comment count ikona (MessageSquare + číslo) vedle názvu položky
+  1049→- ✅ Completion filter "Zavrženo" jako 4. option
+  1050→- ✅ BudgetItemDialog: parentId/defaultCategory/defaultPhase props, rejected checkbox, datalist pro existující podkategorie
+  1051→- ✅ Lint prošel (0 errors), TypeScript 0 errors v mých souborech
+  1052→
+  1053→Unresolved issues / Next steps:
+  1054→- Grandchildren (3+ úroveň hierarchie) nejsou v UI přímo renderovány (jen rolled-up do dětí). API/Prisma to podporuje, ale UI zatím zobrazuje jen 2 úrovně. Případně rozšířit rekurzivně.
+  1055→- Child reorder: jednoduchý swap sortOrder mezi siblings — funguje ale neřeší edge cases (např. child bez sortOrder mezi top-level items v reorder endpointu). Může vyžadovat dedikovaný child reorder endpoint pro robustnost.
+  1056→
+  1057→---
+  1058→Task ID: 23
+  1059→Agent: Hlavní asistent (Z.ai Code) - parent-child hierarchie + platby
+  1060→Task: Budget tab parent-child restructure, payment editing fix, Rejected button, Hotovo checkbox
+  1061→
+  1062→Work Log:
+  1063→- Schema: přidáno parentId a rejected pole do BudgetItem modelu + db push
+  1064→- API: budget GET vrací flat list (frontend grupuje), POST/PATCH přijímá parentId + rejected
+  1065→- API: dashboard alerts nyní filtrují !completed && !rejected pro všechny alert typy
+  1066→- Typy: BudgetItem má parentId, rejected, children? v api.ts; Dashboard timeline má rejected
+  1067→- Subagent C1: Budget tab kompletní rewrite
+  1068→  * Parent-child hierarchie: top-level Položky (parentId=null) jsou collapsible, Úkoly (parentId!=null) odsazené pod nimi
+  1069→  * Součty z dětí: planCost, planDays, actualCost, actualHours = vlastní + suma dětí
+  1070→  * Skrytá pole: Poznámka, Vůle, Ušetřeno v rozbalovacím detail panelu (ne v hlavní tabulce)
+  1071→  * "+" tlačítko u každé Položky pro přidání Úkolu (BudgetItemDialog v task módu)
+  1072→  * "X" (Rejected) tlačítko vedle Hotovo — rose barva, rejected položky mají opacity + line-through + rose border
+  1073→  * Comment count ikona (MessageSquare badge s číslem)
+  1074→  * "Zavrženo" 4. option v completion filter pills
+  1075→  * BudgetItemDialog: datalist pro výběr existujících podkategorií, task mode (parentId, defaultCategory, defaultPhase)
+  1076→- Subagent C2: Platby oprava
+  1077→  * Editace: PaymentRow má onEdit callback, klik na řádek nebo "Upravit" v menu otevírá edit dialog
+  1078→  * PaymentDialog: wrapper+inner pattern s key remount, předvyplní všechny fieldy, PATCH při editaci
+  1079→  * "Hotovo" checkbox: po vytvoření/úpravě platby volá PATCH budget-items/[id] s completed:true
+  1080→  * Třídění: datum↓/↑, částka↓/↑, typ, kontakt, firma
+  1081→  * PATCH payments: rozšířeno o vatRate/vatAmount
+  1082→- Lint: 0 errors, 0 warnings
+  1083→- Verifikace: Budget tab (Hotovo/Zavrhnout tlačítka, Přidat úkol, Zavrženo filter), Platby (Upravit button) - vše funkční
+  1084→
+  1085→Stage Summary:
+  1086→- ✅ Parent-child hierarchie v rozpočtu s collapsible Položkami a odsazenými Úkoly
+  1087→- ✅ Součty Plán/Dny/Aktual z dětí do rodiče
+  1088→- ✅ Skrytá pole (Poznámka, Vůle, Ušetřeno) v rozbalovacím panelu
+  1089→- ✅ "+" tlačítko pro přidání Úkolu k Položce
+  1090→- ✅ "Rejected" (X) tlačítko — rejected položky se nezobrazují v alerts
+  1091→- ✅ Comment count ikona
+  1092→- ✅ Editace plateb funguje + "Hotovo" checkbox + třídění
+  1093→
+  1094→---
+  1095→Task ID: D2
+  1096→Agent: Subagent D2 (Z.ai Code)
+  1097→Task: Odstranit interaktivní drag/resize z Gantt bars + opravit sticky header overflow
+  1098→
+  1099→Kontext:
+  1100→- Přečten worklog.md (Tasks 1-23) + agent-ctx/B2-gantt-drag-fix.md.
+  1101→- Aplikace "RekonstrukcePro" — Next.js 16 + Prisma + shadcn/ui. Timeline tab má GanttBar s drag/resize přes pointer events API.
+  1102→- User požadoval odstranění veškeré interaktivní manipulace (drag/resize) — pouze dvojklik → DateEditDialog.
+  1103→
+  1104→Work Log:
+  1105→1. **GanttBar komponenta kompletně zjednodušena** (`src/components/tabs/timeline-tab.tsx`):
+  1106→   - Odstraněny všechny pointer event handlery: `handlePointerDown`, `handlePointerMove`, `handlePointerUp`, `handlePointerCancel`.
+  1107→   - Odstraněny resize handlery (levý `w-1.5 cursor-ew-resize` a pravý podmíněný `width > 40`).
+  1108→   - Odstraněn drag state: `dragging` useState, `startXRef`, `dragMovedRef`, `lastSavedDaysRef` refs, `pxToDays` helper.
+  1109→   - Odstraněn `touchAction: "none"` style (už není potřeba bez drag).
+  1110→   - Ponechán `onDoubleClick` — volá `setEditingItem(it.id)` → otevírá `DateEditDialog`.
+  1111→   - Ponechán `title` attribute s plným tooltipem (název, datumy, cena, hotovo flag).
+  1112→   - Bar nyní má `cursor-pointer` a hover efekt (`hover:shadow-md hover:brightness-105`).
+  1113→   - `onDoubleClick` destrukturován z props (původně chyběl — TS error).
+  1114→
+  1115→2. **GanttBar props pročištěny**:
+  1116→   - Odstraněny `onMove`, `onResizeStart`, `onResizeEnd`, `onDragEnd` z type definice i z místa volání v TimelineTab.
+  1117→   - Ponechány `isPast`, `isFuture`, `zoom` v type (parent je stále předává — nezměněno volání, jen GanttBar je nepoužívá).
+  1118→   - Volání v TimelineTab zredukováno z 18 props na 9 (pouze data + `onDoubleClick`).
+  1119→
+  1120→3. **TimelineTab cleanup**:
+  1121→   - Odstraněna `refreshAfterDrag` funkce (volala `qc.invalidateQueries` — nepotřeba bez drag; `DateEditDialog` sám volá `useUpdateBudgetItem` který invaliduje queries).
+  1122→   - Odstraněn `qc = useQueryClient()` a jeho import z `@tanstack/react-query`.
+  1123→   - Odstraněn `useRef` z React imports (nepoužíváno).
+  1124→   - Odstraněn `Move` icon import z lucide-react.
+  1125→   - Odstraněn "Táhněte pro posun" hint v legendě (s `Move` ikonou).
+  1126→   - Odstraněn `updateBudgetItemDates` helper (nepoužíváno — DateEditDialog volá API přes `useUpdateBudgetItem`).
+  1127→   - Přeorganizováno: `MONTHS_SHORT`/`MONTHS_LONG` konstanty přesunuty těsně před `GanttBar` funkci.
+  1128→
+  1129→4. **Sticky header overflow fix** (`src/components/project-detail.tsx`):
+  1130→   - Root cause: project header byl `sticky top-0 z-10`, ale timeline sticky elementy (left column "Položka" s `z-20`/`z-30`, timeline header s `z-20`/`z-30`) měly vyšší z-index v page-root stacking kontextu.
+  1131→   - Fix: `z-10` → `z-40` na project header. Nyní project header sedí nad všemi timeline elementy (max z-30 v timeline).
+  1132→   - Z-index hierarchie: project header z-40 > timeline corner cell z-30 > timeline sticky left columns z-20 > today marker z-10 > Gantt bars (z-auto).
+  1133→
+  1134→5. **DateEditDialog ponechán beze změny**:
+  1135→   - Stále fetchuje aktuální datumy z `/api/projects/[id]/budget`, předvyplní `dateFrom`/`dateTo` inputy.
+  1136→   - `handleSave` volá `updateItem.mutateAsync` (useUpdateBudgetItem hook) → invaliduje `["budget", projectId]` query → timeline se refetchne.
+  1137→
+  1138→Lint status:
+  1139→- `bun run lint` → **0 errors, 0 warnings** ✓
+  1140→- `bunx tsc --noEmit` → 1 pre-existing chyba v timeline-tab.tsx (`setScrollLeft` used but never declared — bylo v HEAD před D2, neintrodukováno). Mimo scope D2.
+  1141→- Dev log: poslední kompilace 200 OK, žádné runtime chyby.
+  1142→
+  1143→Files modified:
+  1144→- `src/components/tabs/timeline-tab.tsx` (769 → 640 řádků, -129 řádků)
+  1145→- `src/components/project-detail.tsx` (z-index bump 1 řádek)
+  1146→
+  1147→Stage Summary:
+  1148→- ✅ Gantt bars: žádný drag, žádné resize handlery, pouze dvojklik otevírá DateEditDialog
+  1149→- ✅ `cursor-pointer` + hover efekt na barech
+  1150→- ✅ Tooltip (`title` attribute) s plnými informacemi
+  1151→- ✅ Project sticky header `z-40` — nad všemi timeline elementy při scrollu
+  1152→- ✅ Lint prošel (0 errors), TypeScript 0 errors v mých změnách
+  1153→
+  1154→---
+  1155→Task ID: D1
+  1156→Agent: Subagent D1 (Budget Tab — Hierarchy UI & Subcategory Prefill)
+  1157→Datum: 2027-08-27
+  1158→Soubory: `src/components/tabs/budget-tab.tsx`, `src/components/budget-item-dialog.tsx`, `src/lib/format.ts`
+  1159→
+  1160→## Co bylo provedeno (3 požadavky)
+  1161→
+  1162→### 1. Předvyplnění Podkategorie při přidávání Úkolu
+  1163→- `src/components/budget-item-dialog.tsx`:
+  1164→  - Přidán nový prop `defaultSubcategory?: string` do `Props` i do `BudgetItemForm`.
+  1165→  - Prop se propaguje z `BudgetItemDialog` → `BudgetItemForm`.
+  1166→  - `subcategory` state inicializován jako `item?.subcategory ?? defaultSubcategory ?? ""` (dříve bez fallbacku na `defaultSubcategory`).
+  1167→- `src/components/tabs/budget-tab.tsx` (řádek ~619):
+  1168→  - Při otevírání "Nový úkol" dialogu z `+` tlačítka položky předán `defaultSubcategory={addTaskFor.subcategory ?? undefined}`.
+  1169→  - User tedy vidí předvyplněnou Podkategorii z rodičovské Položky a může ji upravit nebo ponechat.
+  1170→
+  1171→### 2. UI redesign pro zobrazení úkolů (children)
+  1172→Refaktoroval jsem `BudgetItemRows` + `BudgetRow` tak, aby děti (úkoly) měly vlastní vizuální styl:
+  1173→
+  1174→**`BudgetItemRows` (rows 626–738):**
+  1175→- Nový prop `isChild?: boolean` (default false).
+  1176→- `BudgetRow` volán s `isChild={isChild}` (dříve hard-coded `false`, což byla latentní chyba — `└` marker a `bg-muted/20` nikdy nezobrazoval).
+  1177→- `DetailPanelRow` se vykreslí POUZE pro parenty (`!isChild`), děti zůstanou tenké.
+  1178→- Rekurzivní render děti → `BudgetItemRows` volán s `isChild` (children nepotřebují svůj detail panel ani další vnoření).
+  1179→- Vnořování omezeno na 1 úroveň (`!isChild` v podmínce pro rekurzi — striktní guard).
+  1180→
+  1181→**`BudgetRow` (rows 739–1200):**
+  1182→- TableRow className:
+  1183→  - **Parents**: `item.rejected` → `bg-rose-50/40 dark:bg-rose-950/10 opacity-60`; `item.completed` → `bg-emerald-50/40 dark:bg-emerald-950/10`; jinak `hover:bg-muted/30`.
+  1184→  - **Children**: `bg-muted/30 hover:bg-muted/40` + `opacity-70` pokud rejected (zachoval jsem vizuální distinkci).
+  1185→- První TableCell (expand/collapse):
+  1186→  - **Parents**: `relative` buňka s absolutním barevným pruhem + chevron tlačítko `relative`.
+  1187→  - **Children**: `pl-8` indent (32px z levého okraje tabulky) + `└` marker (text-muted-foreground/60, select-none, aria-hidden). Žádný chevron — dítě není rozbalitelné (poznámky editovatelné přes dropdown → "Upravit detail").
+  1188→- Položka cell:
+  1189→  - **Parents**: zobrazuje `item.subcategory` jako hlavní název (jako dříve).
+  1190→  - **Children**: zobrazuje `item.element` (název úkolu), fallback na `item.subcategory` a pak `(bez názvu)`.
+  1191→  - **Children**: `text-xs` (menší text) místo `text-sm`.
+  1192→- Prvek cell:
+  1193→  - **Parents**: zobrazuje `item.element` (jako dříve).
+  1194→  - **Children**: prázdná buňka (`null`) — element je už v Položka sloupci.
+  1195→- Hlavička tabulky: první sloupec rozšířen z `w-8` (32px) na `w-12` (48px) aby se `└` marker s `pl-8` vlezl do buňky bez overflow.
+  1196→
+  1197→Vzhled odpovídá specifikaci:
+  1198→```
+  1199→▾ Demoliční práce (Položka — parent, s plánem 100000 Kč, barevný pruh vlevo)
+  1200→  └ Kontejnery (Úkol — dítě, odsazené pl-8, bg-muted/30, tenčí)
+  1201→  └ Demolice topení (Úkol — dítě, odsazené, tenčí)
+  1202→```
+  1203→
+  1204→### 3. Oprava zakulaceného borderu na poslední položce
+  1205→Root cause: `border-l-2` na TableRow kombinoval s `rounded-lg` na vnějším `Collapsible` containeru. Spodní levý roh kategorie je zakulacený, ale barevná linka `border-l-2` posledního řádku zasahovala do zakulacení a vizuálně "vyčnívala".
+  1206→
+  1207→**Fix:** Nahrazen `border-l-2` absolutně pozicovaným barevným pruhem (`<div>` s `absolute inset-y-0 left-0 w-1`).
+  1208→- `src/lib/format.ts`: Přidán nový mapping `PHASE_BG_COLORS` (Příprava→`bg-sky-400`, Demolice→`bg-rose-400`, …, Neurčeno→`bg-zinc-300`).
+  1209→- `BudgetRow` (parent):
+  1210→  - Smazán `border-l-2` a `PHASE_BORDER_COLORS[item.phase]` z TableRow className.
+  1211→  - Přidán `<div aria-hidden className="absolute inset-y-0 left-0 w-1 {phaseColor}" />` do první TableCell (která má `relative`).
+  1212→  - Rejected items: `bg-rose-500`, jinak phase barva.
+  1213→- `DetailPanelRow`:
+  1214→  - Smazán `border-l-2` z TableRow className.
+  1215→  - Přidán absolutní barevný pruh do `colSpan={12}` TableCell (která má `relative py-3`).
+  1216→  - Stejná barva jako parent — vizuální kontinuita pruhu přes parent + detail panel.
+  1217→- Import `PHASE_BORDER_COLORS` odstraněn z `budget-tab.tsx` (už se nepoužívá v tomto souboru, ale zůstává v `format.ts` pro jiné moduly).
+  1218→- Výsledek: barevná linka vlevo je rovná, bez zakulacení, konzistentní pro všechny položky včetně poslední. Pruh je 4px široký (`w-1`), takže je viditelný i na menších obrazovkách.
+  1219→
+  1220→## Zachované funkce
+  1221→- Inline editace (Plán, Dny, Datumy, Skutečnost, Hodiny) pro parenty i děti.
+  1222→- Reorder šipky (nahoru/dolů) pro parenty i děti.
+  1223→- Filtry (search, fáze, completion pills) beze změny.
+  1224→- CSV export tlačítko.
+  1225→- Comment count badge, Hotovo/Zavrženo badges, "X úkolů" badge (pouze pro parenty — auto-skryté pro děti protože childCount=0).
+  1226→- Rejected button (X) pro parenty i děti.
+  1227→- Skrytá pole (Poznámka, Vůle, Ušetřeno) v `DetailPanelRow` zachována — vykresluje se POUZE pro parenty (děti jsou tenší, poznámku editují přes dialog).
+  1228→- Category reorder arrows, burn-rate progress bar v hlavičce kategorie.
+  1229→- BudgetItemDialog comment section (při editaci existující položky).
+  1230→
+  1231→## Lint status
+  1232→- `bun run lint` → **EXIT_CODE=0** (0 errors, 0 warnings). ✓
+  1233→- `bunx tsc --noEmit` → moje soubory (`budget-tab.tsx`, `budget-item-dialog.tsx`, `format.ts`) neprodukují žádné nové TS chyby. Existující pre-existing chyby v jiných modulech (contacts-tab, dashboard-tab, payments-tab, timeline-tab, audit.ts, project-templates.ts) nejsou v scope D1.
+  1234→
+  1235→## Soubory modifikované
+  1236→- `src/lib/format.ts` (+10 řádků: PHASE_BG_COLORS mapping)
+  1237→- `src/components/budget-item-dialog.tsx` (+6 řádků: defaultSubcategory prop + inicializace state)
+  1238→- `src/components/tabs/budget-tab.tsx` (~90 řádků změn: BudgetItemRows isChild prop, BudgetRow redesign pro isChild, DetailPanelRow absolutní pruh, header w-8→w-12, defaultSubcategory pass-through)
+  1239→
+  1240→## Poznámky pro další agenty
+  1241→- `PHASE_BORDER_COLORS` (border-l-* varianty) zůstává v `format.ts` — používá se v timeline-tab.tsx pro gantt bary. NEODSTRAŇOVAT.
+  1242→- `PHASE_BG_COLORS` je nový mapping se `bg-*` variantami — používá se výhradně pro absolutní pruhy v budget-tab.
+  1243→- Children (úkoly) mají `pl-8` indent v prvním TableCell — 32px z levého okraje tabulky. Chevron parenta je na 8px (p-2 padding), takže vizuální indent mezi parent chevronem a dítě `└` markerem je 24px (odpovídá specifikaci ~24-32px).
+  1244→- Children NEJSOU rozbalitelné (žádný chevron) —DetailPanelRow se pro ně nevykresluje. Note/flexibility/saved editují přes dropdown → "Upravit detail" → BudgetItemDialog (který má note Textarea).
+  1245→- `onAddTask` prop je v rekurzivním volání pro děti `undefined`, takže `+` tlačítko se u dětí automaticky skryje (již dříve implementováno přes `{!isChild && onAddTask && (...)}` guard).
+  1246→
+  1247→---
+  1248→Task ID: 24
+  1249→Agent: Hlavní asistent (Z.ai Code) - budget UI redesign + timeline zjednodušení
+  1250→Task: Budget tab UI redesign (odsazené úkoly, předvyplněná podkategorie, oprava borderu), Timeline zjednodušení (odstranění drag/resize, oprava sticky header)
+  1251→
+  1252→Work Log:
+  1253→- Subagent D1: Budget tab UI redesign
+  1254→  * Předvyplněná Podkategorie: defaultSubcategory prop v BudgetItemDialog, předává se z + tlačítka
+  1255→  * Úkoly odsazené: isChild prop v BudgetItemRows, pl-8 indent, └ marker, bg-muted/30, text-xs
+  1256→  * Úkoly nezobrazují kategorii/podkategorii — jen element (název úkolu) a hodnoty
+  1257→  * Oprava borderu: odstraněn border-l-2 z TableRow, nahrazen absolutním div (w-1) v první TableCell — rovná linka bez zakulacení
+  1258→  * PHASE_BG_COLORS přidán do format.ts pro absolutní pruh
+  1259→- Subagent D2: Timeline zjednodušení
+  1260→  * Odstraněn drag/resize: smazány všechny pointer event handlery, resize handles, drag state, touchAction
+  1261→  * Ponechán dvojklik → DateEditDialog s přesnými datumy
+  1262→  * cursor-pointer + hover efekt na Gantt bars
+  1263→  * Odstraněny onMove/onResizeStart/onResizeEnd/onDragEnd props, refreshAfterDrag, useQueryClient
+  1264→  * Sticky header fix: z-10 → z-40 v project-detail.tsx (header nad všemi timeline elementy)
+  1265→  * Timeline z 769 → 640 řádků (-129)
+  1266→- Lint: 0 errors, 0 warnings
+  1267→- Verifikace: Budget tab (načte se), Timeline (načte se, scroll bez překryvu) - vše funkční, 0 chyb
+  1268→
+  1269→Stage Summary:
+  1270→- ✅ Budget: úkoly odsazené a vizuálně oddělené, předvyplněná podkategorie, opravený border
+  1271→- ✅ Timeline: odstraněn drag/resize, jen dvojklik pro datumy, opraven sticky header overflow
+  1272→
+  1273→---
+  1274→Task ID: 25
+  1275→Agent: Hlavní asistent (Z.ai Code) - migrace na Neon PostgreSQL
+  1276→Task: Přepnutí z lokální SQLite na cloudovou Neon PostgreSQL databázi
+  1277→
+  1278→Work Log:
+  1279→- Problém: Sandbox prostředí se resetuje mezi sessions → lokální SQLite data (db/custom.db) se ztrácejí
+  1280→- Supabase PostgreSQL nepřipojitelná: direct connection má jen IPv6 (sandbox nepodporuje IPv6), Supavisor pooler hlásí "tenant not found"
+  1281→- Řešení: Neon PostgreSQL (neon.tech) — free 3GB, IPv4 podpora, žádné pauzování
+  1282→- Změny:
+  1283→  * .env: DATABASE_URL nastaven na Neon connection string (sslmode=require)
+  1284→  * schema.prisma: provider změněn z "sqlite" na "postgresql"
+  1285→  * db.ts: přidán fallback pro načítání DATABASE_URL z .env souboru (pro prostředí kde env není auto-loaded)
+  1286→  * package.json: dev script aktualizován s explicitním DATABASE_URL
+  1287→  * db:push: schéma pushnuto do Neon (9.84s) — všechny tabulky vytvořeny
+  1288→  * seed.ts: 49 budget items + 3 kontakty naséedováno do Neon (projekt Troja)
+  1289→- Verifikace:
+  1290→  * API: GET /api/projects → 1 projekt (Troja, starred=True)
+  1291→  * API: GET /api/projects/{id}/budget → 49 položek
+  1292→  * Agent Browser: Dashboard načetl bez chyb, Rozpočet tab funguje, 0 runtime chyb
+  1293→- Lint: 0 errors
+  1294→
+  1295→Stage Summary:
+  1296→- ✅ Databáze: Neon PostgreSQL (ep-quiet-breeze-b1x58rmg-pooler.c-5.eu-central-1.aws.neon.tech)
+  1297→- ✅ Data: 1 projekt (Troja), 49 položek rozpočtu, 3 kontakty
+  1298→- ✅ Data nyní přežijí restart sandboxu — jsou v cloude!
+  1299→- ✅ Free tier: 3GB storage, 100h compute/měs, bez pauzování
+  1300→
+  1301→---
+  1302→Task ID: O1
+  1303→Agent: DB indexes + Prisma optimization subagent
+  1304→Task: Přidat databázové indexy pro rychlejší dotazy (všechny cizí klíče a často filtrované sloupce), vypnout query logging v db.ts, validace přes lint.
+  1305→
+  1306→Work Log:
+  1307→- Přečetl worklog a existující `prisma/schema.prisma` (Project, BudgetItem, Payment, Contact, TimeEntry, AuditLog, Comment, Snapshot — všechny PostgreSQL-compatible)
+  1308→- Přidal celkem 20 `@@index` direktiv do 7 modelů:
+  1309→  - **BudgetItem** (8): projectId, parentId, phase, category, completed, sortOrder, dateFrom, dateTo
+  1310→  - **Payment** (4): budgetItemId, contactId, date, installmentOf
+  1311→  - **TimeEntry** (3): budgetItemId, contactId, date
+  1312→  - **Contact** (1): projectId
+  1313→  - **AuditLog** (2): projectId, createdAt
+  1314→  - **Comment** (1): budgetItemId
+  1315→  - **Snapshot** (1): projectId
+  1316→- Ověřil `src/lib/db.ts`: `log: ['error', 'warn']` v dev módu, žádné `'query'` — query logging je vypnutý (rychlé). Při kontrole ale eslint hlásil `@typescript-eslint/no-require-imports` na řádcích 7-8 (původní `require('fs')`/`require('path')`). Opravil přechodem na ES module importy (`import fs from 'fs'`, `import path from 'path'`).
+  1317→- Spustil `DATABASE_URL="..." bunx prisma db push --accept-data-loss` → ✅ "Your database is now in sync with your Prisma schema. Done in 11.25s" + auto-generate Prisma Client v6.19.2 v 168ms.
+  1318→- Spustil `bun run lint` → po opravě require-imports: 0 errors, 0 warnings.
+  1319→
+  1320→Stage Summary:
+  1321→- ✅ 20 B-tree indexů vytvořeno v Neon PostgreSQL — pokrývají všechny cizí klíče a sloupce používané v `where`, `orderBy`, `groupBy` v aplikaci
+  1322→- ✅ Indexy pro `BudgetItem` pokrývají hlavní filtrační/řadicí cesty (projekt, parent hierarchie, fáze, kategorie, completed flag, sortOrder, datumy pro timeline/alerts)
+  1323→- ✅ Indexy pro `Payment`/`TimeEntry` urychlí agregace `actualCost`/`actualHours` (nejčastější dotazy v API endpoints pro dashboard)
+  1324→- ✅ `prisma db push` prošel (11.25s)
+  1325→- ✅ `prisma generate` proběhl (Prisma Client v6.19.2)
+  1326→- ✅ `bun run lint` prošel bez chyb
+  1327→- 📁 Změněné soubory: `prisma/schema.prisma`, `src/lib/db.ts`
+  1328→- 📈 Očekávaný dopad: výrazně rychlejší načítání dashboardu (agregace plateb/času), timeline dotazy, filtrování rozpočtu podle fáze/kategorie, seznamy kontaktů/logů projektu. Pro malou DB (49 items) nepostřehnutelné, ale pro reálné projekty (stovky až tisíce platek/časů) zásadní.
+  1329→
+  1330→---
+  1331→Task ID: O2
+  1332→Agent: Subagent O2 (Z.ai Code)
+  1333→Task: Synchronizovat Zustand store (selectedProjectId, activeTab) s URL parametry pro sdíletelné odkazy.
+  1334→
+  1335→Work Log:
+  1336→- Přečetl kontext (worklog, src/lib/store.ts, src/app/page.tsx, src/components/project-detail.tsx) a ověřil Next.js 16 / App Router.
+  1337→- Refaktoroval `src/app/page.tsx`:
+  1338→  - Rozdělil na `Home` (thin wrapper) + `HomeContent` (reálná logika), abych mohl `useSearchParams()` obalit `<Suspense>` boundary (Next.js 16 to vyžaduje pro bezpečné statické renderování).
+  1339→  - Přidal `useSearchParams`, `useRouter`, `usePathname` z `next/navigation`.
+  1340→  - Přidal subscribe na `activeTab` a `setActiveTab` ze Zustand store (dříve page.tsx slyšel jen `selectedProjectId`).
+  1341→  - Definoval `VALID_TABS` set (dashboard, budget, payments, time, contacts, timeline, notes) — `?tab=` parametr se validuje proti seznamu, takže překlep v URL nerozbije UI.
+  1342→  - URL → Store efekt (mount-only, empty deps): přečte `?project=` a `?tab=` a nastaví je do store.
+  1343→  - Store → URL efekt: při každé změně `selectedProjectId` / `activeTab` zavolá `router.replace()` sestavené URL (`{pathname}?project=...&tab=...`). Používá `router.replace` (ne `push`), aby se neplnil back-button history.
+  1344→  - `hasInitializedRef` brání prvnímu zapsání do URL hned po mountu (jinak by auto-select ihned přepsal URL/defaultní `?tab=dashboard` flicker).
+  1345→  - Auto-select efekt ponechán beze změny — pouze pokud `selectedProjectId === null` (URL bez parametru) se vybere ohvězdičkovaný / první projekt.
+  1346→- Žádná změna `src/lib/store.ts` — store zůstává nezměněn (použil se druhý navrhovaný přístup: synchronizovat přes useEffect v page.tsx).
+  1347→- `src/components/project-detail.tsx` beze změny — nadále volá `setActiveTab`, což díky synchronizačnímu efektu propíše do URL.
+  1348→
+  1349→Edge cases ošetřené:
+  1350→- URL bez parametrů → auto-select první/ohvězdičkovaný projekt (původní chování).
+  1351→- `?project=X&tab=budget` → oba se nastaví do store, URL zůstane beze změny.
+  1352→- Nevalidní `?tab=foobar` → ignoruje se (zůstane výchozí tab z store / auto-selectu).
+  1353→- `?project=neexistující-id` → `selectedProject` je undefined → zobrazí se `<EmptyState />` (chování jako dříve).
+  1354→- Záměrně se nepoužívá `router.push` — URL aktualizace nesmí plnit historii prohlížeče (požadavek zadání).
+  1355→
+  1356→Lint: `bun run lint` → 0 errors, 0 warnings (čistý průchod).
+  1357→
+  1358→Files changed:
+  1359→- src/app/page.tsx
+  1360→

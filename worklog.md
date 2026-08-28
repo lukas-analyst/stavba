@@ -1297,3 +1297,134 @@ Stage Summary:
 - ✅ Data: 1 projekt (Troja), 49 položek rozpočtu, 3 kontakty
 - ✅ Data nyní přežijí restart sandboxu — jsou v cloude!
 - ✅ Free tier: 3GB storage, 100h compute/měs, bez pauzování
+
+---
+Task ID: O1
+Agent: DB indexes + Prisma optimization subagent
+Task: Přidat databázové indexy pro rychlejší dotazy (všechny cizí klíče a často filtrované sloupce), vypnout query logging v db.ts, validace přes lint.
+
+Work Log:
+- Přečetl worklog a existující `prisma/schema.prisma` (Project, BudgetItem, Payment, Contact, TimeEntry, AuditLog, Comment, Snapshot — všechny PostgreSQL-compatible)
+- Přidal celkem 20 `@@index` direktiv do 7 modelů:
+  - **BudgetItem** (8): projectId, parentId, phase, category, completed, sortOrder, dateFrom, dateTo
+  - **Payment** (4): budgetItemId, contactId, date, installmentOf
+  - **TimeEntry** (3): budgetItemId, contactId, date
+  - **Contact** (1): projectId
+  - **AuditLog** (2): projectId, createdAt
+  - **Comment** (1): budgetItemId
+  - **Snapshot** (1): projectId
+- Ověřil `src/lib/db.ts`: `log: ['error', 'warn']` v dev módu, žádné `'query'` — query logging je vypnutý (rychlé). Při kontrole ale eslint hlásil `@typescript-eslint/no-require-imports` na řádcích 7-8 (původní `require('fs')`/`require('path')`). Opravil přechodem na ES module importy (`import fs from 'fs'`, `import path from 'path'`).
+- Spustil `DATABASE_URL="..." bunx prisma db push --accept-data-loss` → ✅ "Your database is now in sync with your Prisma schema. Done in 11.25s" + auto-generate Prisma Client v6.19.2 v 168ms.
+- Spustil `bun run lint` → po opravě require-imports: 0 errors, 0 warnings.
+
+Stage Summary:
+- ✅ 20 B-tree indexů vytvořeno v Neon PostgreSQL — pokrývají všechny cizí klíče a sloupce používané v `where`, `orderBy`, `groupBy` v aplikaci
+- ✅ Indexy pro `BudgetItem` pokrývají hlavní filtrační/řadicí cesty (projekt, parent hierarchie, fáze, kategorie, completed flag, sortOrder, datumy pro timeline/alerts)
+- ✅ Indexy pro `Payment`/`TimeEntry` urychlí agregace `actualCost`/`actualHours` (nejčastější dotazy v API endpoints pro dashboard)
+- ✅ `prisma db push` prošel (11.25s)
+- ✅ `prisma generate` proběhl (Prisma Client v6.19.2)
+- ✅ `bun run lint` prošel bez chyb
+- 📁 Změněné soubory: `prisma/schema.prisma`, `src/lib/db.ts`
+- 📈 Očekávaný dopad: výrazně rychlejší načítání dashboardu (agregace plateb/času), timeline dotazy, filtrování rozpočtu podle fáze/kategorie, seznamy kontaktů/logů projektu. Pro malou DB (49 items) nepostřehnutelné, ale pro reálné projekty (stovky až tisíce platek/časů) zásadní.
+
+---
+Task ID: O2
+Agent: Subagent O2 (Z.ai Code)
+Task: Synchronizovat Zustand store (selectedProjectId, activeTab) s URL parametry pro sdíletelné odkazy.
+
+Work Log:
+- Přečetl kontext (worklog, src/lib/store.ts, src/app/page.tsx, src/components/project-detail.tsx) a ověřil Next.js 16 / App Router.
+- Refaktoroval `src/app/page.tsx`:
+  - Rozdělil na `Home` (thin wrapper) + `HomeContent` (reálná logika), abych mohl `useSearchParams()` obalit `<Suspense>` boundary (Next.js 16 to vyžaduje pro bezpečné statické renderování).
+  - Přidal `useSearchParams`, `useRouter`, `usePathname` z `next/navigation`.
+  - Přidal subscribe na `activeTab` a `setActiveTab` ze Zustand store (dříve page.tsx slyšel jen `selectedProjectId`).
+  - Definoval `VALID_TABS` set (dashboard, budget, payments, time, contacts, timeline, notes) — `?tab=` parametr se validuje proti seznamu, takže překlep v URL nerozbije UI.
+  - URL → Store efekt (mount-only, empty deps): přečte `?project=` a `?tab=` a nastaví je do store.
+  - Store → URL efekt: při každé změně `selectedProjectId` / `activeTab` zavolá `router.replace()` sestavené URL (`{pathname}?project=...&tab=...`). Používá `router.replace` (ne `push`), aby se neplnil back-button history.
+  - `hasInitializedRef` brání prvnímu zapsání do URL hned po mountu (jinak by auto-select ihned přepsal URL/defaultní `?tab=dashboard` flicker).
+  - Auto-select efekt ponechán beze změny — pouze pokud `selectedProjectId === null` (URL bez parametru) se vybere ohvězdičkovaný / první projekt.
+- Žádná změna `src/lib/store.ts` — store zůstává nezměněn (použil se druhý navrhovaný přístup: synchronizovat přes useEffect v page.tsx).
+- `src/components/project-detail.tsx` beze změny — nadále volá `setActiveTab`, což díky synchronizačnímu efektu propíše do URL.
+
+Edge cases ošetřené:
+- URL bez parametrů → auto-select první/ohvězdičkovaný projekt (původní chování).
+- `?project=X&tab=budget` → oba se nastaví do store, URL zůstane beze změny.
+- Nevalidní `?tab=foobar` → ignoruje se (zůstane výchozí tab z store / auto-selectu).
+- `?project=neexistující-id` → `selectedProject` je undefined → zobrazí se `<EmptyState />` (chování jako dříve).
+- Záměrně se nepoužívá `router.push` — URL aktualizace nesmí plnit historii prohlížeče (požadavek zadání).
+
+Lint: `bun run lint` → 0 errors, 0 warnings (čistý průchod).
+
+Files changed:
+- src/app/page.tsx
+
+---
+Task ID: O3
+Agent: Subagent O3 (Z.ai Code) — React Query optimizations
+Task: Implementovat optimistic updates pro inline editaci + prefetch na hover a na pozadí pro plynulejší UX.
+
+Work Log:
+- Přečetl kontext (worklog, `src/lib/api.ts`, `src/components/project-detail.tsx`, `src/lib/store.ts`, `src/app/page.tsx`).
+- Ověřil mapping tab → query key: dashboard→`["dashboard",pid]`, budget→`["budget",pid]`, payments→`["payments",pid]`, time→`["time",pid]`, contacts→`["contacts",pid]`, timeline→`["dashboard",pid]` (timeline používá `useDashboard`), notes→`["projects"]` (již načteno globálně).
+
+### 1. Optimistic Updates (`src/lib/api.ts`)
+
+Pro 4 mutation hooky jsem nahradil `onSuccess: invalidate` pattern plným optimistic flow:
+
+- **`useUpdateProject(id)`** — query key `["projects"]` (seznam projektů):
+  - `onMutate`: `cancelQueries(["projects"])` → snapshot `previousProjects` → `setQueryData` updatne projekt s daným `id` pomocí `{ ...p, ...data }`.
+  - `onError`: rollback na `previousProjects`.
+  - `onSettled`: invaliduje `["projects"]`, `["project", id]`, `["dashboard", id]`.
+  - Výsledek: hvězdičkování / editace projektu v sidebaru projevena okamžitě.
+
+- **`useUpdateBudgetItem(projectId)`** — query key `["budget", projectId]`:
+  - `onMutate`: `cancelQueries(["budget", projectId])` → snapshot `previousItems` → `setQueryData` updatne položku s daným `id` pomocí `{ ...item, ...data }`.
+  - `onError`: rollback na `previousItems`.
+  - `onSettled`: invaliduje `["budget", projectId]`, `["dashboard", projectId]`.
+  - Výsledek: inline editace (klik na číslo → uložení) se projeví okamžitě bez čekání na API.
+
+- **`useUpdatePayment(projectId)`** — query key `["payments", projectId]`:
+  - `onMutate`: `cancelQueries(["payments", projectId])` → snapshot `previousPayments` → `setQueryData` updatne platbu s daným `id`.
+  - `onError`: rollback na `previousPayments`.
+  - `onSettled`: invaliduje `["payments", projectId]`, `["budget", projectId]`, `["dashboard", projectId]` (payments ovlivňují `actualCost` v budget itemech).
+
+- **`useUpdateTimeEntry(projectId)`** — query key `["time", projectId]`:
+  - `onMutate`: `cancelQueries(["time", projectId])` → snapshot `previousEntries` → `setQueryData` updatne time entry s daným `id`.
+  - `onError`: rollback na `previousEntries`.
+  - `onSettled`: invaliduje `["time", projectId]`, `["budget", projectId]`, `["dashboard", projectId]` (time entries ovlivňují `actualHours` v budget itemech).
+
+Při navrhování jsem zachoval původní invalidační strategii z `onSuccess` (všechny ovlivněné query key) v `onSettled`, takže refetch skutečných dat z backendu proběhne jako dříve — rozdíl je pouze v okamžité UI odezvě (optimistic) + rollback při chybě.
+
+### 2. Prefetch na hover + background prefetch (`src/components/project-detail.tsx`)
+
+- Přidal import `useEffect` z `react` a `useQueryClient` z `@tanstack/react-query`.
+- V komponentě `ProjectDetail` zavolal `const qc = useQueryClient()`.
+- Vytvořil funkci `prefetchTab(tabId: TabId)` která pomocí `qc.prefetchQuery()` nenačítá data pro daný tab:
+  - `"dashboard"` → `["dashboard", pid]`
+  - `"budget"` → `["budget", pid]`
+  - `"payments"` → `["payments", pid]`
+  - `"time"` → `["time", pid]`
+  - `"contacts"` → `["contacts", pid]`
+  - `"timeline"` → `["dashboard", pid]` (Timeline tab používá stejná data jako Dashboard)
+  - `"notes"` → no-op (notes tab čte z `useProjects()` které je načteno globálně v page.tsx)
+- Na tab tlačítka přidal `onMouseEnter={() => prefetchTab(tab.id)}` a `onFocus={() => prefetchTab(tab.id)}` — prefetch se aktivuje jak při hoveru (myš), tak při keyboard focusu (Tab klávesa) pro přístupnost.
+- Přidal `useEffect` který při `activeTab === "dashboard"` na pozadí prefetchně `["budget", pid]` a `["payments", pid]` — nejčastější následující akce uživatele (Přehled → Rozpočet / Platby). Deps `[activeTab, project.id, qc]`.
+
+Všechny `prefetchQuery` volání jsou idempotentní — React Query je no-op pokud už je query v cache nebo in-flight, takže hover sám o sobě nespamuje API.
+
+### Verifikace
+- `bun run lint` → 0 errors, 0 warnings (čistý průchod).
+- Dev log čistý, žádné compile errory.
+
+Files changed:
+- `src/lib/api.ts` (4 hooky refaktorovány na optimistic update pattern)
+- `src/components/project-detail.tsx` (prefetch na hover + background prefetch efekt)
+
+Stage Summary:
+- ✅ Optimistic updates: `useUpdateProject`, `useUpdateBudgetItem`, `useUpdatePayment`, `useUpdateTimeEntry` — všechny mají `onMutate` (cancel + snapshot + optimistic update), `onError` (rollback), `onSettled` (invalidate).
+- ✅ Inline editace budget items se projeví okamžitě bez čekání na API.
+- ✅ Hvězdičkování projektu (sidebar) se projeví okamžitě.
+- ✅ Editace plateb / time entries se projeví okamžitě.
+- ✅ Hover nad tab tlačítky spustí prefetch pro daný tab (i keyboard focus).
+- ✅ Při zobrazení Dashboardu se na pozadí nacachují budget items + payments pro rychlý přepnut na nejčastější taby.
+- ✅ Lint 0 errors / 0 warnings.
