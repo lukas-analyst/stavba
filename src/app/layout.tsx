@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-const APP_TITLE = "Stavba — Správa rozpočtu staveb";
+const APP_TITLE = "Stavba (Beta) — Správa rozpočtu staveb";
 const APP_DESCRIPTION =
   "Komplexní správa rozpočtu, nákladů a času pro stavby a rekonstrukce. Přehled projektů, plateb, práce i materiálu na jednom místě.";
 

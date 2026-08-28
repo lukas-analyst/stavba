@@ -373,9 +373,9 @@ export function AppSidebar({ onSelectProject }: { onSelectProject?: (id: string)
             }}
           />
         </div>
-        <p className="mt-2 flex items-center gap-1 text-[10px] text-muted-foreground">
+        <p className="mt-2 flex items-center gap-1.5 text-[10px] text-muted-foreground">
           <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500" />
-          Data uložena lokálně · připraveno pro PostgreSQL
+          Stavba <span className="font-semibold text-foreground">v1.0.0-beta</span> · Neon PostgreSQL
         </p>
       </div>
 
