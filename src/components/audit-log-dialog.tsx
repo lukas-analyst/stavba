@@ -13,9 +13,6 @@ import { useAuditLog, type AuditLog } from "@/lib/api";
 import { formatDate } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import {
-  ScrollArea,
-} from "@/components/ui/scroll-area";
-import {
   History,
   Plus,
   Pencil,
@@ -69,8 +66,10 @@ export function AuditLogDialog({ open, onOpenChange, projectId }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[85vh] max-w-2xl">
-        <DialogHeader>
+      <DialogContent
+        className="z-50 flex max-h-[85vh] w-full flex-col gap-4 overflow-hidden p-6 sm:max-w-2xl"
+      >
+        <DialogHeader className="shrink-0">
           <div className="flex items-center gap-2">
             <History className="h-5 w-5 text-primary" />
             <DialogTitle>Historie změn</DialogTitle>
@@ -81,7 +80,7 @@ export function AuditLogDialog({ open, onOpenChange, projectId }: Props) {
         </DialogHeader>
 
         {isLoading ? (
-          <div className="space-y-2">
+          <div className="shrink-0 space-y-2">
             {[1, 2, 3, 4, 5].map((i) => (
               <Skeleton key={i} className="h-12" />
             ))}
@@ -92,13 +91,20 @@ export function AuditLogDialog({ open, onOpenChange, projectId }: Props) {
             Zatím žádné zaznamenané změny.
           </div>
         ) : (
-          <ScrollArea className="max-h-[60vh] pr-4">
+          // Plain scrollable container — using a div instead of ScrollArea
+          // avoids layout glitches inside the Radix Dialog where the
+          // ScrollArea viewport sometimes doesn't get a proper height and
+          // ends up rendering outside the dialog bounds.
+          <div
+            className="min-h-0 flex-1 overflow-y-auto pr-1"
+            style={{ scrollbarGutter: "stable" }}
+          >
             <div className="space-y-1.5">
               {logs.map((log) => (
                 <AuditLogEntry key={log.id} log={log} />
               ))}
             </div>
-          </ScrollArea>
+          </div>
         )}
       </DialogContent>
     </Dialog>

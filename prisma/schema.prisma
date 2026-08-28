@@ -118,6 +118,9 @@ model BudgetItem {
   unitPrice         String?  // e.g., "1200,- / m"
   // Parent-child relationship: if parentId is set, this is a "task" under a parent item
   parentId          String?  // null = top-level item, non-null = child task
+  // Optional dependency: this item "follows" another top-level item — used to
+  // auto-fill `dateFrom` from the referenced item's `dateTo` in the UI.
+  dependsOnId       String?
   // Plan
   planCost          Float?   // Plán (Kč)
   flexibilityPercent Float?  // Vůle (%) - how flexible the estimate is
@@ -138,6 +141,7 @@ model BudgetItem {
 
   @@index([projectId])
   @@index([parentId])
+  @@index([dependsOnId])
   @@index([phase])
   @@index([category])
   @@index([completed])

@@ -21,7 +21,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Separator } from "@/components/ui/separator";
 import { PHASES } from "@/lib/format";
 import {
   useBudgetItems,
@@ -31,7 +30,6 @@ import {
 } from "@/lib/api";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { CommentSection } from "@/components/comment-section";
 
 type Props = {
   open: boolean;
@@ -149,6 +147,36 @@ function BudgetItemForm({
   const [dateTo, setDateTo] = useState(
     item?.dateTo ? item.dateTo.substring(0, 10) : "",
   );
+  // Optional dependency on another top-level item — used to auto-fill dateFrom
+  // from the referenced item's dateTo. Sentinel "__none__" represents "no dep".
+  const [dependsOnId, setDependsOnId] = useState<string>(
+    item?.dependsOnId ?? "__none__",
+  );
+
+  // Top-level items available for the "Navazuje na" dropdown.
+  // Excludes the item currently being edited (to prevent self-reference).
+  const dependsOnOptions = useMemo(
+    () => topLevelItems.filter((i) => i.id !== item?.id),
+    [topLevelItems, item?.id],
+  );
+
+  const handleDependsOnChange = (value: string) => {
+    setDependsOnId(value);
+    if (value === "__none__") return;
+    const ref = topLevelItems.find((i) => i.id === value);
+    if (!ref) return;
+    if (ref.dateTo) {
+      const next = ref.dateTo.substring(0, 10);
+      setDateFrom(next);
+      toast.success(
+        `Datum od nastaveno podle „${ref.subcategory || ref.category}"`,
+      );
+    } else {
+      toast.info(
+        `„${ref.subcategory || ref.category}" nemá Datum do — Datum od nebylo změněno.`,
+      );
+    }
+  };
 
   // Existing subcategories in the chosen category (for datalist suggestions)
   const existingSubcategories = useMemo(() => {
@@ -196,6 +224,7 @@ function BudgetItemForm({
         planDays: planDays === "" ? null : Number(planDays.replace(",", ".")),
         dateFrom: dateFrom || null,
         dateTo: dateTo || null,
+        dependsOnId: dependsOnId === "__none__" ? null : dependsOnId,
       };
       // Set parentId only when creating new (not when editing — preserve existing)
       if (!item && parentId) {
@@ -419,15 +448,26 @@ function BudgetItemForm({
           </div>
         </div>
 
-        {/* Comments section (only when editing an existing item) */}
-        {item && (
-          <>
-            <Separator className="mt-2" />
-            <div className="pt-2">
-              <CommentSection budgetItemId={item.id} />
-            </div>
-          </>
-        )}
+        <div className="space-y-2">
+          <Label htmlFor="dependsOn">Navazuje na</Label>
+          <Select value={dependsOnId} onValueChange={handleDependsOnChange}>
+            <SelectTrigger id="dependsOn">
+              <SelectValue placeholder="— žádná závislost —" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__none__">— žádná závislost —</SelectItem>
+              {dependsOnOptions.map((i) => (
+                <SelectItem key={i.id} value={i.id}>
+                  {i.subcategory || i.category}
+                  {i.dateTo ? ` (do ${i.dateTo.substring(0, 10)})` : ""}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <p className="text-[10px] text-muted-foreground">
+            Při výběru se Datum od automaticky doplní z Datum do vybrané položky.
+          </p>
+        </div>
 
         <DialogFooter>
           <Button type="button" variant="outline" onClick={onDone}>

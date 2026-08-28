@@ -73,7 +73,12 @@ export async function GET(
       worstCase: number;
       costOverrun: number;
       timeOverrun: number;
+      inProgress: boolean;
+      startingSoon: boolean;
     }>();
+    // Pre-compute "now" and "+7 days" once for the starting-soon check.
+    const phaseNow = new Date();
+    const in7Days = new Date(phaseNow.getTime() + 7 * 24 * 60 * 60 * 1000);
     for (const it of items) {
       const key = it.phase || "Neurčeno";
       const cur = byPhase.get(key) || {
@@ -86,6 +91,8 @@ export async function GET(
         worstCase: 0,
         costOverrun: 0,
         timeOverrun: 0,
+        inProgress: false,
+        startingSoon: false,
       };
       cur.plan += it.planCost || 0;
       cur.actual += it.actualCost || 0;
@@ -101,6 +108,32 @@ export async function GET(
       const plannedH = (it.planDays || 0) * 8;
       const actualH = it.actualHours || 0;
       cur.timeOverrun += Math.max(0, actualH - plannedH);
+
+      // "Probíhá" — phase has any item with actual cost/hours recorded
+      // but that item itself is not yet completed.
+      if (
+        !cur.inProgress &&
+        !it.completed &&
+        !it.rejected &&
+        ((it.actualCost || 0) > 0 || (it.actualHours || 0) > 0)
+      ) {
+        cur.inProgress = true;
+      }
+
+      // "Začíná" — phase has any not-yet-started item whose dateFrom falls
+      // within the next 7 days and which has no actual cost yet.
+      if (
+        !cur.startingSoon &&
+        !it.completed &&
+        !it.rejected &&
+        it.dateFrom &&
+        it.dateFrom >= phaseNow &&
+        it.dateFrom <= in7Days &&
+        (it.actualCost || 0) === 0
+      ) {
+        cur.startingSoon = true;
+      }
+
       byPhase.set(key, cur);
     }
 

@@ -67,7 +67,6 @@ import {
   PiggyBank,
   Download,
   Copy,
-  MessageSquare,
   X,
 } from "lucide-react";
 import {
@@ -892,17 +891,6 @@ function BudgetRow({
                 ? (item.element || item.subcategory || "(bez názvu)")
                 : (item.subcategory || "(bez názvu)")}
             </button>
-            {/* Comment count icon */}
-            {item._count && item._count.comments > 0 && (
-              <Badge
-                variant="outline"
-                className="h-4 px-1 text-[9px] text-sky-700"
-                title={`${item._count.comments} komentářů`}
-              >
-                <MessageSquare className="mr-0.5 h-2.5 w-2.5" />
-                {item._count.comments}
-              </Badge>
-            )}
             {item.rejected && (
               <Badge variant="outline" className="h-4 px-1 text-[9px] text-rose-700">
                 Zavrženo
@@ -1253,7 +1241,7 @@ function DetailPanelRow({
               : PHASE_BG_COLORS[item.phase] ?? "bg-zinc-300",
           )}
         />
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 pl-10 sm:grid-cols-3">
           {/* Poznámka */}
           <div className="sm:col-span-1">
             <div className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">

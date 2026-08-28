@@ -43,6 +43,7 @@ export type BudgetItem = {
   note: string | null;
   unitPrice: string | null;
   parentId: string | null;
+  dependsOnId: string | null;
   planCost: number | null;
   flexibilityPercent: number | null;
   planDays: number | null;
@@ -134,6 +135,8 @@ export type Dashboard = {
     worstCase: number;
     costOverrun: number;
     timeOverrun: number;
+    inProgress: boolean;
+    startingSoon: boolean;
   }[];
   byCategory: { category: string; plan: number; actual: number; hours: number; count: number }[];
   alerts: {
@@ -1033,6 +1036,53 @@ export function useCreateNote(projectId: string) {
         qc.setQueryData<Note[]>(["notes", projectId], (old) =>
           old?.map((n) => (n.id === context.optimisticId ? created : n)),
         );
+      }
+    },
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: ["notes", projectId] });
+    },
+  });
+}
+
+// Update an existing note. Accepts partial { text?, author? } — at least
+// one of the two must be provided. Uses optimistic update so the UI feels
+// instant when the user saves an edit.
+export function useUpdateNote(projectId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: { id: string; text?: string; author?: string }) => {
+      const res = await fetch(`/api/notes/${data.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...(data.text !== undefined ? { text: data.text } : {}),
+          ...(data.author !== undefined ? { author: data.author } : {}),
+        }),
+      });
+      if (!res.ok) throw new Error("Failed to update note");
+      return res.json();
+    },
+    onMutate: async (data) => {
+      await qc.cancelQueries({ queryKey: ["notes", projectId] });
+      const previousNotes = qc.getQueryData<Note[]>(["notes", projectId]);
+      qc.setQueryData<Note[]>(["notes", projectId], (old) =>
+        old?.map((n) =>
+          n.id === data.id
+            ? {
+                ...n,
+                ...(data.text !== undefined ? { text: data.text.trim() } : {}),
+                ...(data.author !== undefined
+                  ? { author: (data.author.trim() || "Anonym").slice(0, 100) }
+                  : {}),
+              }
+            : n,
+        ),
+      );
+      return { previousNotes };
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previousNotes) {
+        qc.setQueryData(["notes", projectId], context.previousNotes);
       }
     },
     onSettled: () => {

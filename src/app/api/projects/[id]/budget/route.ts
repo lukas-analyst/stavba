@@ -42,6 +42,7 @@ export async function POST(
       note,
       unitPrice,
       parentId,
+      dependsOnId,
       planCost,
       flexibilityPercent,
       planDays,
@@ -65,6 +66,16 @@ export async function POST(
       }
     }
 
+    // If dependsOnId is set, validate it belongs to this project and is a top-level item
+    if (dependsOnId) {
+      const dep = await db.budgetItem.findFirst({
+        where: { id: dependsOnId, projectId: id, parentId: null },
+      });
+      if (!dep) {
+        return NextResponse.json({ error: "Referenced item (dependsOnId) not found in this project" }, { status: 404 });
+      }
+    }
+
     const maxOrder = await db.budgetItem.aggregate({
       where: { projectId: id },
       _max: { sortOrder: true },
@@ -83,6 +94,7 @@ export async function POST(
         note: note?.trim() || null,
         unitPrice: unitPrice?.trim() || null,
         parentId: parentId || null,
+        dependsOnId: dependsOnId || null,
         planCost: planCost !== undefined && planCost !== null && planCost !== "" ? Number(planCost) : null,
         flexibilityPercent:
           flexibilityPercent !== undefined && flexibilityPercent !== null && flexibilityPercent !== ""

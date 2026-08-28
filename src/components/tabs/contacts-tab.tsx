@@ -561,7 +561,9 @@ function ContactDetailDialog({
       <DialogContent className="max-h-[90vh] max-w-2xl overflow-hidden p-0">
         <div className="flex max-h-[90vh] flex-col">
           {/* Header */}
-          <DialogHeader className="border-b px-6 py-4">
+          {/* pr-10 reserves space for the absolute-positioned close (X) button
+              in the top-right corner so it never overlaps the "Upravit" button. */}
+          <DialogHeader className="border-b px-6 py-4 pr-10">
             <div className="flex items-start gap-3">
               <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-muted text-xl">
                 {t.emoji}
@@ -590,7 +592,7 @@ function ContactDetailDialog({
                   )}
                 </div>
               </div>
-              <Button variant="outline" size="sm" onClick={onEdit}>
+              <Button variant="outline" size="sm" onClick={onEdit} className="shrink-0">
                 <Pencil className="mr-1.5 h-3.5 w-3.5" /> Upravit
               </Button>
             </div>

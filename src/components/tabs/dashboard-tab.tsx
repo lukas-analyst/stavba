@@ -30,6 +30,7 @@ import {
   CircleAlert,
   PiggyBank,
   CheckCircle2,
+  Activity,
 } from "lucide-react";
 import { formatCzk, formatNumber, formatDate, PHASE_COLORS, PHASE_DOT_COLORS } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -388,6 +389,26 @@ export function DashboardTab({ projectId }: { projectId: string }) {
                     <div className="flex items-center gap-1.5 min-w-0">
                       <span className={cn("h-2 w-2 shrink-0 rounded-full", dotColor)} />
                       <span className="truncate text-xs font-semibold">{p.phase}</span>
+                      {p.inProgress && (
+                        <Badge
+                          variant="outline"
+                          className="h-4 shrink-0 gap-0.5 border-sky-200 bg-sky-50 px-1 text-[9px] text-sky-700 dark:border-sky-900 dark:bg-sky-950/30 dark:text-sky-300"
+                          title="Fáze má rozpracované položky (skutečné náklady nebo hodiny), ale není ještě dokončena"
+                        >
+                          <Activity className="h-2.5 w-2.5" />
+                          Probíhá
+                        </Badge>
+                      )}
+                      {p.startingSoon && (
+                        <Badge
+                          variant="outline"
+                          className="h-4 shrink-0 gap-0.5 border-amber-200 bg-amber-50 px-1 text-[9px] text-amber-700 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-300"
+                          title="Fáze má položku, která startuje v příštích 7 dnech"
+                        >
+                          <CalendarClock className="h-2.5 w-2.5" />
+                          Začíná
+                        </Badge>
+                      )}
                     </div>
                     <div className="flex shrink-0 items-center gap-1">
                       {p.completedCount > 0 && (

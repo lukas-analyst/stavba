@@ -29,6 +29,7 @@ export async function PATCH(
     if (body.completed !== undefined) updateData.completed = Boolean(body.completed);
     if (body.rejected !== undefined) updateData.rejected = Boolean(body.rejected);
     if (body.parentId !== undefined) updateData.parentId = body.parentId || null;
+    if (body.dependsOnId !== undefined) updateData.dependsOnId = body.dependsOnId || null;
     if (body.note !== undefined) updateData.note = body.note?.trim() || null;
     if (body.unitPrice !== undefined) updateData.unitPrice = body.unitPrice?.trim() || null;
     if (body.planCost !== undefined) updateData.planCost = numOrUndef(body.planCost);
