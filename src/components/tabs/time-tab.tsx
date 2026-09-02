@@ -64,6 +64,7 @@ import {
 import { formatNumber, formatDate, WORKER_TYPES, workerTypeLabel } from "@/lib/format";
 import { toast } from "sonner";
 import { EmptyStateBox } from "@/components/empty-state-box";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 
 type SortKey = "date" | "worker" | "hours" | "workerType";
 
@@ -618,20 +619,19 @@ function TimeDialogInner({
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor="budgetItem">Položka rozpočtu *</Label>
-          <Select value={budgetItemId} onValueChange={setBudgetItemId}>
-            <SelectTrigger id="budgetItem">
-              <SelectValue placeholder="Vyberte položku…" />
-            </SelectTrigger>
-            <SelectContent className="max-h-72">
-              {budgetItems.map((b) => (
-                <SelectItem key={b.id} value={b.id}>
-                  {b.category}
-                  {b.subcategory ? ` / ${b.subcategory}` : ""}
-                  {b.completed ? " ✓" : ""}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <SearchableSelect
+            id="budgetItem"
+            options={budgetItems.map((b) => ({
+              value: b.id,
+              label: `${b.category}${b.subcategory ? ` / ${b.subcategory}` : ""}${b.completed ? " ✓" : ""}`,
+              hint: b.category,
+            }))}
+            value={budgetItemId}
+            onChange={setBudgetItemId}
+            placeholder="Vyberte položku…"
+            searchPlaceholder="Hledat položku…"
+            emptyText="Žádné položky nenalezeny"
+          />
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-2">

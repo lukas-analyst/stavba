@@ -48,6 +48,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Checkbox } from "@/components/ui/checkbox";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 import {
   Plus,
   Trash2,
@@ -1051,20 +1052,19 @@ function PaymentDialogInner({
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor="budgetItem">Položka rozpočtu *</Label>
-          <Select value={budgetItemId} onValueChange={setBudgetItemId}>
-            <SelectTrigger id="budgetItem">
-              <SelectValue placeholder="Vyberte položku…" />
-            </SelectTrigger>
-            <SelectContent className="max-h-72">
-              {budgetItems.map((b) => (
-                <SelectItem key={b.id} value={b.id}>
-                  {b.category}
-                  {b.subcategory ? ` / ${b.subcategory}` : ""}
-                  {b.completed ? " ✓" : ""}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <SearchableSelect
+            id="budgetItem"
+            options={budgetItems.map((b) => ({
+              value: b.id,
+              label: `${b.category}${b.subcategory ? ` / ${b.subcategory}` : ""}${b.completed ? " ✓" : ""}`,
+              hint: b.category,
+            }))}
+            value={budgetItemId}
+            onChange={setBudgetItemId}
+            placeholder="Vyberte položku…"
+            searchPlaceholder="Hledat položku…"
+            emptyText="Žádné položky nenalezeny"
+          />
         </div>
 
         {/* Installment toggle - only in create mode (not editing existing payments) */}
