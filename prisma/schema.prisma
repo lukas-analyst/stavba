@@ -1,11 +1,21 @@
-// Prisma schema for Stavba - Budget & Time Tracking
-// for Construction / Reconstruction Projects
+// =====================================================================
+// Prisma schema — Stavba (Construction Budget & Time Tracking)
+// ---------------------------------------------------------------------
+// Database: PostgreSQL (Neon)
+// Generator: prisma-client-js
 //
-// NOTE on PostgreSQL/Supabase migration:
-// To switch to PostgreSQL, change the datasource provider below to "postgresql"
-// and set DATABASE_URL to the Supabase Postgres connection string, then run:
-//   bun run db:push
-// All field types here are PostgreSQL-compatible (no SQLite-only features).
+// DESIGN PRINCIPLES:
+//   1. Multi-user ready: User, Account, Session models for NextAuth.
+//      Project ownership + sharing via ProjectMember (M:N).
+//   2. Audit trail: AuditLog records who (userId) changed what.
+//   3. Soft references: Some columns store IDs without FK constraints
+//      (e.g., installmentOf) for historical/flexibility reasons.
+//   4. Indexing: Every FK has an index. Composite indexes on common
+//      query patterns (projectId + phase, projectId + parentId).
+//   5. Cascading deletes: Deleting a Project cascades to all children.
+//      Deleting a BudgetItem cascades to Payments, TimeEntries, Comments.
+//   6. All tables and columns have descriptive comments for analysts.
+// =====================================================================
 
 generator client {
   provider = "prisma-client-js"
@@ -16,126 +26,461 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// ===== PROJECTS =====
-model Project {
-  id            String   @id @default(cuid())
-  name          String
-  slug          String   @unique // lowercase, kebab-case (e.g. "troja", "dum-v-praze")
-  address       String?
-  description   String?
-  starred       Boolean  @default(false)
-  status        String   @default("active") // active, planning, completed, paused
-  currency      String   @default("CZK")
-  totalBudget   Float    @default(0) // optional overall budget cap
-  startDate     DateTime?
-  endDate       DateTime?
-  // JSON array of category names in display order (for reordering categories)
-  categoryOrder String?
-  // Free-form markdown notes for the project (legacy)
-  notes         String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+// =====================================================================
+// ===== AUTHENTICATION (NextAuth.js compatible) =====
+// =====================================================================
 
+/// Registered user in the application. A user can own multiple projects
+/// and be a member of projects owned by others. Authentication is via
+/// Google OAuth (NextAuth.js), but other providers can be added later.
+model User {
+  id            String    @id @default(cuid())
+  /// Google email address — unique, used as the primary identifier
+  email         String    @unique
+  /// Display name from Google profile (e.g., "Lukáš Hanzlík")
+  name          String?
+  /// Profile picture URL from Google
+  image         String?
+  /// Full name as it appears on the user's Google account (cached for quick access)
+  /// If null, the user hasn't completed their profile yet
+  emailVerified DateTime?
+  /// When this user first signed in
+  createdAt     DateTime  @default(now())
+  /// When this user's record was last updated
+  updatedAt     DateTime  @updatedAt
+
+  // Relations — projects owned by this user
+  ownedProjects Project[]
+
+  // Relations — projects this user has been invited to / is a member of
+  memberships ProjectMember[]
+
+  // Relations — NextAuth OAuth accounts (one user can have multiple providers)
+  accounts Account[]
+
+  // Relations — DB-based sessions (NextAuth)
+  sessions Session[]
+
+  // Relations — activity records (who did what)
+  auditLogs AuditLog[]
+  notes     Note[]
+  comments  Comment[]
+
+  // Relations — invitations sent by this user
+  sentInvitations ProjectInvitation[]
+
+  // Relations — share links created by this user
+  createdShareLinks ProjectShareLink[]
+
+  @@map("users")
+}
+
+/// OAuth account linked to a user (e.g., Google). One user can have
+/// multiple accounts (Google + GitHub + email magic link). This is
+/// NextAuth.js standard schema.
+model Account {
+  id                String   @id @default(cuid())
+  /// FK to User — the owner of this account
+  userId            String
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// Provider name: "google", "github", "email" (magic link), etc.
+  provider          String
+  /// Provider-specific account ID (e.g., Google's subject claim)
+  providerAccountId String
+  /// OAuth refresh token (encrypted at rest by NextAuth)
+  refresh_token     String?
+  /// OAuth access token (encrypted at rest by NextAuth)
+  access_token      String?
+  /// Token expiration timestamp
+  expires_at        Int?
+  /// OAuth token type (usually "Bearer")
+  token_type        String?
+  /// OAuth scope (e.g., "openid email profile")
+  scope             String?
+  /// OpenID Connect ID token (raw JWT)
+  id_token          String?
+  /// When this account record was created
+  createdAt         DateTime @default(now())
+  /// When this account record was last updated
+  updatedAt         DateTime @updatedAt
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+  @@map("accounts")
+}
+
+/// DB-based session (NextAuth). Used when the session strategy is
+/// "database" instead of "jwt". One user can have multiple sessions
+/// (one per device/browser).
+model Session {
+  id           String   @id @default(cuid())
+  /// FK to User — the session owner
+  sessionToken String   @unique
+  /// FK to User — the session owner
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// When this session expires
+  expires      DateTime
+  /// When this session was created
+  createdAt    DateTime @default(now())
+  /// When this session was last updated
+  updatedAt    DateTime @updatedAt
+
+  @@index([userId])
+  @@map("sessions")
+}
+
+/// Email verification token (NextAuth). Used for email magic link
+/// authentication. One-time use, expires after 24 hours.
+model VerificationToken {
+  /// Token identifier (sent to user via email)
+  identifier String
+  /// The verification token itself (hashed)
+  token      String   @unique
+  /// When this token expires
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+// =====================================================================
+// ===== PROJECTS & SHARING =====
+// =====================================================================
+
+/// A construction or reconstruction project. Each project has exactly one
+/// owner (User) and can be shared with multiple other users via
+/// ProjectMember. Projects contain budget items, payments, time entries,
+/// contacts, notes, snapshots, and audit logs.
+model Project {
+  id            String    @id @default(cuid())
+  /// Display name (e.g., "Troja", "Rekonstrukce bytu Praha 7")
+  name          String
+  /// URL-friendly identifier (lowercase, kebab-case). Unique across all projects.
+  /// Example: "troja", "dum-v-praze", "rekonstrukce-2026"
+  slug          String    @unique
+  /// Physical address of the construction site (optional)
+  address       String?
+  /// Free-form description of the project (optional)
+  description   String?
+  /// FK to User — the project owner. Owner has full control including
+  /// delete and sharing. Cannot be null after migration.
+  ownerId       String
+  owner         User      @relation(fields: [ownerId], references: [id], onDelete: Restrict)
+  /// Whether the project is starred/favorited by the owner (for sidebar sorting)
+  starred       Boolean   @default(false)
+  /// Project status: "active" (in progress), "planning" (not started yet),
+  /// "completed" (finished), "paused" (on hold)
+  status        String    @default("active")
+  /// Project currency code (ISO 4217). Default: CZK. Used for all financial amounts.
+  currency      String    @default("CZK")
+  /// Optional overall budget cap (hard limit). If set, dashboard shows
+  /// progress against this cap. If 0, no cap (use sum of budget items).
+  totalBudget   Float     @default(0)
+  /// Project start date (planned or actual)
+  startDate     DateTime?
+  /// Project end date (planned or actual)
+  endDate       DateTime?
+  /// JSON array of category names in display order (for reordering
+  /// categories in the Budget tab). Stored as a JSON string.
+  /// Example: '["Příprava", "Demolice", "Hrubá stavba"]'
+  categoryOrder String?
+  /// Legacy free-form markdown notes for the project (use Note[] instead)
+  notes         String?
+  /// When this project was created
+  createdAt     DateTime  @default(now())
+  /// When this project was last updated
+  updatedAt     DateTime  @updatedAt
+
+  // Relations — project children (all cascade on delete)
   budgetItems BudgetItem[]
   contacts    Contact[]
   auditLogs   AuditLog[]
   snapshots   Snapshot[]
   noteEntries Note[]
+  members     ProjectMember[]
+  invitations ProjectInvitation[]
+  shareLinks  ProjectShareLink[]
+
+  @@index([ownerId])
+  @@index([status])
+  @@index([starred])
+  @@map("projects")
 }
 
-// ===== NOTES =====
-// Plain-text, timestamped notes attached to a project.
-// Each note has a free-text author (the user picks their own name) and is
-// displayed newest-first in the Notes tab.
+/// M:N relationship between User and Project. Defines who has access to
+/// a project and with what role. The owner is always a member with role
+/// "owner" (added implicitly by the application, not stored here —
+/// see Project.ownerId instead).
+model ProjectMember {
+  id        String   @id @default(cuid())
+  /// FK to Project — the project this membership is for
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  /// FK to User — the user who has access
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// Role of this user in the project:
+  /// "editor" — can edit budget, payments, time, contacts (everything except delete/share)
+  /// "viewer" — read-only access (can see everything but can't edit)
+  role      String   @default("viewer")
+  /// When this membership was created (when the user was added to the project)
+  createdAt DateTime @default(now())
+  /// When this membership was last updated (e.g., role change)
+  updatedAt DateTime @updatedAt
+
+  @@unique([projectId, userId])
+  @@index([projectId])
+  @@index([userId])
+  @@index([role])
+  @@map("project_members")
+}
+
+/// Invitation to share a project with a new user. Created by the owner
+/// or an editor. The invitee receives an email with a link containing
+/// the token. Clicking the link creates a ProjectMember record.
+model ProjectInvitation {
+  id           String    @id @default(cuid())
+  /// FK to Project — the project being shared
+  projectId    String
+  project      Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  /// FK to User — who sent the invitation
+  invitedBy    String
+  inviter      User      @relation(fields: [invitedBy], references: [id], onDelete: Cascade)
+  /// Email address of the invitee (the person being invited)
+  /// Does not need to be a registered user yet — they'll sign up after clicking
+  inviteeEmail String
+  /// Role to assign to the invitee after they accept:
+  /// "editor" or "viewer"
+  role         String    @default("viewer")
+  /// Unique, hard-to-guess token used in the invitation link
+  /// Example: "https://stavba.app/invite/abc123def456..."
+  token        String    @unique
+  /// Invitation status: "pending" (waiting for acceptance),
+  /// "accepted" (invitee joined), "revoked" (owner cancelled),
+  /// "expired" (past expiresAt), "rejected" (invitee declined)
+  status       String    @default("pending")
+  /// When the invitation expires. After this, the token is invalid.
+  expiresAt    DateTime
+  /// When the invitation was accepted (null if not yet accepted)
+  acceptedAt   DateTime?
+  /// When this invitation was created
+  createdAt    DateTime  @default(now())
+  /// When this invitation was last updated
+  updatedAt    DateTime  @updatedAt
+
+  @@unique([projectId, inviteeEmail])
+  @@index([projectId])
+  @@index([inviteeEmail])
+  @@index([token])
+  @@index([status])
+  @@index([expiresAt])
+  @@map("project_invitations")
+}
+
+/// Public share link for a project. Allows sharing a project with anyone
+/// who has the link (no login required). The link has an expiration date
+/// and can be revoked at any time by the owner.
+model ProjectShareLink {
+  id          String    @id @default(cuid())
+  /// FK to Project — the project being shared publicly
+  projectId   String
+  project     Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  /// FK to User — who created this share link
+  createdBy   String
+  creator     User      @relation(fields: [createdBy], references: [id], onDelete: Cascade)
+  /// Access level granted by this link:
+  /// "viewer" — read-only access to the project
+  /// "editor" — can edit budget, payments, time, contacts
+  accessLevel String    @default("viewer")
+  /// Unique, hard-to-guess token used in the share URL
+  /// Example: "https://stavba.app/share/xyz789abc..."
+  token       String    @unique
+  /// Whether this share link is active (owner can deactivate without deleting)
+  isActive    Boolean   @default(true)
+  /// When this share link expires (null = never expires)
+  expiresAt   DateTime?
+  /// Optional note from the creator (e.g., "Pro dodavatele - platnost 30 dní")
+  note        String?
+  /// When this share link was last used (for analytics)
+  lastUsedAt  DateTime?
+  /// When this share link was created
+  createdAt   DateTime  @default(now())
+  /// When this share link was last updated
+  updatedAt   DateTime  @updatedAt
+
+  @@index([projectId])
+  @@index([token])
+  @@index([isActive])
+  @@index([expiresAt])
+  @@map("project_share_links")
+}
+
+// =====================================================================
+// ===== PROJECT CONTENT (budget, payments, time, contacts) =====
+// =====================================================================
+
+/// Plain-text, timestamped note attached to a project. Each note has an
+/// author (user who wrote it) and is displayed newest-first in the
+/// Notes tab. Notes are plain text (not markdown).
 model Note {
   id        String   @id @default(cuid())
+  /// FK to Project — the project this note belongs to
   projectId String
   project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  author    String   // author name (chosen by the user themselves)
-  text      String   // plain text, not markdown
+  /// FK to User — who wrote this note (null for legacy notes before auth)
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  /// Author display name (cached from User.name for quick display)
+  author    String
+  /// Plain text content of the note (not markdown)
+  text      String
+  /// When this note was created
   createdAt DateTime @default(now())
 
   @@index([projectId])
+  @@index([userId])
+  @@index([createdAt])
+  @@map("notes")
 }
 
-// ===== SNAPSHOTS =====
-// Saves a point-in-time copy of project totals for "plan vs reality" comparison.
+/// Point-in-time snapshot of project totals. Used for "plan vs reality"
+/// comparison over time (e.g., "How did the budget look after demolition?").
+/// Snapshots are manually created by the user via the UI.
 model Snapshot {
-  id          String   @id @default(cuid())
-  projectId   String
-  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  label       String   // e.g., "Konec přípravy", "Po demolici"
-  planTotal   Float
-  actualTotal Float
-  remaining   Float
-  burnRate    Float
-  hoursTotal  Float
-  daysPlanned Float
-  itemCount   Int
+  id             String   @id @default(cuid())
+  /// FK to Project — the project this snapshot belongs to
+  projectId      String
+  project        Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  /// Human-readable label for this snapshot (e.g., "Konec přípravy", "Po demolici")
+  label          String
+  /// Total planned cost at the time of snapshot (sum of all budget items' planCost)
+  planTotal      Float
+  /// Total actual cost at the time of snapshot (sum of all payments)
+  actualTotal    Float
+  /// Remaining budget at the time of snapshot (planTotal - actualTotal)
+  remaining      Float
+  /// Burn rate percentage at the time of snapshot (actualTotal / planTotal * 100)
+  burnRate       Float
+  /// Total hours worked at the time of snapshot
+  hoursTotal     Float
+  /// Total planned days at the time of snapshot
+  daysPlanned    Float
+  /// Number of budget items at the time of snapshot
+  itemCount      Int
+  /// Number of completed budget items at the time of snapshot
   completedCount Int
-  savedTotal  Float
-  createdAt   DateTime @default(now())
-
-  @@index([projectId])
-}
-
-// ===== AUDIT LOG =====
-// Records changes to budget items, payments, time entries, contacts, and projects.
-// Each entry captures: entity type, entity ID, action (create/update/delete),
-// field changed, old value, new value, and timestamp.
-model AuditLog {
-  id        String   @id @default(cuid())
-  projectId String
-  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  entityType String  // "BudgetItem", "Payment", "TimeEntry", "Contact", "Project"
-  entityId   String
-  action    String   // "create", "update", "delete"
-  field     String?  // which field changed (null for create/delete)
-  oldValue  String?
-  newValue  String?
-  createdAt DateTime @default(now())
+  /// Total savings at the time of snapshot (sum of saved from completed items)
+  savedTotal     Float
+  /// When this snapshot was created
+  createdAt      DateTime @default(now())
 
   @@index([projectId])
   @@index([createdAt])
+  @@map("snapshots")
 }
 
-// ===== BUDGET ITEMS =====
-// Core entity: each row in the budget (category/subcategory/element)
-model BudgetItem {
-  id                String   @id @default(cuid())
-  projectId         String
-  project           Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  category          String   // e.g., "Hrubá stavba"
-  subcategory       String?  // e.g., "Hydroizolace - projekt"
-  element           String?  // "Prvek / Úkol" - description of the task/element
-  phase             String   // Příprava, Demolice, Hrubá stavba, Zabydlování, Do budoucna, Neurčeno
-  required          Boolean  @default(false) // "Nutné" - is it mandatory?
-  completed         Boolean  @default(false) // is this item finished?
-  rejected          Boolean  @default(false) // is this item rejected/cancelled?
-  note              String?
-  unitPrice         String?  // e.g., "1200,- / m"
-  // Parent-child relationship: if parentId is set, this is a "task" under a parent item
-  parentId          String?  // null = top-level item, non-null = child task
-  // Optional dependency: this item "follows" another top-level item — used to
-  // auto-fill `dateFrom` from the referenced item's `dateTo` in the UI.
-  dependsOnId       String?
-  // Plan
-  planCost          Float?   // Plán (Kč)
-  flexibilityPercent Float?  // Vůle (%) - how flexible the estimate is
-  planDays          Float?   // Plán (dní)
-  dateFrom          DateTime? // Datum od
-  dateTo            DateTime? // Datum do
-  // Actual
-  actualCost        Float    @default(0) // Skutečnost (Kč) - aggregated from payments
-  actualHours       Float    @default(0) // Skutečnost (hod) - aggregated from time entries
-  // Ordering
-  sortOrder         Int      @default(0)
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+/// Audit log entry — records every change to project data. Used for
+/// tracking who did what and when. Each entry captures: entity type,
+/// entity ID, action (create/update/delete), field changed, old/new value.
+model AuditLog {
+  id         String   @id @default(cuid())
+  /// FK to Project — the project this audit log entry belongs to
+  projectId  String
+  project    Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  /// FK to User — who made the change (null for legacy entries before auth)
+  userId     String?
+  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  /// Type of entity that was changed:
+  /// "BudgetItem", "Payment", "TimeEntry", "Contact", "Project"
+  entityType String
+  /// ID of the entity that was changed (not a FK — entity may have been deleted)
+  entityId   String
+  /// Action that was performed: "create", "update", "delete"
+  action     String
+  /// Which field changed (null for create/delete — captures all fields)
+  field      String?
+  /// Previous value of the field (null for create)
+  oldValue   String?
+  /// New value of the field (null for delete)
+  newValue   String?
+  /// When this change was made
+  createdAt  DateTime @default(now())
 
-  payments   Payment[]
+  @@index([projectId])
+  @@index([userId])
+  @@index([entityType, entityId])
+  @@index([action])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+/// Core entity: a single line item in the project budget. Budget items
+/// are organized in a hierarchy: top-level items (parentId = null) can
+/// have child "tasks" (parentId set). Items are grouped by `category`
+/// and `phase` for reporting.
+model BudgetItem {
+  id                 String       @id @default(cuid())
+  /// FK to Project — the project this budget item belongs to
+  projectId          String
+  project            Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  /// Category for grouping (e.g., "Hrubá stavba", "Demoliční práce")
+  category           String
+  /// Subcategory / item name (e.g., "Hydroizolace - projekt")
+  subcategory        String?
+  /// Element / task description (legacy field, used for sub-tasks)
+  element            String?
+  /// Construction phase: "Příprava", "Demolice", "Hrubá stavba",
+  /// "Zabydlování", "Do budoucna", "Neurčeno"
+  phase              String
+  /// Whether this item is mandatory ("Nutné" in UI)
+  required           Boolean      @default(false)
+  /// Whether this item is marked as completed ("Hotovo" in UI)
+  completed          Boolean      @default(false)
+  /// Whether this item was rejected/cancelled ("Zavrženo" in UI)
+  rejected           Boolean      @default(false)
+  /// Free-form note attached to this item
+  note               String?
+  /// Unit price description (e.g., "1200,- / m" — stored as text)
+  unitPrice          String?
+  /// FK to BudgetItem (self-reference) — if set, this is a child "task"
+  /// under the parent item. If null, this is a top-level item.
+  parentId           String?
+  parent             BudgetItem?  @relation("BudgetItemHierarchy", fields: [parentId], references: [id], onDelete: NoAction)
+  children           BudgetItem[] @relation("BudgetItemHierarchy")
+  /// FK to BudgetItem (self-reference) — if set, this item "depends on"
+  /// another top-level item. Used to auto-fill `dateFrom` from the
+  /// referenced item's `dateTo` in the UI.
+  dependsOnId        String?
+  dependsOn          BudgetItem?  @relation("BudgetItemDependency", fields: [dependsOnId], references: [id], onDelete: NoAction)
+  dependents         BudgetItem[] @relation("BudgetItemDependency")
+  /// Planned cost in the project currency (Kč). Null = not yet estimated.
+  planCost           Float?
+  /// Flexibility percentage ("Vůle") — how much the estimate could swing up.
+  /// Example: 10 means +10% possible overrun.
+  flexibilityPercent Float?
+  /// Planned duration in days
+  planDays           Float?
+  /// Planned start date
+  dateFrom           DateTime?
+  /// Planned end date
+  dateTo             DateTime?
+  /// Actual cost (sum of all linked payments). Updated automatically
+  /// when a payment is created/updated/deleted.
+  actualCost         Float        @default(0)
+  /// Actual hours worked (sum of all linked time entries). Updated
+  /// automatically when a time entry is created/updated/deleted.
+  actualHours        Float        @default(0)
+  /// Sort order within the category (for manual reordering)
+  sortOrder          Int          @default(0)
+  /// When this budget item was created
+  createdAt          DateTime     @default(now())
+  /// When this budget item was last updated
+  updatedAt          DateTime     @updatedAt
+
+  payments    Payment[]
   timeEntries TimeEntry[]
-  comments   Comment[]
+  comments    Comment[]
 
   @@index([projectId])
   @@index([parentId])
@@ -146,97 +491,161 @@ model BudgetItem {
   @@index([sortOrder])
   @@index([dateFrom])
   @@index([dateTo])
+  // Composite indexes for common query patterns
+  @@index([projectId, phase])
+  @@index([projectId, parentId])
+  @@index([projectId, sortOrder])
+  @@index([projectId, category])
+  @@map("budget_items")
 }
 
-// ===== COMMENTS =====
-// Inline comments/discussion on budget items.
+/// Inline comment/discussion on a budget item. Comments are
+/// chronological (oldest first) and displayed in the item's detail panel.
 model Comment {
-  id           String   @id @default(cuid())
+  id           String     @id @default(cuid())
+  /// FK to BudgetItem — the item this comment is attached to
   budgetItemId String
   budgetItem   BudgetItem @relation(fields: [budgetItemId], references: [id], onDelete: Cascade)
-  author       String   // name of the person commenting
+  /// FK to User — who wrote this comment (null for legacy comments before auth)
+  userId       String?
+  user         User?      @relation(fields: [userId], references: [id], onDelete: SetNull)
+  /// Author display name (cached from User.name for quick display)
+  author       String
+  /// Comment text (plain text, not markdown)
   text         String
-  createdAt    DateTime @default(now())
+  /// When this comment was created
+  createdAt    DateTime   @default(now())
 
   @@index([budgetItemId])
+  @@index([userId])
+  @@index([createdAt])
+  @@map("comments")
 }
 
-// ===== CONTACTS (Workers / Companies / Suppliers) =====
+/// Contact (worker, company, supplier, architect). Contacts are
+/// project-scoped — each project has its own contact list.
 model Contact {
   id        String   @id @default(cuid())
+  /// FK to Project — the project this contact belongs to
   projectId String
   project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  /// Contact display name (e.g., "Ing. Pavel Novák", "Stavební firma Hrázek s.r.o.")
   name      String
-  type      String   // company, craftsman, self, supplier, architect, office
-  role      String?  // e.g., "Zedník", "Elektrikář", "Architekt"
+  /// Contact type: "company", "craftsman", "self", "supplier", "architect", "office"
+  type      String
+  /// Role / profession (e.g., "Zedník", "Elektrikář", "Architekt")
+  role      String?
+  /// Phone number (Czech format: +420 777 123 456)
   phone     String?
+  /// Email address
   email     String?
+  /// Company name (if type = "company")
   company   String?
-  ico       String?  // IČO (Identifikační číslo organizace)
-  dic       String?  // DIČ (Daňové identifikační číslo)
+  /// IČO (Identifikační číslo organizace) — Czech company registration number
+  ico       String?
+  /// DIČ (Daňové identifikační číslo) — Czech tax ID
+  dic       String?
+  /// Website URL
   website   String?
+  /// Free-form notes about this contact
   notes     String?
-  rating    Int?     // 1-5 stars
+  /// Rating (1-5 stars, null = not rated)
+  rating    Int?
+  /// When this contact was created
   createdAt DateTime @default(now())
+  /// When this contact was last updated
   updatedAt DateTime @updatedAt
 
   timeEntries TimeEntry[]
   payments    Payment[]
 
   @@index([projectId])
+  @@index([type])
+  @@index([ico])
+  @@map("contacts")
 }
 
-// ===== PAYMENTS =====
-// Records actual financial transactions linked to budget items.
-// Supports installments: a "parent" payment represents an invoice with
-// `invoiceTotal` (expected total) and `amount = 0`. Child payments with
-// `installmentOf = parent.id` record each partial payment.
-// Standalone full payments have `installmentOf = null` and `invoiceTotal = null`.
+/// Financial transaction (payment, invoice, receipt). Linked to a
+/// budget item and optionally to a contact. Supports installments:
+/// a "parent" payment represents an invoice with `invoiceTotal`
+/// (expected total) and child payments with `installmentOf = parent.id`
+/// record each partial payment.
 model Payment {
-  id            String   @id @default(cuid())
+  id            String     @id @default(cuid())
+  /// FK to BudgetItem — the budget item this payment is for
   budgetItemId  String
   budgetItem    BudgetItem @relation(fields: [budgetItemId], references: [id], onDelete: Cascade)
+  /// FK to Contact — who was paid (optional, null for cash payments)
   contactId     String?
   contact       Contact?   @relation(fields: [contactId], references: [id], onDelete: SetNull)
-  amount        Float    // paid amount for this record (0 for a pure invoice parent)
-  invoiceTotal  Float?   // the full invoice amount expected (set on parent/installment group)
-  installmentOf String?  // parent payment id if this is an installment (plain string, no FK)
-  vatRate       Float?   // VAT rate in percent (e.g., 21 for 21%)
-  vatAmount     Float?   // computed VAT amount (amount * vatRate / (100 + vatRate))
+  /// Paid amount for this record (0 for a pure invoice parent)
+  amount        Float
+  /// Full invoice amount expected (set only on parent/installment group)
+  /// If null, this is a standalone payment (not part of installments)
+  invoiceTotal  Float?
+  /// Parent payment ID if this is an installment (soft reference, no FK)
+  installmentOf String?
+  /// VAT rate in percent (e.g., 21 for 21%)
+  vatRate       Float?
+  /// Computed VAT amount = amount * vatRate / (100 + vatRate)
+  vatAmount     Float?
+  /// Payment date (when the money was paid/received)
   date          DateTime
-  type          String   // receipt, work, material, person, invoice, other
-  vendor        String?  // obchod / firma
+  /// Payment type: "receipt" (účtenka), "work" (práce), "material" (materiál),
+  /// "person" (osoba), "invoice" (faktura), "other" (jiné)
+  type          String
+  /// Vendor / shop name (e.g., "Hornbach", "Bauhaus")
+  vendor        String?
+  /// Invoice number (e.g., "2026/0123")
   invoiceNumber String?
+  /// Free-form description of the payment
   description   String?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  /// When this payment record was created
+  createdAt     DateTime   @default(now())
+  /// When this payment record was last updated
+  updatedAt     DateTime   @updatedAt
 
   @@index([budgetItemId])
   @@index([contactId])
   @@index([date])
   @@index([installmentOf])
+  @@index([type])
+  @@index([date, type])
+  @@map("payments")
 }
 
-// ===== TIME ENTRIES =====
-// Records actual time worked on tasks. Supports multi-day entries via `dateTo`.
-// If dateTo is set, the entry spans date..dateTo and `hours` is the total
-// hours across the whole range.
+/// Time tracking entry. Records actual time worked on a budget item.
+/// Supports multi-day entries via `dateTo` (if set, the entry spans
+/// date..dateTo and `hours` is the total hours across the range).
 model TimeEntry {
-  id           String   @id @default(cuid())
+  id           String     @id @default(cuid())
+  /// FK to BudgetItem — the budget item this time entry is for
   budgetItemId String
   budgetItem   BudgetItem @relation(fields: [budgetItemId], references: [id], onDelete: Cascade)
+  /// FK to Contact — the worker/company (optional, null for svépomoc)
   contactId    String?
   contact      Contact?   @relation(fields: [contactId], references: [id], onDelete: SetNull)
-  workerName   String   // free-text worker name (for quick entry)
-  workerType   String   // company, craftsman, self, family
+  /// Worker name (free-text, for quick entry without creating a Contact)
+  workerName   String
+  /// Worker type: "company", "craftsman", "self", "family"
+  workerType   String
+  /// Start date of the work
   date         DateTime
-  dateTo       DateTime? // optional end date for multi-day entries
-  hours        Float    // total hours across the range
+  /// End date (optional, for multi-day entries). If null, single-day entry.
+  dateTo       DateTime?
+  /// Total hours worked across the range (date..dateTo)
+  hours        Float
+  /// Free-form description of the work done
   description  String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  /// When this time entry was created
+  createdAt    DateTime   @default(now())
+  /// When this time entry was last updated
+  updatedAt    DateTime   @updatedAt
 
   @@index([budgetItemId])
   @@index([contactId])
   @@index([date])
+  @@index([workerType])
+  @@index([date, workerType])
+  @@map("time_entries")
 }

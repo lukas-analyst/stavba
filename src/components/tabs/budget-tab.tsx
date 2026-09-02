@@ -173,13 +173,13 @@ export function BudgetTab({ projectId }: { projectId: string }) {
       scrolledRef.current = null;
       return;
     }
-    // Only scroll once per highlight cycle (even if items refetches)
-    if (scrolledRef.current !== highlightId) {
+    // Try to scroll — the row might not be in the DOM yet (React Query
+    // refetch is async, takes ~300-500ms after mutation).
+    // We retry on every `items` change until we find it.
+    const el = rowRefs.current.get(highlightId);
+    if (el && scrolledRef.current !== highlightId) {
       scrolledRef.current = highlightId;
-      const el = rowRefs.current.get(highlightId);
-      if (el) {
-        el.scrollIntoView({ behavior: "smooth", block: "center" });
-      }
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
     }
     // Clear the highlight after the animation completes (2.4s)
     const t = setTimeout(() => {
@@ -187,16 +187,34 @@ export function BudgetTab({ projectId }: { projectId: string }) {
       scrolledRef.current = null;
     }, 2400);
     return () => clearTimeout(t);
-  }, [highlightId]);
+  }, [highlightId, items]);
 
-  // If the highlighted item is no longer present in the items list (e.g. it
-  // was deleted or filtered out), clear the highlight to avoid a stuck state.
-  // Done as a derived check during render (not in an effect) so it doesn't
-  // trigger a cascading re-render.
-  if (highlightId && items && !items.some((i) => i.id === highlightId)) {
-    // schedule clear on next tick via setTimeout to avoid render-phase setState
-    queueMicrotask(() => setHighlightId(null));
-  }
+  // If the highlighted item is no longer present in the items list AFTER
+  // a grace period (e.g. it was deleted or filtered out), clear the
+  // highlight to avoid a stuck state.
+  // We use a 1.5s grace period so that newly-created items (which aren't
+  // yet in `items` because React Query refetch is async) don't immediately
+  // clear the highlight.
+  useEffect(() => {
+    if (!highlightId) return;
+    // Check if the item exists in the current items list
+    const exists = items?.some((i) => i.id === highlightId);
+    if (!exists) {
+      // Item not found — wait 1.5s for refetch to complete, then clear
+      // if it's still not there.
+      const t = setTimeout(() => {
+        // Re-check inside timeout — items may have updated by now
+        setHighlightId((cur) => {
+          if (!cur) return cur;
+          // If item now exists, keep the highlight (the main useEffect
+          // will handle scrolling + clearing)
+          if (items?.some((i) => i.id === cur)) return cur;
+          return null;
+        });
+      }, 1500);
+      return () => clearTimeout(t);
+    }
+  }, [highlightId, items]);
 
   const toggleCat = (cat: string) => {
     setCollapsedCats((prev) => {

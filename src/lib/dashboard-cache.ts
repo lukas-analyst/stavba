@@ -225,7 +225,7 @@ export const getDashboardData = unstable_cache(
           bi.id, bi.category, bi.subcategory, bi.phase, bi."planCost",
           bi."actualCost", bi."actualHours", bi."dateFrom", bi."dateTo",
           bi.completed, bi.rejected, bi.required, NULL::timestamp AS "latestActivity"
-        FROM "BudgetItem" bi
+        FROM "budget_items" bi
         WHERE bi."projectId" = ${projectId}
           AND bi."parentId" IS NULL
           AND NOT bi.completed AND NOT bi.rejected
@@ -278,7 +278,7 @@ export const getDashboardData = unstable_cache(
           bi.id, bi.category, bi.subcategory, bi.phase, bi."planCost",
           bi."actualCost", bi."actualHours", bi."dateFrom", bi."dateTo",
           bi.completed, bi.rejected, bi.required, NULL::timestamp AS "latestActivity"
-        FROM "BudgetItem" bi
+        FROM "budget_items" bi
         WHERE bi."projectId" = ${projectId}
           AND bi."parentId" IS NULL
           AND NOT bi.completed AND NOT bi.rejected
@@ -294,7 +294,7 @@ export const getDashboardData = unstable_cache(
           id, category, subcategory, phase, "dateFrom",
           COALESCE("dateTo", "dateFrom") AS "dateTo",
           "planCost", "actualCost", "planDays", required, completed, rejected
-        FROM "BudgetItem"
+        FROM "budget_items"
         WHERE "projectId" = ${projectId}
           AND ("dateFrom" IS NOT NULL OR "dateTo" IS NOT NULL)
         ORDER BY "dateFrom" ASC NULLS LAST
@@ -306,9 +306,9 @@ export const getDashboardData = unstable_cache(
           p.id, p.amount, p.date, p.type, p.vendor, p.description, p."invoiceNumber",
           bi.category AS bi_category, bi.subcategory AS bi_subcategory,
           c.name AS c_name
-        FROM "Payment" p
-        JOIN "BudgetItem" bi ON bi.id = p."budgetItemId"
-        LEFT JOIN "Contact" c ON c.id = p."contactId"
+        FROM "payments" p
+        JOIN "budget_items" bi ON bi.id = p."budgetItemId"
+        LEFT JOIN "contacts" c ON c.id = p."contactId"
         WHERE bi."projectId" = ${projectId}
         ORDER BY p.date DESC
         LIMIT 5
@@ -319,8 +319,8 @@ export const getDashboardData = unstable_cache(
         SELECT
           t.id, t."workerName", t."workerType", t.date, t.hours, t.description,
           bi.category AS bi_category, bi.subcategory AS bi_subcategory
-        FROM "TimeEntry" t
-        JOIN "BudgetItem" bi ON bi.id = t."budgetItemId"
+        FROM "time_entries" t
+        JOIN "budget_items" bi ON bi.id = t."budgetItemId"
         WHERE bi."projectId" = ${projectId}
         ORDER BY t.date DESC
         LIMIT 5

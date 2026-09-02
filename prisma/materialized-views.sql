@@ -3,7 +3,7 @@
 -- ---------------------------------------------------------------------
 -- These views pre-aggregate data that the dashboard API needs on every
 -- request. Without them, the dashboard route runs 10 parallel SQL queries
--- that each scan the entire BudgetItem / Payment / TimeEntry tables.
+-- that each scan the entire budget_items / payments / time_entries tables.
 --
 -- With materialized views, the heavy aggregation happens once (on REFRESH)
 -- and the dashboard route can just SELECT from the views — which is
@@ -42,7 +42,7 @@ SELECT
   SUM(GREATEST(0, COALESCE("actualHours", 0) - COALESCE("planDays", 0) * 8)) AS "timeOverrun",
   COUNT(*) FILTER (WHERE NOT completed AND NOT rejected AND (COALESCE("actualCost", 0) > 0 OR COALESCE("actualHours", 0) > 0)) AS "inProgress",
   COUNT(*) FILTER (WHERE NOT completed AND NOT rejected AND "dateFrom" IS NOT NULL AND "dateFrom" >= NOW() AND "dateFrom" <= NOW() + INTERVAL '7 days' AND COALESCE("actualCost", 0) = 0) AS "startingSoon"
-FROM "BudgetItem"
+FROM "budget_items"
 GROUP BY "projectId", COALESCE(NULLIF(phase, ''), 'Neurčeno');
 
 -- Unique index for CONCURRENTLY refresh
@@ -60,7 +60,7 @@ SELECT
   SUM(COALESCE("actualCost", 0)) AS actual,
   SUM(COALESCE("actualHours", 0)) AS hours,
   COUNT(*) AS count
-FROM "BudgetItem"
+FROM "budget_items"
 GROUP BY "projectId", COALESCE(NULLIF(category, ''), '(bez kategorie)');
 
 CREATE UNIQUE INDEX "mv_project_category_stats_uidx" ON "mv_project_category_stats" ("projectId", category);
@@ -84,7 +84,7 @@ SELECT
   COUNT(*) FILTER (WHERE completed AND COALESCE("planCost", 0) > 0) AS "completedWithPlanCount",
   SUM(CASE WHEN completed AND COALESCE("planCost", 0) > 0 THEN COALESCE("actualCost", 0) ELSE 0 END) AS "completedActualSum",
   SUM(CASE WHEN completed AND COALESCE("planCost", 0) > 0 THEN COALESCE("planCost", 0) ELSE 0 END) AS "completedPlanSum"
-FROM "BudgetItem"
+FROM "budget_items"
 GROUP BY "projectId";
 
 CREATE UNIQUE INDEX "mv_project_totals_uidx" ON "mv_project_totals" ("projectId");
@@ -111,23 +111,23 @@ SELECT
   (COALESCE(p."actualCost", 0) + COALESCE(c.child_actual, 0)) AS "rolledActualCost",
   (COALESCE(p."actualHours", 0) + COALESCE(c.child_hours, 0)) AS "rolledActualHours",
   COALESCE(latest_activity.latest, NULL) AS "latestActivity"
-FROM "BudgetItem" p
+FROM "budget_items" p
 LEFT JOIN LATERAL (
   SELECT
     COALESCE(SUM(ch."actualCost"), 0) AS child_actual,
     COALESCE(SUM(ch."actualHours"), 0) AS child_hours
-  FROM "BudgetItem" ch
+  FROM "budget_items" ch
   WHERE ch."parentId" = p.id
 ) c ON TRUE
 LEFT JOIN LATERAL (
   SELECT MAX(d) AS latest FROM (
-    SELECT MAX(pay.date) AS d FROM "Payment" pay WHERE pay."budgetItemId" = p.id
+    SELECT MAX(pay.date) AS d FROM "payments" pay WHERE pay."budgetItemId" = p.id
     UNION ALL
-    SELECT MAX(te.date) AS d FROM "TimeEntry" te WHERE te."budgetItemId" = p.id
+    SELECT MAX(te.date) AS d FROM "time_entries" te WHERE te."budgetItemId" = p.id
     UNION ALL
-    SELECT MAX(pay.date) AS d FROM "Payment" pay JOIN "BudgetItem" ch ON ch.id = pay."budgetItemId" WHERE ch."parentId" = p.id
+    SELECT MAX(pay.date) AS d FROM "payments" pay JOIN "budget_items" ch ON ch.id = pay."budgetItemId" WHERE ch."parentId" = p.id
     UNION ALL
-    SELECT MAX(te.date) AS d FROM "TimeEntry" te JOIN "BudgetItem" ch ON ch.id = te."budgetItemId" WHERE ch."parentId" = p.id
+    SELECT MAX(te.date) AS d FROM "time_entries" te JOIN "budget_items" ch ON ch.id = te."budgetItemId" WHERE ch."parentId" = p.id
   ) s
 ) latest_activity ON TRUE
 WHERE p."parentId" IS NULL;
