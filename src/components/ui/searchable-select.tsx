@@ -155,11 +155,15 @@ export function SearchableSelect({
         </div>
         {/* Plain overflow-y-auto div — Radix ScrollArea has known issues inside
             PopoverContent (transform animations can break inner scroll on some
-            setups). This matches the pattern used by shadcn Combobox. */}
+            setups). This matches the pattern used by shadcn Combobox.
+            overscroll-behavior: contain prevents the scroll from propagating to
+            the parent (especially important when used inside a Dialog). */}
         <div
           id={listId}
           role="listbox"
           className="max-h-[260px] overflow-y-auto overflow-x-hidden p-1"
+          style={{ overscrollBehavior: 'contain', touchAction: 'pan-y', WebkitOverflowScrolling: 'touch' }}
+          onPointerDown={(e) => e.stopPropagation()}
         >
           {filtered.length === 0 ? (
             <p className="py-4 text-center text-xs text-muted-foreground">{emptyText}</p>

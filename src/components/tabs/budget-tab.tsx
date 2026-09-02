@@ -159,22 +159,31 @@ export function BudgetTab({ projectId }: { projectId: string }) {
     else map.delete(id);
   }, []);
 
-  // Whenever highlightId changes to a non-null value, scroll the corresponding
-  // row into view (centered) so the user can see what was just added.
-  // Also re-runs when `items` changes, so the scroll happens once the new
-  // item actually appears in the DOM (React Query refetch is async).
+  // Track whether we've already scrolled for the current highlightId.
+  // This prevents re-scrolling on every `items` refetch while keeping the
+  // highlight visible until the animation completes.
+  const scrolledRef = useRef<string | null>(null);
+
   useEffect(() => {
-    if (!highlightId) return;
-    const el = rowRefs.current.get(highlightId);
-    if (el) {
-      el.scrollIntoView({ behavior: "smooth", block: "center" });
+    if (!highlightId) {
+      scrolledRef.current = null;
+      return;
     }
-    // Clear the highlight after the animation completes (2.4s).
-    // Use the functional updater so we don't depend on `highlightId` in the
-    // closure (avoids re-creating the timer on every render of the parent).
-    const t = setTimeout(() => setHighlightId((cur) => (cur === null ? null : null)), 2400);
+    // Only scroll once per highlight cycle (even if items refetches)
+    if (scrolledRef.current !== highlightId) {
+      scrolledRef.current = highlightId;
+      const el = rowRefs.current.get(highlightId);
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    }
+    // Clear the highlight after the animation completes (2.4s)
+    const t = setTimeout(() => {
+      setHighlightId(null);
+      scrolledRef.current = null;
+    }, 2400);
     return () => clearTimeout(t);
-  }, [highlightId, items]);
+  }, [highlightId]);
 
   // If the highlighted item is no longer present in the items list (e.g. it
   // was deleted or filtered out), clear the highlight to avoid a stuck state.

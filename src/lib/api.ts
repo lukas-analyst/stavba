@@ -106,6 +106,23 @@ export type TimeEntry = {
   contact?: { id: string; name: string; type: string } | null;
 };
 
+// Lightweight alert item returned by the dashboard API.
+// Uses rolled-up values for parent items (parent + children combined).
+export type AlertItem = {
+  id: string;
+  category: string;
+  subcategory: string | null;
+  phase: string;
+  planCost: number | null;
+  actualCost: number;
+  actualHours: number;
+  dateFrom: string | null;
+  dateTo: string | null;
+  completed: boolean;
+  rejected: boolean;
+  required: boolean;
+};
+
 export type Dashboard = {
   project: Project;
   totals: {
@@ -141,11 +158,11 @@ export type Dashboard = {
   }[];
   byCategory: { category: string; plan: number; actual: number; hours: number; count: number }[];
   alerts: {
-    inProgress: BudgetItem[];
-    upcoming: BudgetItem[];
-    overdue: BudgetItem[];
-    overBudget: BudgetItem[];
-    unscheduled: BudgetItem[];
+    inProgress: AlertItem[];
+    upcoming: AlertItem[];
+    overdue: AlertItem[];
+    overBudget: AlertItem[];
+    unscheduled: AlertItem[];
   };
   timeline: {
     id: string;

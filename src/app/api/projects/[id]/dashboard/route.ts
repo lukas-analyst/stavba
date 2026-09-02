@@ -153,69 +153,148 @@ export async function GET(
     }
 
     // ===== ALERTS =====
+    // Build a children map for rolled-up calculations (parent + children totals)
+    const childrenMap = new Map<string, typeof items>();
+    for (const it of items) {
+      if (it.parentId) {
+        const arr = childrenMap.get(it.parentId) ?? [];
+        arr.push(it);
+        childrenMap.set(it.parentId, arr);
+      }
+    }
+
+    // Helper: compute rolled-up actualCost and actualHours for a parent item
+    function rolledUp(parent: (typeof items)[number]) {
+      const kids = childrenMap.get(parent.id) ?? [];
+      const cost = (parent.actualCost || 0) + kids.reduce((s, c) => s + (c.actualCost || 0), 0);
+      const hours = (parent.actualHours || 0) + kids.reduce((s, c) => s + (c.actualHours || 0), 0);
+      // Also gather all payment + time entry dates for sorting
+      const allDates: number[] = [
+        ...parent.payments.map((p) => p.date?.getTime() ?? 0),
+        ...parent.timeEntries.map((t) => t.date?.getTime() ?? 0),
+        ...kids.flatMap((k) => k.payments.map((p) => p.date?.getTime() ?? 0)),
+        ...kids.flatMap((k) => k.timeEntries.map((t) => t.date?.getTime() ?? 0)),
+      ];
+      const latestActivity = Math.max(0, ...allDates);
+      return { cost, hours, latestActivity };
+    }
+
+    // Only consider top-level items (parentId === null) for alerts.
+    // Child items (úkoly) are sub-items of a parent and should not appear
+    // as separate alerts — their rolled-up values are included in the parent.
+    const topItems = items.filter((it) => !it.parentId);
+
     // 0) Items currently being worked on (in-progress):
-    //    - not completed, not rejected
-    //    - has at least one payment (actualCost > 0) or time entry (actualHours > 0)
-    //    - and is not yet finished
-    //    Sorted by most-recently-touched first (latest payment/time entry date desc).
-    const inProgress = items
+    //    - not completed, not rejected, top-level only
+    //    - has rolled-up actualCost > 0 or actualHours > 0
+    //    Sorted by most-recently-touched first.
+    const inProgress = topItems
+      .filter((it) => {
+        if (it.completed || it.rejected) return false;
+        const ru = rolledUp(it);
+        return ru.cost > 0 || ru.hours > 0;
+      })
+      .map((it) => {
+        const ru = rolledUp(it);
+        return { item: it, latestActivity: ru.latestActivity, ru };
+      })
+      .sort((a, b) => b.latestActivity - a.latestActivity)
+      .slice(0, 12)
+      .map(({ item, ru }) => ({
+        id: item.id,
+        category: item.category,
+        subcategory: item.subcategory,
+        phase: item.phase,
+        planCost: item.planCost,
+        actualCost: ru.cost,
+        actualHours: ru.hours,
+        dateFrom: item.dateFrom,
+        dateTo: item.dateTo,
+        completed: item.completed,
+        rejected: item.rejected,
+        required: item.required,
+      }));
+
+    // 1) Items whose dateFrom is within next 30 days
+    const now = new Date();
+    const in30 = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+    const upcoming = topItems
       .filter(
         (it) =>
           !it.completed &&
           !it.rejected &&
-          ((it.actualCost || 0) > 0 || (it.actualHours || 0) > 0),
+          it.dateFrom &&
+          it.dateFrom >= now &&
+          it.dateFrom <= in30 &&
+          (it.actualCost || 0) === 0,
       )
-      .map((it) => {
-        // Determine the latest activity date from payments + time entries
-        const paymentDates = it.payments.map((p) => p.date?.getTime() ?? 0);
-        const timeDates = it.timeEntries.map((t) => t.date?.getTime() ?? 0);
-        const latest = Math.max(0, ...paymentDates, ...timeDates);
-        return { item: it, latestActivity: latest };
+      .map((it) => ({
+        id: it.id,
+        category: it.category,
+        subcategory: it.subcategory,
+        phase: it.phase,
+        planCost: it.planCost,
+        actualCost: it.actualCost,
+        actualHours: it.actualHours,
+        dateFrom: it.dateFrom,
+        dateTo: it.dateTo,
+        completed: it.completed,
+        rejected: it.rejected,
+        required: it.required,
+      }));
+
+    // 2) Overdue items (dateTo in past, rolled-up actualCost < planCost)
+    const overdue = topItems
+      .filter((it) => {
+        if (it.completed || it.rejected || !it.dateTo || it.dateTo >= now || !it.planCost) return false;
+        const ru = rolledUp(it);
+        return ru.cost < it.planCost * 0.9;
       })
-      .sort((a, b) => b.latestActivity - a.latestActivity)
-      .map((x) => x.item)
-      .slice(0, 12); // cap to 12 most-recent in-progress items
+      .map((it) => {
+        const ru = rolledUp(it);
+        return {
+          id: it.id, category: it.category, subcategory: it.subcategory,
+          phase: it.phase, planCost: it.planCost, actualCost: ru.cost,
+          actualHours: ru.hours, dateFrom: it.dateFrom, dateTo: it.dateTo,
+          completed: it.completed, rejected: it.rejected, required: it.required,
+        };
+      });
 
-    // 1) Items whose dateFrom is within next 30 days (need to arrange craftsman / order material)
-    const now = new Date();
-    const in30 = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
-    const upcoming = items.filter(
-      (it) =>
-        !it.completed &&
-        !it.rejected &&
-        it.dateFrom &&
-        it.dateFrom >= now &&
-        it.dateFrom <= in30 &&
-        (it.actualCost || 0) === 0,
-    );
-
-    // 2) Overdue items (dateTo in past, actualCost < planCost, not fully paid)
-    const overdue = items.filter(
-      (it) =>
-        !it.completed &&
-        !it.rejected &&
-        it.dateTo &&
-        it.dateTo < now &&
-        it.planCost &&
-        (it.actualCost || 0) < it.planCost * 0.9,
-    );
-
-    // 3) Over-budget items (actualCost > planCost)
-    const overBudget = items.filter(
-      (it) => !it.completed && !it.rejected && it.planCost && it.actualCost > it.planCost,
-    );
+    // 3) Over-budget items (rolled-up actualCost > planCost)
+    const overBudget = topItems
+      .filter((it) => {
+        if (it.completed || it.rejected || !it.planCost) return false;
+        const ru = rolledUp(it);
+        return ru.cost > it.planCost;
+      })
+      .map((it) => {
+        const ru = rolledUp(it);
+        return {
+          id: it.id, category: it.category, subcategory: it.subcategory,
+          phase: it.phase, planCost: it.planCost, actualCost: ru.cost,
+          actualHours: ru.hours, dateFrom: it.dateFrom, dateTo: it.dateTo,
+          completed: it.completed, rejected: it.rejected, required: it.required,
+        };
+      });
 
     // 4) Items without dates (need scheduling)
-    const unscheduled = items.filter(
-      (it) =>
-        !it.completed &&
-        !it.rejected &&
-        !it.dateFrom &&
-        !it.dateTo &&
-        (it.planCost || 0) > 0 &&
-        it.phase !== "Do budoucna" &&
-        it.phase !== "Neurčeno",
-    );
+    const unscheduled = topItems
+      .filter(
+        (it) =>
+          !it.completed &&
+          !it.rejected &&
+          !it.dateFrom &&
+          !it.dateTo &&
+          (it.planCost || 0) > 0 &&
+          it.phase !== "Do budoucna" &&
+          it.phase !== "Neurčeno",
+      )
+      .map((it) => ({
+        id: it.id, category: it.category, subcategory: it.subcategory,
+        phase: it.phase, planCost: it.planCost, actualCost: it.actualCost,
+        actualHours: it.actualHours, dateFrom: it.dateFrom, dateTo: it.dateTo,
+        completed: it.completed, rejected: it.rejected, required: it.required,
+      }));
 
     // ===== TIMELINE =====
     // Sort items by dateFrom for Gantt-like view

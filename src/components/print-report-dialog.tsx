@@ -15,6 +15,7 @@ import {
   useBudgetItems,
   usePayments,
   type BudgetItem,
+  type AlertItem,
   type Payment,
 } from "@/lib/api";
 import {
@@ -539,7 +540,7 @@ function AlertLine({
 }: {
   tone: "danger" | "info";
   label: string;
-  items: BudgetItem[];
+  items: AlertItem[];
 }) {
   return (
     <div className={cn(tone === "danger" ? "text-rose-700" : "text-sky-700")}>
