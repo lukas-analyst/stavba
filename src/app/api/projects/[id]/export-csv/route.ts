@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
-import { db } from "@/lib/db";
+import { dbRead } from "@/lib/db";
 
 // GET /api/projects/[id]/export-csv?type=budget|payments|time
 // Returns a CSV file with the project's data, ready for Excel/Google Sheets.
+// Uses `dbRead` (read replica if configured, falls back to primary).
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
@@ -12,7 +13,7 @@ export async function GET(
     const { searchParams } = new URL(request.url);
     const type = searchParams.get("type") || "budget";
 
-    const project = await db.project.findUnique({ where: { id } });
+    const project = await dbRead.project.findUnique({ where: { id } });
     if (!project) {
       return NextResponse.json({ error: "Project not found" }, { status: 404 });
     }
@@ -38,7 +39,7 @@ export async function GET(
     let filename: string;
 
     if (type === "payments") {
-      const payments = await db.payment.findMany({
+      const payments = await dbRead.payment.findMany({
         where: { budgetItem: { projectId: id } },
         orderBy: { date: "desc" },
         include: {
@@ -82,7 +83,7 @@ export async function GET(
       ]);
       filename = `${project.name}-platby.csv`;
     } else if (type === "time") {
-      const entries = await db.timeEntry.findMany({
+      const entries = await dbRead.timeEntry.findMany({
         where: { budgetItem: { projectId: id } },
         orderBy: { date: "desc" },
         include: {
@@ -121,7 +122,7 @@ export async function GET(
       filename = `${project.name}-cas.csv`;
     } else {
       // budget
-      const items = await db.budgetItem.findMany({
+      const items = await dbRead.budgetItem.findMany({
         where: { projectId: id },
         orderBy: [{ sortOrder: "asc" }],
       });

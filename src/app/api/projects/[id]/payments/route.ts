@@ -1,5 +1,28 @@
 import { NextResponse } from "next/server";
-import { db } from "@/lib/db";
+import { db, dbRead } from "@/lib/db";
+
+// Explicit field selection — fetch only what the frontend uses.
+// `include` would fetch every column of budgetItem + contact (10+ columns each);
+// `select` fetches only the 3-4 fields we actually display.
+const PAYMENT_SELECT = {
+  id: true,
+  budgetItemId: true,
+  contactId: true,
+  amount: true,
+  invoiceTotal: true,
+  installmentOf: true,
+  vatRate: true,
+  vatAmount: true,
+  date: true,
+  type: true,
+  vendor: true,
+  invoiceNumber: true,
+  description: true,
+  createdAt: true,
+  updatedAt: true,
+  budgetItem: { select: { id: true, category: true, subcategory: true } },
+  contact: { select: { id: true, name: true, type: true } },
+} as const;
 
 // GET /api/projects/[id]/payments - list all payments for a project
 export async function GET(
@@ -8,13 +31,10 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
-    const payments = await db.payment.findMany({
+    const payments = await dbRead.payment.findMany({
       where: { budgetItem: { projectId: id } },
       orderBy: { date: "desc" },
-      include: {
-        budgetItem: { select: { id: true, category: true, subcategory: true } },
-        contact: { select: { id: true, name: true, type: true } },
-      },
+      select: PAYMENT_SELECT,
     });
     return NextResponse.json(payments);
   } catch (error) {
@@ -96,10 +116,7 @@ export async function POST(
         invoiceNumber: invoiceNumber?.trim() || null,
         description: description?.trim() || null,
       },
-      include: {
-        budgetItem: { select: { id: true, category: true, subcategory: true } },
-        contact: { select: { id: true, name: true, type: true } },
-      },
+      select: PAYMENT_SELECT,
     });
 
     // Recompute the budget item actualCost.

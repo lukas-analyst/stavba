@@ -1,14 +1,15 @@
 import { NextResponse } from "next/server";
-import { db } from "@/lib/db";
+import { db, dbRead } from "@/lib/db";
 
 // GET /api/projects/[id]/notes - list all notes for a project (newest first)
+// Uses `dbRead` (read replica if configured, falls back to primary).
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const { id } = await params;
-    const notes = await db.note.findMany({
+    const notes = await dbRead.note.findMany({
       where: { projectId: id },
       orderBy: { createdAt: "desc" },
     });

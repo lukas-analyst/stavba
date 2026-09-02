@@ -1,5 +1,5 @@
 import { unstable_cache } from "next/cache";
-import { db } from "@/lib/db";
+import { dbRead as db } from "@/lib/db";
 import type { AlertItem } from "@/lib/api-types";
 
 // =====================================================================
@@ -131,6 +131,11 @@ export const getDashboardData = unstable_cache(
     if (!project) return null;
 
     // ===== Run all heavy aggregations in parallel (one round-trip via Prisma's batching) =====
+    // Performance: totals, byPhase, byCategory, and rolled-up alerts read from
+    // pre-aggregated MATERIALIZED VIEWS (see prisma/materialized-views.sql).
+    // The views are refreshed after mutations via refreshMaterializedViews().
+    // If the views don't exist (setup script not run), the queries below will
+    // throw and the route will return 500 — so the setup script is required.
     const [
       totalsRow,
       phaseRows,
@@ -144,99 +149,73 @@ export const getDashboardData = unstable_cache(
       recentPayments,
       recentTimeEntries,
     ] = await Promise.all([
-      // 1) Global totals — single GROUP BY over all items in the project
+      // 1) Global totals — read from materialized view (single index lookup)
       db.$queryRaw<RawTotals[]>`
         SELECT
-          COALESCE(SUM("planCost"), 0)::float AS "planTotal",
-          COALESCE(SUM("actualCost"), 0)::float AS "actualTotal",
-          COALESCE(SUM("actualHours"), 0)::float AS "hoursTotal",
-          COALESCE(SUM("planDays"), 0)::float AS "daysPlanned",
-          COALESCE(SUM(CASE WHEN completed THEN GREATEST(0, COALESCE("planCost",0) - COALESCE("actualCost",0)) ELSE 0 END), 0)::float AS "savedTotal",
-          COALESCE(SUM(COALESCE("planCost",0) * (1 + COALESCE("flexibilityPercent",0) / 100.0)), 0)::float AS "worstCase",
-          COUNT(*) FILTER (WHERE required)::int AS "requiredCount",
-          COUNT(*) FILTER (WHERE completed)::int AS "completedCount",
-          COUNT(*)::int AS "itemCount",
-          COUNT(*) FILTER (WHERE completed AND COALESCE("planCost",0) > 0)::int AS "completedWithPlanCount",
-          COALESCE(SUM(CASE WHEN completed AND COALESCE("planCost",0) > 0 THEN COALESCE("actualCost",0) ELSE 0 END), 0)::float AS "completedActualSum",
-          COALESCE(SUM(CASE WHEN completed AND COALESCE("planCost",0) > 0 THEN COALESCE("planCost",0) ELSE 0 END), 0)::float AS "completedPlanSum"
-        FROM "BudgetItem"
+          "planTotal"::float AS "planTotal",
+          "actualTotal"::float AS "actualTotal",
+          "hoursTotal"::float AS "hoursTotal",
+          "daysPlanned"::float AS "daysPlanned",
+          "savedTotal"::float AS "savedTotal",
+          "worstCase"::float AS "worstCase",
+          "requiredCount"::int AS "requiredCount",
+          "completedCount"::int AS "completedCount",
+          "itemCount"::int AS "itemCount",
+          "completedWithPlanCount"::int AS "completedWithPlanCount",
+          "completedActualSum"::float AS "completedActualSum",
+          "completedPlanSum"::float AS "completedPlanSum"
+        FROM "mv_project_totals"
         WHERE "projectId" = ${projectId}
       `,
 
-      // 2) By-phase breakdown
+      // 2) By-phase breakdown — read from materialized view
       db.$queryRaw<RawPhaseRow[]>`
         SELECT
-          COALESCE(NULLIF(phase, ''), 'Neurčeno') AS phase,
-          COALESCE(SUM("planCost"), 0)::float AS plan,
-          COALESCE(SUM("actualCost"), 0)::float AS actual,
-          COALESCE(SUM("actualHours"), 0)::float AS hours,
-          COALESCE(SUM(COALESCE("planDays",0) * 8), 0)::float AS "plannedHours",
-          COUNT(*)::bigint AS count,
-          COUNT(*) FILTER (WHERE completed)::bigint AS "completedCount",
-          COALESCE(SUM(COALESCE("planCost",0) * (1 + COALESCE("flexibilityPercent",0) / 100.0)), 0)::float AS "worstCase",
-          COALESCE(SUM(GREATEST(0, COALESCE("actualCost",0) - COALESCE("planCost",0))), 0)::float AS "costOverrun",
-          COALESCE(SUM(GREATEST(0, COALESCE("actualHours",0) - COALESCE("planDays",0) * 8)), 0)::float AS "timeOverrun",
-          COUNT(*) FILTER (WHERE NOT completed AND NOT rejected AND (COALESCE("actualCost",0) > 0 OR COALESCE("actualHours",0) > 0))::bigint AS "inProgress",
-          COUNT(*) FILTER (WHERE NOT completed AND NOT rejected AND "dateFrom" IS NOT NULL AND "dateFrom" >= NOW() AND "dateFrom" <= NOW() + INTERVAL '7 days' AND COALESCE("actualCost",0) = 0)::bigint AS "startingSoon"
-        FROM "BudgetItem"
+          phase,
+          plan::float AS plan,
+          actual::float AS actual,
+          hours::float AS hours,
+          "plannedHours"::float AS "plannedHours",
+          count::bigint AS count,
+          "completedCount"::bigint AS "completedCount",
+          "worstCase"::float AS "worstCase",
+          "costOverrun"::float AS "costOverrun",
+          "timeOverrun"::float AS "timeOverrun",
+          "inProgress"::bigint AS "inProgress",
+          "startingSoon"::bigint AS "startingSoon"
+        FROM "mv_project_phase_stats"
         WHERE "projectId" = ${projectId}
-        GROUP BY COALESCE(NULLIF(phase, ''), 'Neurčeno')
-        ORDER BY MIN("sortOrder")
+        ORDER BY phase
       `,
 
-      // 3) By-category breakdown
+      // 3) By-category breakdown — read from materialized view
       db.$queryRaw<RawCategoryRow[]>`
         SELECT
-          COALESCE(NULLIF(category, ''), '(bez kategorie)') AS category,
-          COALESCE(SUM("planCost"), 0)::float AS plan,
-          COALESCE(SUM("actualCost"), 0)::float AS actual,
-          COALESCE(SUM("actualHours"), 0)::float AS hours,
-          COUNT(*)::bigint AS count
-        FROM "BudgetItem"
+          category,
+          plan::float AS plan,
+          actual::float AS actual,
+          hours::float AS hours,
+          count::bigint AS count
+        FROM "mv_project_category_stats"
         WHERE "projectId" = ${projectId}
-        GROUP BY COALESCE(NULLIF(category, ''), '(bez kategorie)')
-        ORDER BY COALESCE(SUM("planCost"), 0) DESC
+        ORDER BY plan DESC
       `,
 
-      // 4a) In-progress alert: top-level items with rolled-up actuals > 0
-      // (rolled-up via LEFT JOIN on children, payments, time entries)
+      // 4a) In-progress alert: read from mv_rolled_up_items (pre-computed
+      // LATERAL JOIN) — this is the heaviest query so caching it helps most.
       db.$queryRaw<RawAlertRow[]>`
-        WITH rolled AS (
-          SELECT
-            p.id,
-            (COALESCE(p."actualCost", 0) + COALESCE(c.child_actual, 0))::float AS "actualCost",
-            (COALESCE(p."actualHours", 0) + COALESCE(c.child_hours, 0))::float AS "actualHours",
-            COALESCE(latest_activity.latest, NULL) AS "latestActivity"
-          FROM "BudgetItem" p
-          LEFT JOIN LATERAL (
-            SELECT
-              COALESCE(SUM(ch."actualCost"), 0)::float AS child_actual,
-              COALESCE(SUM(ch."actualHours"), 0)::float AS child_hours
-            FROM "BudgetItem" ch
-            WHERE ch."parentId" = p.id
-          ) c ON TRUE
-          LEFT JOIN LATERAL (
-            SELECT MAX(d) AS latest FROM (
-              SELECT MAX(pay.date) AS d FROM "Payment" pay WHERE pay."budgetItemId" = p.id
-              UNION ALL
-              SELECT MAX(te.date) AS d FROM "TimeEntry" te WHERE te."budgetItemId" = p.id
-              UNION ALL
-              SELECT MAX(pay.date) AS d FROM "Payment" pay JOIN "BudgetItem" ch ON ch.id = pay."budgetItemId" WHERE ch."parentId" = p.id
-              UNION ALL
-              SELECT MAX(te.date) AS d FROM "TimeEntry" te JOIN "BudgetItem" ch ON ch.id = te."budgetItemId" WHERE ch."parentId" = p.id
-            ) s
-          ) latest_activity ON TRUE
-          WHERE p."projectId" = ${projectId} AND p."parentId" IS NULL
-        )
         SELECT
-          bi.id, bi.category, bi.subcategory, bi.phase, bi."planCost",
-          r."actualCost", r."actualHours", bi."dateFrom", bi."dateTo",
-          bi.completed, bi.rejected, bi.required, r."latestActivity"
-        FROM rolled r
-        JOIN "BudgetItem" bi ON bi.id = r.id
-        WHERE NOT bi.completed AND NOT bi.rejected
-          AND (r."actualCost" > 0 OR r."actualHours" > 0)
-        ORDER BY r."latestActivity" DESC NULLS LAST
+          id, category, subcategory, phase, "planCost",
+          "rolledActualCost"::float AS "actualCost",
+          "rolledActualHours"::float AS "actualHours",
+          "dateFrom", "dateTo",
+          completed, rejected, required,
+          "latestActivity"
+        FROM "mv_rolled_up_items"
+        WHERE "projectId" = ${projectId}
+          AND NOT completed AND NOT rejected
+          AND ("rolledActualCost" > 0 OR "rolledActualHours" > 0)
+        ORDER BY "latestActivity" DESC NULLS LAST
         LIMIT 12
       `,
 
@@ -257,53 +236,40 @@ export const getDashboardData = unstable_cache(
         ORDER BY bi."dateFrom" ASC
       `,
 
-      // 4c) Overdue alert
+      // 4c) Overdue alert — read from mv_rolled_up_items (pre-computed
+      // rolled-up actuals via LATERAL JOIN)
       db.$queryRaw<RawAlertRow[]>`
-        WITH rolled AS (
-          SELECT
-            p.id,
-            (COALESCE(p."actualCost", 0) + COALESCE(SUM(ch."actualCost"), 0))::float AS "actualCost",
-            (COALESCE(p."actualHours", 0) + COALESCE(SUM(ch."actualHours"), 0))::float AS "actualHours"
-          FROM "BudgetItem" p
-          LEFT JOIN "BudgetItem" ch ON ch."parentId" = p.id
-          WHERE p."projectId" = ${projectId} AND p."parentId" IS NULL
-          GROUP BY p.id, p."actualCost", p."actualHours"
-        )
         SELECT
-          bi.id, bi.category, bi.subcategory, bi.phase, bi."planCost",
-          r."actualCost", r."actualHours", bi."dateFrom", bi."dateTo",
-          bi.completed, bi.rejected, bi.required, NULL::timestamp AS "latestActivity"
-        FROM rolled r
-        JOIN "BudgetItem" bi ON bi.id = r.id
-        WHERE NOT bi.completed AND NOT bi.rejected
-          AND bi."dateTo" IS NOT NULL AND bi."dateTo" < NOW()
-          AND bi."planCost" IS NOT NULL AND bi."planCost" > 0
-          AND r."actualCost" < bi."planCost" * 0.9
-        ORDER BY bi."dateTo" ASC
+          id, category, subcategory, phase, "planCost",
+          "rolledActualCost"::float AS "actualCost",
+          "rolledActualHours"::float AS "actualHours",
+          "dateFrom", "dateTo",
+          completed, rejected, required,
+          NULL::timestamp AS "latestActivity"
+        FROM "mv_rolled_up_items"
+        WHERE "projectId" = ${projectId}
+          AND NOT completed AND NOT rejected
+          AND "dateTo" IS NOT NULL AND "dateTo" < NOW()
+          AND "planCost" IS NOT NULL AND "planCost" > 0
+          AND "rolledActualCost" < "planCost" * 0.9
+        ORDER BY "dateTo" ASC
       `,
 
-      // 4d) Over-budget alert
+      // 4d) Over-budget alert — read from mv_rolled_up_items
       db.$queryRaw<RawAlertRow[]>`
-        WITH rolled AS (
-          SELECT
-            p.id,
-            (COALESCE(p."actualCost", 0) + COALESCE(SUM(ch."actualCost"), 0))::float AS "actualCost",
-            (COALESCE(p."actualHours", 0) + COALESCE(SUM(ch."actualHours"), 0))::float AS "actualHours"
-          FROM "BudgetItem" p
-          LEFT JOIN "BudgetItem" ch ON ch."parentId" = p.id
-          WHERE p."projectId" = ${projectId} AND p."parentId" IS NULL
-          GROUP BY p.id, p."actualCost", p."actualHours"
-        )
         SELECT
-          bi.id, bi.category, bi.subcategory, bi.phase, bi."planCost",
-          r."actualCost", r."actualHours", bi."dateFrom", bi."dateTo",
-          bi.completed, bi.rejected, bi.required, NULL::timestamp AS "latestActivity"
-        FROM rolled r
-        JOIN "BudgetItem" bi ON bi.id = r.id
-        WHERE NOT bi.completed AND NOT bi.rejected
-          AND bi."planCost" IS NOT NULL AND bi."planCost" > 0
-          AND r."actualCost" > bi."planCost"
-        ORDER BY (r."actualCost" - bi."planCost") DESC
+          id, category, subcategory, phase, "planCost",
+          "rolledActualCost"::float AS "actualCost",
+          "rolledActualHours"::float AS "actualHours",
+          "dateFrom", "dateTo",
+          completed, rejected, required,
+          NULL::timestamp AS "latestActivity"
+        FROM "mv_rolled_up_items"
+        WHERE "projectId" = ${projectId}
+          AND NOT completed AND NOT rejected
+          AND "planCost" IS NOT NULL AND "planCost" > 0
+          AND "rolledActualCost" > "planCost"
+        ORDER BY ("rolledActualCost" - "planCost") DESC
       `,
 
       // 4e) Unscheduled alert

@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
-import { db } from "@/lib/db";
+import { dbRead } from "@/lib/db";
 
 // GET /api/search?q=query
 // Global search across projects, budget items, and contacts.
+// Uses `dbRead` (read replica if configured, falls back to primary).
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
@@ -13,7 +14,7 @@ export async function GET(request: Request) {
     }
 
     const [projects, items, contacts] = await Promise.all([
-      db.project.findMany({
+      dbRead.project.findMany({
         where: {
           OR: [
             { name: { contains: q } },
@@ -31,7 +32,7 @@ export async function GET(request: Request) {
         },
         orderBy: [{ starred: "desc" }, { name: "asc" }],
       }),
-      db.budgetItem.findMany({
+      dbRead.budgetItem.findMany({
         where: {
           OR: [
             { category: { contains: q } },
@@ -51,7 +52,7 @@ export async function GET(request: Request) {
         },
         orderBy: { sortOrder: "asc" },
       }),
-      db.contact.findMany({
+      dbRead.contact.findMany({
         where: {
           OR: [
             { name: { contains: q } },

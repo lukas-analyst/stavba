@@ -1,20 +1,21 @@
 import { NextResponse } from "next/server";
-import { db } from "@/lib/db";
+import { dbRead } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
 // GET /api/export
 // Returns the full application state (all projects, budget items, payments,
 // contacts, time entries) as a downloadable JSON file.
+// Uses `dbRead` (read replica if configured, falls back to primary).
 export async function GET() {
   try {
     const [projects, budgetItems, payments, contacts, timeEntries] =
       await Promise.all([
-        db.project.findMany({ orderBy: { createdAt: "asc" } }),
-        db.budgetItem.findMany({ orderBy: { createdAt: "asc" } }),
-        db.payment.findMany({ orderBy: { createdAt: "asc" } }),
-        db.contact.findMany({ orderBy: { createdAt: "asc" } }),
-        db.timeEntry.findMany({ orderBy: { createdAt: "asc" } }),
+        dbRead.project.findMany({ orderBy: { createdAt: "asc" } }),
+        dbRead.budgetItem.findMany({ orderBy: { createdAt: "asc" } }),
+        dbRead.payment.findMany({ orderBy: { createdAt: "asc" } }),
+        dbRead.contact.findMany({ orderBy: { createdAt: "asc" } }),
+        dbRead.timeEntry.findMany({ orderBy: { createdAt: "asc" } }),
       ]);
 
     const payload = {

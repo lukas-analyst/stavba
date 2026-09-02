@@ -1,14 +1,15 @@
 import { NextResponse } from "next/server";
-import { db } from "@/lib/db";
+import { db, dbRead } from "@/lib/db";
 
 // GET /api/budget-items/[id]/comments - list all comments for a budget item
+// Uses `dbRead` (read replica if configured, falls back to primary).
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const { id } = await params;
-    const comments = await db.comment.findMany({
+    const comments = await dbRead.comment.findMany({
       where: { budgetItemId: id },
       orderBy: { createdAt: "asc" },
     });

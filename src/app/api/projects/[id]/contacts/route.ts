@@ -1,5 +1,25 @@
 import { NextResponse } from "next/server";
-import { db } from "@/lib/db";
+import { db, dbRead } from "@/lib/db";
+
+// Explicit field selection — fetch only what the frontend uses.
+const CONTACT_SELECT = {
+  id: true,
+  projectId: true,
+  name: true,
+  type: true,
+  role: true,
+  phone: true,
+  email: true,
+  company: true,
+  ico: true,
+  dic: true,
+  website: true,
+  notes: true,
+  rating: true,
+  createdAt: true,
+  updatedAt: true,
+  _count: { select: { timeEntries: true, payments: true } },
+} as const;
 
 // GET /api/projects/[id]/contacts - list all contacts for a project
 export async function GET(
@@ -8,12 +28,10 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
-    const contacts = await db.contact.findMany({
+    const contacts = await dbRead.contact.findMany({
       where: { projectId: id },
       orderBy: [{ name: "asc" }],
-      include: {
-        _count: { select: { timeEntries: true, payments: true } },
-      },
+      select: CONTACT_SELECT,
     });
     return NextResponse.json(contacts);
   } catch (error) {

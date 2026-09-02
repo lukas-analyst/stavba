@@ -1,14 +1,15 @@
 import { NextResponse } from "next/server";
-import { db } from "@/lib/db";
+import { db, dbRead } from "@/lib/db";
 
 // GET /api/projects/[id]/snapshots - list all snapshots for a project
+// Uses `dbRead` (read replica if configured, falls back to primary).
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const { id } = await params;
-    const snapshots = await db.snapshot.findMany({
+    const snapshots = await dbRead.snapshot.findMany({
       where: { projectId: id },
       orderBy: { createdAt: "desc" },
     });

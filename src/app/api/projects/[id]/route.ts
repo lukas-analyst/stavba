@@ -1,16 +1,32 @@
 import { NextResponse } from "next/server";
-import { db } from "@/lib/db";
+import { db, dbRead } from "@/lib/db";
 
 // GET /api/projects/[id]
+// Uses `dbRead` (read replica if configured, falls back to primary).
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const { id } = await params;
-    const project = await db.project.findUnique({
+    const project = await dbRead.project.findUnique({
       where: { id },
-      include: {
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        address: true,
+        description: true,
+        starred: true,
+        status: true,
+        currency: true,
+        totalBudget: true,
+        startDate: true,
+        endDate: true,
+        categoryOrder: true,
+        notes: true,
+        createdAt: true,
+        updatedAt: true,
         _count: { select: { budgetItems: true, contacts: true } },
       },
     });

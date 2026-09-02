@@ -1,25 +1,26 @@
 import { NextResponse } from "next/server";
-import { db } from "@/lib/db";
+import { dbRead } from "@/lib/db";
 
 // GET /api/projects/[id]/spending-trend
 // Returns monthly spending + time data for the last 12 months (or all available).
 // Used for the dashboard sparkline / trend chart.
+// Uses `dbRead` (read replica if configured, falls back to primary).
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const { id } = await params;
-    const project = await db.project.findUnique({ where: { id } });
+    const project = await dbRead.project.findUnique({ where: { id } });
     if (!project) {
       return NextResponse.json({ error: "Project not found" }, { status: 404 });
     }
 
-    const payments = await db.payment.findMany({
+    const payments = await dbRead.payment.findMany({
       where: { budgetItem: { projectId: id } },
       select: { amount: true, date: true },
     });
-    const timeEntries = await db.timeEntry.findMany({
+    const timeEntries = await dbRead.timeEntry.findMany({
       where: { budgetItem: { projectId: id } },
       select: { hours: true, date: true },
     });

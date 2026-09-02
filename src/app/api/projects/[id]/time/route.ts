@@ -1,5 +1,22 @@
 import { NextResponse } from "next/server";
-import { db } from "@/lib/db";
+import { db, dbRead } from "@/lib/db";
+
+// Explicit field selection — fetch only what the frontend uses.
+const TIME_ENTRY_SELECT = {
+  id: true,
+  budgetItemId: true,
+  contactId: true,
+  workerName: true,
+  workerType: true,
+  date: true,
+  dateTo: true,
+  hours: true,
+  description: true,
+  createdAt: true,
+  updatedAt: true,
+  budgetItem: { select: { id: true, category: true, subcategory: true } },
+  contact: { select: { id: true, name: true, type: true } },
+} as const;
 
 // GET /api/projects/[id]/time - list all time entries for a project
 export async function GET(
@@ -8,13 +25,10 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
-    const entries = await db.timeEntry.findMany({
+    const entries = await dbRead.timeEntry.findMany({
       where: { budgetItem: { projectId: id } },
       orderBy: { date: "desc" },
-      include: {
-        budgetItem: { select: { id: true, category: true, subcategory: true } },
-        contact: { select: { id: true, name: true, type: true } },
-      },
+      select: TIME_ENTRY_SELECT,
     });
     return NextResponse.json(entries);
   } catch (error) {
@@ -68,10 +82,7 @@ export async function POST(
         hours: Number(hours),
         description: description?.trim() || null,
       },
-      include: {
-        budgetItem: { select: { id: true, category: true, subcategory: true } },
-        contact: { select: { id: true, name: true, type: true } },
-      },
+      select: TIME_ENTRY_SELECT,
     });
 
     // Recompute the budget item actualHours
