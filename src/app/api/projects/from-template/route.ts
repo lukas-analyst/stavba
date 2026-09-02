@@ -31,10 +31,25 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Template not found" }, { status: 400 });
     }
 
+    // Generate slug
+    const baseSlug = name.trim()
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .replace(/-{2,}/g, '-');
+    let slug = baseSlug;
+    let suffix = 1;
+    while (await db.project.findUnique({ where: { slug } })) {
+      slug = `${baseSlug}-${suffix++}`;
+    }
+
     // Create the project
     const project = await db.project.create({
       data: {
         name: name.trim(),
+        slug,
         address: address?.trim() || null,
         description: description?.trim() || template.description,
         starred: false,

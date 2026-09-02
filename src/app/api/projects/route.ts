@@ -59,9 +59,26 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Name is required" }, { status: 400 });
     }
 
+    // Generate slug from name
+    const baseSlug = name.trim()
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '') // remove diacritics
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .replace(/-{2,}/g, '-');
+
+    // Ensure uniqueness
+    let slug = baseSlug;
+    let suffix = 1;
+    while (await db.project.findUnique({ where: { slug } })) {
+      slug = `${baseSlug}-${suffix++}`;
+    }
+
     const project = await db.project.create({
       data: {
         name: name.trim(),
+        slug,
         address: address?.trim() || null,
         description: description?.trim() || null,
         starred: Boolean(starred),

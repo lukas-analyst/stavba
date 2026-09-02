@@ -47,6 +47,7 @@ function HomeContent() {
   const selectedProjectId = useAppStore((s) => s.selectedProjectId);
   const activeTab = useAppStore((s) => s.activeTab);
   const setSelectedProject = useAppStore((s) => s.setSelectedProject);
+  const setSelectedProjectId = useAppStore((s) => s.setSelectedProjectId);
   const setActiveTab = useAppStore((s) => s.setActiveTab);
 
   const searchParams = useSearchParams();
@@ -81,43 +82,47 @@ function HomeContent() {
   }, []);
 
   // === URL → Store sync (one-time, on mount) ===
-  // Read `?project=` and `?tab=` from the URL and apply them to the store
-  // so that shareable links land the user on the right project/tab.
+  // Read `?project=` (slug) and `?tab=` from the URL and apply them to the store.
+  // The URL uses slugs (e.g. "troja"), but the store uses IDs.
   useEffect(() => {
     const urlProject = searchParams.get("project");
     const urlTab = searchParams.get("tab");
 
-    if (urlProject) {
-      setSelectedProject(urlProject);
+    if (urlProject && projects) {
+      // Find project by slug first, fallback to ID
+      const found = projects.find((p) => p.slug === urlProject || p.id === urlProject);
+      if (found) {
+        setSelectedProjectId(found.id);
+      }
     }
-    // Validate the tab against the known list so a mistyped URL does not
-    // leave the app in an undefined tab state.
     if (urlTab && VALID_TABS.has(urlTab as TabId)) {
       setActiveTab(urlTab as TabId);
     }
-  }, []); // run once on mount — see comment above
+  }, [projects]); // run when projects are loaded
 
   // === Store → URL sync (after the initial mount) ===
   // Whenever the selected project or active tab changes, mirror the change
-  // into the URL using `router.replace` so we don't pollute the back-button
-  // history on every interaction.
+  // into the URL using `router.replace`. URL uses slug, not ID.
   useEffect(() => {
-    // Skip the very first run — the URL is already authoritative at mount
-    // time and writing back the (possibly auto-selected) defaults would
-    // create a `?tab=dashboard` flicker.
     if (!hasInitializedRef.current) {
       hasInitializedRef.current = true;
       return;
     }
 
     const params = new URLSearchParams();
-    if (selectedProjectId) params.set("project", selectedProjectId);
+    if (selectedProjectId) {
+      // Find the project's slug
+      const project = projects?.find((p) => p.id === selectedProjectId);
+      if (project) {
+        params.set("project", project.slug);
+      }
+    }
     if (activeTab) params.set("tab", activeTab);
 
     const query = params.toString();
     const nextUrl = query ? `${pathname}?${query}` : pathname;
     router.replace(nextUrl);
-  }, [selectedProjectId, activeTab, pathname, router]);
+  }, [selectedProjectId, activeTab, pathname, router, projects]);
 
   // Close mobile drawer when a project is selected
   const handleSelectProject = (id: string) => {

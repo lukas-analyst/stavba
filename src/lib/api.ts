@@ -6,6 +6,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 export type Project = {
   id: string;
   name: string;
+  slug: string;
   address: string | null;
   description: string | null;
   starred: boolean;

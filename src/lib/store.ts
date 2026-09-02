@@ -15,6 +15,7 @@ type AppState = {
   selectedProjectId: string | null;
   activeTab: TabId;
   setSelectedProject: (id: string | null) => void;
+  setSelectedProjectId: (id: string | null) => void; // sets only ID, keeps tab
   setActiveTab: (tab: TabId) => void;
 };
 
@@ -23,5 +24,7 @@ export const useAppStore = create<AppState>((set) => ({
   activeTab: "dashboard",
   setSelectedProject: (id) =>
     set({ selectedProjectId: id, activeTab: "dashboard" }),
+  setSelectedProjectId: (id) =>
+    set({ selectedProjectId: id }),
   setActiveTab: (tab) => set({ activeTab: tab }),
 }));

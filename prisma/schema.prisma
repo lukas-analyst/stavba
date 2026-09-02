@@ -20,6 +20,7 @@ datasource db {
 model Project {
   id            String   @id @default(cuid())
   name          String
+  slug          String   @unique // lowercase, kebab-case (e.g. "troja", "dum-v-praze")
   address       String?
   description   String?
   starred       Boolean  @default(false)
@@ -30,10 +31,7 @@ model Project {
   endDate       DateTime?
   // JSON array of category names in display order (for reordering categories)
   categoryOrder String?
-  // Free-form markdown notes for the project (decisions, ideas, todos)
-  // NOTE: legacy field — the UI now uses the separate `Note` model for
-  // timestamped plain-text notes with an author. This column is kept for
-  // backwards compatibility / data export.
+  // Free-form markdown notes for the project (legacy)
   notes         String?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
