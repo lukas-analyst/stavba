@@ -35,23 +35,9 @@ import {
 import { formatCzk, formatNumber, formatDate, PHASE_COLORS, PHASE_DOT_COLORS } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/lib/store";
-import {
-  Area,
-  AreaChart,
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Cell,
-  Legend,
-  Pie,
-  PieChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
-
-const PIE_COLORS = ["#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#06b6d4", "#64748b", "#ec4899", "#84cc16"];
+// Charts are lazy-loaded via next/dynamic — reduces initial bundle by ~200KB.
+// See src/components/charts/lazy-charts.tsx
+import { PhaseChart, CategoryChart, SpendingTrendChart } from "@/components/charts/lazy-charts";
 
 export function DashboardTab({ projectId }: { projectId: string }) {
   const { data, isLoading } = useDashboard(projectId);
@@ -523,25 +509,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
           </CardHeader>
           <CardContent>
             <div className="h-72">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={phaseData} margin={{ top: 10, right: 10, left: 0, bottom: 10 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
-                  <XAxis dataKey="phase" tick={{ fontSize: 11 }} interval={0} angle={-15} textAnchor="end" height={60} />
-                  <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
-                  <Tooltip
-                    formatter={(v: number) => formatCzk(v)}
-                    contentStyle={{
-                      backgroundColor: "var(--popover)",
-                      border: "1px solid var(--border)",
-                      borderRadius: "8px",
-                      fontSize: "12px",
-                    }}
-                  />
-                  <Legend wrapperStyle={{ fontSize: 12 }} />
-                  <Bar dataKey="Plán" fill="#06b6d4" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="Skutečnost" fill="#f59e0b" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
+              <PhaseChart data={phaseData} />
             </div>
           </CardContent>
         </Card>
@@ -553,42 +521,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
           </CardHeader>
           <CardContent>
             <div className="h-72">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={pieData}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    outerRadius={90}
-                    innerRadius={40}
-                    dataKey="value"
-                    label={({ name, percent }) =>
-                      percent && percent > 0.05 ? `${(percent * 100).toFixed(0)}%` : ""
-                    }
-                    labelStyle={{ fontSize: 11 }}
-                  >
-                    {pieData.map((_, i) => (
-                      <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    formatter={(v: number) => formatCzk(v)}
-                    contentStyle={{
-                      backgroundColor: "var(--popover)",
-                      border: "1px solid var(--border)",
-                      borderRadius: "8px",
-                      fontSize: "12px",
-                    }}
-                  />
-                  <Legend
-                    wrapperStyle={{ fontSize: 11 }}
-                    layout="vertical"
-                    align="right"
-                    verticalAlign="middle"
-                  />
-                </PieChart>
-              </ResponsiveContainer>
+              <CategoryChart data={pieData} />
             </div>
           </CardContent>
         </Card>
@@ -815,64 +748,7 @@ function SpendingTrendCard({ projectId }: { projectId: string }) {
       <CardContent>
         {hasData ? (
           <div className="h-56">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={data.months} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="spendGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.4} />
-                    <stop offset="95%" stopColor="#f59e0b" stopOpacity={0} />
-                  </linearGradient>
-                  <linearGradient id="hoursGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
-                <XAxis
-                  dataKey="label"
-                  tick={{ fontSize: 10 }}
-                  interval={0}
-                  axisLine={false}
-                  tickLine={false}
-                />
-                <YAxis
-                  tick={{ fontSize: 10 }}
-                  tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`}
-                  orientation="right"
-                  axisLine={false}
-                  tickLine={false}
-                />
-                <Tooltip
-                  formatter={(v: number, name: string) => {
-                    if (name === "Výdaje") return formatCzk(v);
-                    return formatNumber(v, " h");
-                  }}
-                  contentStyle={{
-                    backgroundColor: "var(--popover)",
-                    border: "1px solid var(--border)",
-                    borderRadius: "8px",
-                    fontSize: "12px",
-                  }}
-                  labelStyle={{ fontSize: 11, fontWeight: 600 }}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="spend"
-                  name="Výdaje"
-                  stroke="#f59e0b"
-                  strokeWidth={2}
-                  fill="url(#spendGradient)"
-                />
-                <Area
-                  type="monotone"
-                  dataKey="hours"
-                  name="Hodiny"
-                  stroke="#8b5cf6"
-                  strokeWidth={2}
-                  fill="url(#hoursGradient)"
-                />
-              </AreaChart>
-            </ResponsiveContainer>
+            <SpendingTrendChart data={data.months} />
           </div>
         ) : (
           <div className="flex h-56 flex-col items-center justify-center gap-2 text-sm text-muted-foreground">

@@ -68,6 +68,7 @@ import { formatCzk, formatDate, PAYMENT_TYPES, paymentTypeLabel } from "@/lib/fo
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { EmptyStateBox } from "@/components/empty-state-box";
+import { useDebouncedValue } from "@/hooks/use-debounced-value";
 
 // ===== Sorting =====
 type SortKey =
@@ -144,6 +145,8 @@ export function PaymentsTab({ projectId }: { projectId: string }) {
   const [addOpen, setAddOpen] = useState(false);
   const [editPayment, setEditPayment] = useState<Payment | null>(null);
   const [search, setSearch] = useState("");
+  // Debounce search so filter only re-runs 250ms after typing stops
+  const debouncedSearch = useDebouncedValue(search, 250);
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [sortBy, setSortBy] = useState<SortKey>("date-desc");
 
@@ -187,8 +190,8 @@ export function PaymentsTab({ projectId }: { projectId: string }) {
   // Apply filters to both lists
   const filterFn = (p: Payment) => {
     if (typeFilter !== "all" && p.type !== typeFilter) return false;
-    if (search.trim()) {
-      const q = search.toLowerCase();
+    if (debouncedSearch.trim()) {
+      const q = debouncedSearch.toLowerCase();
       const text = `${p.description ?? ""} ${p.vendor ?? ""} ${p.budgetItem?.category ?? ""} ${p.budgetItem?.subcategory ?? ""} ${p.contact?.name ?? ""}`.toLowerCase();
       if (!text.includes(q)) return false;
     }

@@ -65,6 +65,7 @@ import { formatNumber, formatDate, WORKER_TYPES, workerTypeLabel } from "@/lib/f
 import { toast } from "sonner";
 import { EmptyStateBox } from "@/components/empty-state-box";
 import { SearchableSelect } from "@/components/ui/searchable-select";
+import { useDebouncedValue } from "@/hooks/use-debounced-value";
 
 type SortKey = "date" | "worker" | "hours" | "workerType";
 
@@ -87,6 +88,8 @@ export function TimeTab({ projectId }: { projectId: string }) {
   const [addOpen, setAddOpen] = useState(false);
   const [editEntry, setEditEntry] = useState<TimeEntry | null>(null);
   const [search, setSearch] = useState("");
+  // Debounce search so filter only re-runs 250ms after typing stops
+  const debouncedSearch = useDebouncedValue(search, 250);
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [sortBy, setSortBy] = useState<SortKey>("date");
@@ -104,8 +107,8 @@ export function TimeTab({ projectId }: { projectId: string }) {
     const arr = (entries ?? []).filter((t) => {
       if (typeFilter !== "all" && t.workerType !== typeFilter) return false;
       if (categoryFilter !== "all" && (t.budgetItem?.category ?? "") !== categoryFilter) return false;
-      if (search.trim()) {
-        const q = search.toLowerCase();
+      if (debouncedSearch.trim()) {
+        const q = debouncedSearch.toLowerCase();
         const text = `${t.workerName} ${t.description ?? ""} ${t.budgetItem?.category ?? ""} ${t.budgetItem?.subcategory ?? ""}`.toLowerCase();
         if (!text.includes(q)) return false;
       }
@@ -132,7 +135,7 @@ export function TimeTab({ projectId }: { projectId: string }) {
       }
     });
     return arr;
-  }, [entries, search, typeFilter, categoryFilter, sortBy]);
+  }, [entries, debouncedSearch, typeFilter, categoryFilter, sortBy]);
 
   const totalHours = filtered.reduce((s, t) => s + t.hours, 0);
 

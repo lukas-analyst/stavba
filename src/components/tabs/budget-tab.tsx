@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useRef, useEffect, useCallback } from "react";
+import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import {
   useBudgetItems,
   useUpdateBudgetItem,
@@ -144,6 +145,9 @@ export function BudgetTab({ projectId }: { projectId: string }) {
   const [completionFilter, setCompletionFilter] =
     useState<CompletionFilter>("all");
   const [search, setSearch] = useState("");
+  // Debounce search so the filter only re-runs 250ms after the user stops
+  // typing — avoids re-filtering 49+ items on every keystroke.
+  const debouncedSearch = useDebouncedValue(search, 250);
   const [addOpen, setAddOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<BudgetItem | null>(null);
   const [addTaskFor, setAddTaskFor] = useState<BudgetItem | null>(null);
@@ -231,15 +235,15 @@ export function BudgetTab({ projectId }: { projectId: string }) {
       if (completionFilter === "done" && !i.completed) return false;
       if (completionFilter === "todo" && (i.completed || i.rejected)) return false;
       if (completionFilter === "rejected" && !i.rejected) return false;
-      if (search.trim()) {
-        const q = search.toLowerCase();
+      if (debouncedSearch.trim()) {
+        const q = debouncedSearch.toLowerCase();
         const text =
           `${i.category} ${i.subcategory ?? ""} ${i.note ?? ""}`.toLowerCase();
         if (!text.includes(q)) return false;
       }
       return true;
     };
-  }, [phaseFilter, completionFilter, search]);
+  }, [phaseFilter, completionFilter, debouncedSearch]);
 
   // Filtered top-level items (parentId === null), where the parent matches
   // OR any of its children match.

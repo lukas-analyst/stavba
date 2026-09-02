@@ -143,6 +143,7 @@ export type Dashboard = DashboardData;
 export function useProjects() {
   return useQuery<Project[]>({
     queryKey: ["projects"],
+    staleTime: 60 * 1000, // 60s — projects list rarely changes
     queryFn: async () => {
       const res = await fetch("/api/projects");
       if (!res.ok) throw new Error("Failed to load projects");
@@ -245,6 +246,7 @@ export function useDeleteProject() {
 export function useBudgetItems(projectId: string | null) {
   return useQuery<BudgetItem[]>({
     queryKey: ["budget", projectId],
+    staleTime: 15 * 1000, // 15s — user edits budget often
     queryFn: async () => {
       const res = await fetch(`/api/projects/${projectId}/budget`);
       if (!res.ok) throw new Error("Failed to load budget");
@@ -506,6 +508,7 @@ export function useExportCsv(projectId: string) {
 export function usePayments(projectId: string | null) {
   return useQuery<Payment[]>({
     queryKey: ["payments", projectId],
+    staleTime: 15 * 1000, // 15s — user adds payments often
     queryFn: async () => {
       const res = await fetch(`/api/projects/${projectId}/payments`);
       if (!res.ok) throw new Error("Failed to load payments");
@@ -595,6 +598,7 @@ export function useDeletePayment(projectId: string) {
 export function useTimeEntries(projectId: string | null) {
   return useQuery<TimeEntry[]>({
     queryKey: ["time", projectId],
+    staleTime: 15 * 1000, // 15s — user adds time entries often
     queryFn: async () => {
       const res = await fetch(`/api/projects/${projectId}/time`);
       if (!res.ok) throw new Error("Failed to load time entries");
@@ -684,6 +688,7 @@ export function useDeleteTimeEntry(projectId: string) {
 export function useContacts(projectId: string | null) {
   return useQuery<Contact[]>({
     queryKey: ["contacts", projectId],
+    staleTime: 30 * 1000, // 30s — contacts change less often
     queryFn: async () => {
       const res = await fetch(`/api/projects/${projectId}/contacts`);
       if (!res.ok) throw new Error("Failed to load contacts");
@@ -746,6 +751,7 @@ export function useDeleteContact(projectId: string) {
 export function useDashboard(projectId: string | null) {
   return useQuery<Dashboard>({
     queryKey: ["dashboard", projectId],
+    staleTime: 60 * 1000, // 60s — heavy aggregation, cached server-side
     queryFn: async () => {
       const res = await fetch(`/api/projects/${projectId}/dashboard`);
       if (!res.ok) throw new Error("Failed to load dashboard");
@@ -778,6 +784,7 @@ export type WorkerStat = {
 export function useContactStats(projectId: string | null) {
   return useQuery<{ contactStats: ContactStat[]; workerStats: WorkerStat[] }>({
     queryKey: ["contactStats", projectId],
+    staleTime: 60 * 1000, // 60s — aggregated stats
     queryFn: async () => {
       const res = await fetch(`/api/projects/${projectId}/contact-stats`);
       if (!res.ok) throw new Error("Failed to load contact stats");
@@ -801,6 +808,7 @@ export function useSpendingTrend(projectId: string | null) {
     totals: { totalSpend: number; totalHours: number; paymentCount: number; timeEntryCount: number };
   }>({
     queryKey: ["spendingTrend", projectId],
+    staleTime: 5 * 60 * 1000, // 5min — historical data, rarely changes
     queryFn: async () => {
       const res = await fetch(`/api/projects/${projectId}/spending-trend`);
       if (!res.ok) throw new Error("Failed to load spending trend");
@@ -826,6 +834,7 @@ export type AuditLog = {
 export function useAuditLog(projectId: string | null) {
   return useQuery<AuditLog[]>({
     queryKey: ["auditLog", projectId],
+    staleTime: 30 * 1000, // 30s — audit log updates on mutations
     queryFn: async () => {
       const res = await fetch(`/api/projects/${projectId}/audit?limit=100`);
       if (!res.ok) throw new Error("Failed to load audit log");
@@ -855,6 +864,7 @@ export type Snapshot = {
 export function useSnapshots(projectId: string | null) {
   return useQuery<Snapshot[]>({
     queryKey: ["snapshots", projectId],
+    staleTime: 60 * 1000, // 60s — snapshots rarely change
     queryFn: async () => {
       const res = await fetch(`/api/projects/${projectId}/snapshots`);
       if (!res.ok) throw new Error("Failed to load snapshots");
@@ -908,6 +918,7 @@ export type Comment = {
 export function useComments(budgetItemId: string | null) {
   return useQuery<Comment[]>({
     queryKey: ["comments", budgetItemId],
+    staleTime: 15 * 1000, // 15s — comments update on mutations
     queryFn: async () => {
       const res = await fetch(`/api/budget-items/${budgetItemId}/comments`);
       if (!res.ok) throw new Error("Failed to load comments");
@@ -969,6 +980,7 @@ export type Note = {
 export function useNotes(projectId: string | null) {
   return useQuery<Note[]>({
     queryKey: ["notes", projectId],
+    staleTime: 15 * 1000, // 15s — notes update on mutations
     queryFn: async () => {
       const res = await fetch(`/api/projects/${projectId}/notes`);
       if (!res.ok) throw new Error("Failed to load notes");
