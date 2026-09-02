@@ -69,3 +69,5 @@ qa*.png
 s2-*.png
 screenshot-*.png
 worklog.md
+# Auto-generated version metadata (regenerated before each dev/build run)
+src/generated/

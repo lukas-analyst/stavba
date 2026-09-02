@@ -4,6 +4,7 @@ import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as SonnerToaster } from "@/components/ui/sonner";
 import { Providers } from "@/components/providers";
+import { VERSION_LABEL } from "@/generated/version";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -15,7 +16,7 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-const APP_TITLE = "Stavba (Beta) — Správa rozpočtu staveb";
+const APP_TITLE = `Stavba ${VERSION_LABEL} — Správa rozpočtu staveb`;
 const APP_DESCRIPTION =
   "Komplexní správa rozpočtu, nákladů a času pro stavby a rekonstrukce. Přehled projektů, plateb, práce i materiálu na jednom místě.";
 

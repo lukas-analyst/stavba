@@ -3,7 +3,9 @@
   "version": "1.0.0-beta",
   "private": true,
   "scripts": {
+    "predev": "bun run scripts/generate-version.ts",
     "dev": "next dev -p 3000 2>&1 | tee dev.log",
+    "prebuild": "bun run scripts/generate-version.ts",
     "build": "prisma generate && next build",
     "start": "next start",
     "lint": "eslint .",
@@ -11,7 +13,8 @@
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:reset": "prisma migrate reset",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "version": "bun run scripts/generate-version.ts"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

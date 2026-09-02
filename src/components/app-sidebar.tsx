@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { VERSION_LABEL, GIT_COMMIT_HASH, GIT_COMMIT_DATE, GIT_COMMIT_COUNT } from "@/generated/version";
 
 const STATUS_LABELS: Record<string, { label: string; color: string }> = {
   active: { label: "Aktivní", color: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300" },
@@ -375,7 +376,16 @@ export function AppSidebar({ onSelectProject }: { onSelectProject?: (id: string)
         </div>
         <p className="mt-2 flex items-center gap-1.5 text-[10px] text-muted-foreground">
           <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500" />
-          Stavba <span className="font-semibold text-foreground">v1.0.0-beta</span> · Neon PostgreSQL
+          <span>
+            Stavba{" "}
+            <span
+              className="font-semibold text-foreground"
+              title={`Git commit: ${GIT_COMMIT_HASH}\nDatum: ${GIT_COMMIT_DATE || "—"}\nPočet commitů: ${GIT_COMMIT_COUNT}\nBuild: ${VERSION_LABEL}`}
+            >
+              {VERSION_LABEL}
+            </span>{" "}
+            · Neon PostgreSQL
+          </span>
         </p>
       </div>
 

@@ -2,6 +2,30 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
+// ===== Server-side cache invalidation =====
+// After a mutation succeeds on the client, we also bust the server-side
+// Next.js cache (unstable_cache + revalidateTag) so the next dashboard
+// fetch returns fresh data instead of the stale 60-second-cached response.
+//
+// Tags are fixed strings ("dashboards", "spending-trends", "projects")
+// because Next.js's unstable_cache requires static tag strings.
+//
+// This is fire-and-forget — we don't await it and don't surface errors to
+// the user (the React Query client-side cache is invalidated separately
+// and will trigger a refetch regardless).
+export function bustServerCache(projectId: string, tags: string[] = ["dashboards"]) {
+  if (typeof window === "undefined") return; // server-side no-op
+  void projectId; // projectId is kept in the signature for API compatibility
+  fetch("/api/revalidate", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ tags }),
+    keepalive: true, // survives page navigation
+  }).catch(() => {
+    // Silent — server cache will expire via TTL (60s) anyway.
+  });
+}
+
 // ===== Types =====
 export type Project = {
   id: string;
@@ -106,83 +130,14 @@ export type TimeEntry = {
   contact?: { id: string; name: string; type: string } | null;
 };
 
-// Lightweight alert item returned by the dashboard API.
-// Uses rolled-up values for parent items (parent + children combined).
-export type AlertItem = {
-  id: string;
-  category: string;
-  subcategory: string | null;
-  phase: string;
-  planCost: number | null;
-  actualCost: number;
-  actualHours: number;
-  dateFrom: string | null;
-  dateTo: string | null;
-  completed: boolean;
-  rejected: boolean;
-  required: boolean;
-};
+// Re-export shared API types (so existing imports keep working).
+// The actual type definitions live in `./api-types` to avoid circular
+// imports with the server-side cache module.
+export type { AlertItem, DashboardProject, DashboardData } from "./api-types";
 
-export type Dashboard = {
-  project: Project;
-  totals: {
-    planTotal: number;
-    actualTotal: number;
-    remaining: number;
-    burnRate: number;
-    worstCase: number;
-    worstCaseRemaining: number;
-    hoursTotal: number;
-    daysPlanned: number;
-    itemCount: number;
-    requiredCount: number;
-    completedCount: number;
-    savedTotal: number;
-    projectedFinal: number;
-    projectedOverrun: number;
-    avgOverrunRatio: number;
-  };
-  byPhase: {
-    phase: string;
-    plan: number;
-    actual: number;
-    hours: number;
-    plannedHours: number;
-    count: number;
-    completedCount: number;
-    worstCase: number;
-    costOverrun: number;
-    timeOverrun: number;
-    inProgress: boolean;
-    startingSoon: boolean;
-  }[];
-  byCategory: { category: string; plan: number; actual: number; hours: number; count: number }[];
-  alerts: {
-    inProgress: AlertItem[];
-    upcoming: AlertItem[];
-    overdue: AlertItem[];
-    overBudget: AlertItem[];
-    unscheduled: AlertItem[];
-  };
-  timeline: {
-    id: string;
-    category: string;
-    subcategory: string | null;
-    phase: string;
-    dateFrom: string | null;
-    dateTo: string | null;
-    planCost: number | null;
-    actualCost: number;
-    planDays: number | null;
-    required: boolean;
-    completed: boolean;
-    rejected: boolean;
-  }[];
-  recent: {
-    payments: Payment[];
-    timeEntries: TimeEntry[];
-  };
-};
+// Local alias so the `Dashboard` type name stays the same for existing code.
+import type { DashboardData } from "./api-types";
+export type Dashboard = DashboardData;
 
 // ===== Projects =====
 export function useProjects() {
@@ -260,6 +215,7 @@ export function useUpdateProject(id: string) {
       qc.invalidateQueries({ queryKey: ["projects"] });
       qc.invalidateQueries({ queryKey: ["project", id] });
       qc.invalidateQueries({ queryKey: ["dashboard", id] });
+      bustServerCache(id);
     },
     mutationFn: async (data: Partial<Project>) => {
       const res = await fetch(`/api/projects/${id}`, {
@@ -313,6 +269,7 @@ export function useCreateBudgetItem(projectId: string) {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["budget", projectId] });
       qc.invalidateQueries({ queryKey: ["dashboard", projectId] });
+      bustServerCache(projectId);
     },
   });
 }
@@ -340,6 +297,7 @@ export function useUpdateBudgetItem(projectId: string) {
     onSettled: () => {
       qc.invalidateQueries({ queryKey: ["budget", projectId] });
       qc.invalidateQueries({ queryKey: ["dashboard", projectId] });
+      bustServerCache(projectId);
     },
     mutationFn: async ({ id, data }: { id: string; data: Partial<BudgetItem> }) => {
       const res = await fetch(`/api/budget-items/${id}`, {
@@ -364,6 +322,7 @@ export function useDeleteBudgetItem(projectId: string) {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["budget", projectId] });
       qc.invalidateQueries({ queryKey: ["dashboard", projectId] });
+      bustServerCache(projectId);
     },
   });
 }
@@ -379,6 +338,7 @@ export function useDuplicateBudgetItem(projectId: string) {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["budget", projectId] });
       qc.invalidateQueries({ queryKey: ["dashboard", projectId] });
+      bustServerCache(projectId);
     },
   });
 }
@@ -451,6 +411,7 @@ export function useReorder(projectId: string) {
       qc.invalidateQueries({ queryKey: ["budget", projectId] });
       qc.invalidateQueries({ queryKey: ["projects"] });
       qc.invalidateQueries({ queryKey: ["dashboard", projectId] });
+      bustServerCache(projectId);
     },
     mutationFn: async (data: {
       items?: { id: string; sortOrder: number }[];
@@ -570,6 +531,7 @@ export function useCreatePayment(projectId: string) {
       qc.invalidateQueries({ queryKey: ["payments", projectId] });
       qc.invalidateQueries({ queryKey: ["budget", projectId] });
       qc.invalidateQueries({ queryKey: ["dashboard", projectId] });
+      bustServerCache(projectId);
     },
   });
 }
@@ -598,6 +560,7 @@ export function useUpdatePayment(projectId: string) {
       qc.invalidateQueries({ queryKey: ["payments", projectId] });
       qc.invalidateQueries({ queryKey: ["budget", projectId] });
       qc.invalidateQueries({ queryKey: ["dashboard", projectId] });
+      bustServerCache(projectId);
     },
     mutationFn: async ({ id, data }: { id: string; data: Partial<Payment> }) => {
       const res = await fetch(`/api/payments/${id}`, {
@@ -623,6 +586,7 @@ export function useDeletePayment(projectId: string) {
       qc.invalidateQueries({ queryKey: ["payments", projectId] });
       qc.invalidateQueries({ queryKey: ["budget", projectId] });
       qc.invalidateQueries({ queryKey: ["dashboard", projectId] });
+      bustServerCache(projectId);
     },
   });
 }
@@ -656,6 +620,7 @@ export function useCreateTimeEntry(projectId: string) {
       qc.invalidateQueries({ queryKey: ["time", projectId] });
       qc.invalidateQueries({ queryKey: ["budget", projectId] });
       qc.invalidateQueries({ queryKey: ["dashboard", projectId] });
+      bustServerCache(projectId);
     },
   });
 }
@@ -684,6 +649,7 @@ export function useUpdateTimeEntry(projectId: string) {
       qc.invalidateQueries({ queryKey: ["time", projectId] });
       qc.invalidateQueries({ queryKey: ["budget", projectId] });
       qc.invalidateQueries({ queryKey: ["dashboard", projectId] });
+      bustServerCache(projectId);
     },
     mutationFn: async ({ id, data }: { id: string; data: Partial<TimeEntry> & { hours?: number } }) => {
       const res = await fetch(`/api/time-entries/${id}`, {
@@ -709,6 +675,7 @@ export function useDeleteTimeEntry(projectId: string) {
       qc.invalidateQueries({ queryKey: ["time", projectId] });
       qc.invalidateQueries({ queryKey: ["budget", projectId] });
       qc.invalidateQueries({ queryKey: ["dashboard", projectId] });
+      bustServerCache(projectId);
     },
   });
 }
@@ -770,6 +737,7 @@ export function useDeleteContact(projectId: string) {
       qc.invalidateQueries({ queryKey: ["contacts", projectId] });
       qc.invalidateQueries({ queryKey: ["contactStats", projectId] });
       qc.invalidateQueries({ queryKey: ["dashboard", projectId] });
+      bustServerCache(projectId);
     },
   });
 }
