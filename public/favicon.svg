@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0284c7"/>
+      <stop offset="100%" stop-color="#0f172a"/>
+    </linearGradient>
+  </defs>
+  
+  <rect width="64" height="64" rx="14" fill="url(#bgGrad2)"/>
+  
+  <!-- Roof Blueprint Line -->
+  <path d="M14 28 L32 14 L50 28" stroke="#38bdf8" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  
+  <!-- House / Chart Columns -->
+  <rect x="20" y="34" width="6" height="16" rx="1" fill="#ffffff" opacity="0.5"/>
+  <rect x="29" y="28" width="6" height="22" rx="1" fill="#ffffff" opacity="0.8"/>
+  <rect x="38" y="22" width="6" height="28" rx="1" fill="#4ade80"/>
+  
+  <!-- Foundation Line -->
+  <line x1="14" y1="50" x2="50" y2="50" stroke="#ffffff" stroke-width="3" stroke-linecap="round"/>
+</svg>

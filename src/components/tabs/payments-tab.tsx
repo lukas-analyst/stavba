@@ -1159,18 +1159,19 @@ function PaymentDialogInner({
           </div>
           <div className="space-y-2">
             <Label htmlFor="contact">Kontakt (volitelné)</Label>
-            <Select value={contactId} onValueChange={setContactId}>
-              <SelectTrigger id="contact">
-                <SelectValue placeholder="Bez kontaktu" />
-              </SelectTrigger>
-              <SelectContent className="max-h-60">
-                {contacts.map((c) => (
-                  <SelectItem key={c.id} value={c.id}>
-                    {c.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <SearchableSelect
+              id="contact"
+              options={contacts.map((c) => ({
+                value: c.id,
+                label: c.name,
+                hint: `${c.type}${c.role ? ` · ${c.role}` : ""}${c.company ? ` · ${c.company}` : ""}`,
+              }))}
+              value={contactId}
+              onChange={setContactId}
+              placeholder="Bez kontaktu"
+              searchPlaceholder="Hledat kontakt…"
+              emptyText="Žádné kontakty nenalezeny"
+            />
           </div>
         </div>
         <div className="grid grid-cols-2 gap-3">

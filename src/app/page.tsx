@@ -7,9 +7,8 @@ import { useAppStore, type TabId } from "@/lib/store";
 import { AppSidebar } from "@/components/app-sidebar";
 import { ProjectDetail } from "@/components/project-detail";
 import { EmptyState } from "@/components/empty-state";
-import { GlobalSearchDialog } from "@/components/global-search-dialog";
 import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
-import { Loader2, PanelLeftClose, PanelLeft, Search, Menu, X } from "lucide-react";
+import { Loader2, PanelLeftClose, PanelLeft, Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 // Valid tab ids — used to validate the `?tab=` URL param.
@@ -62,7 +61,6 @@ function HomeContent() {
   const [desktopCollapsed, setDesktopCollapsed] = useState(false);
   // Mobile: sidebar is a drawer (overlay), closed by default
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [searchOpen, setSearchOpen] = useState(false);
 
   useKeyboardShortcuts();
 
@@ -76,12 +74,9 @@ function HomeContent() {
         setDesktopCollapsed((prev) => !prev);
       }
     };
-    const searchHandler = () => setSearchOpen(true);
     window.addEventListener("stavba:toggle-sidebar", toggleHandler);
-    window.addEventListener("stavba:global-search", searchHandler);
     return () => {
       window.removeEventListener("stavba:toggle-sidebar", toggleHandler);
-      window.removeEventListener("stavba:global-search", searchHandler);
     };
   }, []);
 
@@ -217,27 +212,7 @@ function HomeContent() {
           <div className="flex-1 truncate text-sm font-semibold">
             {selectedProject ? selectedProject.name : "Stavba"}
           </div>
-          <button
-            onClick={() => setSearchOpen(true)}
-            className="flex h-9 w-9 items-center justify-center rounded-lg border bg-background hover:bg-muted"
-            aria-label="Hledat"
-          >
-            <Search className="h-4 w-4" />
-          </button>
         </div>
-
-        {/* Desktop search button (fixed, top-right) */}
-        <button
-          onClick={() => setSearchOpen(true)}
-          className="fixed right-4 top-4 z-30 hidden items-center gap-2 rounded-lg border bg-background/80 px-3 py-1.5 text-xs text-muted-foreground shadow-sm backdrop-blur hover:bg-background hover:text-foreground md:flex"
-          aria-label="Globální vyhledávání"
-        >
-          <Search className="h-3.5 w-3.5" />
-          <span>Hledat</span>
-          <kbd className="rounded border bg-muted px-1 py-0.5 text-[10px]">
-            ⌘K
-          </kbd>
-        </button>
 
         {isLoading ? (
           <div className="flex h-full items-center justify-center">
@@ -250,8 +225,6 @@ function HomeContent() {
         )}
       </main>
 
-      {/* Global search dialog */}
-      <GlobalSearchDialog open={searchOpen} onOpenChange={setSearchOpen} />
     </div>
   );
 }

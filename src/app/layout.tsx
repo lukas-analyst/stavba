@@ -34,10 +34,10 @@ export const metadata: Metadata = {
   authors: [{ name: "Stavba" }],
   icons: {
     icon: [
-      { url: "/logo.svg", type: "image/svg+xml" },
+      { url: "/favicon.svg", type: "image/svg+xml" },
     ],
-    shortcut: ["/logo.svg"],
-    apple: ["/logo.svg"],
+    shortcut: ["/favicon.svg"],
+    apple: ["/favicon.svg"],
   },
   openGraph: {
     title: APP_TITLE,
