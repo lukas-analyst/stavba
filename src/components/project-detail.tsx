@@ -41,7 +41,7 @@ const DashboardTab = dynamic(() => import("@/components/tabs/dashboard-tab").the
   ssr: false,
   loading: () => <TabSkeleton />,
 });
-const BudgetTab = dynamic(() => import("@/components/tabs/budget-tab").then(m => m.BudgetTab), {
+const BudgetTab = dynamic(() => import("@/components/tabs/budget-tab").then(m => m.DndBudgetTab), {
   ssr: false,
   loading: () => <TabSkeleton />,
 });

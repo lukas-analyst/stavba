@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useRef, useEffect, useCallback } from "react";
+import { useState, useMemo, useRef, useEffect, useCallback, createContext, useContext } from "react";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import {
   useBudgetItems,
@@ -69,6 +69,7 @@ import {
   Download,
   Copy,
   X,
+  GripVertical,
 } from "lucide-react";
 import {
   formatCzk,
@@ -81,6 +82,133 @@ import {
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { BudgetItemDialog } from "@/components/budget-item-dialog";
+import {
+  DndContext,
+  DragOverlay,
+  PointerSensor,
+  TouchSensor,
+  KeyboardSensor,
+  useSensor,
+  useSensors,
+  closestCorners,
+  type DragEndEvent,
+  type Active,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  useSortable,
+  verticalListSortingStrategy,
+  sortableKeyboardCoordinates,
+  arrayMove,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+
+// =====================================================================
+// DnD layer for the Budget tab
+// ---------------------------------------------------------------------
+// Wraps the existing BudgetTab component with a DndContext that enables
+// drag-and-drop reordering of:
+//   1. Categories (outer SortableContext)
+//   2. Budget items within a category (inner SortableContext per category)
+//
+// Drag handles (GripVertical icon) are shown on hover. Touch devices
+// require a 200ms long-press to start dragging (so normal scrolling
+// isn't interrupted). Keyboard navigation is supported via
+// sortableKeyboardCoordinates.
+//
+// On drag end, the useReorder hook sends the new sort order to the API
+// with optimistic updates — the UI updates instantly and rolls back
+// on error.
+// =====================================================================
+
+// Types for DnD item identification
+type DndItemType =
+  | { kind: "category"; id: string; categoryName: string }
+  | { kind: "item"; id: string; categoryName: string; label: string };
+
+// Module-level handler registry — BudgetTab registers its onDragEnd handler
+// here so DndBudgetTab (which wraps it in DndContext) can call it.
+let dragEndHandler: ((event: DragEndEvent) => void) | null = null;
+
+export function setDragEndHandler(fn: ((event: DragEndEvent) => void) | null) {
+  dragEndHandler = fn;
+}
+
+// =====================================================================
+// Wrapper: DndBudgetTab — wraps BudgetTab with DnD context
+// =====================================================================
+export function DndBudgetTab({ projectId }: { projectId: string }) {
+  const [activeDrag, setActiveDrag] = useState<Active | null>(null);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(TouchSensor, {
+      activationConstraint: { delay: 200, tolerance: 5 },
+    }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
+
+  return (
+    <DndContext
+      sensors={sensors}
+      collisionDetection={closestCorners}
+      onDragStart={(e) => setActiveDrag(e.active)}
+      onDragEnd={(e) => {
+        setActiveDrag(null);
+        if (dragEndHandler) dragEndHandler(e);
+      }}
+      onDragCancel={() => setActiveDrag(null)}
+    >
+      <BudgetTab projectId={projectId} />
+      <DragOverlay>
+        {activeDrag ? (
+          <DragPreviewItem activeDrag={activeDrag} />
+        ) : null}
+      </DragOverlay>
+    </DndContext>
+  );
+}
+
+// =====================================================================
+// DragOverlay preview — shown at the cursor position while dragging
+// =====================================================================
+function DragPreviewItem({ activeDrag }: { activeDrag: Active }) {
+  const data = activeDrag.data.current as DndItemType | undefined;
+  if (!data) return null;
+
+  if (data.kind === "category") {
+    return (
+      <div className="flex items-center gap-2 rounded-lg border bg-card px-4 py-2.5 shadow-lg">
+        <GripVertical className="h-4 w-4 text-muted-foreground" />
+        <span className="text-sm font-bold">{data.categoryName}</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex items-center gap-2 rounded-md border bg-card px-3 py-2 shadow-lg">
+      <GripVertical className="h-4 w-4 text-muted-foreground" />
+      <span className="text-sm font-medium">{data.label}</span>
+    </div>
+  );
+}
+
+// Context to pass drag listeners from SortableBudgetItemRows to BudgetRow
+const RowDragContext = createContext<{
+  listeners: ReturnType<typeof useSortable>["listeners"];
+  isDragging: boolean;
+  sortableRef: (el: HTMLElement | null) => void;
+  sortableStyle: React.CSSProperties;
+  sortableAttributes: Record<string, unknown>;
+} | null>(null);
+
+function useRowDragListeners() {
+  return useContext(RowDragContext);
+}
+
+// =====================================================================
+// The main BudgetTab component (renamed from original BudgetTab)
+// =====================================================================
 
 // Rolled-up totals for an item (own + children sums)
 type RolledUp = {
@@ -115,9 +243,6 @@ function computeRolledUp(item: BudgetItem, children: BudgetItem[]): RolledUp {
   };
 }
 
-// Compute saved for an item: only if completed.
-// For parents with children: saved = max(0, rolledUp.planCost - rolledUp.actualCost) when completed
-// For items without children: same logic on own values
 function computeSaved(item: BudgetItem, children: BudgetItem[]): number | null {
   if (!item.completed) return null;
   const rolled = computeRolledUp(item, children);
@@ -133,7 +258,7 @@ const COMPLETION_OPTIONS = [
 
 type CompletionFilter = (typeof COMPLETION_OPTIONS)[number]["id"];
 
-export function BudgetTab({ projectId }: { projectId: string }) {
+function BudgetTab({ projectId }: { projectId: string }) {
   const { data: items, isLoading } = useBudgetItems(projectId);
   const { data: projects } = useProjects();
   const project = projects?.find((p) => p.id === projectId);
@@ -145,16 +270,11 @@ export function BudgetTab({ projectId }: { projectId: string }) {
   const [completionFilter, setCompletionFilter] =
     useState<CompletionFilter>("all");
   const [search, setSearch] = useState("");
-  // Debounce search so the filter only re-runs 250ms after the user stops
-  // typing — avoids re-filtering 49+ items on every keystroke.
   const debouncedSearch = useDebouncedValue(search, 250);
   const [addOpen, setAddOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<BudgetItem | null>(null);
   const [addTaskFor, setAddTaskFor] = useState<BudgetItem | null>(null);
-  // ID of the row that should be focused / scrolled to / highlighted after
-  // being created or updated. Cleared automatically after the animation ends.
   const [highlightId, setHighlightId] = useState<string | null>(null);
-  // Registry of row DOM elements keyed by item id — used for scrollIntoView
   const rowRefs = useRef<Map<string, HTMLTableRowElement>>(new Map());
 
   const registerRow = useCallback((id: string, el: HTMLTableRowElement | null) => {
@@ -163,9 +283,6 @@ export function BudgetTab({ projectId }: { projectId: string }) {
     else map.delete(id);
   }, []);
 
-  // Track whether we've already scrolled for the current highlightId.
-  // This prevents re-scrolling on every `items` refetch while keeping the
-  // highlight visible until the animation completes.
   const scrolledRef = useRef<string | null>(null);
 
   useEffect(() => {
@@ -173,15 +290,11 @@ export function BudgetTab({ projectId }: { projectId: string }) {
       scrolledRef.current = null;
       return;
     }
-    // Try to scroll — the row might not be in the DOM yet (React Query
-    // refetch is async, takes ~300-500ms after mutation).
-    // We retry on every `items` change until we find it.
     const el = rowRefs.current.get(highlightId);
     if (el && scrolledRef.current !== highlightId) {
       scrolledRef.current = highlightId;
       el.scrollIntoView({ behavior: "smooth", block: "center" });
     }
-    // Clear the highlight after the animation completes (2.4s)
     const t = setTimeout(() => {
       setHighlightId(null);
       scrolledRef.current = null;
@@ -189,25 +302,13 @@ export function BudgetTab({ projectId }: { projectId: string }) {
     return () => clearTimeout(t);
   }, [highlightId, items]);
 
-  // If the highlighted item is no longer present in the items list AFTER
-  // a grace period (e.g. it was deleted or filtered out), clear the
-  // highlight to avoid a stuck state.
-  // We use a 1.5s grace period so that newly-created items (which aren't
-  // yet in `items` because React Query refetch is async) don't immediately
-  // clear the highlight.
   useEffect(() => {
     if (!highlightId) return;
-    // Check if the item exists in the current items list
     const exists = items?.some((i) => i.id === highlightId);
     if (!exists) {
-      // Item not found — wait 1.5s for refetch to complete, then clear
-      // if it's still not there.
       const t = setTimeout(() => {
-        // Re-check inside timeout — items may have updated by now
         setHighlightId((cur) => {
           if (!cur) return cur;
-          // If item now exists, keep the highlight (the main useEffect
-          // will handle scrolling + clearing)
           if (items?.some((i) => i.id === cur)) return cur;
           return null;
         });
@@ -234,7 +335,6 @@ export function BudgetTab({ projectId }: { projectId: string }) {
     });
   };
 
-  // Build children map once from ALL items (not filtered) — preserves real hierarchy
   const childrenMap = useMemo(() => {
     const map = new Map<string, BudgetItem[]>();
     for (const it of items ?? []) {
@@ -263,8 +363,6 @@ export function BudgetTab({ projectId }: { projectId: string }) {
     };
   }, [phaseFilter, completionFilter, debouncedSearch]);
 
-  // Filtered top-level items (parentId === null), where the parent matches
-  // OR any of its children match.
   const filteredTopLevel = useMemo(() => {
     const matches = itemMatches;
     return (items ?? [])
@@ -276,7 +374,6 @@ export function BudgetTab({ projectId }: { projectId: string }) {
       });
   }, [items, childrenMap, itemMatches]);
 
-  // Group filtered top-level items by category, preserving saved order
   const projectCategoryOrder = project?.categoryOrder;
   const savedCategoryOrder = useMemo(() => {
     if (!projectCategoryOrder) return [];
@@ -307,14 +404,13 @@ export function BudgetTab({ projectId }: { projectId: string }) {
     return entries;
   }, [filteredTopLevel, savedCategoryOrder]);
 
-  // Category totals — sum rolled-up top-level items (own + children) to avoid double-counting
   const categoryTotals = useMemo(() => {
     const map = new Map<
       string,
       { plan: number; actual: number; count: number; saved: number }
     >();
     for (const it of items ?? []) {
-      if (it.parentId) continue; // skip children, they're included in parent rollup
+      if (it.parentId) continue;
       const cur =
         map.get(it.category) ?? { plan: 0, actual: 0, count: 0, saved: 0 };
       const children = childrenMap.get(it.id) ?? [];
@@ -330,7 +426,6 @@ export function BudgetTab({ projectId }: { projectId: string }) {
     return map;
   }, [items, childrenMap]);
 
-  // Grand totals — also rolled-up (sum only top-level items)
   const grandPlan = (items ?? [])
     .filter((i) => !i.parentId)
     .reduce((s, i) => {
@@ -356,7 +451,33 @@ export function BudgetTab({ projectId }: { projectId: string }) {
     (i) => !i.parentId && i.completed,
   ).length;
 
-  // ===== Reorder handlers =====
+  // ===== DnD handlers =====
+
+  // Handle item reorder within a category
+  const handleItemReorder = (
+    categoryName: string,
+    oldIndex: number,
+    newIndex: number,
+  ) => {
+    const catItems = grouped.find(([c]) => c === categoryName)?.[1] ?? [];
+    if (oldIndex === newIndex || !catItems.length) return;
+    const reordered = arrayMove(catItems, oldIndex, newIndex);
+    const newSortOrders = reordered.map((it, idx) => ({
+      id: it.id,
+      sortOrder: idx,
+    }));
+    reorder.mutate({ items: newSortOrders });
+  };
+
+  // Handle category reorder
+  const handleCategoryReorder = (oldIndex: number, newIndex: number) => {
+    const allCats = grouped.map(([c]) => c);
+    if (oldIndex === newIndex || !allCats.length) return;
+    const reordered = arrayMove(allCats, oldIndex, newIndex);
+    reorder.mutate({ categoryOrder: reordered });
+  };
+
+  // Legacy move handlers (for arrow buttons — kept as fallback)
   const moveItem = (catItems: BudgetItem[], currentIndex: number, direction: -1 | 1) => {
     const targetIndex = currentIndex + direction;
     if (targetIndex < 0 || targetIndex >= catItems.length) return;
@@ -381,10 +502,58 @@ export function BudgetTab({ projectId }: { projectId: string }) {
     reorder.mutate({ categoryOrder: reordered });
   };
 
+  // Register DnD drag-end handler so DndBudgetTab wrapper can call it.
+  // Uses the module-level `setDragEndHandler` to communicate between
+  // the DndContext wrapper (DndBudgetTab) and the BudgetTab component.
+  // This avoids prop drilling while keeping the DndContext at the top.
+  useEffect(() => {
+    const handler = (event: DragEndEvent) => {
+      const { active, over } = event;
+      if (!over || active.id === over.id) return;
+
+      const activeId = String(active.id);
+      const overId = String(over.id);
+
+      // Category drag: "cat:XXX" IDs
+      if (activeId.startsWith("cat:") && overId.startsWith("cat:")) {
+        const oldIndex = grouped.findIndex(([c]) => `cat:${c}` === activeId);
+        const newIndex = grouped.findIndex(([c]) => `cat:${c}` === overId);
+        if (oldIndex !== -1 && newIndex !== -1) {
+          const allCats = grouped.map(([c]) => c);
+          const reordered = arrayMove(allCats, oldIndex, newIndex);
+          reorder.mutate({ categoryOrder: reordered });
+        }
+        return;
+      }
+
+      // Item drag: "item:XXX" IDs — must be within same category
+      if (activeId.startsWith("item:") && overId.startsWith("item:")) {
+        const activeItemId = activeId.slice(5);
+        const overItemId = overId.slice(5);
+        // Find which category the items belong to
+        for (const [categoryName, catItems] of grouped) {
+          const oldIndex = catItems.findIndex((it) => it.id === activeItemId);
+          const newIndex = catItems.findIndex((it) => it.id === overItemId);
+          if (oldIndex !== -1 && newIndex !== -1) {
+            const reordered = arrayMove(catItems, oldIndex, newIndex);
+            const newSortOrders = reordered.map((it, idx) => ({
+              id: it.id,
+              sortOrder: idx,
+            }));
+            reorder.mutate({ items: newSortOrders });
+            return;
+          }
+        }
+      }
+    };
+
+    setDragEndHandler(handler);
+    return () => setDragEndHandler(null);
+  }, [grouped, reorder]);
+
   if (isLoading) {
     return (
       <div className="space-y-3">
-        {/* Toolbar skeleton */}
         <div className="flex flex-wrap items-center gap-2">
           <Skeleton className="h-9 w-56" />
           <Skeleton className="h-9 w-44" />
@@ -396,7 +565,6 @@ export function BudgetTab({ projectId }: { projectId: string }) {
             <Skeleton className="h-9 w-20" />
           </div>
         </div>
-        {/* Table skeleton */}
         <div className="overflow-hidden rounded-lg border">
           <div className="border-b bg-muted/40 px-4 py-2.5">
             <Skeleton className="h-4 w-full" />
@@ -410,6 +578,9 @@ export function BudgetTab({ projectId }: { projectId: string }) {
       </div>
     );
   }
+
+  // Category IDs for the outer SortableContext
+  const categoryIds = grouped.map(([cat]) => `cat:${cat}`);
 
   return (
     <div className="space-y-4">
@@ -438,7 +609,6 @@ export function BudgetTab({ projectId }: { projectId: string }) {
             ))}
           </SelectContent>
         </Select>
-        {/* Completion filter pills */}
         <div className="flex items-center gap-0.5 rounded-md border bg-muted/40 p-0.5">
           {COMPLETION_OPTIONS.map((opt) => (
             <button
@@ -510,197 +680,121 @@ export function BudgetTab({ projectId }: { projectId: string }) {
         </div>
       </div>
 
-      {/* Budget table grouped by category */}
-      <div className="space-y-3">
-        {grouped.length === 0 && (
-          <div className="rounded-lg border border-dashed py-12 text-center text-sm text-muted-foreground">
-            Žádné položky neodpovídají filtru.
-          </div>
-        )}
-        {grouped.map(([category, catItems], groupIndex) => {
-          const collapsed = collapsedCats.has(category);
-          const totals = categoryTotals.get(category) ?? {
-            plan: 0,
-            actual: 0,
-            count: 0,
-            saved: 0,
-          };
-          const burn = totals.plan > 0 ? (totals.actual / totals.plan) * 100 : 0;
-          return (
-            <Collapsible
-              key={category}
-              open={!collapsed}
-              onOpenChange={() => toggleCat(category)}
-              className="rounded-lg border bg-card"
-            >
-              <CollapsibleTrigger asChild>
-                <button className="group flex w-full items-center gap-2 px-4 py-2.5 text-left hover:bg-muted/50">
-                  {collapsed ? (
-                    <ChevronRight className="h-4 w-4" />
-                  ) : (
-                    <ChevronDown className="h-4 w-4" />
-                  )}
-                  <span className="text-sm font-bold">{category}</span>
-                  <Badge variant="secondary" className="text-[10px]">
-                    {totals.count}
-                  </Badge>
-                  {totals.saved > 0 && (
-                    <Badge variant="outline" className="text-[10px] text-emerald-700">
-                      <PiggyBank className="mr-1 h-2.5 w-2.5" />
-                      {formatCzk(totals.saved)}
-                    </Badge>
-                  )}
-                  <div className="ml-auto flex items-center gap-4 text-xs">
-                    <span className="text-muted-foreground">
-                      {formatCzk(totals.actual)} / {formatCzk(totals.plan)}
-                    </span>
-                    <div className="h-1.5 w-24 overflow-hidden rounded-full bg-muted">
-                      <div
-                        className={cn(
-                          "h-full rounded-full",
-                          burn > 100
-                            ? "bg-rose-500"
-                            : burn > 80
-                              ? "bg-amber-500"
-                              : "bg-emerald-500",
-                        )}
-                        style={{ width: `${Math.min(burn, 100)}%` }}
-                      />
-                    </div>
-                    <span
-                      className={cn(
-                        "font-semibold",
-                        burn > 100
-                          ? "text-rose-600"
-                          : burn > 80
-                            ? "text-amber-600"
-                            : "text-emerald-600",
-                      )}
-                    >
-                      {burn.toFixed(0)}%
-                    </span>
-                  </div>
-                  {/* Category reorder arrows */}
-                  <span className="ml-1 flex flex-col">
-                    <span
-                      role="button"
-                      tabIndex={0}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        moveCategory(category, -1);
-                      }}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          e.stopPropagation();
-                          moveCategory(category, -1);
-                        }
-                      }}
-                      className={cn(
-                        "flex h-3.5 w-3.5 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground",
-                        groupIndex === 0 && "pointer-events-none opacity-30",
-                      )}
-                      aria-label="Přesunout kategorii nahoru"
-                    >
-                      <ArrowUp className="h-3 w-3" />
-                    </span>
-                    <span
-                      role="button"
-                      tabIndex={0}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        moveCategory(category, 1);
-                      }}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          e.stopPropagation();
-                          moveCategory(category, 1);
-                        }
-                      }}
-                      className={cn(
-                        "flex h-3.5 w-3.5 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground",
-                        groupIndex === grouped.length - 1 &&
-                          "pointer-events-none opacity-30",
-                      )}
-                      aria-label="Přesunout kategorii dolů"
-                    >
-                      <ArrowDown className="h-3 w-3" />
-                    </span>
-                  </span>
-                </button>
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow className="bg-muted/40 hover:bg-muted/40">
-                      <TableHead className="w-12"></TableHead>
-                      <TableHead className="min-w-[200px]">Položka</TableHead>
-                      <TableHead className="w-28">Fáze</TableHead>
-                      <TableHead className="w-28 text-right">Plán (Kč)</TableHead>
-                      <TableHead className="w-20 text-right">Dny</TableHead>
-                      <TableHead className="w-28">Datum od</TableHead>
-                      <TableHead className="w-28">Datum do</TableHead>
-                      <TableHead className="w-28 text-right">Skut. (Kč)</TableHead>
-                      <TableHead className="w-20 text-right">Hod.</TableHead>
-                      <TableHead className="w-36 text-center">Stav</TableHead>
-                      <TableHead className="w-8"></TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {catItems.length === 0 && (
-                      <TableRow>
-                        <TableCell colSpan={11} className="py-8 text-center text-sm text-muted-foreground">
-                          Žádné položky v této kategorii.
-                        </TableCell>
+      {/* Budget table grouped by category — wrapped in SortableContext for category DnD */}
+      <SortableContext items={categoryIds} strategy={verticalListSortingStrategy}>
+        <div className="space-y-3">
+          {grouped.length === 0 && (
+            <div className="rounded-lg border border-dashed py-12 text-center text-sm text-muted-foreground">
+              Žádné položky neodpovídají filtru.
+            </div>
+          )}
+          {grouped.map(([category, catItems], groupIndex) => {
+            const collapsed = collapsedCats.has(category);
+            const totals = categoryTotals.get(category) ?? {
+              plan: 0,
+              actual: 0,
+              count: 0,
+              saved: 0,
+            };
+            const burn = totals.plan > 0 ? (totals.actual / totals.plan) * 100 : 0;
+            const sortableId = `cat:${category}`;
+            const itemIds = catItems.map((it) => `item:${it.id}`);
+
+            return (
+              <SortableCategoryCard
+                key={category}
+                id={sortableId}
+                categoryName={category}
+                collapsed={collapsed}
+                onToggle={() => toggleCat(category)}
+                totals={totals}
+                burn={burn}
+                groupIndex={groupIndex}
+                totalGroups={grouped.length}
+                onMoveCategoryUp={() => moveCategory(category, -1)}
+                onMoveCategoryDown={() => moveCategory(category, 1)}
+                onCategoryDragEnd={(oldIdx, newIdx) =>
+                  handleCategoryReorder(oldIdx, newIdx)
+                }
+              >
+                {/* Inner SortableContext for items within this category */}
+                <SortableContext items={itemIds} strategy={verticalListSortingStrategy}>
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="bg-muted/40 hover:bg-muted/40">
+                        <TableHead className="w-8"></TableHead>
+                        <TableHead className="w-12"></TableHead>
+                        <TableHead className="min-w-[200px]">Položka</TableHead>
+                        <TableHead className="w-28">Fáze</TableHead>
+                        <TableHead className="w-28 text-right">Plán (Kč)</TableHead>
+                        <TableHead className="w-20 text-right">Dny</TableHead>
+                        <TableHead className="w-28">Datum od</TableHead>
+                        <TableHead className="w-28">Datum do</TableHead>
+                        <TableHead className="w-28 text-right">Skut. (Kč)</TableHead>
+                        <TableHead className="w-20 text-right">Hod.</TableHead>
+                        <TableHead className="w-36 text-center">Stav</TableHead>
+                        <TableHead className="w-8"></TableHead>
                       </TableRow>
-                    )}
-                    {catItems.map((item, idx) => {
-                      const children = childrenMap.get(item.id) ?? [];
-                      const isExpanded = expandedItems.has(item.id);
-                      return (
-                        <BudgetItemRows
-                          key={item.id}
-                          item={item}
-                          childItems={children}
-                          projectId={projectId}
-                          isExpanded={isExpanded}
-                          onToggleExpand={() => toggleItem(item.id)}
-                          expandedItems={expandedItems}
-                          onToggleChildExpand={toggleItem}
-                          onEdit={setEditingItem}
-                          canMoveUp={idx > 0}
-                          canMoveDown={idx < catItems.length - 1}
-                          onMoveUp={() => moveItem(catItems, idx, -1)}
-                          onMoveDown={() => moveItem(catItems, idx, 1)}
-                          onAddTask={() => setAddTaskFor(item)}
-                          highlightId={highlightId}
-                          registerRow={registerRow}
-                        />
-                      );
-                    })}
-                  </TableBody>
-                </Table>
-              </CollapsibleContent>
-            </Collapsible>
-          );
-        })}
-      </div>
+                    </TableHeader>
+                    <TableBody>
+                      {catItems.length === 0 && (
+                        <TableRow>
+                          <TableCell colSpan={12} className="py-8 text-center text-sm text-muted-foreground">
+                            Žádné položky v této kategorii.
+                          </TableCell>
+                        </TableRow>
+                      )}
+                      {catItems.map((item, idx) => {
+                        const children = childrenMap.get(item.id) ?? [];
+                        const isExpanded = expandedItems.has(item.id);
+                        return (
+                          <SortableBudgetItemRows
+                            key={item.id}
+                            sortableId={`item:${item.id}`}
+                            item={item}
+                            childItems={children}
+                            projectId={projectId}
+                            isExpanded={isExpanded}
+                            onToggleExpand={() => toggleItem(item.id)}
+                            expandedItems={expandedItems}
+                            onToggleChildExpand={toggleItem}
+                            onEdit={setEditingItem}
+                            canMoveUp={idx > 0}
+                            canMoveDown={idx < catItems.length - 1}
+                            onMoveUp={() => moveItem(catItems, idx, -1)}
+                            onMoveDown={() => moveItem(catItems, idx, 1)}
+                            onAddTask={() => setAddTaskFor(item)}
+                            highlightId={highlightId}
+                            registerRow={registerRow}
+                            categoryName={category}
+                            onItemDragEnd={(oldI, newI) =>
+                              handleItemReorder(category, oldI, newI)
+                            }
+                          />
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </SortableContext>
+              </SortableCategoryCard>
+            );
+          })}
+        </div>
+      </SortableContext>
 
       <BudgetItemDialog
         open={addOpen}
         onOpenChange={setAddOpen}
         projectId={projectId}
         onSubmitted={(created) => {
-          // Expand the category the new item belongs to so the row is visible
           setCollapsedCats((prev) => {
             const next = new Set(prev);
             next.delete(created.category);
             return next;
           });
-          // Clear filters that might hide the new item
           setSearch("");
           setPhaseFilter("all");
           setCompletionFilter("all");
-          // Trigger scroll-into-view + highlight once the row renders
           setHighlightId(created.id);
         }}
       />
@@ -710,7 +804,6 @@ export function BudgetTab({ projectId }: { projectId: string }) {
         projectId={projectId}
         item={editingItem}
         onSubmitted={(updated) => {
-          // Make sure the row is visible after an edit (category may have changed)
           setCollapsedCats((prev) => {
             const next = new Set(prev);
             next.delete(updated.category);
@@ -729,7 +822,6 @@ export function BudgetTab({ projectId }: { projectId: string }) {
           defaultPhase={addTaskFor.phase}
           parentItemName={addTaskFor.subcategory ?? addTaskFor.category}
           onSubmitted={(created) => {
-            // Make sure the parent is expanded so the new task is visible
             setExpandedItems((prev) => {
               const next = new Set(prev);
               next.add(addTaskFor.id);
@@ -751,7 +843,269 @@ export function BudgetTab({ projectId }: { projectId: string }) {
   );
 }
 
-// ===== BudgetItemRows — renders one parent row + optional detail panel + child rows =====
+// =====================================================================
+// SortableCategoryCard — wraps a Collapsible category with DnD
+// =====================================================================
+function SortableCategoryCard({
+  id,
+  categoryName,
+  collapsed,
+  onToggle,
+  totals,
+  burn,
+  groupIndex,
+  totalGroups,
+  onMoveCategoryUp,
+  onMoveCategoryDown,
+  onCategoryDragEnd,
+  children,
+}: {
+  id: string;
+  categoryName: string;
+  collapsed: boolean;
+  onToggle: () => void;
+  totals: { plan: number; actual: number; count: number; saved: number };
+  burn: number;
+  groupIndex: number;
+  totalGroups: number;
+  onMoveCategoryUp: () => void;
+  onMoveCategoryDown: () => void;
+  onCategoryDragEnd: (oldIndex: number, newIndex: number) => void;
+  children: React.ReactNode;
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id, data: { type: "category", categoryName } });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 50 : "auto",
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={cn(
+        "rounded-lg border bg-card",
+        isDragging && "shadow-xl ring-2 ring-primary/30",
+      )}
+    >
+      <Collapsible
+        open={!collapsed}
+        onOpenChange={onToggle}
+      >
+        <CollapsibleTrigger asChild>
+          <button
+            className="group flex w-full items-center gap-2 px-4 py-2.5 text-left hover:bg-muted/50"
+            {...attributes}
+          >
+            {/* Drag handle */}
+            <span
+              {...listeners}
+              className="flex h-5 w-5 cursor-grab items-center justify-center rounded text-muted-foreground/40 hover:bg-muted hover:text-foreground active:cursor-grabbing"
+              aria-label="Přetáhnout kategorii"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <GripVertical className="h-4 w-4" />
+            </span>
+            {collapsed ? (
+              <ChevronRight className="h-4 w-4" />
+            ) : (
+              <ChevronDown className="h-4 w-4" />
+            )}
+            <span className="text-sm font-bold">{categoryName}</span>
+            <Badge variant="secondary" className="text-[10px]">
+              {totals.count}
+            </Badge>
+            {totals.saved > 0 && (
+              <Badge variant="outline" className="text-[10px] text-emerald-700">
+                <PiggyBank className="mr-1 h-2.5 w-2.5" />
+                {formatCzk(totals.saved)}
+              </Badge>
+            )}
+            <div className="ml-auto flex items-center gap-4 text-xs">
+              <span className="text-muted-foreground">
+                {formatCzk(totals.actual)} / {formatCzk(totals.plan)}
+              </span>
+              <div className="h-1.5 w-24 overflow-hidden rounded-full bg-muted">
+                <div
+                  className={cn(
+                    "h-full rounded-full",
+                    burn > 100
+                      ? "bg-rose-500"
+                      : burn > 80
+                        ? "bg-amber-500"
+                        : "bg-emerald-500",
+                  )}
+                  style={{ width: `${Math.min(burn, 100)}%` }}
+                />
+              </div>
+              <span
+                className={cn(
+                  "font-semibold",
+                  burn > 100
+                    ? "text-rose-600"
+                    : burn > 80
+                      ? "text-amber-600"
+                      : "text-emerald-600",
+                )}
+              >
+                {burn.toFixed(0)}%
+              </span>
+            </div>
+            {/* Legacy arrow buttons (kept as fallback) */}
+            <span className="ml-1 flex flex-col">
+              <span
+                role="button"
+                tabIndex={0}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onMoveCategoryUp();
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.stopPropagation();
+                    onMoveCategoryUp();
+                  }
+                }}
+                className={cn(
+                  "flex h-3.5 w-3.5 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground",
+                  groupIndex === 0 && "pointer-events-none opacity-30",
+                )}
+                aria-label="Přesunout kategorii nahoru"
+              >
+                <ArrowUp className="h-3 w-3" />
+              </span>
+              <span
+                role="button"
+                tabIndex={0}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onMoveCategoryDown();
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.stopPropagation();
+                    onMoveCategoryDown();
+                  }
+                }}
+                className={cn(
+                  "flex h-3.5 w-3.5 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground",
+                  groupIndex === totalGroups - 1 &&
+                    "pointer-events-none opacity-30",
+                )}
+                aria-label="Přesunout kategorii dolů"
+              >
+                <ArrowDown className="h-3 w-3" />
+              </span>
+            </span>
+          </button>
+        </CollapsibleTrigger>
+        <CollapsibleContent>{children}</CollapsibleContent>
+      </Collapsible>
+    </div>
+  );
+}
+
+// =====================================================================
+// SortableBudgetItemRows — wraps BudgetItemRows with DnD
+// =====================================================================
+function SortableBudgetItemRows({
+  sortableId,
+  item,
+  childItems,
+  projectId,
+  isExpanded,
+  onToggleExpand,
+  expandedItems,
+  onToggleChildExpand,
+  onEdit,
+  canMoveUp,
+  canMoveDown,
+  onMoveUp,
+  onMoveDown,
+  onAddTask,
+  highlightId,
+  registerRow,
+  categoryName,
+  onItemDragEnd,
+}: {
+  sortableId: string;
+  item: BudgetItem;
+  childItems: BudgetItem[];
+  projectId: string;
+  isExpanded: boolean;
+  onToggleExpand: () => void;
+  expandedItems: Set<string>;
+  onToggleChildExpand: (id: string) => void;
+  onEdit: (item: BudgetItem) => void;
+  canMoveUp: boolean;
+  canMoveDown: boolean;
+  onMoveUp: () => void;
+  onMoveDown: () => void;
+  onAddTask?: () => void;
+  highlightId?: string | null;
+  registerRow?: (id: string, el: HTMLTableRowElement | null) => void;
+  categoryName: string;
+  onItemDragEnd: (oldIndex: number, newIndex: number) => void;
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({
+    id: sortableId,
+    data: {
+      type: "item",
+      categoryName,
+      label: item.subcategory || item.category,
+    },
+  });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.4 : 1,
+  };
+
+  return (
+    <RowDragContext.Provider value={{ listeners, isDragging, sortableRef: setNodeRef, sortableStyle: style, sortableAttributes: attributes }}>
+      <BudgetItemRows
+        item={item}
+        childItems={childItems}
+        projectId={projectId}
+        isExpanded={isExpanded}
+        onToggleExpand={onToggleExpand}
+        expandedItems={expandedItems}
+        onToggleChildExpand={onToggleChildExpand}
+        onEdit={onEdit}
+        canMoveUp={canMoveUp}
+        canMoveDown={canMoveDown}
+        onMoveUp={onMoveUp}
+        onMoveDown={onMoveDown}
+        onAddTask={onAddTask}
+        highlightId={highlightId}
+        registerRow={registerRow}
+      />
+    </RowDragContext.Provider>
+  );
+}
+
+// =====================================================================
+// BudgetItemRows — renders one parent row + optional detail panel + child rows
+// (Same as original, but now includes a drag handle)
+// =====================================================================
 function BudgetItemRows({
   item,
   childItems,
@@ -795,7 +1149,6 @@ function BudgetItemRows({
       onMoveChild(siblings, idx, dir);
       return;
     }
-    // Default fallback: swap sortOrder between siblings
     const target = idx + dir;
     if (target < 0 || target >= siblings.length) return;
     const a = siblings[idx];
@@ -832,7 +1185,6 @@ function BudgetItemRows({
         highlightId={highlightId}
         registerRow={registerRow}
       />
-      {/* Detail panel (notes/flexibility/saved) only for parents — children are thinner */}
       {isExpanded && !isChild && (
         <DetailPanelRow
           item={item}
@@ -845,8 +1197,6 @@ function BudgetItemRows({
         !isChild &&
         childItems.map((child, ci) => {
           const childExpanded = expandedItems.has(child.id);
-          // For now, only one level of children nesting is rendered in the UI.
-          // If a child has its own children, they're still rolled up into the child's totals.
           const childChildren: BudgetItem[] = [];
           return (
             <BudgetItemRows
@@ -873,6 +1223,10 @@ function BudgetItemRows({
   );
 }
 
+// =====================================================================
+// BudgetRow — one row in the budget table
+// (Same as original, but now includes a drag handle cell)
+// =====================================================================
 function BudgetRow({
   item,
   projectId,
@@ -914,12 +1268,12 @@ function BudgetRow({
   const deleteItem = useDeleteBudgetItem(projectId);
   const duplicateItem = useDuplicateBudgetItem(projectId);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const dragCtx = useRowDragListeners();
 
   const update = (field: keyof BudgetItem, value: unknown) => {
     updateItem.mutate({ id: item.id, data: { [field]: value } });
   };
 
-  // Display values: if parent with children, show rolled-up; else show own
   const displayPlanCost = childCount > 0 ? rolled.planCost : item.planCost;
   const displayPlanDays = childCount > 0 ? rolled.planDays : item.planDays;
   const displayActualCost = childCount > 0 ? rolled.actualCost : item.actualCost;
@@ -934,7 +1288,12 @@ function BudgetRow({
 
   return (
     <TableRow
-      ref={(el) => registerRow?.(item.id, el)}
+      ref={(el) => {
+        registerRow?.(item.id, el);
+        if (dragCtx) dragCtx.sortableRef(el);
+      }}
+      style={dragCtx?.sortableStyle}
+      {...(dragCtx?.sortableAttributes ?? {})}
       onDoubleClick={() => onEdit(item)}
       className={cn(
         "group transition-colors",
@@ -951,8 +1310,25 @@ function BudgetRow({
                   : "hover:bg-muted/30",
             ),
         isHighlighted && "stavba-highlight-row",
+        dragCtx?.isDragging && "opacity-40",
       )}
     >
+      {/* Drag handle cell (only for top-level items, not children) */}
+      {!isChild && dragCtx?.listeners ? (
+        <TableCell className="w-8 align-middle">
+          <span
+            {...dragCtx.listeners}
+            className="flex h-5 w-5 cursor-grab items-center justify-center rounded text-muted-foreground/30 hover:bg-muted hover:text-foreground active:cursor-grabbing"
+            aria-label="Přetáhnout položku"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <GripVertical className="h-4 w-4" />
+          </span>
+        </TableCell>
+      ) : (
+        <TableCell className="w-8" />
+      )}
+
       {/* Expand/collapse toggle (parents) OR indented └ marker (children) */}
       {isChild ? (
         <TableCell className="align-middle pl-8">
@@ -965,7 +1341,6 @@ function BudgetRow({
           className="relative align-middle cursor-pointer"
           onClick={onToggleExpand}
         >
-          {/* Colored left stripe */}
           <div
             aria-hidden
             className={cn(
@@ -1092,7 +1467,6 @@ function BudgetRow({
       {/* Plán (Kč) */}
       <TableCell className="text-right">
         {childCount > 0 ? (
-          // For parents with children, show rolled-up value as read-only text
           <span className="block w-full rounded px-1 py-0.5 text-right text-xs font-semibold">
             {formatNumber(displayPlanCost, " Kč")}
           </span>
@@ -1342,9 +1716,7 @@ function DetailPanelRow({
 
   return (
     <TableRow className="bg-muted/20 hover:bg-muted/20">
-      <TableCell colSpan={11} className="relative py-3">
-        {/* Colored left stripe — absolute positioned to match the parent row's stripe
-            and avoid rounded-corner clipping at the bottom of the category card. */}
+      <TableCell colSpan={12} className="relative py-3">
         <div
           aria-hidden
           className={cn(
@@ -1355,7 +1727,6 @@ function DetailPanelRow({
           )}
         />
         <div className="grid grid-cols-1 gap-4 pl-10 sm:grid-cols-3">
-          {/* Poznámka */}
           <div className="sm:col-span-1">
             <div className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
               Poznámka
@@ -1366,8 +1737,6 @@ function DetailPanelRow({
               placeholder="Doplňující informace, jednotkové ceny, postup…"
             />
           </div>
-
-          {/* Vůle */}
           <div>
             <div className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
               Vůle (%)
@@ -1382,8 +1751,6 @@ function DetailPanelRow({
               Míra flexibility odhadu.
             </p>
           </div>
-
-          {/* Ušetřeno */}
           <div>
             <div className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
               Ušetřeno
@@ -1533,9 +1900,6 @@ function InlineTextarea({
   onCommit: (v: string | null) => void;
   placeholder?: string;
 }) {
-  // Uncontrolled textarea with `key` re-mounting on value change so the
-  // initial render reflects the latest external value (e.g., after API refetch).
-  // Commits on blur (or Ctrl/Cmd+Enter), Escape resets to original value.
   return (
     <Textarea
       key={value ?? "__empty__"}
