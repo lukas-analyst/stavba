@@ -170,6 +170,56 @@
 }
 
 /* ============================================================
+   Newly-added / just-edited row highlight (Budget tab)
+   ------------------------------------------------------------
+   Triggered by adding the `.stavba-highlight-row` class to a
+   <tr> right after it is created/edited. The animation pulses
+   a soft amber background + ring once, then fades out so the
+   row settles back to its normal styling.
+   The class is removed by the parent component after ~2.4s.
+   ============================================================ */
+@layer utilities {
+  @keyframes stavba-highlight-pulse {
+    0% {
+      background-color: color-mix(in oklch, var(--primary) 18%, transparent);
+      box-shadow: inset 0 0 0 2px color-mix(in oklch, var(--primary) 55%, transparent);
+    }
+    35% {
+      background-color: color-mix(in oklch, var(--primary) 12%, transparent);
+      box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--primary) 40%, transparent);
+    }
+    100% {
+      background-color: transparent;
+      box-shadow: inset 0 0 0 0 transparent;
+    }
+  }
+  .stavba-highlight-row {
+    animation: stavba-highlight-pulse 2.2s ease-out;
+    /* Make sure the animation is visible above hover/odd row striping */
+    position: relative;
+    z-index: 1;
+  }
+  /* On dark theme, the pulse should be a touch brighter */
+  .dark .stavba-highlight-row {
+    animation-name: stavba-highlight-pulse-dark;
+  }
+  @keyframes stavba-highlight-pulse-dark {
+    0% {
+      background-color: color-mix(in oklch, var(--primary) 30%, transparent);
+      box-shadow: inset 0 0 0 2px color-mix(in oklch, var(--primary) 70%, transparent);
+    }
+    35% {
+      background-color: color-mix(in oklch, var(--primary) 18%, transparent);
+      box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--primary) 50%, transparent);
+    }
+    100% {
+      background-color: transparent;
+      box-shadow: inset 0 0 0 0 transparent;
+    }
+  }
+}
+
+/* ============================================================
    Print / PDF export styles
    ------------------------------------------------------------
    Activated only when `body.printing` class is added right

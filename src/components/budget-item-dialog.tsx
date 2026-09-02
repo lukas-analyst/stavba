@@ -42,6 +42,8 @@ type Props = {
   defaultPhase?: string;
   defaultSubcategory?: string;
   parentItemName?: string;
+  /** Called with the newly-created or updated item after a successful submit. */
+  onSubmitted?: (item: BudgetItem, isNew: boolean) => void;
 };
 
 export function BudgetItemDialog({
@@ -53,6 +55,7 @@ export function BudgetItemDialog({
   defaultCategory,
   defaultPhase,
   parentItemName,
+  onSubmitted,
 }: Props) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -67,6 +70,7 @@ export function BudgetItemDialog({
             defaultPhase={defaultPhase}
             parentItemName={parentItemName}
             onDone={() => onOpenChange(false)}
+            onSubmitted={onSubmitted}
           />
         )}
       </DialogContent>
@@ -82,6 +86,7 @@ function BudgetItemForm({
   defaultPhase,
   parentItemName,
   onDone,
+  onSubmitted,
 }: {
   projectId: string;
   item?: BudgetItem | null;
@@ -90,6 +95,7 @@ function BudgetItemForm({
   defaultPhase?: string;
   parentItemName?: string;
   onDone: () => void;
+  onSubmitted?: (item: BudgetItem, isNew: boolean) => void;
 }) {
   const { data: items } = useBudgetItems(projectId);
   const createItem = useCreateBudgetItem(projectId);
@@ -236,11 +242,13 @@ function BudgetItemForm({
         data.parentId = parentId;
       }
       if (item) {
-        await updateItem.mutateAsync({ id: item.id, data });
+        const updated = await updateItem.mutateAsync({ id: item.id, data });
         toast.success(isTaskMode ? "Úkol upraven" : "Položka upravena");
+        onSubmitted?.(updated as BudgetItem, false);
       } else {
-        await createItem.mutateAsync(data);
+        const created = await createItem.mutateAsync(data);
         toast.success(isTaskMode ? "Úkol přidán" : "Položka přidána");
+        onSubmitted?.(created as BudgetItem, true);
       }
       onDone();
     } catch {

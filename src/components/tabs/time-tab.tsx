@@ -379,7 +379,11 @@ function TimeRow({
   const [confirm, setConfirm] = useState(false);
   const w = workerTypeLabel(entry.workerType);
   return (
-    <TableRow className="group">
+    <TableRow
+      className="group cursor-pointer hover:bg-muted/30"
+      onClick={() => onEdit()}
+      title="Klikněte pro úpravu záznamu"
+    >
       <TableCell className="whitespace-nowrap text-xs text-muted-foreground">
         <div className="flex flex-col">
           <span>{formatDate(entry.date)}</span>
@@ -416,10 +420,18 @@ function TimeRow({
       <TableCell className="text-right text-sm font-semibold text-violet-600">
         {formatNumber(entry.hours, " h")}
       </TableCell>
-      <TableCell>
+      <TableCell
+        className="text-right"
+        onClick={(e) => e.stopPropagation()}
+      >
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-7 w-7 opacity-0 group-hover:opacity-100">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 opacity-0 group-hover:opacity-100"
+              onClick={(e) => e.stopPropagation()}
+            >
               <MoreHorizontal className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>

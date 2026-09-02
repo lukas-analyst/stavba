@@ -754,6 +754,7 @@ function PaymentRow({
     <TableRow
       className="group cursor-pointer hover:bg-muted/30"
       onClick={() => onEdit()}
+      title="Klikněte pro úpravu platby"
     >
       <TableCell className="whitespace-nowrap text-xs text-muted-foreground">
         {formatDate(payment.date)}

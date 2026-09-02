@@ -141,6 +141,7 @@ export type Dashboard = {
   }[];
   byCategory: { category: string; plan: number; actual: number; hours: number; count: number }[];
   alerts: {
+    inProgress: BudgetItem[];
     upcoming: BudgetItem[];
     overdue: BudgetItem[];
     overBudget: BudgetItem[];

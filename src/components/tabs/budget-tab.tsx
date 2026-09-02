@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import {
   useBudgetItems,
   useUpdateBudgetItem,
@@ -147,6 +147,43 @@ export function BudgetTab({ projectId }: { projectId: string }) {
   const [addOpen, setAddOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<BudgetItem | null>(null);
   const [addTaskFor, setAddTaskFor] = useState<BudgetItem | null>(null);
+  // ID of the row that should be focused / scrolled to / highlighted after
+  // being created or updated. Cleared automatically after the animation ends.
+  const [highlightId, setHighlightId] = useState<string | null>(null);
+  // Registry of row DOM elements keyed by item id — used for scrollIntoView
+  const rowRefs = useRef<Map<string, HTMLTableRowElement>>(new Map());
+
+  const registerRow = useCallback((id: string, el: HTMLTableRowElement | null) => {
+    const map = rowRefs.current;
+    if (el) map.set(id, el);
+    else map.delete(id);
+  }, []);
+
+  // Whenever highlightId changes to a non-null value, scroll the corresponding
+  // row into view (centered) so the user can see what was just added.
+  // Also re-runs when `items` changes, so the scroll happens once the new
+  // item actually appears in the DOM (React Query refetch is async).
+  useEffect(() => {
+    if (!highlightId) return;
+    const el = rowRefs.current.get(highlightId);
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+    // Clear the highlight after the animation completes (2.4s).
+    // Use the functional updater so we don't depend on `highlightId` in the
+    // closure (avoids re-creating the timer on every render of the parent).
+    const t = setTimeout(() => setHighlightId((cur) => (cur === null ? null : null)), 2400);
+    return () => clearTimeout(t);
+  }, [highlightId, items]);
+
+  // If the highlighted item is no longer present in the items list (e.g. it
+  // was deleted or filtered out), clear the highlight to avoid a stuck state.
+  // Done as a derived check during render (not in an effect) so it doesn't
+  // trigger a cascading re-render.
+  if (highlightId && items && !items.some((i) => i.id === highlightId)) {
+    // schedule clear on next tick via setTimeout to avoid render-phase setState
+    queueMicrotask(() => setHighlightId(null));
+  }
 
   const toggleCat = (cat: string) => {
     setCollapsedCats((prev) => {
@@ -604,6 +641,8 @@ export function BudgetTab({ projectId }: { projectId: string }) {
                           onMoveUp={() => moveItem(catItems, idx, -1)}
                           onMoveDown={() => moveItem(catItems, idx, 1)}
                           onAddTask={() => setAddTaskFor(item)}
+                          highlightId={highlightId}
+                          registerRow={registerRow}
                         />
                       );
                     })}
@@ -619,12 +658,35 @@ export function BudgetTab({ projectId }: { projectId: string }) {
         open={addOpen}
         onOpenChange={setAddOpen}
         projectId={projectId}
+        onSubmitted={(created) => {
+          // Expand the category the new item belongs to so the row is visible
+          setCollapsedCats((prev) => {
+            const next = new Set(prev);
+            next.delete(created.category);
+            return next;
+          });
+          // Clear filters that might hide the new item
+          setSearch("");
+          setPhaseFilter("all");
+          setCompletionFilter("all");
+          // Trigger scroll-into-view + highlight once the row renders
+          setHighlightId(created.id);
+        }}
       />
       <BudgetItemDialog
         open={!!editingItem}
         onOpenChange={(o) => !o && setEditingItem(null)}
         projectId={projectId}
         item={editingItem}
+        onSubmitted={(updated) => {
+          // Make sure the row is visible after an edit (category may have changed)
+          setCollapsedCats((prev) => {
+            const next = new Set(prev);
+            next.delete(updated.category);
+            return next;
+          });
+          setHighlightId(updated.id);
+        }}
       />
       {addTaskFor && (
         <BudgetItemDialog
@@ -635,6 +697,23 @@ export function BudgetTab({ projectId }: { projectId: string }) {
           defaultCategory={addTaskFor.category}
           defaultPhase={addTaskFor.phase}
           parentItemName={addTaskFor.subcategory ?? addTaskFor.category}
+          onSubmitted={(created) => {
+            // Make sure the parent is expanded so the new task is visible
+            setExpandedItems((prev) => {
+              const next = new Set(prev);
+              next.add(addTaskFor.id);
+              return next;
+            });
+            setCollapsedCats((prev) => {
+              const next = new Set(prev);
+              next.delete(created.category);
+              return next;
+            });
+            setSearch("");
+            setPhaseFilter("all");
+            setCompletionFilter("all");
+            setHighlightId(created.id);
+          }}
         />
       )}
     </div>
@@ -658,6 +737,8 @@ function BudgetItemRows({
   onAddTask,
   onMoveChild,
   isChild = false,
+  highlightId,
+  registerRow,
 }: {
   item: BudgetItem;
   childItems: BudgetItem[];
@@ -674,6 +755,8 @@ function BudgetItemRows({
   onAddTask?: () => void;
   onMoveChild?: (siblings: BudgetItem[], idx: number, dir: -1 | 1) => void;
   isChild?: boolean;
+  highlightId?: string | null;
+  registerRow?: (id: string, el: HTMLTableRowElement | null) => void;
 }) {
   const reorder = useReorder(projectId);
   const handleMoveChild = (siblings: BudgetItem[], idx: number, dir: -1 | 1) => {
@@ -715,6 +798,8 @@ function BudgetItemRows({
         overBudget={overBudget}
         onAddTask={onAddTask}
         isChild={isChild}
+        highlightId={highlightId}
+        registerRow={registerRow}
       />
       {/* Detail panel (notes/flexibility/saved) only for parents — children are thinner */}
       {isExpanded && !isChild && (
@@ -748,6 +833,8 @@ function BudgetItemRows({
               onMoveUp={() => handleMoveChild(childItems, ci, -1)}
               onMoveDown={() => handleMoveChild(childItems, ci, 1)}
               isChild
+              highlightId={highlightId}
+              registerRow={registerRow}
             />
           );
         })}
@@ -771,6 +858,8 @@ function BudgetRow({
   overBudget,
   onAddTask,
   isChild,
+  highlightId,
+  registerRow,
 }: {
   item: BudgetItem;
   projectId: string;
@@ -787,6 +876,8 @@ function BudgetRow({
   overBudget: boolean;
   onAddTask?: () => void;
   isChild: boolean;
+  highlightId?: string | null;
+  registerRow?: (id: string, el: HTMLTableRowElement | null) => void;
 }) {
   const updateItem = useUpdateBudgetItem(projectId);
   const deleteItem = useDeleteBudgetItem(projectId);
@@ -808,8 +899,12 @@ function BudgetRow({
       ? rolled.actualCost - rolled.planCost
       : 0;
 
+  const isHighlighted = !!highlightId && highlightId === item.id;
+
   return (
     <TableRow
+      ref={(el) => registerRow?.(item.id, el)}
+      onDoubleClick={() => onEdit(item)}
       className={cn(
         "group transition-colors",
         isChild
@@ -824,6 +919,7 @@ function BudgetRow({
                   ? "bg-emerald-50/40 dark:bg-emerald-950/10"
                   : "hover:bg-muted/30",
             ),
+        isHighlighted && "stavba-highlight-row",
       )}
     >
       {/* Expand/collapse toggle (parents) OR indented └ marker (children) */}

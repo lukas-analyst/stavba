@@ -153,6 +153,29 @@ export async function GET(
     }
 
     // ===== ALERTS =====
+    // 0) Items currently being worked on (in-progress):
+    //    - not completed, not rejected
+    //    - has at least one payment (actualCost > 0) or time entry (actualHours > 0)
+    //    - and is not yet finished
+    //    Sorted by most-recently-touched first (latest payment/time entry date desc).
+    const inProgress = items
+      .filter(
+        (it) =>
+          !it.completed &&
+          !it.rejected &&
+          ((it.actualCost || 0) > 0 || (it.actualHours || 0) > 0),
+      )
+      .map((it) => {
+        // Determine the latest activity date from payments + time entries
+        const paymentDates = it.payments.map((p) => p.date?.getTime() ?? 0);
+        const timeDates = it.timeEntries.map((t) => t.date?.getTime() ?? 0);
+        const latest = Math.max(0, ...paymentDates, ...timeDates);
+        return { item: it, latestActivity: latest };
+      })
+      .sort((a, b) => b.latestActivity - a.latestActivity)
+      .map((x) => x.item)
+      .slice(0, 12); // cap to 12 most-recent in-progress items
+
     // 1) Items whose dateFrom is within next 30 days (need to arrange craftsman / order material)
     const now = new Date();
     const in30 = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
@@ -260,6 +283,7 @@ export async function GET(
         .map(([category, v]) => ({ category, ...v }))
         .sort((a, b) => b.plan - a.plan),
       alerts: {
+        inProgress,
         upcoming,
         overdue,
         overBudget,

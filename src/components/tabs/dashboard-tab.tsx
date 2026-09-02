@@ -67,7 +67,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
     burnRate > 100 ? "text-rose-600" : burnRate > 80 ? "text-amber-600" : "text-emerald-600";
 
   const totalAlerts =
-    alerts.upcoming.length + alerts.overdue.length + alerts.overBudget.length + alerts.unscheduled.length;
+    alerts.inProgress.length + alerts.upcoming.length + alerts.overdue.length + alerts.overBudget.length + alerts.unscheduled.length;
 
   // Pie chart data
   const pieData = byCategory
@@ -222,6 +222,28 @@ export function DashboardTab({ projectId }: { projectId: string }) {
             </div>
           </CardHeader>
           <CardContent className="space-y-3">
+            {alerts.inProgress.length > 0 && (
+              <AlertGroup
+                icon={<Activity className="h-4 w-4" />}
+                title="Právě probíhá"
+                color="text-sky-600"
+                max={8}
+                items={alerts.inProgress.map((it) => {
+                  const hasHours = (it.actualHours || 0) > 0;
+                  const hasCost = (it.actualCost || 0) > 0;
+                  const parts: string[] = [];
+                  if (hasCost) parts.push(formatCzk(it.actualCost));
+                  if (it.planCost) parts.push(`z ${formatCzk(it.planCost)}`);
+                  if (hasHours) parts.push(`${formatNumber(it.actualHours)} h`);
+                  if (it.dateTo) parts.push(`termín ${formatDate(it.dateTo)}`);
+                  return {
+                    id: it.id,
+                    primary: it.subcategory || it.category,
+                    secondary: parts.join(" · "),
+                  };
+                })}
+              />
+            )}
             {alerts.upcoming.length > 0 && (
               <AlertGroup
                 icon={<CalendarClock className="h-4 w-4" />}
@@ -702,12 +724,16 @@ function AlertGroup({
   title,
   color,
   items,
+  max = 4,
 }: {
   icon: React.ReactNode;
   title: string;
   color: string;
   items: { id: string; primary: string; secondary: string }[];
+  max?: number;
 }) {
+  const shown = items.slice(0, max);
+  const remaining = items.length - shown.length;
   return (
     <div>
       <div className={`flex items-center gap-1.5 ${color}`}>
@@ -718,15 +744,15 @@ function AlertGroup({
         </Badge>
       </div>
       <ul className="mt-1.5 space-y-1 pl-5">
-        {items.slice(0, 4).map((it) => (
+        {shown.map((it) => (
           <li key={it.id} className="text-xs">
             <span className="font-medium">{it.primary}</span>{" "}
             <span className="text-muted-foreground">— {it.secondary}</span>
           </li>
         ))}
-        {items.length > 4 && (
+        {remaining > 0 && (
           <li className="text-xs text-muted-foreground">
-            … a dalších {items.length - 4}
+            … a dalších {remaining}
           </li>
         )}
       </ul>
