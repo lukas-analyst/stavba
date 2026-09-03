@@ -132,7 +132,7 @@ export function ContactsTab({ projectId }: { projectId: string }) {
       {/* Leaderboard: top contributors */}
       {statsData && statsData.contactStats.length > 0 && (
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-          <Card className="border-amber-200/60 dark:border-amber-900/40">
+          <Card className="hover-lift border-amber-200/60 dark:border-amber-900/40">
             <CardHeader className="pb-2">
               <div className="flex items-center gap-2">
                 <TrendingUp className="h-4 w-4 text-amber-600" />
@@ -166,7 +166,7 @@ export function ContactsTab({ projectId }: { projectId: string }) {
               )}
             </CardContent>
           </Card>
-          <Card className="border-violet-200/60 dark:border-violet-900/40">
+          <Card className="hover-lift border-violet-200/60 dark:border-violet-900/40">
             <CardHeader className="pb-2">
               <div className="flex items-center gap-2">
                 <Clock className="h-4 w-4 text-violet-600" />
@@ -310,7 +310,7 @@ function ContactCard({
 
   return (
     <Card
-      className="group relative cursor-pointer overflow-hidden transition-shadow hover:shadow-md"
+      className="group relative cursor-pointer overflow-hidden transition-shadow hover:shadow-md hover-lift"
       onClick={onOpenDetail}
     >
       <CardHeader className="pb-3">

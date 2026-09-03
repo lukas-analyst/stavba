@@ -278,7 +278,7 @@ function NoteCard({
     .join("") || "?";
 
   return (
-    <div className="group relative rounded-lg border bg-card p-4 shadow-sm transition-shadow hover:shadow-md">
+    <div className="group relative rounded-lg border bg-card p-4 shadow-sm transition-all hover:shadow-md hover-lift">
       <div className="flex items-start gap-3">
         <Avatar className="h-9 w-9 shrink-0">
           <AvatarFallback className="bg-primary/10 text-xs font-semibold text-primary">

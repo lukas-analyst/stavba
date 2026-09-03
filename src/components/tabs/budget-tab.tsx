@@ -126,24 +126,18 @@ type DndItemType =
   | { kind: "category"; id: string; categoryName: string }
   | { kind: "item"; id: string; categoryName: string; label: string };
 
-// Module-level handler registry — BudgetTab registers its onDragEnd handler
-// here so DndBudgetTab (which wraps it in DndContext) can call it.
-let dragEndHandler: ((event: DragEndEvent) => void) | null = null;
-
-export function setDragEndHandler(fn: ((event: DragEndEvent) => void) | null) {
-  dragEndHandler = fn;
-}
-
 // =====================================================================
 // Wrapper: DndBudgetTab — wraps BudgetTab with DnD context
 // =====================================================================
 export function DndBudgetTab({ projectId }: { projectId: string }) {
   const [activeDrag, setActiveDrag] = useState<Active | null>(null);
+  // Handler is set by BudgetTab via this ref
+  const dragEndHandlerRef = useRef<((event: DragEndEvent) => void) | null>(null);
 
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
     useSensor(TouchSensor, {
-      activationConstraint: { delay: 200, tolerance: 5 },
+      activationConstraint: { delay: 200, tolerance: 8 },
     }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
@@ -155,12 +149,12 @@ export function DndBudgetTab({ projectId }: { projectId: string }) {
       onDragStart={(e) => setActiveDrag(e.active)}
       onDragEnd={(e) => {
         setActiveDrag(null);
-        if (dragEndHandler) dragEndHandler(e);
+        if (dragEndHandlerRef.current) dragEndHandlerRef.current(e);
       }}
       onDragCancel={() => setActiveDrag(null)}
     >
-      <BudgetTab projectId={projectId} />
-      <DragOverlay>
+      <BudgetTab projectId={projectId} dragEndHandlerRef={dragEndHandlerRef} />
+      <DragOverlay dropAnimation={null}>
         {activeDrag ? (
           <DragPreviewItem activeDrag={activeDrag} />
         ) : null}
@@ -258,7 +252,7 @@ const COMPLETION_OPTIONS = [
 
 type CompletionFilter = (typeof COMPLETION_OPTIONS)[number]["id"];
 
-function BudgetTab({ projectId }: { projectId: string }) {
+function BudgetTab({ projectId, dragEndHandlerRef }: { projectId: string; dragEndHandlerRef: React.MutableRefObject<((event: DragEndEvent) => void) | null> }) {
   const { data: items, isLoading } = useBudgetItems(projectId);
   const { data: projects } = useProjects();
   const project = projects?.find((p) => p.id === projectId);
@@ -502,10 +496,7 @@ function BudgetTab({ projectId }: { projectId: string }) {
     reorder.mutate({ categoryOrder: reordered });
   };
 
-  // Register DnD drag-end handler so DndBudgetTab wrapper can call it.
-  // Uses the module-level `setDragEndHandler` to communicate between
-  // the DndContext wrapper (DndBudgetTab) and the BudgetTab component.
-  // This avoids prop drilling while keeping the DndContext at the top.
+  // Register DnD drag-end handler via ref so DndBudgetTab can call it.
   useEffect(() => {
     const handler = (event: DragEndEvent) => {
       const { active, over } = event;
@@ -547,8 +538,8 @@ function BudgetTab({ projectId }: { projectId: string }) {
       }
     };
 
-    setDragEndHandler(handler);
-    return () => setDragEndHandler(null);
+    dragEndHandlerRef.current = handler;
+    return () => { dragEndHandlerRef.current = null; };
   }, [grouped, reorder]);
 
   if (isLoading) {
@@ -892,7 +883,7 @@ function SortableCategoryCard({
   return (
     <div
       ref={setNodeRef}
-      style={{ ...style, animationDelay: `${groupIndex * 60}ms` }}
+      style={{ ...style, animationDelay: `${groupIndex * 80}ms` }}
       className={cn(
         "rounded-lg border bg-card stagger-item",
         isDragging && "shadow-xl ring-2 ring-primary/30",
@@ -1715,16 +1706,17 @@ function DetailPanelRow({
       : 0;
 
   return (
-    <TableRow className="bg-muted/20 hover:bg-muted/20">
+    <TableRow className="detail-panel bg-muted/20 hover:bg-muted/20">
       <TableCell colSpan={12} className="relative py-3">
         <div
           aria-hidden
           className={cn(
-            "absolute inset-y-0 left-0 w-1",
+            "absolute inset-y-0 w-1",
             item.rejected
               ? "bg-rose-500"
               : PHASE_BG_COLORS[item.phase] ?? "bg-zinc-300",
           )}
+          style={{ left: "calc(8px + 48px + 12px)" }}
         />
         <div className="grid grid-cols-1 gap-4 pl-10 sm:grid-cols-3">
           <div className="sm:col-span-1">

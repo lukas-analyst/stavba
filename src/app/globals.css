@@ -245,13 +245,16 @@
   /* Stagger — delay children by index * 40ms */
   .stagger-item {
     opacity: 0;
-    transform: translateY(8px);
-    animation: stagger-fade-in 0.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    animation: stagger-fade-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
   }
   @keyframes stagger-fade-in {
+    from {
+      opacity: 0;
+      transform: translateY(12px) scale(0.98);
+    }
     to {
       opacity: 1;
-      transform: translateY(0);
+      transform: translateY(0) scale(1);
     }
   }
 
@@ -278,11 +281,43 @@
     .reveal,
     .stagger-item,
     .bar-fill,
-    .hover-lift {
+    .hover-lift,
+    [data-state="open"],
+    [data-state="closed"] {
       animation: none !important;
       transition: none !important;
       opacity: 1 !important;
       transform: none !important;
+    }
+  }
+
+  /* Collapsible content — slide-down animation when expanding */
+  [data-state="open"] > * {
+    animation: collapsible-open 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  @keyframes collapsible-open {
+    from {
+      opacity: 0;
+      transform: translateY(-8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Detail panel row — slide-down when item is expanded */
+  tr + tr.detail-panel {
+    animation: detail-panel-open 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  @keyframes detail-panel-open {
+    from {
+      opacity: 0;
+      max-height: 0;
+    }
+    to {
+      opacity: 1;
+      max-height: 500px;
     }
   }
 }
