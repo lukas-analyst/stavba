@@ -38,7 +38,7 @@ import { useAppStore } from "@/lib/store";
 // Charts are lazy-loaded via next/dynamic — reduces initial bundle by ~200KB.
 // See src/components/charts/lazy-charts.tsx
 import { PhaseChart, CategoryChart, SpendingTrendChart } from "@/components/charts/lazy-charts";
-import { useReveal, useRevealMultiple } from "@/hooks/use-reveal";
+import { useReveal } from "@/hooks/use-reveal";
 
 export function DashboardTab({ projectId }: { projectId: string }) {
   const { data, isLoading } = useDashboard(projectId);
@@ -53,10 +53,6 @@ export function DashboardTab({ projectId }: { projectId: string }) {
   const chartsReveal = useReveal<HTMLDivElement>();
   const statsReveal = useReveal<HTMLDivElement>();
   const categoriesReveal = useReveal<HTMLDivElement>();
-
-  // Stagger reveal for KPI cards and phase cards
-  const kpiStagger = useRevealMultiple({ staggerDelay: 60 });
-  const phaseStagger = useRevealMultiple({ staggerDelay: 50 });
 
   if (isLoading || !data) {
     return <DashboardSkeleton />;
