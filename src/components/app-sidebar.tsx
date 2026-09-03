@@ -1,6 +1,6 @@
 "use client";
 
-import { Star, Plus, Home, Trash2, Loader2, Building2, Download, Upload, Search, X } from "lucide-react";
+import { Star, Plus, Trash2, Loader2, Building2, Download, Upload, Search, X } from "lucide-react";
 import { useProjects, useDeleteProject, useUpdateProject, useExportState, useImportState, useDashboard } from "@/lib/api";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAppStore } from "@/lib/store";
@@ -103,11 +103,11 @@ export function AppSidebar({ onSelectProject }: { onSelectProject?: (id: string)
     <aside className="flex h-full w-80 flex-col border-r bg-sidebar text-sidebar-foreground">
       {/* Header */}
       <div className="flex items-center gap-2 border-b px-5 py-4">
-        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-          <Home className="h-5 w-5" />
+        <div className="flex h-9 w-9 items-center justify-center rounded-lg overflow-hidden bg-primary">
+          <img src="/logo.svg" alt="Rozpočet Stavby" className="h-full w-full" />
         </div>
         <div className="flex-1">
-          <h1 className="text-base font-bold leading-tight">Stavba</h1>
+          <h1 className="text-base font-bold leading-tight">Rozpočet Stavby</h1>
           <p className="text-[11px] text-muted-foreground leading-tight">
             Rozpočet · Čas · Materiál
           </p>
@@ -377,7 +377,7 @@ export function AppSidebar({ onSelectProject }: { onSelectProject?: (id: string)
         <p className="mt-2 flex items-center gap-1.5 text-[10px] text-muted-foreground">
           <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500" />
           <span>
-            Stavba{" "}
+            Rozpočet Stavby{" "}
             <span
               className="font-semibold text-foreground"
               title={`Git commit: ${GIT_COMMIT_HASH}\nDatum: ${GIT_COMMIT_DATE || "—"}\nPočet commitů: ${GIT_COMMIT_COUNT}\nBuild: ${VERSION_LABEL}`}

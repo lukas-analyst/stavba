@@ -494,7 +494,7 @@ function ReportBody({
 
       {/* ===== Patička ===== */}
       <footer className="border-t border-border pt-3 text-[10px] text-muted-foreground">
-        Report vygenerován aplikací Stavba dne{" "}
+        Report vygenerován aplikací Rozpočet Stavby dne{" "}
         {formatDate(new Date(), { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })}{" "}
         — {projectName}.
       </footer>

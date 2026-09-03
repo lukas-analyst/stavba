@@ -16,14 +16,14 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-const APP_TITLE = `Stavba ${VERSION_LABEL} — Správa rozpočtu staveb`;
+const APP_TITLE = `Rozpočet Stavby ${VERSION_LABEL}`;
 const APP_DESCRIPTION =
   "Komplexní správa rozpočtu, nákladů a času pro stavby a rekonstrukce. Přehled projektů, plateb, práce i materiálu na jednom místě.";
 
 export const metadata: Metadata = {
   title: APP_TITLE,
   description: APP_DESCRIPTION,
-  applicationName: "Stavba",
+  applicationName: "Rozpočet Stavby",
   keywords: [
     "stavba",
     "rekonstrukce",
@@ -45,7 +45,7 @@ export const metadata: Metadata = {
     description: APP_DESCRIPTION,
     type: "website",
     locale: "cs_CZ",
-    siteName: "Stavba",
+    siteName: "Rozpočet Stavby",
     images: [
       {
         url: "/logo.svg",

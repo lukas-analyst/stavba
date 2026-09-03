@@ -38,10 +38,25 @@ import { useAppStore } from "@/lib/store";
 // Charts are lazy-loaded via next/dynamic — reduces initial bundle by ~200KB.
 // See src/components/charts/lazy-charts.tsx
 import { PhaseChart, CategoryChart, SpendingTrendChart } from "@/components/charts/lazy-charts";
+import { useReveal, useRevealMultiple } from "@/hooks/use-reveal";
 
 export function DashboardTab({ projectId }: { projectId: string }) {
   const { data, isLoading } = useDashboard(projectId);
   const setActiveTab = useAppStore((s) => s.setActiveTab);
+
+  // Scroll reveal for sections
+  const kpiReveal = useReveal<HTMLDivElement>();
+  const alertsReveal = useReveal<HTMLDivElement>();
+  const projectionReveal = useReveal<HTMLDivElement>();
+  const phasesReveal = useReveal<HTMLDivElement>();
+  const trendReveal = useReveal<HTMLDivElement>();
+  const chartsReveal = useReveal<HTMLDivElement>();
+  const statsReveal = useReveal<HTMLDivElement>();
+  const categoriesReveal = useReveal<HTMLDivElement>();
+
+  // Stagger reveal for KPI cards and phase cards
+  const kpiStagger = useRevealMultiple({ staggerDelay: 60 });
+  const phaseStagger = useRevealMultiple({ staggerDelay: 50 });
 
   if (isLoading || !data) {
     return <DashboardSkeleton />;
@@ -75,8 +90,8 @@ export function DashboardTab({ projectId }: { projectId: string }) {
   return (
     <div className="space-y-6">
       {/* KPI cards */}
-      <div className="grid grid-cols-2 gap-2 sm:gap-3 md:grid-cols-3 lg:grid-cols-6 lg:gap-4">
-        <Card className="border-emerald-200/60 bg-gradient-to-br from-emerald-50 to-white dark:border-emerald-900/40 dark:from-emerald-950/30 dark:to-card">
+      <div data-reveal-id={kpiReveal.dataId} className={cn("grid grid-cols-2 gap-2 sm:gap-3 md:grid-cols-3 lg:grid-cols-6 lg:gap-4 reveal", kpiReveal.revealed && "revealed")}>
+        <Card className="border-emerald-200/60 bg-gradient-to-br from-emerald-50 to-white dark:border-emerald-900/40 dark:from-emerald-950/30 dark:to-card hover-lift">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
               Plán rozpočtu
@@ -91,7 +106,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
           </CardContent>
         </Card>
 
-        <Card className="border-amber-200/60 bg-gradient-to-br from-amber-50 to-white dark:border-amber-900/40 dark:from-amber-950/30 dark:to-card">
+        <Card className="border-amber-200/60 bg-gradient-to-br from-amber-50 to-white dark:border-amber-900/40 dark:from-amber-950/30 dark:to-card hover-lift">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
               Čerpání
@@ -122,7 +137,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
           </CardContent>
         </Card>
 
-        <Card className={totals.remaining >= 0 ? "border-sky-200/60 bg-gradient-to-br from-sky-50 to-white dark:border-sky-900/40 dark:from-sky-950/30 dark:to-card" : "border-rose-200/60 bg-gradient-to-br from-rose-50 to-white dark:border-rose-900/40 dark:from-rose-950/30 dark:to-card"}>
+        <Card className={cn("hover-lift", totals.remaining >= 0 ? "border-sky-200/60 bg-gradient-to-br from-sky-50 to-white dark:border-sky-900/40 dark:from-sky-950/30 dark:to-card" : "border-rose-200/60 bg-gradient-to-br from-rose-50 to-white dark:border-rose-900/40 dark:from-rose-950/30 dark:to-card")}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
               Zbývá v rozpočtu
@@ -143,7 +158,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
           </CardContent>
         </Card>
 
-        <Card className="border-violet-200/60 bg-gradient-to-br from-violet-50 to-white dark:border-violet-900/40 dark:from-violet-950/30 dark:to-card">
+        <Card className="border-violet-200/60 bg-gradient-to-br from-violet-50 to-white dark:border-violet-900/40 dark:from-violet-950/30 dark:to-card hover-lift">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
               Odpracováno
@@ -158,7 +173,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
           </CardContent>
         </Card>
 
-        <Card className="border-emerald-300/60 bg-gradient-to-br from-emerald-50 to-white dark:border-emerald-800/40 dark:from-emerald-950/30 dark:to-card">
+        <Card className="border-emerald-300/60 bg-gradient-to-br from-emerald-50 to-white dark:border-emerald-800/40 dark:from-emerald-950/30 dark:to-card hover-lift">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
               Ušetřeno
@@ -175,7 +190,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
           </CardContent>
         </Card>
 
-        <Card className="border-teal-200/60 bg-gradient-to-br from-teal-50 to-white dark:border-teal-900/40 dark:from-teal-950/30 dark:to-card">
+        <Card className="border-teal-200/60 bg-gradient-to-br from-teal-50 to-white dark:border-teal-900/40 dark:from-teal-950/30 dark:to-card hover-lift">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
               Hotovo
@@ -200,7 +215,8 @@ export function DashboardTab({ projectId }: { projectId: string }) {
 
       {/* Alerts banner */}
       {totalAlerts > 0 && (
-        <Card className="border-amber-200 bg-amber-50/50 dark:border-amber-900/40 dark:bg-amber-950/20">
+      <div data-reveal-id={alertsReveal.dataId} className={cn("reveal", alertsReveal.revealed && "revealed")}>
+        <Card className="border-amber-200 bg-amber-50/50 dark:border-amber-900/40 dark:bg-amber-950/20 hover-lift">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
             <div className="flex items-center gap-2">
               <CircleAlert className="h-5 w-5 text-amber-600" />
@@ -280,12 +296,14 @@ export function DashboardTab({ projectId }: { projectId: string }) {
             )}
           </CardContent>
         </Card>
+        </div>
       )}
 
       {/* Budget Projection */}
       {totals.completedCount > 0 && (
+      <div data-reveal-id={projectionReveal.dataId} className={cn("reveal", projectionReveal.revealed && "revealed")}>
         <Card className={cn(
-          "border-l-4",
+          "border-l-4 hover-lift",
           totals.projectedOverrun > 0 ? "border-l-rose-500 border-rose-200/60" : "border-l-emerald-500 border-emerald-200/60",
         )}>
           <CardHeader className="pb-3">
@@ -369,10 +387,12 @@ export function DashboardTab({ projectId }: { projectId: string }) {
             </div>
           </CardContent>
         </Card>
+        </div>
       )}
 
       {/* Phase progress cards */}
-      <Card>
+      <div data-reveal-id={phasesReveal.dataId} className={cn("reveal", phasesReveal.revealed && "revealed")}>
+      <Card className="hover-lift">
         <CardHeader className="pb-3">
           <CardTitle className="text-base">Postup podle fází</CardTitle>
           <CardDescription>Rozpad plánu a čerpání pro každou fázi stavby</CardDescription>
@@ -496,13 +516,16 @@ export function DashboardTab({ projectId }: { projectId: string }) {
           </div>
         </CardContent>
       </Card>
+      </div>
 
       {/* Spending trend (last 12 months) */}
+      <div data-reveal-id={trendReveal.dataId} className={cn("reveal", trendReveal.revealed && "revealed")}>
       <SpendingTrendCard projectId={projectId} />
+      </div>
 
       {/* Charts */}
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <Card>
+      <div data-reveal-id={chartsReveal.dataId} className={cn("grid grid-cols-1 gap-4 lg:grid-cols-2 reveal", chartsReveal.revealed && "revealed")}>
+        <Card className="hover-lift">
           <CardHeader>
             <CardTitle className="text-base">Rozpočet podle fáze</CardTitle>
             <CardDescription>Plán vs skutečnost pro každou fázi projektu</CardDescription>
@@ -514,7 +537,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="hover-lift">
           <CardHeader>
             <CardTitle className="text-base">Rozpočet podle kategorie</CardTitle>
             <CardDescription>Podíl plánovaných nákladů na jednotlivých kategoriích</CardDescription>
@@ -528,8 +551,8 @@ export function DashboardTab({ projectId }: { projectId: string }) {
       </div>
 
       {/* Quick stats grid */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-        <Card>
+      <div data-reveal-id={statsReveal.dataId} className={cn("grid grid-cols-1 gap-4 md:grid-cols-3 reveal", statsReveal.revealed && "revealed")}>
+        <Card className="hover-lift">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Položky rozpočtu</CardTitle>
             <ListChecks className="h-4 w-4 text-muted-foreground" />
@@ -550,7 +573,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="hover-lift">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Poslední platby</CardTitle>
             <Receipt className="h-4 w-4 text-muted-foreground" />
@@ -581,7 +604,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="hover-lift">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Poslední časové záznamy</CardTitle>
             <Timer className="h-4 w-4 text-muted-foreground" />
@@ -614,7 +637,8 @@ export function DashboardTab({ projectId }: { projectId: string }) {
       </div>
 
       {/* Categories breakdown */}
-      <Card>
+      <div data-reveal-id={categoriesReveal.dataId} className={cn("reveal", categoriesReveal.revealed && "revealed")}>
+      <Card className="hover-lift">
         <CardHeader>
           <CardTitle className="text-base">Náklady podle kategorie</CardTitle>
           <CardDescription>Detailní rozpad plánu a skutečnosti</CardDescription>
@@ -648,6 +672,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
           </div>
         </CardContent>
       </Card>
+      </div>
     </div>
   );
 }
@@ -722,7 +747,7 @@ function SpendingTrendCard({ projectId }: { projectId: string }) {
   const maxSpend = Math.max(...data.months.map((m) => m.spend), 1);
 
   return (
-    <Card>
+    <Card className="hover-lift">
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>

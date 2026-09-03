@@ -892,9 +892,9 @@ function SortableCategoryCard({
   return (
     <div
       ref={setNodeRef}
-      style={style}
+      style={{ ...style, animationDelay: `${groupIndex * 60}ms` }}
       className={cn(
-        "rounded-lg border bg-card",
+        "rounded-lg border bg-card stagger-item",
         isDragging && "shadow-xl ring-2 ring-primary/30",
       )}
     >

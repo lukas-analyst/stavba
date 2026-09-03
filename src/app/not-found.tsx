@@ -20,7 +20,7 @@ export default function NotFound() {
         <p className="text-lg font-semibold md:text-xl">Stránka nenalezena</p>
         <p className="mx-auto max-w-md text-sm text-muted-foreground">
           Hledaná stránka neexistuje nebo byla přesunuta. Vraťte se na hlavní
-          stránku aplikace Stavba a pokračujte ve správě rozpočtu.
+          stránku aplikace Rozpočet Stavby a pokračujte ve správě rozpočtu.
         </p>
       </div>
       <Link href="/">
