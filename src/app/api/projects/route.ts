@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { db, dbRead } from "@/lib/db";
+import { getDefaultOwnerId } from "@/lib/default-owner";
 
 // GET /api/projects - list all projects
 // Performance: instead of N+1 queries (one per project to fetch budget items
@@ -104,14 +105,19 @@ export async function POST(request: Request) {
     // Ensure uniqueness
     let slug = baseSlug;
     let suffix = 1;
-    while (await db.project.findUnique({ where: { slug } })) {
+    while (await dbRead.project.findUnique({ where: { slug } })) {
       slug = `${baseSlug}-${suffix++}`;
     }
+
+    // Get the default owner (until auth is implemented, all projects
+    // are owned by the hardcoded default user)
+    const ownerId = await getDefaultOwnerId();
 
     const project = await db.project.create({
       data: {
         name: name.trim(),
         slug,
+        ownerId,
         address: address?.trim() || null,
         description: description?.trim() || null,
         starred: Boolean(starred),

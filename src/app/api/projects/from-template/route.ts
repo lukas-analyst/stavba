@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { getDefaultOwnerId } from "@/lib/default-owner";
 import { getTemplate } from "@/lib/project-templates";
 
 // POST /api/projects/from-template
@@ -45,11 +46,15 @@ export async function POST(request: Request) {
       slug = `${baseSlug}-${suffix++}`;
     }
 
+    // Get the default owner (until auth is implemented)
+    const ownerId = await getDefaultOwnerId();
+
     // Create the project
     const project = await db.project.create({
       data: {
         name: name.trim(),
         slug,
+        ownerId,
         address: address?.trim() || null,
         description: description?.trim() || template.description,
         starred: false,
