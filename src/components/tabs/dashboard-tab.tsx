@@ -38,21 +38,10 @@ import { useAppStore } from "@/lib/store";
 // Charts are lazy-loaded via next/dynamic — reduces initial bundle by ~200KB.
 // See src/components/charts/lazy-charts.tsx
 import { PhaseChart, CategoryChart, SpendingTrendChart } from "@/components/charts/lazy-charts";
-import { useReveal } from "@/hooks/use-reveal";
 
 export function DashboardTab({ projectId }: { projectId: string }) {
   const { data, isLoading } = useDashboard(projectId);
   const setActiveTab = useAppStore((s) => s.setActiveTab);
-
-  // Scroll reveal for sections
-  const kpiReveal = useReveal<HTMLDivElement>();
-  const alertsReveal = useReveal<HTMLDivElement>();
-  const projectionReveal = useReveal<HTMLDivElement>();
-  const phasesReveal = useReveal<HTMLDivElement>();
-  const trendReveal = useReveal<HTMLDivElement>();
-  const chartsReveal = useReveal<HTMLDivElement>();
-  const statsReveal = useReveal<HTMLDivElement>();
-  const categoriesReveal = useReveal<HTMLDivElement>();
 
   if (isLoading || !data) {
     return <DashboardSkeleton />;
@@ -86,7 +75,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
   return (
     <div className="space-y-6">
       {/* KPI cards */}
-      <div data-reveal-id={kpiReveal.dataId} className={cn("grid grid-cols-2 gap-2 sm:gap-3 md:grid-cols-3 lg:grid-cols-6 lg:gap-4 reveal", kpiReveal.revealed && "revealed")}>
+      <div className={cn("grid grid-cols-2 gap-2 sm:gap-3 md:grid-cols-3 lg:grid-cols-6 lg:gap-4 ")}>
         <Card className="border-emerald-200/60 bg-gradient-to-br from-emerald-50 to-white dark:border-emerald-900/40 dark:from-emerald-950/30 dark:to-card hover-lift">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
@@ -211,7 +200,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
 
       {/* Alerts banner */}
       {totalAlerts > 0 && (
-      <div data-reveal-id={alertsReveal.dataId} className={cn("reveal", alertsReveal.revealed && "revealed")}>
+      <div>
         <Card className="border-amber-200 bg-amber-50/50 dark:border-amber-900/40 dark:bg-amber-950/20 hover-lift">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
             <div className="flex items-center gap-2">
@@ -297,7 +286,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
 
       {/* Budget Projection */}
       {totals.completedCount > 0 && (
-      <div data-reveal-id={projectionReveal.dataId} className={cn("reveal", projectionReveal.revealed && "revealed")}>
+      <div>
         <Card className={cn(
           "border-l-4 hover-lift",
           totals.projectedOverrun > 0 ? "border-l-rose-500 border-rose-200/60" : "border-l-emerald-500 border-emerald-200/60",
@@ -387,7 +376,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
       )}
 
       {/* Phase progress cards */}
-      <div data-reveal-id={phasesReveal.dataId} className={cn("reveal", phasesReveal.revealed && "revealed")}>
+      <div>
       <Card className="hover-lift">
         <CardHeader className="pb-3">
           <CardTitle className="text-base">Postup podle fází</CardTitle>
@@ -515,12 +504,12 @@ export function DashboardTab({ projectId }: { projectId: string }) {
       </div>
 
       {/* Spending trend (last 12 months) */}
-      <div data-reveal-id={trendReveal.dataId} className={cn("reveal", trendReveal.revealed && "revealed")}>
+      <div>
       <SpendingTrendCard projectId={projectId} />
       </div>
 
       {/* Charts */}
-      <div data-reveal-id={chartsReveal.dataId} className={cn("grid grid-cols-1 gap-4 lg:grid-cols-2 reveal", chartsReveal.revealed && "revealed")}>
+      <div className={cn("grid grid-cols-1 gap-4 lg:grid-cols-2 ")}>
         <Card className="hover-lift">
           <CardHeader>
             <CardTitle className="text-base">Rozpočet podle fáze</CardTitle>
@@ -547,7 +536,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
       </div>
 
       {/* Quick stats grid */}
-      <div data-reveal-id={statsReveal.dataId} className={cn("grid grid-cols-1 gap-4 md:grid-cols-3 reveal", statsReveal.revealed && "revealed")}>
+      <div className={cn("grid grid-cols-1 gap-4 md:grid-cols-3 ")}>
         <Card className="hover-lift">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Položky rozpočtu</CardTitle>
@@ -633,7 +622,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
       </div>
 
       {/* Categories breakdown */}
-      <div data-reveal-id={categoriesReveal.dataId} className={cn("reveal", categoriesReveal.revealed && "revealed")}>
+      <div>
       <Card className="hover-lift">
         <CardHeader>
           <CardTitle className="text-base">Náklady podle kategorie</CardTitle>

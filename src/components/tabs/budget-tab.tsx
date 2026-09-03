@@ -883,9 +883,9 @@ function SortableCategoryCard({
   return (
     <div
       ref={setNodeRef}
-      style={{ ...style, animationDelay: `${groupIndex * 80}ms` }}
+      style={style}
       className={cn(
-        "rounded-lg border bg-card stagger-item",
+        "rounded-lg border bg-card",
         isDragging && "shadow-xl ring-2 ring-primary/30",
       )}
     >
@@ -1716,7 +1716,7 @@ function DetailPanelRow({
               ? "bg-rose-500"
               : PHASE_BG_COLORS[item.phase] ?? "bg-zinc-300",
           )}
-          style={{ left: "calc(8px + 48px + 12px)" }}
+          style={{ left: "32px" }}
         />
         <div className="grid grid-cols-1 gap-4 pl-10 sm:grid-cols-3">
           <div className="sm:col-span-1">
