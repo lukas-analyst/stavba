@@ -266,6 +266,7 @@ function BudgetTab({ projectId, dragEndHandlerRef }: { projectId: string; dragEn
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebouncedValue(search, 250);
   const [addOpen, setAddOpen] = useState(false);
+  const [addOpenForCategory, setAddOpenForCategory] = useState<string | null>(null);
   const [editingItem, setEditingItem] = useState<BudgetItem | null>(null);
   const [addTaskFor, setAddTaskFor] = useState<BudgetItem | null>(null);
   const [highlightId, setHighlightId] = useState<string | null>(null);
@@ -707,6 +708,9 @@ function BudgetTab({ projectId, dragEndHandlerRef }: { projectId: string; dragEn
                 onCategoryDragEnd={(oldIdx, newIdx) =>
                   handleCategoryReorder(oldIdx, newIdx)
                 }
+                onAddItem={() => {
+                  setAddOpenForCategory(category);
+                }}
               >
                 {/* Inner SortableContext for items within this category */}
                 <SortableContext items={itemIds} strategy={verticalListSortingStrategy}>
@@ -830,6 +834,23 @@ function BudgetTab({ projectId, dragEndHandlerRef }: { projectId: string; dragEn
           }}
         />
       )}
+      <BudgetItemDialog
+        open={!!addOpenForCategory}
+        onOpenChange={(o) => !o && setAddOpenForCategory(null)}
+        projectId={projectId}
+        defaultCategory={addOpenForCategory ?? undefined}
+        onSubmitted={(created) => {
+          setCollapsedCats((prev) => {
+            const next = new Set(prev);
+            next.delete(created.category);
+            return next;
+          });
+          setSearch("");
+          setPhaseFilter("all");
+          setCompletionFilter("all");
+          setHighlightId(created.id);
+        }}
+      />
     </div>
   );
 }
@@ -849,6 +870,7 @@ function SortableCategoryCard({
   onMoveCategoryUp,
   onMoveCategoryDown,
   onCategoryDragEnd,
+  onAddItem,
   children,
 }: {
   id: string;
@@ -862,6 +884,7 @@ function SortableCategoryCard({
   onMoveCategoryUp: () => void;
   onMoveCategoryDown: () => void;
   onCategoryDragEnd: (oldIndex: number, newIndex: number) => void;
+  onAddItem?: () => void;
   children: React.ReactNode;
 }) {
   const {
@@ -921,6 +944,20 @@ function SortableCategoryCard({
                 <PiggyBank className="mr-1 h-2.5 w-2.5" />
                 {formatCzk(totals.saved)}
               </Badge>
+            )}
+            {/* Add item to this category (green plus) */}
+            {onAddItem && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onAddItem();
+                }}
+                title={`Přidat položku do kategorie „${categoryName}"`}
+                aria-label="Přidat položku"
+                className="inline-flex h-5 w-5 items-center justify-center rounded-md text-emerald-700 transition-colors hover:bg-emerald-100 hover:text-emerald-800 dark:text-emerald-400 dark:hover:bg-emerald-900/40"
+              >
+                <Plus className="h-3.5 w-3.5" />
+              </button>
             )}
             <div className="ml-auto flex items-center gap-4 text-xs">
               <span className="text-muted-foreground">

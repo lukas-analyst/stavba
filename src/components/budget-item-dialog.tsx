@@ -20,7 +20,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
 import { PHASES } from "@/lib/format";
 import {
   useBudgetItems,
@@ -28,8 +27,10 @@ import {
   useUpdateBudgetItem,
   type BudgetItem,
 } from "@/lib/api";
-import { Loader2 } from "lucide-react";
+import { Loader2, AlertTriangle, CheckCircle2, Circle, X } from "lucide-react";
 import { toast } from "sonner";
+import { SearchableSelect } from "@/components/ui/searchable-select";
+import { cn } from "@/lib/utils";
 
 type Props = {
   open: boolean;
@@ -135,7 +136,7 @@ function BudgetItemForm({
   // For Úkol: subcategory is the task name (label "Název úkolu").
   const [subcategory, setSubcategory] = useState(item?.subcategory ?? "");
   const [phase, setPhase] = useState(item?.phase ?? defaultPhase ?? "Neurčeno");
-  const [required, setRequired] = useState(item?.required ?? false);
+  const [required, setRequired] = useState(item ? item.required : true);
   const [completed, setCompleted] = useState(item?.completed ?? false);
   const [rejected, setRejected] = useState(item?.rejected ?? false);
   const [note, setNote] = useState(item?.note ?? "");
@@ -363,28 +364,34 @@ function BudgetItemForm({
         )}
 
         {isTaskMode ? (
-          // ===== Task mode: only Hotovo + Zavrženo (no Fáze, no Nutné) =====
-          <div className="flex items-center gap-6">
-            <div className="flex items-center gap-2">
-              <Checkbox
-                id="completed"
-                checked={completed}
-                onCheckedChange={(v) => setCompleted(v === true)}
-              />
-              <Label htmlFor="completed" className="cursor-pointer">
-                Hotovo
-              </Label>
-            </div>
-            <div className="flex items-center gap-2">
-              <Checkbox
-                id="rejected"
-                checked={rejected}
-                onCheckedChange={(v) => setRejected(v === true)}
-              />
-              <Label htmlFor="rejected" className="cursor-pointer text-rose-700 dark:text-rose-400">
-                Zavrženo
-              </Label>
-            </div>
+          // ===== Task mode: Hotovo + Zavrženo as toggle buttons =====
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setCompleted(!completed)}
+              className={cn(
+                "flex items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-medium transition-all",
+                completed
+                  ? "border-emerald-500 bg-emerald-50 text-emerald-700 dark:border-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300"
+                  : "border-border text-muted-foreground hover:border-emerald-300 hover:bg-emerald-50/50 dark:hover:border-emerald-800",
+              )}
+            >
+              {completed ? <CheckCircle2 className="h-3.5 w-3.5" /> : <Circle className="h-3.5 w-3.5" />}
+              Hotovo
+            </button>
+            <button
+              type="button"
+              onClick={() => setRejected(!rejected)}
+              className={cn(
+                "flex items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-medium transition-all",
+                rejected
+                  ? "border-rose-500 bg-rose-50 text-rose-700 dark:border-rose-700 dark:bg-rose-950/40 dark:text-rose-300"
+                  : "border-border text-muted-foreground hover:border-rose-300 hover:bg-rose-50/50 dark:hover:border-rose-800",
+              )}
+            >
+              <X className="h-3.5 w-3.5" />
+              Zavrženo
+            </button>
           </div>
         ) : (
           // ===== Item mode: Fáze + Nutné/Hotovo/Zavrženo =====
@@ -404,37 +411,47 @@ function BudgetItemForm({
                 </SelectContent>
               </Select>
             </div>
-            <div className="flex flex-col justify-end gap-2 pb-2">
-              <div className="flex items-center gap-2">
-                <Checkbox
-                  id="required"
-                  checked={required}
-                  onCheckedChange={(v) => setRequired(v === true)}
-                />
-                <Label htmlFor="required" className="cursor-pointer">
-                  Nutné
-                </Label>
-              </div>
-              <div className="flex items-center gap-2">
-                <Checkbox
-                  id="completed"
-                  checked={completed}
-                  onCheckedChange={(v) => setCompleted(v === true)}
-                />
-                <Label htmlFor="completed" className="cursor-pointer">
-                  Hotovo
-                </Label>
-              </div>
-              <div className="flex items-center gap-2">
-                <Checkbox
-                  id="rejected"
-                  checked={rejected}
-                  onCheckedChange={(v) => setRejected(v === true)}
-                />
-                <Label htmlFor="rejected" className="cursor-pointer text-rose-700 dark:text-rose-400">
-                  Zavrženo
-                </Label>
-              </div>
+            <div className="flex flex-wrap items-center gap-2 pb-1">
+              <button
+                type="button"
+                onClick={() => setRequired(!required)}
+                className={cn(
+                  "flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[11px] font-medium transition-all",
+                  required
+                    ? "border-amber-500 bg-amber-50 text-amber-700 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-300"
+                    : "border-border text-muted-foreground hover:border-amber-300 hover:bg-amber-50/50 dark:hover:border-amber-800",
+                )}
+                title="Nutné — položka je povinná pro dokončení projektu"
+              >
+                <AlertTriangle className="h-3 w-3" />
+                Nutné
+              </button>
+              <button
+                type="button"
+                onClick={() => setCompleted(!completed)}
+                className={cn(
+                  "flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[11px] font-medium transition-all",
+                  completed
+                    ? "border-emerald-500 bg-emerald-50 text-emerald-700 dark:border-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300"
+                    : "border-border text-muted-foreground hover:border-emerald-300 hover:bg-emerald-50/50 dark:hover:border-emerald-800",
+                )}
+              >
+                {completed ? <CheckCircle2 className="h-3 w-3" /> : <Circle className="h-3 w-3" />}
+                Hotovo
+              </button>
+              <button
+                type="button"
+                onClick={() => setRejected(!rejected)}
+                className={cn(
+                  "flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[11px] font-medium transition-all",
+                  rejected
+                    ? "border-rose-500 bg-rose-50 text-rose-700 dark:border-rose-700 dark:bg-rose-950/40 dark:text-rose-300"
+                    : "border-border text-muted-foreground hover:border-rose-300 hover:bg-rose-50/50 dark:hover:border-rose-800",
+                )}
+              >
+                <X className="h-3 w-3" />
+                Zavrženo
+              </button>
             </div>
           </div>
         )}
@@ -507,20 +524,22 @@ function BudgetItemForm({
         {!isTaskMode && (
           <div className="space-y-2">
             <Label htmlFor="dependsOn">Navazuje na</Label>
-            <Select value={dependsOnId} onValueChange={handleDependsOnChange}>
-              <SelectTrigger id="dependsOn">
-                <SelectValue placeholder="— žádná závislost —" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="__none__">— žádná závislost —</SelectItem>
-                {dependsOnOptions.map((i) => (
-                  <SelectItem key={i.id} value={i.id}>
-                    {i.subcategory || i.category}
-                    {i.dateTo ? ` (do ${i.dateTo.substring(0, 10)})` : ""}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <SearchableSelect
+              id="dependsOn"
+              options={[
+                { value: "__none__", label: "— žádná závislost —", hint: "" },
+                ...dependsOnOptions.map((i) => ({
+                  value: i.id,
+                  label: i.subcategory || i.category,
+                  hint: `${i.category}${i.dateTo ? ` · do ${i.dateTo.substring(0, 10)}` : ""}`,
+                })),
+              ]}
+              value={dependsOnId}
+              onChange={(v) => handleDependsOnChange(v)}
+              placeholder="— žádná závislost —"
+              searchPlaceholder="Hledat položku…"
+              emptyText="Žádné položky nenalezeny"
+            />
             <p className="text-[10px] text-muted-foreground">
               Při výběru se Datum od automaticky doplní z Datum do vybrané položky.
             </p>
