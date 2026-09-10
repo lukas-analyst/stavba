@@ -716,7 +716,7 @@ function BudgetTab({ projectId, dragEndHandlerRef }: { projectId: string; dragEn
                 <SortableContext items={itemIds} strategy={verticalListSortingStrategy}>
                   <Table>
                     <TableHeader>
-                      <TableRow className="bg-muted/40 hover:bg-muted/40">
+                      <TableRow className="sticky top-0 z-10 bg-muted/95 backdrop-blur-sm hover:bg-muted/95">
                         <TableHead className="w-8"></TableHead>
                         <TableHead className="w-12"></TableHead>
                         <TableHead className="min-w-[200px]">Položka</TableHead>
@@ -1359,10 +1359,37 @@ function BudgetRow({
         <TableCell className="w-8" />
       )}
 
-      {/* Expand/collapse toggle (parents) OR indented └ marker (children) */}
+      {/* Expand/collapse toggle (parents) OR gradient bg for children */}
       {isChild ? (
-        <TableCell className="align-middle pl-8">
-          <span aria-hidden className="select-none text-muted-foreground/60">
+        <TableCell className="relative align-middle pl-8">
+          {/* Gradient fade from parent's phase color (left) to transparent (right) */}
+          <div
+            aria-hidden
+            className="absolute inset-y-0 left-0 w-16 pointer-events-none"
+            style={{
+              background: `linear-gradient(to right, var(--phase-color, transparent) 0%, transparent 100%)`,
+              opacity: 0.15,
+            }}
+            data-phase-color={
+              item.rejected ? "rose" : item.phase
+            }
+            ref={(el) => {
+              if (!el) return;
+              // Set CSS variable from PHASE_BG_COLORS
+              const colorMap: Record<string, string> = {
+                "Příprava": "#a78bfa",
+                "Demolice": "#f87171",
+                "Hrubá stavba": "#fbbf24",
+                "Zabydlování": "#34d399",
+                "Do budoucna": "#60a5fa",
+                "Neurčeno": "#a1a1aa",
+                "rose": "#f43f5e",
+              };
+              const key = el.getAttribute("data-phase-color") ?? "";
+              el.style.setProperty("--phase-color", colorMap[key] ?? "#a1a1aa");
+            }}
+          />
+          <span aria-hidden className="relative select-none text-muted-foreground/60">
             └
           </span>
         </TableCell>

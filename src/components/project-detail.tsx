@@ -243,8 +243,8 @@ export function ProjectDetail({ project }: { project: Project }) {
 
   return (
     <div className="flex min-h-screen flex-col">
-      {/* Project header */}
-      <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/70">
+      {/* Project header (scrolls away — not sticky) */}
+      <header className="border-b bg-background">
         <div className="px-4 pt-4 pb-0 md:px-6">
           {/* Title row */}
           <div className="flex items-start justify-between gap-2 md:gap-4">
@@ -382,8 +382,8 @@ export function ProjectDetail({ project }: { project: Project }) {
             </div>
           </div>
 
-          {/* Tabs */}
-          <nav className="scrollbar-none mt-3 flex gap-1 overflow-x-auto border-b md:mt-4">
+          {/* Tabs — sticky, stays visible during scroll */}
+          <nav className="scrollbar-none sticky top-0 z-30 -mx-4 mt-3 flex gap-1 overflow-x-auto border-b bg-background/95 px-4 backdrop-blur md:mt-4 md:-mx-6 md:px-6">
             {TABS.map((tab) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
