@@ -381,36 +381,36 @@ export function ProjectDetail({ project }: { project: Project }) {
               </Button>
             </div>
           </div>
-
-          {/* Tabs — sticky, stays visible during scroll */}
-          <nav className="scrollbar-none sticky top-0 z-30 -mx-4 mt-3 flex gap-1 overflow-x-auto border-b bg-background/95 px-4 backdrop-blur md:mt-4 md:-mx-6 md:px-6">
-            {TABS.map((tab) => {
-              const Icon = tab.icon;
-              const isActive = activeTab === tab.id;
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  onMouseEnter={() => prefetchTab(tab.id)}
-                  onFocus={() => prefetchTab(tab.id)}
-                  className={cn(
-                    "relative flex shrink-0 items-center gap-1.5 whitespace-nowrap px-3 py-2.5 text-sm font-medium transition-colors md:gap-2 md:px-4",
-                    isActive
-                      ? "text-foreground"
-                      : "text-muted-foreground hover:text-foreground",
-                  )}
-                >
-                  <Icon className="h-4 w-4" />
-                  <span className="hidden sm:inline">{tab.label}</span>
-                  {isActive && (
-                    <span className="absolute inset-x-0 -bottom-px h-0.5 bg-primary" />
-                  )}
-                </button>
-              );
-            })}
-          </nav>
         </div>
       </header>
+
+      {/* Sticky tab navigation — stays visible during scroll */}
+      <nav className="scrollbar-none sticky top-0 z-30 flex gap-1 overflow-x-auto border-b bg-background/95 px-4 backdrop-blur md:px-6">
+        {TABS.map((tab) => {
+          const Icon = tab.icon;
+          const isActive = activeTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              onMouseEnter={() => prefetchTab(tab.id)}
+              onFocus={() => prefetchTab(tab.id)}
+              className={cn(
+                "relative flex shrink-0 items-center gap-1.5 whitespace-nowrap px-3 py-2.5 text-sm font-medium transition-colors md:gap-2 md:px-4",
+                isActive
+                  ? "text-foreground"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              <Icon className="h-4 w-4" />
+              <span className="hidden sm:inline">{tab.label}</span>
+              {isActive && (
+                <span className="absolute inset-x-0 -bottom-px h-0.5 bg-primary" />
+              )}
+            </button>
+          );
+        })}
+      </nav>
 
       {/* Tab content */}
       <div className="flex-1 px-4 py-4 md:px-6 md:py-6">

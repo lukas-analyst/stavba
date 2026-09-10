@@ -716,7 +716,7 @@ function BudgetTab({ projectId, dragEndHandlerRef }: { projectId: string; dragEn
                 <SortableContext items={itemIds} strategy={verticalListSortingStrategy}>
                   <Table>
                     <TableHeader>
-                      <TableRow className="sticky top-0 z-10 bg-muted/95 backdrop-blur-sm hover:bg-muted/95">
+                      <TableRow className="sticky top-[41px] z-10 bg-muted/95 backdrop-blur-sm hover:bg-muted/95">
                         <TableHead className="w-8"></TableHead>
                         <TableHead className="w-12"></TableHead>
                         <TableHead className="min-w-[200px]">Položka</TableHead>
@@ -1774,17 +1774,31 @@ function DetailPanelRow({
   return (
     <TableRow className="detail-panel bg-muted/20 hover:bg-muted/20">
       <TableCell colSpan={12} className="relative py-3">
+        {/* Gradient fade from phase color (left edge) to transparent */}
         <div
           aria-hidden
-          className={cn(
-            "absolute inset-y-0 w-1",
-            item.rejected
-              ? "bg-rose-500"
-              : PHASE_BG_COLORS[item.phase] ?? "bg-zinc-300",
-          )}
-          style={{ left: "32px" }}
+          className="absolute inset-y-0 left-0 w-24 pointer-events-none"
+          style={{
+            background: `linear-gradient(to right, var(--phase-color, transparent) 0%, transparent 100%)`,
+            opacity: 0.12,
+          }}
+          data-phase-color={item.rejected ? "rose" : item.phase}
+          ref={(el) => {
+            if (!el) return;
+            const colorMap: Record<string, string> = {
+              "Příprava": "#a78bfa",
+              "Demolice": "#f87171",
+              "Hrubá stavba": "#fbbf24",
+              "Zabydlování": "#34d399",
+              "Do budoucna": "#60a5fa",
+              "Neurčeno": "#a1a1aa",
+              "rose": "#f43f5e",
+            };
+            const key = el.getAttribute("data-phase-color") ?? "";
+            el.style.setProperty("--phase-color", colorMap[key] ?? "#a1a1aa");
+          }}
         />
-        <div className="grid grid-cols-1 gap-4 pl-10 sm:grid-cols-3">
+        <div className="relative grid grid-cols-1 gap-4 pl-10 sm:grid-cols-3">
           <div className="sm:col-span-1">
             <div className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
               Poznámka
