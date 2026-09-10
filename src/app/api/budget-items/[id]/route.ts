@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { logChanges } from "@/lib/audit";
+import { recalcParentDates } from "@/lib/recalc-parent-dates";
 
 // PATCH /api/budget-items/[id]
 export async function PATCH(
@@ -56,6 +57,20 @@ export async function PATCH(
       updated as unknown as Record<string, unknown>,
     );
 
+    // If dateFrom/dateTo changed or item was re-parented, recalculate parent dates
+    const dateChanged =
+      updateData.dateFrom !== undefined || updateData.dateTo !== undefined;
+    const parentChanged =
+      updateData.parentId !== undefined && updateData.parentId !== existing.parentId;
+
+    if (updated.parentId && (dateChanged || parentChanged)) {
+      await recalcParentDates(updated.parentId);
+    }
+    // If item was moved to a new parent, also recalc the OLD parent
+    if (parentChanged && existing.parentId) {
+      await recalcParentDates(existing.parentId);
+    }
+
     return NextResponse.json(updated);
   } catch (error) {
     console.error("PATCH budget item error:", error);
@@ -86,6 +101,12 @@ export async function DELETE(
     );
 
     await db.budgetItem.delete({ where: { id } });
+
+    // If this was a child task, recalculate parent's dateFrom/dateTo
+    if (existing.parentId) {
+      await recalcParentDates(existing.parentId);
+    }
+
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("DELETE budget item error:", error);

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { db, dbRead } from "@/lib/db";
+import { recalcParentDates } from "@/lib/recalc-parent-dates";
 
 // Explicit field selection — only fetch what the frontend actually uses.
 // This reduces DB payload by ~40% compared to `include` (which fetches
@@ -136,6 +137,11 @@ export async function POST(
       },
       select: BUDGET_ITEM_SELECT,
     });
+
+    // If this is a child task, recalculate parent's dateFrom/dateTo
+    if (parentId) {
+      await recalcParentDates(parentId);
+    }
 
     return NextResponse.json(item, { status: 201 });
   } catch (error) {

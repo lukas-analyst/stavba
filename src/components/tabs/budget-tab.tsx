@@ -816,6 +816,8 @@ function BudgetTab({ projectId, dragEndHandlerRef }: { projectId: string; dragEn
           defaultCategory={addTaskFor.category}
           defaultPhase={addTaskFor.phase}
           parentItemName={addTaskFor.subcategory ?? addTaskFor.category}
+          defaultDateFrom={addTaskFor.dateFrom ? addTaskFor.dateFrom.substring(0, 10) : undefined}
+          defaultDateTo={addTaskFor.dateTo ? addTaskFor.dateTo.substring(0, 10) : undefined}
           onSubmitted={(created) => {
             setExpandedItems((prev) => {
               const next = new Set(prev);

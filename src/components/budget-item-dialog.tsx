@@ -43,6 +43,10 @@ type Props = {
   defaultPhase?: string;
   defaultSubcategory?: string;
   parentItemName?: string;
+  /** Default dateFrom — pre-filled from parent item (only for task mode) */
+  defaultDateFrom?: string;
+  /** Default dateTo — pre-filled from parent item (only for task mode) */
+  defaultDateTo?: string;
   /** Called with the newly-created or updated item after a successful submit. */
   onSubmitted?: (item: BudgetItem, isNew: boolean) => void;
 };
@@ -56,6 +60,8 @@ export function BudgetItemDialog({
   defaultCategory,
   defaultPhase,
   parentItemName,
+  defaultDateFrom,
+  defaultDateTo,
   onSubmitted,
 }: Props) {
   return (
@@ -70,6 +76,8 @@ export function BudgetItemDialog({
             defaultCategory={defaultCategory}
             defaultPhase={defaultPhase}
             parentItemName={parentItemName}
+            defaultDateFrom={defaultDateFrom}
+            defaultDateTo={defaultDateTo}
             onDone={() => onOpenChange(false)}
             onSubmitted={onSubmitted}
           />
@@ -86,6 +94,8 @@ function BudgetItemForm({
   defaultCategory,
   defaultPhase,
   parentItemName,
+  defaultDateFrom,
+  defaultDateTo,
   onDone,
   onSubmitted,
 }: {
@@ -95,6 +105,8 @@ function BudgetItemForm({
   defaultCategory?: string;
   defaultPhase?: string;
   parentItemName?: string;
+  defaultDateFrom?: string;
+  defaultDateTo?: string;
   onDone: () => void;
   onSubmitted?: (item: BudgetItem, isNew: boolean) => void;
 }) {
@@ -146,10 +158,10 @@ function BudgetItemForm({
   );
   const [planDays, setPlanDays] = useState(item?.planDays?.toString() ?? "");
   const [dateFrom, setDateFrom] = useState(
-    item?.dateFrom ? item.dateFrom.substring(0, 10) : "",
+    item?.dateFrom ? item.dateFrom.substring(0, 10) : (defaultDateFrom ?? ""),
   );
   const [dateTo, setDateTo] = useState(
-    item?.dateTo ? item.dateTo.substring(0, 10) : "",
+    item?.dateTo ? item.dateTo.substring(0, 10) : (defaultDateTo ?? ""),
   );
   // Optional dependency on another top-level item — used to auto-fill dateFrom
   // from the referenced item's dateTo. Sentinel "__none__" represents "no dep".
