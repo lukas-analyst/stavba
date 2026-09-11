@@ -117,9 +117,10 @@ export function NotesTab({ projectId }: { projectId: string }) {
   };
 
   return (
-    <div className="space-y-4">
+    <div id="notes-root" className="space-y-4">
       {/* Add note form */}
       <form
+        id="notes-add-form"
         onSubmit={handleSubmit}
         className="space-y-3 rounded-lg border bg-card p-4 shadow-sm"
       >

@@ -624,7 +624,7 @@ function BudgetTab({ projectId, dragEndHandlerRef }: { projectId: string; dragEn
     <div id="budget-root" className="space-y-4">
       {/* Toolbar */}
       <div id="budget-toolbar" className="flex flex-wrap items-center gap-2">
-        <div className="relative">
+        <div id="budget-search" className="relative">
           <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             value={search}
@@ -647,7 +647,7 @@ function BudgetTab({ projectId, dragEndHandlerRef }: { projectId: string; dragEn
             ))}
           </SelectContent>
         </Select>
-        <div className="flex items-center gap-0.5 rounded-md border bg-muted/40 p-0.5">
+        <div id="budget-completion-filter" className="flex items-center gap-0.5 rounded-md border bg-muted/40 p-0.5">
           {COMPLETION_OPTIONS.map((opt) => (
             <button
               key={opt.id}
@@ -710,7 +710,7 @@ function BudgetTab({ projectId, dragEndHandlerRef }: { projectId: string; dragEn
                 <SortableContext items={itemIds} strategy={verticalListSortingStrategy}>
                   <Table>
                     <TableHeader>
-                      <TableRow className="sticky top-[37px] z-20 bg-muted/95 backdrop-blur-sm hover:bg-muted/95">
+                      <TableRow className="bg-muted/40 hover:bg-muted/40">
                         <TableHead className="w-8"></TableHead>
                         <TableHead className="w-12"></TableHead>
                         <TableHead className="min-w-[200px]">Položka</TableHead>
@@ -903,6 +903,7 @@ function SortableCategoryCard({
     <div
       ref={setNodeRef}
       style={style}
+      id={`category-${categoryName.replace(/[^a-zA-Z0-9]/g, "-").toLowerCase()}`}
       className={cn(
         "rounded-lg border bg-card",
         isDragging && "shadow-xl ring-2 ring-primary/30",

@@ -212,9 +212,9 @@ export function PaymentsTab({ projectId }: { projectId: string }) {
   ].reduce((s, p) => s + p.amount, 0);
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-center gap-2">
-        <div className="relative">
+    <div id="payments-root" className="space-y-4">
+      <div id="payments-toolbar" className="flex flex-wrap items-center gap-2">
+        <div id="payments-search" className="relative">
           <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             value={search}

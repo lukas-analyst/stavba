@@ -153,9 +153,9 @@ export function TimeTab({ projectId }: { projectId: string }) {
   }, [entries]);
 
   return (
-    <div className="space-y-4">
+    <div id="time-root" className="space-y-4">
       {/* Top stats: hours by worker */}
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4 lg:grid-cols-6">
+      <div id="time-worker-stats" className="grid grid-cols-2 gap-3 md:grid-cols-4 lg:grid-cols-6">
         {byWorker.slice(0, 6).map(([name, info]) => {
           const w = workerTypeLabel(info.type);
           return (

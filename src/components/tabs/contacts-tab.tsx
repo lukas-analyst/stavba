@@ -100,8 +100,8 @@ export function ContactsTab({ projectId }: { projectId: string }) {
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
+    <div id="contacts-root" className="space-y-4">
+      <div id="contacts-header" className="flex items-center justify-between">
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Users className="h-4 w-4" />
           {contacts?.length ?? 0} kontaktů v projektu
