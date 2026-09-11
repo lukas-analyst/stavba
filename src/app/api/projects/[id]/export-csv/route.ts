@@ -38,8 +38,50 @@ export async function GET(
     let rows: string[][];
     let filename: string;
 
+<<<<<<< Updated upstream
     if (type === "payments") {
       const payments = await dbRead.payment.findMany({
+=======
+    if (type === "contacts") {
+      const contacts = await db.contact.findMany({
+        where: { projectId: id },
+        orderBy: [{ name: "asc" }],
+      });
+      header = [
+        "Jméno / Název",
+        "Typ",
+        "Role / Obor",
+        "Firma",
+        "Telefon",
+        "E-mail",
+        "Web",
+        "Hodnocení",
+        "Poznámky",
+      ];
+      const typeLabels: Record<string, string> = {
+        company: "Firma",
+        craftsman: "Řemeslník",
+        self: "Svépomoc",
+        family: "Rodina",
+        supplier: "Dodavatel",
+        architect: "Architekt",
+        office: "Úřad",
+      };
+      rows = contacts.map((c) => [
+        c.name,
+        typeLabels[c.type] ?? c.type,
+        c.role ?? "",
+        c.company ?? "",
+        c.phone ?? "",
+        c.email ?? "",
+        c.website ?? "",
+        c.rating !== null ? String(c.rating) : "",
+        c.notes ?? "",
+      ]);
+      filename = `${project.name}-kontakty.csv`;
+    } else if (type === "payments") {
+      const payments = await db.payment.findMany({
+>>>>>>> Stashed changes
         where: { budgetItem: { projectId: id } },
         orderBy: { date: "desc" },
         include: {

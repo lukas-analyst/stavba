@@ -63,6 +63,10 @@ import {
   ArrowUpDown,
   CheckCircle2,
   Download,
+  Pencil,
+  ArrowDownUp,
+  ArrowUp,
+  ArrowDown,
 } from "lucide-react";
 import { formatCzk, formatDate, PAYMENT_TYPES, paymentTypeLabel } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -133,6 +137,10 @@ function toDateStr(d: string | null | undefined): string {
   }
 }
 
+// Sorting options for standalone payments
+type SortKey = "date" | "type" | "amount" | "contact" | "vendor";
+type SortDir = "asc" | "desc";
+
 export function PaymentsTab({ projectId }: { projectId: string }) {
   const { data: payments, isLoading } = usePayments(projectId);
   const { data: budgetItems } = useBudgetItems(projectId);
@@ -148,7 +156,12 @@ export function PaymentsTab({ projectId }: { projectId: string }) {
   // Debounce search so filter only re-runs 250ms after typing stops
   const debouncedSearch = useDebouncedValue(search, 250);
   const [typeFilter, setTypeFilter] = useState<string>("all");
+<<<<<<< Updated upstream
   const [sortBy, setSortBy] = useState<SortKey>("date-desc");
+=======
+  const [sortBy, setSortBy] = useState<SortKey>("date");
+  const [sortDir, setSortDir] = useState<SortDir>("desc");
+>>>>>>> Stashed changes
 
   // Group payments: standalone payments + installment groups
   // A payment is an "installment parent" if it has invoiceTotal != null (regardless of children).
@@ -184,6 +197,14 @@ export function PaymentsTab({ projectId }: { projectId: string }) {
       }
       // If p.installmentOf is set, it's a child — already in childrenByParent, skip
     }
+<<<<<<< Updated upstream
+=======
+    // Installment groups are always sorted by date desc (newest first)
+    // and kept above standalone payments regardless of selected sort.
+    groups.sort(
+      (a, b) => new Date(b.parent.date).getTime() - new Date(a.parent.date).getTime(),
+    );
+>>>>>>> Stashed changes
     return { standalone, groups };
   }, [payments]);
 
@@ -197,6 +218,7 @@ export function PaymentsTab({ projectId }: { projectId: string }) {
     }
     return true;
   };
+<<<<<<< Updated upstream
   const filteredStandalone = standalone
     .filter(filterFn)
     .slice()
@@ -205,6 +227,40 @@ export function PaymentsTab({ projectId }: { projectId: string }) {
     .filter((g) => filterFn(g.parent))
     .slice()
     .sort((a, b) => sortPayments(a.parent, b.parent, sortBy));
+=======
+
+  // Sort standalone payments according to current sort key/direction.
+  // Date is the default (newest first = desc).
+  const filteredStandalone = useMemo(() => {
+    const filtered = standalone.filter(filterFn);
+    const sorted = [...filtered].sort((a, b) => {
+      let cmp = 0;
+      switch (sortBy) {
+        case "date":
+          cmp = new Date(a.date).getTime() - new Date(b.date).getTime();
+          break;
+        case "type":
+          cmp = a.type.localeCompare(b.type);
+          break;
+        case "amount":
+          cmp = a.amount - b.amount;
+          break;
+        case "contact":
+          cmp = (a.contact?.name ?? "").localeCompare(b.contact?.name ?? "", "cs");
+          break;
+        case "vendor":
+          cmp = (a.vendor ?? "").localeCompare(b.vendor ?? "", "cs");
+          break;
+        default:
+          cmp = 0;
+      }
+      return sortDir === "asc" ? cmp : -cmp;
+    });
+    return sorted;
+  }, [standalone, sortBy, sortDir, typeFilter, search]);
+
+  const filteredGroups = groups.filter((g) => filterFn(g.parent));
+>>>>>>> Stashed changes
 
   const totalAmount = [
     ...filteredStandalone,
@@ -236,6 +292,7 @@ export function PaymentsTab({ projectId }: { projectId: string }) {
             ))}
           </SelectContent>
         </Select>
+<<<<<<< Updated upstream
         <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortKey)}>
           <SelectTrigger className="h-9 w-52">
             <ArrowUpDown className="mr-1.5 h-3.5 w-3.5 text-muted-foreground" />
@@ -249,6 +306,37 @@ export function PaymentsTab({ projectId }: { projectId: string }) {
             ))}
           </SelectContent>
         </Select>
+=======
+        {/* Sorting controls */}
+        <div className="flex items-center gap-1">
+          <ArrowDownUp className="h-4 w-4 shrink-0 text-muted-foreground" />
+          <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortKey)}>
+            <SelectTrigger className="h-9 w-40">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="date">Datum</SelectItem>
+              <SelectItem value="type">Typ</SelectItem>
+              <SelectItem value="amount">Částka</SelectItem>
+              <SelectItem value="contact">Kontakt</SelectItem>
+              <SelectItem value="vendor">Firma</SelectItem>
+            </SelectContent>
+          </Select>
+          <Button
+            variant="outline"
+            size="icon"
+            className="h-9 w-9 shrink-0"
+            onClick={() => setSortDir((d) => (d === "asc" ? "desc" : "asc"))}
+            title={sortDir === "asc" ? "Vzestupně (klikněte pro sestupné)" : "Sestupně (klikněte pro vzestupné)"}
+          >
+            {sortDir === "asc" ? (
+              <ArrowUp className="h-4 w-4" />
+            ) : (
+              <ArrowDown className="h-4 w-4" />
+            )}
+          </Button>
+        </div>
+>>>>>>> Stashed changes
         <div className="ml-auto flex items-center gap-3 text-sm">
           <div className="text-right">
             <div className="text-xs text-muted-foreground">
@@ -421,6 +509,23 @@ export function PaymentsTab({ projectId }: { projectId: string }) {
         payment={editPayment}
         onClose={() => setEditPayment(null)}
       />
+
+      {/* Edit existing payment dialog (remounts per payment via key) */}
+      {editPayment && (
+        <PaymentDialog
+          key={editPayment.id}
+          open={!!editPayment}
+          onOpenChange={(o) => {
+            if (!o) setEditPayment(null);
+          }}
+          projectId={projectId}
+          budgetItems={budgetItems ?? []}
+          contacts={contacts ?? []}
+          createPayment={createPayment}
+          updatePayment={updatePayment}
+          payment={editPayment}
+        />
+      )}
     </div>
   );
 }
@@ -538,12 +643,21 @@ function InstallmentGroupCard({
         <div className="border-t bg-card">
           {/* Installments list */}
           <Table>
+<<<<<<< Updated upstream
               <TableHeader>
                 <TableRow className="bg-muted/30 hover:bg-muted/30">
                   <TableHead className="w-32">Datum splátky</TableHead>
                   <TableHead className="min-w-[160px]">Popis</TableHead>
                   <TableHead>Kontakt</TableHead>
                   <TableHead className="text-right">Částka</TableHead>
+=======
+            <TableHeader>
+              <TableRow className="bg-muted/30 hover:bg-muted/30">
+                <TableHead className="w-32">Datum splátky</TableHead>
+                <TableHead className="min-w-[160px]">Popis</TableHead>
+                <TableHead>Kontakt</TableHead>
+                <TableHead className="text-right">Částka</TableHead>
+>>>>>>> Stashed changes
                   <TableHead className="w-8"></TableHead>
                 </TableRow>
               </TableHeader>
@@ -755,9 +869,14 @@ function PaymentRow({
 
   return (
     <TableRow
+<<<<<<< Updated upstream
       className="group cursor-pointer hover:bg-muted/30"
       onClick={() => onEdit()}
       title="Klikněte pro úpravu platby"
+=======
+      className="group cursor-pointer transition-colors hover:bg-muted/30"
+      onClick={onEdit}
+>>>>>>> Stashed changes
     >
       <TableCell className="whitespace-nowrap text-xs text-muted-foreground">
         {formatDate(payment.date)}
@@ -846,6 +965,7 @@ function PaymentRow({
   );
 }
 
+<<<<<<< Updated upstream
 // ===== Payment dialog (create + edit) =====
 interface PaymentDialogProps {
   open: boolean;
@@ -879,11 +999,18 @@ function PaymentDialog(props: PaymentDialogProps) {
 }
 
 function PaymentDialogInner({
+=======
+// ===== Payment creation/edit dialog =====
+function PaymentDialog({
+  open,
+  onOpenChange,
+>>>>>>> Stashed changes
   projectId,
   budgetItems,
   contacts,
   createPayment,
   updatePayment,
+<<<<<<< Updated upstream
   updateBudgetItem,
   payment,
   onClose,
@@ -897,11 +1024,44 @@ function PaymentDialogInner({
   const [contactId, setContactId] = useState(payment?.contactId ?? "");
   const [amount, setAmount] = useState(payment ? String(payment.amount ?? "") : "");
   const [date, setDate] = useState(toDateStr(payment?.date) || today);
+=======
+  payment,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  projectId: string;
+  budgetItems: { id: string; category: string; subcategory: string | null }[];
+  contacts: { id: string; name: string; type: string }[];
+  createPayment: ReturnType<typeof useCreatePayment>;
+  updatePayment?: ReturnType<typeof useUpdatePayment>;
+  payment?: Payment | null;
+}) {
+  // Edit mode: when a `payment` is supplied we pre-fill all fields from it.
+  // We use a key-based remount in the parent (key={payment.id}) so initial
+  // state is computed once when the dialog opens for a given payment.
+  const isEditMode = !!payment;
+  const isInvoiceParent =
+    isEditMode && !!payment && payment.invoiceTotal !== null && payment.invoiceTotal !== undefined;
+
+  const [budgetItemId, setBudgetItemId] = useState(
+    payment?.budgetItemId ?? "",
+  );
+  const [contactId, setContactId] = useState(payment?.contactId ?? "");
+  const [amount, setAmount] = useState(
+    payment ? String(payment.amount) : "",
+  );
+  const [date, setDate] = useState(
+    payment
+      ? new Date(payment.date).toISOString().substring(0, 10)
+      : new Date().toISOString().substring(0, 10),
+  );
+>>>>>>> Stashed changes
   const [type, setType] = useState(payment?.type ?? "receipt");
   const [vendor, setVendor] = useState(payment?.vendor ?? "");
   const [invoiceNumber, setInvoiceNumber] = useState(payment?.invoiceNumber ?? "");
   const [description, setDescription] = useState(payment?.description ?? "");
   const [vatRate, setVatRate] = useState(
+<<<<<<< Updated upstream
     payment?.vatRate !== null && payment?.vatRate !== undefined ? String(payment.vatRate) : "",
   );
   // Installment mode (create-only)
@@ -924,6 +1084,17 @@ function PaymentDialogInner({
     setVatRate("");
     setMarkCompleted(false);
   }
+=======
+    payment?.vatRate !== null && payment?.vatRate !== undefined && payment.vatRate > 0
+      ? String(payment.vatRate)
+      : "",
+  );
+  // Installment mode (create-only; not available when editing an existing payment)
+  const [isInvoice, setIsInvoice] = useState(false);
+  const [invoiceTotal, setInvoiceTotal] = useState(
+    payment?.invoiceTotal ? String(payment.invoiceTotal) : "",
+  );
+>>>>>>> Stashed changes
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -969,8 +1140,49 @@ function PaymentDialogInner({
         onClose?.();
         return;
       }
+<<<<<<< Updated upstream
 
       // Create flow
+=======
+    }
+    if (isInvoiceParent) {
+      // Editing an existing invoice parent: validate invoiceTotal
+      const inv = Number(invoiceTotal.replace(",", "."));
+      if (!inv || inv <= 0) {
+        toast.error("Zadejte platnou celkovou částku faktury");
+        return;
+      }
+    }
+
+    try {
+      if (isEditMode && payment && updatePayment) {
+        // === Edit mode: PATCH the existing payment ===
+        const patch: Record<string, unknown> = {
+          budgetItemId,
+          contactId: contactId || null,
+          amount: amt,
+          date,
+          type,
+          vendor,
+          invoiceNumber,
+          description,
+        };
+        if (isInvoiceParent) {
+          const inv = Number(invoiceTotal.replace(",", "."));
+          patch.invoiceTotal = inv;
+        }
+        if (vatRate) {
+          patch.vatRate = Number(vatRate);
+        } else {
+          patch.vatRate = null;
+        }
+        await updatePayment.mutateAsync({ id: payment.id, data: patch });
+        toast.success("Platba upravena");
+        onOpenChange(false);
+        return;
+      }
+
+>>>>>>> Stashed changes
       if (isInvoice) {
         const inv = Number(invoiceTotal.replace(",", "."));
         if (!inv || inv <= 0) {
@@ -1029,6 +1241,7 @@ function PaymentDialogInner({
       onOpenChange(false);
       onClose?.();
     } catch {
+<<<<<<< Updated upstream
       toast.error(isEdit ? "Nepodařilo se upravit platbu" : "Nepodařilo se přidat platbu");
     }
   };
@@ -1088,6 +1301,155 @@ function PaymentDialogInner({
 
         {isInvoice && !isEdit ? (
           <div className="grid grid-cols-2 gap-3">
+=======
+      toast.error(
+        isEditMode ? "Nepodařilo se upravit platbu" : "Nepodařilo se přidat platbu",
+      );
+    }
+  };
+
+  const isSubmitting = isEditMode
+    ? updatePayment?.isPending ?? false
+    : createPayment.isPending;
+
+  return (
+    <Dialog
+      open={open}
+      onOpenChange={(o) => {
+        if (!o && !isEditMode) {
+          setBudgetItemId("");
+          setContactId("");
+          setAmount("");
+          setVendor("");
+          setInvoiceNumber("");
+          setDescription("");
+          setType("receipt");
+          setIsInvoice(false);
+          setInvoiceTotal("");
+        }
+        onOpenChange(o);
+      }}
+    >
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle>
+            {isEditMode ? "Upravit platbu" : "Nová platba"}
+          </DialogTitle>
+          <DialogDescription>
+            {isEditMode
+              ? "Upravte údaje existující platby a uložte změny."
+              : "Zaznamenejte platbu - účtenku, fakturu nebo výplatu za práci."}
+          </DialogDescription>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="budgetItem">Položka rozpočtu *</Label>
+            <Select value={budgetItemId} onValueChange={setBudgetItemId}>
+              <SelectTrigger id="budgetItem">
+                <SelectValue placeholder="Vyberte položku…" />
+              </SelectTrigger>
+              <SelectContent className="max-h-72">
+                {budgetItems.map((b) => (
+                  <SelectItem key={b.id} value={b.id}>
+                    {b.category}
+                    {b.subcategory ? ` / ${b.subcategory}` : ""}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Installment toggle — create mode only */}
+          {!isEditMode && (
+            <div className="flex items-center gap-2 rounded-md border bg-muted/30 p-2">
+              <Checkbox
+                id="isInvoice"
+                checked={isInvoice}
+                onCheckedChange={(v) => setIsInvoice(v === true)}
+              />
+              <Label htmlFor="isInvoice" className="cursor-pointer text-xs">
+                <CircleDollarSign className="mr-1 inline h-3.5 w-3.5" />
+                Platba ve splátkách (faktura s více platbami)
+              </Label>
+            </div>
+          )}
+
+          {isInvoice ? (
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label htmlFor="invoiceTotal">Faktura celkem (Kč) *</Label>
+                <Input
+                  id="invoiceTotal"
+                  value={invoiceTotal}
+                  onChange={(e) => setInvoiceTotal(e.target.value)}
+                  placeholder="150000"
+                  inputMode="decimal"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="amount">1. splátka (Kč) *</Label>
+                <Input
+                  id="amount"
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                  placeholder="50000"
+                  inputMode="decimal"
+                />
+              </div>
+            </div>
+          ) : isInvoiceParent ? (
+            // Editing an existing invoice parent: show invoiceTotal + amount (parent.amount=0 placeholder)
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label htmlFor="invoiceTotal">Faktura celkem (Kč) *</Label>
+                <Input
+                  id="invoiceTotal"
+                  value={invoiceTotal}
+                  onChange={(e) => setInvoiceTotal(e.target.value)}
+                  placeholder="150000"
+                  inputMode="decimal"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="amount">Zaplaceno celkem (Kč) *</Label>
+                <Input
+                  id="amount"
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                  placeholder="50000"
+                  inputMode="decimal"
+                />
+                <p className="text-[10px] text-muted-foreground">
+                  Součet částek splátek. Upravujte jednotlivé splátky v seznamu níže.
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label htmlFor="amount">Částka (Kč) *</Label>
+                <Input
+                  id="amount"
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                  placeholder="25000"
+                  inputMode="decimal"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="date">Datum *</Label>
+                <Input
+                  id="date"
+                  type="date"
+                  value={date}
+                  onChange={(e) => setDate(e.target.value)}
+                />
+              </div>
+            </div>
+          )}
+
+          {isInvoice && (
+>>>>>>> Stashed changes
             <div className="space-y-2">
               <Label htmlFor="invoiceTotal">Faktura celkem (Kč) *</Label>
               <Input
@@ -1133,7 +1495,108 @@ function PaymentDialogInner({
           </div>
         )}
 
+<<<<<<< Updated upstream
         {isInvoice && !isEdit && (
+=======
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-2">
+              <Label htmlFor="type">Typ</Label>
+              <Select value={type} onValueChange={setType}>
+                <SelectTrigger id="type">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {PAYMENT_TYPES.map((t) => (
+                    <SelectItem key={t.value} value={t.value}>
+                      {t.emoji} {t.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="contact">Kontakt (volitelné)</Label>
+              <Select value={contactId} onValueChange={setContactId}>
+                <SelectTrigger id="contact">
+                  <SelectValue placeholder="Bez kontaktu" />
+                </SelectTrigger>
+                <SelectContent className="max-h-60">
+                  {contacts.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>
+                      {c.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-2">
+              <Label htmlFor="vendor">Firma / Obchod</Label>
+              <Input
+                id="vendor"
+                value={vendor}
+                onChange={(e) => setVendor(e.target.value)}
+                placeholder="např. Hornbach"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="invoiceNumber">Číslo faktury/účtenky</Label>
+              <Input
+                id="invoiceNumber"
+                value={invoiceNumber}
+                onChange={(e) => setInvoiceNumber(e.target.value)}
+                placeholder="2024-001"
+              />
+            </div>
+          </div>
+          {/* VAT field — hidden for invoice parent (installment groups handle VAT per installment) */}
+          {!isInvoice && !isInvoiceParent && (
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label htmlFor="vatRate">DPH sazba (%)</Label>
+                <Select value={vatRate || "none"} onValueChange={(v) => setVatRate(v === "none" ? "" : v)}>
+                  <SelectTrigger id="vatRate">
+                    <SelectValue placeholder="Bez DPH" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Bez DPH</SelectItem>
+                    <SelectItem value="21">21 % (standardní)</SelectItem>
+                    <SelectItem value="12">12 % (snížená 1)</SelectItem>
+                    <SelectItem value="10">10 % (snížená 2)</SelectItem>
+                    <SelectItem value="0">0 %</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Výpočet DPH</Label>
+                <div className="flex h-9 items-center rounded-md border bg-muted/30 px-3 text-xs text-muted-foreground">
+                  {vatRate && amount ? (
+                    <>
+                      DPH:{" "}
+                      <strong className="ml-1 text-foreground tabular-nums">
+                        {formatCzk(
+                          (Number(amount.replace(",", ".")) * Number(vatRate)) /
+                            (100 + Number(vatRate)),
+                        )}
+                      </strong>
+                      <span className="ml-2">
+                        (Základ:{" "}
+                        {formatCzk(
+                          (Number(amount.replace(",", ".")) * 100) /
+                            (100 + Number(vatRate)),
+                        )}
+                        )
+                      </span>
+                    </>
+                  ) : (
+                    <span>Zadejte částku a DPH sazbu</span>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+>>>>>>> Stashed changes
           <div className="space-y-2">
             <Label htmlFor="date">Datum faktury *</Label>
             <Input
@@ -1143,6 +1606,7 @@ function PaymentDialogInner({
               onChange={(e) => setDate(e.target.value)}
             />
           </div>
+<<<<<<< Updated upstream
         )}
 
         <div className="grid grid-cols-2 gap-3">
@@ -1293,5 +1757,23 @@ function PaymentDialogInner({
         </DialogFooter>
       </form>
     </>
+=======
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+              Zrušit
+            </Button>
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {isEditMode
+                ? "Uložit změny"
+                : isInvoice
+                  ? "Vytvořit fakturu"
+                  : "Přidat platbu"}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+>>>>>>> Stashed changes
   );
 }

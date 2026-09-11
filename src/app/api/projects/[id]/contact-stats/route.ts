@@ -2,9 +2,14 @@ import { NextResponse } from "next/server";
 import { dbRead } from "@/lib/db";
 
 // GET /api/projects/[id]/contact-stats
+<<<<<<< Updated upstream
 // Returns aggregated stats per contact: total paid, total hours, payment count, time entry count
 // Performance: uses Prisma `groupBy` for aggregation in the DB instead of
 // fetching all rows and aggregating in JS (N+1 → 3 queries total).
+=======
+// Returns aggregated stats per contact: total paid, total hours, payment count, time entry count,
+// and the list of budget items the contact worked on (with hours and amount per item).
+>>>>>>> Stashed changes
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ id: string }> },
@@ -15,7 +20,46 @@ export async function GET(
     // 1) Contact metadata (name, type, rating)
     const contacts = await dbRead.contact.findMany({
       where: { projectId: id },
+<<<<<<< Updated upstream
       select: { id: true, name: true, type: true, rating: true },
+=======
+      include: {
+        payments: {
+          select: {
+            amount: true,
+            date: true,
+            type: true,
+            budgetItemId: true,
+            budgetItem: {
+              select: {
+                id: true,
+                category: true,
+                subcategory: true,
+                element: true,
+                phase: true,
+              },
+            },
+          },
+        },
+        timeEntries: {
+          select: {
+            hours: true,
+            date: true,
+            workerType: true,
+            budgetItemId: true,
+            budgetItem: {
+              select: {
+                id: true,
+                category: true,
+                subcategory: true,
+                element: true,
+                phase: true,
+              },
+            },
+          },
+        },
+      },
+>>>>>>> Stashed changes
       orderBy: { name: "asc" },
     });
 
@@ -48,6 +92,7 @@ export async function GET(
     const timeMap = new Map(timeAgg.map((t) => [t.contactId, t]));
 
     const contactStats = contacts.map((c) => {
+<<<<<<< Updated upstream
       const p = paymentMap.get(c.id);
       const t = timeMap.get(c.id);
       const totalPaid = p?._sum.amount ?? 0;
@@ -59,16 +104,81 @@ export async function GET(
       const tDate = t?._max.date?.getTime() ?? 0;
       const lastActivityTs = Math.max(pDate, tDate);
       const lastActivity = lastActivityTs > 0 ? new Date(lastActivityTs) : null;
+=======
+      const totalPaid = c.payments.reduce((s, p) => s + p.amount, 0);
+      const totalHours = c.timeEntries.reduce((s, t) => s + t.hours, 0);
+      // Latest activity date
+      const allDates = [
+        ...c.payments.map((p) => p.date),
+        ...c.timeEntries.map((t) => t.date),
+      ].sort((a, b) => b.getTime() - a.getTime());
+
+      // Aggregate per-budget-item stats for this contact
+      const itemMap = new Map<
+        string,
+        {
+          budgetItemId: string;
+          category: string;
+          subcategory: string | null;
+          element: string | null;
+          phase: string;
+          amount: number;
+          hours: number;
+        }
+      >();
+      for (const p of c.payments) {
+        const bi = p.budgetItem;
+        if (!bi) continue;
+        const cur = itemMap.get(bi.id) ?? {
+          budgetItemId: bi.id,
+          category: bi.category,
+          subcategory: bi.subcategory,
+          element: bi.element,
+          phase: bi.phase,
+          amount: 0,
+          hours: 0,
+        };
+        cur.amount += p.amount;
+        itemMap.set(bi.id, cur);
+      }
+      for (const t of c.timeEntries) {
+        const bi = t.budgetItem;
+        if (!bi) continue;
+        const cur = itemMap.get(bi.id) ?? {
+          budgetItemId: bi.id,
+          category: bi.category,
+          subcategory: bi.subcategory,
+          element: bi.element,
+          phase: bi.phase,
+          amount: 0,
+          hours: 0,
+        };
+        cur.hours += t.hours;
+        itemMap.set(bi.id, cur);
+      }
+      const budgetItems = Array.from(itemMap.values()).sort(
+        (a, b) => b.amount + b.hours * 500 - (a.amount + a.hours * 500),
+      );
+
+>>>>>>> Stashed changes
       return {
         contactId: c.id,
         name: c.name,
         type: c.type,
         rating: c.rating,
+        website: c.website,
         totalPaid,
         totalHours,
+<<<<<<< Updated upstream
         paymentCount,
         timeEntryCount,
         lastActivity,
+=======
+        paymentCount: c.payments.length,
+        timeEntryCount: c.timeEntries.length,
+        lastActivity: allDates[0] ?? null,
+        budgetItems,
+>>>>>>> Stashed changes
       };
     });
 

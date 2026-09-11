@@ -539,7 +539,11 @@ model Contact {
   phone     String?
   /// Email address
   email     String?
+<<<<<<< Updated upstream
   /// Company name (if type = "company")
+=======
+  website   String?
+>>>>>>> Stashed changes
   company   String?
   /// IČO (Identifikační číslo organizace) — Czech company registration number
   ico       String?
