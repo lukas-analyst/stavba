@@ -42,6 +42,12 @@ import { PhaseChart, CategoryChart, SpendingTrendChart } from "@/components/char
 export function DashboardTab({ projectId }: { projectId: string }) {
   const { data, isLoading } = useDashboard(projectId);
   const setActiveTab = useAppStore((s) => s.setActiveTab);
+  const setBudgetFilter = useAppStore((s) => s.setBudgetFilter);
+
+  const goToBudget = (filter: Parameters<typeof setBudgetFilter>[0]) => {
+    setBudgetFilter(filter);
+    setActiveTab("budget");
+  };
 
   if (isLoading || !data) {
     return <DashboardSkeleton />;
@@ -91,7 +97,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
           </CardContent>
         </Card>
 
-        <Card className="border-amber-200/60 bg-gradient-to-br from-amber-50 to-white dark:border-amber-900/40 dark:from-amber-950/30 dark:to-card hover-lift">
+        <Card className="border-amber-200/60 bg-gradient-to-br from-amber-50 to-white dark:border-amber-900/40 dark:from-amber-950/30 dark:to-card hover-lift cursor-pointer" onClick={() => setActiveTab("payments")}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
               Čerpání
@@ -122,7 +128,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
           </CardContent>
         </Card>
 
-        <Card className={cn("hover-lift", totals.remaining >= 0 ? "border-sky-200/60 bg-gradient-to-br from-sky-50 to-white dark:border-sky-900/40 dark:from-sky-950/30 dark:to-card" : "border-rose-200/60 bg-gradient-to-br from-rose-50 to-white dark:border-rose-900/40 dark:from-rose-950/30 dark:to-card")}>
+        <Card className={cn("hover-lift cursor-pointer", totals.remaining >= 0 ? "border-sky-200/60 bg-gradient-to-br from-sky-50 to-white dark:border-sky-900/40 dark:from-sky-950/30 dark:to-card" : "border-rose-200/60 bg-gradient-to-br from-rose-50 to-white dark:border-rose-900/40 dark:from-rose-950/30 dark:to-card")} onClick={() => goToBudget({ type: "active" })}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
               Zbývá v rozpočtu
@@ -143,7 +149,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
           </CardContent>
         </Card>
 
-        <Card className="border-violet-200/60 bg-gradient-to-br from-violet-50 to-white dark:border-violet-900/40 dark:from-violet-950/30 dark:to-card hover-lift">
+        <Card className="border-violet-200/60 bg-gradient-to-br from-violet-50 to-white dark:border-violet-900/40 dark:from-violet-950/30 dark:to-card hover-lift cursor-pointer" onClick={() => setActiveTab("time")}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
               Odpracováno
@@ -158,7 +164,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
           </CardContent>
         </Card>
 
-        <Card className="border-emerald-300/60 bg-gradient-to-br from-emerald-50 to-white dark:border-emerald-800/40 dark:from-emerald-950/30 dark:to-card hover-lift">
+        <Card className="border-emerald-300/60 bg-gradient-to-br from-emerald-50 to-white dark:border-emerald-800/40 dark:from-emerald-950/30 dark:to-card hover-lift cursor-pointer" onClick={() => goToBudget({ type: "saved" })}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
               Ušetřeno
@@ -175,7 +181,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
           </CardContent>
         </Card>
 
-        <Card className="border-teal-200/60 bg-gradient-to-br from-teal-50 to-white dark:border-teal-900/40 dark:from-teal-950/30 dark:to-card hover-lift">
+        <Card className="border-teal-200/60 bg-gradient-to-br from-teal-50 to-white dark:border-teal-900/40 dark:from-teal-950/30 dark:to-card hover-lift cursor-pointer" onClick={() => goToBudget({ type: "completion", value: "done" })}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
               Hotovo

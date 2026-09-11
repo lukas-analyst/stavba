@@ -1,6 +1,6 @@
 "use client";
 
-import { Star, Plus, Trash2, Loader2, Building2, Download, Upload, Search, X } from "lucide-react";
+import { Star, Plus, Trash2, Loader2, Building2, Download, Upload, Search, X, MoreVertical, History, FileText, Pencil } from "lucide-react";
 import { useProjects, useDeleteProject, useUpdateProject, useExportState, useImportState, useDashboard } from "@/lib/api";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAppStore } from "@/lib/store";
@@ -22,6 +22,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { VERSION_LABEL, GIT_COMMIT_HASH, GIT_COMMIT_DATE, GIT_COMMIT_COUNT } from "@/generated/version";
@@ -302,25 +308,55 @@ export function AppSidebar({ onSelectProject }: { onSelectProject?: (id: string)
                         </div>
                       </div>
                     )}
-                    {/* Delete button (appears on hover) */}
-                    <span
-                      role="button"
-                      tabIndex={0}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setDeleteId(p.id);
-                      }}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" || e.key === " ") {
-                          e.stopPropagation();
-                          setDeleteId(p.id);
-                        }
-                      }}
-                      className="absolute right-1.5 top-1.5 hidden h-6 w-6 items-center justify-center rounded-md text-muted-foreground hover:bg-destructive/10 hover:text-destructive group-hover:flex"
-                      aria-label="Smazat projekt"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </span>
+                    {/* Project actions menu (3-dot) — appears on hover */}
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <span
+                          role="button"
+                          tabIndex={0}
+                          onClick={(e) => e.stopPropagation()}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.stopPropagation();
+                            }
+                          }}
+                          className="absolute right-1.5 top-1.5 hidden h-6 w-6 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground group-hover:flex"
+                          aria-label="Akce projektu"
+                        >
+                          <MoreVertical className="h-3.5 w-3.5" />
+                        </span>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                        <DropdownMenuItem onClick={() => {
+                          setSelectedProject(p.id);
+                          onSelectProject?.(p.id);
+                          useAppStore.getState().setActiveTab("dashboard");
+                          window.dispatchEvent(new CustomEvent("stavba:open-audit"));
+                        }}>
+                          <History className="mr-2 h-3.5 w-3.5" /> Historie změn
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => {
+                          setSelectedProject(p.id);
+                          onSelectProject?.(p.id);
+                          window.dispatchEvent(new CustomEvent("stavba:open-report"));
+                        }}>
+                          <FileText className="mr-2 h-3.5 w-3.5" /> Report
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => {
+                          setSelectedProject(p.id);
+                          onSelectProject?.(p.id);
+                          window.dispatchEvent(new CustomEvent("stavba:open-edit"));
+                        }}>
+                          <Pencil className="mr-2 h-3.5 w-3.5" /> Upravit
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          className="text-destructive focus:text-destructive"
+                          onClick={() => setDeleteId(p.id)}
+                        >
+                          <Trash2 className="mr-2 h-3.5 w-3.5" /> Odstranit
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
                 </li>
               );

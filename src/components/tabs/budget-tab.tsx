@@ -82,6 +82,7 @@ import {
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { BudgetItemDialog } from "@/components/budget-item-dialog";
+import { useAppStore } from "@/lib/store";
 import {
   DndContext,
   DragOverlay,
@@ -265,6 +266,36 @@ function BudgetTab({ projectId, dragEndHandlerRef }: { projectId: string; dragEn
     useState<CompletionFilter>("all");
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebouncedValue(search, 250);
+  const [categoryFilter, setCategoryFilter] = useState<string>("all");
+  const budgetFilter = useAppStore((s) => s.budgetFilter);
+
+  // Apply budget filter from store (set from Dashboard KPI cards)
+  useEffect(() => {
+    if (!budgetFilter) return;
+    queueMicrotask(() => {
+      if (budgetFilter.type === "completion") {
+        setCompletionFilter(budgetFilter.value);
+        setPhaseFilter("all");
+        setCategoryFilter("all");
+        setSearch("");
+      } else if (budgetFilter.type === "category") {
+        setCategoryFilter(budgetFilter.value);
+        setCompletionFilter("all");
+        setPhaseFilter("all");
+        setSearch("");
+      } else if (budgetFilter.type === "saved") {
+        setCompletionFilter("done");
+        setPhaseFilter("all");
+        setCategoryFilter("all");
+      } else if (budgetFilter.type === "active") {
+        setCompletionFilter("todo");
+        setPhaseFilter("all");
+        setCategoryFilter("all");
+        setSearch("");
+      }
+      useAppStore.getState().setBudgetFilter(null);
+    });
+  }, [budgetFilter]);
   const [addOpen, setAddOpen] = useState(false);
   const [addOpenForCategory, setAddOpenForCategory] = useState<string | null>(null);
   const [editingItem, setEditingItem] = useState<BudgetItem | null>(null);
@@ -344,6 +375,7 @@ function BudgetTab({ projectId, dragEndHandlerRef }: { projectId: string; dragEn
 
   const itemMatches = useMemo(() => {
     return (i: BudgetItem): boolean => {
+      if (categoryFilter !== "all" && i.category !== categoryFilter) return false;
       if (phaseFilter !== "all" && i.phase !== phaseFilter) return false;
       if (completionFilter === "done" && !i.completed) return false;
       if (completionFilter === "todo" && (i.completed || i.rejected)) return false;
@@ -356,18 +388,32 @@ function BudgetTab({ projectId, dragEndHandlerRef }: { projectId: string; dragEn
       }
       return true;
     };
-  }, [phaseFilter, completionFilter, debouncedSearch]);
+  }, [phaseFilter, completionFilter, debouncedSearch, categoryFilter]);
 
   const filteredTopLevel = useMemo(() => {
     const matches = itemMatches;
     return (items ?? [])
       .filter((it) => it.parentId === null)
       .filter((top) => {
+        // Parent passes if it matches itself OR any child matches
         if (matches(top)) return true;
         const children = childrenMap.get(top.id) ?? [];
         return children.some(matches);
       });
   }, [items, childrenMap, itemMatches]);
+
+  // Filtered children map — only contains children that pass the filter
+  const filteredChildrenMap = useMemo(() => {
+    const map = new Map<string, BudgetItem[]>();
+    const matches = itemMatches;
+    for (const [parentId, children] of childrenMap) {
+      const filtered = children.filter(matches);
+      if (filtered.length > 0) {
+        map.set(parentId, filtered);
+      }
+    }
+    return map;
+  }, [childrenMap, itemMatches]);
 
   const projectCategoryOrder = project?.categoryOrder;
   const savedCategoryOrder = useMemo(() => {
@@ -618,58 +664,6 @@ function BudgetTab({ projectId, dragEndHandlerRef }: { projectId: string; dragEn
             </button>
           ))}
         </div>
-        <div className="ml-auto flex items-center gap-3 text-sm">
-          <div className="text-right">
-            <div className="text-xs text-muted-foreground">Plán</div>
-            <div className="font-bold">{formatCzk(grandPlan)}</div>
-          </div>
-          <div className="text-right">
-            <div className="text-xs text-muted-foreground">Skutečnost</div>
-            <div className="font-bold text-amber-600">{formatCzk(grandActual)}</div>
-          </div>
-          <div className="text-right">
-            <div className="text-xs text-muted-foreground">Zbývá</div>
-            <div
-              className={cn(
-                "font-bold",
-                grandPlan - grandActual < 0 ? "text-rose-600" : "text-emerald-600",
-              )}
-            >
-              {formatCzk(grandPlan - grandActual)}
-            </div>
-          </div>
-          <div className="text-right">
-            <div className="flex items-center gap-1 text-xs text-muted-foreground">
-              <PiggyBank className="h-3 w-3" /> Ušetřeno
-            </div>
-            <div className="font-bold text-emerald-600">{formatCzk(grandSaved)}</div>
-          </div>
-          <div className="text-right">
-            <div className="text-xs text-muted-foreground">Hotovo</div>
-            <div className="font-bold">
-              {completedCount}/{topLevelCount}
-            </div>
-          </div>
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={exportCsv.isPending}
-            onClick={async () => {
-              try {
-                await exportCsv.mutateAsync("budget");
-                toast.success("Rozpočet exportován do CSV");
-              } catch {
-                toast.error("Export selhal");
-              }
-            }}
-            title="Exportovat do CSV (Excel/Google Sheets)"
-          >
-            <Download className="mr-1 h-4 w-4" /> CSV
-          </Button>
-          <Button size="sm" onClick={() => setAddOpen(true)}>
-            <Plus className="mr-1 h-4 w-4" /> Přidat položku
-          </Button>
-        </div>
       </div>
 
       {/* Budget table grouped by category — wrapped in SortableContext for category DnD */}
@@ -740,7 +734,7 @@ function BudgetTab({ projectId, dragEndHandlerRef }: { projectId: string; dragEn
                         </TableRow>
                       )}
                       {catItems.map((item, idx) => {
-                        const children = childrenMap.get(item.id) ?? [];
+                        const children = filteredChildrenMap.get(item.id) ?? [];
                         const isExpanded = expandedItems.has(item.id);
                         return (
                           <SortableBudgetItemRows

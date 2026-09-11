@@ -133,6 +133,21 @@ export function ProjectDetail({ project }: { project: Project }) {
     }
   };
 
+  // Listen for custom events from sidebar project menu
+  useEffect(() => {
+    const openAudit = () => setAuditOpen(true);
+    const openReport = () => setReportOpen(true);
+    const openEdit = () => setEditOpen(true);
+    window.addEventListener("stavba:open-audit", openAudit);
+    window.addEventListener("stavba:open-report", openReport);
+    window.addEventListener("stavba:open-edit", openEdit);
+    return () => {
+      window.removeEventListener("stavba:open-audit", openAudit);
+      window.removeEventListener("stavba:open-report", openReport);
+      window.removeEventListener("stavba:open-edit", openEdit);
+    };
+  }, []);
+
   const deadlineToneColor: Record<string, string> = {
     past: "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/30 dark:text-rose-300 dark:border-rose-900",
     today: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/30 dark:text-amber-300 dark:border-amber-900",
@@ -298,88 +313,28 @@ export function ProjectDetail({ project }: { project: Project }) {
                   )}
                 </div>
               )}
-
-              {/* Stats strip */}
-              <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 border-t pt-2.5 text-xs md:gap-x-5 md:gap-y-2 md:pt-3">
-                {project.startDate && (
-                  <div className="flex items-center gap-1.5">
-                    <CalendarClock className="h-3.5 w-3.5 text-muted-foreground" />
-                    <span className="text-muted-foreground">Zahájení</span>
-                    <strong className="font-semibold">{formatDate(project.startDate)}</strong>
-                    {started.tone !== "none" && started.days! < 0 && (
-                      <span className="text-muted-foreground/60">({started.text})</span>
+            </div>
+            {/* Compact burn rate indicator */}
+            {project.stats && (
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-muted-foreground">Čerpání</span>
+                <strong className={cn(
+                  "font-semibold text-sm",
+                  project.stats.burnRate > 100 ? "text-rose-600" : project.stats.burnRate > 80 ? "text-amber-600" : "text-emerald-600",
+                )}>
+                  {project.stats.burnRate.toFixed(0)}%
+                </strong>
+                <div className="h-1.5 w-16 overflow-hidden rounded-full bg-muted">
+                  <div
+                    className={cn(
+                      "h-full rounded-full",
+                      project.stats.burnRate > 100 ? "bg-rose-500" : project.stats.burnRate > 80 ? "bg-amber-500" : "bg-emerald-500",
                     )}
-                  </div>
-                )}
-                {project.endDate && (
-                  <div className="flex items-center gap-1.5">
-                    <CalendarClock className="h-3.5 w-3.5 text-muted-foreground" />
-                    <span className="text-muted-foreground">Dokončení</span>
-                    <strong className="font-semibold">{formatDate(project.endDate)}</strong>
-                  </div>
-                )}
-                {project._count && (
-                  <>
-                    <div className="flex items-center gap-1.5">
-                      <Table2 className="h-3.5 w-3.5 text-muted-foreground" />
-                      <strong className="font-semibold">{project._count.budgetItems}</strong>
-                      <span className="text-muted-foreground">položek</span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <Users className="h-3.5 w-3.5 text-muted-foreground" />
-                      <strong className="font-semibold">{project._count.contacts}</strong>
-                      <span className="text-muted-foreground">kontaktů</span>
-                    </div>
-                  </>
-                )}
-                {project.stats && (
-                  <>
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-muted-foreground">Čerpání</span>
-                      <strong className={cn(
-                        "font-semibold",
-                        project.stats.burnRate > 100 ? "text-rose-600" : project.stats.burnRate > 80 ? "text-amber-600" : "text-emerald-600",
-                      )}>
-                        {project.stats.burnRate.toFixed(0)}%
-                      </strong>
-                      <div className="h-1.5 w-16 overflow-hidden rounded-full bg-muted">
-                        <div
-                          className={cn(
-                            "h-full rounded-full",
-                            project.stats.burnRate > 100 ? "bg-rose-500" : project.stats.burnRate > 80 ? "bg-amber-500" : "bg-emerald-500",
-                          )}
-                          style={{ width: `${Math.min(project.stats.burnRate, 100)}%` }}
-                        />
-                      </div>
-                    </div>
-                  </>
-                )}
+                    style={{ width: `${Math.min(project.stats.burnRate, 100)}%` }}
+                  />
+                </div>
               </div>
-            </div>
-            <div className="flex shrink-0 gap-1.5 md:gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setAuditOpen(true)}
-                className="no-print px-2 md:px-3"
-                title="Historie změn"
-              >
-                <History className="h-3.5 w-3.5" />
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setReportOpen(true)}
-                className="no-print px-2 md:px-3"
-              >
-                <FileText className="h-3.5 w-3.5" />
-                <span className="ml-1.5 hidden md:inline">Report</span>
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => setEditOpen(true)} className="px-2 md:px-3">
-                <Pencil className="h-3.5 w-3.5" />
-                <span className="ml-1.5 hidden md:inline">Upravit</span>
-              </Button>
-            </div>
+            )}
           </div>
         </div>
       </header>

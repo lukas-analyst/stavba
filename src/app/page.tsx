@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useRef, useState } from "react";
+import { Suspense, useEffect, useRef, useState, useCallback } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { useProjects } from "@/lib/api";
 import { useAppStore, type TabId } from "@/lib/store";
@@ -59,7 +59,21 @@ function HomeContent() {
   const hasInitializedRef = useRef(false);
 
   // Desktop: sidebar can be collapsed via the edge button or Cmd+B
-  const [desktopCollapsed, setDesktopCollapsed] = useState(false);
+  // Persist collapsed state in localStorage
+  const [desktopCollapsed, setDesktopCollapsed] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return localStorage.getItem("stavba:sidebar-collapsed") === "true";
+  });
+
+  const toggleDesktopCollapsed = useCallback(() => {
+    setDesktopCollapsed((prev) => {
+      const next = !prev;
+      if (typeof window !== "undefined") {
+        localStorage.setItem("stavba:sidebar-collapsed", String(next));
+      }
+      return next;
+    });
+  }, []);
   // Mobile: sidebar is a drawer (overlay), closed by default
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -72,7 +86,7 @@ function HomeContent() {
       if (window.innerWidth < 768) {
         setMobileOpen((prev) => !prev);
       } else {
-        setDesktopCollapsed((prev) => !prev);
+        toggleDesktopCollapsed();
       }
     };
     window.addEventListener("stavba:toggle-sidebar", toggleHandler);
@@ -157,7 +171,7 @@ function HomeContent() {
       {/* Desktop collapse button (edge of sidebar) */}
       {!desktopCollapsed && (
         <button
-          onClick={() => setDesktopCollapsed(true)}
+          onClick={() => toggleDesktopCollapsed()}
           className="fixed left-[319px] top-1/2 z-50 hidden h-6 w-5 items-center justify-center rounded-r-md border border-l-0 bg-background shadow-sm hover:bg-muted md:flex"
           aria-label="Skrýt panel"
         >
@@ -166,7 +180,7 @@ function HomeContent() {
       )}
       {desktopCollapsed && (
         <button
-          onClick={() => setDesktopCollapsed(false)}
+          onClick={() => toggleDesktopCollapsed()}
           className="fixed left-3 top-4 z-50 hidden h-10 w-10 items-center justify-center rounded-lg border bg-background shadow-md hover:bg-muted md:flex"
           aria-label="Zobrazit panel"
           title="Zobrazit panel"
