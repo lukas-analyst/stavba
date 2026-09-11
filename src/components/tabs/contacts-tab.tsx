@@ -61,23 +61,16 @@ import {
   Loader2,
   TrendingUp,
   Clock,
-<<<<<<< Updated upstream
   Download,
-=======
->>>>>>> Stashed changes
   ExternalLink,
   Wallet,
   Clock3,
   PackageCheck,
   CalendarClock,
-<<<<<<< Updated upstream
   Search,
   Hash,
 } from "lucide-react";
 import { AresSearch, type AresCompany } from "@/components/ares-search";
-=======
-} from "lucide-react";
->>>>>>> Stashed changes
 import {
   CONTACT_TYPES,
   contactTypeLabel,
@@ -237,7 +230,6 @@ export function ContactsTab({ projectId }: { projectId: string }) {
               stat={statsByContactId.get(c.id)}
               onEdit={() => setEditContact(c)}
               onOpenDetail={() => setDetailContact(c)}
-<<<<<<< Updated upstream
               onDelete={(deletedId) => {
                 // Close any open dialogs that reference the deleted contact
                 // before React Query refetches and removes the card from the
@@ -250,8 +242,6 @@ export function ContactsTab({ projectId }: { projectId: string }) {
                   setEditContact(null);
                 }
               }}
-=======
->>>>>>> Stashed changes
             />
           ))}
         </div>
@@ -302,20 +292,14 @@ function ContactCard({
   stat,
   onEdit,
   onOpenDetail,
-<<<<<<< Updated upstream
   onDelete,
-=======
->>>>>>> Stashed changes
 }: {
   contact: Contact;
   projectId: string;
   stat?: ContactStat;
   onEdit: () => void;
   onOpenDetail: () => void;
-<<<<<<< Updated upstream
   onDelete?: (deletedId: string) => void;
-=======
->>>>>>> Stashed changes
 }) {
   const deleteContact = useDeleteContact(projectId);
   const [confirm, setConfirm] = useState(false);
@@ -326,11 +310,7 @@ function ContactCard({
 
   return (
     <Card
-<<<<<<< Updated upstream
       className="group relative cursor-pointer overflow-hidden transition-shadow hover:shadow-md hover-lift"
-=======
-      className="group relative cursor-pointer overflow-hidden transition-shadow hover:shadow-md"
->>>>>>> Stashed changes
       onClick={onOpenDetail}
     >
       <CardHeader className="pb-3">
@@ -574,10 +554,6 @@ function ContactDetailDialog({
 }) {
   if (!contact) return null;
   const t = contactTypeLabel(contact.type);
-<<<<<<< Updated upstream
-=======
-  const totalItems = stat?.budgetItems?.length ?? 0;
->>>>>>> Stashed changes
   const lastActivity = stat?.lastActivity;
 
   return (
@@ -585,13 +561,9 @@ function ContactDetailDialog({
       <DialogContent className="max-h-[90vh] max-w-2xl overflow-hidden p-0">
         <div className="flex max-h-[90vh] flex-col">
           {/* Header */}
-<<<<<<< Updated upstream
           {/* pr-10 reserves space for the absolute-positioned close (X) button
               in the top-right corner so it never overlaps the "Upravit" button. */}
           <DialogHeader className="border-b px-6 py-4 pr-10">
-=======
-          <DialogHeader className="border-b px-6 py-4">
->>>>>>> Stashed changes
             <div className="flex items-start gap-3">
               <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-muted text-xl">
                 {t.emoji}
@@ -620,11 +592,7 @@ function ContactDetailDialog({
                   )}
                 </div>
               </div>
-<<<<<<< Updated upstream
               <Button variant="outline" size="sm" onClick={onEdit} className="shrink-0">
-=======
-              <Button variant="outline" size="sm" onClick={onEdit}>
->>>>>>> Stashed changes
                 <Pencil className="mr-1.5 h-3.5 w-3.5" /> Upravit
               </Button>
             </div>
@@ -641,7 +609,6 @@ function ContactDetailDialog({
                   {contact.company && (
                     <DetailRow icon={<Building2 className="h-3.5 w-3.5" />} label="Firma" value={contact.company} />
                   )}
-<<<<<<< Updated upstream
                   {contact.ico && (
                     <DetailRow
                       icon={<Hash className="h-3.5 w-3.5" />}
@@ -656,8 +623,6 @@ function ContactDetailDialog({
                       value={contact.dic}
                     />
                   )}
-=======
->>>>>>> Stashed changes
                   {contact.phone && (
                     <DetailRow
                       icon={<Phone className="h-3.5 w-3.5" />}
@@ -732,65 +697,6 @@ function ContactDetailDialog({
                   />
                 </div>
               </section>
-<<<<<<< Updated upstream
-=======
-
-              <Separator />
-
-              {/* Položky rozpočtu na kterých kontakt pracoval */}
-              <section className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                    Položky rozpočtu
-                  </h4>
-                  <Badge variant="secondary" className="text-[10px]">
-                    {totalItems} {totalItems === 1 ? "položka" : totalItems >= 2 && totalItems <= 4 ? "položky" : "položek"}
-                  </Badge>
-                </div>
-                {stat && stat.budgetItems.length > 0 ? (
-                  <div className="overflow-hidden rounded-md border">
-                    <table className="w-full text-xs">
-                      <thead className="bg-muted/50">
-                        <tr>
-                          <th className="px-2 py-1.5 text-left font-medium text-muted-foreground">Kategorie / Prvek</th>
-                          <th className="px-2 py-1.5 text-right font-medium text-muted-foreground">Fáze</th>
-                          <th className="px-2 py-1.5 text-right font-medium text-muted-foreground">Kč</th>
-                          <th className="px-2 py-1.5 text-right font-medium text-muted-foreground">Hodiny</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {stat.budgetItems.map((bi) => (
-                          <tr key={bi.budgetItemId} className="border-t">
-                            <td className="px-2 py-1.5">
-                              <div className="font-medium">{bi.category}</div>
-                              {bi.subcategory && (
-                                <div className="text-[10px] text-muted-foreground">{bi.subcategory}</div>
-                              )}
-                              {bi.element && (
-                                <div className="text-[10px] text-muted-foreground">{bi.element}</div>
-                              )}
-                            </td>
-                            <td className="px-2 py-1.5 text-right">
-                              <Badge variant="outline" className="text-[10px]">{bi.phase}</Badge>
-                            </td>
-                            <td className="px-2 py-1.5 text-right tabular-nums font-semibold text-amber-700 dark:text-amber-400">
-                              {bi.amount > 0 ? formatCzk(bi.amount) : "—"}
-                            </td>
-                            <td className="px-2 py-1.5 text-right tabular-nums font-semibold text-violet-700 dark:text-violet-400">
-                              {bi.hours > 0 ? formatNumber(bi.hours, " h") : "—"}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                ) : (
-                  <div className="rounded-md border border-dashed bg-muted/20 px-3 py-6 text-center text-xs text-muted-foreground">
-                    Kontakt zatím nepracoval na žádné položce rozpočtu.
-                  </div>
-                )}
-              </section>
->>>>>>> Stashed changes
             </div>
           </ScrollArea>
 

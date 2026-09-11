@@ -510,19 +510,6 @@ const MONTHS_LONG = [
   "Červenec", "Srpen", "Září", "Říjen", "Listopad", "Prosinec",
 ];
 
-<<<<<<< Updated upstream
-=======
-// ===== Gantt bar with drag/resize =====
-type DragMode = "move" | "resize-start" | "resize-end";
-
-interface DragState {
-  mode: DragMode;
-  startClientX: number;
-  deltaDays: number; // cumulative days delta from drag start
-  moved: boolean;
-}
-
->>>>>>> Stashed changes
 function GanttBar({
   item,
   startOffset,
@@ -550,136 +537,22 @@ function GanttBar({
   zoom: ZoomLevel;
   onDoubleClick: () => void;
 }) {
-<<<<<<< Updated upstream
   const width = widthUnits * unitW;
   const left = startOffset * unitW;
-=======
-  // Local drag state: holds the cumulative day delta while the user is dragging.
-  // The bar's VISUAL position is computed from startOffset/widthUnits + dragState.deltaDays,
-  // so the user sees the bar move/resize in real time. The API is only written once on
-  // pointer up with the final delta.
-  const [drag, setDrag] = useState<DragState | null>(null);
-  const pointerIdRef = useRef<number | null>(null);
-
-  // Convert pixel delta to day delta based on zoom
-  const pxToDays = (px: number) => {
-    if (zoom === "days") return px / unitW;
-    if (zoom === "months") return (px / unitW) * 30;
-    if (zoom === "quarters") return (px / unitW) * 90;
-    return (px / unitW) * 365;
-  };
-
-  // Visual offsets: blend the committed (props) position with the live drag delta.
-  let visualStartOffset = startOffset;
-  let visualWidthUnits = widthUnits;
-  if (drag) {
-    if (drag.mode === "move") {
-      visualStartOffset = startOffset + drag.deltaDays;
-    } else if (drag.mode === "resize-start") {
-      // Don't let the start cross past the end (keep at least ~1 day of width)
-      const maxDelta = widthUnits - 1;
-      const clamped = Math.min(Math.max(drag.deltaDays, -startOffset), maxDelta);
-      visualStartOffset = startOffset + clamped;
-      visualWidthUnits = widthUnits - clamped;
-    } else if (drag.mode === "resize-end") {
-      const minDelta = -(widthUnits - 1);
-      const clamped = Math.max(drag.deltaDays, minDelta);
-      visualWidthUnits = widthUnits + clamped;
-    }
-  }
-
-  const handlePointerDown = (mode: DragMode) => (e: React.PointerEvent) => {
-    // Only react to primary button / touch / pen
-    if (e.button !== 0 && e.pointerType === "mouse") return;
-    e.preventDefault();
-    e.stopPropagation();
-    pointerIdRef.current = e.pointerId;
-    setDrag({ mode, startClientX: e.clientX, deltaDays: 0, moved: false });
-    // Capture on currentTarget (the element with the React handler) — robust against
-    // children re-rendering or unmounting during the drag.
-    try {
-      (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
-    } catch {
-      // ignore — capture is best-effort
-    }
-  };
-
-  const handlePointerMove = (e: React.PointerEvent) => {
-    if (!drag) return;
-    const dx = e.clientX - drag.startClientX;
-    const moved = drag.moved || Math.abs(dx) > 3;
-    const deltaDays = Math.round(pxToDays(dx));
-    if (deltaDays === drag.deltaDays && moved === drag.moved) return;
-    setDrag({ ...drag, deltaDays, moved });
-  };
-
-  const handlePointerUp = async (e: React.PointerEvent) => {
-    const current = drag;
-    if (!current) return;
-    try {
-      (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
-    } catch {
-      // ignore
-    }
-    pointerIdRef.current = null;
-    setDrag(null);
-
-    // If the pointer barely moved, treat as a click (let onDoubleClick handle it).
-    if (!current.moved) return;
-
-    // Commit the final cumulative delta to the API (single call).
-    const delta = current.deltaDays;
-    try {
-      if (delta !== 0) {
-        if (current.mode === "move") await onMove(delta);
-        else if (current.mode === "resize-start") await onResizeStart(delta);
-        else if (current.mode === "resize-end") await onResizeEnd(delta);
-      }
-    } finally {
-      // After a drag/resize completes, refresh React Query (dashboard + budget)
-      onDragEnd();
-    }
-  };
-
-  const handlePointerCancel = (e: React.PointerEvent) => {
-    if (drag) {
-      try {
-        (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
-      } catch {
-        // ignore
-      }
-      pointerIdRef.current = null;
-      setDrag(null);
-    }
-  };
-
-  const width = Math.max(visualWidthUnits * unitW, 24);
-  const left = visualStartOffset * unitW;
->>>>>>> Stashed changes
   const barColor = PHASE_COLORS[item.phase] ?? "";
-  const isResizing = drag?.mode === "resize-start" || drag?.mode === "resize-end";
-  const isMoving = drag?.mode === "move";
 
   return (
     <div
       className={cn(
-<<<<<<< Updated upstream
         "absolute top-1/2 flex h-7 -translate-y-1/2 cursor-pointer items-center overflow-hidden rounded-md border shadow-sm transition-shadow hover:shadow-md hover:brightness-105",
         barColor,
         isActive && "ring-2 ring-offset-1",
-=======
-        "absolute top-1/2 flex h-7 -translate-y-1/2 items-center overflow-hidden rounded-md border shadow-sm transition-shadow select-none",
-        barColor,
-        isActive && "ring-2 ring-offset-1",
-        isMoving && "shadow-lg",
->>>>>>> Stashed changes
         item.completed && "opacity-70",
       )}
       style={{
         left: `${left}px`,
-        width: `${width}px`,
+        width: `${Math.max(width, 24)}px`,
         minWidth: 24,
-<<<<<<< Updated upstream
       }}
       onDoubleClick={(e) => {
         e.stopPropagation();
@@ -691,45 +564,6 @@ function GanttBar({
         {item.subcategory || item.category}
         {item.completed && " ✓"}
       </span>
-=======
-        cursor: isMoving ? "grabbing" : "grab",
-        touchAction: "none",
-        zIndex: isResizing || isMoving ? 30 : undefined,
-      }}
-      onPointerDown={handlePointerDown("move")}
-      onPointerMove={handlePointerMove}
-      onPointerUp={handlePointerUp}
-      onPointerCancel={handlePointerCancel}
-      onDoubleClick={(e) => {
-        e.stopPropagation();
-        // Suppress double-click if a real drag happened; allow when user just tapped.
-        if (!drag?.moved) onDoubleClick();
-      }}
-      title={`${item.subcategory || item.category}\n${formatDate(item.dateFrom)} — ${formatDate(item.dateTo)}\n${formatCzk(item.planCost)}${item.completed ? " · Hotovo" : ""}`}
-    >
-      {/* Left resize handle — always mounted so capture is never lost mid-drag */}
-      <span
-        className="flex h-full w-1.5 shrink-0 cursor-ew-resize items-center justify-center bg-black/10 hover:bg-black/20"
-        style={{ touchAction: "none" }}
-        onPointerDown={handlePointerDown("resize-start")}
-        onPointerMove={handlePointerMove}
-        onPointerUp={handlePointerUp}
-        onPointerCancel={handlePointerCancel}
-      />
-      <span className="flex-1 truncate px-1.5 text-[10px] font-medium pointer-events-none">
-        {item.subcategory || item.category}
-        {item.completed && " ✓"}
-      </span>
-      {/* Right resize handle — always mounted so capture is never lost mid-drag */}
-      <span
-        className="flex h-full w-1.5 shrink-0 cursor-ew-resize items-center justify-center bg-black/10 hover:bg-black/20"
-        style={{ touchAction: "none" }}
-        onPointerDown={handlePointerDown("resize-end")}
-        onPointerMove={handlePointerMove}
-        onPointerUp={handlePointerUp}
-        onPointerCancel={handlePointerCancel}
-      />
->>>>>>> Stashed changes
     </div>
   );
 }

@@ -30,16 +30,7 @@ import {
   CircleAlert,
   PiggyBank,
   CheckCircle2,
-<<<<<<< Updated upstream
   Activity,
-=======
-  Camera,
-  Trash2,
-  Activity,
-  Rocket,
-  Flame,
-  Banknote,
->>>>>>> Stashed changes
 } from "lucide-react";
 import { formatCzk, formatNumber, formatDate, PHASE_COLORS, PHASE_DOT_COLORS } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -61,25 +52,8 @@ export function DashboardTab({ projectId }: { projectId: string }) {
   const burnColor =
     burnRate > 100 ? "text-rose-600" : burnRate > 80 ? "text-amber-600" : "text-emerald-600";
 
-<<<<<<< Updated upstream
   const totalAlerts =
     alerts.inProgress.length + alerts.upcoming.length + alerts.overdue.length + alerts.overBudget.length + alerts.unscheduled.length;
-=======
-  // Alert counts split by severity
-  const criticalAlerts = [
-    ...alerts.mustPay,
-    ...alerts.overdue,
-    ...alerts.overBudget,
-    ...alerts.overBudgetWorst,
-  ];
-  const progressAlerts = [...alerts.inProgress];
-  const infoAlerts = [
-    ...alerts.upcoming,
-    ...alerts.shouldStart,
-    ...alerts.unscheduled,
-  ];
-  const totalAlerts = criticalAlerts.length + progressAlerts.length + infoAlerts.length;
->>>>>>> Stashed changes
 
   // Pie chart data
   const pieData = byCategory
@@ -226,40 +200,15 @@ export function DashboardTab({ projectId }: { projectId: string }) {
 
       {/* Alerts banner */}
       {totalAlerts > 0 && (
-<<<<<<< Updated upstream
       <div>
         <Card className="border-amber-200 bg-amber-50/50 dark:border-amber-900/40 dark:bg-amber-950/20 hover-lift">
-=======
-        <Card className="border-amber-200/70 bg-card dark:border-amber-900/40">
->>>>>>> Stashed changes
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
             <div className="flex items-center gap-2">
               <CircleAlert className="h-5 w-5 text-amber-600" />
               <CardTitle className="text-base">Upozornění a akce ({totalAlerts})</CardTitle>
             </div>
-            <div className="flex flex-wrap items-center gap-1.5 text-[10px]">
-              {criticalAlerts.length > 0 && (
-                <Badge variant="outline" className="border-rose-300 bg-rose-50 text-rose-700 dark:border-rose-800 dark:bg-rose-950/40 dark:text-rose-300">
-                  <AlertTriangle className="mr-1 h-3 w-3" />
-                  {criticalAlerts.length} kritické
-                </Badge>
-              )}
-              {progressAlerts.length > 0 && (
-                <Badge variant="outline" className="border-sky-300 bg-sky-50 text-sky-700 dark:border-sky-800 dark:bg-sky-950/40 dark:text-sky-300">
-                  <Activity className="mr-1 h-3 w-3" />
-                  {progressAlerts.length} probíhající
-                </Badge>
-              )}
-              {infoAlerts.length > 0 && (
-                <Badge variant="outline" className="border-amber-300 bg-amber-50 text-amber-700 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-300">
-                  <CalendarClock className="mr-1 h-3 w-3" />
-                  {infoAlerts.length} informativní
-                </Badge>
-              )}
-            </div>
           </CardHeader>
           <CardContent className="space-y-3">
-<<<<<<< Updated upstream
             {alerts.inProgress.length > 0 && (
               <AlertGroup
                 icon={<Activity className="h-4 w-4" />}
@@ -293,152 +242,42 @@ export function DashboardTab({ projectId }: { projectId: string }) {
                   secondary: `Začátek ${formatDate(it.dateFrom)} · ${formatCzk(it.planCost)}`,
                 }))}
               />
-=======
-            {/* ===== Critical group ===== */}
-            {criticalAlerts.length > 0 && (
-              <div className="space-y-3 rounded-lg border border-rose-200/70 bg-rose-50/40 p-3 dark:border-rose-900/40 dark:bg-rose-950/10">
-                <div className="flex items-center gap-1.5 text-rose-700 dark:text-rose-300">
-                  <AlertTriangle className="h-4 w-4" />
-                  <span className="text-xs font-bold uppercase tracking-wide">Kritické</span>
-                  <Badge variant="secondary" className="h-4 px-1.5 text-[10px]">
-                    {criticalAlerts.length}
-                  </Badge>
-                </div>
-
-                {alerts.mustPay.length > 0 && (
-                  <AlertGroup
-                    icon={<Banknote className="h-4 w-4" />}
-                    title="Práce bez platby"
-                    hint="Odpracováno, ale zatím nezaplaceno"
-                    color="text-rose-700 dark:text-rose-300"
-                    items={alerts.mustPay.map((it) => ({
-                      id: it.id,
-                      primary: it.subcategory || it.category,
-                      secondary: `Hodiny ${formatNumber(it.actualHours, " h")} · ${formatCzk(it.actualCost)} placeno / ${formatCzk(it.planCost)} plán`,
-                    }))}
-                  />
-                )}
-                {alerts.overBudgetWorst.length > 0 && (
-                  <AlertGroup
-                    icon={<Flame className="h-4 w-4" />}
-                    title="Překročeno i s vůlí"
-                    hint="Přesahuje i horní hranici (plán + vůle)"
-                    color="text-rose-700 dark:text-rose-300"
-                    items={alerts.overBudgetWorst.map((it) => {
-                      const ceiling = (it.planCost || 0) * (1 + (it.flexibilityPercent || 0) / 100);
-                      return {
-                        id: it.id,
-                        primary: it.subcategory || it.category,
-                        secondary: `${formatCzk(it.actualCost)} z ${formatCzk(ceiling)} (vůle ${formatNumber(it.flexibilityPercent, " %")})`,
-                      };
-                    })}
-                  />
-                )}
-                {alerts.overdue.length > 0 && (
-                  <AlertGroup
-                    icon={<AlertTriangle className="h-4 w-4" />}
-                    title="Zpožděné položky"
-                    hint="Termín v minulosti, čerpáno pod 90 % plánu"
-                    color="text-rose-700 dark:text-rose-300"
-                    items={alerts.overdue.map((it) => ({
-                      id: it.id,
-                      primary: it.subcategory || it.category,
-                      secondary: `Termín ${formatDate(it.dateTo)} · čerpáno ${formatCzk(it.actualCost)} / ${formatCzk(it.planCost)}`,
-                    }))}
-                  />
-                )}
-                {alerts.overBudget.length > 0 && (
-                  <AlertGroup
-                    icon={<TrendingDown className="h-4 w-4" />}
-                    title="Překročen rozpočet"
-                    hint="Skutečnost vyšší než plán"
-                    color="text-rose-700 dark:text-rose-300"
-                    items={alerts.overBudget.map((it) => ({
-                      id: it.id,
-                      primary: it.subcategory || it.category,
-                      secondary: `${formatCzk(it.actualCost)} z ${formatCzk(it.planCost)} (+${formatCzk((it.actualCost || 0) - (it.planCost || 0))})`,
-                    }))}
-                  />
-                )}
-              </div>
->>>>>>> Stashed changes
             )}
-
-            {/* ===== In-progress group ===== */}
-            {progressAlerts.length > 0 && (
-              <div className="space-y-3 rounded-lg border border-sky-200/70 bg-sky-50/40 p-3 dark:border-sky-900/40 dark:bg-sky-950/10">
-                <div className="flex items-center gap-1.5 text-sky-700 dark:text-sky-300">
-                  <Activity className="h-4 w-4" />
-                  <span className="text-xs font-bold uppercase tracking-wide">Probíhající</span>
-                  <Badge variant="secondary" className="h-4 px-1.5 text-[10px]">
-                    {progressAlerts.length}
-                  </Badge>
-                </div>
-                <AlertGroup
-                  icon={<Activity className="h-4 w-4" />}
-                  title="Položky v průběhu"
-                  hint="Mají náklady nebo hodiny, ale nejsou dokončeny"
-                  color="text-sky-700 dark:text-sky-300"
-                  items={alerts.inProgress.map((it) => ({
-                    id: it.id,
-                    primary: it.subcategory || it.category,
-                    secondary: `${formatCzk(it.actualCost)} / ${formatCzk(it.planCost)} · ${formatNumber(it.actualHours, " h")}`,
-                  }))}
-                />
-              </div>
+            {alerts.overdue.length > 0 && (
+              <AlertGroup
+                icon={<AlertTriangle className="h-4 w-4" />}
+                title="Zpožděné položky"
+                color="text-rose-600"
+                items={alerts.overdue.map((it) => ({
+                  id: it.id,
+                  primary: it.subcategory || it.category,
+                  secondary: `Termín ${formatDate(it.dateTo)} · čerpáno ${formatCzk(it.actualCost)} / ${formatCzk(it.planCost)}`,
+                }))}
+              />
             )}
-
-            {/* ===== Informative group ===== */}
-            {infoAlerts.length > 0 && (
-              <div className="space-y-3 rounded-lg border border-amber-200/70 bg-amber-50/40 p-3 dark:border-amber-900/40 dark:bg-amber-950/10">
-                <div className="flex items-center gap-1.5 text-amber-700 dark:text-amber-300">
-                  <CalendarClock className="h-4 w-4" />
-                  <span className="text-xs font-bold uppercase tracking-wide">Informativní</span>
-                  <Badge variant="secondary" className="h-4 px-1.5 text-[10px]">
-                    {infoAlerts.length}
-                  </Badge>
-                </div>
-
-                {alerts.shouldStart.length > 0 && (
-                  <AlertGroup
-                    icon={<Rocket className="h-4 w-4" />}
-                    title="Mělo by začít"
-                    hint="Začátek do 7 dní (nebo v minulosti), bez plateb i hodin"
-                    color="text-amber-700 dark:text-amber-300"
-                    items={alerts.shouldStart.map((it) => ({
-                      id: it.id,
-                      primary: it.subcategory || it.category,
-                      secondary: `Začátek ${formatDate(it.dateFrom)} · ${formatCzk(it.planCost)}`,
-                    }))}
-                  />
-                )}
-                {alerts.upcoming.length > 0 && (
-                  <AlertGroup
-                    icon={<CalendarClock className="h-4 w-4" />}
-                    title="Blížící se termíny (do 30 dní)"
-                    hint="Začátek v příštích 30 dnech, bez čerpání"
-                    color="text-amber-700 dark:text-amber-300"
-                    items={alerts.upcoming.map((it) => ({
-                      id: it.id,
-                      primary: it.subcategory || it.category,
-                      secondary: `Začátek ${formatDate(it.dateFrom)} · ${formatCzk(it.planCost)}`,
-                    }))}
-                  />
-                )}
-                {alerts.unscheduled.length > 0 && (
-                  <AlertGroup
-                    icon={<CalendarClock className="h-4 w-4" />}
-                    title="Neplánované (bez termínu)"
-                    hint="Položky s plánem, ale bez data a ve fázi, která by ho měla mít"
-                    color="text-amber-700 dark:text-amber-300"
-                    items={alerts.unscheduled.map((it) => ({
-                      id: it.id,
-                      primary: it.subcategory || it.category,
-                      secondary: `${formatCzk(it.planCost)} · ${it.phase}`,
-                    }))}
-                  />
-                )}
-              </div>
+            {alerts.overBudget.length > 0 && (
+              <AlertGroup
+                icon={<TrendingDown className="h-4 w-4" />}
+                title="Překročen rozpočet"
+                color="text-rose-600"
+                items={alerts.overBudget.map((it) => ({
+                  id: it.id,
+                  primary: it.subcategory || it.category,
+                  secondary: `${formatCzk(it.actualCost)} z ${formatCzk(it.planCost)} (+${formatCzk((it.actualCost || 0) - (it.planCost || 0))})`,
+                }))}
+              />
+            )}
+            {alerts.unscheduled.length > 0 && (
+              <AlertGroup
+                icon={<CalendarClock className="h-4 w-4" />}
+                title="Neplánované (bez termínu)"
+                color="text-amber-600"
+                items={alerts.unscheduled.map((it) => ({
+                  id: it.id,
+                  primary: it.subcategory || it.category,
+                  secondary: `${formatCzk(it.planCost)} · ${it.phase}`,
+                }))}
+              />
             )}
           </CardContent>
         </Card>
@@ -489,84 +328,6 @@ export function DashboardTab({ projectId }: { projectId: string }) {
                 <div className={cn("text-lg font-bold tabular-nums", totals.projectedOverrun > 0 ? "text-rose-600" : "text-emerald-600")}>
                   {totals.projectedOverrun > 0 ? "+" : ""}
                   {formatCzk(totals.projectedOverrun)}
-                </div>
-              </div>
-            </div>
-            {/* Worst-case (Vůle) comparison panel */}
-            <div className="mt-4 rounded-lg border border-violet-200/60 bg-violet-50/40 p-3 dark:border-violet-900/40 dark:bg-violet-950/10">
-              <div className="mb-2 flex items-center justify-between gap-2">
-                <div className="flex items-center gap-1.5 text-violet-700 dark:text-violet-300">
-                  <Flame className="h-4 w-4" />
-                  <span className="text-xs font-bold uppercase tracking-wide">Nejhorší scénář (Vůle)</span>
-                </div>
-                {totals.projectedFinal > totals.worstCase && (
-                  <Badge variant="outline" className="border-rose-300 bg-rose-50 text-rose-700 dark:border-rose-800 dark:bg-rose-950/40 dark:text-rose-300 text-[10px]">
-                    <AlertTriangle className="mr-1 h-3 w-3" />
-                    Odhad přesahuje vůli
-                  </Badge>
-                )}
-              </div>
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                <div className="space-y-0.5">
-                  <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Horní hranice (plán + vůle)</div>
-                  <div className="text-sm font-bold tabular-nums text-violet-700 dark:text-violet-300">
-                    {formatCzk(totals.worstCase)}
-                  </div>
-                </div>
-                <div className="space-y-0.5">
-                  <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Rezerva do vůle</div>
-                  <div className={cn(
-                    "text-sm font-bold tabular-nums",
-                    totals.worstCaseRemaining < 0 ? "text-rose-600" : "text-violet-700 dark:text-violet-300",
-                  )}>
-                    {totals.worstCaseRemaining < 0 ? "−" : ""}
-                    {formatCzk(Math.abs(totals.worstCaseRemaining))}
-                  </div>
-                </div>
-                <div className="space-y-0.5">
-                  <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Odhad vs. vůle</div>
-                  <div className={cn(
-                    "text-sm font-bold tabular-nums",
-                    totals.projectedFinal > totals.worstCase ? "text-rose-600" : "text-emerald-600",
-                  )}>
-                    {totals.projectedFinal > totals.worstCase ? "+" : ""}
-                    {formatCzk(totals.projectedFinal - totals.worstCase)}
-                  </div>
-                </div>
-              </div>
-              {/* Stacked bar: actual | plan marker | worst-case marker */}
-              <div className="mt-3 space-y-1.5">
-                <div className="relative h-3 overflow-hidden rounded-full bg-muted">
-                  {/* Plan marker (planTotal as % of worstCase) */}
-                  <div
-                    className="absolute top-0 bottom-0 w-0.5 bg-foreground/50"
-                    style={{
-                      left: `${totals.worstCase > 0 ? Math.min((totals.planTotal / totals.worstCase) * 100, 100) : 0}%`,
-                      transform: "translateX(-50%)",
-                    }}
-                    title={`Plán: ${formatCzk(totals.planTotal)}`}
-                  />
-                  {/* Actual bar (actualTotal as % of worstCase) */}
-                  <div
-                    className={cn(
-                      "h-full rounded-full transition-all",
-                      totals.actualTotal > totals.worstCase ? "bg-rose-500" : "bg-amber-400",
-                    )}
-                    style={{
-                      width: `${totals.worstCase > 0 ? Math.min((totals.actualTotal / totals.worstCase) * 100, 100) : 0}%`,
-                    }}
-                  />
-                </div>
-                <div className="flex items-center gap-3 text-[10px] text-muted-foreground">
-                  <span className="flex items-center gap-1">
-                    <span className="inline-block h-2 w-2 rounded-sm bg-amber-400" /> Čerpáno
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <span className="inline-block h-2 w-px bg-foreground/50" /> Plán
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <span className="inline-block h-2 w-3 rounded-sm bg-violet-200" /> = Vůle (max)
-                  </span>
                 </div>
               </div>
             </div>
@@ -625,12 +386,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {byPhase.map((p) => {
               const burn = p.plan > 0 ? (p.actual / p.plan) * 100 : 0;
-<<<<<<< Updated upstream
               const timeBurn = p.plannedHours > 0 ? (p.hours / p.plannedHours) * 100 : 0;
-=======
-              const worstBurn = p.worstCase > 0 ? (p.actual / p.worstCase) * 100 : 0;
-              const exceedsWorst = p.worstCase > 0 && p.actual > p.worstCase;
->>>>>>> Stashed changes
               const phaseColor = PHASE_COLORS[p.phase] ?? "";
               const dotColor = PHASE_DOT_COLORS[p.phase] ?? "bg-zinc-400";
               const hasOverrun = p.costOverrun > 0 || p.timeOverrun > 0;
@@ -639,11 +395,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
                   key={p.phase}
                   className={cn(
                     "rounded-lg border bg-card p-3 transition-shadow hover:shadow-sm",
-<<<<<<< Updated upstream
                     p.actual > p.worstCase && "border-rose-300 dark:border-rose-800",
-=======
-                    exceedsWorst && "border-rose-300 bg-rose-50/40 dark:border-rose-800/60 dark:bg-rose-950/10",
->>>>>>> Stashed changes
                   )}
                 >
                   <div className="mb-2 flex items-center justify-between gap-2">
@@ -681,24 +433,6 @@ export function DashboardTab({ projectId }: { projectId: string }) {
                         {p.count}
                       </Badge>
                     </div>
-<<<<<<< Updated upstream
-=======
-                    <div className="flex shrink-0 items-center gap-1">
-                      {exceedsWorst && (
-                        <Badge
-                          variant="outline"
-                          className="h-4 border-rose-300 bg-rose-50 px-1 text-[9px] text-rose-700 dark:border-rose-800 dark:bg-rose-950/40 dark:text-rose-300"
-                          title={`Přesahuje i vůli (${formatCzk(p.worstCase)})`}
-                        >
-                          <Flame className="mr-0.5 h-2.5 w-2.5" />
-                          Vůle
-                        </Badge>
-                      )}
-                      <Badge variant="secondary" className="h-4 px-1 text-[10px]">
-                        {p.count}
-                      </Badge>
-                    </div>
->>>>>>> Stashed changes
                   </div>
                   <div className="space-y-1.5">
                     {/* Financial progress */}
@@ -709,30 +443,15 @@ export function DashboardTab({ projectId }: { projectId: string }) {
                         <span className="text-muted-foreground">/ {formatCzk(p.plan)}</span>
                       </span>
                     </div>
-                    <div className="relative h-2 overflow-hidden rounded-full bg-muted">
-                      {/* Worst-case marker (worstCase as % of plan) */}
-                      {p.worstCase > 0 && p.worstCase !== p.plan && (
-                        <div
-                          className={cn(
-                            "absolute top-0 bottom-0 w-0.5",
-                            exceedsWorst ? "bg-rose-500" : "bg-violet-400",
-                          )}
-                          style={{
-                            left: `${Math.min((p.worstCase / Math.max(p.plan, 1)) * 100, 100)}%`,
-                            transform: "translateX(-50%)",
-                          }}
-                          title={`Vůle (max): ${formatCzk(p.worstCase)}`}
-                        />
-                      )}
+                    <div className="h-2 overflow-hidden rounded-full bg-muted">
                       <div
                         className={cn(
                           "h-full rounded-full transition-all",
-                          exceedsWorst ? "bg-rose-500" : burn > 100 ? "bg-rose-500" : burn > 80 ? "bg-amber-500" : "bg-emerald-500",
+                          burn > 100 ? "bg-rose-500" : burn > 80 ? "bg-amber-500" : "bg-emerald-500",
                         )}
                         style={{ width: `${Math.min(burn, 100)}%` }}
                       />
                     </div>
-<<<<<<< Updated upstream
                     {/* Time progress */}
                     {p.plannedHours > 0 && (
                       <>
@@ -759,28 +478,6 @@ export function DashboardTab({ projectId }: { projectId: string }) {
                       <span className="text-muted-foreground">
                         {burn.toFixed(0)}% fin
                         {p.plannedHours > 0 && ` · ${timeBurn.toFixed(0)}% čas`}
-=======
-                    <div className="flex items-center justify-between text-[11px]">
-                      <span className="flex items-center gap-1.5 text-muted-foreground">
-                        {formatNumber(p.hours, " h")}
-                        {p.worstCase > 0 && (
-                          <span className="text-[10px] text-violet-600/80 dark:text-violet-400/80" title={`Vůle (max): ${formatCzk(p.worstCase)}`}>
-                            · max {formatCzk(p.worstCase)}
-                          </span>
-                        )}
-                      </span>
-                      <span
-                        className={cn(
-                          "font-semibold",
-                          exceedsWorst ? "text-rose-600" : burn > 100 ? "text-rose-600" : burn > 80 ? "text-amber-600" : "text-emerald-600",
-                        )}
-                        title={exceedsWorst ? `Přesahuje vůli (${worstBurn.toFixed(0)} % max)` : `${burn.toFixed(0)} % plánu`}
-                      >
-                        {burn.toFixed(0)}%
-                        {exceedsWorst && (
-                          <span className="ml-1 text-[10px] text-rose-600">· {worstBurn.toFixed(0)}% max</span>
-                        )}
->>>>>>> Stashed changes
                       </span>
                       {hasOverrun && (
                         <div className="flex gap-1.5">
@@ -969,14 +666,12 @@ function AlertGroup({
   icon,
   title,
   color,
-  hint,
   items,
   max = 4,
 }: {
   icon: React.ReactNode;
   title: string;
   color: string;
-  hint?: string;
   items: { id: string; primary: string; secondary: string }[];
   max?: number;
 }) {
@@ -984,23 +679,15 @@ function AlertGroup({
   const remaining = items.length - shown.length;
   return (
     <div>
-      <div className="flex items-center gap-1.5">
-        <span className={color}>{icon}</span>
-        <span className={`text-xs font-semibold ${color}`}>{title}</span>
+      <div className={`flex items-center gap-1.5 ${color}`}>
+        {icon}
+        <span className="text-xs font-semibold">{title}</span>
         <Badge variant="secondary" className="ml-1 h-4 px-1.5 text-[10px]">
           {items.length}
         </Badge>
-        {hint && (
-          <span className="text-[10px] text-muted-foreground">· {hint}</span>
-        )}
       </div>
-<<<<<<< Updated upstream
       <ul className="mt-1.5 space-y-1 pl-5">
         {shown.map((it) => (
-=======
-      <ul className="mt-1.5 max-h-40 space-y-1 overflow-y-auto pl-5 pr-1">
-        {items.slice(0, 4).map((it) => (
->>>>>>> Stashed changes
           <li key={it.id} className="text-xs">
             <span className="font-medium">{it.primary}</span>{" "}
             <span className="text-muted-foreground">— {it.secondary}</span>

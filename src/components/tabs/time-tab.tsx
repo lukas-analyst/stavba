@@ -26,11 +26,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-<<<<<<< Updated upstream
 import { Card } from "@/components/ui/card";
-=======
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
->>>>>>> Stashed changes
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
@@ -80,15 +76,6 @@ const SORT_OPTIONS: { value: SortKey; label: string }[] = [
   { value: "workerType", label: "Typ pracovníka" },
 ];
 
-type SortKey = "date" | "worker" | "hours" | "workerType";
-
-const SORT_OPTIONS: { value: SortKey; label: string }[] = [
-  { value: "date", label: "Datum (nejnovější)" },
-  { value: "worker", label: "Pracovník (A→Z)" },
-  { value: "hours", label: "Hodiny (sestupně)" },
-  { value: "workerType", label: "Typ pracovníka" },
-];
-
 export function TimeTab({ projectId }: { projectId: string }) {
   const { data: entries, isLoading } = useTimeEntries(projectId);
   const { data: budgetItems } = useBudgetItems(projectId);
@@ -109,15 +96,9 @@ export function TimeTab({ projectId }: { projectId: string }) {
 
   // Unique categories derived from budget items for the category filter
   const categories = useMemo(() => {
-<<<<<<< Updated upstream
     const set = new Set<string>();
     for (const b of budgetItems ?? []) {
       if (b.category) set.add(b.category);
-=======
-    const set = new Map<string, string>();
-    for (const b of budgetItems ?? []) {
-      if (b.category) set.set(b.category, b.category);
->>>>>>> Stashed changes
     }
     return Array.from(set.values()).sort((a, b) => a.localeCompare(b, "cs-CZ"));
   }, [budgetItems]);
@@ -126,13 +107,8 @@ export function TimeTab({ projectId }: { projectId: string }) {
     const arr = (entries ?? []).filter((t) => {
       if (typeFilter !== "all" && t.workerType !== typeFilter) return false;
       if (categoryFilter !== "all" && (t.budgetItem?.category ?? "") !== categoryFilter) return false;
-<<<<<<< Updated upstream
       if (debouncedSearch.trim()) {
         const q = debouncedSearch.toLowerCase();
-=======
-      if (search.trim()) {
-        const q = search.toLowerCase();
->>>>>>> Stashed changes
         const text = `${t.workerName} ${t.description ?? ""} ${t.budgetItem?.category ?? ""} ${t.budgetItem?.subcategory ?? ""}`.toLowerCase();
         if (!text.includes(q)) return false;
       }
@@ -152,22 +128,14 @@ export function TimeTab({ projectId }: { projectId: string }) {
           return a.workerType.localeCompare(b.workerType, "cs-CZ");
         case "date":
         default: {
-<<<<<<< Updated upstream
           // Newest first; tiebreak by id
-=======
-          // Newest first; tiebreak by createdAt/id
->>>>>>> Stashed changes
           const cmp = b.date.localeCompare(a.date);
           return cmp !== 0 ? cmp : b.id.localeCompare(a.id);
         }
       }
     });
     return arr;
-<<<<<<< Updated upstream
   }, [entries, debouncedSearch, typeFilter, categoryFilter, sortBy]);
-=======
-  }, [entries, search, typeFilter, categoryFilter, sortBy]);
->>>>>>> Stashed changes
 
   const totalHours = filtered.reduce((s, t) => s + t.hours, 0);
 
@@ -520,7 +488,6 @@ interface TimeDialogProps {
   onClose?: () => void;
 }
 
-<<<<<<< Updated upstream
 // Wrapper component: handles Dialog open state and remounts inner form via `key`
 // whenever editEntry changes — ensures fresh state via useState initializers.
 function TimeDialog(props: TimeDialogProps) {
@@ -551,11 +518,6 @@ function toDateStr(d: string | null | undefined): string {
 }
 
 function TimeDialogInner({
-=======
-function TimeDialog({
-  open,
-  onOpenChange,
->>>>>>> Stashed changes
   budgetItems,
   contacts,
   createTimeEntry,
@@ -563,7 +525,6 @@ function TimeDialog({
   updateBudgetItem,
   editEntry,
   onClose,
-<<<<<<< Updated upstream
   onOpenChange,
 }: Omit<TimeDialogProps, "open">) {
   const isEdit = !!editEntry;
@@ -577,57 +538,6 @@ function TimeDialog({
   const [hours, setHours] = useState(editEntry ? String(editEntry.hours ?? "") : "");
   const [description, setDescription] = useState(editEntry?.description ?? "");
   const [markCompleted, setMarkCompleted] = useState(false);
-=======
-}: TimeDialogProps) {
-  const isEdit = !!editEntry;
-  const [budgetItemId, setBudgetItemId] = useState("");
-  const [contactId, setContactId] = useState("");
-  const [workerName, setWorkerName] = useState("");
-  const [workerType, setWorkerType] = useState("self");
-  const [date, setDate] = useState(new Date().toISOString().substring(0, 10));
-  const [dateTo, setDateTo] = useState("");
-  const [hours, setHours] = useState("");
-  const [description, setDescription] = useState("");
-  const [markCompleted, setMarkCompleted] = useState(false);
-
-  // When opening in edit mode, prefill all fields from editEntry
-  useEffect(() => {
-    if (!open) return;
-    if (editEntry) {
-      setBudgetItemId(editEntry.budgetItemId || "");
-      setContactId(editEntry.contactId || "");
-      setWorkerName(editEntry.workerName || "");
-      setWorkerType(editEntry.workerType || "self");
-      // Format date as YYYY-MM-DD (Prisma returns Date/string)
-      const toDateStr = (d: string | null | undefined) => {
-        if (!d) return "";
-        try {
-          const dt = new Date(d);
-          if (isNaN(dt.getTime())) return "";
-          return dt.toISOString().substring(0, 10);
-        } catch {
-          return "";
-        }
-      };
-      setDate(toDateStr(editEntry.date) || new Date().toISOString().substring(0, 10));
-      setDateTo(toDateStr(editEntry.dateTo));
-      setHours(String(editEntry.hours ?? ""));
-      setDescription(editEntry.description || "");
-      setMarkCompleted(false); // Checkbox default unchecked in edit mode too
-    } else {
-      // Reset for create mode
-      setBudgetItemId("");
-      setContactId("");
-      setWorkerName("");
-      setWorkerType("self");
-      setDate(new Date().toISOString().substring(0, 10));
-      setDateTo("");
-      setHours("");
-      setDescription("");
-      setMarkCompleted(false);
-    }
-  }, [open, editEntry]);
->>>>>>> Stashed changes
 
   // Compute day span for display
   const daySpan = useMemo(() => {
@@ -712,7 +622,6 @@ function TimeDialog({
   const alreadyCompleted = selectedBudgetItem?.completed === true;
 
   return (
-<<<<<<< Updated upstream
     <>
       <DialogHeader>
         <DialogTitle>{isEdit ? "Upravit časový záznam" : "Zaznamenat čas"}</DialogTitle>
@@ -740,19 +649,6 @@ function TimeDialog({
           />
         </div>
         <div className="grid grid-cols-2 gap-3">
-=======
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
-        <DialogHeader>
-          <DialogTitle>{isEdit ? "Upravit časový záznam" : "Zaznamenat čas"}</DialogTitle>
-          <DialogDescription>
-            {isEdit
-              ? "Upravte záznam o práci. Změny se propíší do statistik položky rozpočtu."
-              : "Kdo na čem pracoval, kdy a jak dlouho. Firma, řemeslník i svépomoc."}
-          </DialogDescription>
-        </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
->>>>>>> Stashed changes
           <div className="space-y-2">
             <Label htmlFor="workerName">Pracovník (jméno) *</Label>
             <Input
@@ -775,19 +671,10 @@ function TimeDialog({
               <SelectTrigger id="workerType">
                 <SelectValue />
               </SelectTrigger>
-<<<<<<< Updated upstream
               <SelectContent>
                 {WORKER_TYPES.map((t) => (
                   <SelectItem key={t.value} value={t.value}>
                     {t.emoji} {t.label}
-=======
-              <SelectContent className="max-h-72">
-                {budgetItems.map((b) => (
-                  <SelectItem key={b.id} value={b.id}>
-                    {b.category}
-                    {b.subcategory ? ` / ${b.subcategory}` : ""}
-                    {b.completed ? " ✓" : ""}
->>>>>>> Stashed changes
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -821,7 +708,6 @@ function TimeDialog({
               required
             />
           </div>
-<<<<<<< Updated upstream
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-2">
@@ -900,41 +786,5 @@ function TimeDialog({
         </DialogFooter>
       </form>
     </>
-=======
-          {/* Hotovo checkbox */}
-          <div className="flex flex-col gap-1 rounded-md border border-violet-200 bg-violet-50/50 p-3 dark:border-violet-900/60 dark:bg-violet-950/20">
-            <div className="flex items-start gap-2">
-              <Checkbox
-                id="markCompleted"
-                checked={markCompleted}
-                onCheckedChange={(v) => setMarkCompleted(v === true)}
-                className="mt-0.5"
-              />
-              <Label htmlFor="markCompleted" className="cursor-pointer text-sm font-medium leading-tight">
-                Označit položku rozpočtu jako hotovou
-              </Label>
-            </div>
-            <p className="ml-6 text-[11px] text-muted-foreground">
-              {alreadyCompleted
-                ? "Položka je již označena jako hotová."
-                : "Po uložení záznamu se zavolá PATCH na budget item s completed: true. Propojí časový záznam s dokončením položky."}
-            </p>
-          </div>
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Zrušit
-            </Button>
-            <Button type="submit" disabled={isPending}>
-              {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {isEdit ? "Uložit změny" : "Zaznamenat"}
-              {markCompleted && !isPending && (
-                <CheckCircle2 className="ml-1.5 h-4 w-4 text-violet-500" />
-              )}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
->>>>>>> Stashed changes
   );
 }

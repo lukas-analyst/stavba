@@ -48,11 +48,7 @@ export async function POST(
   try {
     const { id } = await params;
     const body = await request.json();
-<<<<<<< Updated upstream
     const { name, type, role, phone, email, company, ico, dic, website, notes, rating } = body;
-=======
-    const { name, type, role, phone, email, website, company, notes, rating } = body;
->>>>>>> Stashed changes
 
     if (!name || typeof name !== "string" || !name.trim()) {
       return NextResponse.json({ error: "Name is required" }, { status: 400 });
@@ -66,7 +62,6 @@ export async function POST(
         role: role?.trim() || null,
         phone: phone?.trim() || null,
         email: email?.trim() || null,
-        website: website?.trim() || null,
         company: company?.trim() || null,
         ico: ico?.trim() || null,
         dic: dic?.trim() || null,

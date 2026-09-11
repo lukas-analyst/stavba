@@ -89,7 +89,6 @@ export type Contact = {
   role: string | null;
   phone: string | null;
   email: string | null;
-  website: string | null;
   company: string | null;
   ico: string | null;
   dic: string | null;
@@ -131,7 +130,6 @@ export type TimeEntry = {
   contact?: { id: string; name: string; type: string } | null;
 };
 
-<<<<<<< Updated upstream
 // Re-export shared API types (so existing imports keep working).
 // The actual type definitions live in `./api-types` to avoid circular
 // imports with the server-side cache module.
@@ -140,57 +138,6 @@ export type { AlertItem, DashboardProject, DashboardData } from "./api-types";
 // Local alias so the `Dashboard` type name stays the same for existing code.
 import type { DashboardData } from "./api-types";
 export type Dashboard = DashboardData;
-=======
-export type Dashboard = {
-  project: Project;
-  totals: {
-    planTotal: number;
-    actualTotal: number;
-    remaining: number;
-    burnRate: number;
-    worstCase: number;
-    worstCaseRemaining: number;
-    hoursTotal: number;
-    daysPlanned: number;
-    itemCount: number;
-    requiredCount: number;
-    completedCount: number;
-    savedTotal: number;
-    projectedFinal: number;
-    projectedOverrun: number;
-    avgOverrunRatio: number;
-  };
-  byPhase: { phase: string; plan: number; actual: number; hours: number; count: number; worstCase: number }[];
-  byCategory: { category: string; plan: number; actual: number; hours: number; count: number }[];
-  alerts: {
-    upcoming: BudgetItem[];
-    overdue: BudgetItem[];
-    overBudget: BudgetItem[];
-    overBudgetWorst: BudgetItem[];
-    unscheduled: BudgetItem[];
-    inProgress: BudgetItem[];
-    mustPay: BudgetItem[];
-    shouldStart: BudgetItem[];
-  };
-  timeline: {
-    id: string;
-    category: string;
-    subcategory: string | null;
-    phase: string;
-    dateFrom: string | null;
-    dateTo: string | null;
-    planCost: number | null;
-    actualCost: number;
-    planDays: number | null;
-    required: boolean;
-    completed: boolean;
-  }[];
-  recent: {
-    payments: Payment[];
-    timeEntries: TimeEntry[];
-  };
-};
->>>>>>> Stashed changes
 
 // ===== Projects =====
 export function useProjects() {
@@ -720,26 +667,6 @@ export function useUpdateTimeEntry(projectId: string) {
   });
 }
 
-export function useUpdateTimeEntry(projectId: string) {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: Partial<TimeEntry> & { hours?: number } }) => {
-      const res = await fetch(`/api/time-entries/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-      if (!res.ok) throw new Error("Failed to update time entry");
-      return res.json();
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["time", projectId] });
-      qc.invalidateQueries({ queryKey: ["budget", projectId] });
-      qc.invalidateQueries({ queryKey: ["dashboard", projectId] });
-    },
-  });
-}
-
 export function useDeleteTimeEntry(projectId: string) {
   const qc = useQueryClient();
   return useMutation({
@@ -783,10 +710,7 @@ export function useCreateContact(projectId: string) {
       if (!res.ok) throw new Error("Failed to create contact");
       return res.json();
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["contacts", projectId] });
-      qc.invalidateQueries({ queryKey: ["contactStats", projectId] });
-    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["contacts", projectId] }),
   });
 }
 
@@ -802,10 +726,7 @@ export function useUpdateContact(projectId: string) {
       if (!res.ok) throw new Error("Failed to update contact");
       return res.json();
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["contacts", projectId] });
-      qc.invalidateQueries({ queryKey: ["contactStats", projectId] });
-    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["contacts", projectId] }),
   });
 }
 
@@ -820,11 +741,8 @@ export function useDeleteContact(projectId: string) {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["contacts", projectId] });
       qc.invalidateQueries({ queryKey: ["contactStats", projectId] });
-<<<<<<< Updated upstream
       qc.invalidateQueries({ queryKey: ["dashboard", projectId] });
       bustServerCache(projectId);
-=======
->>>>>>> Stashed changes
     },
   });
 }
@@ -844,28 +762,16 @@ export function useDashboard(projectId: string | null) {
 }
 
 // ===== Contact Stats =====
-export type ContactBudgetItemStat = {
-  budgetItemId: string;
-  category: string;
-  subcategory: string | null;
-  element: string | null;
-  phase: string;
-  amount: number;
-  hours: number;
-};
-
 export type ContactStat = {
   contactId: string;
   name: string;
   type: string;
   rating: number | null;
-  website: string | null;
   totalPaid: number;
   totalHours: number;
   paymentCount: number;
   timeEntryCount: number;
   lastActivity: string | null;
-  budgetItems: ContactBudgetItemStat[];
 };
 
 export type WorkerStat = {

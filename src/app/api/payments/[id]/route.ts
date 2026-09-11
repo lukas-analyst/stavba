@@ -16,7 +16,6 @@ export async function PATCH(
       return NextResponse.json({ error: "Payment not found" }, { status: 404 });
     }
 
-<<<<<<< Updated upstream
     // Compute VAT amount if amount or vatRate is being updated
     let numVatRate: number | null | undefined = undefined;
     let numVatAmount: number | null | undefined = undefined;
@@ -34,20 +33,6 @@ export async function PATCH(
     } else if (body.amount !== undefined && existing.vatRate !== null && existing.vatRate > 0) {
       // Amount changed but VAT rate unchanged -> recompute VAT amount
       numVatAmount = (Number(body.amount) * existing.vatRate) / (100 + existing.vatRate);
-=======
-    // Pre-compute vatAmount if vatRate is being updated
-    let vatAmountValue: number | null | undefined = undefined;
-    if (body.vatRate !== undefined) {
-      const newVatRate =
-        body.vatRate === null || body.vatRate === "" ? null : Number(body.vatRate);
-      const effectiveAmount =
-        body.amount !== undefined ? Number(body.amount) : existing.amount;
-      if (newVatRate !== null && !Number.isNaN(newVatRate) && newVatRate > 0) {
-        vatAmountValue = (effectiveAmount * newVatRate) / (100 + newVatRate);
-      } else {
-        vatAmountValue = null;
-      }
->>>>>>> Stashed changes
     }
 
     const updated = await db.payment.update({
@@ -65,13 +50,6 @@ export async function PATCH(
             : undefined,
         installmentOf:
           body.installmentOf !== undefined ? body.installmentOf || null : undefined,
-        vatRate:
-          body.vatRate === undefined
-            ? undefined
-            : body.vatRate === null || body.vatRate === ""
-              ? null
-              : Number(body.vatRate),
-        vatAmount: vatAmountValue,
         date: body.date !== undefined ? (body.date ? new Date(body.date) : new Date()) : undefined,
         type: body.type !== undefined ? body.type : undefined,
         vendor: body.vendor !== undefined ? (body.vendor?.trim() || null) : undefined,

@@ -264,7 +264,6 @@ function BudgetTab({ projectId, dragEndHandlerRef }: { projectId: string; dragEn
   const [completionFilter, setCompletionFilter] =
     useState<CompletionFilter>("all");
   const [search, setSearch] = useState("");
-<<<<<<< Updated upstream
   const debouncedSearch = useDebouncedValue(search, 250);
   const [addOpen, setAddOpen] = useState(false);
   const [addOpenForCategory, setAddOpenForCategory] = useState<string | null>(null);
@@ -313,12 +312,6 @@ function BudgetTab({ projectId, dragEndHandlerRef }: { projectId: string; dragEn
     }
   }, [highlightId, items]);
 
-=======
-  const [addOpen, setAddOpen] = useState(false);
-  const [editingItem, setEditingItem] = useState<BudgetItem | null>(null);
-  const updateItem = useUpdateBudgetItem(projectId);
-
->>>>>>> Stashed changes
   const toggleCat = (cat: string) => {
     setCollapsedCats((prev) => {
       const next = new Set(prev);
@@ -404,11 +397,7 @@ function BudgetTab({ projectId, dragEndHandlerRef }: { projectId: string; dragEn
       return ia - ib;
     });
     return entries;
-<<<<<<< Updated upstream
   }, [filteredTopLevel, savedCategoryOrder]);
-=======
-  }, [items, phaseFilter, search, savedCategoryOrder, completionFilter]);
->>>>>>> Stashed changes
 
   const categoryTotals = useMemo(() => {
     const map = new Map<
@@ -683,7 +672,6 @@ function BudgetTab({ projectId, dragEndHandlerRef }: { projectId: string; dragEn
         </div>
       </div>
 
-<<<<<<< Updated upstream
       {/* Budget table grouped by category — wrapped in SortableContext for category DnD */}
       <SortableContext items={categoryIds} strategy={verticalListSortingStrategy}>
         <div className="space-y-3">
@@ -788,152 +776,6 @@ function BudgetTab({ projectId, dragEndHandlerRef }: { projectId: string; dragEn
           })}
         </div>
       </SortableContext>
-=======
-      {/* Budget table grouped by category */}
-      <div className="space-y-3">
-        {grouped.length === 0 && (
-          <div className="rounded-lg border border-dashed py-12 text-center text-sm text-muted-foreground">
-            Žádné položky neodpovídají filtru.
-          </div>
-        )}
-        {grouped.map(([category, catItems], groupIndex) => {
-          const collapsed = collapsedCats.has(category);
-          const totals = categoryTotals.get(category)!;
-          const burn = totals.plan > 0 ? (totals.actual / totals.plan) * 100 : 0;
-          return (
-            <Collapsible
-              key={category}
-              open={!collapsed}
-              onOpenChange={() => toggleCat(category)}
-              className="rounded-lg border bg-card"
-            >
-              <CollapsibleTrigger asChild>
-                <button className="group flex w-full items-center gap-2 px-4 py-2.5 text-left hover:bg-muted/50">
-                  {collapsed ? (
-                    <ChevronRight className="h-4 w-4" />
-                  ) : (
-                    <ChevronDown className="h-4 w-4" />
-                  )}
-                  <span className="text-sm font-bold">{category}</span>
-                  <Badge variant="secondary" className="text-[10px]">
-                    {totals.count}
-                  </Badge>
-                  {totals.saved > 0 && (
-                    <Badge variant="outline" className="text-[10px] text-emerald-700">
-                      <PiggyBank className="mr-1 h-2.5 w-2.5" />
-                      {formatCzk(totals.saved)}
-                    </Badge>
-                  )}
-                  <div className="ml-auto flex items-center gap-4 text-xs">
-                    <span className="text-muted-foreground">
-                      {formatCzk(totals.actual)} / {formatCzk(totals.plan)}
-                    </span>
-                    <div className="h-1.5 w-24 overflow-hidden rounded-full bg-muted">
-                      <div
-                        className={cn(
-                          "h-full rounded-full",
-                          burn > 100 ? "bg-rose-500" : burn > 80 ? "bg-amber-500" : "bg-emerald-500",
-                        )}
-                        style={{ width: `${Math.min(burn, 100)}%` }}
-                      />
-                    </div>
-                    <span
-                      className={cn(
-                        "font-semibold",
-                        burn > 100 ? "text-rose-600" : burn > 80 ? "text-amber-600" : "text-emerald-600",
-                      )}
-                    >
-                      {burn.toFixed(0)}%
-                    </span>
-                  </div>
-                  {/* Category reorder arrows */}
-                  <span className="ml-1 flex flex-col">
-                    <span
-                      role="button"
-                      tabIndex={0}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        moveCategory(category, -1);
-                      }}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          e.stopPropagation();
-                          moveCategory(category, -1);
-                        }
-                      }}
-                      className={cn(
-                        "flex h-3.5 w-3.5 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground",
-                        groupIndex === 0 && "pointer-events-none opacity-30",
-                      )}
-                      aria-label="Přesunout kategorii nahoru"
-                    >
-                      <ArrowUp className="h-3 w-3" />
-                    </span>
-                    <span
-                      role="button"
-                      tabIndex={0}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        moveCategory(category, 1);
-                      }}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          e.stopPropagation();
-                          moveCategory(category, 1);
-                        }
-                      }}
-                      className={cn(
-                        "flex h-3.5 w-3.5 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground",
-                        groupIndex === grouped.length - 1 && "pointer-events-none opacity-30",
-                      )}
-                      aria-label="Přesunout kategorii dolů"
-                    >
-                      <ArrowDown className="h-3 w-3" />
-                    </span>
-                  </span>
-                </button>
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow className="bg-muted/40 hover:bg-muted/40">
-                      <TableHead className="min-w-[200px]">Položka</TableHead>
-                      <TableHead className="min-w-[140px]">Prvek / Úkol</TableHead>
-                      <TableHead className="w-28">Fáze</TableHead>
-                      <TableHead className="w-44">Poznámka</TableHead>
-                      <TableHead className="w-28 text-right">Plán (Kč)</TableHead>
-                      <TableHead className="w-20 text-right">Vůle</TableHead>
-                      <TableHead className="w-20 text-right">Dny</TableHead>
-                      <TableHead className="w-28">Datum od</TableHead>
-                      <TableHead className="w-28">Datum do</TableHead>
-                      <TableHead className="w-28 text-right">Skut. (Kč)</TableHead>
-                      <TableHead className="w-24 text-right">Ušetřeno</TableHead>
-                      <TableHead className="w-20 text-right">Hod.</TableHead>
-                      <TableHead className="w-28 text-center">Stav</TableHead>
-                      <TableHead className="w-8"></TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {catItems.map((item, idx) => (
-                      <BudgetRow
-                        key={item.id}
-                        item={item}
-                        projectId={projectId}
-                        onEdit={() => setEditingItem(item)}
-                        canMoveUp={idx > 0}
-                        canMoveDown={idx < catItems.length - 1}
-                        onMoveUp={() => moveItem(catItems, idx, -1)}
-                        onMoveDown={() => moveItem(catItems, idx, 1)}
-                      />
-                    ))}
-                  </TableBody>
-                </Table>
-              </CollapsibleContent>
-            </Collapsible>
-          );
-        })}
-      </div>
->>>>>>> Stashed changes
 
       <BudgetItemDialog
         open={addOpen}
@@ -1423,7 +1265,6 @@ function BudgetRow({
   canMoveDown,
   onMoveUp,
   onMoveDown,
-<<<<<<< Updated upstream
   isExpanded,
   onToggleExpand,
   childCount,
@@ -1434,8 +1275,6 @@ function BudgetRow({
   isChild,
   highlightId,
   registerRow,
-=======
->>>>>>> Stashed changes
 }: {
   item: BudgetItem;
   projectId: string;
@@ -1444,7 +1283,6 @@ function BudgetRow({
   canMoveDown: boolean;
   onMoveUp: () => void;
   onMoveDown: () => void;
-<<<<<<< Updated upstream
   isExpanded: boolean;
   onToggleExpand: () => void;
   childCount: number;
@@ -1455,8 +1293,6 @@ function BudgetRow({
   isChild: boolean;
   highlightId?: string | null;
   registerRow?: (id: string, el: HTMLTableRowElement | null) => void;
-=======
->>>>>>> Stashed changes
 }) {
   const updateItem = useUpdateBudgetItem(projectId);
   const deleteItem = useDeleteBudgetItem(projectId);
@@ -1490,7 +1326,6 @@ function BudgetRow({
       {...(dragCtx?.sortableAttributes ?? {})}
       onDoubleClick={() => onEdit(item)}
       className={cn(
-<<<<<<< Updated upstream
         "group transition-colors",
         isChild
           ? cn(
@@ -1592,37 +1427,18 @@ function BudgetRow({
         className={isChild ? "cursor-pointer" : ""}
         onClick={isChild ? () => onEdit(item) : undefined}
       >
-=======
-        "group border-l-2 transition-colors",
-        PHASE_BORDER_COLORS[item.phase] ?? "border-l-zinc-300",
-        item.completed
-          ? "bg-emerald-50/40 dark:bg-emerald-950/10"
-          : "hover:bg-muted/30",
-      )}
-    >
-      <TableCell>
->>>>>>> Stashed changes
         <div className="flex flex-col">
           <div className="flex items-center gap-1.5">
             {item.required && (
               <span
                 title="Nutné"
                 aria-label="Nutné"
-<<<<<<< Updated upstream
                 className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-rose-100 text-[10px] font-bold leading-none text-rose-700 dark:bg-rose-900/40 dark:text-rose-300"
-=======
-                className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-rose-100 text-[10px] font-bold text-rose-700 dark:bg-rose-900/40 dark:text-rose-300"
->>>>>>> Stashed changes
               >
                 !
               </span>
             )}
-<<<<<<< Updated upstream
             <span
-=======
-            <button
-              onClick={onEdit}
->>>>>>> Stashed changes
               className={cn(
                 "text-left font-medium",
                 isChild ? "cursor-pointer hover:underline" : "",
@@ -1659,7 +1475,6 @@ function BudgetRow({
               </button>
             )}
           </div>
-<<<<<<< Updated upstream
           {item._count &&
             (item._count.payments > 0 || item._count.timeEntries > 0) && (
               <div className="mt-0.5 flex flex-wrap gap-1">
@@ -1679,47 +1494,10 @@ function BudgetRow({
                 )}
               </div>
             )}
-=======
-          {item._count && (item._count.payments > 0 || item._count.timeEntries > 0 || item._count.comments > 0) && (
-            <div className="mt-0.5 flex flex-wrap gap-1">
-              {item._count.payments > 0 && (
-                <Badge variant="outline" className="h-4 px-1 text-[10px] text-emerald-700">
-                  {item._count.payments} plateb
-                </Badge>
-              )}
-              {item._count.timeEntries > 0 && (
-                <Badge variant="outline" className="h-4 px-1 text-[10px] text-violet-700">
-                  {item._count.timeEntries} časů
-                </Badge>
-              )}
-              {item._count.comments > 0 && (
-                <Badge variant="outline" className="h-4 px-1 text-[10px] text-sky-700">
-                  <MessageSquare className="mr-0.5 h-2 w-2" />
-                  {item._count.comments}
-                </Badge>
-              )}
-            </div>
-          )}
->>>>>>> Stashed changes
         </div>
       </TableCell>
 
       {/* Fáze */}
-      <TableCell>
-        {item.element ? (
-          <button
-            onClick={onEdit}
-            className="block w-full text-left text-xs hover:underline"
-            title={item.element}
-          >
-            <span className="line-clamp-2 text-xs text-foreground/80">
-              {item.element}
-            </span>
-          </button>
-        ) : (
-          <span className="text-[11px] text-muted-foreground/50">—</span>
-        )}
-      </TableCell>
       <TableCell>
         <Select
           value={item.phase}
@@ -1818,7 +1596,6 @@ function BudgetRow({
       <TableCell className="text-right text-[11px] text-violet-600">
         {displayActualHours > 0 ? formatNumber(displayActualHours, " h") : "—"}
       </TableCell>
-<<<<<<< Updated upstream
 
       {/* Stav: Hotovo + Rejected (X) */}
       <TableCell className="text-center">
@@ -1867,32 +1644,6 @@ function BudgetRow({
       </TableCell>
 
       {/* Akce */}
-=======
-      <TableCell className="text-center">
-        <Button
-          type="button"
-          size="sm"
-          variant={item.completed ? "default" : "outline"}
-          onClick={() => update("completed", !item.completed)}
-          disabled={updateItem.isPending}
-          aria-pressed={item.completed}
-          className={cn(
-            "h-7 gap-1.5 px-2.5 text-xs",
-            item.completed
-              ? "border-emerald-600 bg-emerald-600 text-white hover:bg-emerald-700 hover:text-white dark:border-emerald-700 dark:bg-emerald-700 dark:hover:bg-emerald-800"
-              : "text-emerald-700 hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-700 dark:text-emerald-400 dark:hover:bg-emerald-950/40",
-          )}
-          title={item.completed ? "Označit jako nedokončené" : "Označit jako hotové"}
-        >
-          {item.completed ? (
-            <CheckCircle2 className="h-3.5 w-3.5" />
-          ) : (
-            <Circle className="h-3.5 w-3.5" />
-          )}
-          Hotovo
-        </Button>
-      </TableCell>
->>>>>>> Stashed changes
       <TableCell>
         <div className="flex items-center">
           <span className="flex flex-col">

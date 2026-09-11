@@ -539,18 +539,14 @@ model Contact {
   phone     String?
   /// Email address
   email     String?
-<<<<<<< Updated upstream
-  /// Company name (if type = "company")
-=======
+  /// Website URL
   website   String?
->>>>>>> Stashed changes
+  /// Company name (if type = "company")
   company   String?
   /// IČO (Identifikační číslo organizace) — Czech company registration number
   ico       String?
   /// DIČ (Daňové identifikační číslo) — Czech tax ID
   dic       String?
-  /// Website URL
-  website   String?
   /// Free-form notes about this contact
   notes     String?
   /// Rating (1-5 stars, null = not rated)
