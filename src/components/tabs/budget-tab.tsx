@@ -621,9 +621,9 @@ function BudgetTab({ projectId, dragEndHandlerRef }: { projectId: string; dragEn
   const categoryIds = grouped.map(([cat]) => `cat:${cat}`);
 
   return (
-    <div className="space-y-4">
+    <div id="budget-root" className="space-y-4">
       {/* Toolbar */}
-      <div className="flex flex-wrap items-center gap-2">
+      <div id="budget-toolbar" className="flex flex-wrap items-center gap-2">
         <div className="relative">
           <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
@@ -668,7 +668,7 @@ function BudgetTab({ projectId, dragEndHandlerRef }: { projectId: string; dragEn
 
       {/* Budget table grouped by category — wrapped in SortableContext for category DnD */}
       <SortableContext items={categoryIds} strategy={verticalListSortingStrategy}>
-        <div className="space-y-3">
+        <div id="budget-categories" className="space-y-3">
           {grouped.length === 0 && (
             <div className="rounded-lg border border-dashed py-12 text-center text-sm text-muted-foreground">
               Žádné položky neodpovídají filtru.
@@ -710,7 +710,7 @@ function BudgetTab({ projectId, dragEndHandlerRef }: { projectId: string; dragEn
                 <SortableContext items={itemIds} strategy={verticalListSortingStrategy}>
                   <Table>
                     <TableHeader>
-                      <TableRow className="sticky top-[41px] z-10 bg-muted/95 backdrop-blur-sm hover:bg-muted/95">
+                      <TableRow className="sticky top-[37px] z-20 bg-muted/95 backdrop-blur-sm hover:bg-muted/95">
                         <TableHead className="w-8"></TableHead>
                         <TableHead className="w-12"></TableHead>
                         <TableHead className="min-w-[200px]">Položka</TableHead>

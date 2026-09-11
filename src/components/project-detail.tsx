@@ -259,8 +259,8 @@ export function ProjectDetail({ project }: { project: Project }) {
   return (
     <div className="flex min-h-screen flex-col">
       {/* Project header (scrolls away — not sticky) */}
-      <header className="border-b bg-background">
-        <div className="px-4 pt-4 pb-0 md:px-6">
+      <header id="project-header" className="border-b bg-background">
+        <div className="px-4 pt-4 pb-4 md:px-6">
           {/* Title row */}
           <div className="flex items-start justify-between gap-2 md:gap-4">
             <div className="min-w-0 flex-1">
@@ -340,7 +340,7 @@ export function ProjectDetail({ project }: { project: Project }) {
       </header>
 
       {/* Sticky tab navigation — stays visible during scroll */}
-      <nav className="scrollbar-none sticky top-0 z-30 flex gap-1 overflow-x-auto border-b bg-background/95 px-4 backdrop-blur md:px-6">
+      <nav id="tab-nav" className="scrollbar-none sticky top-0 z-30 flex gap-1 overflow-x-auto border-b bg-background/95 px-4 backdrop-blur md:px-6">
         {TABS.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
@@ -368,7 +368,7 @@ export function ProjectDetail({ project }: { project: Project }) {
       </nav>
 
       {/* Tab content */}
-      <div className="flex-1 px-4 py-4 md:px-6 md:py-6">
+      <div id="tab-content" className="flex-1 px-4 py-4 md:px-6 md:py-6">
         {activeTab === "dashboard" && <DashboardTab projectId={project.id} />}
         {activeTab === "budget" && <BudgetTab projectId={project.id} />}
         {activeTab === "payments" && <PaymentsTab projectId={project.id} />}

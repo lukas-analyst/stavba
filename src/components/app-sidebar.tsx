@@ -106,9 +106,9 @@ export function AppSidebar({ onSelectProject }: { onSelectProject?: (id: string)
   };
 
   return (
-    <aside className="flex h-full w-80 flex-col border-r bg-sidebar text-sidebar-foreground">
+    <aside id="app-sidebar" className="flex h-full w-80 flex-col border-r bg-sidebar text-sidebar-foreground">
       {/* Header */}
-      <div className="flex items-center gap-2 border-b px-5 py-4">
+      <div id="sidebar-header" className="flex items-center gap-2 border-b px-5 py-4">
         <div className="flex h-9 w-9 items-center justify-center rounded-lg overflow-hidden bg-primary">
           <img src="/logo.svg" alt="Rozpočet Stavby" className="h-full w-full" />
         </div>
@@ -189,7 +189,7 @@ export function AppSidebar({ onSelectProject }: { onSelectProject?: (id: string)
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-2 pb-2">
+      <div id="sidebar-project-list" className="flex-1 overflow-y-auto px-2 pb-2">
         {isLoading ? (
           <div className="flex justify-center py-8">
             <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
@@ -326,7 +326,7 @@ export function AppSidebar({ onSelectProject }: { onSelectProject?: (id: string)
                           <MoreVertical className="h-3.5 w-3.5" />
                         </span>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                      <DropdownMenuContent align="end" side="bottom" sideOffset={4} onClick={(e) => e.stopPropagation()}>
                         <DropdownMenuItem onClick={() => {
                           setSelectedProject(p.id);
                           onSelectProject?.(p.id);

@@ -79,10 +79,10 @@ export function DashboardTab({ projectId }: { projectId: string }) {
     });
 
   return (
-    <div className="space-y-6">
+    <div id="dashboard-root" className="space-y-6">
       {/* KPI cards */}
-      <div className={cn("grid grid-cols-2 gap-2 sm:gap-3 md:grid-cols-3 lg:grid-cols-6 lg:gap-4 ")}>
-        <Card className="border-emerald-200/60 bg-gradient-to-br from-emerald-50 to-white dark:border-emerald-900/40 dark:from-emerald-950/30 dark:to-card hover-lift">
+      <div id="kpi-cards" className={cn("grid grid-cols-2 gap-2 sm:gap-3 md:grid-cols-3 lg:grid-cols-6 lg:gap-4 ")}>
+        <Card id="kpi-plan" className="border-emerald-200/60 bg-gradient-to-br from-emerald-50 to-white dark:border-emerald-900/40 dark:from-emerald-950/30 dark:to-card hover-lift">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
               Plán rozpočtu
@@ -97,7 +97,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
           </CardContent>
         </Card>
 
-        <Card className="border-amber-200/60 bg-gradient-to-br from-amber-50 to-white dark:border-amber-900/40 dark:from-amber-950/30 dark:to-card hover-lift cursor-pointer" onClick={() => setActiveTab("payments")}>
+        <Card id="kpi-burn" className="border-amber-200/60 bg-gradient-to-br from-amber-50 to-white dark:border-amber-900/40 dark:from-amber-950/30 dark:to-card hover-lift cursor-pointer" onClick={() => setActiveTab("payments")}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
               Čerpání
@@ -128,7 +128,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
           </CardContent>
         </Card>
 
-        <Card className={cn("hover-lift cursor-pointer", totals.remaining >= 0 ? "border-sky-200/60 bg-gradient-to-br from-sky-50 to-white dark:border-sky-900/40 dark:from-sky-950/30 dark:to-card" : "border-rose-200/60 bg-gradient-to-br from-rose-50 to-white dark:border-rose-900/40 dark:from-rose-950/30 dark:to-card")} onClick={() => goToBudget({ type: "active" })}>
+        <Card id="kpi-remaining" className={cn("hover-lift cursor-pointer", totals.remaining >= 0 ? "border-sky-200/60 bg-gradient-to-br from-sky-50 to-white dark:border-sky-900/40 dark:from-sky-950/30 dark:to-card" : "border-rose-200/60 bg-gradient-to-br from-rose-50 to-white dark:border-rose-900/40 dark:from-rose-950/30 dark:to-card")} onClick={() => goToBudget({ type: "active" })}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
               Zbývá v rozpočtu
@@ -149,7 +149,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
           </CardContent>
         </Card>
 
-        <Card className="border-violet-200/60 bg-gradient-to-br from-violet-50 to-white dark:border-violet-900/40 dark:from-violet-950/30 dark:to-card hover-lift cursor-pointer" onClick={() => setActiveTab("time")}>
+        <Card id="kpi-hours" className="border-violet-200/60 bg-gradient-to-br from-violet-50 to-white dark:border-violet-900/40 dark:from-violet-950/30 dark:to-card hover-lift cursor-pointer" onClick={() => setActiveTab("time")}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
               Odpracováno
@@ -164,7 +164,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
           </CardContent>
         </Card>
 
-        <Card className="border-emerald-300/60 bg-gradient-to-br from-emerald-50 to-white dark:border-emerald-800/40 dark:from-emerald-950/30 dark:to-card hover-lift cursor-pointer" onClick={() => goToBudget({ type: "saved" })}>
+        <Card id="kpi-saved" className="border-emerald-300/60 bg-gradient-to-br from-emerald-50 to-white dark:border-emerald-800/40 dark:from-emerald-950/30 dark:to-card hover-lift cursor-pointer" onClick={() => goToBudget({ type: "saved" })}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
               Ušetřeno
@@ -181,7 +181,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
           </CardContent>
         </Card>
 
-        <Card className="border-teal-200/60 bg-gradient-to-br from-teal-50 to-white dark:border-teal-900/40 dark:from-teal-950/30 dark:to-card hover-lift cursor-pointer" onClick={() => goToBudget({ type: "completion", value: "done" })}>
+        <Card id="kpi-completed" className="border-teal-200/60 bg-gradient-to-br from-teal-50 to-white dark:border-teal-900/40 dark:from-teal-950/30 dark:to-card hover-lift cursor-pointer" onClick={() => goToBudget({ type: "completion", value: "done" })}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
               Hotovo
