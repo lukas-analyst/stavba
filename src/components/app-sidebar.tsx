@@ -308,8 +308,8 @@ export function AppSidebar({ onSelectProject }: { onSelectProject?: (id: string)
                         </div>
                       </div>
                     )}
-                    {/* Project actions menu (3-dot) — appears on hover */}
-                    <DropdownMenu>
+                    {/* Project actions menu (3-dot) — appears on hover, stays visible while open */}
+                    <DropdownMenu modal={false}>
                       <DropdownMenuTrigger asChild>
                         <span
                           role="button"
@@ -320,13 +320,13 @@ export function AppSidebar({ onSelectProject }: { onSelectProject?: (id: string)
                               e.stopPropagation();
                             }
                           }}
-                          className="absolute right-1.5 top-1.5 hidden h-6 w-6 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground group-hover:flex"
+                          className="absolute right-1.5 top-1.5 z-30 hidden h-6 w-6 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground group-hover:flex data-[state=open]:flex"
                           aria-label="Akce projektu"
                         >
                           <MoreVertical className="h-3.5 w-3.5" />
                         </span>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" side="bottom" sideOffset={4} onClick={(e) => e.stopPropagation()}>
+                      <DropdownMenuContent align="end" side="bottom" sideOffset={4} alignOffset={-4} onClick={(e) => e.stopPropagation()}>
                         <DropdownMenuItem onClick={() => {
                           setSelectedProject(p.id);
                           onSelectProject?.(p.id);
