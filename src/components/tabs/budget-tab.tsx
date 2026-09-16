@@ -721,7 +721,7 @@ function BudgetTab({ projectId, dragEndHandlerRef }: { projectId: string; dragEn
                         <TableHead className="w-28">Datum do</TableHead>
                         <TableHead className="w-28 text-right">Skut. (Kč)</TableHead>
                         <TableHead className="w-20 text-right">Hod.</TableHead>
-                        <TableHead className="w-36 text-center">Stav</TableHead>
+                        <TableHead className="w-44 text-center">Stav</TableHead>
                         <TableHead className="w-8"></TableHead>
                       </TableRow>
                     </TableHeader>
@@ -1426,9 +1426,9 @@ function BudgetRow({
           <div className="flex items-center gap-1.5">
             {item.required && (
               <span
-                title="Nutné"
+                title="Povinné (nutné pro dokončení projektu)"
                 aria-label="Nutné"
-                className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-rose-100 text-[10px] font-bold leading-none text-rose-700 dark:bg-rose-900/40 dark:text-rose-300"
+                className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-amber-100 text-[10px] font-bold leading-none text-amber-700 dark:bg-amber-900/40 dark:text-amber-300"
               >
                 !
               </span>
@@ -1592,9 +1592,31 @@ function BudgetRow({
         {displayActualHours > 0 ? formatNumber(displayActualHours, " h") : "—"}
       </TableCell>
 
-      {/* Stav: Hotovo + Rejected (X) */}
+      {/* Stav: Nutné + Hotovo + Rejected (X) */}
       <TableCell className="text-center">
         <div className="flex items-center justify-center gap-1">
+          <Button
+            type="button"
+            size="sm"
+            variant={item.required ? "default" : "outline"}
+            onClick={() => update("required", !item.required)}
+            disabled={updateItem.isPending}
+            aria-pressed={item.required}
+            aria-label={item.required ? "Zrušit nutné" : "Označit jako nutné"}
+            className={cn(
+              "h-7 w-7 shrink-0 p-0",
+              item.required
+                ? "border-amber-500 bg-amber-500 text-white hover:bg-amber-600 hover:text-white dark:border-amber-600 dark:bg-amber-600 dark:hover:bg-amber-700"
+                : "text-amber-600 hover:border-amber-300 hover:bg-amber-50 hover:text-amber-700 dark:text-amber-400 dark:hover:border-amber-800 dark:hover:bg-amber-950/40",
+            )}
+            title={
+              item.required
+                ? "Povinné — kliknutím označíte jako nepovinné"
+                : "Nepovinné — kliknutím označíte jako povinné (nutné pro dokončení projektu)"
+            }
+          >
+            <AlertTriangle className="h-3.5 w-3.5" />
+          </Button>
           <Button
             type="button"
             size="sm"
@@ -1675,6 +1697,12 @@ function BudgetRow({
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem onClick={() => onEdit(item)}>Upravit detail</DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => update("required", !item.required)}
+              >
+                <AlertTriangle className="mr-2 h-3.5 w-3.5 text-amber-500" />
+                {item.required ? "Označit jako nepovinné" : "Označit jako povinné"}
+              </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => update("completed", !item.completed)}
               >
