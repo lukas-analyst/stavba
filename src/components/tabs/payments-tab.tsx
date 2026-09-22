@@ -63,6 +63,7 @@ import {
   ArrowUpDown,
   CheckCircle2,
   Download,
+  ChevronDown,
 } from "lucide-react";
 import { formatCzk, formatDate, PAYMENT_TYPES, paymentTypeLabel } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -446,7 +447,7 @@ function InstallmentGroupCard({
   }) => Promise<void>;
   onEditPayment: (payment: Payment) => void;
 }) {
-  const [expanded, setExpanded] = useState(true);
+  const [expanded, setExpanded] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
   const [amount, setAmount] = useState("");
   const [date, setDate] = useState(new Date().toISOString().substring(0, 10));
@@ -467,7 +468,22 @@ function InstallmentGroupCard({
       <div
         className="flex cursor-pointer items-center gap-3 px-4 py-3 hover:bg-amber-50/60 dark:hover:bg-amber-950/20"
         onClick={() => setExpanded(!expanded)}
+        aria-expanded={expanded}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            setExpanded(!expanded);
+          }
+        }}
       >
+        <ChevronDown
+          className={cn(
+            "h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200",
+            !expanded && "-rotate-90",
+          )}
+        />
         <FileText className="h-5 w-5 shrink-0 text-amber-600" />
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
@@ -476,6 +492,9 @@ function InstallmentGroupCard({
             </span>
             <Badge variant="outline" className="text-[10px]">
               <Layers className="mr-1 h-2.5 w-2.5" /> Faktura ve splátkách
+              <span className="ml-1 rounded bg-muted px-1 py-0.5 text-[9px] font-semibold tabular-nums">
+                {1 + installments.length}
+              </span>
             </Badge>
             {parent.invoiceNumber && (
               <Badge variant="secondary" className="text-[10px]">
@@ -637,7 +656,7 @@ function InstallmentGroupCard({
                 {installments.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={5} className="py-4 text-center text-xs text-muted-foreground">
-                      Zatím žádné splátky. Přidejte první splátku níže.
+                      Žádné další splátky. Přidejte další splátku níže.
                     </TableCell>
                   </TableRow>
                 )}

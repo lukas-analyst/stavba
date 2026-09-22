@@ -5,10 +5,20 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 
 export const createClient = (request: NextRequest) => {
+  // Gracefully passthrough when Supabase env vars are not configured.
+  // The app uses Neon (PostgreSQL) + NextAuth, not Supabase — this
+  // scaffolding is kept for optional future use but must not block
+  // requests when the env vars are absent.
+  if (!supabaseUrl || !supabaseKey) {
+    return NextResponse.next({
+      request: { headers: request.headers },
+    });
+  }
+
   let supabaseResponse = NextResponse.next({
     request: { headers: request.headers },
   });
-  const supabase = createServerClient(supabaseUrl!, supabaseKey!, {
+  const supabase = createServerClient(supabaseUrl, supabaseKey, {
     cookies: {
       getAll() {
         return request.cookies.getAll();
