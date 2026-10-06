@@ -25,6 +25,8 @@ const BUDGET_ITEM_SELECT = {
   dateTo: true,
   actualCost: true,
   actualHours: true,
+  subsidyEligible: true,
+  subsidyAmount: true,
   sortOrder: true,
   createdAt: true,
   updatedAt: true,
@@ -78,6 +80,8 @@ export async function POST(
       dateTo,
       actualCost,
       actualHours,
+      subsidyEligible,
+      subsidyAmount,
     } = body;
 
     if (!category || typeof category !== "string" || !category.trim()) {
@@ -133,6 +137,8 @@ export async function POST(
         dateTo: dateTo ? new Date(dateTo) : null,
         actualCost: actualCost !== undefined ? Number(actualCost) : 0,
         actualHours: actualHours !== undefined ? Number(actualHours) : 0,
+        subsidyEligible: Boolean(subsidyEligible),
+        subsidyAmount: subsidyAmount !== undefined && subsidyAmount !== null && subsidyAmount !== "" ? Number(subsidyAmount) : null,
         sortOrder: (maxOrder._max.sortOrder ?? -1) + 1,
       },
       select: BUDGET_ITEM_SELECT,

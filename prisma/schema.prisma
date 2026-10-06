@@ -471,6 +471,13 @@ model BudgetItem {
   /// Actual hours worked (sum of all linked time entries). Updated
   /// automatically when a time entry is created/updated/deleted.
   actualHours        Float        @default(0)
+  /// Whether this item/task is eligible for a subsidy/grant ("Dotace" in UI).
+  /// Default false — existing rows get false (no data modification).
+  subsidyEligible    Boolean      @default(false)
+  /// Estimated subsidy/grant amount (Kč) that could be obtained for this
+  /// item/task. Null = not yet specified. Only meaningful when
+  /// subsidyEligible = true, but stored independently for flexibility.
+  subsidyAmount      Float?
   /// Sort order within the category (for manual reordering)
   sortOrder          Int          @default(0)
   /// When this budget item was created
@@ -488,6 +495,7 @@ model BudgetItem {
   @@index([phase])
   @@index([category])
   @@index([completed])
+  @@index([subsidyEligible])
   @@index([sortOrder])
   @@index([dateFrom])
   @@index([dateTo])

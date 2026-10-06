@@ -40,6 +40,8 @@ export async function PATCH(
     if (body.dateTo !== undefined) updateData.dateTo = body.dateTo ? new Date(body.dateTo) : null;
     if (body.actualCost !== undefined) updateData.actualCost = numOrUndef(body.actualCost) ?? 0;
     if (body.actualHours !== undefined) updateData.actualHours = numOrUndef(body.actualHours) ?? 0;
+    if (body.subsidyEligible !== undefined) updateData.subsidyEligible = Boolean(body.subsidyEligible);
+    if (body.subsidyAmount !== undefined) updateData.subsidyAmount = numOrUndef(body.subsidyAmount);
     if (body.sortOrder !== undefined) updateData.sortOrder = Number(body.sortOrder);
 
     const updated = await db.budgetItem.update({

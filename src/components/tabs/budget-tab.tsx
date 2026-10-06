@@ -70,6 +70,7 @@ import {
   Copy,
   X,
   GripVertical,
+  HandCoins,
 } from "lucide-react";
 import {
   formatCzk,
@@ -1456,6 +1457,25 @@ function BudgetRow({
                 Hotovo
               </Badge>
             )}
+            {item.subsidyEligible && (
+              <Badge
+                variant="outline"
+                title={
+                  item.subsidyAmount != null
+                    ? `Možná dotace: ${formatCzk(item.subsidyAmount)}`
+                    : "Možná dotace (částka nezadána)"
+                }
+                className="h-4 gap-0.5 px-1 text-[9px] text-teal-700 dark:text-teal-300"
+              >
+                <HandCoins className="h-2.5 w-2.5" />
+                Dotace
+                {item.subsidyAmount != null && item.subsidyAmount > 0 && (
+                  <span className="ml-0.5 tabular-nums">
+                    {formatCzk(item.subsidyAmount)}
+                  </span>
+                )}
+              </Badge>
+            )}
             {!isChild && onAddTask && (
               <button
                 onClick={(e) => {
@@ -1702,6 +1722,12 @@ function BudgetRow({
               >
                 <AlertTriangle className="mr-2 h-3.5 w-3.5 text-amber-500" />
                 {item.required ? "Označit jako nepovinné" : "Označit jako povinné"}
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => update("subsidyEligible", !item.subsidyEligible)}
+              >
+                <HandCoins className="mr-2 h-3.5 w-3.5 text-teal-500" />
+                {item.subsidyEligible ? "Zrušit dotaci" : "Označit jako dotovatelné"}
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => update("completed", !item.completed)}

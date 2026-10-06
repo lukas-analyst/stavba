@@ -76,6 +76,8 @@ export type BudgetItem = {
   dateTo: string | null;
   actualCost: number;
   actualHours: number;
+  subsidyEligible: boolean;
+  subsidyAmount: number | null;
   sortOrder: number;
   _count?: { payments: number; timeEntries: number; comments: number };
   children?: BudgetItem[];

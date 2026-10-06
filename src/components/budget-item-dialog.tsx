@@ -27,7 +27,7 @@ import {
   useUpdateBudgetItem,
   type BudgetItem,
 } from "@/lib/api";
-import { Loader2, AlertTriangle, CheckCircle2, Circle, X } from "lucide-react";
+import { Loader2, AlertTriangle, CheckCircle2, Circle, X, HandCoins } from "lucide-react";
 import { toast } from "sonner";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import { cn } from "@/lib/utils";
@@ -151,6 +151,8 @@ function BudgetItemForm({
   const [required, setRequired] = useState(item ? item.required : true);
   const [completed, setCompleted] = useState(item?.completed ?? false);
   const [rejected, setRejected] = useState(item?.rejected ?? false);
+  const [subsidyEligible, setSubsidyEligible] = useState(item?.subsidyEligible ?? false);
+  const [subsidyAmount, setSubsidyAmount] = useState(item?.subsidyAmount?.toString() ?? "");
   const [note, setNote] = useState(item?.note ?? "");
   const [planCost, setPlanCost] = useState(item?.planCost?.toString() ?? "");
   const [flexibility, setFlexibility] = useState(
@@ -244,6 +246,8 @@ function BudgetItemForm({
         planDays: planDays === "" ? null : Number(planDays.replace(",", ".")),
         dateFrom: dateFrom || null,
         dateTo: dateTo || null,
+        subsidyEligible,
+        subsidyAmount: subsidyAmount === "" ? null : Number(subsidyAmount.replace(",", ".")),
         dependsOnId: isTaskMode
           ? (item?.dependsOnId ?? null)
           : dependsOnId === "__none__"
@@ -376,34 +380,71 @@ function BudgetItemForm({
         )}
 
         {isTaskMode ? (
-          // ===== Task mode: Hotovo + Zavrženo as toggle buttons =====
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setCompleted(!completed)}
-              className={cn(
-                "flex items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-medium transition-all",
-                completed
-                  ? "border-emerald-500 bg-emerald-50 text-emerald-700 dark:border-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300"
-                  : "border-border text-muted-foreground hover:border-emerald-300 hover:bg-emerald-50/50 dark:hover:border-emerald-800",
-              )}
-            >
-              {completed ? <CheckCircle2 className="h-3.5 w-3.5" /> : <Circle className="h-3.5 w-3.5" />}
-              Hotovo
-            </button>
-            <button
-              type="button"
-              onClick={() => setRejected(!rejected)}
-              className={cn(
-                "flex items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-medium transition-all",
-                rejected
-                  ? "border-rose-500 bg-rose-50 text-rose-700 dark:border-rose-700 dark:bg-rose-950/40 dark:text-rose-300"
-                  : "border-border text-muted-foreground hover:border-rose-300 hover:bg-rose-50/50 dark:hover:border-rose-800",
-              )}
-            >
-              <X className="h-3.5 w-3.5" />
-              Zavrženo
-            </button>
+          // ===== Task mode: Hotovo + Zavrženo + Dotace as toggle buttons =====
+          <div className="space-y-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setCompleted(!completed)}
+                className={cn(
+                  "flex items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-medium transition-all",
+                  completed
+                    ? "border-emerald-500 bg-emerald-50 text-emerald-700 dark:border-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300"
+                    : "border-border text-muted-foreground hover:border-emerald-300 hover:bg-emerald-50/50 dark:hover:border-emerald-800",
+                )}
+              >
+                {completed ? <CheckCircle2 className="h-3.5 w-3.5" /> : <Circle className="h-3.5 w-3.5" />}
+                Hotovo
+              </button>
+              <button
+                type="button"
+                onClick={() => setRejected(!rejected)}
+                className={cn(
+                  "flex items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-medium transition-all",
+                  rejected
+                    ? "border-rose-500 bg-rose-50 text-rose-700 dark:border-rose-700 dark:bg-rose-950/40 dark:text-rose-300"
+                    : "border-border text-muted-foreground hover:border-rose-300 hover:bg-rose-50/50 dark:hover:border-rose-800",
+                )}
+              >
+                <X className="h-3.5 w-3.5" />
+                Zavrženo
+              </button>
+              <button
+                type="button"
+                onClick={() => setSubsidyEligible(!subsidyEligible)}
+                className={cn(
+                  "flex items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-medium transition-all",
+                  subsidyEligible
+                    ? "border-teal-500 bg-teal-50 text-teal-700 dark:border-teal-600 dark:bg-teal-950/40 dark:text-teal-300"
+                    : "border-border text-muted-foreground hover:border-teal-300 hover:bg-teal-50/50 dark:hover:border-teal-800",
+                )}
+                title="Dotace — pro tento úkol lze čerpat dotaci"
+              >
+                <HandCoins className="h-3.5 w-3.5" />
+                Dotace
+              </button>
+            </div>
+            {subsidyEligible && (
+              <div className="flex items-center gap-2">
+                <Label htmlFor="subsidyAmountTask" className="text-[11px] text-muted-foreground">
+                  Částka dotace (Kč)
+                </Label>
+                <Input
+                  id="subsidyAmountTask"
+                  type="number"
+                  inputMode="decimal"
+                  step="any"
+                  min="0"
+                  value={subsidyAmount}
+                  onChange={(e) => setSubsidyAmount(e.target.value)}
+                  placeholder="např. 15000"
+                  className="h-8 w-40 text-xs"
+                />
+                <span className="text-[10px] text-muted-foreground">
+                  Odhadovaná výše dotace pro tento úkol.
+                </span>
+              </div>
+            )}
           </div>
         ) : (
           // ===== Item mode: Fáze + Nutné/Hotovo/Zavrženo =====
@@ -464,7 +505,42 @@ function BudgetItemForm({
                 <X className="h-3 w-3" />
                 Zavrženo
               </button>
+              <button
+                type="button"
+                onClick={() => setSubsidyEligible(!subsidyEligible)}
+                className={cn(
+                  "flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[11px] font-medium transition-all",
+                  subsidyEligible
+                    ? "border-teal-500 bg-teal-50 text-teal-700 dark:border-teal-600 dark:bg-teal-950/40 dark:text-teal-300"
+                    : "border-border text-muted-foreground hover:border-teal-300 hover:bg-teal-50/50 dark:hover:border-teal-800",
+                )}
+                title="Dotace — pro tuto položku/úkol lze čerpat dotaci"
+              >
+                <HandCoins className="h-3 w-3" />
+                Dotace
+              </button>
             </div>
+            {subsidyEligible && (
+              <div className="flex items-center gap-2 pb-1">
+                <Label htmlFor="subsidyAmount" className="text-[11px] text-muted-foreground">
+                  Částka dotace (Kč)
+                </Label>
+                <Input
+                  id="subsidyAmount"
+                  type="number"
+                  inputMode="decimal"
+                  step="any"
+                  min="0"
+                  value={subsidyAmount}
+                  onChange={(e) => setSubsidyAmount(e.target.value)}
+                  placeholder="např. 15000"
+                  className="h-8 w-40 text-xs"
+                />
+                <span className="text-[10px] text-muted-foreground">
+                  Odhadovaná výše dotace, kterou lze na tuto položku získat.
+                </span>
+              </div>
+            )}
           </div>
         )}
 

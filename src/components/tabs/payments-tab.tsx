@@ -207,10 +207,82 @@ export function PaymentsTab({ projectId }: { projectId: string }) {
     .slice()
     .sort((a, b) => sortPayments(a.parent, b.parent, sortBy));
 
-  const totalAmount = [
-    ...filteredStandalone,
-    ...filteredGroups.flatMap((g) => [g.parent, ...g.installments]),
-  ].reduce((s, p) => s + p.amount, 0);
+  // Build a single flat list of all payment rows (standalone + installment
+  // parents + installment children) so they can be rendered in ONE unified
+  // table. Each row carries optional installment metadata for display.
+  type RowMeta = {
+    isInstallmentParent: boolean;
+    isInstallmentChild: boolean;
+    installmentNumber: number; // 1 for parent, 2+ for children
+    totalInstallments: number; // 1 + children count
+    invoiceTotal: number | null;
+    paidTotal: number; // sum of parent + all children
+    remaining: number;
+    percent: number;
+    parentId?: string; // for children — to keep parent reference
+  };
+  const allRows: { payment: Payment; meta: RowMeta }[] = [];
+
+  // Standalone payments (no installment metadata)
+  for (const p of filteredStandalone) {
+    allRows.push({
+      payment: p,
+      meta: {
+        isInstallmentParent: false,
+        isInstallmentChild: false,
+        installmentNumber: 0,
+        totalInstallments: 0,
+        invoiceTotal: null,
+        paidTotal: p.amount,
+        remaining: 0,
+        percent: 100,
+      },
+    });
+  }
+
+  // Installment groups: parent (as row 1) + each child (row 2, 3, ...)
+  for (const g of filteredGroups) {
+    const children = g.installments;
+    const invoiceTotal = g.parent.invoiceTotal ?? g.parent.amount;
+    const paidTotal = g.parent.amount + children.reduce((s, i) => s + i.amount, 0);
+    const remaining = invoiceTotal - paidTotal;
+    const percent = invoiceTotal > 0 ? (paidTotal / invoiceTotal) * 100 : 0;
+    allRows.push({
+      payment: g.parent,
+      meta: {
+        isInstallmentParent: true,
+        isInstallmentChild: false,
+        installmentNumber: 1,
+        totalInstallments: 1 + children.length,
+        invoiceTotal,
+        paidTotal,
+        remaining,
+        percent,
+      },
+    });
+    children.forEach((c, i) => {
+      allRows.push({
+        payment: c,
+        meta: {
+          isInstallmentParent: false,
+          isInstallmentChild: true,
+          installmentNumber: i + 2,
+          totalInstallments: 1 + children.length,
+          invoiceTotal,
+          paidTotal,
+          remaining,
+          percent,
+          parentId: g.parent.id,
+        },
+      });
+    });
+  }
+
+  // Sort the flat list by the user's chosen sort key (parent/child ordering
+  // is preserved by stable sort within same date).
+  allRows.sort((a, b) => sortPayments(a.payment, b.payment, sortBy));
+
+  const totalAmount = allRows.reduce((s, r) => s + r.payment.amount, 0);
 
   return (
     <div id="payments-root" className="space-y-4">
@@ -334,67 +406,40 @@ export function PaymentsTab({ projectId }: { projectId: string }) {
         />
       ) : (
         <div className="space-y-3">
-          {/* Installment groups (invoices with partial payments) */}
-          {filteredGroups.map(({ parent, installments }) => (
-            <InstallmentGroupCard
-              key={parent.id}
-              parent={parent}
-              installments={installments}
-              onDeletePayment={async (id) => {
-                try {
-                  await deletePayment.mutateAsync(id);
-                  toast.success("Platba smazána");
-                } catch {
-                  toast.error("Nepodařilo se smazat");
-                }
-              }}
-              onAddInstallment={async (data) => {
-                try {
-                  await createPayment.mutateAsync(data);
-                  toast.success("Splátka přidána");
-                } catch {
-                  toast.error("Nepodařilo se přidat splátku");
-                }
-              }}
-              onEditPayment={(p) => setEditPayment(p)}
-            />
-          ))}
-
-          {/* Standalone payments */}
-          {filteredStandalone.length > 0 && (
-            <div className="overflow-hidden rounded-lg border">
-              <Table>
-                <TableHeader>
-                  <TableRow className="bg-muted/40 hover:bg-muted/40">
-                    <TableHead className="w-28">Datum</TableHead>
-                    <TableHead className="w-32">Typ</TableHead>
-                    <TableHead className="min-w-[220px]">Položka rozpočtu</TableHead>
-                    <TableHead className="min-w-[160px]">Popis / Firma</TableHead>
-                    <TableHead>Osoba / Kontakt</TableHead>
-                    <TableHead className="text-right">Částka</TableHead>
-                    <TableHead className="w-8"></TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredStandalone.map((p) => (
-                    <PaymentRow
-                      key={p.id}
-                      payment={p}
-                      onEdit={() => setEditPayment(p)}
-                      onDelete={async () => {
-                        try {
-                          await deletePayment.mutateAsync(p.id);
-                          toast.success("Platba smazána");
-                        } catch {
-                          toast.error("Nepodařilo se smazat");
-                        }
-                      }}
-                    />
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          )}
+          {/* Unified payments table — standalone + installment invoices merged */}
+          <div className="overflow-hidden rounded-lg border">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-muted/40 hover:bg-muted/40">
+                  <TableHead className="w-28">Datum</TableHead>
+                  <TableHead className="w-32">Typ</TableHead>
+                  <TableHead className="min-w-[220px]">Položka rozpočtu</TableHead>
+                  <TableHead className="min-w-[160px]">Popis / Firma</TableHead>
+                  <TableHead>Osoba / Kontakt</TableHead>
+                  <TableHead className="text-right">Částka</TableHead>
+                  <TableHead className="w-8"></TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {allRows.map(({ payment, meta }) => (
+                  <PaymentRow
+                    key={payment.id}
+                    payment={payment}
+                    meta={meta}
+                    onEdit={() => setEditPayment(payment)}
+                    onDelete={async () => {
+                      try {
+                        await deletePayment.mutateAsync(payment.id);
+                        toast.success("Platba smazána");
+                      } catch {
+                        toast.error("Nepodařilo se smazat");
+                      }
+                    }}
+                  />
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         </div>
       )}
 
@@ -759,35 +804,86 @@ function InstallmentGroupCard({
   );
 }
 
-// ===== Standalone payment row =====
+// ===== Unified payment row (standalone + installment parent + installment child) =====
+type RowMeta = {
+  isInstallmentParent: boolean;
+  isInstallmentChild: boolean;
+  installmentNumber: number;
+  totalInstallments: number;
+  invoiceTotal: number | null;
+  paidTotal: number;
+  remaining: number;
+  percent: number;
+  parentId?: string;
+};
+
 function PaymentRow({
   payment,
+  meta,
   onEdit,
   onDelete,
 }: {
   payment: Payment;
+  meta?: RowMeta;
   onEdit: () => void;
   onDelete: () => void;
 }) {
   const [confirm, setConfirm] = useState(false);
   const t = paymentTypeLabel(payment.type);
+  const isParent = meta?.isInstallmentParent ?? false;
+  const isChild = meta?.isInstallmentChild ?? false;
+  const installmentNumber = meta?.installmentNumber ?? 0;
+  const totalInstallments = meta?.totalInstallments ?? 0;
+  const hasInstallment = isParent || isChild;
 
   return (
     <TableRow
-      className="group cursor-pointer hover:bg-muted/30"
+      className={cn(
+        "group cursor-pointer hover:bg-muted/30",
+        isParent && "bg-amber-50/30 dark:bg-amber-950/10",
+      )}
       onClick={() => onEdit()}
       title="Klikněte pro úpravu platby"
     >
       <TableCell className="whitespace-nowrap text-xs text-muted-foreground">
+        {hasInstallment && (
+          <span
+            className={cn(
+              "mr-1.5 inline-flex h-4 w-4 items-center justify-center rounded-full text-[9px] font-bold",
+              isParent
+                ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300"
+                : "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300",
+            )}
+          >
+            {installmentNumber}
+          </span>
+        )}
         {formatDate(payment.date)}
       </TableCell>
       <TableCell>
-        <Badge variant="outline" className="text-[10px]">
-          {t.emoji} {t.label}
-        </Badge>
+        <div className="flex flex-wrap items-center gap-1">
+          <Badge variant="outline" className="text-[10px]">
+            {t.emoji} {t.label}
+          </Badge>
+          {hasInstallment && (
+            <Badge
+              variant="outline"
+              className="gap-0.5 text-[9px] text-amber-700 dark:text-amber-300"
+              title={
+                meta?.invoiceTotal != null
+                  ? `Faktura ve splátkách: ${formatCzk(meta.invoiceTotal)} — zaplaceno ${formatCzk(meta.paidTotal)} (${meta.percent.toFixed(0)} %), zbývá ${formatCzk(meta.remaining)}`
+                  : "Faktura ve splátkách"
+              }
+            >
+              <Layers className="h-2.5 w-2.5" />
+              {isParent ? "1. splátka" : `${installmentNumber}. splátka`}
+              <span className="ml-0.5 tabular-nums">/ {totalInstallments}</span>
+            </Badge>
+          )}
+        </div>
       </TableCell>
       <TableCell>
-        <div className="flex flex-col">
+        <div className={cn("flex flex-col", isChild && "pl-4")}>
           <span className="text-xs font-medium">
             {payment.budgetItem?.subcategory || payment.budgetItem?.category}
           </span>
@@ -798,7 +894,7 @@ function PaymentRow({
       </TableCell>
       <TableCell>
         <div className="flex flex-col">
-          <span className="text-xs">{payment.description || "—"}</span>
+          <span className="text-xs">{payment.description || (isParent ? "1. splátka" : "—")}</span>
           {payment.vendor && (
             <span className="text-[10px] text-muted-foreground">
               {payment.vendor}
@@ -815,6 +911,11 @@ function PaymentRow({
           <span className="text-sm font-semibold text-amber-600 tabular-nums">
             {formatCzk(payment.amount)}
           </span>
+          {isParent && meta?.invoiceTotal != null && (
+            <span className="text-[10px] text-muted-foreground tabular-nums">
+              z {formatCzk(meta.invoiceTotal)}
+            </span>
+          )}
           {payment.vatRate !== null && payment.vatRate !== undefined && (
             <span className="text-[10px] text-muted-foreground tabular-nums">
               vč. DPH {payment.vatRate}%
