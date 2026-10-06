@@ -302,7 +302,7 @@ function NoteCard({
               })}
             </Badge>
             {isEditing && (
-              <Badge variant="outline" className="text-[10px] font-normal text-sky-700">
+              <Badge variant="outline" className="text-[10px] font-normal text-info-strong">
                 úprava
               </Badge>
             )}
@@ -344,7 +344,7 @@ function NoteCard({
               variant="ghost"
               size="icon"
               className={cn(
-                "h-7 w-7 text-muted-foreground opacity-0 transition-opacity hover:bg-sky-50 hover:text-sky-700 group-hover:opacity-100",
+                "h-7 w-7 text-muted-foreground opacity-0 transition-opacity hover:bg-info-soft/50 hover:text-info-strong group-hover:opacity-100",
               )}
               onClick={startEdit}
               aria-label="Upravit poznámku"
@@ -358,7 +358,7 @@ function NoteCard({
                 type="button"
                 variant="ghost"
                 size="icon"
-                className="h-7 w-7 text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700"
+                className="h-7 w-7 text-success hover:bg-success-soft/50 hover:text-success-strong"
                 onClick={commitEdit}
                 aria-label="Uložit úpravy"
                 disabled={isSaving || !draft.trim()}

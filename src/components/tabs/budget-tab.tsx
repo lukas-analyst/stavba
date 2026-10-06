@@ -81,6 +81,7 @@ import {
   PHASES,
   PHASE_COLORS,
   PHASE_BG_COLORS,
+  PHASE_CSS_VARS,
 } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -660,7 +661,7 @@ function BudgetTab({ projectId, dragEndHandlerRef }: { projectId: string; dragEn
                 completionFilter === opt.id
                   ? "bg-background text-foreground shadow-sm"
                   : "text-muted-foreground hover:text-foreground",
-                opt.id === "rejected" && completionFilter !== opt.id && "text-rose-500 hover:text-rose-600",
+                opt.id === "rejected" && completionFilter !== opt.id && "text-danger hover:text-danger",
               )}
             >
               {opt.label}
@@ -940,7 +941,7 @@ function SortableCategoryCard({
               {totals.count}
             </Badge>
             {totals.saved > 0 && (
-              <Badge variant="outline" className="text-[10px] text-emerald-700">
+              <Badge variant="outline" className="text-[10px] text-success-strong">
                 <PiggyBank className="mr-1 h-2.5 w-2.5" />
                 {formatCzk(totals.saved)}
               </Badge>
@@ -954,7 +955,7 @@ function SortableCategoryCard({
                 }}
                 title={`Přidat položku do kategorie „${categoryName}"`}
                 aria-label="Přidat položku"
-                className="inline-flex h-5 w-5 items-center justify-center rounded-md text-emerald-700 transition-colors hover:bg-emerald-100 hover:text-emerald-800 dark:text-emerald-400 dark:hover:bg-emerald-900/40"
+                className="inline-flex h-5 w-5 items-center justify-center rounded-md text-success-strong transition-colors hover:bg-success-soft hover:text-success-strong dark:text-success dark:hover:bg-success-soft"
               >
                 <Plus className="h-3.5 w-3.5" />
               </button>
@@ -968,10 +969,10 @@ function SortableCategoryCard({
                   className={cn(
                     "h-full rounded-full",
                     burn > 100
-                      ? "bg-rose-500"
+                      ? "bg-danger"
                       : burn > 80
-                        ? "bg-amber-500"
-                        : "bg-emerald-500",
+                        ? "bg-warning"
+                        : "bg-success",
                   )}
                   style={{ width: `${Math.min(burn, 100)}%` }}
                 />
@@ -980,10 +981,10 @@ function SortableCategoryCard({
                 className={cn(
                   "font-semibold",
                   burn > 100
-                    ? "text-rose-600"
+                    ? "text-danger"
                     : burn > 80
-                      ? "text-amber-600"
-                      : "text-emerald-600",
+                      ? "text-warning"
+                      : "text-success",
                 )}
               >
                 {burn.toFixed(0)}%
@@ -1332,9 +1333,9 @@ function BudgetRow({
             )
           : cn(
               item.rejected
-                ? "opacity-60 bg-rose-50/40 dark:bg-rose-950/10"
+                ? "opacity-60 bg-danger-soft/40 dark:bg-danger-soft/40"
                 : item.completed
-                  ? "bg-emerald-50/40 dark:bg-emerald-950/10"
+                  ? "bg-success-soft/40 dark:bg-success-soft/40"
                   : "hover:bg-muted/30",
             ),
         isHighlighted && "stavba-highlight-row",
@@ -1373,18 +1374,11 @@ function BudgetRow({
             }
             ref={(el) => {
               if (!el) return;
-              // Set CSS variable from PHASE_BG_COLORS
-              const colorMap: Record<string, string> = {
-                "Příprava": "#a78bfa",
-                "Demolice": "#f87171",
-                "Hrubá stavba": "#fbbf24",
-                "Zabydlování": "#34d399",
-                "Do budoucna": "#60a5fa",
-                "Neurčeno": "#a1a1aa",
-                "rose": "#f43f5e",
-              };
+              // Set CSS variable from PHASE_CSS_VARS — references design tokens
+              // (var(--info), var(--danger), etc.) so the gradient stays in sync
+              // with the badge/border colors defined in globals.css.
               const key = el.getAttribute("data-phase-color") ?? "";
-              el.style.setProperty("--phase-color", colorMap[key] ?? "#a1a1aa");
+              el.style.setProperty("--phase-color", PHASE_CSS_VARS[key] ?? PHASE_CSS_VARS.Neurčeno);
             }}
           />
           <span aria-hidden className="relative select-none text-muted-foreground/60">
@@ -1401,8 +1395,8 @@ function BudgetRow({
             className={cn(
               "absolute inset-y-0 left-0 w-1",
               item.rejected
-                ? "bg-rose-500"
-                : PHASE_BG_COLORS[item.phase] ?? "bg-zinc-300",
+                ? "bg-danger"
+                : PHASE_BG_COLORS[item.phase] ?? "bg-muted-foreground/50",
             )}
           />
           <div className="relative flex items-center gap-1">
@@ -1431,7 +1425,7 @@ function BudgetRow({
               <span
                 title="Povinné (nutné pro dokončení projektu)"
                 aria-label="Nutné"
-                className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-amber-100 text-[10px] font-bold leading-none text-amber-700 dark:bg-amber-900/40 dark:text-amber-300"
+                className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-warning-soft text-[10px] font-bold leading-none text-warning-strong dark:bg-warning-soft dark:text-warning-strong"
               >
                 !
               </span>
@@ -1442,20 +1436,20 @@ function BudgetRow({
                 isChild ? "cursor-pointer hover:underline" : "",
                 isChild ? "text-xs" : "text-sm",
                 item.rejected
-                  ? "line-through decoration-rose-500/70"
-                  : item.completed && "line-through decoration-emerald-500/50",
+                  ? "line-through decoration-danger/70"
+                  : item.completed && "line-through decoration-success/50",
                 childCount > 0 && "font-semibold",
               )}
             >
               {item.subcategory || "(bez názvu)"}
             </span>
             {item.rejected && (
-              <Badge variant="outline" className="h-4 px-1 text-[9px] text-rose-700">
+              <Badge variant="outline" className="h-4 px-1 text-[9px] text-danger-strong">
                 Zavrženo
               </Badge>
             )}
             {item.completed && !item.rejected && (
-              <Badge variant="outline" className="h-4 px-1 text-[9px] text-emerald-700">
+              <Badge variant="outline" className="h-4 px-1 text-[9px] text-success-strong">
                 Hotovo
               </Badge>
             )}
@@ -1467,7 +1461,7 @@ function BudgetRow({
                     ? `Možná dotace: ${formatCzk(item.subsidyAmount)}`
                     : "Možná dotace (částka nezadána)"
                 }
-                className="h-4 gap-0.5 px-1 text-[9px] text-teal-700 dark:text-teal-300"
+                className="h-4 gap-0.5 px-1 text-[9px] text-subsidy-strong dark:text-subsidy-strong"
               >
                 <HandCoins className="h-2.5 w-2.5" />
                 Dotace
@@ -1486,7 +1480,7 @@ function BudgetRow({
                 }}
                 title="Přidat úkol pod tuto položku"
                 aria-label="Přidat úkol"
-                className="inline-flex h-6 w-6 items-center justify-center rounded-md text-emerald-700 transition-colors hover:bg-emerald-100 hover:text-emerald-800 dark:text-emerald-400 dark:hover:bg-emerald-900/40"
+                className="inline-flex h-6 w-6 items-center justify-center rounded-md text-success-strong transition-colors hover:bg-success-soft hover:text-success-strong dark:text-success dark:hover:bg-success-soft"
               >
                 <Plus className="h-4 w-4" />
               </button>
@@ -1496,7 +1490,7 @@ function BudgetRow({
             (item._count.payments > 0 || item._count.timeEntries > 0) && (
               <div className="mt-0.5 flex flex-wrap gap-1">
                 {item._count.payments > 0 && (
-                  <Badge variant="outline" className="h-4 px-1 text-[10px] text-emerald-700">
+                  <Badge variant="outline" className="h-4 px-1 text-[10px] text-success-strong">
                     {item._count.payments === 1
                       ? "1 platba"
                       : item._count.payments < 5
@@ -1505,7 +1499,7 @@ function BudgetRow({
                   </Badge>
                 )}
                 {item._count.timeEntries > 0 && (
-                  <Badge variant="outline" className="h-4 px-1 text-[10px] text-violet-700">
+                  <Badge variant="outline" className="h-4 px-1 text-[10px] text-time-strong">
                     {item._count.timeEntries} časů
                   </Badge>
                 )}
@@ -1588,7 +1582,7 @@ function BudgetRow({
       <TableCell
         className={cn(
           "text-right",
-          overBudget && "font-semibold text-rose-600",
+          overBudget && "font-semibold text-danger",
         )}
       >
         {childCount > 0 ? (
@@ -1603,14 +1597,14 @@ function BudgetRow({
           />
         )}
         {overBudget && (
-          <span className="ml-1 inline-flex items-center text-[10px] text-rose-500">
+          <span className="ml-1 inline-flex items-center text-[10px] text-danger">
             <AlertTriangle className="h-3 w-3" />
           </span>
         )}
       </TableCell>
 
       {/* Hodiny */}
-      <TableCell className="text-right text-[11px] text-violet-600">
+      <TableCell className="text-right text-[11px] text-time">
         {displayActualHours > 0 ? formatNumber(displayActualHours, " h") : "—"}
       </TableCell>
 
@@ -1628,8 +1622,8 @@ function BudgetRow({
             className={cn(
               "h-7 w-7 shrink-0 p-0",
               item.required
-                ? "border-amber-500 bg-amber-500 text-white hover:bg-amber-600 hover:text-white dark:border-amber-600 dark:bg-amber-600 dark:hover:bg-amber-700"
-                : "text-amber-600 hover:border-amber-300 hover:bg-amber-50 hover:text-amber-700 dark:text-amber-400 dark:hover:border-amber-800 dark:hover:bg-amber-950/40",
+                ? "border-warning bg-warning text-white hover:bg-warning hover:text-white dark:border-warning dark:bg-warning dark:hover:bg-warning-strong"
+                : "text-warning hover:border-warning/50 hover:bg-warning-soft/50 hover:text-warning-strong dark:text-warning dark:hover:border-warning-strong dark:hover:bg-warning-soft/80",
             )}
             title={
               item.required
@@ -1649,8 +1643,8 @@ function BudgetRow({
             className={cn(
               "h-7 gap-1 px-2 text-xs",
               item.completed
-                ? "border-emerald-600 bg-emerald-600 text-white hover:bg-emerald-700 hover:text-white dark:border-emerald-700 dark:bg-emerald-700 dark:hover:bg-emerald-800"
-                : "text-emerald-700 hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-700 dark:text-emerald-400 dark:hover:bg-emerald-950/40",
+                ? "border-success bg-success text-white hover:bg-success-strong hover:text-white dark:border-success-strong dark:bg-success-strong dark:hover:bg-success-strong"
+                : "text-success-strong hover:border-success/50 hover:bg-success-soft/50 hover:text-success-strong dark:text-success dark:hover:bg-success-soft/80",
             )}
             title={item.completed ? "Označit jako nedokončené" : "Označit jako hotové"}
           >
@@ -1671,8 +1665,8 @@ function BudgetRow({
             className={cn(
               "h-7 w-7 p-0",
               item.rejected
-                ? "border-rose-600 bg-rose-600 text-white hover:bg-rose-700 hover:text-white dark:border-rose-700 dark:bg-rose-700 dark:hover:bg-rose-800"
-                : "text-rose-600 hover:border-rose-300 hover:bg-rose-50 hover:text-rose-700 dark:text-rose-400 dark:hover:bg-rose-950/40",
+                ? "border-danger bg-danger text-white hover:bg-danger-strong hover:text-white dark:border-danger-strong dark:bg-danger-strong dark:hover:bg-danger-strong"
+                : "text-danger hover:border-danger/50 hover:bg-danger-soft/50 hover:text-danger-strong dark:text-danger dark:hover:bg-danger-soft/80",
             )}
             title={item.rejected ? "Zrušit zavržení" : "Zavrhnout položku"}
             aria-label={item.rejected ? "Zrušit zavržení" : "Zavrhnout"}
@@ -1722,13 +1716,13 @@ function BudgetRow({
               <DropdownMenuItem
                 onClick={() => update("required", !item.required)}
               >
-                <AlertTriangle className="mr-2 h-3.5 w-3.5 text-amber-500" />
+                <AlertTriangle className="mr-2 h-3.5 w-3.5 text-warning" />
                 {item.required ? "Označit jako nepovinné" : "Označit jako povinné"}
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => update("subsidyEligible", !item.subsidyEligible)}
               >
-                <HandCoins className="mr-2 h-3.5 w-3.5 text-teal-500" />
+                <HandCoins className="mr-2 h-3.5 w-3.5 text-subsidy" />
                 {item.subsidyEligible ? "Zrušit dotaci" : "Označit jako dotovatelné"}
               </DropdownMenuItem>
               <DropdownMenuItem
@@ -1881,11 +1875,11 @@ function DetailPanelRow({
             <div className="rounded border bg-background px-2 py-1.5 text-xs">
               {item.completed ? (
                 saved !== null && saved > 0 ? (
-                  <span className="font-medium text-emerald-600" title="Ušetřeno od plánu">
+                  <span className="font-medium text-success" title="Ušetřeno od plánu">
                     {formatCzk(saved)}
                   </span>
                 ) : overSaved > 0 ? (
-                  <span className="font-medium text-rose-600" title="Překročeno oproti plánu">
+                  <span className="font-medium text-danger" title="Překročeno oproti plánu">
                     −{formatCzk(overSaved)}
                   </span>
                 ) : (

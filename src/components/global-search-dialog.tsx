@@ -212,7 +212,7 @@ function GlobalSearchInner({ onOpenChange }: { onOpenChange: (open: boolean) => 
                         key={item.id}
                         selected={safeSelectedIndex === flatIdx}
                         onClick={() => handleSelect(flatResults[flatIdx])}
-                        icon={<Package className="h-4 w-4 text-amber-600" />}
+                        icon={<Package className="h-4 w-4 text-warning" />}
                         title={item.subcategory || item.category}
                         subtitle={item.category}
                         badge={item.planCost ? formatCzk(item.planCost) : undefined}
@@ -235,7 +235,7 @@ function GlobalSearchInner({ onOpenChange }: { onOpenChange: (open: boolean) => 
                         key={contact.id}
                         selected={safeSelectedIndex === flatIdx}
                         onClick={() => handleSelect(flatResults[flatIdx])}
-                        icon={<Users className="h-4 w-4 text-violet-600" />}
+                        icon={<Users className="h-4 w-4 text-time" />}
                         title={contact.name}
                         subtitle={contact.role ?? contact.type}
                         badge={contact.phone ?? undefined}

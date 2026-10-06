@@ -327,7 +327,7 @@ export function PaymentsTab({ projectId }: { projectId: string }) {
             <div className="text-xs text-muted-foreground">
               Součet ({filteredStandalone.length + filteredGroups.length})
             </div>
-            <div className="text-lg font-bold text-amber-600 tabular-nums">{formatCzk(totalAmount)}</div>
+            <div className="text-lg font-bold text-warning tabular-nums">{formatCzk(totalAmount)}</div>
           </div>
           {/* VAT summary */}
           {(() => {
@@ -337,7 +337,7 @@ export function PaymentsTab({ projectId }: { projectId: string }) {
             return hasVat ? (
               <div className="text-right">
                 <div className="text-xs text-muted-foreground">z toho DPH</div>
-                <div className="text-sm font-semibold text-sky-600 tabular-nums">{formatCzk(totalVat)}</div>
+                <div className="text-sm font-semibold text-info tabular-nums">{formatCzk(totalVat)}</div>
               </div>
             ) : null;
           })()}
@@ -508,10 +508,10 @@ function InstallmentGroupCard({
   const t = paymentTypeLabel(parent.type);
 
   return (
-    <div className="overflow-hidden rounded-lg border border-amber-200 bg-amber-50/30 dark:border-amber-900/40 dark:bg-amber-950/10">
+    <div className="overflow-hidden rounded-lg border border-warning/30 bg-warning-soft/30 dark:border-warning-strong/40 dark:bg-warning-soft/40">
       {/* Header row: invoice summary */}
       <div
-        className="flex cursor-pointer items-center gap-3 px-4 py-3 hover:bg-amber-50/60 dark:hover:bg-amber-950/20"
+        className="flex cursor-pointer items-center gap-3 px-4 py-3 hover:bg-warning-soft/60 dark:hover:bg-warning-soft/60"
         onClick={() => setExpanded(!expanded)}
         aria-expanded={expanded}
         role="button"
@@ -529,7 +529,7 @@ function InstallmentGroupCard({
             !expanded && "-rotate-90",
           )}
         />
-        <FileText className="h-5 w-5 shrink-0 text-amber-600" />
+        <FileText className="h-5 w-5 shrink-0 text-warning" />
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <span className="text-sm font-bold">
@@ -569,7 +569,7 @@ function InstallmentGroupCard({
         <div className="flex items-center gap-4 text-xs">
           <div className="text-right">
             <div className="text-[10px] text-muted-foreground">Zaplaceno</div>
-            <div className="font-bold text-emerald-600">{formatCzk(paidTotal)}</div>
+            <div className="font-bold text-success">{formatCzk(paidTotal)}</div>
           </div>
           <div className="text-right">
             <div className="text-[10px] text-muted-foreground">Faktura</div>
@@ -577,7 +577,7 @@ function InstallmentGroupCard({
           </div>
           <div className="text-right">
             <div className="text-[10px] text-muted-foreground">Zbývá</div>
-            <div className={cn("font-bold", remaining > 0 ? "text-amber-600" : "text-emerald-600")}>
+            <div className={cn("font-bold", remaining > 0 ? "text-warning" : "text-success")}>
               {formatCzk(remaining)}
             </div>
           </div>
@@ -586,7 +586,7 @@ function InstallmentGroupCard({
               <div
                 className={cn(
                   "h-full rounded-full transition-all",
-                  percent >= 100 ? "bg-emerald-500" : percent >= 50 ? "bg-amber-500" : "bg-sky-500",
+                  percent >= 100 ? "bg-success" : percent >= 50 ? "bg-warning" : "bg-info",
                 )}
                 style={{ width: `${Math.min(percent, 100)}%` }}
               />
@@ -619,7 +619,7 @@ function InstallmentGroupCard({
                   onClick={() => onEditPayment(parent)}
                 >
                   <TableCell className="whitespace-nowrap text-xs text-muted-foreground">
-                    <span className="mr-1.5 inline-flex h-4 w-4 items-center justify-center rounded-full bg-emerald-100 text-[9px] font-bold text-emerald-700">
+                    <span className="mr-1.5 inline-flex h-4 w-4 items-center justify-center rounded-full bg-success-soft text-[9px] font-bold text-success-strong">
                       1
                     </span>
                     {formatDate(parent.date)}
@@ -630,7 +630,7 @@ function InstallmentGroupCard({
                   <TableCell className="text-xs">
                     {parent.contact?.name || "—"}
                   </TableCell>
-                  <TableCell className="text-right text-sm font-semibold text-emerald-600">
+                  <TableCell className="text-right text-sm font-semibold text-success">
                     {formatCzk(parent.amount)}
                   </TableCell>
                   <TableCell onClick={(e) => e.stopPropagation()}>
@@ -662,7 +662,7 @@ function InstallmentGroupCard({
                     onClick={() => onEditPayment(inst)}
                   >
                     <TableCell className="whitespace-nowrap text-xs text-muted-foreground">
-                      <span className="mr-1.5 inline-flex h-4 w-4 items-center justify-center rounded-full bg-amber-100 text-[9px] font-bold text-amber-700">
+                      <span className="mr-1.5 inline-flex h-4 w-4 items-center justify-center rounded-full bg-warning-soft text-[9px] font-bold text-warning-strong">
                         {i + 2}
                       </span>
                       {formatDate(inst.date)}
@@ -673,7 +673,7 @@ function InstallmentGroupCard({
                     <TableCell className="text-xs">
                       {inst.contact?.name || "—"}
                     </TableCell>
-                    <TableCell className="text-right text-sm font-semibold text-amber-600">
+                    <TableCell className="text-right text-sm font-semibold text-warning">
                       {formatCzk(inst.amount)}
                     </TableCell>
                     <TableCell onClick={(e) => e.stopPropagation()}>
@@ -840,7 +840,7 @@ function PaymentRow({
     <TableRow
       className={cn(
         "group cursor-pointer hover:bg-muted/30",
-        isParent && "bg-amber-50/30 dark:bg-amber-950/10",
+        isParent && "bg-warning-soft/30 dark:bg-warning-soft/40",
       )}
       onClick={() => onEdit()}
       title="Klikněte pro úpravu platby"
@@ -851,8 +851,8 @@ function PaymentRow({
             className={cn(
               "mr-1.5 inline-flex h-4 w-4 items-center justify-center rounded-full text-[9px] font-bold",
               isParent
-                ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300"
-                : "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300",
+                ? "bg-success-soft text-success-strong dark:bg-success-soft dark:text-success-strong"
+                : "bg-warning-soft text-warning-strong dark:bg-warning-soft dark:text-warning-strong",
             )}
           >
             {installmentNumber}
@@ -868,7 +868,7 @@ function PaymentRow({
           {hasInstallment && (
             <Badge
               variant="outline"
-              className="gap-0.5 text-[9px] text-amber-700 dark:text-amber-300"
+              className="gap-0.5 text-[9px] text-warning-strong dark:text-warning-strong"
               title={
                 meta?.invoiceTotal != null
                   ? `Faktura ve splátkách: ${formatCzk(meta.invoiceTotal)} — zaplaceno ${formatCzk(meta.paidTotal)} (${meta.percent.toFixed(0)} %), zbývá ${formatCzk(meta.remaining)}`
@@ -908,7 +908,7 @@ function PaymentRow({
       </TableCell>
       <TableCell className="text-right">
         <div className="flex flex-col items-end">
-          <span className="text-sm font-semibold text-amber-600 tabular-nums">
+          <span className="text-sm font-semibold text-warning tabular-nums">
             {formatCzk(payment.amount)}
           </span>
           {isParent && meta?.invoiceTotal != null && (
@@ -1376,7 +1376,7 @@ function PaymentDialogInner({
         </div>
 
         {/* Hotovo checkbox - propojí platbu s dokončením budget item */}
-        <div className="flex flex-col gap-1 rounded-md border border-amber-200 bg-amber-50/50 p-3 dark:border-amber-900/60 dark:bg-amber-950/20">
+        <div className="flex flex-col gap-1 rounded-md border border-warning/30 bg-warning-soft/50 p-3 dark:border-warning-strong/60 dark:bg-warning-soft/60">
           <div className="flex items-start gap-2">
             <Checkbox
               id="markCompleted"
@@ -1407,7 +1407,7 @@ function PaymentDialogInner({
                 ? "Vytvořit fakturu"
                 : "Přidat platbu"}
             {markCompleted && !isPending && (
-              <CheckCircle2 className="ml-1.5 h-4 w-4 text-amber-500" />
+              <CheckCircle2 className="ml-1.5 h-4 w-4 text-warning" />
             )}
           </Button>
         </DialogFooter>

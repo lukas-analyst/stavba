@@ -37,6 +37,41 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
+  /* ===========================================================
+     Sémantické barevné tokeny (Fáze 1 — vizuální restrukturalizace)
+     -----------------------------------------------------------
+     6 konceptů × 3 shades (soft ~100, base ~500, strong ~700).
+     Soft = světlá pastel pozadí; Base = plná barva (fill/dot/border);
+     Strong = tmavá pro text na světlém pozadí.
+
+     Vhodné i pro dark mode (dark:* utility používají opacity na base).
+
+     Koncept → původní Tailwind paleta:
+       success → emerald (Hotovo, zaplaceno, kladné, completed)
+       warning → amber (Nutné, burn-rate 80-100%, paused, upozornění)
+       danger  → rose (Zavrženo, over-budget, rejected, smazat)
+       info    → sky (Info, odkazy, planning, neutrální modrá)
+       time    → violet (Čas/hodiny, "Do budoucna" fáze)
+       subsidy → teal (Dotace)
+     =========================================================== */
+  --color-success-soft: var(--success-soft);
+  --color-success: var(--success);
+  --color-success-strong: var(--success-strong);
+  --color-warning-soft: var(--warning-soft);
+  --color-warning: var(--warning);
+  --color-warning-strong: var(--warning-strong);
+  --color-danger-soft: var(--danger-soft);
+  --color-danger: var(--danger);
+  --color-danger-strong: var(--danger-strong);
+  --color-info-soft: var(--info-soft);
+  --color-info: var(--info);
+  --color-info-strong: var(--info-strong);
+  --color-time-soft: var(--time-soft);
+  --color-time: var(--time);
+  --color-time-strong: var(--time-strong);
+  --color-subsidy-soft: var(--subsidy-soft);
+  --color-subsidy: var(--subsidy);
+  --color-subsidy-strong: var(--subsidy-strong);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -76,6 +111,37 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+  /* ===========================================================
+     Sémantické barevné hodnoty (Light mode)
+     -----------------------------------------------------------
+     oklch hodnoty ekvivalentní Tailwind paletám pro vizuální
+     konzistenci při přechodu z hardcoded tříd na tokeny.
+     Soft ~ -100 shade, Base ~ -500, Strong ~ -700/800.
+     =========================================================== */
+  /* success — emerald (Hotovo, zaplaceno, kladné) */
+  --success-soft: oklch(0.95 0.052 163.05);
+  --success: oklch(0.696 0.17 162.48);
+  --success-strong: oklch(0.439 0.16 160.0);
+  /* warning — amber (Nutné, paused, burn-rate) */
+  --warning-soft: oklch(0.95 0.079 85.0);
+  --warning: oklch(0.769 0.188 70.08);
+  --warning-strong: oklch(0.55 0.16 50.0);
+  /* danger — rose (Zavrženo, over-budget, smazat) */
+  --danger-soft: oklch(0.95 0.052 20.0);
+  --danger: oklch(0.645 0.246 16.439);
+  --danger-strong: oklch(0.48 0.22 18.0);
+  /* info — sky (Info, odkazy, planning, neutrální modrá) */
+  --info-soft: oklch(0.95 0.04 220.0);
+  --info: oklch(0.6 0.118 184.704);
+  --info-strong: oklch(0.45 0.14 220.0);
+  /* time — violet (Čas/hodiny, "Do budoucna" fáze) */
+  --time-soft: oklch(0.95 0.05 300.0);
+  --time: oklch(0.606 0.25 292.717);
+  --time-strong: oklch(0.45 0.22 295.0);
+  /* subsidy — teal (Dotace) */
+  --subsidy-soft: oklch(0.95 0.04 180.0);
+  --subsidy: oklch(0.6 0.118 175.0);
+  --subsidy-strong: oklch(0.45 0.14 178.0);
 }
 
 .dark {
@@ -110,6 +176,31 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
+  /* ===========================================================
+     Sémantické barevné hodnoty (Dark mode)
+     -----------------------------------------------------------
+     Soft = tmavší varianta (pro dark:bg-* pozadí),
+     Base = jasnější (zachovat viditelnost),
+     Strong = světlejší (pro text na tmavém pozadí).
+     =========================================================== */
+  --success-soft: oklch(0.30 0.10 163.0);
+  --success: oklch(0.76 0.18 162.0);
+  --success-strong: oklch(0.85 0.15 162.0);
+  --warning-soft: oklch(0.30 0.10 70.0);
+  --warning: oklch(0.82 0.18 75.0);
+  --warning-strong: oklch(0.88 0.14 75.0);
+  --danger-soft: oklch(0.30 0.12 18.0);
+  --danger: oklch(0.70 0.20 18.0);
+  --danger-strong: oklch(0.82 0.15 18.0);
+  --info-soft: oklch(0.30 0.10 220.0);
+  --info: oklch(0.70 0.13 210.0);
+  --info-strong: oklch(0.82 0.12 210.0);
+  --time-soft: oklch(0.30 0.12 295.0);
+  --time: oklch(0.70 0.22 295.0);
+  --time-strong: oklch(0.82 0.16 295.0);
+  --subsidy-soft: oklch(0.30 0.10 178.0);
+  --subsidy: oklch(0.70 0.13 178.0);
+  --subsidy-strong: oklch(0.82 0.12 178.0);
 }
 
 @layer base {

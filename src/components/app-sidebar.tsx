@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import { formatCzk } from "@/lib/format";
+import { formatCzk, STATUS_LABELS } from "@/lib/format";
 import { useMemo, useRef, useState } from "react";
 import { ProjectDialog } from "@/components/project-dialog";
 import { NewProjectDialog } from "@/components/new-project-dialog";
@@ -32,12 +32,7 @@ import { toast } from "sonner";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { VERSION_LABEL, GIT_COMMIT_HASH, GIT_COMMIT_DATE, GIT_COMMIT_COUNT } from "@/generated/version";
 
-const STATUS_LABELS: Record<string, { label: string; color: string }> = {
-  active: { label: "Aktivní", color: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300" },
-  planning: { label: "Plánování", color: "bg-sky-100 text-sky-700 dark:bg-sky-900/40 dark:text-sky-300" },
-  completed: { label: "Dokončeno", color: "bg-zinc-100 text-zinc-700 dark:bg-zinc-800/40 dark:text-zinc-300" },
-  paused: { label: "Pozastaveno", color: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300" },
-};
+// STATUS_LABELS is imported from @/lib/format (single source of truth).
 
 export function AppSidebar({ onSelectProject }: { onSelectProject?: (id: string) => void } = {}) {
   const qc = useQueryClient();
@@ -264,8 +259,8 @@ export function AppSidebar({ onSelectProject }: { onSelectProject?: (id: string)
                               className={cn(
                                 "h-3.5 w-3.5 shrink-0 transition-colors",
                                 p.starred
-                                  ? "fill-amber-400 text-amber-400"
-                                  : "text-muted-foreground/40 hover:text-amber-400",
+                                  ? "fill-warning text-warning"
+                                  : "text-muted-foreground/40 hover:text-warning",
                               )}
                             />
                           </button>
@@ -298,10 +293,10 @@ export function AppSidebar({ onSelectProject }: { onSelectProject?: (id: string)
                             className={cn(
                               "h-full rounded-full transition-all",
                               p.stats.burnRate > 100
-                                ? "bg-rose-500"
+                                ? "bg-danger"
                                 : p.stats.burnRate > 80
-                                  ? "bg-amber-500"
-                                  : "bg-emerald-500",
+                                  ? "bg-warning"
+                                  : "bg-success",
                             )}
                             style={{ width: `${Math.min(p.stats.burnRate, 100)}%` }}
                           />
@@ -411,7 +406,7 @@ export function AppSidebar({ onSelectProject }: { onSelectProject?: (id: string)
           />
         </div>
         <p className="mt-2 flex items-center gap-1.5 text-[10px] text-muted-foreground">
-          <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500" />
+          <span className="inline-block h-1.5 w-1.5 rounded-full bg-success" />
           <span>
             Rozpočet Stavby{" "}
             <span
@@ -484,10 +479,10 @@ function MiniProjectStats({ projectId }: { projectId: string }) {
   const { totals } = data;
   const burnTone =
     totals.burnRate > 100
-      ? "text-rose-600 bg-rose-500"
+      ? "text-danger bg-danger"
       : totals.burnRate > 80
-        ? "text-amber-600 bg-amber-500"
-        : "text-emerald-600 bg-emerald-500";
+        ? "text-warning bg-warning"
+        : "text-success bg-success";
   const burnClass = burnTone.split(" ")[1];
   const completionPct =
     totals.itemCount > 0 ? (totals.completedCount / totals.itemCount) * 100 : 0;
@@ -525,7 +520,7 @@ function MiniProjectStats({ projectId }: { projectId: string }) {
           </div>
           <div className="h-1.5 overflow-hidden rounded-full bg-muted">
             <div
-              className="h-full rounded-full bg-teal-500 transition-all"
+              className="h-full rounded-full bg-subsidy transition-all"
               style={{ width: `${completionPct}%` }}
             />
           </div>
@@ -537,7 +532,7 @@ function MiniProjectStats({ projectId }: { projectId: string }) {
             <div
               className={cn(
                 "font-bold",
-                totals.remaining < 0 ? "text-rose-600" : "text-emerald-600",
+                totals.remaining < 0 ? "text-danger" : "text-success",
               )}
             >
               {formatCzk(totals.remaining)}
@@ -545,19 +540,19 @@ function MiniProjectStats({ projectId }: { projectId: string }) {
           </div>
           <div className="rounded bg-background px-2 py-1">
             <div className="text-muted-foreground">Ušetřeno</div>
-            <div className="font-bold text-emerald-600">
+            <div className="font-bold text-success">
               {formatCzk(totals.savedTotal)}
             </div>
           </div>
           <div className="rounded bg-background px-2 py-1">
             <div className="text-muted-foreground">Hodin</div>
-            <div className="font-bold text-violet-600">
+            <div className="font-bold text-time">
               {new Intl.NumberFormat("cs-CZ", { maximumFractionDigits: 0 }).format(totals.hoursTotal)} h
             </div>
           </div>
           <div className="rounded bg-background px-2 py-1">
             <div className="text-muted-foreground">Plán dní</div>
-            <div className="font-bold text-sky-600">
+            <div className="font-bold text-info">
               {new Intl.NumberFormat("cs-CZ", { maximumFractionDigits: 0 }).format(totals.daysPlanned)}
             </div>
           </div>

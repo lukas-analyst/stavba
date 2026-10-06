@@ -166,7 +166,7 @@ export function TimeTab({ projectId }: { projectId: string }) {
               <div className="mt-1 truncate text-sm font-bold" title={name}>
                 {name}
               </div>
-              <div className="mt-1 text-lg font-bold text-violet-600">
+              <div className="mt-1 text-lg font-bold text-time">
                 {formatNumber(info.hours, " h")}
               </div>
               <div className="text-[10px] text-muted-foreground">
@@ -234,7 +234,7 @@ export function TimeTab({ projectId }: { projectId: string }) {
         <div className="ml-auto flex items-center gap-3 text-sm">
           <div className="text-right">
             <div className="text-xs text-muted-foreground">Celkem ({filtered.length})</div>
-            <div className="text-lg font-bold text-violet-600">
+            <div className="text-lg font-bold text-time">
               {formatNumber(totalHours, " h")}
             </div>
           </div>
@@ -391,7 +391,7 @@ function TimeRow({
         <div className="flex flex-col">
           <span>{formatDate(entry.date)}</span>
           {entry.dateTo && (
-            <span className="text-[10px] text-violet-600">
+            <span className="text-[10px] text-time">
               → {formatDate(entry.dateTo)}
             </span>
           )}
@@ -420,7 +420,7 @@ function TimeRow({
       <TableCell className="text-xs text-muted-foreground">
         {entry.description || "—"}
       </TableCell>
-      <TableCell className="text-right text-sm font-semibold text-violet-600">
+      <TableCell className="text-right text-sm font-semibold text-time">
         {formatNumber(entry.hours, " h")}
       </TableCell>
       <TableCell
@@ -754,7 +754,7 @@ function TimeDialogInner({
           />
         </div>
         {/* Hotovo checkbox - propojí časový záznam s dokončením budget item */}
-        <div className="flex flex-col gap-1 rounded-md border border-violet-200 bg-violet-50/50 p-3 dark:border-violet-900/60 dark:bg-violet-950/20">
+        <div className="flex flex-col gap-1 rounded-md border border-time/30 bg-time-soft/50 p-3 dark:border-time-strong/60 dark:bg-time-soft/60">
           <div className="flex items-start gap-2">
             <Checkbox
               id="markCompleted"
@@ -780,7 +780,7 @@ function TimeDialogInner({
             {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             {isEdit ? "Uložit změny" : "Zaznamenat"}
             {markCompleted && !isPending && (
-              <CheckCircle2 className="ml-1.5 h-4 w-4 text-violet-500" />
+              <CheckCircle2 className="ml-1.5 h-4 w-4 text-time" />
             )}
           </Button>
         </DialogFooter>

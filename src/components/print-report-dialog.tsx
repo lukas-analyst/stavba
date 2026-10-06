@@ -310,7 +310,7 @@ function ReportBody({
                   <td
                     className={cn(
                       "py-1.5 px-2 text-right tabular-nums font-medium",
-                      burn > 100 ? "text-rose-600" : burn > 80 ? "text-amber-600" : "text-emerald-600",
+                      burn > 100 ? "text-danger" : burn > 80 ? "text-warning" : "text-success",
                     )}
                   >
                     {burn.toFixed(0)} %
@@ -357,7 +357,7 @@ function ReportBody({
                   <td
                     className={cn(
                       "py-1.5 pl-2 text-right tabular-nums",
-                      burn > 100 ? "text-rose-600" : "text-emerald-600",
+                      burn > 100 ? "text-danger" : "text-success",
                     )}
                   >
                     {burn.toFixed(0)} %
@@ -406,10 +406,10 @@ function ReportBody({
               const statusTone = it.rejected
                 ? "bg-zinc-100 text-zinc-700 border-zinc-200"
                 : it.completed
-                  ? "bg-emerald-100 text-emerald-800 border-emerald-200"
+                  ? "bg-success-soft text-success-strong border-success/30"
                   : it.actualCost > 0 || it.actualHours > 0
-                    ? "bg-amber-100 text-amber-800 border-amber-200"
-                    : "bg-sky-100 text-sky-800 border-sky-200";
+                    ? "bg-warning-soft text-warning-strong border-warning/30"
+                    : "bg-info-soft text-info-strong border-info/30";
               return (
                 <tr key={it.id} className="border-b border-border">
                   <td className="py-1 pr-2 align-top text-muted-foreground">{it.category}</td>
@@ -523,8 +523,8 @@ function KpiCard({
       <div
         className={cn(
           "mt-0.5 font-bold tabular-nums",
-          tone === "ok" && "text-emerald-600",
-          tone === "danger" && "text-rose-600",
+          tone === "ok" && "text-success",
+          tone === "danger" && "text-danger",
         )}
       >
         {value}
@@ -543,7 +543,7 @@ function AlertLine({
   items: AlertItem[];
 }) {
   return (
-    <div className={cn(tone === "danger" ? "text-rose-700" : "text-sky-700")}>
+    <div className={cn(tone === "danger" ? "text-danger-strong" : "text-info-strong")}>
       <strong>{label}:</strong>{" "}
       {items.map((it) => it.subcategory || it.category).join(", ")}
     </div>

@@ -400,8 +400,8 @@ function BudgetItemForm({
                 className={cn(
                   "flex items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-medium transition-all",
                   completed
-                    ? "border-emerald-500 bg-emerald-50 text-emerald-700 dark:border-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300"
-                    : "border-border text-muted-foreground hover:border-emerald-300 hover:bg-emerald-50/50 dark:hover:border-emerald-800",
+                    ? "border-success bg-success-soft/50 text-success-strong dark:border-success-strong dark:bg-success-soft/80 dark:text-success-strong"
+                    : "border-border text-muted-foreground hover:border-success/50 hover:bg-success-soft/50/50 dark:hover:border-success-strong",
                 )}
               >
                 {completed ? <CheckCircle2 className="h-3.5 w-3.5" /> : <Circle className="h-3.5 w-3.5" />}
@@ -413,8 +413,8 @@ function BudgetItemForm({
                 className={cn(
                   "flex items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-medium transition-all",
                   rejected
-                    ? "border-rose-500 bg-rose-50 text-rose-700 dark:border-rose-700 dark:bg-rose-950/40 dark:text-rose-300"
-                    : "border-border text-muted-foreground hover:border-rose-300 hover:bg-rose-50/50 dark:hover:border-rose-800",
+                    ? "border-danger bg-danger-soft/50 text-danger-strong dark:border-danger-strong dark:bg-danger-soft/80 dark:text-danger-strong"
+                    : "border-border text-muted-foreground hover:border-danger/50 hover:bg-danger-soft/50 dark:hover:border-danger-strong",
                 )}
               >
                 <X className="h-3.5 w-3.5" />
@@ -426,8 +426,8 @@ function BudgetItemForm({
                 className={cn(
                   "flex items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-medium transition-all",
                   subsidyEligible
-                    ? "border-teal-500 bg-teal-50 text-teal-700 dark:border-teal-600 dark:bg-teal-950/40 dark:text-teal-300"
-                    : "border-border text-muted-foreground hover:border-teal-300 hover:bg-teal-50/50 dark:hover:border-teal-800",
+                    ? "border-subsidy bg-subsidy-soft/50 text-subsidy-strong dark:border-subsidy dark:bg-subsidy-soft/80 dark:text-subsidy-strong"
+                    : "border-border text-muted-foreground hover:border-subsidy/50 hover:bg-subsidy-soft/50 dark:hover:border-subsidy-strong",
                 )}
                 title="Dotace — pro tento úkol lze čerpat dotaci"
               >
@@ -482,8 +482,8 @@ function BudgetItemForm({
                 className={cn(
                   "flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[11px] font-medium transition-all",
                   required
-                    ? "border-amber-500 bg-amber-50 text-amber-700 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-300"
-                    : "border-border text-muted-foreground hover:border-amber-300 hover:bg-amber-50/50 dark:hover:border-amber-800",
+                    ? "border-warning bg-warning-soft/50 text-warning-strong dark:border-warning-strong dark:bg-warning-soft/80 dark:text-warning-strong"
+                    : "border-border text-muted-foreground hover:border-warning/50 hover:bg-warning-soft/50/50 dark:hover:border-warning-strong",
                 )}
                 title="Nutné — položka je povinná pro dokončení projektu"
               >
@@ -496,8 +496,8 @@ function BudgetItemForm({
                 className={cn(
                   "flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[11px] font-medium transition-all",
                   completed
-                    ? "border-emerald-500 bg-emerald-50 text-emerald-700 dark:border-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300"
-                    : "border-border text-muted-foreground hover:border-emerald-300 hover:bg-emerald-50/50 dark:hover:border-emerald-800",
+                    ? "border-success bg-success-soft/50 text-success-strong dark:border-success-strong dark:bg-success-soft/80 dark:text-success-strong"
+                    : "border-border text-muted-foreground hover:border-success/50 hover:bg-success-soft/50/50 dark:hover:border-success-strong",
                 )}
               >
                 {completed ? <CheckCircle2 className="h-3 w-3" /> : <Circle className="h-3 w-3" />}
@@ -509,8 +509,8 @@ function BudgetItemForm({
                 className={cn(
                   "flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[11px] font-medium transition-all",
                   rejected
-                    ? "border-rose-500 bg-rose-50 text-rose-700 dark:border-rose-700 dark:bg-rose-950/40 dark:text-rose-300"
-                    : "border-border text-muted-foreground hover:border-rose-300 hover:bg-rose-50/50 dark:hover:border-rose-800",
+                    ? "border-danger bg-danger-soft/50 text-danger-strong dark:border-danger-strong dark:bg-danger-soft/80 dark:text-danger-strong"
+                    : "border-border text-muted-foreground hover:border-danger/50 hover:bg-danger-soft/50 dark:hover:border-danger-strong",
                 )}
               >
                 <X className="h-3 w-3" />
@@ -522,8 +522,8 @@ function BudgetItemForm({
                 className={cn(
                   "flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[11px] font-medium transition-all",
                   subsidyEligible
-                    ? "border-teal-500 bg-teal-50 text-teal-700 dark:border-teal-600 dark:bg-teal-950/40 dark:text-teal-300"
-                    : "border-border text-muted-foreground hover:border-teal-300 hover:bg-teal-50/50 dark:hover:border-teal-800",
+                    ? "border-subsidy bg-subsidy-soft/50 text-subsidy-strong dark:border-subsidy dark:bg-subsidy-soft/80 dark:text-subsidy-strong"
+                    : "border-border text-muted-foreground hover:border-subsidy/50 hover:bg-subsidy-soft/50 dark:hover:border-subsidy-strong",
                 )}
                 title="Dotace — pro tuto položku/úkol lze čerpat dotaci"
               >

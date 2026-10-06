@@ -113,9 +113,9 @@ export function AuditLogDialog({ open, onOpenChange, projectId }: Props) {
 
 function AuditLogEntry({ log }: { log: AuditLog }) {
   const actionConfig = {
-    create: { icon: Plus, color: "text-emerald-600", bg: "bg-emerald-50 dark:bg-emerald-950/20", label: "Vytvořeno" },
-    update: { icon: Pencil, color: "text-sky-600", bg: "bg-sky-50 dark:bg-sky-950/20", label: "Upraveno" },
-    delete: { icon: Trash2, color: "text-rose-600", bg: "bg-rose-50 dark:bg-rose-950/20", label: "Smazáno" },
+    create: { icon: Plus, color: "text-success", bg: "bg-success-soft/50 dark:bg-success-soft/60", label: "Vytvořeno" },
+    update: { icon: Pencil, color: "text-info", bg: "bg-info-soft/50 dark:bg-info-soft/60", label: "Upraveno" },
+    delete: { icon: Trash2, color: "text-danger", bg: "bg-danger-soft/50 dark:bg-danger-soft/60", label: "Smazáno" },
   }[log.action] ?? { icon: CircleDot, color: "text-muted-foreground", bg: "bg-muted/30", label: log.action };
 
   const Icon = actionConfig.icon;
@@ -143,11 +143,11 @@ function AuditLogEntry({ log }: { log: AuditLog }) {
         </div>
         {log.action === "update" && log.oldValue !== null && log.newValue !== null && (
           <div className="mt-1 flex items-center gap-2 font-mono text-[11px]">
-            <span className="rounded bg-rose-50 px-1.5 py-0.5 text-rose-700 line-through dark:bg-rose-950/30 dark:text-rose-300">
+            <span className="rounded bg-danger-soft/50 px-1.5 py-0.5 text-danger-strong line-through dark:bg-danger-soft/70 dark:text-danger-strong">
               {log.oldValue || "(prázdné)"}
             </span>
             <span className="text-muted-foreground">→</span>
-            <span className="rounded bg-emerald-50 px-1.5 py-0.5 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-300">
+            <span className="rounded bg-success-soft/50 px-1.5 py-0.5 text-success-strong dark:bg-success-soft/70 dark:text-success-strong">
               {log.newValue || "(prázdné)"}
             </span>
           </div>

@@ -81,44 +81,88 @@ export function remaining(plan: number | null, actual: number): number {
   return plan - actual;
 }
 
-// Phase color mapping
+// Phase color mapping — uses sémantic tokens (info/danger/warning/success/time)
+// defined in globals.css. Same palette is used across all phase representations
+// (badge, border, background stripe, dot) so changing a phase color is a
+// single-token edit in globals.css.
 export const PHASE_COLORS: Record<string, string> = {
-  Příprava: "bg-sky-100 text-sky-800 border-sky-200 dark:bg-sky-900/40 dark:text-sky-200 dark:border-sky-800",
-  Demolice: "bg-rose-100 text-rose-800 border-rose-200 dark:bg-rose-900/40 dark:text-rose-200 dark:border-rose-800",
-  "Hrubá stavba": "bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-900/40 dark:text-amber-200 dark:border-amber-800",
-  Zabydlování: "bg-emerald-100 text-emerald-800 border-emerald-200 dark:bg-emerald-900/40 dark:text-emerald-200 dark:border-emerald-800",
-  "Do budoucna": "bg-violet-100 text-violet-800 border-violet-200 dark:bg-violet-900/40 dark:text-violet-200 dark:border-violet-800",
-  Neurčeno: "bg-zinc-100 text-zinc-800 border-zinc-200 dark:bg-zinc-800/40 dark:text-zinc-200 dark:border-zinc-700",
+  Příprava: "bg-info-soft text-info-strong border-info/30 dark:bg-info-soft dark:text-info-strong dark:border-info/40",
+  Demolice: "bg-danger-soft text-danger-strong border-danger/30 dark:bg-danger-soft dark:text-danger-strong dark:border-danger/40",
+  "Hrubá stavba": "bg-warning-soft text-warning-strong border-warning/30 dark:bg-warning-soft dark:text-warning-strong dark:border-warning/40",
+  Zabydlování: "bg-success-soft text-success-strong border-success/30 dark:bg-success-soft dark:text-success-strong dark:border-success/40",
+  "Do budoucna": "bg-time-soft text-time-strong border-time/30 dark:bg-time-soft dark:text-time-strong dark:border-time/40",
+  Neurčeno: "bg-muted text-muted-foreground border-border dark:bg-muted dark:text-muted-foreground dark:border-border",
 };
 
 // Phase left-border accent colors (for table rows)
 export const PHASE_BORDER_COLORS: Record<string, string> = {
-  Příprava: "border-l-sky-400",
-  Demolice: "border-l-rose-400",
-  "Hrubá stavba": "border-l-amber-400",
-  Zabydlování: "border-l-emerald-400",
-  "Do budoucna": "border-l-violet-400",
-  Neurčeno: "border-l-zinc-300",
+  Příprava: "border-l-info",
+  Demolice: "border-l-danger",
+  "Hrubá stavba": "border-l-warning",
+  Zabydlování: "border-l-success",
+  "Do budoucna": "border-l-time",
+  Neurčeno: "border-l-border",
 };
 
 // Phase background colors used for absolute-positioned colored stripes
 // (replaces border-l-2 to avoid rounded-corner clipping at the last row of a category).
 export const PHASE_BG_COLORS: Record<string, string> = {
-  Příprava: "bg-sky-400",
-  Demolice: "bg-rose-400",
-  "Hrubá stavba": "bg-amber-400",
-  Zabydlování: "bg-emerald-400",
-  "Do budoucna": "bg-violet-400",
-  Neurčeno: "bg-zinc-300",
+  Příprava: "bg-info",
+  Demolice: "bg-danger",
+  "Hrubá stavba": "bg-warning",
+  Zabydlování: "bg-success",
+  "Do budoucna": "bg-time",
+  Neurčeno: "bg-muted-foreground/50",
 };
 
 export const PHASE_DOT_COLORS: Record<string, string> = {
-  Příprava: "bg-sky-500",
-  Demolice: "bg-rose-500",
-  "Hrubá stavba": "bg-amber-500",
-  Zabydlování: "bg-emerald-500",
-  "Do budoucna": "bg-violet-500",
-  Neurčeno: "bg-zinc-400",
+  Příprava: "bg-info",
+  Demolice: "bg-danger",
+  "Hrubá stavba": "bg-warning",
+  Zabydlování: "bg-success",
+  "Do budoucna": "bg-time",
+  Neurčeno: "bg-muted-foreground",
+};
+
+// Phase CSS variable mapping — used by budget-tab.tsx to set the
+// `--phase-color` custom property for the gradient stripe under child rows.
+// Each value references a design token (defined in globals.css), so the
+// gradient stays in sync with the badge/border colors automatically.
+export const PHASE_CSS_VARS: Record<string, string> = {
+  Příprava: "var(--info)",
+  Demolice: "var(--danger)",
+  "Hrubá stavba": "var(--warning)",
+  Zabydlování: "var(--success)",
+  "Do budoucna": "var(--time)",
+  Neurčeno: "var(--muted-foreground)",
+  // Rejected items use danger regardless of phase
+  rose: "var(--danger)",
+};
+
+// Project status labels — SINGLE SOURCE OF TRUTH (previously duplicated in
+// app-sidebar.tsx and project-detail.tsx). Includes a `dot` color used by
+// project-detail header; app-sidebar simply ignores the `dot` field.
+export const STATUS_LABELS: Record<string, { label: string; color: string; dot: string }> = {
+  active: {
+    label: "Aktivní",
+    color: "bg-success-soft text-success-strong dark:bg-success-soft dark:text-success-strong",
+    dot: "bg-success",
+  },
+  planning: {
+    label: "Plánování",
+    color: "bg-info-soft text-info-strong dark:bg-info-soft dark:text-info-strong",
+    dot: "bg-info",
+  },
+  completed: {
+    label: "Dokončeno",
+    color: "bg-muted text-muted-foreground dark:bg-muted dark:text-muted-foreground",
+    dot: "bg-muted-foreground",
+  },
+  paused: {
+    label: "Pozastaveno",
+    color: "bg-warning-soft text-warning-strong dark:bg-warning-soft dark:text-warning-strong",
+    dot: "bg-warning",
+  },
 };
 
 export const PHASE_ORDER = [

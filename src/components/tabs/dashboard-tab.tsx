@@ -56,7 +56,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
   const { totals, byPhase, byCategory, alerts, recent } = data;
   const burnRate = totals.burnRate;
   const burnColor =
-    burnRate > 100 ? "text-rose-600" : burnRate > 80 ? "text-amber-600" : "text-emerald-600";
+    burnRate > 100 ? "text-danger" : burnRate > 80 ? "text-warning" : "text-success";
 
   const totalAlerts =
     alerts.inProgress.length + alerts.upcoming.length + alerts.overdue.length + alerts.overBudget.length + alerts.unscheduled.length;
@@ -82,12 +82,12 @@ export function DashboardTab({ projectId }: { projectId: string }) {
     <div id="dashboard-root" className="space-y-6">
       {/* KPI cards */}
       <div id="kpi-cards" className={cn("grid grid-cols-2 gap-2 sm:gap-3 md:grid-cols-3 lg:grid-cols-6 lg:gap-4 ")}>
-        <Card id="kpi-plan" className="border-emerald-200/60 bg-gradient-to-br from-emerald-50 to-white dark:border-emerald-900/40 dark:from-emerald-950/30 dark:to-card hover-lift">
+        <Card id="kpi-plan" className="border-success/40 bg-gradient-to-br from-success-soft to-white dark:border-success/30 dark:from-success-soft dark:to-card hover-lift">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
               Plán rozpočtu
             </CardTitle>
-            <Wallet className="h-4 w-4 text-emerald-600" />
+            <Wallet className="h-4 w-4 text-success" />
           </CardHeader>
           <CardContent>
             <div className="text-lg font-bold tabular-nums md:text-2xl">{formatCzk(totals.planTotal)}</div>
@@ -97,12 +97,12 @@ export function DashboardTab({ projectId }: { projectId: string }) {
           </CardContent>
         </Card>
 
-        <Card id="kpi-burn" className="border-amber-200/60 bg-gradient-to-br from-amber-50 to-white dark:border-amber-900/40 dark:from-amber-950/30 dark:to-card hover-lift cursor-pointer" onClick={() => setActiveTab("payments")}>
+        <Card id="kpi-burn" className="border-warning/40 bg-gradient-to-br from-warning-soft to-white dark:border-warning-strong/40 dark:from-warning-soft dark:to-card hover-lift cursor-pointer" onClick={() => setActiveTab("payments")}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
               Čerpání
             </CardTitle>
-            <TrendingDown className="h-4 w-4 text-amber-600" />
+            <TrendingDown className="h-4 w-4 text-warning" />
           </CardHeader>
           <CardContent>
             <div className="text-lg font-bold tabular-nums md:text-2xl">{formatCzk(totals.actualTotal)}</div>
@@ -119,7 +119,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
                 <div
                   className={cn(
                     "h-full rounded-full transition-all",
-                    burnRate > 100 ? "bg-rose-500" : burnRate > 80 ? "bg-amber-500" : "bg-emerald-500",
+                    burnRate > 100 ? "bg-danger" : burnRate > 80 ? "bg-warning" : "bg-success",
                   )}
                   style={{ width: `${Math.min(burnRate, 100)}%` }}
                 />
@@ -128,19 +128,19 @@ export function DashboardTab({ projectId }: { projectId: string }) {
           </CardContent>
         </Card>
 
-        <Card id="kpi-remaining" className={cn("hover-lift cursor-pointer", totals.remaining >= 0 ? "border-sky-200/60 bg-gradient-to-br from-sky-50 to-white dark:border-sky-900/40 dark:from-sky-950/30 dark:to-card" : "border-rose-200/60 bg-gradient-to-br from-rose-50 to-white dark:border-rose-900/40 dark:from-rose-950/30 dark:to-card")} onClick={() => goToBudget({ type: "active" })}>
+        <Card id="kpi-remaining" className={cn("hover-lift cursor-pointer", totals.remaining >= 0 ? "border-info/40 bg-gradient-to-br from-info-soft to-white dark:border-info-strong/40 dark:from-info-soft dark:to-card" : "border-danger/40 bg-gradient-to-br from-danger-soft to-white dark:border-danger-strong/40 dark:from-danger-soft dark:to-card")} onClick={() => goToBudget({ type: "active" })}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
               Zbývá v rozpočtu
             </CardTitle>
             {totals.remaining >= 0 ? (
-              <TrendingUp className="h-4 w-4 text-sky-600" />
+              <TrendingUp className="h-4 w-4 text-info" />
             ) : (
-              <TrendingDown className="h-4 w-4 text-rose-600" />
+              <TrendingDown className="h-4 w-4 text-danger" />
             )}
           </CardHeader>
           <CardContent>
-            <div className={`text-lg font-bold tabular-nums md:text-2xl ${totals.remaining < 0 ? "text-rose-600" : ""}`}>
+            <div className={`text-lg font-bold tabular-nums md:text-2xl ${totals.remaining < 0 ? "text-danger" : ""}`}>
               {formatCzk(totals.remaining)}
             </div>
             <p className="mt-1 text-xs text-muted-foreground">
@@ -149,12 +149,12 @@ export function DashboardTab({ projectId }: { projectId: string }) {
           </CardContent>
         </Card>
 
-        <Card id="kpi-hours" className="border-violet-200/60 bg-gradient-to-br from-violet-50 to-white dark:border-violet-900/40 dark:from-violet-950/30 dark:to-card hover-lift cursor-pointer" onClick={() => setActiveTab("time")}>
+        <Card id="kpi-hours" className="border-time/40 bg-gradient-to-br from-time-soft to-white dark:border-time/30 dark:from-time-soft dark:to-card hover-lift cursor-pointer" onClick={() => setActiveTab("time")}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
               Odpracováno
             </CardTitle>
-            <Clock className="h-4 w-4 text-violet-600" />
+            <Clock className="h-4 w-4 text-time" />
           </CardHeader>
           <CardContent>
             <div className="text-lg font-bold tabular-nums md:text-2xl">{formatNumber(totals.hoursTotal, " h")}</div>
@@ -164,15 +164,15 @@ export function DashboardTab({ projectId }: { projectId: string }) {
           </CardContent>
         </Card>
 
-        <Card id="kpi-saved" className="border-emerald-300/60 bg-gradient-to-br from-emerald-50 to-white dark:border-emerald-800/40 dark:from-emerald-950/30 dark:to-card hover-lift cursor-pointer" onClick={() => goToBudget({ type: "saved" })}>
+        <Card id="kpi-saved" className="border-success/50 bg-gradient-to-br from-success-soft to-white dark:border-success-strong/40 dark:from-success-soft dark:to-card hover-lift cursor-pointer" onClick={() => goToBudget({ type: "saved" })}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
               Ušetřeno
             </CardTitle>
-            <PiggyBank className="h-4 w-4 text-emerald-600" />
+            <PiggyBank className="h-4 w-4 text-success" />
           </CardHeader>
           <CardContent>
-            <div className="text-lg font-bold tabular-nums md:text-2xl text-emerald-600">
+            <div className="text-lg font-bold tabular-nums md:text-2xl text-success">
               {formatCzk(totals.savedTotal)}
             </div>
             <p className="mt-1 text-xs text-muted-foreground">
@@ -181,12 +181,12 @@ export function DashboardTab({ projectId }: { projectId: string }) {
           </CardContent>
         </Card>
 
-        <Card id="kpi-completed" className="border-teal-200/60 bg-gradient-to-br from-teal-50 to-white dark:border-teal-900/40 dark:from-teal-950/30 dark:to-card hover-lift cursor-pointer" onClick={() => goToBudget({ type: "completion", value: "done" })}>
+        <Card id="kpi-completed" className="border-subsidy/40 bg-gradient-to-br from-subsidy-soft to-white dark:border-subsidy-strong/40 dark:from-subsidy-soft dark:to-card hover-lift cursor-pointer" onClick={() => goToBudget({ type: "completion", value: "done" })}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
               Hotovo
             </CardTitle>
-            <CheckCircle2 className="h-4 w-4 text-teal-600" />
+            <CheckCircle2 className="h-4 w-4 text-subsidy" />
           </CardHeader>
           <CardContent>
             <div className="text-lg font-bold tabular-nums md:text-2xl">
@@ -194,7 +194,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
             </div>
             <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-muted">
               <div
-                className="h-full rounded-full bg-teal-500"
+                className="h-full rounded-full bg-subsidy"
                 style={{
                   width: `${totals.itemCount > 0 ? (totals.completedCount / totals.itemCount) * 100 : 0}%`,
                 }}
@@ -207,10 +207,10 @@ export function DashboardTab({ projectId }: { projectId: string }) {
       {/* Alerts banner */}
       {totalAlerts > 0 && (
       <div>
-        <Card className="border-amber-200 bg-amber-50/50 dark:border-amber-900/40 dark:bg-amber-950/20 hover-lift">
+        <Card className="border-warning/30 bg-warning-soft/50 dark:border-warning-strong/40 dark:bg-warning-soft/60 hover-lift">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
             <div className="flex items-center gap-2">
-              <CircleAlert className="h-5 w-5 text-amber-600" />
+              <CircleAlert className="h-5 w-5 text-warning" />
               <CardTitle className="text-base">Upozornění a akce ({totalAlerts})</CardTitle>
             </div>
           </CardHeader>
@@ -219,7 +219,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
               <AlertGroup
                 icon={<Activity className="h-4 w-4" />}
                 title="Právě probíhá"
-                color="text-sky-600"
+                color="text-info"
                 max={8}
                 items={alerts.inProgress.map((it) => {
                   const hasHours = (it.actualHours || 0) > 0;
@@ -241,7 +241,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
               <AlertGroup
                 icon={<CalendarClock className="h-4 w-4" />}
                 title="Blížící se termíny (do 30 dní)"
-                color="text-sky-600"
+                color="text-info"
                 items={alerts.upcoming.map((it) => ({
                   id: it.id,
                   primary: it.subcategory || it.category,
@@ -253,7 +253,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
               <AlertGroup
                 icon={<AlertTriangle className="h-4 w-4" />}
                 title="Zpožděné položky"
-                color="text-rose-600"
+                color="text-danger"
                 items={alerts.overdue.map((it) => ({
                   id: it.id,
                   primary: it.subcategory || it.category,
@@ -265,7 +265,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
               <AlertGroup
                 icon={<TrendingDown className="h-4 w-4" />}
                 title="Překročen rozpočet"
-                color="text-rose-600"
+                color="text-danger"
                 items={alerts.overBudget.map((it) => ({
                   id: it.id,
                   primary: it.subcategory || it.category,
@@ -277,7 +277,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
               <AlertGroup
                 icon={<CalendarClock className="h-4 w-4" />}
                 title="Neplánované (bez termínu)"
-                color="text-amber-600"
+                color="text-warning"
                 items={alerts.unscheduled.map((it) => ({
                   id: it.id,
                   primary: it.subcategory || it.category,
@@ -295,12 +295,12 @@ export function DashboardTab({ projectId }: { projectId: string }) {
       <div>
         <Card className={cn(
           "border-l-4 hover-lift",
-          totals.projectedOverrun > 0 ? "border-l-rose-500 border-rose-200/60" : "border-l-emerald-500 border-emerald-200/60",
+          totals.projectedOverrun > 0 ? "border-l-rose-500 border-danger/40" : "border-l-emerald-500 border-success/40",
         )}>
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <TrendingUp className={cn("h-5 w-5", totals.projectedOverrun > 0 ? "text-rose-600" : "text-emerald-600")} />
+                <TrendingUp className={cn("h-5 w-5", totals.projectedOverrun > 0 ? "text-danger" : "text-success")} />
                 <CardTitle className="text-base">Predikce konečných nákladů</CardTitle>
               </div>
               <Badge variant="outline" className="text-[10px]">
@@ -319,19 +319,19 @@ export function DashboardTab({ projectId }: { projectId: string }) {
               </div>
               <div className="space-y-0.5">
                 <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Odhad zbytku</div>
-                <div className="text-lg font-bold tabular-nums text-amber-600">
+                <div className="text-lg font-bold tabular-nums text-warning">
                   {formatCzk(totals.projectedFinal - totals.actualTotal)}
                 </div>
               </div>
               <div className="space-y-0.5">
                 <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Odhad celkem</div>
-                <div className={cn("text-lg font-bold tabular-nums", totals.projectedOverrun > 0 ? "text-rose-600" : "text-emerald-600")}>
+                <div className={cn("text-lg font-bold tabular-nums", totals.projectedOverrun > 0 ? "text-danger" : "text-success")}>
                   {formatCzk(totals.projectedFinal)}
                 </div>
               </div>
               <div className="space-y-0.5">
                 <div className="text-[10px] uppercase tracking-wide text-muted-foreground">vs. Plán</div>
-                <div className={cn("text-lg font-bold tabular-nums", totals.projectedOverrun > 0 ? "text-rose-600" : "text-emerald-600")}>
+                <div className={cn("text-lg font-bold tabular-nums", totals.projectedOverrun > 0 ? "text-danger" : "text-success")}>
                   {totals.projectedOverrun > 0 ? "+" : ""}
                   {formatCzk(totals.projectedOverrun)}
                 </div>
@@ -341,7 +341,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
             <div className="mt-4 space-y-1.5">
               <div className="flex items-center justify-between text-[11px]">
                 <span className="text-muted-foreground">Plán → Odhad</span>
-                <span className={cn("font-semibold", totals.projectedOverrun > 0 ? "text-rose-600" : "text-emerald-600")}>
+                <span className={cn("font-semibold", totals.projectedOverrun > 0 ? "text-danger" : "text-success")}>
                   {totals.planTotal > 0 ? ((totals.projectedFinal / totals.planTotal) * 100).toFixed(0) : 0} % plánu
                 </span>
               </div>
@@ -355,21 +355,21 @@ export function DashboardTab({ projectId }: { projectId: string }) {
                 {/* Actual + projected bar */}
                 <div className="flex h-full">
                   <div
-                    className="h-full bg-amber-400"
+                    className="h-full bg-warning"
                     style={{ width: `${Math.min((totals.actualTotal / Math.max(totals.projectedFinal, 1)) * 100, 100)}%` }}
                   />
                   <div
-                    className={cn("h-full", totals.projectedOverrun > 0 ? "bg-rose-400" : "bg-emerald-400")}
+                    className={cn("h-full", totals.projectedOverrun > 0 ? "bg-danger" : "bg-success")}
                     style={{ width: `${Math.min(((totals.projectedFinal - totals.actualTotal) / Math.max(totals.projectedFinal, 1)) * 100, 100)}%` }}
                   />
                 </div>
               </div>
               <div className="flex items-center gap-3 text-[10px] text-muted-foreground">
                 <span className="flex items-center gap-1">
-                  <span className="inline-block h-2 w-2 rounded-sm bg-amber-400" /> Čerpáno
+                  <span className="inline-block h-2 w-2 rounded-sm bg-warning" /> Čerpáno
                 </span>
                 <span className="flex items-center gap-1">
-                  <span className={cn("inline-block h-2 w-2 rounded-sm", totals.projectedOverrun > 0 ? "bg-rose-400" : "bg-emerald-400")} /> Odhad zbytku
+                  <span className={cn("inline-block h-2 w-2 rounded-sm", totals.projectedOverrun > 0 ? "bg-danger" : "bg-success")} /> Odhad zbytku
                 </span>
                 <span className="flex items-center gap-1">
                   <span className="inline-block h-2 w-px bg-foreground/40" /> Plán (100 %)
@@ -401,7 +401,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
                   key={p.phase}
                   className={cn(
                     "rounded-lg border bg-card p-3 transition-shadow hover:shadow-sm",
-                    p.actual > p.worstCase && "border-rose-300 dark:border-rose-800",
+                    p.actual > p.worstCase && "border-danger/50 dark:border-danger-strong",
                   )}
                 >
                   <div className="mb-2 flex items-center justify-between gap-2">
@@ -411,7 +411,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
                       {p.inProgress && (
                         <Badge
                           variant="outline"
-                          className="h-4 shrink-0 gap-0.5 border-sky-200 bg-sky-50 px-1 text-[9px] text-sky-700 dark:border-sky-900 dark:bg-sky-950/30 dark:text-sky-300"
+                          className="h-4 shrink-0 gap-0.5 border-info/30 bg-info-soft/50 px-1 text-[9px] text-info-strong dark:border-info-strong dark:bg-info-soft/70 dark:text-info-strong"
                           title="Fáze má rozpracované položky (skutečné náklady nebo hodiny), ale není ještě dokončena"
                         >
                           <Activity className="h-2.5 w-2.5" />
@@ -421,7 +421,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
                       {p.startingSoon && (
                         <Badge
                           variant="outline"
-                          className="h-4 shrink-0 gap-0.5 border-amber-200 bg-amber-50 px-1 text-[9px] text-amber-700 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-300"
+                          className="h-4 shrink-0 gap-0.5 border-warning/30 bg-warning-soft/50 px-1 text-[9px] text-warning-strong dark:border-warning-strong dark:bg-warning-soft/70 dark:text-warning-strong"
                           title="Fáze má položku, která startuje v příštích 7 dnech"
                         >
                           <CalendarClock className="h-2.5 w-2.5" />
@@ -431,7 +431,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
                     </div>
                     <div className="flex shrink-0 items-center gap-1">
                       {p.completedCount > 0 && (
-                        <Badge variant="outline" className="h-4 px-1 text-[10px] text-emerald-700">
+                        <Badge variant="outline" className="h-4 px-1 text-[10px] text-success-strong">
                           {p.completedCount}/{p.count} ✓
                         </Badge>
                       )}
@@ -453,7 +453,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
                       <div
                         className={cn(
                           "h-full rounded-full transition-all",
-                          burn > 100 ? "bg-rose-500" : burn > 80 ? "bg-amber-500" : "bg-emerald-500",
+                          burn > 100 ? "bg-danger" : burn > 80 ? "bg-warning" : "bg-success",
                         )}
                         style={{ width: `${Math.min(burn, 100)}%` }}
                       />
@@ -472,7 +472,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
                           <div
                             className={cn(
                               "h-full rounded-full transition-all",
-                              timeBurn > 100 ? "bg-rose-500" : timeBurn > 80 ? "bg-amber-500" : "bg-violet-500",
+                              timeBurn > 100 ? "bg-danger" : timeBurn > 80 ? "bg-warning" : "bg-time",
                             )}
                             style={{ width: `${Math.min(timeBurn, 100)}%` }}
                           />
@@ -488,12 +488,12 @@ export function DashboardTab({ projectId }: { projectId: string }) {
                       {hasOverrun && (
                         <div className="flex gap-1.5">
                           {p.costOverrun > 0 && (
-                            <span className="font-semibold text-rose-600 tabular-nums">
+                            <span className="font-semibold text-danger tabular-nums">
                               +{formatCzk(p.costOverrun)}
                             </span>
                           )}
                           {p.timeOverrun > 0 && (
-                            <span className="font-semibold text-amber-600 tabular-nums">
+                            <span className="font-semibold text-warning tabular-nums">
                               +{formatNumber(p.timeOverrun, " h")}
                             </span>
                           )}
@@ -578,7 +578,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
                   <span className="truncate">
                     {p.budgetItem?.subcategory || p.budgetItem?.category}
                   </span>
-                  <span className="ml-2 font-medium text-emerald-600">
+                  <span className="ml-2 font-medium text-success">
                     {formatCzk(p.amount)}
                   </span>
                 </div>
@@ -609,7 +609,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
                   <span className="truncate">
                     {t.workerName} · {t.budgetItem?.subcategory || t.budgetItem?.category}
                   </span>
-                  <span className="ml-2 font-medium text-violet-600">
+                  <span className="ml-2 font-medium text-time">
                     {formatNumber(t.hours, " h")}
                   </span>
                 </div>
@@ -639,7 +639,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
             {byCategory.map((c) => {
               const burn = c.plan > 0 ? (c.actual / c.plan) * 100 : 0;
               const color =
-                burn > 100 ? "bg-rose-500" : burn > 80 ? "bg-amber-500" : "bg-emerald-500";
+                burn > 100 ? "bg-danger" : burn > 80 ? "bg-warning" : "bg-success";
               return (
                 <div key={c.category} className="grid grid-cols-12 items-center gap-3">
                   <div className="col-span-3 truncate text-sm font-medium">
@@ -748,13 +748,13 @@ function SpendingTrendCard({ projectId }: { projectId: string }) {
           <div className="flex gap-4 text-right">
             <div>
               <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Celkem vydáno</div>
-              <div className="text-sm font-bold tabular-nums text-amber-600">
+              <div className="text-sm font-bold tabular-nums text-warning">
                 {formatCzk(data.totals.totalSpend)}
               </div>
             </div>
             <div>
               <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Celkem hodin</div>
-              <div className="text-sm font-bold tabular-nums text-violet-600">
+              <div className="text-sm font-bold tabular-nums text-time">
                 {formatNumber(data.totals.totalHours, " h")}
               </div>
             </div>
@@ -778,7 +778,7 @@ function SpendingTrendCard({ projectId }: { projectId: string }) {
           {data.months.map((m, i) => (
             <div key={i} className="flex flex-1 flex-col items-center gap-0.5">
               <div
-                className="w-full rounded-sm bg-amber-400/70 transition-all hover:bg-amber-500"
+                className="w-full rounded-sm bg-warning/70 transition-all hover:bg-warning"
                 style={{
                   height: `${(m.spend / maxSpend) * 100}%`,
                   minHeight: m.spend > 0 ? "4px" : "0",

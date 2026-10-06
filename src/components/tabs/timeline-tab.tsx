@@ -294,7 +294,7 @@ export function TimelineTab({ projectId }: { projectId: string }) {
         </div>
         <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
           <span className="flex items-center gap-1">
-            <span className="inline-block h-2 w-2 rounded-full bg-rose-500" /> Dnes
+            <span className="inline-block h-2 w-2 rounded-full bg-danger" /> Dnes
           </span>
           <span>Dvojklik = upravit datumy</span>
         </div>
@@ -341,7 +341,7 @@ export function TimelineTab({ projectId }: { projectId: string }) {
                           key={i}
                           className={cn(
                             "border-l px-1 py-0.5 text-center text-[9px]",
-                            isWeekend ? "bg-rose-50 text-rose-400 dark:bg-rose-950/20" : "text-muted-foreground",
+                            isWeekend ? "bg-danger-soft/50 text-danger dark:bg-danger-soft/60" : "text-muted-foreground",
                           )}
                           style={{ width: `${unitW}px` }}
                         >
@@ -358,10 +358,10 @@ export function TimelineTab({ projectId }: { projectId: string }) {
               <div className="relative">
                 {todayOffset >= 0 && todayOffset <= totalUnits && (
                   <div
-                    className="pointer-events-none absolute top-0 bottom-0 z-10 border-l-2 border-dashed border-rose-500"
+                    className="pointer-events-none absolute top-0 bottom-0 z-10 border-l-2 border-dashed border-danger"
                     style={{ left: `calc(16rem + ${todayOffset * unitW}px)` }}
                   >
-                    <div className="absolute -top-0.5 left-1 whitespace-nowrap rounded bg-rose-500 px-1 text-[9px] text-white">
+                    <div className="absolute -top-0.5 left-1 whitespace-nowrap rounded bg-danger px-1 text-[9px] text-white">
                       Dnes
                     </div>
                   </div>
@@ -395,14 +395,14 @@ export function TimelineTab({ projectId }: { projectId: string }) {
                           <div className="sticky left-0 z-20 w-64 shrink-0 border-r bg-card px-3 py-2">
                             <div className="flex items-center gap-1.5">
                               {it.completed ? (
-                                <CheckCircle2 className="h-3 w-3 shrink-0 text-emerald-500" />
+                                <CheckCircle2 className="h-3 w-3 shrink-0 text-success" />
                               ) : it.required ? (
-                                <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-rose-500" />
+                                <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-danger" />
                               ) : (
                                 <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-muted-foreground/30" />
                               )}
                               <div className="min-w-0">
-                                <div className={cn("truncate text-xs font-medium", it.completed && "line-through decoration-emerald-500/50")}>
+                                <div className={cn("truncate text-xs font-medium", it.completed && "line-through decoration-success/50")}>
                                   {it.subcategory || it.category}
                                 </div>
                                 <div className="truncate text-[10px] text-muted-foreground">
@@ -444,7 +444,7 @@ export function TimelineTab({ projectId }: { projectId: string }) {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-sm">
-              <CalendarDays className="h-4 w-4 text-sky-600" />
+              <CalendarDays className="h-4 w-4 text-info" />
               Nejbližší akce
             </CardTitle>
           </CardHeader>
@@ -452,7 +452,7 @@ export function TimelineTab({ projectId }: { projectId: string }) {
             {data?.alerts.upcoming.slice(0, 3).map((it) => (
               <div key={it.id} className="flex items-center justify-between">
                 <span className="truncate">{it.subcategory || it.category}</span>
-                <span className="ml-2 font-medium text-sky-600">{formatDate(it.dateFrom)}</span>
+                <span className="ml-2 font-medium text-info">{formatDate(it.dateFrom)}</span>
               </div>
             )) ?? <p className="text-muted-foreground">Žádné blížící se termíny</p>}
           </CardContent>
@@ -460,7 +460,7 @@ export function TimelineTab({ projectId }: { projectId: string }) {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-sm">
-              <CalendarRange className="h-4 w-4 text-rose-600" />
+              <CalendarRange className="h-4 w-4 text-danger" />
               Zpožděné
             </CardTitle>
           </CardHeader>
@@ -468,7 +468,7 @@ export function TimelineTab({ projectId }: { projectId: string }) {
             {data?.alerts.overdue.slice(0, 3).map((it) => (
               <div key={it.id} className="flex items-center justify-between">
                 <span className="truncate">{it.subcategory || it.category}</span>
-                <span className="ml-2 font-medium text-rose-600">{formatDate(it.dateTo)}</span>
+                <span className="ml-2 font-medium text-danger">{formatDate(it.dateTo)}</span>
               </div>
             )) ?? <p className="text-muted-foreground">Žádné zpožděné položky</p>}
           </CardContent>
@@ -476,7 +476,7 @@ export function TimelineTab({ projectId }: { projectId: string }) {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-sm">
-              <CalendarRange className="h-4 w-4 text-amber-600" />
+              <CalendarRange className="h-4 w-4 text-warning" />
               K naplánování
             </CardTitle>
           </CardHeader>
@@ -484,7 +484,7 @@ export function TimelineTab({ projectId }: { projectId: string }) {
             {data?.alerts.unscheduled.slice(0, 3).map((it) => (
               <div key={it.id} className="flex items-center justify-between">
                 <span className="truncate">{it.subcategory || it.category}</span>
-                <span className="ml-2 font-medium text-amber-600">{formatCzk(it.planCost)}</span>
+                <span className="ml-2 font-medium text-warning">{formatCzk(it.planCost)}</span>
               </div>
             )) ?? <p className="text-muted-foreground">Vše naplánováno</p>}
           </CardContent>

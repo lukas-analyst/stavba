@@ -25,7 +25,7 @@ import { Badge } from "@/components/ui/badge";
 import { ProjectDialog } from "@/components/project-dialog";
 import { PrintReportDialog } from "@/components/print-report-dialog";
 import { AuditLogDialog } from "@/components/audit-log-dialog";
-import { formatDate, daysUntilLabel } from "@/lib/format";
+import { formatDate, daysUntilLabel, STATUS_LABELS } from "@/lib/format";
 import { useUpdateProject } from "@/lib/api";
 import { toast } from "sonner";
 
@@ -88,28 +88,7 @@ const TABS: { id: TabId; label: string; icon: React.ComponentType<{ className?: 
   { id: "notes", label: "Poznámky", icon: FileText },
 ];
 
-const STATUS_LABELS: Record<string, { label: string; color: string; dot: string }> = {
-  active: {
-    label: "Aktivní",
-    color: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300",
-    dot: "bg-emerald-500",
-  },
-  planning: {
-    label: "Plánování",
-    color: "bg-sky-100 text-sky-700 dark:bg-sky-900/40 dark:text-sky-300",
-    dot: "bg-sky-500",
-  },
-  completed: {
-    label: "Dokončeno",
-    color: "bg-zinc-100 text-zinc-700 dark:bg-zinc-800/40 dark:text-zinc-300",
-    dot: "bg-zinc-400",
-  },
-  paused: {
-    label: "Pozastaveno",
-    color: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300",
-    dot: "bg-amber-500",
-  },
-};
+// STATUS_LABELS is imported from @/lib/format (single source of truth).
 
 export function ProjectDetail({ project }: { project: Project }) {
   const activeTab = useAppStore((s) => s.activeTab);
@@ -149,10 +128,10 @@ export function ProjectDetail({ project }: { project: Project }) {
   }, []);
 
   const deadlineToneColor: Record<string, string> = {
-    past: "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/30 dark:text-rose-300 dark:border-rose-900",
-    today: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/30 dark:text-amber-300 dark:border-amber-900",
-    soon: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/30 dark:text-amber-300 dark:border-amber-900",
-    future: "bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-950/30 dark:text-sky-300 dark:border-sky-900",
+    past: "bg-danger-soft/50 text-danger-strong border-danger/30 dark:bg-danger-soft/70 dark:text-danger-strong dark:border-danger-strong",
+    today: "bg-warning-soft/50 text-warning-strong border-warning/30 dark:bg-warning-soft/70 dark:text-warning-strong dark:border-warning-strong",
+    soon: "bg-warning-soft/50 text-warning-strong border-warning/30 dark:bg-warning-soft/70 dark:text-warning-strong dark:border-warning-strong",
+    future: "bg-info-soft/50 text-info-strong border-info/30 dark:bg-info-soft/70 dark:text-info-strong dark:border-info-strong",
     none: "",
   };
 
@@ -277,8 +256,8 @@ export function ProjectDetail({ project }: { project: Project }) {
                     className={cn(
                       "h-4 w-4 transition-colors",
                       project.starred
-                        ? "fill-amber-400 text-amber-400"
-                        : "text-muted-foreground/50 hover:text-amber-400",
+                        ? "fill-warning text-warning"
+                        : "text-muted-foreground/50 hover:text-warning",
                     )}
                   />
                 </button>
@@ -320,7 +299,7 @@ export function ProjectDetail({ project }: { project: Project }) {
                 <span className="text-xs text-muted-foreground">Čerpání</span>
                 <strong className={cn(
                   "font-semibold text-sm",
-                  project.stats.burnRate > 100 ? "text-rose-600" : project.stats.burnRate > 80 ? "text-amber-600" : "text-emerald-600",
+                  project.stats.burnRate > 100 ? "text-danger" : project.stats.burnRate > 80 ? "text-warning" : "text-success",
                 )}>
                   {project.stats.burnRate.toFixed(0)}%
                 </strong>
@@ -328,7 +307,7 @@ export function ProjectDetail({ project }: { project: Project }) {
                   <div
                     className={cn(
                       "h-full rounded-full",
-                      project.stats.burnRate > 100 ? "bg-rose-500" : project.stats.burnRate > 80 ? "bg-amber-500" : "bg-emerald-500",
+                      project.stats.burnRate > 100 ? "bg-danger" : project.stats.burnRate > 80 ? "bg-warning" : "bg-success",
                     )}
                     style={{ width: `${Math.min(project.stats.burnRate, 100)}%` }}
                   />

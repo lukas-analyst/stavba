@@ -132,10 +132,10 @@ export function ContactsTab({ projectId }: { projectId: string }) {
       {/* Leaderboard: top contributors */}
       {statsData && statsData.contactStats.length > 0 && (
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-          <Card className="hover-lift border-amber-200/60 dark:border-amber-900/40">
+          <Card className="hover-lift border-warning/40 dark:border-warning-strong/40">
             <CardHeader className="pb-2">
               <div className="flex items-center gap-2">
-                <TrendingUp className="h-4 w-4 text-amber-600" />
+                <TrendingUp className="h-4 w-4 text-warning" />
                 <CardTitle className="text-sm">Největší náklady (celkem zaplaceno)</CardTitle>
               </div>
             </CardHeader>
@@ -149,13 +149,13 @@ export function ContactsTab({ projectId }: { projectId: string }) {
                     <div key={s.contactId} className="flex items-center gap-2 text-xs">
                       <span className={cn(
                         "flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold",
-                        i === 0 ? "bg-amber-100 text-amber-700" : "bg-muted text-muted-foreground",
+                        i === 0 ? "bg-warning-soft text-warning-strong" : "bg-muted text-muted-foreground",
                       )}>
                         {i + 1}
                       </span>
                       <span className="text-base">{t.emoji}</span>
                       <span className="flex-1 truncate font-medium">{s.name}</span>
-                      <span className="font-bold text-amber-600 tabular-nums">
+                      <span className="font-bold text-warning tabular-nums">
                         {formatCzk(s.totalPaid)}
                       </span>
                     </div>
@@ -166,10 +166,10 @@ export function ContactsTab({ projectId }: { projectId: string }) {
               )}
             </CardContent>
           </Card>
-          <Card className="hover-lift border-violet-200/60 dark:border-violet-900/40">
+          <Card className="hover-lift border-time/40 dark:border-time/30">
             <CardHeader className="pb-2">
               <div className="flex items-center gap-2">
-                <Clock className="h-4 w-4 text-violet-600" />
+                <Clock className="h-4 w-4 text-time" />
                 <CardTitle className="text-sm">Nejvíce odpracováno (hodiny)</CardTitle>
               </div>
             </CardHeader>
@@ -183,13 +183,13 @@ export function ContactsTab({ projectId }: { projectId: string }) {
                     <div key={w.name} className="flex items-center gap-2 text-xs">
                       <span className={cn(
                         "flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold",
-                        i === 0 ? "bg-violet-100 text-violet-700" : "bg-muted text-muted-foreground",
+                        i === 0 ? "bg-time-soft text-time-strong" : "bg-muted text-muted-foreground",
                       )}>
                         {i + 1}
                       </span>
                       <span className="text-base">{t.emoji}</span>
                       <span className="flex-1 truncate font-medium">{w.name}</span>
-                      <span className="font-bold text-violet-600 tabular-nums">
+                      <span className="font-bold text-time tabular-nums">
                         {formatNumber(w.hours, " h")}
                       </span>
                     </div>
@@ -464,7 +464,7 @@ function ContactCard({
                   className={cn(
                     "h-3 w-3",
                     s <= contact.rating!
-                      ? "fill-amber-400 text-amber-400"
+                      ? "fill-warning text-warning"
                       : "text-muted-foreground/30",
                   )}
                 />
@@ -528,8 +528,8 @@ function StatPill({
 }) {
   const toneClasses =
     tone === "amber"
-      ? "bg-amber-50 text-amber-700 dark:bg-amber-950/30 dark:text-amber-300"
-      : "bg-violet-50 text-violet-700 dark:bg-violet-950/30 dark:text-violet-300";
+      ? "bg-warning-soft/50 text-warning-strong dark:bg-warning-soft/70 dark:text-warning-strong"
+      : "bg-time-soft/50 text-time-strong dark:bg-time-soft/70 dark:text-time-strong";
   return (
     <div className={cn("flex items-center gap-1.5 rounded-md px-2 py-1 text-[11px]", toneClasses)}>
       {icon}
@@ -583,7 +583,7 @@ function ContactDetailDialog({
                           className={cn(
                             "h-3 w-3",
                             s <= contact.rating!
-                              ? "fill-amber-400 text-amber-400"
+                              ? "fill-warning text-warning"
                               : "text-muted-foreground/30",
                           )}
                         />
@@ -760,8 +760,8 @@ function DetailStat({
 }) {
   const toneClasses =
     tone === "amber"
-      ? "border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-300"
-      : "border-violet-200 bg-violet-50 text-violet-800 dark:border-violet-900/50 dark:bg-violet-950/30 dark:text-violet-300";
+      ? "border-warning/30 bg-warning-soft/50 text-warning-strong dark:border-warning-strong/50 dark:bg-warning-soft/70 dark:text-warning-strong"
+      : "border-time/30 bg-time-soft/50 text-time-strong dark:border-time-strong/50 dark:bg-time-soft/70 dark:text-time-strong";
   return (
     <div className={cn("rounded-md border px-3 py-2", toneClasses)}>
       <div className="flex items-center gap-1.5">
@@ -1020,8 +1020,8 @@ function ContactForm({
                     className={cn(
                       "h-5 w-5 transition-colors",
                       rating && s <= rating
-                        ? "fill-amber-400 text-amber-400"
-                        : "text-muted-foreground/40 hover:text-amber-300",
+                        ? "fill-warning text-warning"
+                        : "text-muted-foreground/40 hover:text-warning-strong",
                     )}
                   />
                 </button>
