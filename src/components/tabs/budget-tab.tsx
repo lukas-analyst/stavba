@@ -71,6 +71,8 @@ import {
   X,
   GripVertical,
   HandCoins,
+  Link as LinkIcon,
+  ExternalLink,
 } from "lucide-react";
 import {
   formatCzk,
@@ -1902,6 +1904,35 @@ function DetailPanelRow({
               Počítáno po dokončení položky.
             </p>
           </div>
+          {/* External hyperlinks — shown only in detail panel (hezký název).
+              Click opens in new tab. Edit happens via the edit dialog. */}
+          {item.links && item.links.length > 0 && (
+            <div className="sm:col-span-1">
+              <div className="mb-1 flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                <LinkIcon className="h-3 w-3" />
+                Odkazy
+                <span className="rounded bg-muted px-1 py-0.5 text-[9px] tabular-nums">
+                  {item.links.length}
+                </span>
+              </div>
+              <ul className="space-y-0.5">
+                {item.links.map((link) => (
+                  <li key={link.id}>
+                    <a
+                      href={link.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      title={link.url}
+                      className="inline-flex items-center gap-1 text-xs font-medium text-primary underline-offset-2 hover:underline"
+                    >
+                      <ExternalLink className="h-3 w-3 shrink-0 opacity-60" />
+                      {link.label}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
       </TableCell>
     </TableRow>

@@ -80,7 +80,20 @@ export type BudgetItem = {
   subsidyAmount: number | null;
   sortOrder: number;
   _count?: { payments: number; timeEntries: number; comments: number };
+  // External hyperlinks (1:N) — present when the budget GET endpoint
+  // includes them. Ordered by sortOrder.
+  links?: BudgetItemLink[];
   children?: BudgetItem[];
+};
+
+/// External hyperlink attached to a budget item or task.
+/// `label` is the human-readable name shown in the UI; `url` is the raw
+/// absolute URL persisted in the DB and opened in a new tab on click.
+export type BudgetItemLink = {
+  id: string;
+  label: string;
+  url: string;
+  sortOrder: number;
 };
 
 export type Contact = {

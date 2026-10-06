@@ -31,6 +31,12 @@ const BUDGET_ITEM_SELECT = {
   createdAt: true,
   updatedAt: true,
   _count: { select: { payments: true, timeEntries: true, comments: true } },
+  // External hyperlinks (1:N) — only id/label/url/sortOrder needed by UI.
+  // Ordered by sortOrder for stable display in the detail panel.
+  links: {
+    orderBy: { sortOrder: "asc" },
+    select: { id: true, label: true, url: true, sortOrder: true },
+  },
 } as const;
 
 // GET /api/projects/[id]/budget - list all budget items for a project

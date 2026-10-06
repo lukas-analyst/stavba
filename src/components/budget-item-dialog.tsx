@@ -26,8 +26,9 @@ import {
   useCreateBudgetItem,
   useUpdateBudgetItem,
   type BudgetItem,
+  type BudgetItemLink,
 } from "@/lib/api";
-import { Loader2, AlertTriangle, CheckCircle2, Circle, X, HandCoins } from "lucide-react";
+import { Loader2, AlertTriangle, CheckCircle2, Circle, X, HandCoins, Link as LinkIcon, Plus, ExternalLink, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import { cn } from "@/lib/utils";
@@ -153,6 +154,12 @@ function BudgetItemForm({
   const [rejected, setRejected] = useState(item?.rejected ?? false);
   const [subsidyEligible, setSubsidyEligible] = useState(item?.subsidyEligible ?? false);
   const [subsidyAmount, setSubsidyAmount] = useState(item?.subsidyAmount?.toString() ?? "");
+  // External hyperlinks — editable list. Each entry is {id?, label, url}.
+  // id is set for links that already exist in DB (so backend can update);
+  // new links have id = undefined and will be created on save.
+  const [links, setLinks] = useState<{ id?: string; label: string; url: string }[]>(
+    item?.links?.map((l) => ({ id: l.id, label: l.label, url: l.url })) ?? [],
+  );
   const [note, setNote] = useState(item?.note ?? "");
   const [planCost, setPlanCost] = useState(item?.planCost?.toString() ?? "");
   const [flexibility, setFlexibility] = useState(
@@ -248,6 +255,10 @@ function BudgetItemForm({
         dateTo: dateTo || null,
         subsidyEligible,
         subsidyAmount: subsidyAmount === "" ? null : Number(subsidyAmount.replace(",", ".")),
+        // Send full links array — backend performs atomic replace (delete + create)
+        links: links.map((l) => ({ id: l.id, label: l.label.trim(), url: l.url.trim() })).filter(
+          (l) => l.label !== "" && l.url !== "",
+        ),
         dependsOnId: isTaskMode
           ? (item?.dependsOnId ?? null)
           : dependsOnId === "__none__"
@@ -633,6 +644,96 @@ function BudgetItemForm({
             </p>
           </div>
         )}
+
+        {/* External hyperlinks — shown in detail dialog only.
+            Each link: label (hezký název) + url. Clickable opens in new tab. */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <Label className="flex items-center gap-1.5 text-xs">
+              <LinkIcon className="h-3.5 w-3.5 text-muted-foreground" />
+              Odkazy
+              {links.length > 0 && (
+                <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-semibold tabular-nums text-muted-foreground">
+                  {links.length}
+                </span>
+              )}
+            </Label>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-7 gap-1 px-2 text-[11px]"
+              onClick={() => setLinks((prev) => [...prev, { id: undefined, label: "", url: "" }])}
+            >
+              <Plus className="h-3 w-3" /> Přidat odkaz
+            </Button>
+          </div>
+          {links.length === 0 ? (
+            <p className="text-[11px] text-muted-foreground">
+              Žádné odkazy. Přidejte např. odkaz na výrobce, dokumentaci, e-shop…
+            </p>
+          ) : (
+            <div className="space-y-1.5">
+              {links.map((link, idx) => (
+                <div
+                  key={link.id ?? `new-${idx}`}
+                  className="flex flex-wrap items-center gap-1.5 rounded-md border bg-card/50 p-1.5"
+                >
+                  <Input
+                    value={link.label}
+                    onChange={(e) =>
+                      setLinks((prev) =>
+                        prev.map((l, i) => (i === idx ? { ...l, label: e.target.value } : l)),
+                      )
+                    }
+                    placeholder="Hezký název (např. Výrobce)"
+                    className="h-7 flex-1 min-w-[120px] text-xs"
+                  />
+                  <div className="relative flex-1 min-w-[140px]">
+                    <Input
+                      value={link.url}
+                      onChange={(e) =>
+                        setLinks((prev) =>
+                          prev.map((l, i) => (i === idx ? { ...l, url: e.target.value } : l)),
+                        )
+                      }
+                      placeholder="https://…"
+                      className="h-7 pr-7 text-xs"
+                      inputMode="url"
+                    />
+                    {link.url.trim() !== "" && (
+                      <a
+                        href={link.url.trim()}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={(e) => e.stopPropagation()}
+                        title="Otevřít odkaz v novém okně"
+                        className="absolute right-1.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                      >
+                        <ExternalLink className="h-3.5 w-3.5" />
+                      </a>
+                    )}
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 shrink-0 text-muted-foreground hover:text-destructive"
+                    onClick={() => setLinks((prev) => prev.filter((_, i) => i !== idx))}
+                    title="Smazat odkaz"
+                    aria-label="Smazat odkaz"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
+          <p className="text-[10px] text-muted-foreground">
+            Odkazy se zobrazí pouze po rozkliknutí detailu položky/úkolu.
+            Hezký název bude vidět v přehledu, URL se otevírá v novém okně.
+          </p>
+        </div>
 
         <DialogFooter>
           <Button type="button" variant="outline" onClick={onDone}>

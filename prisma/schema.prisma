@@ -488,6 +488,7 @@ model BudgetItem {
   payments    Payment[]
   timeEntries TimeEntry[]
   comments    Comment[]
+  links       BudgetItemLink[]
 
   @@index([projectId])
   @@index([parentId])
@@ -528,6 +529,43 @@ model Comment {
   @@index([userId])
   @@index([createdAt])
   @@map("comments")
+}
+
+/// External hyperlink attached to a budget item or task (1:N).
+/// Each link stores a human-readable `label` (e.g., "Oficiální stránka
+/// výrobce") shown in the detail panel, and the underlying `url` that
+/// opens in a new tab when clicked. The raw URL is persisted in the DB
+/// so it can be edited independently of the display label.
+///
+/// Design notes:
+///   - Separate table (not JSON in BudgetItem) for query/index efficiency
+///     and partial updates (changing one link doesn't rewrite the row).
+///   - CASCADE delete: removing a budget item removes its links.
+///   - Indexed on budgetItemId for O(log n) lookup during budget fetch.
+///   - sortOrder supports manual reordering in the UI.
+model BudgetItemLink {
+  id           String     @id @default(cuid())
+  /// FK to BudgetItem — the item/task this link is attached to
+  budgetItemId String
+  budgetItem   BudgetItem @relation(fields: [budgetItemId], references: [id], onDelete: Cascade)
+  /// Human-readable display name shown in the detail panel (e.g.,
+  /// "Oficiální stránka výrobce"). Required so the UI always has a
+  /// clickable label instead of a raw URL.
+  label        String
+  /// The actual URL (https://…). Stored as-is so the user can edit it
+  /// later without losing the label. Should be a valid absolute URL.
+  url          String
+  /// Manual sort order within the item (for reordering links in UI)
+  sortOrder    Int        @default(0)
+  /// When this link was created
+  createdAt    DateTime   @default(now())
+  /// When this link was last updated
+  updatedAt    DateTime   @updatedAt
+
+  @@index([budgetItemId])
+  @@index([sortOrder])
+  @@index([budgetItemId, sortOrder])
+  @@map("budget_item_links")
 }
 
 /// Contact (worker, company, supplier, architect). Contacts are

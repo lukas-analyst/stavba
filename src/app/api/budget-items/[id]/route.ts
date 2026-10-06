@@ -44,9 +44,46 @@ export async function PATCH(
     if (body.subsidyAmount !== undefined) updateData.subsidyAmount = numOrUndef(body.subsidyAmount);
     if (body.sortOrder !== undefined) updateData.sortOrder = Number(body.sortOrder);
 
+    // Synchronize external hyperlinks (1:N) when `links` is provided.
+    // The frontend sends the FULL desired state of the links array, so we
+    // perform a replace: delete links no longer in the array, upsert
+    // (by id) the ones that are. This keeps the operation atomic with
+    // the budget item update via a single transaction.
+    //   - link.id = undefined → create new link
+    //   - link.id matches existing → update label/url
+    //   - existing link not in array → delete
+    // Validation: label + url required, url trimmed.
+    let linksWereSynced = false;
+    if (Array.isArray(body.links)) {
+      const incomingLinks = body.links
+        .filter((l: unknown): l is { id?: string; label: string; url: string } => {
+          if (!l || typeof l !== "object") return false;
+          const obj = l as Record<string, unknown>;
+          return (
+            typeof obj.label === "string" && obj.label.trim() !== "" &&
+            typeof obj.url === "string" && obj.url.trim() !== ""
+          );
+        })
+        .map((l, idx) => ({
+          id: typeof l.id === "string" ? l.id : undefined,
+          label: l.label.trim(),
+          url: l.url.trim(),
+          sortOrder: idx,
+        }));
+
+      updateData.links = {
+        deleteMany: {}, // delete all existing, then recreate from incoming
+        create: incomingLinks.map(({ id: _id, ...rest }) => rest),
+      };
+      linksWereSynced = true;
+    }
+
     const updated = await db.budgetItem.update({
       where: { id },
       data: updateData,
+      include: linksWereSynced
+        ? { links: { orderBy: { sortOrder: "asc" }, select: { id: true, label: true, url: true, sortOrder: true } } }
+        : undefined,
     });
 
     // Log changes to audit log
