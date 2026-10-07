@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   useContacts,
   useCreateContact,
@@ -90,6 +90,18 @@ export function ContactsTab({ projectId }: { projectId: string }) {
   const [addOpen, setAddOpen] = useState(false);
   const [editContact, setEditContact] = useState<Contact | null>(null);
   const [detailContact, setDetailContact] = useState<Contact | null>(null);
+
+  // Listen for FAB "add contact" trigger (mobile contextual FAB)
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const action = (e as CustomEvent<string>).detail;
+      if (action === "add-contact") {
+        setAddOpen(true);
+      }
+    };
+    window.addEventListener("stavba:fab-add", handler);
+    return () => window.removeEventListener("stavba:fab-add", handler);
+  }, []);
 
   // Build a lookup of contactId → stat for quick access in cards
   const statsByContactId = new Map<string, ContactStat>();

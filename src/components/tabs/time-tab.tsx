@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
   useTimeEntries,
   useBudgetItems,
@@ -93,6 +93,18 @@ export function TimeTab({ projectId }: { projectId: string }) {
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [sortBy, setSortBy] = useState<SortKey>("date");
+
+  // Listen for FAB "add time" trigger (mobile contextual FAB)
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const action = (e as CustomEvent<string>).detail;
+      if (action === "add-time") {
+        setAddOpen(true);
+      }
+    };
+    window.addEventListener("stavba:fab-add", handler);
+    return () => window.removeEventListener("stavba:fab-add", handler);
+  }, []);
 
   // Unique categories derived from budget items for the category filter
   const categories = useMemo(() => {

@@ -6,6 +6,7 @@ import { useProjects } from "@/lib/api";
 import { useAppStore, type TabId } from "@/lib/store";
 import { TopBar } from "@/components/top-bar";
 import { AppSidebar } from "@/components/app-sidebar";
+import { ContextualFab } from "@/components/contextual-fab";
 import { ProjectDetail } from "@/components/project-detail";
 import { EmptyState } from "@/components/empty-state";
 import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
@@ -175,6 +176,9 @@ function HomeContent() {
           )}
         </main>
       </div>
+
+      {/* Contextual FAB — mobile only, context-aware per active tab */}
+      {selectedProject && <ContextualFab />}
     </div>
   );
 }
