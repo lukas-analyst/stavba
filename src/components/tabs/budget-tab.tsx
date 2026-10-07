@@ -81,6 +81,7 @@ import {
   PHASES,
   PHASE_COLORS,
   PHASE_BG_COLORS,
+  PHASE_CSS_VARS,
 } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -672,7 +673,7 @@ function BudgetTab({ projectId, dragEndHandlerRef }: { projectId: string; dragEn
                 completionFilter === opt.id
                   ? "bg-background text-foreground shadow-sm"
                   : "text-muted-foreground hover:text-foreground",
-                opt.id === "rejected" && completionFilter !== opt.id && "text-rose-500 hover:text-rose-600",
+                opt.id === "rejected" && completionFilter !== opt.id && "text-danger hover:text-danger-strong",
               )}
             >
               {opt.label}
@@ -688,12 +689,39 @@ function BudgetTab({ projectId, dragEndHandlerRef }: { projectId: string; dragEn
         </Button>
       </div>
 
+      {/* Shared sticky table header — rendered once above all categories.
+          Each category card renders only its <TableBody>; the header sticks
+          to the top of the scroll viewport so column labels stay visible. */}
+      <Table>
+        <TableHeader>
+          <TableRow className="sticky top-0 z-20 bg-background/95 backdrop-blur">
+            <TableHead className="w-8"></TableHead>
+            <TableHead className="w-12"></TableHead>
+            <TableHead className="min-w-[200px]">Položka</TableHead>
+            <TableHead className="w-28">Fáze</TableHead>
+            <TableHead className="w-28 text-right">Plán (Kč)</TableHead>
+            <TableHead className="w-20 text-right">Dny</TableHead>
+            <TableHead className="w-28">Datum od</TableHead>
+            <TableHead className="w-28">Datum do</TableHead>
+            <TableHead className="w-28 text-right">Skut. (Kč)</TableHead>
+            <TableHead className="w-20 text-right">Hod.</TableHead>
+            <TableHead className="w-44 text-center">Stav</TableHead>
+            <TableHead className="w-8"></TableHead>
+          </TableRow>
+        </TableHeader>
+      </Table>
+
       {/* Budget table grouped by category — wrapped in SortableContext for category DnD */}
       <SortableContext items={categoryIds} strategy={verticalListSortingStrategy}>
         <div id="budget-categories" className="space-y-3">
           {grouped.length === 0 && (
-            <div className="rounded-lg border border-dashed py-12 text-center text-sm text-muted-foreground">
-              Žádné položky neodpovídají filtru.
+            <div className="rounded-lg border border-dashed py-12 text-center">
+              <PiggyBank className="mx-auto h-10 w-10 text-muted-foreground/30" />
+              <p className="mt-3 text-sm font-medium text-muted-foreground">Žádné položky v rozpočtu</p>
+              <p className="text-xs text-muted-foreground">Začněte přidáním první položky do rozpočtu.</p>
+              <Button size="sm" className="mt-3" onClick={() => setAddOpen(true)}>
+                <Plus className="mr-1 h-4 w-4" /> Přidat položku
+              </Button>
             </div>
           )}
           {grouped.map(([category, catItems], groupIndex) => {
@@ -731,22 +759,6 @@ function BudgetTab({ projectId, dragEndHandlerRef }: { projectId: string; dragEn
                 {/* Inner SortableContext for items within this category */}
                 <SortableContext items={itemIds} strategy={verticalListSortingStrategy}>
                   <Table>
-                    <TableHeader>
-                      <TableRow className="bg-muted/40 hover:bg-muted/40">
-                        <TableHead className="w-8"></TableHead>
-                        <TableHead className="w-12"></TableHead>
-                        <TableHead className="min-w-[200px]">Položka</TableHead>
-                        <TableHead className="w-28">Fáze</TableHead>
-                        <TableHead className="w-28 text-right">Plán (Kč)</TableHead>
-                        <TableHead className="w-20 text-right">Dny</TableHead>
-                        <TableHead className="w-28">Datum od</TableHead>
-                        <TableHead className="w-28">Datum do</TableHead>
-                        <TableHead className="w-28 text-right">Skut. (Kč)</TableHead>
-                        <TableHead className="w-20 text-right">Hod.</TableHead>
-                        <TableHead className="w-44 text-center">Stav</TableHead>
-                        <TableHead className="w-8"></TableHead>
-                      </TableRow>
-                    </TableHeader>
                     <TableBody>
                       {catItems.length === 0 && (
                         <TableRow>
@@ -943,7 +955,7 @@ function SortableCategoryCard({
             {/* Drag handle */}
             <span
               {...listeners}
-              className="flex h-5 w-5 cursor-grab items-center justify-center rounded text-muted-foreground/40 hover:bg-muted hover:text-foreground active:cursor-grabbing"
+              className="flex h-8 w-8 cursor-grab items-center justify-center rounded text-muted-foreground/40 hover:bg-muted hover:text-foreground active:cursor-grabbing"
               aria-label="Přetáhnout kategorii"
               onClick={(e) => e.stopPropagation()}
             >
@@ -955,11 +967,11 @@ function SortableCategoryCard({
               <ChevronDown className="h-4 w-4" />
             )}
             <span className="text-sm font-bold">{categoryName}</span>
-            <Badge variant="secondary" className="text-[10px]">
+            <Badge variant="secondary" className="text-[11px]">
               {totals.count}
             </Badge>
             {totals.saved > 0 && (
-              <Badge variant="outline" className="text-[10px] text-emerald-700">
+              <Badge variant="outline" className="text-[11px] text-success-strong">
                 <PiggyBank className="mr-1 h-2.5 w-2.5" />
                 {formatCzk(totals.saved)}
               </Badge>
@@ -973,9 +985,9 @@ function SortableCategoryCard({
                 }}
                 title={`Přidat položku do kategorie „${categoryName}"`}
                 aria-label="Přidat položku"
-                className="inline-flex h-5 w-5 items-center justify-center rounded-md text-emerald-700 transition-colors hover:bg-emerald-100 hover:text-emerald-800 dark:text-emerald-400 dark:hover:bg-emerald-900/40"
+                className="inline-flex h-8 w-8 items-center justify-center rounded-md text-success-strong transition-colors hover:bg-success-soft hover:text-success-strong dark:text-success dark:hover:bg-success-soft"
               >
-                <Plus className="h-3.5 w-3.5" />
+                <Plus className="h-4 w-4" />
               </button>
             )}
             <div className="ml-auto flex items-center gap-4 text-xs">
@@ -987,10 +999,10 @@ function SortableCategoryCard({
                   className={cn(
                     "h-full rounded-full",
                     burn > 100
-                      ? "bg-rose-500"
+                      ? "bg-danger"
                       : burn > 80
-                        ? "bg-amber-500"
-                        : "bg-emerald-500",
+                        ? "bg-warning"
+                        : "bg-success",
                   )}
                   style={{ width: `${Math.min(burn, 100)}%` }}
                 />
@@ -999,61 +1011,15 @@ function SortableCategoryCard({
                 className={cn(
                   "font-semibold",
                   burn > 100
-                    ? "text-rose-600"
+                    ? "text-danger"
                     : burn > 80
-                      ? "text-amber-600"
-                      : "text-emerald-600",
+                      ? "text-warning"
+                      : "text-success",
                 )}
               >
                 {burn.toFixed(0)}%
               </span>
             </div>
-            {/* Legacy arrow buttons (kept as fallback) */}
-            <span className="ml-1 flex flex-col">
-              <span
-                role="button"
-                tabIndex={0}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onMoveCategoryUp();
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.stopPropagation();
-                    onMoveCategoryUp();
-                  }
-                }}
-                className={cn(
-                  "flex h-3.5 w-3.5 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground",
-                  groupIndex === 0 && "pointer-events-none opacity-30",
-                )}
-                aria-label="Přesunout kategorii nahoru"
-              >
-                <ArrowUp className="h-3 w-3" />
-              </span>
-              <span
-                role="button"
-                tabIndex={0}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onMoveCategoryDown();
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.stopPropagation();
-                    onMoveCategoryDown();
-                  }
-                }}
-                className={cn(
-                  "flex h-3.5 w-3.5 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground",
-                  groupIndex === totalGroups - 1 &&
-                    "pointer-events-none opacity-30",
-                )}
-                aria-label="Přesunout kategorii dolů"
-              >
-                <ArrowDown className="h-3 w-3" />
-              </span>
-            </span>
           </button>
         </CollapsibleTrigger>
         <CollapsibleContent>{children}</CollapsibleContent>
@@ -1341,9 +1307,9 @@ function BudgetRow({
       }}
       style={dragCtx?.sortableStyle}
       {...(dragCtx?.sortableAttributes ?? {})}
-      onDoubleClick={() => onEdit(item)}
+      onClick={() => onEdit(item)}
       className={cn(
-        "group transition-colors",
+        "group cursor-pointer transition-colors",
         isChild
           ? cn(
               "bg-muted/30 hover:bg-muted/40",
@@ -1351,9 +1317,9 @@ function BudgetRow({
             )
           : cn(
               item.rejected
-                ? "opacity-60 bg-rose-50/40 dark:bg-rose-950/10"
+                ? "opacity-60 bg-danger-soft/30"
                 : item.completed
-                  ? "bg-emerald-50/40 dark:bg-emerald-950/10"
+                  ? "bg-success-soft/30"
                   : "hover:bg-muted/30",
             ),
         isHighlighted && "stavba-highlight-row",
@@ -1365,7 +1331,7 @@ function BudgetRow({
         <TableCell className="w-8 align-middle">
           <span
             {...dragCtx.listeners}
-            className="flex h-5 w-5 cursor-grab items-center justify-center rounded text-muted-foreground/30 hover:bg-muted hover:text-foreground active:cursor-grabbing"
+            className="flex h-8 w-8 cursor-grab items-center justify-center rounded text-muted-foreground/30 hover:bg-muted hover:text-foreground active:cursor-grabbing"
             aria-label="Přetáhnout položku"
             onClick={(e) => e.stopPropagation()}
           >
@@ -1384,26 +1350,8 @@ function BudgetRow({
             aria-hidden
             className="absolute inset-y-0 left-0 w-16 pointer-events-none"
             style={{
-              background: `linear-gradient(to right, var(--phase-color, transparent) 0%, transparent 100%)`,
+              background: `linear-gradient(to right, ${PHASE_CSS_VARS[item.rejected ? "rose" : item.phase] ?? PHASE_CSS_VARS.Neurčeno} 0%, transparent 100%)`,
               opacity: 0.15,
-            }}
-            data-phase-color={
-              item.rejected ? "rose" : item.phase
-            }
-            ref={(el) => {
-              if (!el) return;
-              // Set CSS variable from PHASE_BG_COLORS
-              const colorMap: Record<string, string> = {
-                "Příprava": "#a78bfa",
-                "Demolice": "#f87171",
-                "Hrubá stavba": "#fbbf24",
-                "Zabydlování": "#34d399",
-                "Do budoucna": "#60a5fa",
-                "Neurčeno": "#a1a1aa",
-                "rose": "#f43f5e",
-              };
-              const key = el.getAttribute("data-phase-color") ?? "";
-              el.style.setProperty("--phase-color", colorMap[key] ?? "#a1a1aa");
             }}
           />
           <span aria-hidden className="relative select-none text-muted-foreground/60">
@@ -1411,28 +1359,33 @@ function BudgetRow({
           </span>
         </TableCell>
       ) : (
-        <TableCell
-          className="relative align-middle cursor-pointer"
-          onClick={onToggleExpand}
-        >
+        <TableCell className="relative align-middle">
           <div
             aria-hidden
             className={cn(
               "absolute inset-y-0 left-0 w-1",
               item.rejected
-                ? "bg-rose-500"
+                ? "bg-danger"
                 : PHASE_BG_COLORS[item.phase] ?? "bg-zinc-300",
             )}
           />
           <div className="relative flex items-center gap-1">
-            <span className="flex h-5 w-5 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground">
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggleExpand();
+              }}
+              className="flex h-5 w-5 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground"
+              aria-label={isExpanded ? "Sbalit" : "Rozbalit"}
+            >
               {isExpanded ? (
                 <ChevronDown className="h-4 w-4" />
               ) : (
                 <ChevronRight className="h-4 w-4" />
               )}
-            </span>
-            <span className="text-[10px] text-muted-foreground/60">
+            </button>
+            <span className="text-xs text-muted-foreground/60">
               {childCount > 0 ? `${childCount} ${childCount === 1 ? "úkol" : childCount < 5 ? "úkoly" : "úkolů"}` : ""}
             </span>
           </div>
@@ -1440,17 +1393,14 @@ function BudgetRow({
       )}
 
       {/* Položka / Úkol */}
-      <TableCell
-        className={isChild ? "cursor-pointer" : ""}
-        onClick={isChild ? () => onEdit(item) : undefined}
-      >
+      <TableCell>
         <div className="flex flex-col">
           <div className="flex items-center gap-1.5">
             {item.required && (
               <span
                 title="Povinné (nutné pro dokončení projektu)"
                 aria-label="Nutné"
-                className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-amber-100 text-[10px] font-bold leading-none text-amber-700 dark:bg-amber-900/40 dark:text-amber-300"
+                className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-warning-soft text-[11px] font-bold leading-none text-warning-strong dark:bg-warning-soft dark:text-warning-strong"
               >
                 !
               </span>
@@ -1461,20 +1411,20 @@ function BudgetRow({
                 isChild ? "cursor-pointer hover:underline" : "",
                 isChild ? "text-xs" : "text-sm",
                 item.rejected
-                  ? "line-through decoration-rose-500/70"
-                  : item.completed && "line-through decoration-emerald-500/50",
+                  ? "line-through decoration-danger/70"
+                  : item.completed && "line-through decoration-success/50",
                 childCount > 0 && "font-semibold",
               )}
             >
               {item.subcategory || "(bez názvu)"}
             </span>
             {item.rejected && (
-              <Badge variant="outline" className="h-4 px-1 text-[9px] text-rose-700">
+              <Badge variant="outline" className="h-4 px-1 text-[11px] text-danger-strong">
                 Zavrženo
               </Badge>
             )}
             {item.completed && !item.rejected && (
-              <Badge variant="outline" className="h-4 px-1 text-[9px] text-emerald-700">
+              <Badge variant="outline" className="h-4 px-1 text-[11px] text-success-strong">
                 Hotovo
               </Badge>
             )}
@@ -1486,7 +1436,7 @@ function BudgetRow({
                     ? `Možná dotace: ${formatCzk(item.subsidyAmount)}`
                     : "Možná dotace (částka nezadána)"
                 }
-                className="h-4 gap-0.5 px-1 text-[9px] text-teal-700 dark:text-teal-300"
+                className="h-4 gap-0.5 px-1 text-[11px] text-subsidy-strong dark:text-subsidy-strong"
               >
                 <HandCoins className="h-2.5 w-2.5" />
                 Dotace
@@ -1505,7 +1455,7 @@ function BudgetRow({
                 }}
                 title="Přidat úkol pod tuto položku"
                 aria-label="Přidat úkol"
-                className="inline-flex h-6 w-6 items-center justify-center rounded-md text-emerald-700 transition-colors hover:bg-emerald-100 hover:text-emerald-800 dark:text-emerald-400 dark:hover:bg-emerald-900/40"
+                className="inline-flex h-6 w-6 items-center justify-center rounded-md text-success-strong transition-colors hover:bg-success-soft hover:text-success-strong dark:text-success dark:hover:bg-success-soft"
               >
                 <Plus className="h-4 w-4" />
               </button>
@@ -1515,7 +1465,7 @@ function BudgetRow({
             (item._count.payments > 0 || item._count.timeEntries > 0) && (
               <div className="mt-0.5 flex flex-wrap gap-1">
                 {item._count.payments > 0 && (
-                  <Badge variant="outline" className="h-4 px-1 text-[10px] text-emerald-700">
+                  <Badge variant="outline" className="h-4 px-1 text-[11px] text-success-strong">
                     {item._count.payments === 1
                       ? "1 platba"
                       : item._count.payments < 5
@@ -1524,7 +1474,7 @@ function BudgetRow({
                   </Badge>
                 )}
                 {item._count.timeEntries > 0 && (
-                  <Badge variant="outline" className="h-4 px-1 text-[10px] text-violet-700">
+                  <Badge variant="outline" className="h-4 px-1 text-[11px] text-time-strong">
                     {item._count.timeEntries} časů
                   </Badge>
                 )}
@@ -1542,7 +1492,7 @@ function BudgetRow({
           <SelectTrigger className="h-7 border-0 px-1 text-[11px] shadow-none hover:bg-muted">
             <Badge
               variant="outline"
-              className={cn("h-5 px-1.5 text-[10px]", PHASE_COLORS[item.phase] ?? "")}
+              className={cn("h-5 px-1.5 text-[11px]", PHASE_COLORS[item.phase] ?? "")}
             >
               {item.phase}
             </Badge>
@@ -1607,7 +1557,7 @@ function BudgetRow({
       <TableCell
         className={cn(
           "text-right",
-          overBudget && "font-semibold text-rose-600",
+          overBudget && "font-semibold text-danger",
         )}
       >
         {childCount > 0 ? (
@@ -1622,19 +1572,19 @@ function BudgetRow({
           />
         )}
         {overBudget && (
-          <span className="ml-1 inline-flex items-center text-[10px] text-rose-500">
+          <span className="ml-1 inline-flex items-center text-xs text-danger">
             <AlertTriangle className="h-3 w-3" />
           </span>
         )}
       </TableCell>
 
       {/* Hodiny */}
-      <TableCell className="text-right text-[11px] text-violet-600">
+      <TableCell className="text-right text-[11px] text-time">
         {displayActualHours > 0 ? formatNumber(displayActualHours, " h") : "—"}
       </TableCell>
 
       {/* Stav: Nutné + Hotovo + Rejected (X) */}
-      <TableCell className="text-center">
+      <TableCell className="text-center" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-center gap-1">
           <Button
             type="button"
@@ -1645,10 +1595,10 @@ function BudgetRow({
             aria-pressed={item.required}
             aria-label={item.required ? "Zrušit nutné" : "Označit jako nutné"}
             className={cn(
-              "h-7 w-7 shrink-0 p-0",
+              "h-8 w-8 shrink-0 p-0",
               item.required
-                ? "border-amber-500 bg-amber-500 text-white hover:bg-amber-600 hover:text-white dark:border-amber-600 dark:bg-amber-600 dark:hover:bg-amber-700"
-                : "text-amber-600 hover:border-amber-300 hover:bg-amber-50 hover:text-amber-700 dark:text-amber-400 dark:hover:border-amber-800 dark:hover:bg-amber-950/40",
+                ? "border-warning bg-warning text-white hover:bg-warning hover:text-white dark:border-warning dark:bg-warning dark:hover:bg-warning-strong"
+                : "text-warning hover:border-warning/50 hover:bg-warning-soft/50 hover:text-warning-strong dark:text-warning dark:hover:border-warning-strong dark:hover:bg-warning-soft",
             )}
             title={
               item.required
@@ -1656,7 +1606,7 @@ function BudgetRow({
                 : "Nepovinné — kliknutím označíte jako povinné (nutné pro dokončení projektu)"
             }
           >
-            <AlertTriangle className="h-3.5 w-3.5" />
+            <AlertTriangle className="h-4 w-4" />
           </Button>
           <Button
             type="button"
@@ -1666,19 +1616,18 @@ function BudgetRow({
             disabled={updateItem.isPending || item.rejected}
             aria-pressed={item.completed}
             className={cn(
-              "h-7 gap-1 px-2 text-xs",
+              "h-8 w-8 p-0",
               item.completed
-                ? "border-emerald-600 bg-emerald-600 text-white hover:bg-emerald-700 hover:text-white dark:border-emerald-700 dark:bg-emerald-700 dark:hover:bg-emerald-800"
-                : "text-emerald-700 hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-700 dark:text-emerald-400 dark:hover:bg-emerald-950/40",
+                ? "border-success bg-success text-white hover:bg-success-strong hover:text-white dark:border-success dark:bg-success dark:hover:bg-success-strong"
+                : "text-success hover:border-success/50 hover:bg-success-soft/50 hover:text-success-strong dark:text-success dark:hover:bg-success-soft",
             )}
             title={item.completed ? "Označit jako nedokončené" : "Označit jako hotové"}
           >
             {item.completed ? (
-              <CheckCircle2 className="h-3.5 w-3.5" />
+              <CheckCircle2 className="h-4 w-4" />
             ) : (
-              <Circle className="h-3.5 w-3.5" />
+              <Circle className="h-4 w-4" />
             )}
-            Hotovo
           </Button>
           <Button
             type="button"
@@ -1688,21 +1637,21 @@ function BudgetRow({
             disabled={updateItem.isPending}
             aria-pressed={item.rejected}
             className={cn(
-              "h-7 w-7 p-0",
+              "h-8 w-8 p-0",
               item.rejected
-                ? "border-rose-600 bg-rose-600 text-white hover:bg-rose-700 hover:text-white dark:border-rose-700 dark:bg-rose-700 dark:hover:bg-rose-800"
-                : "text-rose-600 hover:border-rose-300 hover:bg-rose-50 hover:text-rose-700 dark:text-rose-400 dark:hover:bg-rose-950/40",
+                ? "border-danger bg-danger text-white hover:bg-danger-strong hover:text-white dark:border-danger dark:bg-danger dark:hover:bg-danger-strong"
+                : "text-danger hover:border-danger/50 hover:bg-danger-soft/50 hover:text-danger-strong dark:text-danger dark:hover:bg-danger-soft",
             )}
             title={item.rejected ? "Zrušit zavržení" : "Zavrhnout položku"}
             aria-label={item.rejected ? "Zrušit zavržení" : "Zavrhnout"}
           >
-            <X className="h-3.5 w-3.5" />
+            <X className="h-4 w-4" />
           </Button>
         </div>
       </TableCell>
 
       {/* Akce */}
-      <TableCell>
+      <TableCell onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center">
           <span className="flex flex-col">
             <button
@@ -1741,13 +1690,13 @@ function BudgetRow({
               <DropdownMenuItem
                 onClick={() => update("required", !item.required)}
               >
-                <AlertTriangle className="mr-2 h-3.5 w-3.5 text-amber-500" />
+                <AlertTriangle className="mr-2 h-3.5 w-3.5 text-warning" />
                 {item.required ? "Označit jako nepovinné" : "Označit jako povinné"}
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => update("subsidyEligible", !item.subsidyEligible)}
               >
-                <HandCoins className="mr-2 h-3.5 w-3.5 text-teal-500" />
+                <HandCoins className="mr-2 h-3.5 w-3.5 text-subsidy" />
                 {item.subsidyEligible ? "Zrušit dotaci" : "Označit jako dotovatelné"}
               </DropdownMenuItem>
               <DropdownMenuItem
@@ -1849,28 +1798,14 @@ function DetailPanelRow({
           aria-hidden
           className="absolute inset-y-0 left-0 w-24 pointer-events-none"
           style={{
-            background: `linear-gradient(to right, var(--phase-color, transparent) 0%, transparent 100%)`,
-            opacity: 0.12,
-          }}
-          data-phase-color={item.rejected ? "rose" : item.phase}
-          ref={(el) => {
-            if (!el) return;
-            const colorMap: Record<string, string> = {
-              "Příprava": "#a78bfa",
-              "Demolice": "#f87171",
-              "Hrubá stavba": "#fbbf24",
-              "Zabydlování": "#34d399",
-              "Do budoucna": "#60a5fa",
-              "Neurčeno": "#a1a1aa",
-              "rose": "#f43f5e",
-            };
-            const key = el.getAttribute("data-phase-color") ?? "";
-            el.style.setProperty("--phase-color", colorMap[key] ?? "#a1a1aa");
+            background: `linear-gradient(to right, ${PHASE_CSS_VARS[item.rejected ? "rose" : item.phase] ?? PHASE_CSS_VARS.Neurčeno} 0%, transparent 100%)`,
+            opacity: 0.15,
           }}
         />
-        <div className="relative grid grid-cols-1 gap-4 pl-10 sm:grid-cols-3">
-          <div className="sm:col-span-1">
-            <div className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+        <div className="relative grid grid-cols-1 gap-4 sm:grid-cols-3">
+          {/* Column 1 (widest): Poznámka (InlineTextarea) */}
+          <div>
+            <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
               Poznámka
             </div>
             <InlineTextarea
@@ -1879,32 +1814,65 @@ function DetailPanelRow({
               placeholder="Doplňující informace, jednotkové ceny, postup…"
             />
           </div>
-          <div>
-            <div className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
-              Vůle (%)
+          {/* Column 2: Odkazy (if exist) + Vůle (%) */}
+          <div className="space-y-4">
+            {/* External hyperlinks — shown only in detail panel (hezký název).
+                Click opens in new tab. Edit happens via the edit dialog. */}
+            {item.links && item.links.length > 0 && (
+              <div>
+                <div className="mb-1 flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  <LinkIcon className="h-3 w-3" />
+                  Odkazy
+                  <span className="rounded bg-muted px-1 py-0.5 text-[11px] tabular-nums">
+                    {item.links.length}
+                  </span>
+                </div>
+                <ul className="space-y-0.5">
+                  {item.links.map((link) => (
+                    <li key={link.id}>
+                      <a
+                        href={link.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        title={link.url}
+                        className="inline-flex items-center gap-1 text-xs font-medium text-primary underline-offset-2 hover:underline"
+                      >
+                        <ExternalLink className="h-3 w-3 shrink-0 opacity-60" />
+                        {link.label}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            <div>
+              <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Vůle (%)
+              </div>
+              <InlineNumber
+                value={item.flexibilityPercent}
+                onCommit={(v) => update("flexibilityPercent", v)}
+                suffix="%"
+                className="text-left text-xs"
+              />
+              <p className="mt-1 text-xs text-muted-foreground">
+                Míra flexibility odhadu.
+              </p>
             </div>
-            <InlineNumber
-              value={item.flexibilityPercent}
-              onCommit={(v) => update("flexibilityPercent", v)}
-              suffix="%"
-              className="text-left text-xs"
-            />
-            <p className="mt-1 text-[10px] text-muted-foreground">
-              Míra flexibility odhadu.
-            </p>
           </div>
+          {/* Column 3: Ušetřeno */}
           <div>
-            <div className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+            <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
               Ušetřeno
             </div>
             <div className="rounded border bg-background px-2 py-1.5 text-xs">
               {item.completed ? (
                 saved !== null && saved > 0 ? (
-                  <span className="font-medium text-emerald-600" title="Ušetřeno od plánu">
+                  <span className="font-medium text-success" title="Ušetřeno od plánu">
                     {formatCzk(saved)}
                   </span>
                 ) : overSaved > 0 ? (
-                  <span className="font-medium text-rose-600" title="Překročeno oproti plánu">
+                  <span className="font-medium text-danger" title="Překročeno oproti plánu">
                     −{formatCzk(overSaved)}
                   </span>
                 ) : (
@@ -1919,39 +1887,10 @@ function DetailPanelRow({
                 </span>
               )}
             </div>
-            <p className="mt-1 text-[10px] text-muted-foreground">
+            <p className="mt-1 text-xs text-muted-foreground">
               Počítáno po dokončení položky.
             </p>
           </div>
-          {/* External hyperlinks — shown only in detail panel (hezký název).
-              Click opens in new tab. Edit happens via the edit dialog. */}
-          {item.links && item.links.length > 0 && (
-            <div className="sm:col-span-1">
-              <div className="mb-1 flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
-                <LinkIcon className="h-3 w-3" />
-                Odkazy
-                <span className="rounded bg-muted px-1 py-0.5 text-[9px] tabular-nums">
-                  {item.links.length}
-                </span>
-              </div>
-              <ul className="space-y-0.5">
-                {item.links.map((link) => (
-                  <li key={link.id}>
-                    <a
-                      href={link.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      title={link.url}
-                      className="inline-flex items-center gap-1 text-xs font-medium text-primary underline-offset-2 hover:underline"
-                    >
-                      <ExternalLink className="h-3 w-3 shrink-0 opacity-60" />
-                      {link.label}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
         </div>
       </TableCell>
     </TableRow>
