@@ -3,7 +3,6 @@
 import * as React from "react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ChevronDown } from "lucide-react";
-import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 
 // ============================================================
@@ -11,6 +10,8 @@ import { cn } from "@/lib/utils";
 // ------------------------------------------------------------
 // Rounded-2xl border with muted background. On desktop, sections
 // are open by default; on mobile, collapsed (to save space).
+// Uses synchronous window.innerWidth check in useState initializer
+// to avoid SSR/hydration mismatch with useIsMobile hook.
 // ============================================================
 export function CollapsibleSection({
   title,
@@ -23,8 +24,14 @@ export function CollapsibleSection({
   children: React.ReactNode;
   defaultOpen?: boolean;
 }) {
-  const isMobile = useIsMobile();
-  const isOpen = defaultOpen ?? !isMobile;
+  // Synchronous check — avoids the useIsMobile() race condition where
+  // isMobile is undefined/false on first render, causing defaultOpen
+  // to be true even on mobile.
+  const [isOpen] = React.useState(() => {
+    if (defaultOpen !== undefined) return defaultOpen;
+    if (typeof window === "undefined") return true; // SSR: assume desktop
+    return window.innerWidth >= 768; // desktop: open, mobile: closed
+  });
 
   return (
     <Collapsible defaultOpen={isOpen}>

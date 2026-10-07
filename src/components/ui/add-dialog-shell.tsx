@@ -166,7 +166,7 @@ export function AddDialogShell({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className={cn("flex max-h-[90vh] flex-col gap-0 p-0", maxWidth)}>
+      <DialogContent className={cn("flex max-h-[90vh] flex-col gap-0 p-0 sm:max-w-3xl", maxWidth)}>
         {header}
         <div className="flex-1 overflow-y-auto scrollbar-thin px-4 pb-4">
           {children}

@@ -150,10 +150,13 @@ function CollapsibleSection({
   badge?: number;
   children: React.ReactNode;
 }) {
-  const isMobile = useIsMobile();
-  // On desktop, sections are open by default; on mobile, collapsed (to save space)
+  // Synchronous check — avoids useIsMobile() race condition
+  const [isOpen] = useState(() => {
+    if (typeof window === "undefined") return true;
+    return window.innerWidth >= 768;
+  });
   return (
-    <Collapsible defaultOpen={!isMobile}>
+    <Collapsible defaultOpen={isOpen}>
       <div className="rounded-2xl border bg-muted/20">
         <CollapsibleTrigger asChild>
           <button
