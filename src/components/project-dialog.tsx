@@ -1,13 +1,12 @@
 "use client";
 
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  ResponsiveDialog,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+  ResponsiveDialogDescription,
+  ResponsiveDialogFooter,
+} from "@/components/ui/responsive-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -32,11 +31,9 @@ type Props = {
 
 export function ProjectDialog({ open, onOpenChange, project }: Props) {
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
-        {open && <ProjectForm key={project?.id ?? "new"} project={project} onDone={() => onOpenChange(false)} />}
-      </DialogContent>
-    </Dialog>
+    <ResponsiveDialog open={open} onOpenChange={onOpenChange} className="max-w-lg">
+      {open && <ProjectForm key={project?.id ?? "new"} project={project} onDone={() => onOpenChange(false)} />}
+    </ResponsiveDialog>
   );
 }
 
@@ -53,7 +50,6 @@ function ProjectForm({
   const [address, setAddress] = useState(project?.address ?? "");
   const [description, setDescription] = useState(project?.description ?? "");
   const [status, setStatus] = useState(project?.status ?? "planning");
-  const [constructionType, setConstructionType] = useState("reconstruction");
   const [startDate, setStartDate] = useState(
     project?.startDate ? project.startDate.substring(0, 10) : "",
   );
@@ -94,17 +90,17 @@ function ProjectForm({
 
   return (
     <>
-      <DialogHeader>
-        <DialogTitle>
+      <ResponsiveDialogHeader>
+        <ResponsiveDialogTitle>
           {project ? "Upravit projekt" : "Nový projekt"}
-        </DialogTitle>
-        <DialogDescription>
+        </ResponsiveDialogTitle>
+        <ResponsiveDialogDescription>
           {isEditMode
             ? "Upravte název, popis a termíny projektu."
             : "Vytvořte nový projekt pro stavbu nebo rekonstrukci domu, bytu, chalupy."}
-        </DialogDescription>
-      </DialogHeader>
-      <form onSubmit={handleSubmit} className="space-y-4">
+        </ResponsiveDialogDescription>
+      </ResponsiveDialogHeader>
+      <form onSubmit={handleSubmit} className="space-y-4 px-4 pb-4">
         <div className="space-y-2">
           <Label htmlFor="name">Název projektu *</Label>
           <Input
@@ -149,20 +145,6 @@ function ProjectForm({
               </SelectContent>
             </Select>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="type">Typ stavby</Label>
-            <Select value={constructionType} onValueChange={setConstructionType}>
-              <SelectTrigger id="type">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="reconstruction">Rekonstrukce</SelectItem>
-                <SelectItem value="new_build">Nová stavba</SelectItem>
-                <SelectItem value="extension">Přístavba</SelectItem>
-                <SelectItem value="interior">Interiér</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-2">
@@ -184,7 +166,7 @@ function ProjectForm({
             />
           </div>
         </div>
-        <DialogFooter>
+        <ResponsiveDialogFooter>
           <Button type="button" variant="outline" onClick={onDone}>
             Zrušit
           </Button>
@@ -194,7 +176,7 @@ function ProjectForm({
             )}
             {isEditMode ? "Uložit změny" : "Vytvořit projekt"}
           </Button>
-        </DialogFooter>
+        </ResponsiveDialogFooter>
       </form>
     </>
   );

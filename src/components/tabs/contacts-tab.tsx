@@ -35,6 +35,13 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
+  ResponsiveDialog,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+  ResponsiveDialogDescription,
+  ResponsiveDialogFooter,
+} from "@/components/ui/responsive-dialog";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -799,8 +806,7 @@ function ContactDialog({
   createContact?: ReturnType<typeof useCreateContact>;
 }) {
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
+    <ResponsiveDialog open={open} onOpenChange={onOpenChange} className="max-w-lg">
         {open && (
           <ContactForm
             key={contact?.id ?? "new"}
@@ -810,8 +816,7 @@ function ContactDialog({
             onDone={() => onOpenChange(false)}
           />
         )}
-      </DialogContent>
-    </Dialog>
+    </ResponsiveDialog>
   );
 }
 
@@ -893,12 +898,12 @@ function ContactForm({
 
   return (
     <>
-      <DialogHeader>
-        <DialogTitle>{contact ? "Upravit kontakt" : "Nový kontakt"}</DialogTitle>
-        <DialogDescription>
+      <ResponsiveDialogHeader>
+        <ResponsiveDialogTitle>{contact ? "Upravit kontakt" : "Nový kontakt"}</ResponsiveDialogTitle>
+        <ResponsiveDialogDescription>
           Firma, řemeslník, dodavatel, architekt nebo svépomoc.
-        </DialogDescription>
-      </DialogHeader>
+        </ResponsiveDialogDescription>
+      </ResponsiveDialogHeader>
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* ARES search — načte data firmy z registru */}
         {!contact && (
@@ -1061,7 +1066,7 @@ function ContactForm({
               rows={2}
             />
           </div>
-          <DialogFooter>
+          <ResponsiveDialogFooter>
             <Button type="button" variant="outline" onClick={onDone}>
               Zrušit
             </Button>
@@ -1074,7 +1079,7 @@ function ContactForm({
               )}
               {contact ? "Uložit" : "Přidat kontakt"}
             </Button>
-          </DialogFooter>
+          </ResponsiveDialogFooter>
         </form>
       </>
   );

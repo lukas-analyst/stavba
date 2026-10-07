@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo } from "react";
 import {
   usePayments,
   useBudgetItems,
@@ -34,6 +34,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  ResponsiveDialog,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+  ResponsiveDialogDescription,
+  ResponsiveDialogFooter,
+} from "@/components/ui/responsive-dialog";
 import {
   Select,
   SelectContent,
@@ -70,6 +77,7 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { EmptyStateBox } from "@/components/empty-state-box";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
+import { useLastValue } from "@/hooks/use-last-value";
 
 // ===== Sorting =====
 type SortKey =
@@ -150,18 +158,6 @@ export function PaymentsTab({ projectId }: { projectId: string }) {
   const debouncedSearch = useDebouncedValue(search, 250);
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [sortBy, setSortBy] = useState<SortKey>("date-desc");
-
-  // Listen for FAB "add payment" trigger (mobile contextual FAB)
-  useEffect(() => {
-    const handler = (e: Event) => {
-      const action = (e as CustomEvent<string>).detail;
-      if (action === "add-payment") {
-        setAddOpen(true);
-      }
-    };
-    window.addEventListener("stavba:fab-add", handler);
-    return () => window.removeEventListener("stavba:fab-add", handler);
-  }, []);
 
   // Group payments: standalone payments + installment groups
   // A payment is an "installment parent" if it has invoiceTotal != null (regardless of children).
@@ -339,7 +335,7 @@ export function PaymentsTab({ projectId }: { projectId: string }) {
             <div className="text-xs text-muted-foreground">
               Součet ({filteredStandalone.length + filteredGroups.length})
             </div>
-            <div className="text-lg font-bold text-warning tabular-nums">{formatCzk(totalAmount)}</div>
+            <div className="text-lg font-bold text-amber-600 tabular-nums">{formatCzk(totalAmount)}</div>
           </div>
           {/* VAT summary */}
           {(() => {
@@ -349,7 +345,7 @@ export function PaymentsTab({ projectId }: { projectId: string }) {
             return hasVat ? (
               <div className="text-right">
                 <div className="text-xs text-muted-foreground">z toho DPH</div>
-                <div className="text-sm font-semibold text-info tabular-nums">{formatCzk(totalVat)}</div>
+                <div className="text-sm font-semibold text-sky-600 tabular-nums">{formatCzk(totalVat)}</div>
               </div>
             ) : null;
           })()}
@@ -419,8 +415,8 @@ export function PaymentsTab({ projectId }: { projectId: string }) {
       ) : (
         <div className="space-y-3">
           {/* Unified payments table — standalone + installment invoices merged */}
-          <div className="overflow-x-auto scrollbar-thin rounded-lg border">
-            <Table className="min-w-[800px]">
+          <div className="overflow-hidden rounded-lg border">
+            <Table>
               <TableHeader>
                 <TableRow className="bg-muted/40 hover:bg-muted/40">
                   <TableHead className="w-28">Datum</TableHead>
@@ -483,338 +479,6 @@ export function PaymentsTab({ projectId }: { projectId: string }) {
   );
 }
 
-// ===== Installment group card =====
-function InstallmentGroupCard({
-  parent,
-  installments,
-  onDeletePayment,
-  onAddInstallment,
-  onEditPayment,
-}: {
-  parent: Payment;
-  installments: Payment[];
-  onDeletePayment: (id: string) => void;
-  onAddInstallment: (data: {
-    budgetItemId: string;
-    amount: number;
-    installmentOf: string;
-    date: string;
-    type: string;
-    description?: string;
-  }) => Promise<void>;
-  onEditPayment: (payment: Payment) => void;
-}) {
-  const [expanded, setExpanded] = useState(false);
-  const [addOpen, setAddOpen] = useState(false);
-  const [amount, setAmount] = useState("");
-  const [date, setDate] = useState(new Date().toISOString().substring(0, 10));
-  const [description, setDescription] = useState("");
-  const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
-  const [submitting, setSubmitting] = useState(false);
-
-  const invoiceTotal = parent.invoiceTotal ?? parent.amount;
-  // Parent's amount is the first installment; children are additional installments
-  const paidTotal = parent.amount + installments.reduce((s, i) => s + i.amount, 0);
-  const remaining = invoiceTotal - paidTotal;
-  const percent = invoiceTotal > 0 ? (paidTotal / invoiceTotal) * 100 : 0;
-  const t = paymentTypeLabel(parent.type);
-
-  return (
-    <div className="overflow-hidden rounded-lg border border-warning/30 bg-warning-soft/30 dark:border-warning-strong/40 dark:bg-warning-soft/40">
-      {/* Header row: invoice summary */}
-      <div
-        className="flex cursor-pointer items-center gap-3 px-4 py-3 hover:bg-warning-soft/60 dark:hover:bg-warning-soft/60"
-        onClick={() => setExpanded(!expanded)}
-        aria-expanded={expanded}
-        role="button"
-        tabIndex={0}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" || e.key === " ") {
-            e.preventDefault();
-            setExpanded(!expanded);
-          }
-        }}
-      >
-        <ChevronDown
-          className={cn(
-            "h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200",
-            !expanded && "-rotate-90",
-          )}
-        />
-        <FileText className="h-5 w-5 shrink-0 text-warning" />
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-sm font-bold">
-              {parent.budgetItem?.subcategory || parent.budgetItem?.category}
-            </span>
-            <Badge variant="outline" className="text-[10px]">
-              <Layers className="mr-1 h-2.5 w-2.5" /> Faktura ve splátkách
-              <span className="ml-1 rounded bg-muted px-1 py-0.5 text-[9px] font-semibold tabular-nums">
-                {1 + installments.length}
-              </span>
-            </Badge>
-            {parent.invoiceNumber && (
-              <Badge variant="secondary" className="text-[10px]">
-                {parent.invoiceNumber}
-              </Badge>
-            )}
-            {parent.vendor && (
-              <span className="text-[11px] text-muted-foreground">{parent.vendor}</span>
-            )}
-          </div>
-          <div className="mt-0.5 text-[11px] text-muted-foreground">
-            {parent.budgetItem?.category} · {t.emoji} {t.label} · vystavena {formatDate(parent.date)}
-          </div>
-        </div>
-        {/* Edit invoice button */}
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onEditPayment(parent);
-          }}
-          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md border bg-background text-muted-foreground hover:bg-muted hover:text-foreground"
-          title="Upravit fakturu (typ, číslo, firma…)"
-          aria-label="Upravit fakturu"
-        >
-          <Pencil className="h-3.5 w-3.5" />
-        </button>
-        <div className="flex items-center gap-4 text-xs">
-          <div className="text-right">
-            <div className="text-[10px] text-muted-foreground">Zaplaceno</div>
-            <div className="font-bold text-success">{formatCzk(paidTotal)}</div>
-          </div>
-          <div className="text-right">
-            <div className="text-[10px] text-muted-foreground">Faktura</div>
-            <div className="font-bold">{formatCzk(invoiceTotal)}</div>
-          </div>
-          <div className="text-right">
-            <div className="text-[10px] text-muted-foreground">Zbývá</div>
-            <div className={cn("font-bold", remaining > 0 ? "text-warning" : "text-success")}>
-              {formatCzk(remaining)}
-            </div>
-          </div>
-          <div className="w-24">
-            <div className="h-2 overflow-hidden rounded-full bg-muted">
-              <div
-                className={cn(
-                  "h-full rounded-full transition-all",
-                  percent >= 100 ? "bg-success" : percent >= 50 ? "bg-warning" : "bg-info",
-                )}
-                style={{ width: `${Math.min(percent, 100)}%` }}
-              />
-            </div>
-            <div className="mt-0.5 text-center text-[10px] text-muted-foreground">
-              {percent.toFixed(0)} %
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {expanded && (
-        <div className="border-t bg-card">
-          {/* Installments list */}
-          <Table>
-              <TableHeader>
-                <TableRow className="bg-muted/30 hover:bg-muted/30">
-                  <TableHead className="w-32">Datum splátky</TableHead>
-                  <TableHead className="min-w-[160px]">Popis</TableHead>
-                  <TableHead>Kontakt</TableHead>
-                  <TableHead className="text-right">Částka</TableHead>
-                  <TableHead className="w-8"></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {/* First installment = parent payment (has its own amount + invoiceTotal) */}
-                <TableRow
-                  key={parent.id}
-                  className="group cursor-pointer hover:bg-muted/30"
-                  onClick={() => onEditPayment(parent)}
-                >
-                  <TableCell className="whitespace-nowrap text-xs text-muted-foreground">
-                    <span className="mr-1.5 inline-flex h-4 w-4 items-center justify-center rounded-full bg-success-soft text-[9px] font-bold text-success-strong">
-                      1
-                    </span>
-                    {formatDate(parent.date)}
-                  </TableCell>
-                  <TableCell className="text-xs">
-                    {parent.description || "1. splátka"}
-                  </TableCell>
-                  <TableCell className="text-xs">
-                    {parent.contact?.name || "—"}
-                  </TableCell>
-                  <TableCell className="text-right text-sm font-semibold text-success">
-                    {formatCzk(parent.amount)}
-                  </TableCell>
-                  <TableCell onClick={(e) => e.stopPropagation()}>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-7 w-7 opacity-0 group-hover:opacity-100">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => onEditPayment(parent)}>
-                          <Pencil className="mr-2 h-3.5 w-3.5" /> Upravit
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          className="text-destructive focus:text-destructive"
-                          onClick={() => setConfirmDelete(parent.id)}
-                        >
-                          <Trash2 className="mr-2 h-3.5 w-3.5" /> Smazat
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-                {/* Additional installments (children) */}
-                {installments.map((inst, i) => (
-                  <TableRow
-                    key={inst.id}
-                    className="group cursor-pointer hover:bg-muted/30"
-                    onClick={() => onEditPayment(inst)}
-                  >
-                    <TableCell className="whitespace-nowrap text-xs text-muted-foreground">
-                      <span className="mr-1.5 inline-flex h-4 w-4 items-center justify-center rounded-full bg-warning-soft text-[9px] font-bold text-warning-strong">
-                        {i + 2}
-                      </span>
-                      {formatDate(inst.date)}
-                    </TableCell>
-                    <TableCell className="text-xs">
-                      {inst.description || "—"}
-                    </TableCell>
-                    <TableCell className="text-xs">
-                      {inst.contact?.name || "—"}
-                    </TableCell>
-                    <TableCell className="text-right text-sm font-semibold text-warning">
-                      {formatCzk(inst.amount)}
-                    </TableCell>
-                    <TableCell onClick={(e) => e.stopPropagation()}>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-7 w-7 opacity-0 group-hover:opacity-100">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => onEditPayment(inst)}>
-                            <Pencil className="mr-2 h-3.5 w-3.5" /> Upravit splátku
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            className="text-destructive focus:text-destructive"
-                            onClick={() => setConfirmDelete(inst.id)}
-                          >
-                            <Trash2 className="mr-2 h-3.5 w-3.5" /> Smazat splátku
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {installments.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={5} className="py-4 text-center text-xs text-muted-foreground">
-                      Žádné další splátky. Přidejte další splátku níže.
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-
-          {/* Add installment form */}
-          <div className="border-t bg-muted/20 px-4 py-3">
-            <div className="flex flex-wrap items-end gap-2">
-              <div className="space-y-1">
-                <Label htmlFor={`amt-${parent.id}`} className="text-[11px]">Částka (Kč) *</Label>
-                <Input
-                  id={`amt-${parent.id}`}
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                  placeholder={remaining > 0 ? String(remaining) : "0"}
-                  className="h-8 w-32 text-sm"
-                  inputMode="decimal"
-                />
-              </div>
-              <div className="space-y-1">
-                <Label htmlFor={`dt-${parent.id}`} className="text-[11px]">Datum *</Label>
-                <Input
-                  id={`dt-${parent.id}`}
-                  type="date"
-                  value={date}
-                  onChange={(e) => setDate(e.target.value)}
-                  className="h-8 w-36 text-sm"
-                />
-              </div>
-              <div className="space-y-1 flex-1 min-w-[160px]">
-                <Label htmlFor={`ds-${parent.id}`} className="text-[11px]">Popis</Label>
-                <Input
-                  id={`ds-${parent.id}`}
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder="např. 1. záloha"
-                  className="h-8 text-sm"
-                />
-              </div>
-              <Button
-                size="sm"
-                className="h-8"
-                disabled={!amount || Number(amount.replace(",", ".")) <= 0 || submitting}
-                onClick={async () => {
-                  const amt = Number(amount.replace(",", "."));
-                  if (!amt || amt <= 0) {
-                    toast.error("Zadejte platnou částku");
-                    return;
-                  }
-                  setSubmitting(true);
-                  try {
-                    await onAddInstallment({
-                      budgetItemId: parent.budgetItemId,
-                      amount: amt,
-                      installmentOf: parent.id,
-                      date,
-                      type: parent.type,
-                      description: description || undefined,
-                    });
-                    setAmount("");
-                    setDescription("");
-                    setDate(new Date().toISOString().substring(0, 10));
-                  } finally {
-                    setSubmitting(false);
-                  }
-                }}
-              >
-                {submitting && <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" />}
-                <Plus className="mr-1 h-3.5 w-3.5" /> Přidat splátku
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      <Dialog open={!!confirmDelete} onOpenChange={(o) => !o && setConfirmDelete(null)}>
-        <DialogContent className="max-w-sm">
-          <DialogHeader>
-            <DialogTitle>Smazat splátku?</DialogTitle>
-            <DialogDescription>
-              Opravdu chcete smazat tuto splátku?
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setConfirmDelete(null)}>Zrušit</Button>
-            <Button
-              variant="destructive"
-              onClick={() => {
-                if (confirmDelete) onDeletePayment(confirmDelete);
-                setConfirmDelete(null);
-              }}
-            >
-              Smazat
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </div>
-  );
-}
 
 // ===== Unified payment row (standalone + installment parent + installment child) =====
 type RowMeta = {
@@ -852,7 +516,7 @@ function PaymentRow({
     <TableRow
       className={cn(
         "group cursor-pointer hover:bg-muted/30",
-        isParent && "bg-warning-soft/30 dark:bg-warning-soft/40",
+        isParent && "bg-amber-50/30 dark:bg-amber-950/10",
       )}
       onClick={() => onEdit()}
       title="Klikněte pro úpravu platby"
@@ -863,8 +527,8 @@ function PaymentRow({
             className={cn(
               "mr-1.5 inline-flex h-4 w-4 items-center justify-center rounded-full text-[9px] font-bold",
               isParent
-                ? "bg-success-soft text-success-strong dark:bg-success-soft dark:text-success-strong"
-                : "bg-warning-soft text-warning-strong dark:bg-warning-soft dark:text-warning-strong",
+                ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300"
+                : "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300",
             )}
           >
             {installmentNumber}
@@ -880,7 +544,7 @@ function PaymentRow({
           {hasInstallment && (
             <Badge
               variant="outline"
-              className="gap-0.5 text-[9px] text-warning-strong dark:text-warning-strong"
+              className="gap-0.5 text-[9px] text-amber-700 dark:text-amber-300"
               title={
                 meta?.invoiceTotal != null
                   ? `Faktura ve splátkách: ${formatCzk(meta.invoiceTotal)} — zaplaceno ${formatCzk(meta.paidTotal)} (${meta.percent.toFixed(0)} %), zbývá ${formatCzk(meta.remaining)}`
@@ -920,7 +584,7 @@ function PaymentRow({
       </TableCell>
       <TableCell className="text-right">
         <div className="flex flex-col items-end">
-          <span className="text-sm font-semibold text-warning tabular-nums">
+          <span className="text-sm font-semibold text-amber-600 tabular-nums">
             {formatCzk(payment.amount)}
           </span>
           {isParent && meta?.invoiceTotal != null && (
@@ -997,16 +661,14 @@ interface PaymentDialogProps {
 function PaymentDialog(props: PaymentDialogProps) {
   const { open, onOpenChange, payment } = props;
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
-        {open && (
-          <PaymentDialogInner
-            key={payment?.id ?? "new"}
-            {...props}
-          />
-        )}
-      </DialogContent>
-    </Dialog>
+    <ResponsiveDialog open={open} onOpenChange={onOpenChange} className="max-w-lg">
+      {open && (
+        <PaymentDialogInner
+          key={payment?.id ?? "new"}
+          {...props}
+        />
+      )}
+    </ResponsiveDialog>
   );
 }
 
@@ -1025,12 +687,17 @@ function PaymentDialogInner({
   const isInstallment = !!payment?.installmentOf;
   const today = new Date().toISOString().substring(0, 10);
 
+  // Smart defaults: remember last used values per project (only for create flow)
+  const [lastType, setLastType] = useLastValue("paymentType", "receipt", projectId);
+  const [lastContactId, setLastContactId] = useLastValue("contactId", "", projectId);
+  const [lastVendor, setLastVendor] = useLastValue("vendor", "", projectId);
+
   const [budgetItemId, setBudgetItemId] = useState(payment?.budgetItemId ?? "");
-  const [contactId, setContactId] = useState(payment?.contactId ?? "");
+  const [contactId, setContactId] = useState(payment?.contactId ?? lastContactId);
   const [amount, setAmount] = useState(payment ? String(payment.amount ?? "") : "");
   const [date, setDate] = useState(toDateStr(payment?.date) || today);
-  const [type, setType] = useState(payment?.type ?? "receipt");
-  const [vendor, setVendor] = useState(payment?.vendor ?? "");
+  const [type, setType] = useState(payment?.type ?? lastType);
+  const [vendor, setVendor] = useState(payment?.vendor ?? lastVendor);
   const [invoiceNumber, setInvoiceNumber] = useState(payment?.invoiceNumber ?? "");
   const [description, setDescription] = useState(payment?.description ?? "");
   const [vatRate, setVatRate] = useState(
@@ -1040,6 +707,9 @@ function PaymentDialogInner({
   const [isInvoice, setIsInvoice] = useState(false);
   const [invoiceTotal, setInvoiceTotal] = useState("");
   const [markCompleted, setMarkCompleted] = useState(false);
+
+  // Inline validation errors
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const isPending = isEdit ? (updatePayment?.isPending ?? false) : createPayment.isPending;
 
@@ -1059,17 +729,18 @@ function PaymentDialogInner({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!budgetItemId) {
-      toast.error("Vyberte položku rozpočtu");
-      return;
+    const newErrors: Record<string, string> = {};
+    if (!budgetItemId) newErrors.budgetItemId = "Vyberte položku rozpočtu";
+    if (isInvoice && (!invoiceTotal || isNaN(Number(invoiceTotal.replace(",", "."))))) {
+      newErrors.invoiceTotal = "Zadejte platnou celkovou částku faktury";
     }
+    if (!isInvoice && (!amount || isNaN(Number(amount.replace(",", "."))))) {
+      newErrors.amount = "Zadejte platnou částku";
+    }
+    setErrors(newErrors);
+    if (Object.keys(newErrors).length > 0) return;
+
     const amt = Number(amount.replace(",", "."));
-    // Allow amount=0 only when editing an installment parent (has invoiceTotal and no installmentOf)
-    const isInstallmentParent = isEdit && payment?.invoiceTotal != null && payment?.installmentOf == null;
-    if ((!amt || amt <= 0) && !isInstallmentParent) {
-      toast.error("Zadejte platnou částku");
-      return;
-    }
 
     try {
       if (isEdit && payment && updatePayment) {
@@ -1105,10 +776,6 @@ function PaymentDialogInner({
       // Create flow
       if (isInvoice) {
         const inv = Number(invoiceTotal.replace(",", "."));
-        if (!inv || inv <= 0) {
-          toast.error("Zadejte platnou celkovou částku faktury");
-          return;
-        }
         // Create ONE payment that IS the first installment + has invoiceTotal
         // Additional installments can be added later with installmentOf = this payment
         await createPayment.mutateAsync({
@@ -1157,6 +824,11 @@ function PaymentDialogInner({
           toast.success("Platba přidána");
         }
       }
+      // Save smart defaults (only on create — edit flow returns earlier above)
+      setLastType(type);
+      setLastContactId(contactId);
+      setLastVendor(vendor);
+      setErrors({});
       resetForm();
       onOpenChange(false);
       onClose?.();
@@ -1171,20 +843,20 @@ function PaymentDialogInner({
 
   return (
     <>
-      <DialogHeader>
-        <DialogTitle>
+      <ResponsiveDialogHeader>
+        <ResponsiveDialogTitle>
           {isEdit
             ? isInstallment
               ? "Upravit splátku"
               : "Upravit platbu"
             : "Nová platba"}
-        </DialogTitle>
-        <DialogDescription>
+        </ResponsiveDialogTitle>
+        <ResponsiveDialogDescription>
           {isEdit
             ? "Upravte údaje o platbě. Změny se propíší do statistik položky rozpočtu."
             : "Zaznamenejte platbu - účtenku, fakturu nebo výplatu za práci."}
-        </DialogDescription>
-      </DialogHeader>
+        </ResponsiveDialogDescription>
+      </ResponsiveDialogHeader>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor="budgetItem">Položka rozpočtu *</Label>
@@ -1196,11 +868,23 @@ function PaymentDialogInner({
               hint: b.category,
             }))}
             value={budgetItemId}
-            onChange={setBudgetItemId}
+            onChange={(v) => {
+              setBudgetItemId(v);
+              if (errors.budgetItemId)
+                setErrors((prev) => {
+                  const n = { ...prev };
+                  delete n.budgetItemId;
+                  return n;
+                });
+            }}
             placeholder="Vyberte položku…"
             searchPlaceholder="Hledat položku…"
             emptyText="Žádné položky nenalezeny"
+            className={cn(errors.budgetItemId && "border-destructive")}
           />
+          {errors.budgetItemId && (
+            <p className="text-xs text-destructive mt-1">{errors.budgetItemId}</p>
+          )}
         </div>
 
         {/* Installment toggle - only in create mode (not editing existing payments) */}
@@ -1225,10 +909,22 @@ function PaymentDialogInner({
               <Input
                 id="invoiceTotal"
                 value={invoiceTotal}
-                onChange={(e) => setInvoiceTotal(e.target.value)}
+                onChange={(e) => {
+                  setInvoiceTotal(e.target.value);
+                  if (errors.invoiceTotal)
+                    setErrors((prev) => {
+                      const n = { ...prev };
+                      delete n.invoiceTotal;
+                      return n;
+                    });
+                }}
                 placeholder="150000"
                 inputMode="decimal"
+                className={cn(errors.invoiceTotal && "border-destructive")}
               />
+              {errors.invoiceTotal && (
+                <p className="text-xs text-destructive mt-1">{errors.invoiceTotal}</p>
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="amount">1. splátka (Kč) *</Label>
@@ -1248,10 +944,22 @@ function PaymentDialogInner({
               <Input
                 id="amount"
                 value={amount}
-                onChange={(e) => setAmount(e.target.value)}
+                onChange={(e) => {
+                  setAmount(e.target.value);
+                  if (errors.amount)
+                    setErrors((prev) => {
+                      const n = { ...prev };
+                      delete n.amount;
+                      return n;
+                    });
+                }}
                 placeholder="25000"
                 inputMode="decimal"
+                className={cn(errors.amount && "border-destructive")}
               />
+              {errors.amount && (
+                <p className="text-xs text-destructive mt-1">{errors.amount}</p>
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="date">Datum *</Label>
@@ -1388,7 +1096,7 @@ function PaymentDialogInner({
         </div>
 
         {/* Hotovo checkbox - propojí platbu s dokončením budget item */}
-        <div className="flex flex-col gap-1 rounded-md border border-warning/30 bg-warning-soft/50 p-3 dark:border-warning-strong/60 dark:bg-warning-soft/60">
+        <div className="flex flex-col gap-1 rounded-md border border-amber-200 bg-amber-50/50 p-3 dark:border-amber-900/60 dark:bg-amber-950/20">
           <div className="flex items-start gap-2">
             <Checkbox
               id="markCompleted"
@@ -1407,7 +1115,7 @@ function PaymentDialogInner({
           </p>
         </div>
 
-        <DialogFooter>
+        <ResponsiveDialogFooter>
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
             Zrušit
           </Button>
@@ -1419,10 +1127,10 @@ function PaymentDialogInner({
                 ? "Vytvořit fakturu"
                 : "Přidat platbu"}
             {markCompleted && !isPending && (
-              <CheckCircle2 className="ml-1.5 h-4 w-4 text-warning" />
+              <CheckCircle2 className="ml-1.5 h-4 w-4 text-amber-500" />
             )}
           </Button>
-        </DialogFooter>
+        </ResponsiveDialogFooter>
       </form>
     </>
   );

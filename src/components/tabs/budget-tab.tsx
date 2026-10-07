@@ -680,6 +680,13 @@ function BudgetTab({ projectId, dragEndHandlerRef }: { projectId: string; dragEn
             </button>
           ))}
         </div>
+        <Button
+          size="sm"
+          onClick={() => setAddOpen(true)}
+          className="h-9 gap-1.5"
+        >
+          <Plus className="mr-1 h-4 w-4" /> Přidat položku
+        </Button>
       </div>
 
       {/* Budget table grouped by category — wrapped in SortableContext for category DnD */}

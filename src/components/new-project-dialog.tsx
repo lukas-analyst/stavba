@@ -9,6 +9,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  ResponsiveDialog,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+  ResponsiveDialogDescription,
+  ResponsiveDialogFooter,
+} from "@/components/ui/responsive-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -234,14 +241,13 @@ export function NewProjectDialog({ open, onOpenChange }: Props) {
     !isSubmitting;
 
   return (
-    <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Nový projekt</DialogTitle>
-          <DialogDescription>
-            Vyberte, jak chcete projekt vytvořit.
-          </DialogDescription>
-        </DialogHeader>
+    <ResponsiveDialog open={open} onOpenChange={handleClose} className="max-w-2xl">
+      <ResponsiveDialogHeader>
+        <ResponsiveDialogTitle>Nový projekt</ResponsiveDialogTitle>
+        <ResponsiveDialogDescription>
+          Vyberte, jak chcete projekt vytvořit.
+        </ResponsiveDialogDescription>
+      </ResponsiveDialogHeader>
 
         <div className="space-y-5">
           {/* ===== Mode selection (3 cards) ===== */}
@@ -479,7 +485,7 @@ export function NewProjectDialog({ open, onOpenChange }: Props) {
           )}
         </div>
 
-        <DialogFooter>
+        <ResponsiveDialogFooter>
           <Button variant="outline" onClick={() => handleClose(false)}>
             Zrušit
           </Button>
@@ -494,8 +500,7 @@ export function NewProjectDialog({ open, onOpenChange }: Props) {
               {mode === "copy" && "Zkopírovat projekt"}
             </Button>
           )}
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </ResponsiveDialogFooter>
+    </ResponsiveDialog>
   );
 }

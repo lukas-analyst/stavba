@@ -2,13 +2,17 @@
 
 import { useState, useMemo } from "react";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  ResponsiveDialog,
+  ResponsiveDialogDescription,
+  ResponsiveDialogFooter,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+} from "@/components/ui/responsive-dialog";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -28,7 +32,19 @@ import {
   type BudgetItem,
   type BudgetItemLink,
 } from "@/lib/api";
-import { Loader2, AlertTriangle, CheckCircle2, Circle, X, HandCoins, Link as LinkIcon, Plus, ExternalLink, Trash2 } from "lucide-react";
+import {
+  ChevronDown,
+  Loader2,
+  AlertTriangle,
+  CheckCircle2,
+  Circle,
+  X,
+  HandCoins,
+  Link as LinkIcon,
+  Plus,
+  ExternalLink,
+  Trash2,
+} from "lucide-react";
 import { toast } from "sonner";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import { cn } from "@/lib/utils";
@@ -66,25 +82,23 @@ export function BudgetItemDialog({
   onSubmitted,
 }: Props) {
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
-        {open && (
-          <BudgetItemForm
-            key={item?.id ?? parentId ?? "new"}
-            projectId={projectId}
-            item={item}
-            parentId={parentId}
-            defaultCategory={defaultCategory}
-            defaultPhase={defaultPhase}
-            parentItemName={parentItemName}
-            defaultDateFrom={defaultDateFrom}
-            defaultDateTo={defaultDateTo}
-            onDone={() => onOpenChange(false)}
-            onSubmitted={onSubmitted}
-          />
-        )}
-      </DialogContent>
-    </Dialog>
+    <ResponsiveDialog open={open} onOpenChange={onOpenChange} className="max-w-2xl">
+      {open && (
+        <BudgetItemForm
+          key={item?.id ?? parentId ?? "new"}
+          projectId={projectId}
+          item={item}
+          parentId={parentId}
+          defaultCategory={defaultCategory}
+          defaultPhase={defaultPhase}
+          parentItemName={parentItemName}
+          defaultDateFrom={defaultDateFrom}
+          defaultDateTo={defaultDateTo}
+          onDone={() => onOpenChange(false)}
+          onSubmitted={onSubmitted}
+        />
+      )}
+    </ResponsiveDialog>
   );
 }
 
@@ -238,10 +252,6 @@ function BudgetItemForm({
       const data: Partial<BudgetItem> = {
         category: finalCategory,
         subcategory: subcategory.trim() || null,
-        // The `element` field is no longer used in the UI — Položky don't have
-        // it, and Úkoly use `subcategory` as their name. Always null it out
-        // to keep the database consistent.
-        element: null,
         phase,
         required,
         completed,
@@ -294,8 +304,8 @@ function BudgetItemForm({
 
   return (
     <>
-      <DialogHeader>
-        <DialogTitle>
+      <ResponsiveDialogHeader>
+        <ResponsiveDialogTitle>
           {isTaskMode
             ? item
               ? "Upravit úkol"
@@ -303,439 +313,634 @@ function BudgetItemForm({
             : item
               ? "Upravit položku"
               : "Nová položka"}
-        </DialogTitle>
-        <DialogDescription>
+        </ResponsiveDialogTitle>
+        <ResponsiveDialogDescription>
           {isTaskMode
             ? `Úkol pod položkou „${parentName}"`
             : "Přidejte novou položku do rozpočtu projektu."}
-        </DialogDescription>
-      </DialogHeader>
+        </ResponsiveDialogDescription>
+      </ResponsiveDialogHeader>
       <form onSubmit={handleSubmit} className="space-y-4">
         {isTaskMode ? (
-          // ===== Task mode: only the task name (subcategory) =====
-          <div className="space-y-2">
-            <Label htmlFor="subcategory">Název úkolu *</Label>
-            <Input
-              id="subcategory"
-              value={subcategory}
-              onChange={(e) => setSubcategory(e.target.value)}
-              placeholder="např. Vyklízení sklepa"
-              list="existing-subcategories"
-              autoFocus
-            />
-            <datalist id="existing-subcategories">
-              {existingSubcategories.map((s) => (
-                <option key={s} value={s} />
-              ))}
-            </datalist>
-          </div>
-        ) : (
-          // ===== Item mode: category + subcategory (název položky) =====
-          <div className="grid grid-cols-2 gap-3">
+          // ===== Task mode: flat layout, no collapsible sections =====
+          <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="category">Kategorie *</Label>
-              {!isCustomCat ? (
-                <Select value={category} onValueChange={setCategory}>
-                  <SelectTrigger id="category">
-                    <SelectValue placeholder="Vyberte kategorii" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {existingCategories.map((c) => (
-                      <SelectItem key={c} value={c}>
-                        {c}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              ) : (
-                <Input
-                  value={customCategory}
-                  onChange={(e) => setCustomCategory(e.target.value)}
-                  placeholder="Nová kategorie"
-                  autoFocus
-                />
-              )}
-              <Button
-                type="button"
-                variant="link"
-                size="sm"
-                className="h-auto p-0 text-xs"
-                onClick={() => setIsCustomCat(!isCustomCat)}
-              >
-                {isCustomCat ? "Vybrat existující" : "+ Vytvořit novou kategorii"}
-              </Button>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="subcategory">Název položky</Label>
-              {/* Use datalist to allow free typing + autocomplete from existing subcategories */}
+              <Label htmlFor="subcategory">Název úkolu *</Label>
               <Input
                 id="subcategory"
                 value={subcategory}
                 onChange={(e) => setSubcategory(e.target.value)}
-                placeholder="např. Hydroizolace - projekt"
+                placeholder="např. Vyklízení sklepa"
                 list="existing-subcategories"
+                autoFocus
               />
               <datalist id="existing-subcategories">
                 {existingSubcategories.map((s) => (
                   <option key={s} value={s} />
                 ))}
               </datalist>
-              {existingSubcategories.length > 0 && (
-                <p className="text-[10px] text-muted-foreground">
-                  {existingSubcategories.length} existujících podkategorií v této kategorii —
-                  začněte psát pro návrhy.
-                </p>
+            </div>
+
+            {/* Hotovo + Zavrženo + Dotace as toggle buttons */}
+            <div className="space-y-2">
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setCompleted(!completed)}
+                  className={cn(
+                    "flex items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-medium transition-all",
+                    completed
+                      ? "border-emerald-500 bg-emerald-50 text-emerald-700 dark:border-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300"
+                      : "border-border text-muted-foreground hover:border-emerald-300 hover:bg-emerald-50/50 dark:hover:border-emerald-800",
+                  )}
+                >
+                  {completed ? <CheckCircle2 className="h-3.5 w-3.5" /> : <Circle className="h-3.5 w-3.5" />}
+                  Hotovo
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setRejected(!rejected)}
+                  className={cn(
+                    "flex items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-medium transition-all",
+                    rejected
+                      ? "border-rose-500 bg-rose-50 text-rose-700 dark:border-rose-700 dark:bg-rose-950/40 dark:text-rose-300"
+                      : "border-border text-muted-foreground hover:border-rose-300 hover:bg-rose-50/50 dark:hover:border-rose-800",
+                  )}
+                >
+                  <X className="h-3.5 w-3.5" />
+                  Zavrženo
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSubsidyEligible(!subsidyEligible)}
+                  className={cn(
+                    "flex items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-medium transition-all",
+                    subsidyEligible
+                      ? "border-teal-500 bg-teal-50 text-teal-700 dark:border-teal-600 dark:bg-teal-950/40 dark:text-teal-300"
+                      : "border-border text-muted-foreground hover:border-teal-300 hover:bg-teal-50/50 dark:hover:border-teal-800",
+                  )}
+                  title="Dotace — pro tento úkol lze čerpat dotaci"
+                >
+                  <HandCoins className="h-3.5 w-3.5" />
+                  Dotace
+                </button>
+              </div>
+              {subsidyEligible && (
+                <div className="flex items-center gap-2">
+                  <Label htmlFor="subsidyAmountTask" className="text-[11px] text-muted-foreground">
+                    Částka dotace (Kč)
+                  </Label>
+                  <Input
+                    id="subsidyAmountTask"
+                    type="number"
+                    inputMode="decimal"
+                    step="any"
+                    min="0"
+                    value={subsidyAmount}
+                    onChange={(e) => setSubsidyAmount(e.target.value)}
+                    placeholder="např. 15000"
+                    className="h-8 w-40 text-xs"
+                  />
+                  <span className="text-[10px] text-muted-foreground">
+                    Odhadovaná výše dotace pro tento úkol.
+                  </span>
+                </div>
               )}
             </div>
-          </div>
-        )}
 
-        {isTaskMode ? (
-          // ===== Task mode: Hotovo + Zavrženo + Dotace as toggle buttons =====
-          <div className="space-y-2">
-            <div className="flex flex-wrap items-center gap-2">
-              <button
-                type="button"
-                onClick={() => setCompleted(!completed)}
-                className={cn(
-                  "flex items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-medium transition-all",
-                  completed
-                    ? "border-success bg-success-soft/50 text-success-strong dark:border-success-strong dark:bg-success-soft/80 dark:text-success-strong"
-                    : "border-border text-muted-foreground hover:border-success/50 hover:bg-success-soft/50/50 dark:hover:border-success-strong",
-                )}
-              >
-                {completed ? <CheckCircle2 className="h-3.5 w-3.5" /> : <Circle className="h-3.5 w-3.5" />}
-                Hotovo
-              </button>
-              <button
-                type="button"
-                onClick={() => setRejected(!rejected)}
-                className={cn(
-                  "flex items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-medium transition-all",
-                  rejected
-                    ? "border-danger bg-danger-soft/50 text-danger-strong dark:border-danger-strong dark:bg-danger-soft/80 dark:text-danger-strong"
-                    : "border-border text-muted-foreground hover:border-danger/50 hover:bg-danger-soft/50 dark:hover:border-danger-strong",
-                )}
-              >
-                <X className="h-3.5 w-3.5" />
-                Zavrženo
-              </button>
-              <button
-                type="button"
-                onClick={() => setSubsidyEligible(!subsidyEligible)}
-                className={cn(
-                  "flex items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-medium transition-all",
-                  subsidyEligible
-                    ? "border-subsidy bg-subsidy-soft/50 text-subsidy-strong dark:border-subsidy dark:bg-subsidy-soft/80 dark:text-subsidy-strong"
-                    : "border-border text-muted-foreground hover:border-subsidy/50 hover:bg-subsidy-soft/50 dark:hover:border-subsidy-strong",
-                )}
-                title="Dotace — pro tento úkol lze čerpat dotaci"
-              >
-                <HandCoins className="h-3.5 w-3.5" />
-                Dotace
-              </button>
+            <div className="space-y-2">
+              <Label htmlFor="note">Poznámka</Label>
+              <Textarea
+                id="note"
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+                placeholder="Doplňující informace, jednotkové ceny, postup…"
+                rows={2}
+              />
             </div>
-            {subsidyEligible && (
-              <div className="flex items-center gap-2">
-                <Label htmlFor="subsidyAmountTask" className="text-[11px] text-muted-foreground">
-                  Částka dotace (Kč)
-                </Label>
+
+            <div className="grid grid-cols-3 gap-3">
+              <div className="space-y-2">
+                <Label htmlFor="planCost">Plán (Kč)</Label>
                 <Input
-                  id="subsidyAmountTask"
-                  type="number"
+                  id="planCost"
+                  value={planCost}
+                  onChange={(e) => setPlanCost(e.target.value)}
+                  placeholder="25000"
                   inputMode="decimal"
-                  step="any"
-                  min="0"
-                  value={subsidyAmount}
-                  onChange={(e) => setSubsidyAmount(e.target.value)}
-                  placeholder="např. 15000"
-                  className="h-8 w-40 text-xs"
                 />
-                <span className="text-[10px] text-muted-foreground">
-                  Odhadovaná výše dotace pro tento úkol.
-                </span>
               </div>
-            )}
+              <div className="space-y-2">
+                <Label htmlFor="flexibility">Vůle (%)</Label>
+                <Input
+                  id="flexibility"
+                  value={flexibility}
+                  onChange={(e) => setFlexibility(e.target.value)}
+                  placeholder="50"
+                  inputMode="decimal"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="planDays">Plán (dní)</Label>
+                <Input
+                  id="planDays"
+                  value={planDays}
+                  onChange={(e) => setPlanDays(e.target.value)}
+                  placeholder="21"
+                  inputMode="decimal"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label htmlFor="dateFrom">Datum od</Label>
+                <Input
+                  id="dateFrom"
+                  type="date"
+                  value={dateFrom}
+                  onChange={(e) => setDateFrom(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="dateTo">Datum do</Label>
+                <Input
+                  id="dateTo"
+                  type="date"
+                  value={dateTo}
+                  onChange={(e) => setDateTo(e.target.value)}
+                />
+              </div>
+            </div>
+
+            {/* External hyperlinks */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label className="flex items-center gap-1.5 text-xs">
+                  <LinkIcon className="h-3.5 w-3.5 text-muted-foreground" />
+                  Odkazy
+                  {links.length > 0 && (
+                    <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-semibold tabular-nums text-muted-foreground">
+                      {links.length}
+                    </span>
+                  )}
+                </Label>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-7 gap-1 px-2 text-[11px]"
+                  onClick={() => setLinks((prev) => [...prev, { id: undefined, label: "", url: "" }])}
+                >
+                  <Plus className="h-3 w-3" /> Přidat odkaz
+                </Button>
+              </div>
+              {links.length === 0 ? (
+                <p className="text-[11px] text-muted-foreground">
+                  Žádné odkazy. Přidejte např. odkaz na výrobce, dokumentaci, e-shop…
+                </p>
+              ) : (
+                <div className="space-y-1.5">
+                  {links.map((link, idx) => (
+                    <div
+                      key={link.id ?? `new-${idx}`}
+                      className="flex flex-wrap items-center gap-1.5 rounded-md border bg-card/50 p-1.5"
+                    >
+                      <Input
+                        value={link.label}
+                        onChange={(e) =>
+                          setLinks((prev) =>
+                            prev.map((l, i) => (i === idx ? { ...l, label: e.target.value } : l)),
+                          )
+                        }
+                        placeholder="Hezký název (např. Výrobce)"
+                        className="h-7 flex-1 min-w-[120px] text-xs"
+                      />
+                      <div className="relative flex-1 min-w-[140px]">
+                        <Input
+                          value={link.url}
+                          onChange={(e) =>
+                            setLinks((prev) =>
+                              prev.map((l, i) => (i === idx ? { ...l, url: e.target.value } : l)),
+                            )
+                          }
+                          placeholder="https://…"
+                          className="h-7 pr-7 text-xs"
+                          inputMode="url"
+                        />
+                        {link.url.trim() !== "" && (
+                          <a
+                            href={link.url.trim()}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                            title="Otevřít odkaz v novém okně"
+                            className="absolute right-1.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                          >
+                            <ExternalLink className="h-3.5 w-3.5" />
+                          </a>
+                        )}
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 shrink-0 text-muted-foreground hover:text-destructive"
+                        onClick={() => setLinks((prev) => prev.filter((_, i) => i !== idx))}
+                        title="Smazat odkaz"
+                        aria-label="Smazat odkaz"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <p className="text-[10px] text-muted-foreground">
+                Odkazy se zobrazí pouze po rozkliknutí detailu položky/úkolu.
+                Hezký název bude vidět v přehledu, URL se otevírá v novém okně.
+              </p>
+            </div>
           </div>
         ) : (
-          // ===== Item mode: Fáze + Nutné/Hotovo/Zavrženo =====
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-2">
-              <Label htmlFor="phase">Fáze</Label>
-              <Select value={phase} onValueChange={setPhase}>
-                <SelectTrigger id="phase">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {PHASES.map((p) => (
-                    <SelectItem key={p} value={p}>
-                      {p}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex flex-wrap items-center gap-2 pb-1">
-              <button
-                type="button"
-                onClick={() => setRequired(!required)}
-                className={cn(
-                  "flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[11px] font-medium transition-all",
-                  required
-                    ? "border-warning bg-warning-soft/50 text-warning-strong dark:border-warning-strong dark:bg-warning-soft/80 dark:text-warning-strong"
-                    : "border-border text-muted-foreground hover:border-warning/50 hover:bg-warning-soft/50/50 dark:hover:border-warning-strong",
-                )}
-                title="Nutné — položka je povinná pro dokončení projektu"
-              >
-                <AlertTriangle className="h-3 w-3" />
-                Nutné
-              </button>
-              <button
-                type="button"
-                onClick={() => setCompleted(!completed)}
-                className={cn(
-                  "flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[11px] font-medium transition-all",
-                  completed
-                    ? "border-success bg-success-soft/50 text-success-strong dark:border-success-strong dark:bg-success-soft/80 dark:text-success-strong"
-                    : "border-border text-muted-foreground hover:border-success/50 hover:bg-success-soft/50/50 dark:hover:border-success-strong",
-                )}
-              >
-                {completed ? <CheckCircle2 className="h-3 w-3" /> : <Circle className="h-3 w-3" />}
-                Hotovo
-              </button>
-              <button
-                type="button"
-                onClick={() => setRejected(!rejected)}
-                className={cn(
-                  "flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[11px] font-medium transition-all",
-                  rejected
-                    ? "border-danger bg-danger-soft/50 text-danger-strong dark:border-danger-strong dark:bg-danger-soft/80 dark:text-danger-strong"
-                    : "border-border text-muted-foreground hover:border-danger/50 hover:bg-danger-soft/50 dark:hover:border-danger-strong",
-                )}
-              >
-                <X className="h-3 w-3" />
-                Zavrženo
-              </button>
-              <button
-                type="button"
-                onClick={() => setSubsidyEligible(!subsidyEligible)}
-                className={cn(
-                  "flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[11px] font-medium transition-all",
-                  subsidyEligible
-                    ? "border-subsidy bg-subsidy-soft/50 text-subsidy-strong dark:border-subsidy dark:bg-subsidy-soft/80 dark:text-subsidy-strong"
-                    : "border-border text-muted-foreground hover:border-subsidy/50 hover:bg-subsidy-soft/50 dark:hover:border-subsidy-strong",
-                )}
-                title="Dotace — pro tuto položku/úkol lze čerpat dotaci"
-              >
-                <HandCoins className="h-3 w-3" />
-                Dotace
-              </button>
-            </div>
-            {subsidyEligible && (
-              <div className="flex items-center gap-2 pb-1">
-                <Label htmlFor="subsidyAmount" className="text-[11px] text-muted-foreground">
-                  Částka dotace (Kč)
-                </Label>
-                <Input
-                  id="subsidyAmount"
-                  type="number"
-                  inputMode="decimal"
-                  step="any"
-                  min="0"
-                  value={subsidyAmount}
-                  onChange={(e) => setSubsidyAmount(e.target.value)}
-                  placeholder="např. 15000"
-                  className="h-8 w-40 text-xs"
-                />
-                <span className="text-[10px] text-muted-foreground">
-                  Odhadovaná výše dotace, kterou lze na tuto položku získat.
-                </span>
-              </div>
-            )}
-          </div>
-        )}
-
-        <div className="space-y-2">
-          <Label htmlFor="note">Poznámka</Label>
-          <Textarea
-            id="note"
-            value={note}
-            onChange={(e) => setNote(e.target.value)}
-            placeholder="Doplňující informace, jednotkové ceny, postup…"
-            rows={2}
-          />
-        </div>
-
-        <div className="grid grid-cols-3 gap-3">
-          <div className="space-y-2">
-            <Label htmlFor="planCost">Plán (Kč)</Label>
-            <Input
-              id="planCost"
-              value={planCost}
-              onChange={(e) => setPlanCost(e.target.value)}
-              placeholder="25000"
-              inputMode="decimal"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="flexibility">Vůle (%)</Label>
-            <Input
-              id="flexibility"
-              value={flexibility}
-              onChange={(e) => setFlexibility(e.target.value)}
-              placeholder="50"
-              inputMode="decimal"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="planDays">Plán (dní)</Label>
-            <Input
-              id="planDays"
-              value={planDays}
-              onChange={(e) => setPlanDays(e.target.value)}
-              placeholder="21"
-              inputMode="decimal"
-            />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-3">
-          <div className="space-y-2">
-            <Label htmlFor="dateFrom">Datum od</Label>
-            <Input
-              id="dateFrom"
-              type="date"
-              value={dateFrom}
-              onChange={(e) => setDateFrom(e.target.value)}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="dateTo">Datum do</Label>
-            <Input
-              id="dateTo"
-              type="date"
-              value={dateTo}
-              onChange={(e) => setDateTo(e.target.value)}
-            />
-          </div>
-        </div>
-
-        {!isTaskMode && (
-          <div className="space-y-2">
-            <Label htmlFor="dependsOn">Navazuje na</Label>
-            <SearchableSelect
-              id="dependsOn"
-              options={[
-                { value: "__none__", label: "— žádná závislost —", hint: "" },
-                ...dependsOnOptions.map((i) => ({
-                  value: i.id,
-                  label: i.subcategory || i.category,
-                  hint: `${i.category}${i.dateTo ? ` · do ${i.dateTo.substring(0, 10)}` : ""}`,
-                })),
-              ]}
-              value={dependsOnId}
-              onChange={(v) => handleDependsOnChange(v)}
-              placeholder="— žádná závislost —"
-              searchPlaceholder="Hledat položku…"
-              emptyText="Žádné položky nenalezeny"
-            />
-            <p className="text-[10px] text-muted-foreground">
-              Při výběru se Datum od automaticky doplní z Datum do vybrané položky.
-            </p>
-          </div>
-        )}
-
-        {/* External hyperlinks — shown in detail dialog only.
-            Each link: label (hezký název) + url. Clickable opens in new tab. */}
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <Label className="flex items-center gap-1.5 text-xs">
-              <LinkIcon className="h-3.5 w-3.5 text-muted-foreground" />
-              Odkazy
-              {links.length > 0 && (
-                <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-semibold tabular-nums text-muted-foreground">
-                  {links.length}
-                </span>
-              )}
-            </Label>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="h-7 gap-1 px-2 text-[11px]"
-              onClick={() => setLinks((prev) => [...prev, { id: undefined, label: "", url: "" }])}
-            >
-              <Plus className="h-3 w-3" /> Přidat odkaz
-            </Button>
-          </div>
-          {links.length === 0 ? (
-            <p className="text-[11px] text-muted-foreground">
-              Žádné odkazy. Přidejte např. odkaz na výrobce, dokumentaci, e-shop…
-            </p>
-          ) : (
-            <div className="space-y-1.5">
-              {links.map((link, idx) => (
-                <div
-                  key={link.id ?? `new-${idx}`}
-                  className="flex flex-wrap items-center gap-1.5 rounded-md border bg-card/50 p-1.5"
-                >
+          // ===== Item mode: 4 sections (3 collapsible) =====
+          <div className="space-y-4">
+            {/* Section 1: Základ — always open, NOT collapsible */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label htmlFor="category">Kategorie *</Label>
+                {!isCustomCat ? (
+                  <Select value={category} onValueChange={setCategory}>
+                    <SelectTrigger id="category">
+                      <SelectValue placeholder="Vyberte kategorii" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {existingCategories.map((c) => (
+                        <SelectItem key={c} value={c}>
+                          {c}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
                   <Input
-                    value={link.label}
-                    onChange={(e) =>
-                      setLinks((prev) =>
-                        prev.map((l, i) => (i === idx ? { ...l, label: e.target.value } : l)),
-                      )
-                    }
-                    placeholder="Hezký název (např. Výrobce)"
-                    className="h-7 flex-1 min-w-[120px] text-xs"
+                    value={customCategory}
+                    onChange={(e) => setCustomCategory(e.target.value)}
+                    placeholder="Nová kategorie"
+                    autoFocus
                   />
-                  <div className="relative flex-1 min-w-[140px]">
-                    <Input
-                      value={link.url}
-                      onChange={(e) =>
-                        setLinks((prev) =>
-                          prev.map((l, i) => (i === idx ? { ...l, url: e.target.value } : l)),
-                        )
-                      }
-                      placeholder="https://…"
-                      className="h-7 pr-7 text-xs"
-                      inputMode="url"
-                    />
-                    {link.url.trim() !== "" && (
-                      <a
-                        href={link.url.trim()}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        onClick={(e) => e.stopPropagation()}
-                        title="Otevřít odkaz v novém okně"
-                        className="absolute right-1.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                      >
-                        <ExternalLink className="h-3.5 w-3.5" />
-                      </a>
-                    )}
-                  </div>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="h-7 w-7 shrink-0 text-muted-foreground hover:text-destructive"
-                    onClick={() => setLinks((prev) => prev.filter((_, i) => i !== idx))}
-                    title="Smazat odkaz"
-                    aria-label="Smazat odkaz"
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </Button>
-                </div>
-              ))}
+                )}
+                <Button
+                  type="button"
+                  variant="link"
+                  size="sm"
+                  className="h-auto p-0 text-xs"
+                  onClick={() => setIsCustomCat(!isCustomCat)}
+                >
+                  {isCustomCat ? "Vybrat existující" : "+ Vytvořit novou kategorii"}
+                </Button>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="subcategory">Název položky</Label>
+                {/* Use datalist to allow free typing + autocomplete from existing subcategories */}
+                <Input
+                  id="subcategory"
+                  value={subcategory}
+                  onChange={(e) => setSubcategory(e.target.value)}
+                  placeholder="např. Hydroizolace - projekt"
+                  list="existing-subcategories"
+                />
+                <datalist id="existing-subcategories">
+                  {existingSubcategories.map((s) => (
+                    <option key={s} value={s} />
+                  ))}
+                </datalist>
+                {existingSubcategories.length > 0 && (
+                  <p className="text-[10px] text-muted-foreground">
+                    {existingSubcategories.length} existujících podkategorií v této kategorii —
+                    začněte psát pro návrhy.
+                  </p>
+                )}
+              </div>
             </div>
-          )}
-          <p className="text-[10px] text-muted-foreground">
-            Odkazy se zobrazí pouze po rozkliknutí detailu položky/úkolu.
-            Hezký název bude vidět v přehledu, URL se otevírá v novém okně.
-          </p>
-        </div>
 
-        <DialogFooter>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label htmlFor="phase">Fáze</Label>
+                <Select value={phase} onValueChange={setPhase}>
+                  <SelectTrigger id="phase">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {PHASES.map((p) => (
+                      <SelectItem key={p} value={p}>
+                        {p}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex flex-wrap items-center gap-2 pb-1">
+                <button
+                  type="button"
+                  onClick={() => setRequired(!required)}
+                  className={cn(
+                    "flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[11px] font-medium transition-all",
+                    required
+                      ? "border-amber-500 bg-amber-50 text-amber-700 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-300"
+                      : "border-border text-muted-foreground hover:border-amber-300 hover:bg-amber-50/50 dark:hover:border-amber-800",
+                  )}
+                  title="Nutné — položka je povinná pro dokončení projektu"
+                >
+                  <AlertTriangle className="h-3 w-3" />
+                  Nutné
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCompleted(!completed)}
+                  className={cn(
+                    "flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[11px] font-medium transition-all",
+                    completed
+                      ? "border-emerald-500 bg-emerald-50 text-emerald-700 dark:border-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300"
+                      : "border-border text-muted-foreground hover:border-emerald-300 hover:bg-emerald-50/50 dark:hover:border-emerald-800",
+                  )}
+                >
+                  {completed ? <CheckCircle2 className="h-3 w-3" /> : <Circle className="h-3 w-3" />}
+                  Hotovo
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setRejected(!rejected)}
+                  className={cn(
+                    "flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[11px] font-medium transition-all",
+                    rejected
+                      ? "border-rose-500 bg-rose-50 text-rose-700 dark:border-rose-700 dark:bg-rose-950/40 dark:text-rose-300"
+                      : "border-border text-muted-foreground hover:border-rose-300 hover:bg-rose-50/50 dark:hover:border-rose-800",
+                  )}
+                >
+                  <X className="h-3 w-3" />
+                  Zavrženo
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSubsidyEligible(!subsidyEligible)}
+                  className={cn(
+                    "flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[11px] font-medium transition-all",
+                    subsidyEligible
+                      ? "border-teal-500 bg-teal-50 text-teal-700 dark:border-teal-600 dark:bg-teal-950/40 dark:text-teal-300"
+                      : "border-border text-muted-foreground hover:border-teal-300 hover:bg-teal-50/50 dark:hover:border-teal-800",
+                  )}
+                  title="Dotace — pro tuto položku/úkol lze čerpat dotaci"
+                >
+                  <HandCoins className="h-3 w-3" />
+                  Dotace
+                </button>
+              </div>
+              {subsidyEligible && (
+                <div className="flex items-center gap-2 pb-1">
+                  <Label htmlFor="subsidyAmount" className="text-[11px] text-muted-foreground">
+                    Částka dotace (Kč)
+                  </Label>
+                  <Input
+                    id="subsidyAmount"
+                    type="number"
+                    inputMode="decimal"
+                    step="any"
+                    min="0"
+                    value={subsidyAmount}
+                    onChange={(e) => setSubsidyAmount(e.target.value)}
+                    placeholder="např. 15000"
+                    className="h-8 w-40 text-xs"
+                  />
+                  <span className="text-[10px] text-muted-foreground">
+                    Odhadovaná výše dotace, kterou lze na tuto položku získat.
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* Section 2: Časování (collapsible, default closed) */}
+            <Collapsible defaultOpen={false}>
+              <CollapsibleTrigger asChild>
+                <button
+                  type="button"
+                  className="flex w-full items-center justify-between rounded-lg border bg-muted/30 px-3 py-2 text-sm font-medium hover:bg-muted/50"
+                >
+                  <span>Časování (volitelné)</span>
+                  <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                </button>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="space-y-4 pt-3">
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <Label htmlFor="dateFrom">Datum od</Label>
+                    <Input
+                      id="dateFrom"
+                      type="date"
+                      value={dateFrom}
+                      onChange={(e) => setDateFrom(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="dateTo">Datum do</Label>
+                    <Input
+                      id="dateTo"
+                      type="date"
+                      value={dateTo}
+                      onChange={(e) => setDateTo(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="dependsOn">Navazuje na</Label>
+                  <SearchableSelect
+                    id="dependsOn"
+                    options={[
+                      { value: "__none__", label: "— žádná závislost —", hint: "" },
+                      ...dependsOnOptions.map((i) => ({
+                        value: i.id,
+                        label: i.subcategory || i.category,
+                        hint: `${i.category}${i.dateTo ? ` · do ${i.dateTo.substring(0, 10)}` : ""}`,
+                      })),
+                    ]}
+                    value={dependsOnId}
+                    onChange={(v) => handleDependsOnChange(v)}
+                    placeholder="— žádná závislost —"
+                    searchPlaceholder="Hledat položku…"
+                    emptyText="Žádné položky nenalezeny"
+                  />
+                  <p className="text-[10px] text-muted-foreground">
+                    Při výběru se Datum od automaticky doplní z Datum do vybrané položky.
+                  </p>
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+
+            {/* Section 3: Peníze (collapsible, default closed) */}
+            <Collapsible defaultOpen={false}>
+              <CollapsibleTrigger asChild>
+                <button
+                  type="button"
+                  className="flex w-full items-center justify-between rounded-lg border bg-muted/30 px-3 py-2 text-sm font-medium hover:bg-muted/50"
+                >
+                  <span>Peníze (volitelné)</span>
+                  <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                </button>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="space-y-4 pt-3">
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="space-y-2">
+                    <Label htmlFor="planCost">Plán (Kč)</Label>
+                    <Input
+                      id="planCost"
+                      value={planCost}
+                      onChange={(e) => setPlanCost(e.target.value)}
+                      placeholder="25000"
+                      inputMode="decimal"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="flexibility">Vůle (%)</Label>
+                    <Input
+                      id="flexibility"
+                      value={flexibility}
+                      onChange={(e) => setFlexibility(e.target.value)}
+                      placeholder="50"
+                      inputMode="decimal"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="planDays">Plán (dní)</Label>
+                    <Input
+                      id="planDays"
+                      value={planDays}
+                      onChange={(e) => setPlanDays(e.target.value)}
+                      placeholder="21"
+                      inputMode="decimal"
+                    />
+                  </div>
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+
+            {/* Section 4: Odkazy & poznámky (collapsible, default closed) */}
+            <Collapsible defaultOpen={false}>
+              <CollapsibleTrigger asChild>
+                <button
+                  type="button"
+                  className="flex w-full items-center justify-between rounded-lg border bg-muted/30 px-3 py-2 text-sm font-medium hover:bg-muted/50"
+                >
+                  <span>Odkazy &amp; poznámky (volitelné)</span>
+                  <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                </button>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="space-y-4 pt-3">
+                {/* External hyperlinks — editable list */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label className="flex items-center gap-1.5 text-xs">
+                      <LinkIcon className="h-3.5 w-3.5 text-muted-foreground" />
+                      Odkazy
+                      {links.length > 0 && (
+                        <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-semibold tabular-nums text-muted-foreground">
+                          {links.length}
+                        </span>
+                      )}
+                    </Label>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="h-7 gap-1 px-2 text-[11px]"
+                      onClick={() => setLinks((prev) => [...prev, { id: undefined, label: "", url: "" }])}
+                    >
+                      <Plus className="h-3 w-3" /> Přidat odkaz
+                    </Button>
+                  </div>
+                  {links.length === 0 ? (
+                    <p className="text-[11px] text-muted-foreground">
+                      Žádné odkazy. Přidejte např. odkaz na výrobce, dokumentaci, e-shop…
+                    </p>
+                  ) : (
+                    <div className="space-y-1.5">
+                      {links.map((link, idx) => (
+                        <div
+                          key={link.id ?? `new-${idx}`}
+                          className="flex flex-wrap items-center gap-1.5 rounded-md border bg-card/50 p-1.5"
+                        >
+                          <Input
+                            value={link.label}
+                            onChange={(e) =>
+                              setLinks((prev) =>
+                                prev.map((l, i) => (i === idx ? { ...l, label: e.target.value } : l)),
+                              )
+                            }
+                            placeholder="Hezký název (např. Výrobce)"
+                            className="h-7 flex-1 min-w-[120px] text-xs"
+                          />
+                          <div className="relative flex-1 min-w-[140px]">
+                            <Input
+                              value={link.url}
+                              onChange={(e) =>
+                                setLinks((prev) =>
+                                  prev.map((l, i) => (i === idx ? { ...l, url: e.target.value } : l)),
+                                )
+                              }
+                              placeholder="https://…"
+                              className="h-7 pr-7 text-xs"
+                              inputMode="url"
+                            />
+                            {link.url.trim() !== "" && (
+                              <a
+                                href={link.url.trim()}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                onClick={(e) => e.stopPropagation()}
+                                title="Otevřít odkaz v novém okně"
+                                className="absolute right-1.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                              >
+                                <ExternalLink className="h-3.5 w-3.5" />
+                              </a>
+                            )}
+                          </div>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 shrink-0 text-muted-foreground hover:text-destructive"
+                            onClick={() => setLinks((prev) => prev.filter((_, i) => i !== idx))}
+                            title="Smazat odkaz"
+                            aria-label="Smazat odkaz"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  <p className="text-[10px] text-muted-foreground">
+                    Odkazy se zobrazí pouze po rozkliknutí detailu položky/úkolu.
+                    Hezký název bude vidět v přehledu, URL se otevírá v novém okně.
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="note">Poznámka</Label>
+                  <Textarea
+                    id="note"
+                    value={note}
+                    onChange={(e) => setNote(e.target.value)}
+                    placeholder="Doplňující informace, jednotkové ceny, postup…"
+                    rows={2}
+                  />
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+          </div>
+        )}
+
+        <ResponsiveDialogFooter>
           <Button type="button" variant="outline" onClick={onDone}>
             Zrušit
           </Button>
@@ -748,7 +953,7 @@ function BudgetItemForm({
             )}
             {submitLabel}
           </Button>
-        </DialogFooter>
+        </ResponsiveDialogFooter>
       </form>
     </>
   );

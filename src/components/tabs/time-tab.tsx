@@ -37,6 +37,13 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
+  ResponsiveDialog,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+  ResponsiveDialogDescription,
+  ResponsiveDialogFooter,
+} from "@/components/ui/responsive-dialog";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -66,6 +73,8 @@ import { toast } from "sonner";
 import { EmptyStateBox } from "@/components/empty-state-box";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
+import { useLastValue } from "@/hooks/use-last-value";
+import { cn } from "@/lib/utils";
 
 type SortKey = "date" | "worker" | "hours" | "workerType";
 
@@ -505,16 +514,14 @@ interface TimeDialogProps {
 function TimeDialog(props: TimeDialogProps) {
   const { open, onOpenChange, editEntry } = props;
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
-        {open && (
-          <TimeDialogInner
-            key={editEntry?.id ?? "new"}
-            {...props}
-          />
-        )}
-      </DialogContent>
-    </Dialog>
+    <ResponsiveDialog open={open} onOpenChange={onOpenChange} className="max-w-lg">
+      {open && (
+        <TimeDialogInner
+          key={editEntry?.id ?? "new"}
+          {...props}
+        />
+      )}
+    </ResponsiveDialog>
   );
 }
 
@@ -530,6 +537,7 @@ function toDateStr(d: string | null | undefined): string {
 }
 
 function TimeDialogInner({
+  projectId,
   budgetItems,
   contacts,
   createTimeEntry,
@@ -541,15 +549,33 @@ function TimeDialogInner({
 }: Omit<TimeDialogProps, "open">) {
   const isEdit = !!editEntry;
   const today = new Date().toISOString().substring(0, 10);
+  // Smart defaults: remember last used value per project (only persisted on
+  // create — edit mode seeds from editEntry and skips localStorage writes).
+  const [lastWorkerName, setLastWorkerName] = useLastValue<string>(
+    "workerName",
+    "",
+    projectId,
+  );
+  const [lastWorkerType, setLastWorkerType] = useLastValue<string>(
+    "workerType",
+    "self",
+    projectId,
+  );
+  const [lastContactId, setLastContactId] = useLastValue<string>(
+    "contactId",
+    "",
+    projectId,
+  );
   const [budgetItemId, setBudgetItemId] = useState(editEntry?.budgetItemId ?? "");
-  const [contactId, setContactId] = useState(editEntry?.contactId ?? "");
-  const [workerName, setWorkerName] = useState(editEntry?.workerName ?? "");
-  const [workerType, setWorkerType] = useState(editEntry?.workerType ?? "self");
+  const [contactId, setContactId] = useState(editEntry?.contactId ?? lastContactId);
+  const [workerName, setWorkerName] = useState(editEntry?.workerName ?? lastWorkerName);
+  const [workerType, setWorkerType] = useState(editEntry?.workerType ?? lastWorkerType);
   const [date, setDate] = useState(toDateStr(editEntry?.date) || today);
   const [dateTo, setDateTo] = useState(toDateStr(editEntry?.dateTo));
   const [hours, setHours] = useState(editEntry ? String(editEntry.hours ?? "") : "");
   const [description, setDescription] = useState(editEntry?.description ?? "");
   const [markCompleted, setMarkCompleted] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   // Compute day span for display
   const daySpan = useMemo(() => {
@@ -570,19 +596,13 @@ function TimeDialogInner({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!budgetItemId) {
-      toast.error("Vyberte položku rozpočtu");
-      return;
-    }
+    const newErrors: Record<string, string> = {};
+    if (!budgetItemId) newErrors.budgetItemId = "Vyberte položku rozpočtu";
+    if (!workerName.trim()) newErrors.workerName = "Zadejte jméno pracovníka";
     const h = Number(hours.replace(",", "."));
-    if (!h || h <= 0) {
-      toast.error("Zadejte platný počet hodin");
-      return;
-    }
-    if (!workerName.trim()) {
-      toast.error("Zadejte jméno pracovníka");
-      return;
-    }
+    if (!hours || isNaN(h) || h <= 0) newErrors.hours = "Zadejte platný počet hodin";
+    setErrors(newErrors);
+    if (Object.keys(newErrors).length > 0) return;
 
     const payload = {
       budgetItemId,
@@ -611,6 +631,10 @@ function TimeDialogInner({
         }
       } else {
         await createTimeEntry.mutateAsync(payload);
+        // Persist last-used values for the next "new" entry (edit mode is skipped).
+        setLastWorkerName(workerName);
+        setLastWorkerType(workerType);
+        setLastContactId(contactId);
         if (markCompleted) {
           try {
             await updateBudgetItem.mutateAsync({ id: budgetItemId, data: { completed: true } });
@@ -635,14 +659,14 @@ function TimeDialogInner({
 
   return (
     <>
-      <DialogHeader>
-        <DialogTitle>{isEdit ? "Upravit časový záznam" : "Zaznamenat čas"}</DialogTitle>
-        <DialogDescription>
+      <ResponsiveDialogHeader>
+        <ResponsiveDialogTitle>{isEdit ? "Upravit časový záznam" : "Zaznamenat čas"}</ResponsiveDialogTitle>
+        <ResponsiveDialogDescription>
           {isEdit
             ? "Upravte záznam o práci. Změny se propíší do statistik položky rozpočtu."
             : "Kdo na čem pracoval, kdy a jak dlouho. Firma, řemeslník i svépomoc."}
-        </DialogDescription>
-      </DialogHeader>
+        </ResponsiveDialogDescription>
+      </ResponsiveDialogHeader>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor="budgetItem">Položka rozpočtu *</Label>
@@ -654,11 +678,23 @@ function TimeDialogInner({
               hint: b.category,
             }))}
             value={budgetItemId}
-            onChange={setBudgetItemId}
+            onChange={(v) => {
+              setBudgetItemId(v);
+              if (errors.budgetItemId)
+                setErrors((prev) => {
+                  const n = { ...prev };
+                  delete n.budgetItemId;
+                  return n;
+                });
+            }}
             placeholder="Vyberte položku…"
             searchPlaceholder="Hledat položku…"
             emptyText="Žádné položky nenalezeny"
+            className={cn(errors.budgetItemId && "border-destructive ring-destructive")}
           />
+          {errors.budgetItemId && (
+            <p className="text-xs text-destructive mt-1">{errors.budgetItemId}</p>
+          )}
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-2">
@@ -666,11 +702,24 @@ function TimeDialogInner({
             <Input
               id="workerName"
               value={workerName}
-              onChange={(e) => setWorkerName(e.target.value)}
+              onChange={(e) => {
+                setWorkerName(e.target.value);
+                if (errors.workerName)
+                  setErrors((prev) => {
+                    const n = { ...prev };
+                    delete n.workerName;
+                    return n;
+                  });
+              }}
               placeholder="např. Jan Svoboda"
               list="contacts-list"
+              aria-invalid={!!errors.workerName}
+              className={cn(errors.workerName && "border-destructive ring-destructive")}
               required
             />
+            {errors.workerName && (
+              <p className="text-xs text-destructive mt-1">{errors.workerName}</p>
+            )}
             <datalist id="contacts-list">
               {contacts.map((c) => (
                 <option key={c.id} value={c.name} />
@@ -699,11 +748,24 @@ function TimeDialogInner({
             <Input
               id="hours"
               value={hours}
-              onChange={(e) => setHours(e.target.value)}
+              onChange={(e) => {
+                setHours(e.target.value);
+                if (errors.hours)
+                  setErrors((prev) => {
+                    const n = { ...prev };
+                    delete n.hours;
+                    return n;
+                  });
+              }}
               placeholder="40"
               inputMode="decimal"
+              aria-invalid={!!errors.hours}
+              className={cn(errors.hours && "border-destructive ring-destructive")}
               required
             />
+            {errors.hours && (
+              <p className="text-xs text-destructive mt-1">{errors.hours}</p>
+            )}
             {daySpan > 1 && hoursPerDay && (
               <p className="text-[11px] text-muted-foreground">
                 ≈ {hoursPerDay} h/den × {daySpan} dní
@@ -784,7 +846,7 @@ function TimeDialogInner({
               : "Po uložení záznamu se zavolá PATCH na budget item s completed: true. Propojí časový záznam s dokončením položky."}
           </p>
         </div>
-        <DialogFooter>
+        <ResponsiveDialogFooter>
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
             Zrušit
           </Button>
@@ -795,7 +857,7 @@ function TimeDialogInner({
               <CheckCircle2 className="ml-1.5 h-4 w-4 text-time" />
             )}
           </Button>
-        </DialogFooter>
+        </ResponsiveDialogFooter>
       </form>
     </>
   );
