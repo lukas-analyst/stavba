@@ -76,6 +76,47 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  /* ===========================================================
+     Spacing scale (Fáze 3) — foundation for consistent padding
+     -----------------------------------------------------------
+     Convention (Tailwind utility → usage):
+       space-1 (4px)  → icon-to-icon gaps, tight inline
+       space-2 (8px)  → inline element gaps, badge padding
+       space-3 (12px) → form field gaps, tab icon-label
+       space-4 (16px) → card padding, row vertical padding
+       space-5 (20px) → dialog section gap
+       space-6 (24px) → page content padding (desktop)
+     Not a replacement for Tailwind's p-* utilities — these are
+     documentation/convention tokens for design review reference.
+     =========================================================== */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  /* ===========================================================
+     Typography scale (Fáze 3) — font-size foundation
+     -----------------------------------------------------------
+     Convention (Tailwind utility → usage):
+       text-[10px] → badges, count, metadata sublabels
+       text-xs (11px) → table metadata, small descriptions
+       text-sm (13px) → table body, form labels, tab labels
+       text-base (14px) → default UI text, dialog body
+       text-lg (18px) → dialog titles, section headers
+       text-xl (24px) → KPI numeric values
+       text-2xl (32px) → page titles (if needed)
+     Font weights: 400 (normal), 500 (medium), 600 (semibold), 700 (bold)
+     Line heights: 1.2 (tight/headings), 1.5 (body), 1.75 (loose/long text)
+     =========================================================== */
+  --font-size-xs-2: 0.625rem;   /* 10px — badges, count */
+  --font-size-xs: 0.6875rem;    /* 11px — metadata */
+  --font-size-sm: 0.8125rem;    /* 13px — table/labels */
+  --font-size-base: 0.875rem;   /* 14px — default UI */
+  --font-size-lg: 1.125rem;     /* 18px — titles */
+  --font-size-xl: 1.5rem;        /* 24px — KPI values */
+  --font-size-2xl: 2rem;         /* 32px — page titles */
 }
 
 :root {

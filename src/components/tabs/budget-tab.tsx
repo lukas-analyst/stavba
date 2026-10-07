@@ -724,7 +724,7 @@ function BudgetTab({ projectId, dragEndHandlerRef }: { projectId: string; dragEn
               >
                 {/* Inner SortableContext for items within this category */}
                 <SortableContext items={itemIds} strategy={verticalListSortingStrategy}>
-                  <Table>
+                  <Table className="min-w-[1100px]">
                     <TableHeader>
                       <TableRow className="bg-muted/40 hover:bg-muted/40">
                         <TableHead className="w-8"></TableHead>
@@ -1050,7 +1050,9 @@ function SortableCategoryCard({
             </span>
           </button>
         </CollapsibleTrigger>
-        <CollapsibleContent>{children}</CollapsibleContent>
+        <CollapsibleContent>
+          <div className="overflow-x-auto scrollbar-thin">{children}</div>
+        </CollapsibleContent>
       </Collapsible>
     </div>
   );

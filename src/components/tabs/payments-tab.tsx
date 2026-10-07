@@ -419,8 +419,8 @@ export function PaymentsTab({ projectId }: { projectId: string }) {
       ) : (
         <div className="space-y-3">
           {/* Unified payments table — standalone + installment invoices merged */}
-          <div className="overflow-hidden rounded-lg border">
-            <Table>
+          <div className="overflow-x-auto scrollbar-thin rounded-lg border">
+            <Table className="min-w-[800px]">
               <TableHeader>
                 <TableRow className="bg-muted/40 hover:bg-muted/40">
                   <TableHead className="w-28">Datum</TableHead>
