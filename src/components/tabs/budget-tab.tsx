@@ -683,7 +683,7 @@ function BudgetTab({ projectId, dragEndHandlerRef }: { projectId: string; dragEn
         <Button
           size="sm"
           onClick={() => setAddOpen(true)}
-          className="h-9 gap-1.5"
+          className="ml-auto h-9 gap-1.5"
         >
           <Plus className="mr-1 h-4 w-4" /> Přidat položku
         </Button>

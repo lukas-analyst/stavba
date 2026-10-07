@@ -102,6 +102,60 @@ export function BudgetItemDialog({
   );
 }
 
+// ============================================================
+// ToggleChip — Material Design 3 filter chip
+// ------------------------------------------------------------
+// Full-width touch target (h-10, 40px), rounded-2xl.
+// Active: tonal fill (bg-<token>-soft, border-<token>, text-<token>-strong)
+// Inactive: outline only (border-border, text-muted-foreground)
+// ============================================================
+function ToggleChip({
+  active,
+  onClick,
+  icon: Icon,
+  label,
+  token,
+  title,
+}: {
+  active: boolean;
+  onClick: () => void;
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  token: "warning" | "success" | "danger" | "subsidy";
+  title?: string;
+}) {
+  const activeClasses: Record<string, string> = {
+    warning: "border-warning bg-warning-soft text-warning-strong",
+    success: "border-success bg-success-soft text-success-strong",
+    danger: "border-danger bg-danger-soft text-danger-strong",
+    subsidy: "border-subsidy bg-subsidy-soft text-subsidy-strong",
+  };
+  const hoverClasses: Record<string, string> = {
+    warning: "hover:border-warning/50 hover:bg-warning-soft/50",
+    success: "hover:border-success/50 hover:bg-success-soft/50",
+    danger: "hover:border-danger/50 hover:bg-danger-soft/50",
+    subsidy: "hover:border-subsidy/50 hover:bg-subsidy-soft/50",
+  };
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      title={title}
+      aria-pressed={active}
+      className={cn(
+        "flex h-10 items-center justify-center gap-1.5 rounded-2xl border px-3 text-xs font-medium transition-all",
+        active
+          ? activeClasses[token]
+          : cn("border-border text-muted-foreground", hoverClasses[token]),
+      )}
+    >
+      <Icon className="h-4 w-4 shrink-0" />
+      {label}
+    </button>
+  );
+}
+
 function BudgetItemForm({
   projectId,
   item,
@@ -341,49 +395,31 @@ function BudgetItemForm({
               </datalist>
             </div>
 
-            {/* Hotovo + Zavrženo + Dotace as toggle buttons */}
+            {/* Hotovo + Zavrženo + Dotace as MD3 toggle chips */}
             <div className="space-y-2">
-              <div className="flex flex-wrap items-center gap-2">
-                <button
-                  type="button"
+              <div className="grid grid-cols-2 gap-2">
+                <ToggleChip
+                  active={completed}
                   onClick={() => setCompleted(!completed)}
-                  className={cn(
-                    "flex items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-medium transition-all",
-                    completed
-                      ? "border-emerald-500 bg-emerald-50 text-emerald-700 dark:border-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300"
-                      : "border-border text-muted-foreground hover:border-emerald-300 hover:bg-emerald-50/50 dark:hover:border-emerald-800",
-                  )}
-                >
-                  {completed ? <CheckCircle2 className="h-3.5 w-3.5" /> : <Circle className="h-3.5 w-3.5" />}
-                  Hotovo
-                </button>
-                <button
-                  type="button"
+                  icon={completed ? CheckCircle2 : Circle}
+                  label="Hotovo"
+                  token="success"
+                />
+                <ToggleChip
+                  active={rejected}
                   onClick={() => setRejected(!rejected)}
-                  className={cn(
-                    "flex items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-medium transition-all",
-                    rejected
-                      ? "border-rose-500 bg-rose-50 text-rose-700 dark:border-rose-700 dark:bg-rose-950/40 dark:text-rose-300"
-                      : "border-border text-muted-foreground hover:border-rose-300 hover:bg-rose-50/50 dark:hover:border-rose-800",
-                  )}
-                >
-                  <X className="h-3.5 w-3.5" />
-                  Zavrženo
-                </button>
-                <button
-                  type="button"
+                  icon={X}
+                  label="Zavrženo"
+                  token="danger"
+                />
+                <ToggleChip
+                  active={subsidyEligible}
                   onClick={() => setSubsidyEligible(!subsidyEligible)}
-                  className={cn(
-                    "flex items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-medium transition-all",
-                    subsidyEligible
-                      ? "border-teal-500 bg-teal-50 text-teal-700 dark:border-teal-600 dark:bg-teal-950/40 dark:text-teal-300"
-                      : "border-border text-muted-foreground hover:border-teal-300 hover:bg-teal-50/50 dark:hover:border-teal-800",
-                  )}
-                  title="Dotace — pro tento úkol lze čerpat dotaci"
-                >
-                  <HandCoins className="h-3.5 w-3.5" />
-                  Dotace
-                </button>
+                  icon={HandCoins}
+                  label="Dotace"
+                  token="subsidy"
+                  title="Pro tento úkol lze čerpat dotaci"
+                />
               </div>
               {subsidyEligible && (
                 <div className="flex items-center gap-2">
@@ -640,61 +676,37 @@ function BudgetItemForm({
                   </SelectContent>
                 </Select>
               </div>
-              <div className="flex flex-wrap items-center gap-2 pb-1">
-                <button
-                  type="button"
+              <div className="grid grid-cols-2 gap-2 pb-1">
+                <ToggleChip
+                  active={required}
                   onClick={() => setRequired(!required)}
-                  className={cn(
-                    "flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[11px] font-medium transition-all",
-                    required
-                      ? "border-amber-500 bg-amber-50 text-amber-700 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-300"
-                      : "border-border text-muted-foreground hover:border-amber-300 hover:bg-amber-50/50 dark:hover:border-amber-800",
-                  )}
-                  title="Nutné — položka je povinná pro dokončení projektu"
-                >
-                  <AlertTriangle className="h-3 w-3" />
-                  Nutné
-                </button>
-                <button
-                  type="button"
+                  icon={AlertTriangle}
+                  label="Nutné"
+                  token="warning"
+                  title="Položka je povinná pro dokončení projektu"
+                />
+                <ToggleChip
+                  active={completed}
                   onClick={() => setCompleted(!completed)}
-                  className={cn(
-                    "flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[11px] font-medium transition-all",
-                    completed
-                      ? "border-emerald-500 bg-emerald-50 text-emerald-700 dark:border-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300"
-                      : "border-border text-muted-foreground hover:border-emerald-300 hover:bg-emerald-50/50 dark:hover:border-emerald-800",
-                  )}
-                >
-                  {completed ? <CheckCircle2 className="h-3 w-3" /> : <Circle className="h-3 w-3" />}
-                  Hotovo
-                </button>
-                <button
-                  type="button"
+                  icon={completed ? CheckCircle2 : Circle}
+                  label="Hotovo"
+                  token="success"
+                />
+                <ToggleChip
+                  active={rejected}
                   onClick={() => setRejected(!rejected)}
-                  className={cn(
-                    "flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[11px] font-medium transition-all",
-                    rejected
-                      ? "border-rose-500 bg-rose-50 text-rose-700 dark:border-rose-700 dark:bg-rose-950/40 dark:text-rose-300"
-                      : "border-border text-muted-foreground hover:border-rose-300 hover:bg-rose-50/50 dark:hover:border-rose-800",
-                  )}
-                >
-                  <X className="h-3 w-3" />
-                  Zavrženo
-                </button>
-                <button
-                  type="button"
+                  icon={X}
+                  label="Zavrženo"
+                  token="danger"
+                />
+                <ToggleChip
+                  active={subsidyEligible}
                   onClick={() => setSubsidyEligible(!subsidyEligible)}
-                  className={cn(
-                    "flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[11px] font-medium transition-all",
-                    subsidyEligible
-                      ? "border-teal-500 bg-teal-50 text-teal-700 dark:border-teal-600 dark:bg-teal-950/40 dark:text-teal-300"
-                      : "border-border text-muted-foreground hover:border-teal-300 hover:bg-teal-50/50 dark:hover:border-teal-800",
-                  )}
-                  title="Dotace — pro tuto položku/úkol lze čerpat dotaci"
-                >
-                  <HandCoins className="h-3 w-3" />
-                  Dotace
-                </button>
+                  icon={HandCoins}
+                  label="Dotace"
+                  token="subsidy"
+                  title="Pro tuto položku lze čerpat dotaci"
+                />
               </div>
               {subsidyEligible && (
                 <div className="flex items-center gap-2 pb-1">
