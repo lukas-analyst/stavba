@@ -36,9 +36,7 @@ import {
 } from "@/components/ui/dialog";
 import {
   ResponsiveDialog,
-  ResponsiveDialogHeader,
-  ResponsiveDialogTitle,
-  ResponsiveDialogDescription,
+  ResponsiveDialogBody,
   ResponsiveDialogFooter,
 } from "@/components/ui/responsive-dialog";
 import {
@@ -673,7 +671,7 @@ interface PaymentDialogProps {
 function PaymentDialog(props: PaymentDialogProps) {
   const { open, onOpenChange, payment } = props;
   return (
-    <ResponsiveDialog open={open} onOpenChange={onOpenChange} className="max-w-lg">
+    <ResponsiveDialog open={open} onOpenChange={onOpenChange} className="max-w-3xl">
       {open && (
         <PaymentDialogInner
           key={payment?.id ?? "new"}
@@ -855,23 +853,21 @@ function PaymentDialogInner({
 
   return (
     <>
-      <ResponsiveDialogHeader>
-        <ResponsiveDialogTitle>
-          {isEdit
-            ? isInstallment
-              ? "Upravit splátku"
-              : "Upravit platbu"
-            : "Nová platba"}
-        </ResponsiveDialogTitle>
-        <ResponsiveDialogDescription>
-          {isEdit
-            ? "Upravte údaje o platbě. Změny se propíší do statistik položky rozpočtu."
-            : "Zaznamenejte platbu - účtenku, fakturu nebo výplatu za práci."}
-        </ResponsiveDialogDescription>
-      </ResponsiveDialogHeader>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="budgetItem">Položka rozpočtu *</Label>
+      <ResponsiveDialogBody>
+        <form id="payment-form" onSubmit={handleSubmit} className="space-y-4 px-4 pb-4">
+          {/* ===== POPIS (borderless, na top) ===== */}
+          <Textarea
+            id="description"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="Co bylo koupeno / zaplaceno…"
+            rows={2}
+            className="border-0 px-0 text-lg font-semibold shadow-none focus-visible:ring-0 resize-none"
+            autoFocus
+          />
+
+          <div className="space-y-2">
+            <Label htmlFor="budgetItem">Položka rozpočtu *</Label>
           <SearchableSelect
             id="budgetItem"
             options={budgetItems.map((b) => ({
@@ -1096,16 +1092,6 @@ function PaymentDialogInner({
             </div>
           </div>
         )}
-        <div className="space-y-2">
-          <Label htmlFor="description">Popis</Label>
-          <Textarea
-            id="description"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder="Co bylo koupeno / zaplaceno…"
-            rows={2}
-          />
-        </div>
 
         {/* Hotovo checkbox - propojí platbu s dokončením budget item */}
         <div className="flex flex-col gap-1 rounded-md border border-amber-200 bg-amber-50/50 p-3 dark:border-amber-900/60 dark:bg-amber-950/20">
@@ -1126,24 +1112,25 @@ function PaymentDialogInner({
               : "Položka bude označena jako dokončená"}
           </p>
         </div>
+        </form>
+      </ResponsiveDialogBody>
 
-        <ResponsiveDialogFooter>
-          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-            Zrušit
-          </Button>
-          <Button type="submit" disabled={isPending}>
-            {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {isEdit
-              ? "Uložit změny"
-              : isInvoice
-                ? "Vytvořit fakturu"
-                : "Přidat platbu"}
-            {markCompleted && !isPending && (
-              <CheckCircle2 className="ml-1.5 h-4 w-4 text-amber-500" />
-            )}
-          </Button>
-        </ResponsiveDialogFooter>
-      </form>
+      <ResponsiveDialogFooter>
+        <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+          Zrušit
+        </Button>
+        <Button type="submit" form="payment-form" disabled={isPending}>
+          {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          {isEdit
+            ? "Uložit změny"
+            : isInvoice
+              ? "Vytvořit fakturu"
+              : "Přidat platbu"}
+          {markCompleted && !isPending && (
+            <CheckCircle2 className="ml-1.5 h-4 w-4 text-amber-500" />
+          )}
+        </Button>
+      </ResponsiveDialogFooter>
     </>
   );
 }

@@ -38,9 +38,7 @@ import {
 } from "@/components/ui/dialog";
 import {
   ResponsiveDialog,
-  ResponsiveDialogHeader,
-  ResponsiveDialogTitle,
-  ResponsiveDialogDescription,
+  ResponsiveDialogBody,
   ResponsiveDialogFooter,
 } from "@/components/ui/responsive-dialog";
 import {
@@ -514,7 +512,7 @@ interface TimeDialogProps {
 function TimeDialog(props: TimeDialogProps) {
   const { open, onOpenChange, editEntry } = props;
   return (
-    <ResponsiveDialog open={open} onOpenChange={onOpenChange} className="max-w-lg">
+    <ResponsiveDialog open={open} onOpenChange={onOpenChange} className="max-w-3xl">
       {open && (
         <TimeDialogInner
           key={editEntry?.id ?? "new"}
@@ -659,17 +657,39 @@ function TimeDialogInner({
 
   return (
     <>
-      <ResponsiveDialogHeader>
-        <ResponsiveDialogTitle>{isEdit ? "Upravit časový záznam" : "Zaznamenat čas"}</ResponsiveDialogTitle>
-        <ResponsiveDialogDescription>
-          {isEdit
-            ? "Upravte záznam o práci. Změny se propíší do statistik položky rozpočtu."
-            : "Kdo na čem pracoval, kdy a jak dlouho. Firma, řemeslník i svépomoc."}
-        </ResponsiveDialogDescription>
-      </ResponsiveDialogHeader>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="budgetItem">Položka rozpočtu *</Label>
+      <ResponsiveDialogBody>
+        <form id="time-form" onSubmit={handleSubmit} className="space-y-4 px-4 pb-4">
+          {/* ===== PRACOVNÍK (borderless, na top) ===== */}
+          <Input
+            id="workerName"
+            value={workerName}
+            onChange={(e) => {
+              setWorkerName(e.target.value);
+              if (errors.workerName)
+                setErrors((prev) => {
+                  const n = { ...prev };
+                  delete n.workerName;
+                  return n;
+                });
+            }}
+            placeholder="např. Jan Svoboda"
+            list="contacts-list"
+            aria-invalid={!!errors.workerName}
+            className="border-0 px-0 text-lg font-semibold shadow-none focus-visible:ring-0"
+            autoFocus
+            required
+          />
+          {errors.workerName && (
+            <p className="-mt-2 text-xs text-destructive">{errors.workerName}</p>
+          )}
+          <datalist id="contacts-list">
+            {contacts.map((c) => (
+              <option key={c.id} value={c.name} />
+            ))}
+          </datalist>
+
+          <div className="space-y-2">
+            <Label htmlFor="budgetItem">Položka rozpočtu *</Label>
           <SearchableSelect
             id="budgetItem"
             options={budgetItems.map((b) => ({
@@ -696,51 +716,20 @@ function TimeDialogInner({
             <p className="text-xs text-destructive mt-1">{errors.budgetItemId}</p>
           )}
         </div>
-        <div className="grid grid-cols-2 gap-3">
-          <div className="space-y-2">
-            <Label htmlFor="workerName">Pracovník (jméno) *</Label>
-            <Input
-              id="workerName"
-              value={workerName}
-              onChange={(e) => {
-                setWorkerName(e.target.value);
-                if (errors.workerName)
-                  setErrors((prev) => {
-                    const n = { ...prev };
-                    delete n.workerName;
-                    return n;
-                  });
-              }}
-              placeholder="např. Jan Svoboda"
-              list="contacts-list"
-              aria-invalid={!!errors.workerName}
-              className={cn(errors.workerName && "border-destructive ring-destructive")}
-              required
-            />
-            {errors.workerName && (
-              <p className="text-xs text-destructive mt-1">{errors.workerName}</p>
-            )}
-            <datalist id="contacts-list">
-              {contacts.map((c) => (
-                <option key={c.id} value={c.name} />
+        <div className="space-y-2">
+          <Label htmlFor="workerType">Typ pracovníka</Label>
+          <Select value={workerType} onValueChange={setWorkerType}>
+            <SelectTrigger id="workerType">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {WORKER_TYPES.map((t) => (
+                <SelectItem key={t.value} value={t.value}>
+                  {t.emoji} {t.label}
+                </SelectItem>
               ))}
-            </datalist>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="workerType">Typ pracovníka</Label>
-            <Select value={workerType} onValueChange={setWorkerType}>
-              <SelectTrigger id="workerType">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {WORKER_TYPES.map((t) => (
-                  <SelectItem key={t.value} value={t.value}>
-                    {t.emoji} {t.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+            </SelectContent>
+          </Select>
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-2">
@@ -846,19 +835,21 @@ function TimeDialogInner({
               : "Po uložení záznamu se zavolá PATCH na budget item s completed: true. Propojí časový záznam s dokončením položky."}
           </p>
         </div>
-        <ResponsiveDialogFooter>
-          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-            Zrušit
-          </Button>
-          <Button type="submit" disabled={isPending}>
-            {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {isEdit ? "Uložit změny" : "Zaznamenat"}
-            {markCompleted && !isPending && (
-              <CheckCircle2 className="ml-1.5 h-4 w-4 text-time" />
-            )}
-          </Button>
-        </ResponsiveDialogFooter>
-      </form>
+        </form>
+      </ResponsiveDialogBody>
+
+      <ResponsiveDialogFooter>
+        <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+          Zrušit
+        </Button>
+        <Button type="submit" form="time-form" disabled={isPending}>
+          {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          {isEdit ? "Uložit změny" : "Zaznamenat"}
+          {markCompleted && !isPending && (
+            <CheckCircle2 className="ml-1.5 h-4 w-4 text-time" />
+          )}
+        </Button>
+      </ResponsiveDialogFooter>
     </>
   );
 }

@@ -4,7 +4,6 @@ import { useState, useMemo } from "react";
 import {
   ResponsiveDialog,
   ResponsiveDialogHeader,
-  ResponsiveDialogTitle,
   ResponsiveDialogDescription,
   ResponsiveDialogBody,
   ResponsiveDialogFooter,
@@ -47,6 +46,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { SearchableSelect } from "@/components/ui/searchable-select";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 
 type Props = {
@@ -78,7 +78,7 @@ export function BudgetItemDialog({
   onSubmitted,
 }: Props) {
   return (
-    <ResponsiveDialog open={open} onOpenChange={onOpenChange} className="max-w-2xl">
+    <ResponsiveDialog open={open} onOpenChange={onOpenChange} className="max-w-3xl">
       {open && (
         <BudgetItemForm
           key={item?.id ?? parentId ?? "new"}
@@ -154,16 +154,16 @@ function ToggleChip({
 function CollapsibleSection({
   title,
   badge,
-  defaultOpen = false,
   children,
 }: {
   title: string;
   badge?: number;
-  defaultOpen?: boolean;
   children: React.ReactNode;
 }) {
+  const isMobile = useIsMobile();
+  // On desktop, sections are open by default; on mobile, collapsed (to save space)
   return (
-    <Collapsible defaultOpen={defaultOpen}>
+    <Collapsible defaultOpen={!isMobile}>
       <div className="rounded-2xl border bg-muted/20">
         <CollapsibleTrigger asChild>
           <button
@@ -382,18 +382,13 @@ function BudgetItemForm({
 
   return (
     <>
-      <ResponsiveDialogHeader>
-        <ResponsiveDialogTitle>
-          {isTaskMode
-            ? item ? "Upravit úkol" : "Nový úkol"
-            : item ? "Upravit položku" : "Nová položka"}
-        </ResponsiveDialogTitle>
-        {isTaskMode && (
+      {isTaskMode && (
+        <ResponsiveDialogHeader>
           <ResponsiveDialogDescription>
             Úkol pod položkou „{parentName}"
           </ResponsiveDialogDescription>
-        )}
-      </ResponsiveDialogHeader>
+        </ResponsiveDialogHeader>
+      )}
 
       <ResponsiveDialogBody>
         <form id="budget-item-form" onSubmit={handleSubmit} className="space-y-4 px-4 pb-4">

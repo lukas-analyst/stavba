@@ -36,9 +36,7 @@ import {
 } from "@/components/ui/dialog";
 import {
   ResponsiveDialog,
-  ResponsiveDialogHeader,
-  ResponsiveDialogTitle,
-  ResponsiveDialogDescription,
+  ResponsiveDialogBody,
   ResponsiveDialogFooter,
 } from "@/components/ui/responsive-dialog";
 import {
@@ -806,7 +804,7 @@ function ContactDialog({
   createContact?: ReturnType<typeof useCreateContact>;
 }) {
   return (
-    <ResponsiveDialog open={open} onOpenChange={onOpenChange} className="max-w-lg">
+    <ResponsiveDialog open={open} onOpenChange={onOpenChange} className="max-w-3xl">
         {open && (
           <ContactForm
             key={contact?.id ?? "new"}
@@ -898,52 +896,46 @@ function ContactForm({
 
   return (
     <>
-      <ResponsiveDialogHeader>
-        <ResponsiveDialogTitle>{contact ? "Upravit kontakt" : "Nový kontakt"}</ResponsiveDialogTitle>
-        <ResponsiveDialogDescription>
-          Firma, řemeslník, dodavatel, architekt nebo svépomoc.
-        </ResponsiveDialogDescription>
-      </ResponsiveDialogHeader>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        {/* ARES search — načte data firmy z registru */}
-        {!contact && (
-          <div className="space-y-1.5 rounded-md border bg-muted/30 p-3">
-            <Label className="flex items-center gap-1.5 text-xs">
-              <Search className="h-3 w-3" />
-              Načíst z ARES registru
-            </Label>
-            <p className="text-[11px] text-muted-foreground">
-              Vyhledejte firmu podle IČO nebo názvu a predvyplňte pole.
-            </p>
-            <AresSearch onSelect={handleAresSelect} />
-          </div>
-        )}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-2">
-              <Label htmlFor="name">Jméno / Název *</Label>
-              <Input
-                id="name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="např. Pavel Novák"
-                required
-              />
+      <ResponsiveDialogBody>
+        <form id="contact-form" onSubmit={handleSubmit} className="space-y-4 px-4 pb-4">
+          {/* ===== JMÉNO (borderless, na top) ===== */}
+          <Input
+            id="name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="např. Pavel Novák"
+            className="border-0 px-0 text-lg font-semibold shadow-none focus-visible:ring-0"
+            autoFocus
+            required
+          />
+
+          {/* ARES search — načte data firmy z registru */}
+          {!contact && (
+            <div className="space-y-1.5 rounded-md border bg-muted/30 p-3">
+              <Label className="flex items-center gap-1.5 text-xs">
+                <Search className="h-3 w-3" />
+                Načíst z ARES registru
+              </Label>
+              <p className="text-[11px] text-muted-foreground">
+                Vyhledejte firmu podle IČO nebo názvu a predvyplňte pole.
+              </p>
+              <AresSearch onSelect={handleAresSelect} />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="type">Typ</Label>
-              <Select value={type} onValueChange={setType}>
-                <SelectTrigger id="type">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {CONTACT_TYPES.map((t) => (
-                    <SelectItem key={t.value} value={t.value}>
-                      {t.emoji} {t.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+          )}
+          <div className="space-y-2">
+            <Label htmlFor="type">Typ</Label>
+            <Select value={type} onValueChange={setType}>
+              <SelectTrigger id="type">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {CONTACT_TYPES.map((t) => (
+                  <SelectItem key={t.value} value={t.value}>
+                    {t.emoji} {t.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
@@ -1066,21 +1058,24 @@ function ContactForm({
               rows={2}
             />
           </div>
-          <ResponsiveDialogFooter>
-            <Button type="button" variant="outline" onClick={onDone}>
-              Zrušit
-            </Button>
-            <Button
-              type="submit"
-              disabled={createContact?.isPending || updateContact.isPending}
-            >
-              {(createContact?.isPending || updateContact.isPending) && (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              )}
-              {contact ? "Uložit" : "Přidat kontakt"}
-            </Button>
-          </ResponsiveDialogFooter>
         </form>
-      </>
+      </ResponsiveDialogBody>
+
+      <ResponsiveDialogFooter>
+        <Button type="button" variant="outline" onClick={onDone}>
+          Zrušit
+        </Button>
+        <Button
+          type="submit"
+          form="contact-form"
+          disabled={createContact?.isPending || updateContact.isPending}
+        >
+          {(createContact?.isPending || updateContact.isPending) && (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          )}
+          {contact ? "Uložit" : "Přidat kontakt"}
+        </Button>
+      </ResponsiveDialogFooter>
+    </>
   );
 }
