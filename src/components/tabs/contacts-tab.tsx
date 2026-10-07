@@ -36,7 +36,9 @@ import {
 } from "@/components/ui/dialog";
 import {
   ResponsiveDialog,
-  ResponsiveDialogBody,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+  ResponsiveDialogDescription,
   ResponsiveDialogFooter,
 } from "@/components/ui/responsive-dialog";
 import {
@@ -46,6 +48,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -74,6 +81,7 @@ import {
   CalendarClock,
   Search,
   Hash,
+  ChevronDown,
 } from "lucide-react";
 import { AresSearch, type AresCompany } from "@/components/ares-search";
 import {
@@ -86,6 +94,7 @@ import {
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { EmptyStateBox } from "@/components/empty-state-box";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export function ContactsTab({ projectId }: { projectId: string }) {
   const { data: contacts, isLoading } = useContacts(projectId);
@@ -804,7 +813,7 @@ function ContactDialog({
   createContact?: ReturnType<typeof useCreateContact>;
 }) {
   return (
-    <ResponsiveDialog open={open} onOpenChange={onOpenChange} className="max-w-3xl">
+    <ResponsiveDialog open={open} onOpenChange={onOpenChange} className="max-w-lg">
         {open && (
           <ContactForm
             key={contact?.id ?? "new"}
@@ -841,6 +850,8 @@ function ContactForm({
   const [website, setWebsite] = useState(contact?.website ?? "");
   const [notes, setNotes] = useState(contact?.notes ?? "");
   const [rating, setRating] = useState<number | null>(contact?.rating ?? null);
+
+  const isMobile = useIsMobile();
 
   // Handle ARES company selection — prefill name, company, IČO, DIČ and type.
   // ARES returns only companies, so type defaults to "company".
@@ -896,32 +907,26 @@ function ContactForm({
 
   return (
     <>
-      <ResponsiveDialogBody>
-        <form id="contact-form" onSubmit={handleSubmit} className="space-y-4 px-4 pb-4">
-          {/* ===== JMÉNO (borderless, na top) ===== */}
-          <Input
-            id="name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="např. Pavel Novák"
-            className="border-0 px-0 text-lg font-semibold shadow-none focus-visible:ring-0"
-            autoFocus
-            required
-          />
+      <ResponsiveDialogHeader>
+        <ResponsiveDialogTitle>{contact ? "Upravit kontakt" : "Nový kontakt"}</ResponsiveDialogTitle>
+        <ResponsiveDialogDescription>
+          Firma, řemeslník, dodavatel, architekt nebo svépomoc.
+        </ResponsiveDialogDescription>
+      </ResponsiveDialogHeader>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        {/* ===== Borderless Jméno input — top ===== */}
+        <Input
+          id="name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="Jméno / Název…"
+          autoFocus
+          className="border-0 px-0 text-xl font-bold shadow-none focus-visible:ring-0"
+          required
+        />
 
-          {/* ARES search — načte data firmy z registru */}
-          {!contact && (
-            <div className="space-y-1.5 rounded-md border bg-muted/30 p-3">
-              <Label className="flex items-center gap-1.5 text-xs">
-                <Search className="h-3 w-3" />
-                Načíst z ARES registru
-              </Label>
-              <p className="text-[11px] text-muted-foreground">
-                Vyhledejte firmu podle IČO nebo názvu a predvyplňte pole.
-              </p>
-              <AresSearch onSelect={handleAresSelect} />
-            </div>
-          )}
+        {/* ===== Typ + Role grid ===== */}
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div className="space-y-2">
             <Label htmlFor="type">Typ</Label>
             <Select value={type} onValueChange={setType}>
@@ -937,145 +942,185 @@ function ContactForm({
               </SelectContent>
             </Select>
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-2">
-              <Label htmlFor="role">Role / Obor</Label>
-              <Input
-                id="role"
-                value={role}
-                onChange={(e) => setRole(e.target.value)}
-                placeholder="např. Zedník, Elektrikář"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="company">Firma (volitelné)</Label>
-              <Input
-                id="company"
-                value={company}
-                onChange={(e) => setCompany(e.target.value)}
-                placeholder="např. Stavby s.r.o."
-              />
-            </div>
-          </div>
-          {/* IČO / DIČ — identifikátory firmy (předvyplněno z ARES) */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-2">
-              <Label htmlFor="ico">IČO</Label>
-              <Input
-                id="ico"
-                value={ico}
-                onChange={(e) => setIco(e.target.value)}
-                placeholder="např. 12345678"
-                inputMode="numeric"
-                autoComplete="off"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="dic">DIČ</Label>
-              <Input
-                id="dic"
-                value={dic}
-                onChange={(e) => setDic(e.target.value)}
-                placeholder="např. CZ12345678"
-                autoComplete="off"
-              />
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-2">
-              <Label htmlFor="phone">Telefon</Label>
-              <Input
-                id="phone"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                placeholder="+420 …"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">E-mail</Label>
-              <Input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="email@domena.cz"
-              />
-            </div>
-          </div>
           <div className="space-y-2">
-            <Label htmlFor="website">Web</Label>
-            <div className="relative">
-              <Globe className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                id="website"
-                value={website}
-                onChange={(e) => setWebsite(e.target.value)}
-                placeholder="např. www.firma.cz"
-                className="pl-9"
-              />
-            </div>
-          </div>
-          <div className="space-y-2">
-            <Label>Hodnocení</Label>
-            <div className="flex gap-1">
-              {[1, 2, 3, 4, 5].map((s) => (
-                <button
-                  key={s}
-                  type="button"
-                  onClick={() => setRating(rating === s ? null : s)}
-                  className="p-1"
-                >
-                  <Star
-                    className={cn(
-                      "h-5 w-5 transition-colors",
-                      rating && s <= rating
-                        ? "fill-warning text-warning"
-                        : "text-muted-foreground/40 hover:text-warning-strong",
-                    )}
-                  />
-                </button>
-              ))}
-              {rating && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="ml-2 h-6 text-xs"
-                  onClick={() => setRating(null)}
-                >
-                  Zrušit
-                </Button>
-              )}
-            </div>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="notes">Poznámky</Label>
-            <Textarea
-              id="notes"
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder="Zkušenosti, reference, postup práce…"
-              rows={2}
+            <Label htmlFor="role">Role / Obor</Label>
+            <Input
+              id="role"
+              value={role}
+              onChange={(e) => setRole(e.target.value)}
+              placeholder="např. Zedník, Elektrikář"
             />
           </div>
-        </form>
-      </ResponsiveDialogBody>
+        </div>
 
-      <ResponsiveDialogFooter>
-        <Button type="button" variant="outline" onClick={onDone}>
-          Zrušit
-        </Button>
-        <Button
-          type="submit"
-          form="contact-form"
-          disabled={createContact?.isPending || updateContact.isPending}
-        >
-          {(createContact?.isPending || updateContact.isPending) && (
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          )}
-          {contact ? "Uložit" : "Přidat kontakt"}
-        </Button>
-      </ResponsiveDialogFooter>
-    </>
+        {/* ===== Collapsible: Detaily (volitelné) ===== */}
+        <Collapsible defaultOpen={!isMobile}>
+          <div className="rounded-2xl border bg-muted/20">
+            <CollapsibleTrigger asChild>
+              <button
+                type="button"
+                className="flex w-full items-center justify-between px-4 py-2.5 text-sm font-medium hover:bg-muted/40 rounded-2xl"
+              >
+                <span>Detaily (volitelné)</span>
+                <ChevronDown className="h-4 w-4 text-muted-foreground" />
+              </button>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <div className="space-y-4 p-4 pt-0">
+                {/* ARES search — only when create */}
+                {!contact && (
+                  <div className="space-y-1.5 rounded-md border bg-background/60 p-3">
+                    <Label className="flex items-center gap-1.5 text-xs">
+                      <Search className="h-3 w-3" />
+                      Načíst z ARES registru
+                    </Label>
+                    <p className="text-[11px] text-muted-foreground">
+                      Vyhledejte firmu podle IČO nebo názvu a predvyplňte pole.
+                    </p>
+                    <AresSearch onSelect={handleAresSelect} />
+                  </div>
+                )}
+
+                {/* Firma (volitelné) */}
+                <div className="space-y-2">
+                  <Label htmlFor="company">Firma (volitelné)</Label>
+                  <Input
+                    id="company"
+                    value={company}
+                    onChange={(e) => setCompany(e.target.value)}
+                    placeholder="např. Stavby s.r.o."
+                  />
+                </div>
+
+                {/* IČO + DIČ — identifikátory firmy (předvyplněno z ARES) */}
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="ico">IČO</Label>
+                    <Input
+                      id="ico"
+                      value={ico}
+                      onChange={(e) => setIco(e.target.value)}
+                      placeholder="např. 12345678"
+                      inputMode="numeric"
+                      autoComplete="off"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="dic">DIČ</Label>
+                    <Input
+                      id="dic"
+                      value={dic}
+                      onChange={(e) => setDic(e.target.value)}
+                      placeholder="např. CZ12345678"
+                      autoComplete="off"
+                    />
+                  </div>
+                </div>
+
+                {/* Telefon + E-mail */}
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="phone">Telefon</Label>
+                    <Input
+                      id="phone"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      placeholder="+420 …"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="email">E-mail</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="email@domena.cz"
+                    />
+                  </div>
+                </div>
+
+                {/* Web */}
+                <div className="space-y-2">
+                  <Label htmlFor="website">Web</Label>
+                  <div className="relative">
+                    <Globe className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                      id="website"
+                      value={website}
+                      onChange={(e) => setWebsite(e.target.value)}
+                      placeholder="např. www.firma.cz"
+                      className="pl-9"
+                    />
+                  </div>
+                </div>
+
+                {/* Hodnocení */}
+                <div className="space-y-2">
+                  <Label>Hodnocení</Label>
+                  <div className="flex gap-1">
+                    {[1, 2, 3, 4, 5].map((s) => (
+                      <button
+                        key={s}
+                        type="button"
+                        onClick={() => setRating(rating === s ? null : s)}
+                        className="p-1"
+                      >
+                        <Star
+                          className={cn(
+                            "h-5 w-5 transition-colors",
+                            rating && s <= rating
+                              ? "fill-warning text-warning"
+                              : "text-muted-foreground/40 hover:text-warning-strong",
+                          )}
+                        />
+                      </button>
+                    ))}
+                    {rating && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="ml-2 h-6 text-xs"
+                        onClick={() => setRating(null)}
+                      >
+                        Zrušit
+                      </Button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Poznámky */}
+                <div className="space-y-2">
+                  <Label htmlFor="notes">Poznámky</Label>
+                  <Textarea
+                    id="notes"
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    placeholder="Zkušenosti, reference, postup práce…"
+                    rows={2}
+                  />
+                </div>
+              </div>
+            </CollapsibleContent>
+          </div>
+        </Collapsible>
+
+        <ResponsiveDialogFooter>
+          <Button type="button" variant="outline" onClick={onDone}>
+            Zrušit
+          </Button>
+          <Button
+            type="submit"
+            disabled={createContact?.isPending || updateContact.isPending}
+          >
+            {(createContact?.isPending || updateContact.isPending) && (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            )}
+            {contact ? "Uložit" : "Přidat kontakt"}
+          </Button>
+        </ResponsiveDialogFooter>
+      </form>
+      </>
   );
 }

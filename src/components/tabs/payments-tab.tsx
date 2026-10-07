@@ -36,7 +36,9 @@ import {
 } from "@/components/ui/dialog";
 import {
   ResponsiveDialog,
-  ResponsiveDialogBody,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+  ResponsiveDialogDescription,
   ResponsiveDialogFooter,
 } from "@/components/ui/responsive-dialog";
 import {
@@ -54,6 +56,12 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Checkbox } from "@/components/ui/checkbox";
 import { SearchableSelect } from "@/components/ui/searchable-select";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import { useIsMobile } from "@/hooks/use-mobile";
 import {
   Plus,
   Trash2,
@@ -671,7 +679,7 @@ interface PaymentDialogProps {
 function PaymentDialog(props: PaymentDialogProps) {
   const { open, onOpenChange, payment } = props;
   return (
-    <ResponsiveDialog open={open} onOpenChange={onOpenChange} className="max-w-3xl">
+    <ResponsiveDialog open={open} onOpenChange={onOpenChange} className="max-w-lg">
       {open && (
         <PaymentDialogInner
           key={payment?.id ?? "new"}
@@ -711,7 +719,7 @@ function PaymentDialogInner({
   const [invoiceNumber, setInvoiceNumber] = useState(payment?.invoiceNumber ?? "");
   const [description, setDescription] = useState(payment?.description ?? "");
   const [vatRate, setVatRate] = useState(
-    payment?.vatRate !== null && payment?.vatRate !== undefined ? String(payment.vatRate) : "",
+    payment?.vatRate !== null && payment?.vatRate !== undefined ? String(payment.vatRate) : "21",
   );
   // Installment mode (create-only)
   const [isInvoice, setIsInvoice] = useState(false);
@@ -723,6 +731,8 @@ function PaymentDialogInner({
 
   const isPending = isEdit ? (updatePayment?.isPending ?? false) : createPayment.isPending;
 
+  const isMobile = useIsMobile();
+
   function resetForm() {
     setBudgetItemId("");
     setContactId("");
@@ -733,7 +743,7 @@ function PaymentDialogInner({
     setType("receipt");
     setIsInvoice(false);
     setInvoiceTotal("");
-    setVatRate("");
+    setVatRate("21");
     setMarkCompleted(false);
   }
 
@@ -853,21 +863,35 @@ function PaymentDialogInner({
 
   return (
     <>
-      <ResponsiveDialogBody>
-        <form id="payment-form" onSubmit={handleSubmit} className="space-y-4 px-4 pb-4">
-          {/* ===== POPIS (borderless, na top) ===== */}
-          <Textarea
-            id="description"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder="Co bylo koupeno / zaplaceno…"
-            rows={2}
-            className="border-0 px-0 text-lg font-semibold shadow-none focus-visible:ring-0 resize-none"
-            autoFocus
-          />
+      <ResponsiveDialogHeader>
+        <ResponsiveDialogTitle>
+          {isEdit
+            ? isInstallment
+              ? "Upravit splátku"
+              : "Upravit platbu"
+            : "Nová platba"}
+        </ResponsiveDialogTitle>
+        <ResponsiveDialogDescription>
+          {isEdit
+            ? "Upravte údaje o platbě. Změny se propíší do statistik položky rozpočtu."
+            : "Zaznamenejte platbu - účtenku, fakturu nebo výplatu za práci."}
+        </ResponsiveDialogDescription>
+      </ResponsiveDialogHeader>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        {/* ===== Borderless Popis textarea — top ===== */}
+        <Textarea
+          id="description"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          placeholder="Co bylo zakoupeno / zaplaceno…"
+          rows={1}
+          autoFocus
+          className="border-0 px-0 text-xl font-bold shadow-none focus-visible:ring-0 resize-none"
+        />
 
-          <div className="space-y-2">
-            <Label htmlFor="budgetItem">Položka rozpočtu *</Label>
+        {/* ===== Položka rozpočtu ===== */}
+        <div className="space-y-2">
+          <Label htmlFor="budgetItem">Položka rozpočtu *</Label>
           <SearchableSelect
             id="budgetItem"
             options={budgetItems.map((b) => ({
@@ -895,95 +919,36 @@ function PaymentDialogInner({
           )}
         </div>
 
-        {/* Installment toggle - only in create mode (not editing existing payments) */}
-        {!isEdit && (
-          <div className="flex items-center gap-2 rounded-md border bg-muted/30 p-2">
-            <Checkbox
-              id="isInvoice"
-              checked={isInvoice}
-              onCheckedChange={(v) => setIsInvoice(v === true)}
-            />
-            <Label htmlFor="isInvoice" className="cursor-pointer text-xs">
-              <CircleDollarSign className="mr-1 inline h-3.5 w-3.5" />
-              Platba ve splátkách (faktura s více platbami)
-            </Label>
-          </div>
-        )}
-
-        {isInvoice && !isEdit ? (
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-2">
-              <Label htmlFor="invoiceTotal">Faktura celkem (Kč) *</Label>
-              <Input
-                id="invoiceTotal"
-                value={invoiceTotal}
-                onChange={(e) => {
-                  setInvoiceTotal(e.target.value);
-                  if (errors.invoiceTotal)
-                    setErrors((prev) => {
-                      const n = { ...prev };
-                      delete n.invoiceTotal;
-                      return n;
-                    });
-                }}
-                placeholder="150000"
-                inputMode="decimal"
-                className={cn(errors.invoiceTotal && "border-destructive")}
-              />
-              {errors.invoiceTotal && (
-                <p className="text-xs text-destructive mt-1">{errors.invoiceTotal}</p>
-              )}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="amount">1. splátka (Kč) *</Label>
-              <Input
-                id="amount"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                placeholder="50000"
-                inputMode="decimal"
-              />
-            </div>
-          </div>
-        ) : (
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-2">
-              <Label htmlFor="amount">Částka (Kč) *</Label>
-              <Input
-                id="amount"
-                value={amount}
-                onChange={(e) => {
-                  setAmount(e.target.value);
-                  if (errors.amount)
-                    setErrors((prev) => {
-                      const n = { ...prev };
-                      delete n.amount;
-                      return n;
-                    });
-                }}
-                placeholder="25000"
-                inputMode="decimal"
-                className={cn(errors.amount && "border-destructive")}
-              />
-              {errors.amount && (
-                <p className="text-xs text-destructive mt-1">{errors.amount}</p>
-              )}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="date">Datum *</Label>
-              <Input
-                id="date"
-                type="date"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-              />
-            </div>
-          </div>
-        )}
-
-        {isInvoice && !isEdit && (
+        {/* ===== Grid: Částka + Datum + Typ ===== */}
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           <div className="space-y-2">
-            <Label htmlFor="date">Datum faktury *</Label>
+            <Label htmlFor="amount">
+              {isInvoice && !isEdit ? "1. splátka (Kč) *" : "Částka (Kč) *"}
+            </Label>
+            <Input
+              id="amount"
+              value={amount}
+              onChange={(e) => {
+                setAmount(e.target.value);
+                if (errors.amount)
+                  setErrors((prev) => {
+                    const n = { ...prev };
+                    delete n.amount;
+                    return n;
+                  });
+              }}
+              placeholder={isInvoice && !isEdit ? "50000" : "25000"}
+              inputMode="decimal"
+              className={cn(errors.amount && "border-destructive")}
+            />
+            {errors.amount && (
+              <p className="text-xs text-destructive mt-1">{errors.amount}</p>
+            )}
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="date">
+              {isInvoice && !isEdit ? "Datum faktury *" : "Datum *"}
+            </Label>
             <Input
               id="date"
               type="date"
@@ -991,9 +956,6 @@ function PaymentDialogInner({
               onChange={(e) => setDate(e.target.value)}
             />
           </div>
-        )}
-
-        <div className="grid grid-cols-2 gap-3">
           <div className="space-y-2">
             <Label htmlFor="type">Typ</Label>
             <Select value={type} onValueChange={setType}>
@@ -1009,128 +971,191 @@ function PaymentDialogInner({
               </SelectContent>
             </Select>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="contact">Kontakt (volitelné)</Label>
-            <SearchableSelect
-              id="contact"
-              options={contacts.map((c) => ({
-                value: c.id,
-                label: c.name,
-                hint: `${c.type}${c.role ? ` · ${c.role}` : ""}${c.company ? ` · ${c.company}` : ""}`,
-              }))}
-              value={contactId}
-              onChange={setContactId}
-              placeholder="Bez kontaktu"
-              searchPlaceholder="Hledat kontakt…"
-              emptyText="Žádné kontakty nenalezeny"
-            />
-          </div>
         </div>
-        <div className="grid grid-cols-2 gap-3">
-          <div className="space-y-2">
-            <Label htmlFor="vendor">Firma / Obchod</Label>
-            <Input
-              id="vendor"
-              value={vendor}
-              onChange={(e) => setVendor(e.target.value)}
-              placeholder="např. Hornbach"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="invoiceNumber">Číslo faktury/účtenky</Label>
-            <Input
-              id="invoiceNumber"
-              value={invoiceNumber}
-              onChange={(e) => setInvoiceNumber(e.target.value)}
-              placeholder="2024-001"
-            />
-          </div>
-        </div>
-        {/* VAT field - shown for non-invoice (standalone or edit) payments */}
-        {(!isInvoice || isEdit) && (
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-2">
-              <Label htmlFor="vatRate">DPH sazba (%)</Label>
-              <Select value={vatRate || "none"} onValueChange={(v) => setVatRate(v === "none" ? "" : v)}>
-                <SelectTrigger id="vatRate">
-                  <SelectValue placeholder="Bez DPH" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">Bez DPH</SelectItem>
-                  <SelectItem value="21">21 % (standardní)</SelectItem>
-                  <SelectItem value="12">12 % (snížená 1)</SelectItem>
-                  <SelectItem value="10">10 % (snížená 2)</SelectItem>
-                  <SelectItem value="0">0 %</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label>Výpočet DPH</Label>
-              <div className="flex h-9 items-center rounded-md border bg-muted/30 px-3 text-xs text-muted-foreground">
-                {vatRate && amount ? (
-                  <>
-                    DPH:{" "}
-                    <strong className="ml-1 text-foreground tabular-nums">
-                      {formatCzk(
-                        (Number(amount.replace(",", ".")) * Number(vatRate)) /
-                          (100 + Number(vatRate)),
-                      )}
-                    </strong>
-                    <span className="ml-2">
-                      (Základ:{" "}
-                      {formatCzk(
-                        (Number(amount.replace(",", ".")) * 100) /
-                          (100 + Number(vatRate)),
-                      )}
-                      )
-                    </span>
-                  </>
-                ) : (
-                  <span>Zadejte částku a DPH sazbu</span>
+
+        {/* ===== Collapsible: Více (volitelné) ===== */}
+        <Collapsible defaultOpen={!isMobile}>
+          <div className="rounded-2xl border bg-muted/20">
+            <CollapsibleTrigger asChild>
+              <button
+                type="button"
+                className="flex w-full items-center justify-between px-4 py-2.5 text-sm font-medium hover:bg-muted/40 rounded-2xl"
+              >
+                <span>Více (volitelné)</span>
+                <ChevronDown className="h-4 w-4 text-muted-foreground" />
+              </button>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <div className="space-y-4 p-4 pt-0">
+                {/* Faktura ve splátkách checkbox - only in create mode */}
+                {!isEdit && (
+                  <div className="flex items-center gap-2 rounded-md border bg-background/60 p-2">
+                    <Checkbox
+                      id="isInvoice"
+                      checked={isInvoice}
+                      onCheckedChange={(v) => setIsInvoice(v === true)}
+                    />
+                    <Label htmlFor="isInvoice" className="cursor-pointer text-xs">
+                      <CircleDollarSign className="mr-1 inline h-3.5 w-3.5" />
+                      Platba ve splátkách (faktura s více platbami)
+                    </Label>
+                  </div>
                 )}
+
+                {/* Faktura celkem - only if isInvoice && !isEdit */}
+                {isInvoice && !isEdit && (
+                  <div className="space-y-2">
+                    <Label htmlFor="invoiceTotal">Faktura celkem (Kč) *</Label>
+                    <Input
+                      id="invoiceTotal"
+                      value={invoiceTotal}
+                      onChange={(e) => {
+                        setInvoiceTotal(e.target.value);
+                        if (errors.invoiceTotal)
+                          setErrors((prev) => {
+                            const n = { ...prev };
+                            delete n.invoiceTotal;
+                            return n;
+                          });
+                      }}
+                      placeholder="150000"
+                      inputMode="decimal"
+                      className={cn(errors.invoiceTotal && "border-destructive")}
+                    />
+                    {errors.invoiceTotal && (
+                      <p className="text-xs text-destructive mt-1">{errors.invoiceTotal}</p>
+                    )}
+                  </div>
+                )}
+
+                {/* Kontakt */}
+                <div className="space-y-2">
+                  <Label htmlFor="contact">Kontakt (volitelné)</Label>
+                  <SearchableSelect
+                    id="contact"
+                    options={contacts.map((c) => ({
+                      value: c.id,
+                      label: c.name,
+                      hint: `${c.type}${c.role ? ` · ${c.role}` : ""}${c.company ? ` · ${c.company}` : ""}`,
+                    }))}
+                    value={contactId}
+                    onChange={setContactId}
+                    placeholder="Bez kontaktu"
+                    searchPlaceholder="Hledat kontakt…"
+                    emptyText="Žádné kontakty nenalezeny"
+                  />
+                </div>
+
+                {/* Firma + Číslo faktury/účtenky */}
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="vendor">Firma / Obchod</Label>
+                    <Input
+                      id="vendor"
+                      value={vendor}
+                      onChange={(e) => setVendor(e.target.value)}
+                      placeholder="např. Hornbach"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="invoiceNumber">Číslo faktury/účtenky</Label>
+                    <Input
+                      id="invoiceNumber"
+                      value={invoiceNumber}
+                      onChange={(e) => setInvoiceNumber(e.target.value)}
+                      placeholder="2024-001"
+                    />
+                  </div>
+                </div>
+
+                {/* DPH sazba + Výpočet DPH - shown for non-invoice (standalone or edit) payments */}
+                {(!isInvoice || isEdit) && (
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="vatRate">DPH sazba (%)</Label>
+                      <Select value={vatRate || "none"} onValueChange={(v) => setVatRate(v === "none" ? "" : v)}>
+                        <SelectTrigger id="vatRate">
+                          <SelectValue placeholder="Bez DPH" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">Bez DPH</SelectItem>
+                          <SelectItem value="21">21 % (standardní)</SelectItem>
+                          <SelectItem value="12">12 % (snížená 1)</SelectItem>
+                          <SelectItem value="10">10 % (snížená 2)</SelectItem>
+                          <SelectItem value="0">0 %</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Výpočet DPH</Label>
+                      <div className="flex h-9 items-center rounded-md border bg-background/60 px-3 text-xs text-muted-foreground">
+                        {vatRate && amount ? (
+                          <>
+                            DPH:{" "}
+                            <strong className="ml-1 text-foreground tabular-nums">
+                              {formatCzk(
+                                (Number(amount.replace(",", ".")) * Number(vatRate)) /
+                                  (100 + Number(vatRate)),
+                              )}
+                            </strong>
+                            <span className="ml-2">
+                              (Základ:{" "}
+                              {formatCzk(
+                                (Number(amount.replace(",", ".")) * 100) /
+                                  (100 + Number(vatRate)),
+                              )}
+                              )
+                            </span>
+                          </>
+                        ) : (
+                          <span>Zadejte částku a DPH sazbu</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Označit položku jako hotovou */}
+                <div className="flex flex-col gap-1 rounded-md border border-amber-200 bg-amber-50/50 p-3 dark:border-amber-900/60 dark:bg-amber-950/20">
+                  <div className="flex items-start gap-2">
+                    <Checkbox
+                      id="markCompleted"
+                      checked={markCompleted}
+                      onCheckedChange={(v) => setMarkCompleted(v === true)}
+                      className="mt-0.5"
+                    />
+                    <Label htmlFor="markCompleted" className="cursor-pointer text-sm font-medium leading-tight">
+                      Označit položku jako hotovou
+                    </Label>
+                  </div>
+                  <p className="ml-6 text-[11px] text-muted-foreground">
+                    {alreadyCompleted
+                      ? "Položka je již označena jako hotová."
+                      : "Položka bude označena jako dokončená"}
+                  </p>
+                </div>
               </div>
-            </div>
+            </CollapsibleContent>
           </div>
-        )}
+        </Collapsible>
 
-        {/* Hotovo checkbox - propojí platbu s dokončením budget item */}
-        <div className="flex flex-col gap-1 rounded-md border border-amber-200 bg-amber-50/50 p-3 dark:border-amber-900/60 dark:bg-amber-950/20">
-          <div className="flex items-start gap-2">
-            <Checkbox
-              id="markCompleted"
-              checked={markCompleted}
-              onCheckedChange={(v) => setMarkCompleted(v === true)}
-              className="mt-0.5"
-            />
-            <Label htmlFor="markCompleted" className="cursor-pointer text-sm font-medium leading-tight">
-              Označit položku jako hotovou
-            </Label>
-          </div>
-          <p className="ml-6 text-[11px] text-muted-foreground">
-            {alreadyCompleted
-              ? "Položka je již označena jako hotová."
-              : "Položka bude označena jako dokončená"}
-          </p>
-        </div>
-        </form>
-      </ResponsiveDialogBody>
-
-      <ResponsiveDialogFooter>
-        <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-          Zrušit
-        </Button>
-        <Button type="submit" form="payment-form" disabled={isPending}>
-          {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          {isEdit
-            ? "Uložit změny"
-            : isInvoice
-              ? "Vytvořit fakturu"
-              : "Přidat platbu"}
-          {markCompleted && !isPending && (
-            <CheckCircle2 className="ml-1.5 h-4 w-4 text-amber-500" />
-          )}
-        </Button>
-      </ResponsiveDialogFooter>
+        <ResponsiveDialogFooter>
+          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            Zrušit
+          </Button>
+          <Button type="submit" disabled={isPending}>
+            {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {isEdit
+              ? "Uložit změny"
+              : isInvoice
+                ? "Vytvořit fakturu"
+                : "Přidat platbu"}
+            {markCompleted && !isPending && (
+              <CheckCircle2 className="ml-1.5 h-4 w-4 text-amber-500" />
+            )}
+          </Button>
+        </ResponsiveDialogFooter>
+      </form>
     </>
   );
 }

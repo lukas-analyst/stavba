@@ -31,6 +31,7 @@ export async function PATCH(
               : null
             : undefined,
         hours: body.hours !== undefined ? Number(body.hours) : undefined,
+        workerCount: body.workerCount !== undefined ? Math.max(1, Number(body.workerCount)) : undefined,
         description: body.description !== undefined ? (body.description?.trim() || null) : undefined,
       },
       include: {

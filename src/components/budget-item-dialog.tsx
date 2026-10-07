@@ -399,7 +399,7 @@ function BudgetItemForm({
                 value={subcategory}
                 onChange={(e) => setSubcategory(e.target.value)}
                 placeholder="Název položky…"
-                className="border-0 px-0 text-lg font-semibold shadow-none focus-visible:ring-0"
+                className="border-0 px-0 text-xl font-bold shadow-none focus-visible:ring-0"
                 list="existing-subcategories"
                 autoFocus
               />
@@ -416,7 +416,7 @@ function BudgetItemForm({
               value={subcategory}
               onChange={(e) => setSubcategory(e.target.value)}
               placeholder="Název úkolu…"
-              className="border-0 px-0 text-lg font-semibold shadow-none focus-visible:ring-0"
+              className="border-0 px-0 text-xl font-bold shadow-none focus-visible:ring-0"
               list="existing-subcategories"
               autoFocus
             />
