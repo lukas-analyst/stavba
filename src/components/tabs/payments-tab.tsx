@@ -23,7 +23,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -34,14 +33,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  ResponsiveDialog,
-  ResponsiveDialogHeader,
-  ResponsiveDialogTitle,
-  ResponsiveDialogDescription,
-  ResponsiveDialogFooter,
-  ResponsiveDialogBody,
-} from "@/components/ui/responsive-dialog";
+import { AddDialogShell } from "@/components/ui/add-dialog-shell";
 import {
   Select,
   SelectContent,
@@ -64,14 +56,10 @@ import {
   MoreHorizontal,
   Search,
   Receipt,
-  Loader2,
-  FileText,
   Layers,
   CircleDollarSign,
   ArrowUpDown,
-  CheckCircle2,
   Download,
-  ChevronDown,
 } from "lucide-react";
 import { formatCzk, formatDate, PAYMENT_TYPES, paymentTypeLabel } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -672,20 +660,19 @@ interface PaymentDialogProps {
 // Wrapper component: handles Dialog open state and remounts inner form via `key`
 // whenever payment changes — ensures fresh state via useState initializers.
 function PaymentDialog(props: PaymentDialogProps) {
-  const { open, onOpenChange, payment } = props;
+  const { open } = props;
+  if (!open) return null;
   return (
-    <ResponsiveDialog open={open} onOpenChange={onOpenChange} className="max-w-lg">
-      {open && (
-        <PaymentDialogInner
-          key={payment?.id ?? "new"}
-          {...props}
-        />
-      )}
-    </ResponsiveDialog>
+    <PaymentDialogInner
+      key={props.payment?.id ?? "new"}
+      {...props}
+    />
   );
 }
 
 function PaymentDialogInner({
+  open,
+  onOpenChange,
   projectId,
   budgetItems,
   contacts,
@@ -694,8 +681,7 @@ function PaymentDialogInner({
   updateBudgetItem,
   payment,
   onClose,
-  onOpenChange,
-}: Omit<PaymentDialogProps, "open">) {
+}: PaymentDialogProps) {
   const isEdit = !!payment;
   const isInstallment = !!payment?.installmentOf;
   const today = new Date().toISOString().substring(0, 10);
@@ -740,8 +726,7 @@ function PaymentDialogInner({
     setMarkCompleted(false);
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async () => {
     const newErrors: Record<string, string> = {};
     if (!budgetItemId) newErrors.budgetItemId = "Vyberte položku rozpočtu";
     if (isInvoice && (!invoiceTotal || isNaN(Number(invoiceTotal.replace(",", "."))))) {
@@ -854,24 +839,27 @@ function PaymentDialogInner({
   const selectedBudgetItem = budgetItems.find((b) => b.id === budgetItemId);
   const alreadyCompleted = selectedBudgetItem?.completed === true;
 
+  const submitLabel = isEdit
+    ? isInstallment
+      ? "Upravit splátku"
+      : "Upravit platbu"
+    : isInvoice
+      ? "Vytvořit fakturu"
+      : "Přidat platbu";
+
   return (
-    <>
-      <ResponsiveDialogHeader>
-        <ResponsiveDialogTitle>
-          {isEdit
-            ? isInstallment
-              ? "Upravit splátku"
-              : "Upravit platbu"
-            : "Nová platba"}
-        </ResponsiveDialogTitle>
-        <ResponsiveDialogDescription>
-          {isEdit
-            ? "Upravte údaje o platbě. Změny se propíší do statistik položky rozpočtu."
-            : "Zaznamenejte platbu - účtenku, fakturu nebo výplatu za práci."}
-        </ResponsiveDialogDescription>
-      </ResponsiveDialogHeader>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <ResponsiveDialogBody>
+    <AddDialogShell
+      open={open}
+      onOpenChange={onOpenChange}
+      titleValue={description}
+      onTitleChange={setDescription}
+      titlePlaceholder="Co bylo zakoupeno / zaplaceno…"
+      submitLabel={submitLabel}
+      onSubmit={handleSubmit}
+      isSubmitting={isPending}
+      maxWidth="max-w-3xl"
+    >
+      <div className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor="budgetItem">Položka rozpočtu *</Label>
           <SearchableSelect
@@ -1098,14 +1086,6 @@ function PaymentDialogInner({
             </div>
           </div>
         )}
-        <Textarea
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          placeholder="Co bylo zakoupeno / zaplaceno…"
-          rows={1}
-          className="border-0 px-0 text-xl font-bold shadow-none focus-visible:ring-0 resize-none"
-          autoFocus
-        />
 
         {/* Hotovo checkbox - propojí platbu s dokončením budget item */}
         <div className="flex flex-col gap-1 rounded-md border border-amber-200 bg-amber-50/50 p-3 dark:border-amber-900/60 dark:bg-amber-950/20">
@@ -1126,25 +1106,7 @@ function PaymentDialogInner({
               : "Položka bude označena jako dokončená"}
           </p>
         </div>
-
-        </ResponsiveDialogBody>
-        <ResponsiveDialogFooter>
-          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-            Zrušit
-          </Button>
-          <Button type="submit" disabled={isPending}>
-            {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {isEdit
-              ? "Uložit změny"
-              : isInvoice
-                ? "Vytvořit fakturu"
-                : "Přidat platbu"}
-            {markCompleted && !isPending && (
-              <CheckCircle2 className="ml-1.5 h-4 w-4 text-amber-500" />
-            )}
-          </Button>
-        </ResponsiveDialogFooter>
-      </form>
-    </>
+      </div>
+    </AddDialogShell>
   );
 }

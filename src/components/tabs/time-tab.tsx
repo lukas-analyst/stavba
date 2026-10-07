@@ -23,7 +23,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card } from "@/components/ui/card";
@@ -36,14 +35,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  ResponsiveDialog,
-  ResponsiveDialogHeader,
-  ResponsiveDialogTitle,
-  ResponsiveDialogDescription,
-  ResponsiveDialogFooter,
-  ResponsiveDialogBody,
-} from "@/components/ui/responsive-dialog";
+import { AddDialogShell } from "@/components/ui/add-dialog-shell";
 import {
   Select,
   SelectContent,
@@ -64,10 +56,8 @@ import {
   MoreHorizontal,
   Search,
   Clock,
-  Loader2,
   Download,
   ArrowUpDown,
-  CheckCircle2,
 } from "lucide-react";
 import { formatNumber, formatDate, WORKER_TYPES, workerTypeLabel } from "@/lib/format";
 import { toast } from "sonner";
@@ -513,16 +503,13 @@ interface TimeDialogProps {
 // Wrapper component: handles Dialog open state and remounts inner form via `key`
 // whenever editEntry changes — ensures fresh state via useState initializers.
 function TimeDialog(props: TimeDialogProps) {
-  const { open, onOpenChange, editEntry } = props;
+  const { open } = props;
+  if (!open) return null;
   return (
-    <ResponsiveDialog open={open} onOpenChange={onOpenChange} className="max-w-lg">
-      {open && (
-        <TimeDialogInner
-          key={editEntry?.id ?? "new"}
-          {...props}
-        />
-      )}
-    </ResponsiveDialog>
+    <TimeDialogInner
+      key={props.editEntry?.id ?? "new"}
+      {...props}
+    />
   );
 }
 
@@ -538,6 +525,8 @@ function toDateStr(d: string | null | undefined): string {
 }
 
 function TimeDialogInner({
+  open,
+  onOpenChange,
   projectId,
   budgetItems,
   contacts,
@@ -546,8 +535,7 @@ function TimeDialogInner({
   updateBudgetItem,
   editEntry,
   onClose,
-  onOpenChange,
-}: Omit<TimeDialogProps, "open">) {
+}: TimeDialogProps) {
   const isEdit = !!editEntry;
   const today = new Date().toISOString().substring(0, 10);
   // Smart defaults: remember last used value per project (only persisted on
@@ -595,8 +583,7 @@ function TimeDialogInner({
     ? updateTimeEntry?.isPending ?? false
     : createTimeEntry.isPending;
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async () => {
     const newErrors: Record<string, string> = {};
     if (!budgetItemId) newErrors.budgetItemId = "Vyberte položku rozpočtu";
     if (!workerName.trim()) newErrors.workerName = "Zadejte jméno pracovníka";
@@ -658,18 +645,27 @@ function TimeDialogInner({
   const selectedBudgetItem = budgetItems.find((b) => b.id === budgetItemId);
   const alreadyCompleted = selectedBudgetItem?.completed === true;
 
+  const submitLabel = isEdit ? "Upravit záznam" : "Zaznamenat čas";
+
   return (
-    <>
-      <ResponsiveDialogHeader>
-        <ResponsiveDialogTitle>{isEdit ? "Upravit časový záznam" : "Zaznamenat čas"}</ResponsiveDialogTitle>
-        <ResponsiveDialogDescription>
-          {isEdit
-            ? "Upravte záznam o práci. Změny se propíší do statistik položky rozpočtu."
-            : "Kdo na čem pracoval, kdy a jak dlouho. Firma, řemeslník i svépomoc."}
-        </ResponsiveDialogDescription>
-      </ResponsiveDialogHeader>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <ResponsiveDialogBody>
+    <AddDialogShell
+      open={open}
+      onOpenChange={onOpenChange}
+      titleValue={workerName}
+      onTitleChange={setWorkerName}
+      titlePlaceholder="Pracovník…"
+      descriptionValue={description}
+      onDescriptionChange={setDescription}
+      descriptionPlaceholder="Popis práce…"
+      submitLabel={submitLabel}
+      onSubmit={handleSubmit}
+      isSubmitting={isPending}
+      maxWidth="max-w-3xl"
+    >
+      <div className="space-y-4">
+        {errors.workerName && (
+          <p className="text-xs text-destructive">{errors.workerName}</p>
+        )}
         <div className="space-y-2">
           <Label htmlFor="budgetItem">Položka rozpočtu *</Label>
           <SearchableSelect
@@ -698,51 +694,20 @@ function TimeDialogInner({
             <p className="text-xs text-destructive mt-1">{errors.budgetItemId}</p>
           )}
         </div>
-        <div className="grid grid-cols-2 gap-3">
-          <div className="space-y-2">
-            <Input
-              id="workerName"
-              value={workerName}
-              onChange={(e) => {
-                setWorkerName(e.target.value);
-                if (errors.workerName)
-                  setErrors((prev) => {
-                    const n = { ...prev };
-                    delete n.workerName;
-                    return n;
-                  });
-              }}
-              placeholder="Pracovník…"
-              list="contacts-list"
-              aria-invalid={!!errors.workerName}
-              className="border-0 px-0 text-xl font-bold shadow-none focus-visible:ring-0"
-              autoFocus
-              required
-            />
-            {errors.workerName && (
-              <p className="text-xs text-destructive mt-1">{errors.workerName}</p>
-            )}
-            <datalist id="contacts-list">
-              {contacts.map((c) => (
-                <option key={c.id} value={c.name} />
+        <div className="space-y-2">
+          <Label htmlFor="workerType">Typ pracovníka</Label>
+          <Select value={workerType} onValueChange={setWorkerType}>
+            <SelectTrigger id="workerType">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {WORKER_TYPES.map((t) => (
+                <SelectItem key={t.value} value={t.value}>
+                  {t.emoji} {t.label}
+                </SelectItem>
               ))}
-            </datalist>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="workerType">Typ pracovníka</Label>
-            <Select value={workerType} onValueChange={setWorkerType}>
-              <SelectTrigger id="workerType">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {WORKER_TYPES.map((t) => (
-                  <SelectItem key={t.value} value={t.value}>
-                    {t.emoji} {t.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+            </SelectContent>
+          </Select>
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-2">
@@ -819,16 +784,6 @@ function TimeDialogInner({
             />
           </div>
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="description">Popis práce</Label>
-          <Textarea
-            id="description"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder="Co se dělalo, postup, materiál…"
-            rows={2}
-          />
-        </div>
         {/* Hotovo checkbox - propojí časový záznam s dokončením budget item */}
         <div className="flex flex-col gap-1 rounded-md border border-time/30 bg-time-soft/50 p-3 dark:border-time-strong/60 dark:bg-time-soft/60">
           <div className="flex items-start gap-2">
@@ -848,21 +803,7 @@ function TimeDialogInner({
               : "Po uložení záznamu se zavolá PATCH na budget item s completed: true. Propojí časový záznam s dokončením položky."}
           </p>
         </div>
-
-        </ResponsiveDialogBody>
-        <ResponsiveDialogFooter>
-          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-            Zrušit
-          </Button>
-          <Button type="submit" disabled={isPending}>
-            {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {isEdit ? "Uložit změny" : "Zaznamenat"}
-            {markCompleted && !isPending && (
-              <CheckCircle2 className="ml-1.5 h-4 w-4 text-time" />
-            )}
-          </Button>
-        </ResponsiveDialogFooter>
-      </form>
-    </>
+      </div>
+    </AddDialogShell>
   );
 }

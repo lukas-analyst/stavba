@@ -34,13 +34,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  ResponsiveDialog,
-  ResponsiveDialogHeader,
-  ResponsiveDialogTitle,
-  ResponsiveDialogDescription,
-  ResponsiveDialogFooter,
-} from "@/components/ui/responsive-dialog";
+import { AddDialogShell } from "@/components/ui/add-dialog-shell";
 import {
   Select,
   SelectContent,
@@ -812,31 +806,31 @@ function ContactDialog({
   contact?: Contact | null;
   createContact?: ReturnType<typeof useCreateContact>;
 }) {
+  if (!open) return null;
   return (
-    <ResponsiveDialog open={open} onOpenChange={onOpenChange} className="max-w-lg">
-        {open && (
-          <ContactForm
-            key={contact?.id ?? "new"}
-            projectId={projectId}
-            contact={contact}
-            createContact={createContact}
-            onDone={() => onOpenChange(false)}
-          />
-        )}
-    </ResponsiveDialog>
+    <ContactForm
+      key={contact?.id ?? "new"}
+      open={open}
+      onOpenChange={onOpenChange}
+      projectId={projectId}
+      contact={contact}
+      createContact={createContact}
+    />
   );
 }
 
 function ContactForm({
+  open,
+  onOpenChange,
   projectId,
   contact,
   createContact,
-  onDone,
 }: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
   projectId: string;
   contact?: Contact | null;
   createContact?: ReturnType<typeof useCreateContact>;
-  onDone: () => void;
 }) {
   const updateContact = useUpdateContact(projectId);
   const [name, setName] = useState(contact?.name ?? "");
@@ -872,8 +866,7 @@ function ContactForm({
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async () => {
     if (!name.trim()) {
       toast.error("Jméno je povinné");
       return;
@@ -899,13 +892,16 @@ function ContactForm({
         await createContact.mutateAsync(data);
         toast.success("Kontakt přidán");
       }
-      onDone();
+      onOpenChange(false);
     } catch {
       toast.error("Nepodařilo se uložit kontakt");
     }
   };
 
+  const submitLabel = contact ? "Upravit kontakt" : "Přidat kontakt";
+
   return (
+<<<<<<< HEAD
     <>
       <ResponsiveDialogHeader>
         <ResponsiveDialogTitle>{contact ? "Upravit kontakt" : "Nový kontakt"}</ResponsiveDialogTitle>
@@ -942,6 +938,49 @@ function ContactForm({
               </SelectContent>
             </Select>
           </div>
+=======
+    <AddDialogShell
+      open={open}
+      onOpenChange={onOpenChange}
+      titleValue={name}
+      onTitleChange={setName}
+      titlePlaceholder="Jméno / Název…"
+      submitLabel={submitLabel}
+      onSubmit={handleSubmit}
+      isSubmitting={createContact?.isPending || updateContact.isPending}
+      maxWidth="max-w-3xl"
+    >
+      <div className="space-y-4">
+        {/* ARES search — načte data firmy z registru */}
+        {!contact && (
+          <div className="space-y-1.5 rounded-md border bg-muted/30 p-3">
+            <Label className="flex items-center gap-1.5 text-xs">
+              <Search className="h-3 w-3" />
+              Načíst z ARES registru
+            </Label>
+            <p className="text-[11px] text-muted-foreground">
+              Vyhledejte firmu podle IČO nebo názvu a predvyplňte pole.
+            </p>
+            <AresSearch onSelect={handleAresSelect} />
+          </div>
+        )}
+        <div className="space-y-2">
+          <Label htmlFor="type">Typ</Label>
+          <Select value={type} onValueChange={setType}>
+            <SelectTrigger id="type">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {CONTACT_TYPES.map((t) => (
+                <SelectItem key={t.value} value={t.value}>
+                  {t.emoji} {t.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+>>>>>>> main
           <div className="space-y-2">
             <Label htmlFor="role">Role / Obor</Label>
             <Input
@@ -951,6 +990,7 @@ function ContactForm({
               placeholder="např. Zedník, Elektrikář"
             />
           </div>
+<<<<<<< HEAD
         </div>
 
         {/* ===== Collapsible: Detaily (volitelné) ===== */}
@@ -1122,5 +1162,120 @@ function ContactForm({
         </ResponsiveDialogFooter>
       </form>
       </>
+=======
+          <div className="space-y-2">
+            <Label htmlFor="company">Firma (volitelné)</Label>
+            <Input
+              id="company"
+              value={company}
+              onChange={(e) => setCompany(e.target.value)}
+              placeholder="např. Stavby s.r.o."
+            />
+          </div>
+        </div>
+        {/* IČO / DIČ — identifikátory firmy (předvyplněno z ARES) */}
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-2">
+            <Label htmlFor="ico">IČO</Label>
+            <Input
+              id="ico"
+              value={ico}
+              onChange={(e) => setIco(e.target.value)}
+              placeholder="např. 12345678"
+              inputMode="numeric"
+              autoComplete="off"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="dic">DIČ</Label>
+            <Input
+              id="dic"
+              value={dic}
+              onChange={(e) => setDic(e.target.value)}
+              placeholder="např. CZ12345678"
+              autoComplete="off"
+            />
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-2">
+            <Label htmlFor="phone">Telefon</Label>
+            <Input
+              id="phone"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              placeholder="+420 …"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="email">E-mail</Label>
+            <Input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="email@domena.cz"
+            />
+          </div>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="website">Web</Label>
+          <div className="relative">
+            <Globe className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              id="website"
+              value={website}
+              onChange={(e) => setWebsite(e.target.value)}
+              placeholder="např. www.firma.cz"
+              className="pl-9"
+            />
+          </div>
+        </div>
+        <div className="space-y-2">
+          <Label>Hodnocení</Label>
+          <div className="flex gap-1">
+            {[1, 2, 3, 4, 5].map((s) => (
+              <button
+                key={s}
+                type="button"
+                onClick={() => setRating(rating === s ? null : s)}
+                className="p-1"
+              >
+                <Star
+                  className={cn(
+                    "h-5 w-5 transition-colors",
+                    rating && s <= rating
+                      ? "fill-warning text-warning"
+                      : "text-muted-foreground/40 hover:text-warning-strong",
+                  )}
+                />
+              </button>
+            ))}
+            {rating && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="ml-2 h-6 text-xs"
+                onClick={() => setRating(null)}
+              >
+                Zrušit
+              </Button>
+            )}
+          </div>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="notes">Poznámky</Label>
+          <Textarea
+            id="notes"
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            placeholder="Zkušenosti, reference, postup práce…"
+            rows={2}
+          />
+        </div>
+      </div>
+    </AddDialogShell>
+>>>>>>> main
   );
 }
