@@ -3,40 +3,16 @@
 import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import { useQueryClient } from "@tanstack/react-query";
-import {
-  Star,
-  Pencil,
-  LayoutDashboard,
-  Table2,
-  Receipt,
-  Clock,
-  Users,
-  CalendarRange,
-  CalendarClock,
-  MapPin,
-  FileText,
-  History,
-} from "lucide-react";
 import { useAppStore, type TabId } from "@/lib/store";
 import type { Project } from "@/lib/api";
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { ProjectDialog } from "@/components/project-dialog";
 import { PrintReportDialog } from "@/components/print-report-dialog";
 import { AuditLogDialog } from "@/components/audit-log-dialog";
-import { formatDate, daysUntilLabel, STATUS_LABELS } from "@/lib/format";
-import { useUpdateProject } from "@/lib/api";
-import { toast } from "sonner";
 
 // ===== Code splitting per tab =====
 // Each tab is loaded lazily (only when the user navigates to it).
 // This reduces the initial JS bundle by ~200-400 KB (Budget tab alone is
 // ~80KB, Payments ~70KB, Dashboard with charts ~150KB).
-//
-// `ssr: false` because these are all client components that use React Query
-// and wouldn't benefit from server-side rendering anyway.
-// `loading` shows a minimal skeleton while the chunk downloads.
 const DashboardTab = dynamic(() => import("@/components/tabs/dashboard-tab").then(m => m.DashboardTab), {
   ssr: false,
   loading: () => <TabSkeleton />,
@@ -66,8 +42,6 @@ const NotesTab = dynamic(() => import("@/components/tabs/notes-tab").then(m => m
   loading: () => <TabSkeleton />,
 });
 
-// Minimal skeleton shown while a tab chunk is downloading (first load only).
-// Once the chunk is cached, switching back to the same tab is instant.
 function TabSkeleton() {
   return (
     <div className="space-y-3" aria-hidden>
@@ -78,41 +52,19 @@ function TabSkeleton() {
   );
 }
 
-const TABS: { id: TabId; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
-  { id: "dashboard", label: "Přehled", icon: LayoutDashboard },
-  { id: "budget", label: "Rozpočet", icon: Table2 },
-  { id: "payments", label: "Platby", icon: Receipt },
-  { id: "time", label: "Čas", icon: Clock },
-  { id: "contacts", label: "Kontakty", icon: Users },
-  { id: "timeline", label: "Časová osa", icon: CalendarRange },
-  { id: "notes", label: "Poznámky", icon: FileText },
-];
-
-// STATUS_LABELS is imported from @/lib/format (single source of truth).
-
+// ===== ProjectDetail — tab content container + dialogs =====
+// The project header has been moved to the TopBar (project dropdown +
+// budget summary). The tab navigation has been moved to the AppSidebar.
+// This component renders only the active tab's content + manages the
+// project edit/report/audit dialogs (triggered from Settings menu).
 export function ProjectDetail({ project }: { project: Project }) {
   const activeTab = useAppStore((s) => s.activeTab);
-  const setActiveTab = useAppStore((s) => s.setActiveTab);
   const [editOpen, setEditOpen] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
   const [auditOpen, setAuditOpen] = useState(false);
-  const updateProject = useUpdateProject(project.id);
   const qc = useQueryClient();
 
-  const status = STATUS_LABELS[project.status] ?? STATUS_LABELS.active;
-  const deadline = daysUntilLabel(project.endDate);
-  const started = daysUntilLabel(project.startDate);
-
-  const toggleStar = async () => {
-    try {
-      await updateProject.mutateAsync({ starred: !project.starred });
-      toast.success(project.starred ? "Ohvězdičkování zrušeno" : "Projekt ohvězdičkován");
-    } catch {
-      toast.error("Nepodařilo se upravit projekt");
-    }
-  };
-
-  // Listen for custom events from sidebar project menu
+  // Listen for custom events from sidebar Settings menu
   useEffect(() => {
     const openAudit = () => setAuditOpen(true);
     const openReport = () => setReportOpen(true);
@@ -127,93 +79,86 @@ export function ProjectDetail({ project }: { project: Project }) {
     };
   }, []);
 
-  const deadlineToneColor: Record<string, string> = {
-    past: "bg-danger-soft/50 text-danger-strong border-danger/30 dark:bg-danger-soft/70 dark:text-danger-strong dark:border-danger-strong",
-    today: "bg-warning-soft/50 text-warning-strong border-warning/30 dark:bg-warning-soft/70 dark:text-warning-strong dark:border-warning-strong",
-    soon: "bg-warning-soft/50 text-warning-strong border-warning/30 dark:bg-warning-soft/70 dark:text-warning-strong dark:border-warning-strong",
-    future: "bg-info-soft/50 text-info-strong border-info/30 dark:bg-info-soft/70 dark:text-info-strong dark:border-info-strong",
-    none: "",
-  };
-
   // === Prefetch on hover ===
-  // When the user hovers a tab button, eagerly fetch the data for that tab
-  // so the switch is instant. `prefetchQuery` is a no-op if the query is
-  // already cached or in flight, so it's safe to call repeatedly.
-  const prefetchTab = (tabId: TabId) => {
-    const pid = project.id;
-    switch (tabId) {
-      case "dashboard":
-        qc.prefetchQuery({
-          queryKey: ["dashboard", pid],
-          queryFn: async () => {
-            const res = await fetch(`/api/projects/${pid}/dashboard`);
-            if (!res.ok) throw new Error("Failed to load dashboard");
-            return res.json();
-          },
-        });
-        break;
-      case "budget":
-        qc.prefetchQuery({
-          queryKey: ["budget", pid],
-          queryFn: async () => {
-            const res = await fetch(`/api/projects/${pid}/budget`);
-            if (!res.ok) throw new Error("Failed to load budget");
-            return res.json();
-          },
-        });
-        break;
-      case "payments":
-        qc.prefetchQuery({
-          queryKey: ["payments", pid],
-          queryFn: async () => {
-            const res = await fetch(`/api/projects/${pid}/payments`);
-            if (!res.ok) throw new Error("Failed to load payments");
-            return res.json();
-          },
-        });
-        break;
-      case "time":
-        qc.prefetchQuery({
-          queryKey: ["time", pid],
-          queryFn: async () => {
-            const res = await fetch(`/api/projects/${pid}/time`);
-            if (!res.ok) throw new Error("Failed to load time entries");
-            return res.json();
-          },
-        });
-        break;
-      case "contacts":
-        qc.prefetchQuery({
-          queryKey: ["contacts", pid],
-          queryFn: async () => {
-            const res = await fetch(`/api/projects/${pid}/contacts`);
-            if (!res.ok) throw new Error("Failed to load contacts");
-            return res.json();
-          },
-        });
-        break;
-      case "timeline":
-        // Timeline tab uses the dashboard aggregate, so prefetch it.
-        qc.prefetchQuery({
-          queryKey: ["dashboard", pid],
-          queryFn: async () => {
-            const res = await fetch(`/api/projects/${pid}/dashboard`);
-            if (!res.ok) throw new Error("Failed to load dashboard");
-            return res.json();
-          },
-        });
-        break;
-      case "notes":
-        // Notes tab reads from the projects list (already loaded globally).
-        // No extra prefetch needed.
-        break;
-    }
-  };
+  // When the user hovers a nav button in the sidebar, eagerly fetch the
+  // data for that tab so the switch is instant.
+  useEffect(() => {
+    const prefetchTab = (tabId: TabId) => {
+      const pid = project.id;
+      switch (tabId) {
+        case "dashboard":
+          qc.prefetchQuery({
+            queryKey: ["dashboard", pid],
+            queryFn: async () => {
+              const res = await fetch(`/api/projects/${pid}/dashboard`);
+              if (!res.ok) throw new Error("Failed to load dashboard");
+              return res.json();
+            },
+          });
+          break;
+        case "budget":
+          qc.prefetchQuery({
+            queryKey: ["budget", pid],
+            queryFn: async () => {
+              const res = await fetch(`/api/projects/${pid}/budget`);
+              if (!res.ok) throw new Error("Failed to load budget");
+              return res.json();
+            },
+          });
+          break;
+        case "payments":
+          qc.prefetchQuery({
+            queryKey: ["payments", pid],
+            queryFn: async () => {
+              const res = await fetch(`/api/projects/${pid}/payments`);
+              if (!res.ok) throw new Error("Failed to load payments");
+              return res.json();
+            },
+          });
+          break;
+        case "time":
+          qc.prefetchQuery({
+            queryKey: ["time", pid],
+            queryFn: async () => {
+              const res = await fetch(`/api/projects/${pid}/time`);
+              if (!res.ok) throw new Error("Failed to load time entries");
+              return res.json();
+            },
+          });
+          break;
+        case "contacts":
+          qc.prefetchQuery({
+            queryKey: ["contacts", pid],
+            queryFn: async () => {
+              const res = await fetch(`/api/projects/${pid}/contacts`);
+              if (!res.ok) throw new Error("Failed to load contacts");
+              return res.json();
+            },
+          });
+          break;
+        case "timeline":
+          qc.prefetchQuery({
+            queryKey: ["dashboard", pid],
+            queryFn: async () => {
+              const res = await fetch(`/api/projects/${pid}/dashboard`);
+              if (!res.ok) throw new Error("Failed to load dashboard");
+              return res.json();
+            },
+          });
+          break;
+      }
+    };
+
+    // Listen for prefetch requests from sidebar
+    const prefetchHandler = (e: Event) => {
+      const tabId = (e as CustomEvent<TabId>).detail;
+      prefetchTab(tabId);
+    };
+    window.addEventListener("stavba:prefetch-tab", prefetchHandler);
+    return () => window.removeEventListener("stavba:prefetch-tab", prefetchHandler);
+  }, [project.id, qc]);
 
   // === Background prefetch when Dashboard loads ===
-  // While the user is on the Dashboard, warm up the budget items and
-  // payments queries in the background so the most likely next tab switches
-  // (Budget / Payments) feel instant.
   useEffect(() => {
     if (activeTab !== "dashboard") return;
     const pid = project.id;
@@ -236,116 +181,7 @@ export function ProjectDetail({ project }: { project: Project }) {
   }, [activeTab, project.id, qc]);
 
   return (
-    <div className="flex min-h-screen flex-col">
-      {/* Project header (scrolls away — not sticky) */}
-      <header id="project-header" className="border-b bg-background">
-        <div className="px-4 pt-4 pb-4 md:px-6">
-          {/* Title row */}
-          <div className="flex items-start justify-between gap-2 md:gap-4">
-            <div className="min-w-0 flex-1">
-              <div className="flex flex-wrap items-center gap-2">
-                <h2 className="text-xl font-bold tracking-tight md:text-2xl">
-                  {project.name}
-                </h2>
-                <button
-                  onClick={toggleStar}
-                  className="rounded-md p-1 hover:bg-muted"
-                  aria-label="Ohvězdičkovat"
-                >
-                  <Star
-                    className={cn(
-                      "h-4 w-4 transition-colors",
-                      project.starred
-                        ? "fill-warning text-warning"
-                        : "text-muted-foreground/50 hover:text-warning",
-                    )}
-                  />
-                </button>
-                <Badge variant="secondary" className={cn("gap-1", status.color)}>
-                  <span className={cn("h-1.5 w-1.5 rounded-full", status.dot)} />
-                  {status.label}
-                </Badge>
-                {deadline.tone !== "none" && (
-                  <Badge
-                    variant="outline"
-                    className={cn("gap-1 border", deadlineToneColor[deadline.tone])}
-                  >
-                    <CalendarClock className="h-3 w-3" />
-                    {deadline.text}
-                  </Badge>
-                )}
-              </div>
-
-              {/* Subtitle: address */}
-              {(project.address || project.description) && (
-                <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-0.5">
-                  {project.address && (
-                    <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                      <MapPin className="h-3 w-3" />
-                      {project.address}
-                    </span>
-                  )}
-                  {project.description && (
-                    <span className="text-xs text-muted-foreground/80 line-clamp-1">
-                      {project.description}
-                    </span>
-                  )}
-                </div>
-              )}
-            </div>
-            {/* Compact burn rate indicator */}
-            {project.stats && (
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-muted-foreground">Čerpání</span>
-                <strong className={cn(
-                  "font-semibold text-sm",
-                  project.stats.burnRate > 100 ? "text-danger" : project.stats.burnRate > 80 ? "text-warning" : "text-success",
-                )}>
-                  {project.stats.burnRate.toFixed(0)}%
-                </strong>
-                <div className="h-1.5 w-16 overflow-hidden rounded-full bg-muted">
-                  <div
-                    className={cn(
-                      "h-full rounded-full",
-                      project.stats.burnRate > 100 ? "bg-danger" : project.stats.burnRate > 80 ? "bg-warning" : "bg-success",
-                    )}
-                    style={{ width: `${Math.min(project.stats.burnRate, 100)}%` }}
-                  />
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      </header>
-
-      {/* Sticky tab navigation — stays visible during scroll */}
-      <nav id="tab-nav" className="scrollbar-none sticky top-0 z-30 flex gap-1 overflow-x-auto border-b bg-background/95 px-4 backdrop-blur md:px-6">
-        {TABS.map((tab) => {
-          const Icon = tab.icon;
-          const isActive = activeTab === tab.id;
-          return (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              onMouseEnter={() => prefetchTab(tab.id)}
-              onFocus={() => prefetchTab(tab.id)}
-              className={cn(
-                "relative flex shrink-0 items-center gap-1.5 whitespace-nowrap px-3 py-2.5 text-sm font-medium transition-colors md:gap-2 md:px-4",
-                isActive
-                  ? "text-foreground"
-                  : "text-muted-foreground hover:text-foreground",
-              )}
-            >
-              <Icon className="h-4 w-4" />
-              <span className="hidden sm:inline">{tab.label}</span>
-              {isActive && (
-                <span className="absolute inset-x-0 -bottom-px h-0.5 bg-primary" />
-              )}
-            </button>
-          );
-        })}
-      </nav>
-
+    <>
       {/* Tab content */}
       <div id="tab-content" className="flex-1 px-4 py-4 md:px-6 md:py-6">
         {activeTab === "dashboard" && <DashboardTab projectId={project.id} />}
@@ -357,22 +193,15 @@ export function ProjectDetail({ project }: { project: Project }) {
         {activeTab === "notes" && <NotesTab projectId={project.id} />}
       </div>
 
-      <ProjectDialog
-        open={editOpen}
-        onOpenChange={setEditOpen}
-        project={project}
-      />
+      {/* Dialogs — triggered from Settings menu in sidebar */}
+      <ProjectDialog open={editOpen} onOpenChange={setEditOpen} project={project} />
       <PrintReportDialog
         open={reportOpen}
         onOpenChange={setReportOpen}
         projectId={project.id}
         projectName={project.name}
       />
-      <AuditLogDialog
-        open={auditOpen}
-        onOpenChange={setAuditOpen}
-        projectId={project.id}
-      />
-    </div>
+      <AuditLogDialog open={auditOpen} onOpenChange={setAuditOpen} projectId={project.id} />
+    </>
   );
 }

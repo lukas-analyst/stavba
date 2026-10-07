@@ -1,563 +1,229 @@
 "use client";
 
-import { Star, Plus, Trash2, Loader2, Building2, Download, Upload, Search, X, MoreVertical, History, FileText, Pencil } from "lucide-react";
-import { useProjects, useDeleteProject, useUpdateProject, useExportState, useImportState, useDashboard } from "@/lib/api";
-import { useQueryClient } from "@tanstack/react-query";
-import { useAppStore } from "@/lib/store";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { cn } from "@/lib/utils";
-import { formatCzk, STATUS_LABELS } from "@/lib/format";
-import { useMemo, useRef, useState } from "react";
-import { ProjectDialog } from "@/components/project-dialog";
-import { NewProjectDialog } from "@/components/new-project-dialog";
+import { useRef, useCallback } from "react";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+  LayoutDashboard,
+  Table2,
+  Receipt,
+  Clock,
+  Users,
+  CalendarRange,
+  FileText,
+  Settings,
+  Download,
+  Upload,
+  FileSpreadsheet,
+  Pencil,
+  Printer,
+  History,
+} from "lucide-react";
+import { NAV_ITEMS } from "@/lib/navigation";
+import { useAppStore } from "@/lib/store";
+import { useExportState, useImportState, useExportCsv } from "@/lib/api";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
+  DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
+import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-import { ThemeToggle } from "@/components/theme-toggle";
-import { VERSION_LABEL, GIT_COMMIT_HASH, GIT_COMMIT_DATE, GIT_COMMIT_COUNT } from "@/generated/version";
 
-// STATUS_LABELS is imported from @/lib/format (single source of truth).
+// ===== AppSidebar — pure navigation + settings =====
+// Projects list has been moved to the TopBar dropdown.
+// This sidebar is purely for tab navigation (top) and settings (bottom).
+//
+// Layout:
+//   ┌──────────────────┐
+//   │ Navigation       │  ← 7 tabs, P0 first, separator, P2
+//   │ (flex-1)         │
+//   │                  │
+//   │ ─────────────   │  ← separator
+//   │ ⚙ Nastavení      │  ← settings dropdown (bottom)
+//   └──────────────────┘
+export function AppSidebar() {
+  const activeTab = useAppStore((s) => s.activeTab);
+  const setActiveTab = useAppStore((s) => s.setActiveTab);
+  const selectedProjectId = useAppStore((s) => s.selectedProjectId);
+  const sidebarOpen = useAppStore((s) => s.sidebarOpen);
+  const setSidebarOpen = useAppStore((s) => s.setSidebarOpen);
 
-export function AppSidebar({ onSelectProject }: { onSelectProject?: (id: string) => void } = {}) {
-  const qc = useQueryClient();
-  const { data: projects, isLoading } = useProjects();
-  const deleteProject = useDeleteProject();
   const exportState = useExportState();
   const importState = useImportState();
-  const selectedProjectId = useAppStore((s) => s.selectedProjectId);
-  const setSelectedProjectRaw = useAppStore((s) => s.setSelectedProject);
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [newDialogOpen, setNewDialogOpen] = useState(false);
-  const [deleteId, setDeleteId] = useState<string | null>(null);
-  const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "planning" | "completed">("all");
+  const exportCsv = useExportCsv(selectedProjectId ?? "");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Wrapper that also calls the optional onSelectProject callback (for closing mobile drawer)
-  const setSelectedProject = (id: string) => {
-    setSelectedProjectRaw(id);
-    onSelectProject?.(id);
-  };
+  // Navigation: split into P0 (daily) and P2 (occasional)
+  const p0Items = NAV_ITEMS.filter((t) => t.priority === "P0");
+  const p2Items = NAV_ITEMS.filter((t) => t.priority === "P2");
 
-  const toggleStar = async (projectId: string, starred: boolean) => {
-    // optimistic: directly call API then refetch
+  const handleNavClick = useCallback(
+    (tabId: typeof activeTab) => {
+      setActiveTab(tabId);
+      // Close sidebar on mobile after navigation
+      if (typeof window !== "undefined" && window.innerWidth < 768) {
+        setSidebarOpen(false);
+      }
+    },
+    [setActiveTab, setSidebarOpen],
+  );
+
+  const handleExport = async () => {
     try {
-      await fetch(`/api/projects/${projectId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ starred }),
-      });
-      qc.invalidateQueries({ queryKey: ["projects"] });
+      await exportState.mutateAsync();
+      toast.success("Stav exportován");
     } catch {
-      toast.error("Nepodařilo se upravit hvězdičku");
+      toast.error("Export selhal");
     }
   };
 
-  const sortedProjects = useMemo(() => {
-    const filtered = (projects ?? []).filter((p) => {
-      if (statusFilter !== "all" && p.status !== statusFilter) return false;
-      if (!search.trim()) return true;
-      const q = search.toLowerCase();
-      return (
-        p.name.toLowerCase().includes(q) ||
-        (p.address ?? "").toLowerCase().includes(q) ||
-        (p.description ?? "").toLowerCase().includes(q)
-      );
-    });
-    return filtered.sort((a, b) => {
-      if (a.starred !== b.starred) return a.starred ? -1 : 1;
-      return a.name.localeCompare(b.name);
-    });
-  }, [projects, search, statusFilter]);
-
-  const projectToDelete = projects?.find((p) => p.id === deleteId);
-  const selectedProject = projects?.find((p) => p.id === selectedProjectId);
-
-  const handleImport = async (file: File) => {
+  const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
     try {
-      const result = await importState.mutateAsync(file);
-      toast.success(
-        `Import hotový: ${result.projects ?? 0} projektů, ${result.budgetItems ?? 0} položek, ${result.payments ?? 0} plateb`,
-      );
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Import selhal");
+      await importState.mutateAsync(file);
+      toast.success("Stav importován");
+    } catch {
+      toast.error("Import selhal");
+    }
+    e.target.value = "";
+  };
+
+  const handleCsv = async () => {
+    try {
+      await exportCsv.mutateAsync();
+      toast.success("CSV staženo");
+    } catch {
+      toast.error("CSV export selhal");
     }
   };
 
   return (
-    <aside id="app-sidebar" className="flex h-full w-80 flex-col border-r bg-sidebar text-sidebar-foreground">
-      {/* Header */}
-      <div id="sidebar-header" className="flex items-center gap-2 border-b px-5 py-4">
-        <div className="flex h-9 w-9 items-center justify-center rounded-lg overflow-hidden bg-primary">
-          <img src="/logo.svg" alt="Rozpočet Stavby" className="h-full w-full" />
-        </div>
-        <div className="flex-1">
-          <h1 className="text-base font-bold leading-tight">Rozpočet Stavby</h1>
-          <p className="text-[11px] text-muted-foreground leading-tight">
-            Rozpočet · Čas · Materiál
-          </p>
-        </div>
-        <ThemeToggle />
-      </div>
-
-      {/* Projects search + list header */}
-      <div className="px-3 pt-3 pb-2">
-        <div className="relative mb-2">
-          <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Hledat projekt…"
-            className="h-8 pl-8 pr-7 text-xs"
+    <nav className="flex h-full flex-col bg-background">
+      {/* Navigation tabs */}
+      <div className="flex-1 space-y-0.5 overflow-y-auto scrollbar-thin p-2">
+        {p0Items.map((tab) => (
+          <NavButton
+            key={tab.id}
+            tab={tab}
+            isActive={activeTab === tab.id}
+            onClick={() => handleNavClick(tab.id)}
           />
-          {search && (
-            <button
-              onClick={() => setSearch("")}
-              className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-0.5 text-muted-foreground hover:bg-muted hover:text-foreground"
-              aria-label="Vyčistit hledání"
-            >
-              <X className="h-3.5 w-3.5" />
-            </button>
-          )}
-        </div>
-        {/* Status filter pills */}
-        <div className="mb-2 flex items-center gap-0.5 rounded-md border bg-muted/40 p-0.5">
-          {([
-            { id: "all", label: "Vše", count: projects?.length ?? 0 },
-            { id: "active", label: "Aktivní", count: projects?.filter((p) => p.status === "active").length ?? 0 },
-            { id: "planning", label: "Plánování", count: projects?.filter((p) => p.status === "planning").length ?? 0 },
-            { id: "completed", label: "Hotovo", count: projects?.filter((p) => p.status === "completed").length ?? 0 },
-          ] as const).map((opt) => (
-            <button
-              key={opt.id}
-              onClick={() => setStatusFilter(opt.id)}
-              className={cn(
-                "flex flex-1 items-center justify-center gap-1 rounded px-1.5 py-1 text-[11px] font-medium transition-colors",
-                statusFilter === opt.id
-                  ? "bg-background text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground",
-              )}
-            >
-              {opt.label}
-              {opt.count > 0 && (
-                <span className={cn(
-                  "tabular-nums text-[9px]",
-                  statusFilter === opt.id ? "text-muted-foreground" : "text-muted-foreground/60",
-                )}>
-                  {opt.count}
-                </span>
-              )}
-            </button>
-          ))}
-        </div>
-        <div className="flex items-center justify-between">
-          <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            Projekty ({sortedProjects.length}
-            {search && (projects?.length ?? 0) !== sortedProjects.length
-              ? `/${projects?.length ?? 0}`
-              : ""})
-          </span>
-          <Button
-            size="sm"
-            variant="ghost"
-            className="h-7 px-2 text-xs"
-            onClick={() => setNewDialogOpen(true)}
-          >
-            <Plus className="mr-1 h-3.5 w-3.5" /> Přidat
-          </Button>
-        </div>
-      </div>
+        ))}
 
-      <div id="sidebar-project-list" className="flex-1 overflow-y-auto px-2 pb-2">
-        {isLoading ? (
-          <div className="flex justify-center py-8">
-            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-          </div>
-        ) : sortedProjects.length === 0 ? (
-          <div className="px-3 py-8 text-center text-sm text-muted-foreground">
-            {search ? (
-              <>
-                Žádné projekty neodpovídají „{search}".
-                <br />
-                <button
-                  onClick={() => setSearch("")}
-                  className="mt-1 text-primary hover:underline"
-                >
-                  Zrušit hledání
-                </button>
-              </>
-            ) : (
-              <>
-                Zatím žádné projekty.
-                <br />
-                Klikněte na „Přidat".
-              </>
-            )}
-          </div>
-        ) : (
-          <ul className="space-y-1">
-            {sortedProjects.map((p) => {
-              const isActive = p.id === selectedProjectId;
-              const status = STATUS_LABELS[p.status] ?? STATUS_LABELS.active;
-              return (
-                <li key={p.id}>
-                  <div
-                    role="button"
-                    tabIndex={0}
-                    onClick={() => setSelectedProject(p.id)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" || e.key === " ") {
-                        e.preventDefault();
-                        setSelectedProject(p.id);
-                      }
-                    }}
-                    className={cn(
-                      "group relative flex w-full cursor-pointer flex-col gap-1 rounded-lg border border-transparent px-3 py-2.5 text-left transition-colors",
-                      isActive
-                        ? "border-border bg-sidebar-accent text-sidebar-accent-foreground shadow-sm"
-                        : "hover:bg-sidebar-accent/60",
-                    )}
-                  >
-                    <div className="flex items-start gap-2">
-                      <Building2
-                        className={cn(
-                          "mt-0.5 h-4 w-4 shrink-0",
-                          isActive ? "text-primary" : "text-muted-foreground",
-                        )}
-                      />
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-1.5">
-                          <span className="truncate text-sm font-semibold">
-                            {p.name}
-                          </span>
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              toggleStar(p.id, !p.starred);
-                            }}
-                            className="rounded p-0.5 hover:bg-muted"
-                            aria-label={p.starred ? "Odebrat hvězdičku" : "Ohvězdičkovat"}
-                          >
-                            <Star
-                              className={cn(
-                                "h-3.5 w-3.5 shrink-0 transition-colors",
-                                p.starred
-                                  ? "fill-warning text-warning"
-                                  : "text-muted-foreground/40 hover:text-warning",
-                              )}
-                            />
-                          </button>
-                        </div>
-                        {p.address && (
-                          <p className="truncate text-[11px] text-muted-foreground">
-                            {p.address}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                    {p.stats && (
-                      <div className="mt-1.5 flex items-center justify-between pl-6">
-                        <span className="text-[11px] text-muted-foreground">
-                          {formatCzk(p.stats.actualTotal)} / {formatCzk(p.stats.planTotal)}
-                        </span>
-                        <Badge
-                          variant="secondary"
-                          className={cn("h-4 px-1.5 text-[10px]", status.color)}
-                        >
-                          {status.label}
-                        </Badge>
-                      </div>
-                    )}
-                    {/* Burn rate progress bar */}
-                    {p.stats && p.stats.planTotal > 0 && (
-                      <div className="mt-1 pl-6">
-                        <div className="h-1 w-full overflow-hidden rounded-full bg-muted">
-                          <div
-                            className={cn(
-                              "h-full rounded-full transition-all",
-                              p.stats.burnRate > 100
-                                ? "bg-danger"
-                                : p.stats.burnRate > 80
-                                  ? "bg-warning"
-                                  : "bg-success",
-                            )}
-                            style={{ width: `${Math.min(p.stats.burnRate, 100)}%` }}
-                          />
-                        </div>
-                      </div>
-                    )}
-                    {/* Project actions menu (3-dot) — appears on hover, stays visible while open */}
-                    <DropdownMenu modal={false}>
-                      <DropdownMenuTrigger asChild>
-                        <span
-                          role="button"
-                          tabIndex={0}
-                          onClick={(e) => e.stopPropagation()}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter" || e.key === " ") {
-                              e.stopPropagation();
-                            }
-                          }}
-                          className="absolute right-1.5 top-1.5 z-30 hidden h-6 w-6 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground group-hover:flex data-[state=open]:flex"
-                          aria-label="Akce projektu"
-                        >
-                          <MoreVertical className="h-3.5 w-3.5" />
-                        </span>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" side="bottom" sideOffset={4} alignOffset={-4} onClick={(e) => e.stopPropagation()}>
-                        <DropdownMenuItem onClick={() => {
-                          setSelectedProject(p.id);
-                          onSelectProject?.(p.id);
-                          useAppStore.getState().setActiveTab("dashboard");
-                          window.dispatchEvent(new CustomEvent("stavba:open-audit"));
-                        }}>
-                          <History className="mr-2 h-3.5 w-3.5" /> Historie změn
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => {
-                          setSelectedProject(p.id);
-                          onSelectProject?.(p.id);
-                          window.dispatchEvent(new CustomEvent("stavba:open-report"));
-                        }}>
-                          <FileText className="mr-2 h-3.5 w-3.5" /> Report
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => {
-                          setSelectedProject(p.id);
-                          onSelectProject?.(p.id);
-                          window.dispatchEvent(new CustomEvent("stavba:open-edit"));
-                        }}>
-                          <Pencil className="mr-2 h-3.5 w-3.5" /> Upravit
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          className="text-destructive focus:text-destructive"
-                          onClick={() => setDeleteId(p.id)}
-                        >
-                          <Trash2 className="mr-2 h-3.5 w-3.5" /> Odstranit
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
+        {/* Separator between P0 and P2 */}
+        {p2Items.length > 0 && (
+          <div className="my-2 h-px bg-border" aria-hidden />
         )}
-      </div>
 
-      {/* Mini-stats for the selected project */}
-      {selectedProject && (selectedProject.stats || selectedProject._count) && (
-        <MiniProjectStats projectId={selectedProject.id} />
-      )}
-
-      {/* Footer with Export/Import */}
-      <div className="border-t px-3 py-3">
-        <div className="flex gap-1.5">
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-7 flex-1 text-xs"
-            disabled={exportState.isPending || (projects?.length ?? 0) === 0}
-            onClick={async () => {
-              try {
-                await exportState.mutateAsync();
-                toast.success("Stav exportován");
-              } catch {
-                toast.error("Export selhal");
-              }
-            }}
-          >
-            <Download className="mr-1.5 h-3.5 w-3.5" /> Export
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-7 flex-1 text-xs"
-            disabled={importState.isPending}
-            onClick={() => fileInputRef.current?.click()}
-          >
-            <Upload className="mr-1.5 h-3.5 w-3.5" /> Import
-          </Button>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="application/json,.json"
-            className="hidden"
-            onChange={(e) => {
-              const f = e.target.files?.[0];
-              if (f) handleImport(f);
-              e.target.value = "";
-            }}
+        {p2Items.map((tab) => (
+          <NavButton
+            key={tab.id}
+            tab={tab}
+            isActive={activeTab === tab.id}
+            onClick={() => handleNavClick(tab.id)}
           />
-        </div>
-        <p className="mt-2 flex items-center gap-1.5 text-[10px] text-muted-foreground">
-          <span className="inline-block h-1.5 w-1.5 rounded-full bg-success" />
-          <span>
-            Rozpočet Stavby{" "}
-            <span
-              className="font-semibold text-foreground"
-              title={`Git commit: ${GIT_COMMIT_HASH}\nDatum: ${GIT_COMMIT_DATE || "—"}\nPočet commitů: ${GIT_COMMIT_COUNT}\nBuild: ${VERSION_LABEL}`}
-            >
-              {VERSION_LABEL}
-            </span>{" "}
-            · Neon PostgreSQL
-          </span>
-        </p>
+        ))}
       </div>
 
-      <ProjectDialog open={dialogOpen} onOpenChange={setDialogOpen} />
-      <NewProjectDialog open={newDialogOpen} onOpenChange={setNewDialogOpen} />
-
-      <AlertDialog
-        open={!!deleteId}
-        onOpenChange={(open) => !open && setDeleteId(null)}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Smazat projekt?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Opravdu chcete smazat projekt{" "}
-              <strong>{projectToDelete?.name}</strong>? Tím se trvale odstraní
-              všechny položky rozpočtu, platby, časové záznamy a kontakty
-              náležející k tomuto projektu. Tuto akci nelze vrátit zpět.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Zrušit</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={async () => {
-                if (!deleteId) return;
-                try {
-                  await deleteProject.mutateAsync(deleteId);
-                  if (deleteId === selectedProjectId) {
-                    setSelectedProject(null);
-                  }
-                  setDeleteId(null);
-                  toast.success("Projekt byl smazán");
-                } catch {
-                  toast.error("Nepodařilo se smazat projekt");
-                }
-              }}
+      {/* Settings dropdown — bottom */}
+      <div className="border-t p-2">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              className="w-full justify-start gap-2.5 px-3 text-sm"
+              disabled={!selectedProjectId}
             >
-              Smazat projekt
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </aside>
+              <Settings className="h-4 w-4" />
+              Nastavení
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent side="top" align="start" className="w-56">
+            <DropdownMenuLabel className="text-xs text-muted-foreground">
+              Projekt
+            </DropdownMenuLabel>
+            <DropdownMenuItem onClick={() => window.dispatchEvent(new CustomEvent("stavba:open-edit"))}>
+              <Pencil className="mr-2 h-3.5 w-3.5" />
+              Upravit projekt
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => window.dispatchEvent(new CustomEvent("stavba:open-report"))}>
+              <Printer className="mr-2 h-3.5 w-3.5" />
+              Report (PDF)
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => window.dispatchEvent(new CustomEvent("stavba:open-audit"))}>
+              <History className="mr-2 h-3.5 w-3.5" />
+              Historie změn
+            </DropdownMenuItem>
+
+            <DropdownMenuSeparator />
+
+            <DropdownMenuLabel className="text-xs text-muted-foreground">
+              Data
+            </DropdownMenuLabel>
+            <DropdownMenuItem
+              disabled={exportState.isPending}
+              onClick={handleExport}
+            >
+              <Download className="mr-2 h-3.5 w-3.5" />
+              Export stavu (JSON)
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              disabled={importState.isPending}
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <Upload className="mr-2 h-3.5 w-3.5" />
+              Import stavu (JSON)
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              disabled={exportCsv.isPending || !selectedProjectId}
+              onClick={handleCsv}
+            >
+              <FileSpreadsheet className="mr-2 h-3.5 w-3.5" />
+              Stáhnout CSV
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+
+      {/* Hidden file input for JSON import */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="application/json,.json"
+        className="hidden"
+        onChange={handleImport}
+      />
+    </nav>
   );
 }
 
-// ===== Mini project stats widget for the sidebar =====
-function MiniProjectStats({ projectId }: { projectId: string }) {
-  const { data } = useDashboard(projectId);
-
-  if (!data) {
-    return (
-      <div className="border-t px-3 py-3">
-        <div className="h-20 animate-pulse rounded-md bg-muted/50" />
-      </div>
-    );
-  }
-
-  const { totals } = data;
-  const burnTone =
-    totals.burnRate > 100
-      ? "text-danger bg-danger"
-      : totals.burnRate > 80
-        ? "text-warning bg-warning"
-        : "text-success bg-success";
-  const burnClass = burnTone.split(" ")[1];
-  const completionPct =
-    totals.itemCount > 0 ? (totals.completedCount / totals.itemCount) * 100 : 0;
-
+// ===== Navigation button =====
+function NavButton({
+  tab,
+  isActive,
+  onClick,
+}: {
+  tab: (typeof NAV_ITEMS)[number];
+  isActive: boolean;
+  onClick: () => void;
+}) {
+  const Icon = tab.icon;
   return (
-    <div className="border-t px-3 py-3">
-      <div className="mb-2 flex items-center justify-between">
-        <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-          Souhrn projektu
-        </span>
-      </div>
-      <div className="space-y-2 rounded-lg border bg-muted/30 p-2.5">
-        {/* Burn rate */}
-        <div>
-          <div className="mb-1 flex items-center justify-between text-[11px]">
-            <span className="text-muted-foreground">Čerpání rozpočtu</span>
-            <span className={cn("font-semibold", burnTone.split(" ")[0])}>
-              {totals.burnRate.toFixed(0)}%
-            </span>
-          </div>
-          <div className="h-1.5 overflow-hidden rounded-full bg-muted">
-            <div
-              className={cn("h-full rounded-full transition-all", burnClass)}
-              style={{ width: `${Math.min(totals.burnRate, 100)}%` }}
-            />
-          </div>
-        </div>
-        {/* Completion */}
-        <div>
-          <div className="mb-1 flex items-center justify-between text-[11px]">
-            <span className="text-muted-foreground">Dokončeno</span>
-            <span className="font-semibold text-foreground">
-              {totals.completedCount}/{totals.itemCount}
-            </span>
-          </div>
-          <div className="h-1.5 overflow-hidden rounded-full bg-muted">
-            <div
-              className="h-full rounded-full bg-subsidy transition-all"
-              style={{ width: `${completionPct}%` }}
-            />
-          </div>
-        </div>
-        {/* Quick stats */}
-        <div className="grid grid-cols-2 gap-1.5 pt-1 text-[11px]">
-          <div className="rounded bg-background px-2 py-1">
-            <div className="text-muted-foreground">Zbývá</div>
-            <div
-              className={cn(
-                "font-bold",
-                totals.remaining < 0 ? "text-danger" : "text-success",
-              )}
-            >
-              {formatCzk(totals.remaining)}
-            </div>
-          </div>
-          <div className="rounded bg-background px-2 py-1">
-            <div className="text-muted-foreground">Ušetřeno</div>
-            <div className="font-bold text-success">
-              {formatCzk(totals.savedTotal)}
-            </div>
-          </div>
-          <div className="rounded bg-background px-2 py-1">
-            <div className="text-muted-foreground">Hodin</div>
-            <div className="font-bold text-time">
-              {new Intl.NumberFormat("cs-CZ", { maximumFractionDigits: 0 }).format(totals.hoursTotal)} h
-            </div>
-          </div>
-          <div className="rounded bg-background px-2 py-1">
-            <div className="text-muted-foreground">Plán dní</div>
-            <div className="font-bold text-info">
-              {new Intl.NumberFormat("cs-CZ", { maximumFractionDigits: 0 }).format(totals.daysPlanned)}
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+    <button
+      onClick={onClick}
+      className={cn(
+        "flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+        isActive
+          ? "bg-accent text-accent-foreground"
+          : "text-muted-foreground hover:bg-muted/60 hover:text-foreground",
+      )}
+    >
+      <Icon className="h-4 w-4 shrink-0" />
+      {tab.label}
+    </button>
   );
 }
