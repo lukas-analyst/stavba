@@ -140,6 +140,7 @@ export type TimeEntry = {
   date: string;
   dateTo: string | null;
   hours: number;
+  workerCount: number;
   description: string | null;
   budgetItem?: { id: string; category: string; subcategory: string | null };
   contact?: { id: string; name: string; type: string } | null;

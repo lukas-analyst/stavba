@@ -11,6 +11,7 @@ const TIME_ENTRY_SELECT = {
   date: true,
   dateTo: true,
   hours: true,
+  workerCount: true,
   description: true,
   createdAt: true,
   updatedAt: true,
@@ -45,7 +46,7 @@ export async function POST(
   try {
     const { id } = await params;
     const body = await request.json();
-    const { budgetItemId, contactId, workerName, workerType, date, dateTo, hours, description } = body;
+    const { budgetItemId, contactId, workerName, workerType, date, dateTo, hours, workerCount, description } = body;
 
     if (!budgetItemId) {
       return NextResponse.json({ error: "budgetItemId is required" }, { status: 400 });
@@ -80,6 +81,7 @@ export async function POST(
         date: startDate,
         dateTo: endDate,
         hours: Number(hours),
+        workerCount: workerCount ? Math.max(1, Number(workerCount)) : 1,
         description: description?.trim() || null,
       },
       select: TIME_ENTRY_SELECT,

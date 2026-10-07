@@ -680,7 +680,11 @@ model TimeEntry {
   /// End date (optional, for multi-day entries). If null, single-day entry.
   dateTo       DateTime?
   /// Total hours worked across the range (date..dateTo)
+  /// Note: This is hours per person. Total person-hours = hours × workerCount.
   hours        Float
+  /// Number of workers (default 1). Total person-hours = hours × workerCount.
+  /// Example: 3 workers × 8 hours = 24 person-hours total.
+  workerCount  Int        @default(1)
   /// Free-form description of the work done
   description  String?
   /// When this time entry was created
