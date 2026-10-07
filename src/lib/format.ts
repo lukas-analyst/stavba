@@ -165,6 +165,30 @@ export const STATUS_LABELS: Record<string, { label: string; color: string; dot: 
   },
 };
 
+// Project status labels — single source of truth
+export const STATUS_LABELS: Record<string, { label: string; color: string; dot: string }> = {
+  active: {
+    label: "Aktivní",
+    color: "bg-success-soft text-success-strong dark:bg-success-soft dark:text-success-strong",
+    dot: "bg-success",
+  },
+  planning: {
+    label: "Plánování",
+    color: "bg-info-soft text-info-strong dark:bg-info-soft dark:text-info-strong",
+    dot: "bg-info",
+  },
+  completed: {
+    label: "Dokončeno",
+    color: "bg-muted text-muted-foreground dark:bg-muted dark:text-muted-foreground",
+    dot: "bg-muted-foreground",
+  },
+  paused: {
+    label: "Pozastaveno",
+    color: "bg-warning-soft text-warning-strong dark:bg-warning-soft dark:text-warning-strong",
+    dot: "bg-warning",
+  },
+};
+
 export const PHASE_ORDER = [
   "Příprava",
   "Demolice",

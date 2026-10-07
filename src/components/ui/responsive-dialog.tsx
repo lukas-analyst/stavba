@@ -20,6 +20,12 @@ import {
 } from "@/components/ui/drawer";
 import { cn } from "@/lib/utils";
 
+// ============================================================
+// ResponsiveDialog — Drawer (bottom sheet) on mobile, Dialog on desktop.
+// On mobile, the footer is sticky at the bottom of the drawer
+// so it stays visible when the form content expands.
+// ============================================================
+
 type ResponsiveDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -39,7 +45,7 @@ export function ResponsiveDialog({
   if (isMobile) {
     return (
       <Drawer open={open} onOpenChange={onOpenChange}>
-        <DrawerContent className={cn("max-h-[92vh]", className)}>
+        <DrawerContent className={cn("max-h-[92vh] flex flex-col", className)}>
           {children}
         </DrawerContent>
       </Drawer>
@@ -55,9 +61,10 @@ export function ResponsiveDialog({
   );
 }
 
+// Header — always at top
 export function ResponsiveDialogHeader({ className, ...props }: React.ComponentProps<"div">) {
   const isMobile = useIsMobile();
-  if (isMobile) return <DrawerHeader className={className} {...props} />;
+  if (isMobile) return <DrawerHeader className={cn("shrink-0", className)} {...props} />;
   return <DialogHeader className={className} {...props} />;
 }
 
@@ -73,8 +80,26 @@ export function ResponsiveDialogDescription({ className, ...props }: React.Compo
   return <DialogDescription className={className} {...(props as React.ComponentProps<typeof DialogDescription>)} />;
 }
 
+// Body — scrollable area between header and footer (mobile only)
+export function ResponsiveDialogBody({ className, ...props }: React.ComponentProps<"div">) {
+  const isMobile = useIsMobile();
+  if (isMobile) {
+    return <div className={cn("flex-1 overflow-y-auto scrollbar-thin", className)} {...props} />;
+  }
+  // On desktop, just a plain div (the DialogContent handles scrolling)
+  return <div className={className} {...props} />;
+}
+
+// Footer — sticky at bottom on mobile, normal on desktop
 export function ResponsiveDialogFooter({ className, ...props }: React.ComponentProps<"div">) {
   const isMobile = useIsMobile();
-  if (isMobile) return <DrawerFooter className={className} {...props} />;
+  if (isMobile) {
+    return (
+      <DrawerFooter
+        className={cn("shrink-0 border-t bg-background sticky bottom-0", className)}
+        {...props}
+      />
+    );
+  }
   return <DialogFooter className={className} {...props} />;
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
   usePayments,
   useBudgetItems,
@@ -158,6 +158,18 @@ export function PaymentsTab({ projectId }: { projectId: string }) {
   const debouncedSearch = useDebouncedValue(search, 250);
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [sortBy, setSortBy] = useState<SortKey>("date-desc");
+
+  // Listen for FAB "add payment" trigger (mobile contextual FAB)
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const action = (e as CustomEvent<string>).detail;
+      if (action === "add-payment") {
+        setAddOpen(true);
+      }
+    };
+    window.addEventListener("stavba:fab-add", handler);
+    return () => window.removeEventListener("stavba:fab-add", handler);
+  }, []);
 
   // Group payments: standalone payments + installment groups
   // A payment is an "installment parent" if it has invoiceTotal != null (regardless of children).

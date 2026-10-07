@@ -346,6 +346,18 @@ function BudgetTab({ projectId, dragEndHandlerRef }: { projectId: string; dragEn
     }
   }, [highlightId, items]);
 
+  // Listen for FAB "add item" trigger (mobile contextual FAB)
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const action = (e as CustomEvent<string>).detail;
+      if (action === "add-item") {
+        setAddOpen(true);
+      }
+    };
+    window.addEventListener("stavba:fab-add", handler);
+    return () => window.removeEventListener("stavba:fab-add", handler);
+  }, []);
+
   const toggleCat = (cat: string) => {
     setCollapsedCats((prev) => {
       const next = new Set(prev);
