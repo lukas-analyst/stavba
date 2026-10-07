@@ -29,11 +29,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Card } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
-import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -47,6 +42,7 @@ import {
   ResponsiveDialogTitle,
   ResponsiveDialogDescription,
   ResponsiveDialogFooter,
+  ResponsiveDialogBody,
 } from "@/components/ui/responsive-dialog";
 import {
   Select,
@@ -72,13 +68,11 @@ import {
   Download,
   ArrowUpDown,
   CheckCircle2,
-  ChevronDown,
 } from "lucide-react";
 import { formatNumber, formatDate, WORKER_TYPES, workerTypeLabel } from "@/lib/format";
 import { toast } from "sonner";
 import { EmptyStateBox } from "@/components/empty-state-box";
 import { SearchableSelect } from "@/components/ui/searchable-select";
-import { useIsMobile } from "@/hooks/use-mobile";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { useLastValue } from "@/hooks/use-last-value";
 import { cn } from "@/lib/utils";
@@ -580,7 +574,6 @@ function TimeDialogInner({
   const [date, setDate] = useState(toDateStr(editEntry?.date) || today);
   const [dateTo, setDateTo] = useState(toDateStr(editEntry?.dateTo));
   const [hours, setHours] = useState(editEntry ? String(editEntry.hours ?? "") : "");
-  const [workerCount, setWorkerCount] = useState(editEntry ? String(editEntry.workerCount ?? 1) : "1");
   const [description, setDescription] = useState(editEntry?.description ?? "");
   const [markCompleted, setMarkCompleted] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -602,8 +595,6 @@ function TimeDialogInner({
     ? updateTimeEntry?.isPending ?? false
     : createTimeEntry.isPending;
 
-  const isMobile = useIsMobile();
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const newErrors: Record<string, string> = {};
@@ -622,7 +613,6 @@ function TimeDialogInner({
       date,
       dateTo: dateTo || null,
       hours: h,
-      workerCount: workerCount ? Math.max(1, Number(workerCount)) : 1,
       description,
     };
 
@@ -679,49 +669,7 @@ function TimeDialogInner({
         </ResponsiveDialogDescription>
       </ResponsiveDialogHeader>
       <form onSubmit={handleSubmit} className="space-y-4">
-        {/* ===== Borderless Pracovník input — top ===== */}
-        <Input
-          id="workerName"
-          value={workerName}
-          onChange={(e) => {
-            setWorkerName(e.target.value);
-            if (errors.workerName)
-              setErrors((prev) => {
-                const n = { ...prev };
-                delete n.workerName;
-                return n;
-              });
-          }}
-          placeholder="Pracovník…"
-          list="contacts-list"
-          autoFocus
-          aria-invalid={!!errors.workerName}
-          className={cn(
-            "border-0 px-0 text-xl font-bold shadow-none focus-visible:ring-0",
-            errors.workerName && "border-destructive ring-destructive",
-          )}
-          required
-        />
-        {errors.workerName && (
-          <p className="text-xs text-destructive -mt-2">{errors.workerName}</p>
-        )}
-        <datalist id="contacts-list">
-          {contacts.map((c) => (
-            <option key={c.id} value={c.name} />
-          ))}
-        </datalist>
-
-        {/* ===== Borderless Popis práce textarea ===== */}
-        <Textarea
-          id="description"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          placeholder="Popis práce…"
-          rows={1}
-          className="border-0 px-0 text-sm text-muted-foreground shadow-none focus-visible:ring-0 resize-none"
-        />
-
-        {/* ===== Položka rozpočtu ===== */}
+        <ResponsiveDialogBody>
         <div className="space-y-2">
           <Label htmlFor="budgetItem">Položka rozpočtu *</Label>
           <SearchableSelect
@@ -750,9 +698,53 @@ function TimeDialogInner({
             <p className="text-xs text-destructive mt-1">{errors.budgetItemId}</p>
           )}
         </div>
-
-        {/* ===== Grid: Hodiny + Počet lidí + Datum ===== */}
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-2">
+            <Input
+              id="workerName"
+              value={workerName}
+              onChange={(e) => {
+                setWorkerName(e.target.value);
+                if (errors.workerName)
+                  setErrors((prev) => {
+                    const n = { ...prev };
+                    delete n.workerName;
+                    return n;
+                  });
+              }}
+              placeholder="Pracovník…"
+              list="contacts-list"
+              aria-invalid={!!errors.workerName}
+              className="border-0 px-0 text-xl font-bold shadow-none focus-visible:ring-0"
+              autoFocus
+              required
+            />
+            {errors.workerName && (
+              <p className="text-xs text-destructive mt-1">{errors.workerName}</p>
+            )}
+            <datalist id="contacts-list">
+              {contacts.map((c) => (
+                <option key={c.id} value={c.name} />
+              ))}
+            </datalist>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="workerType">Typ pracovníka</Label>
+            <Select value={workerType} onValueChange={setWorkerType}>
+              <SelectTrigger id="workerType">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {WORKER_TYPES.map((t) => (
+                  <SelectItem key={t.value} value={t.value}>
+                    {t.emoji} {t.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
           <div className="space-y-2">
             <Label htmlFor="hours">Hodiny celkem *</Label>
             <Input
@@ -783,17 +775,6 @@ function TimeDialogInner({
             )}
           </div>
           <div className="space-y-2">
-            <Label>Počet lidí</Label>
-            <Input
-              type="number"
-              inputMode="numeric"
-              min="1"
-              value={workerCount}
-              onChange={(e) => setWorkerCount(e.target.value)}
-              placeholder="1"
-            />
-          </div>
-          <div className="space-y-2">
             <Label htmlFor="date">Datum od *</Label>
             <Input
               id="date"
@@ -804,105 +785,78 @@ function TimeDialogInner({
             />
           </div>
         </div>
-
-        {/* ===== Collapsible: Více (volitelné) ===== */}
-        <Collapsible defaultOpen={!isMobile}>
-          <div className="rounded-2xl border bg-muted/20">
-            <CollapsibleTrigger asChild>
-              <button
-                type="button"
-                className="flex w-full items-center justify-between px-4 py-2.5 text-sm font-medium hover:bg-muted/40 rounded-2xl"
-              >
-                <span>Více (volitelné)</span>
-                <ChevronDown className="h-4 w-4 text-muted-foreground" />
-              </button>
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-              <div className="space-y-4 p-4 pt-0">
-                {/* Typ pracovníka */}
-                <div className="space-y-2">
-                  <Label htmlFor="workerType">Typ pracovníka</Label>
-                  <Select value={workerType} onValueChange={setWorkerType}>
-                    <SelectTrigger id="workerType">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {WORKER_TYPES.map((t) => (
-                        <SelectItem key={t.value} value={t.value}>
-                          {t.emoji} {t.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Kontakt */}
-                <div className="space-y-2">
-                  <Label htmlFor="contact">Kontakt (volitelné)</Label>
-                  <SearchableSelect
-                    id="contact"
-                    options={contacts.map((c) => ({
-                      value: c.id,
-                      label: c.name,
-                      hint: `${c.type}${c.role ? ` · ${c.role}` : ""}${c.company ? ` · ${c.company}` : ""}`,
-                    }))}
-                    value={contactId}
-                    onChange={setContactId}
-                    placeholder="Bez kontaktu"
-                    searchPlaceholder="Hledat kontakt…"
-                    emptyText="Žádné kontakty nenalezeny"
-                  />
-                </div>
-
-                {/* Datum do */}
-                <div className="space-y-2">
-                  <Label htmlFor="dateTo">Datum do (vícedenní)</Label>
-                  <Input
-                    id="dateTo"
-                    type="date"
-                    value={dateTo}
-                    min={date}
-                    onChange={(e) => setDateTo(e.target.value)}
-                    placeholder="(volitelné)"
-                  />
-                  {dateTo && (
-                    <p className="text-[11px] text-muted-foreground">
-                      Práce trvá {daySpan} {daySpan === 1 ? "den" : daySpan < 5 ? "dny" : "dní"}
-                    </p>
-                  )}
-                </div>
-
-                {/* Označit položku jako hotovou */}
-                <div className="flex flex-col gap-1 rounded-md border border-time/30 bg-time-soft/50 p-3 dark:border-time-strong/60 dark:bg-time-soft/60">
-                  <div className="flex items-start gap-2">
-                    <Checkbox
-                      id="markCompleted"
-                      checked={markCompleted}
-                      onCheckedChange={(v) => setMarkCompleted(v === true)}
-                      className="mt-0.5"
-                    />
-                    <Label htmlFor="markCompleted" className="cursor-pointer text-sm font-medium leading-tight">
-                      Označit položku rozpočtu jako hotovou
-                    </Label>
-                  </div>
-                  <p className="ml-6 text-[11px] text-muted-foreground">
-                    {alreadyCompleted
-                      ? "Položka je již označena jako hotová."
-                      : "Po uložení záznamu se zavolá PATCH na budget item s completed: true. Propojí časový záznam s dokončením položky."}
-                  </p>
-                </div>
-              </div>
-            </CollapsibleContent>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-2">
+            <Label htmlFor="dateTo">Datum do (vícedenní)</Label>
+            <Input
+              id="dateTo"
+              type="date"
+              value={dateTo}
+              min={date}
+              onChange={(e) => setDateTo(e.target.value)}
+              placeholder="(volitelné)"
+            />
+            {dateTo && (
+              <p className="text-[11px] text-muted-foreground">
+                Práce trvá {daySpan} {daySpan === 1 ? "den" : daySpan < 5 ? "dny" : "dní"}
+              </p>
+            )}
           </div>
-        </Collapsible>
+          <div className="space-y-2">
+            <Label htmlFor="contact">Kontakt (volitelné)</Label>
+            <SearchableSelect
+              id="contact"
+              options={contacts.map((c) => ({
+                value: c.id,
+                label: c.name,
+                hint: `${c.type}${c.role ? ` · ${c.role}` : ""}${c.company ? ` · ${c.company}` : ""}`,
+              }))}
+              value={contactId}
+              onChange={setContactId}
+              placeholder="Bez kontaktu"
+              searchPlaceholder="Hledat kontakt…"
+              emptyText="Žádné kontakty nenalezeny"
+            />
+          </div>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="description">Popis práce</Label>
+          <Textarea
+            id="description"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="Co se dělalo, postup, materiál…"
+            rows={2}
+          />
+        </div>
+        {/* Hotovo checkbox - propojí časový záznam s dokončením budget item */}
+        <div className="flex flex-col gap-1 rounded-md border border-time/30 bg-time-soft/50 p-3 dark:border-time-strong/60 dark:bg-time-soft/60">
+          <div className="flex items-start gap-2">
+            <Checkbox
+              id="markCompleted"
+              checked={markCompleted}
+              onCheckedChange={(v) => setMarkCompleted(v === true)}
+              className="mt-0.5"
+            />
+            <Label htmlFor="markCompleted" className="cursor-pointer text-sm font-medium leading-tight">
+              Označit položku rozpočtu jako hotovou
+            </Label>
+          </div>
+          <p className="ml-6 text-[11px] text-muted-foreground">
+            {alreadyCompleted
+              ? "Položka je již označena jako hotová."
+              : "Po uložení záznamu se zavolá PATCH na budget item s completed: true. Propojí časový záznam s dokončením položky."}
+          </p>
+        </div>
 
+        </ResponsiveDialogBody>
         <ResponsiveDialogFooter>
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
             Zrušit
           </Button>
           <Button type="submit" disabled={isPending}>
             {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {isEdit ? "Uložit změny" : "Přidat čas"}
+            {isEdit ? "Uložit změny" : "Zaznamenat"}
             {markCompleted && !isPending && (
               <CheckCircle2 className="ml-1.5 h-4 w-4 text-time" />
             )}
