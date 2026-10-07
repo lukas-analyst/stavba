@@ -34,6 +34,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { AddDialogShell } from "@/components/ui/add-dialog-shell";
+import { CollapsibleSection } from "@/components/ui/collapsible-section";
 import {
   Select,
   SelectContent,
@@ -859,36 +860,139 @@ function PaymentDialogInner({
       isSubmitting={isPending}
       maxWidth="max-w-3xl"
     >
-      <div className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="budgetItem">Položka rozpočtu *</Label>
-          <SearchableSelect
-            id="budgetItem"
-            options={budgetItems.map((b) => ({
-              value: b.id,
-              label: `${b.category}${b.subcategory ? ` / ${b.subcategory}` : ""}${b.completed ? " ✓" : ""}`,
-              hint: b.category,
-            }))}
-            value={budgetItemId}
-            onChange={(v) => {
-              setBudgetItemId(v);
-              if (errors.budgetItemId)
-                setErrors((prev) => {
-                  const n = { ...prev };
-                  delete n.budgetItemId;
-                  return n;
-                });
-            }}
-            placeholder="Vyberte položku…"
-            searchPlaceholder="Hledat položku…"
-            emptyText="Žádné položky nenalezeny"
-            className={cn(errors.budgetItemId && "border-destructive")}
-          />
-          {errors.budgetItemId && (
-            <p className="text-xs text-destructive mt-1">{errors.budgetItemId}</p>
-          )}
-        </div>
+      {/* ===== ZÁKLAD ===== */}
+      <div className="space-y-2">
+        <Label htmlFor="budgetItem">Položka rozpočtu *</Label>
+        <SearchableSelect
+          id="budgetItem"
+          options={budgetItems.map((b) => ({
+            value: b.id,
+            label: `${b.category}${b.subcategory ? ` / ${b.subcategory}` : ""}${b.completed ? " ✓" : ""}`,
+            hint: b.category,
+          }))}
+          value={budgetItemId}
+          onChange={(v) => {
+            setBudgetItemId(v);
+            if (errors.budgetItemId)
+              setErrors((prev) => {
+                const n = { ...prev };
+                delete n.budgetItemId;
+                return n;
+              });
+          }}
+          placeholder="Vyberte položku…"
+          searchPlaceholder="Hledat položku…"
+          emptyText="Žádné položky nenalezeny"
+          className={cn(errors.budgetItemId && "border-destructive")}
+        />
+        {errors.budgetItemId && (
+          <p className="text-xs text-destructive mt-1">{errors.budgetItemId}</p>
+        )}
+      </div>
 
+      {/* Částka / Faktura celkem / 1. splátka + Datum */}
+      {isInvoice && !isEdit ? (
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-2">
+            <Label htmlFor="invoiceTotal">Faktura celkem (Kč) *</Label>
+            <Input
+              id="invoiceTotal"
+              value={invoiceTotal}
+              onChange={(e) => {
+                setInvoiceTotal(e.target.value);
+                if (errors.invoiceTotal)
+                  setErrors((prev) => {
+                    const n = { ...prev };
+                    delete n.invoiceTotal;
+                    return n;
+                  });
+              }}
+              placeholder="150000"
+              inputMode="decimal"
+              className={cn(errors.invoiceTotal && "border-destructive")}
+            />
+            {errors.invoiceTotal && (
+              <p className="text-xs text-destructive mt-1">{errors.invoiceTotal}</p>
+            )}
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="amount">1. splátka (Kč) *</Label>
+            <Input
+              id="amount"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              placeholder="50000"
+              inputMode="decimal"
+            />
+          </div>
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-2">
+            <Label htmlFor="amount">Částka (Kč) *</Label>
+            <Input
+              id="amount"
+              value={amount}
+              onChange={(e) => {
+                setAmount(e.target.value);
+                if (errors.amount)
+                  setErrors((prev) => {
+                    const n = { ...prev };
+                    delete n.amount;
+                    return n;
+                  });
+              }}
+              placeholder="25000"
+              inputMode="decimal"
+              className={cn(errors.amount && "border-destructive")}
+            />
+            {errors.amount && (
+              <p className="text-xs text-destructive mt-1">{errors.amount}</p>
+            )}
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="date">Datum *</Label>
+            <Input
+              id="date"
+              type="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+            />
+          </div>
+        </div>
+      )}
+
+      {isInvoice && !isEdit && (
+        <div className="space-y-2">
+          <Label htmlFor="date">Datum faktury *</Label>
+          <Input
+            id="date"
+            type="date"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+          />
+        </div>
+      )}
+
+      {/* Typ */}
+      <div className="space-y-2">
+        <Label htmlFor="type">Typ</Label>
+        <Select value={type} onValueChange={setType}>
+          <SelectTrigger id="type">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {PAYMENT_TYPES.map((t) => (
+              <SelectItem key={t.value} value={t.value}>
+                {t.emoji} {t.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* ===== DETAILY (volitelné) ===== */}
+      <CollapsibleSection title="Detaily (volitelné)">
         {/* Installment toggle - only in create mode (not editing existing payments) */}
         {!isEdit && (
           <div className="flex items-center gap-2 rounded-md border bg-muted/30 p-2">
@@ -904,122 +1008,25 @@ function PaymentDialogInner({
           </div>
         )}
 
-        {isInvoice && !isEdit ? (
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-2">
-              <Label htmlFor="invoiceTotal">Faktura celkem (Kč) *</Label>
-              <Input
-                id="invoiceTotal"
-                value={invoiceTotal}
-                onChange={(e) => {
-                  setInvoiceTotal(e.target.value);
-                  if (errors.invoiceTotal)
-                    setErrors((prev) => {
-                      const n = { ...prev };
-                      delete n.invoiceTotal;
-                      return n;
-                    });
-                }}
-                placeholder="150000"
-                inputMode="decimal"
-                className={cn(errors.invoiceTotal && "border-destructive")}
-              />
-              {errors.invoiceTotal && (
-                <p className="text-xs text-destructive mt-1">{errors.invoiceTotal}</p>
-              )}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="amount">1. splátka (Kč) *</Label>
-              <Input
-                id="amount"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                placeholder="50000"
-                inputMode="decimal"
-              />
-            </div>
-          </div>
-        ) : (
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-2">
-              <Label htmlFor="amount">Částka (Kč) *</Label>
-              <Input
-                id="amount"
-                value={amount}
-                onChange={(e) => {
-                  setAmount(e.target.value);
-                  if (errors.amount)
-                    setErrors((prev) => {
-                      const n = { ...prev };
-                      delete n.amount;
-                      return n;
-                    });
-                }}
-                placeholder="25000"
-                inputMode="decimal"
-                className={cn(errors.amount && "border-destructive")}
-              />
-              {errors.amount && (
-                <p className="text-xs text-destructive mt-1">{errors.amount}</p>
-              )}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="date">Datum *</Label>
-              <Input
-                id="date"
-                type="date"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-              />
-            </div>
-          </div>
-        )}
-
-        {isInvoice && !isEdit && (
-          <div className="space-y-2">
-            <Label htmlFor="date">Datum faktury *</Label>
-            <Input
-              id="date"
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-            />
-          </div>
-        )}
-
-        <div className="grid grid-cols-2 gap-3">
-          <div className="space-y-2">
-            <Label htmlFor="type">Typ</Label>
-            <Select value={type} onValueChange={setType}>
-              <SelectTrigger id="type">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {PAYMENT_TYPES.map((t) => (
-                  <SelectItem key={t.value} value={t.value}>
-                    {t.emoji} {t.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="contact">Kontakt (volitelné)</Label>
-            <SearchableSelect
-              id="contact"
-              options={contacts.map((c) => ({
-                value: c.id,
-                label: c.name,
-                hint: `${c.type}${c.role ? ` · ${c.role}` : ""}${c.company ? ` · ${c.company}` : ""}`,
-              }))}
-              value={contactId}
-              onChange={setContactId}
-              placeholder="Bez kontaktu"
-              searchPlaceholder="Hledat kontakt…"
-              emptyText="Žádné kontakty nenalezeny"
-            />
-          </div>
+        {/* Kontakt (volitelné) */}
+        <div className="space-y-2">
+          <Label htmlFor="contact">Kontakt (volitelné)</Label>
+          <SearchableSelect
+            id="contact"
+            options={contacts.map((c) => ({
+              value: c.id,
+              label: c.name,
+              hint: `${c.type}${c.role ? ` · ${c.role}` : ""}${c.company ? ` · ${c.company}` : ""}`,
+            }))}
+            value={contactId}
+            onChange={setContactId}
+            placeholder="Bez kontaktu"
+            searchPlaceholder="Hledat kontakt…"
+            emptyText="Žádné kontakty nenalezeny"
+          />
         </div>
+
+        {/* Firma / Obchod + Číslo faktury/účtenky */}
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-2">
             <Label htmlFor="vendor">Firma / Obchod</Label>
@@ -1040,6 +1047,7 @@ function PaymentDialogInner({
             />
           </div>
         </div>
+
         {/* VAT field - shown for non-invoice (standalone or edit) payments */}
         {(!isInvoice || isEdit) && (
           <div className="grid grid-cols-2 gap-3">
@@ -1106,7 +1114,7 @@ function PaymentDialogInner({
               : "Položka bude označena jako dokončená"}
           </p>
         </div>
-      </div>
+      </CollapsibleSection>
     </AddDialogShell>
   );
 }

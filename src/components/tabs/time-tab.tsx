@@ -36,6 +36,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { AddDialogShell } from "@/components/ui/add-dialog-shell";
+import { CollapsibleSection } from "@/components/ui/collapsible-section";
 import {
   Select,
   SelectContent,
@@ -662,38 +663,89 @@ function TimeDialogInner({
       isSubmitting={isPending}
       maxWidth="max-w-3xl"
     >
-      <div className="space-y-4">
-        {errors.workerName && (
-          <p className="text-xs text-destructive">{errors.workerName}</p>
+      {errors.workerName && (
+        <p className="text-xs text-destructive">{errors.workerName}</p>
+      )}
+
+      {/* ===== ZÁKLAD ===== */}
+      <div className="space-y-2">
+        <Label htmlFor="budgetItem">Položka rozpočtu *</Label>
+        <SearchableSelect
+          id="budgetItem"
+          options={budgetItems.map((b) => ({
+            value: b.id,
+            label: `${b.category}${b.subcategory ? ` / ${b.subcategory}` : ""}${b.completed ? " ✓" : ""}`,
+            hint: b.category,
+          }))}
+          value={budgetItemId}
+          onChange={(v) => {
+            setBudgetItemId(v);
+            if (errors.budgetItemId)
+              setErrors((prev) => {
+                const n = { ...prev };
+                delete n.budgetItemId;
+                return n;
+              });
+          }}
+          placeholder="Vyberte položku…"
+          searchPlaceholder="Hledat položku…"
+          emptyText="Žádné položky nenalezeny"
+          className={cn(errors.budgetItemId && "border-destructive ring-destructive")}
+        />
+        {errors.budgetItemId && (
+          <p className="text-xs text-destructive mt-1">{errors.budgetItemId}</p>
         )}
+      </div>
+
+      {/* Hodiny + Datum od
+          NOTE: task spec mentions "Počet lidí" as a 3rd column, but that field
+          doesn't exist in the current codebase (state/submit logic untouched).
+          Using grid-cols-1 sm:grid-cols-2 to fit the 2 existing fields cleanly. */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div className="space-y-2">
-          <Label htmlFor="budgetItem">Položka rozpočtu *</Label>
-          <SearchableSelect
-            id="budgetItem"
-            options={budgetItems.map((b) => ({
-              value: b.id,
-              label: `${b.category}${b.subcategory ? ` / ${b.subcategory}` : ""}${b.completed ? " ✓" : ""}`,
-              hint: b.category,
-            }))}
-            value={budgetItemId}
-            onChange={(v) => {
-              setBudgetItemId(v);
-              if (errors.budgetItemId)
+          <Label htmlFor="hours">Hodiny celkem *</Label>
+          <Input
+            id="hours"
+            value={hours}
+            onChange={(e) => {
+              setHours(e.target.value);
+              if (errors.hours)
                 setErrors((prev) => {
                   const n = { ...prev };
-                  delete n.budgetItemId;
+                  delete n.hours;
                   return n;
                 });
             }}
-            placeholder="Vyberte položku…"
-            searchPlaceholder="Hledat položku…"
-            emptyText="Žádné položky nenalezeny"
-            className={cn(errors.budgetItemId && "border-destructive ring-destructive")}
+            placeholder="40"
+            inputMode="decimal"
+            aria-invalid={!!errors.hours}
+            className={cn(errors.hours && "border-destructive ring-destructive")}
+            required
           />
-          {errors.budgetItemId && (
-            <p className="text-xs text-destructive mt-1">{errors.budgetItemId}</p>
+          {errors.hours && (
+            <p className="text-xs text-destructive mt-1">{errors.hours}</p>
+          )}
+          {daySpan > 1 && hoursPerDay && (
+            <p className="text-[11px] text-muted-foreground">
+              ≈ {hoursPerDay} h/den × {daySpan} dní
+            </p>
           )}
         </div>
+        <div className="space-y-2">
+          <Label htmlFor="date">Datum od *</Label>
+          <Input
+            id="date"
+            type="date"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+            required
+          />
+        </div>
+      </div>
+
+      {/* ===== DETAILY (volitelné) ===== */}
+      <CollapsibleSection title="Detaily (volitelné)">
+        {/* Typ pracovníka */}
         <div className="space-y-2">
           <Label htmlFor="workerType">Typ pracovníka</Label>
           <Select value={workerType} onValueChange={setWorkerType}>
@@ -709,81 +761,43 @@ function TimeDialogInner({
             </SelectContent>
           </Select>
         </div>
-        <div className="grid grid-cols-2 gap-3">
-          <div className="space-y-2">
-            <Label htmlFor="hours">Hodiny celkem *</Label>
-            <Input
-              id="hours"
-              value={hours}
-              onChange={(e) => {
-                setHours(e.target.value);
-                if (errors.hours)
-                  setErrors((prev) => {
-                    const n = { ...prev };
-                    delete n.hours;
-                    return n;
-                  });
-              }}
-              placeholder="40"
-              inputMode="decimal"
-              aria-invalid={!!errors.hours}
-              className={cn(errors.hours && "border-destructive ring-destructive")}
-              required
-            />
-            {errors.hours && (
-              <p className="text-xs text-destructive mt-1">{errors.hours}</p>
-            )}
-            {daySpan > 1 && hoursPerDay && (
-              <p className="text-[11px] text-muted-foreground">
-                ≈ {hoursPerDay} h/den × {daySpan} dní
-              </p>
-            )}
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="date">Datum od *</Label>
-            <Input
-              id="date"
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              required
-            />
-          </div>
+
+        {/* Datum do (vícedenní) */}
+        <div className="space-y-2">
+          <Label htmlFor="dateTo">Datum do (vícedenní)</Label>
+          <Input
+            id="dateTo"
+            type="date"
+            value={dateTo}
+            min={date}
+            onChange={(e) => setDateTo(e.target.value)}
+            placeholder="(volitelné)"
+          />
+          {dateTo && (
+            <p className="text-[11px] text-muted-foreground">
+              Práce trvá {daySpan} {daySpan === 1 ? "den" : daySpan < 5 ? "dny" : "dní"}
+            </p>
+          )}
         </div>
-        <div className="grid grid-cols-2 gap-3">
-          <div className="space-y-2">
-            <Label htmlFor="dateTo">Datum do (vícedenní)</Label>
-            <Input
-              id="dateTo"
-              type="date"
-              value={dateTo}
-              min={date}
-              onChange={(e) => setDateTo(e.target.value)}
-              placeholder="(volitelné)"
-            />
-            {dateTo && (
-              <p className="text-[11px] text-muted-foreground">
-                Práce trvá {daySpan} {daySpan === 1 ? "den" : daySpan < 5 ? "dny" : "dní"}
-              </p>
-            )}
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="contact">Kontakt (volitelné)</Label>
-            <SearchableSelect
-              id="contact"
-              options={contacts.map((c) => ({
-                value: c.id,
-                label: c.name,
-                hint: `${c.type}${c.role ? ` · ${c.role}` : ""}${c.company ? ` · ${c.company}` : ""}`,
-              }))}
-              value={contactId}
-              onChange={setContactId}
-              placeholder="Bez kontaktu"
-              searchPlaceholder="Hledat kontakt…"
-              emptyText="Žádné kontakty nenalezeny"
-            />
-          </div>
+
+        {/* Kontakt (volitelné) */}
+        <div className="space-y-2">
+          <Label htmlFor="contact">Kontakt (volitelné)</Label>
+          <SearchableSelect
+            id="contact"
+            options={contacts.map((c) => ({
+              value: c.id,
+              label: c.name,
+              hint: `${c.type}${c.role ? ` · ${c.role}` : ""}${c.company ? ` · ${c.company}` : ""}`,
+            }))}
+            value={contactId}
+            onChange={setContactId}
+            placeholder="Bez kontaktu"
+            searchPlaceholder="Hledat kontakt…"
+            emptyText="Žádné kontakty nenalezeny"
+          />
         </div>
+
         {/* Hotovo checkbox - propojí časový záznam s dokončením budget item */}
         <div className="flex flex-col gap-1 rounded-md border border-time/30 bg-time-soft/50 p-3 dark:border-time-strong/60 dark:bg-time-soft/60">
           <div className="flex items-start gap-2">
@@ -803,7 +817,7 @@ function TimeDialogInner({
               : "Po uložení záznamu se zavolá PATCH na budget item s completed: true. Propojí časový záznam s dokončením položky."}
           </p>
         </div>
-      </div>
+      </CollapsibleSection>
     </AddDialogShell>
   );
 }

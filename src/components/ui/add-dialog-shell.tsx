@@ -115,7 +115,7 @@ export function AddDialogShell({
 
   // Header (title + description + context)
   const header = (
-    <div className="space-y-1 px-4 pt-4 pb-2 shrink-0">
+    <div className="space-y-2 px-4 pt-4 pb-4 shrink-0">
       {contextText && (
         <p className="text-xs text-muted-foreground">{contextText}</p>
       )}
@@ -126,7 +126,7 @@ export function AddDialogShell({
 
   // Body (form fields — scrollable on mobile)
   const body = (
-    <div className={cn("flex-1 overflow-y-auto scrollbar-thin px-4 pb-4", !isMobile && "overflow-visible")}>
+    <div className={cn("flex-1 overflow-y-auto scrollbar-thin space-y-4 px-4 pb-4", !isMobile && "overflow-visible")}>
       {children}
     </div>
   );
