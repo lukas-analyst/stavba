@@ -1,17 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-<<<<<<< HEAD
-import {
-  ResponsiveDialog,
-  ResponsiveDialogHeader,
-  ResponsiveDialogDescription,
-  ResponsiveDialogBody,
-  ResponsiveDialogFooter,
-} from "@/components/ui/responsive-dialog";
-=======
 import { AddDialogShell } from "@/components/ui/add-dialog-shell";
->>>>>>> main
 import {
   Collapsible,
   CollapsibleContent,
@@ -81,25 +71,6 @@ export function BudgetItemDialog({
 }: Props) {
   if (!open) return null;
   return (
-<<<<<<< HEAD
-    <ResponsiveDialog open={open} onOpenChange={onOpenChange} className="max-w-3xl">
-      {open && (
-        <BudgetItemForm
-          key={item?.id ?? parentId ?? "new"}
-          projectId={projectId}
-          item={item}
-          parentId={parentId}
-          defaultCategory={defaultCategory}
-          defaultPhase={defaultPhase}
-          parentItemName={parentItemName}
-          defaultDateFrom={defaultDateFrom}
-          defaultDateTo={defaultDateTo}
-          onDone={() => onOpenChange(false)}
-          onSubmitted={onSubmitted}
-        />
-      )}
-    </ResponsiveDialog>
-=======
     <BudgetItemForm
       key={item?.id ?? parentId ?? "new"}
       open={open}
@@ -114,7 +85,6 @@ export function BudgetItemDialog({
       defaultDateTo={defaultDateTo}
       onSubmitted={onSubmitted}
     />
->>>>>>> main
   );
 }
 
@@ -402,92 +372,6 @@ function BudgetItemForm({
     : isTaskMode ? "Přidat úkol" : "Přidat položku";
 
   return (
-<<<<<<< HEAD
-    <>
-      {isTaskMode && (
-        <ResponsiveDialogHeader>
-          <ResponsiveDialogDescription>
-            Úkol pod položkou „{parentName}"
-          </ResponsiveDialogDescription>
-        </ResponsiveDialogHeader>
-      )}
-
-      <ResponsiveDialogBody>
-        <form id="budget-item-form" onSubmit={handleSubmit} className="space-y-4 px-4 pb-4">
-          {/* ===== NÁZEV + POZNÁMKA (borderless, na top) ===== */}
-          {!isTaskMode ? (
-            <>
-              <Input
-                value={subcategory}
-                onChange={(e) => setSubcategory(e.target.value)}
-                placeholder="Název položky…"
-                className="border-0 px-0 text-xl font-bold shadow-none focus-visible:ring-0"
-                list="existing-subcategories"
-                autoFocus
-              />
-              <Textarea
-                value={note}
-                onChange={(e) => setNote(e.target.value)}
-                placeholder="Poznámka…"
-                rows={2}
-                className="border-0 px-0 text-sm text-muted-foreground shadow-none focus-visible:ring-0 resize-none"
-              />
-            </>
-          ) : (
-            <Input
-              value={subcategory}
-              onChange={(e) => setSubcategory(e.target.value)}
-              placeholder="Název úkolu…"
-              className="border-0 px-0 text-xl font-bold shadow-none focus-visible:ring-0"
-              list="existing-subcategories"
-              autoFocus
-            />
-          )}
-          <datalist id="existing-subcategories">
-            {existingSubcategories.map((s) => (
-              <option key={s} value={s} />
-            ))}
-          </datalist>
-
-          {/* ===== KATEGORIE + FÁZE (vedle sebe) ===== */}
-          {!isTaskMode && (
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="category">Kategorie *</Label>
-                {!isCustomCat ? (
-                  <Select value={category} onValueChange={setCategory}>
-                    <SelectTrigger id="category">
-                      <SelectValue placeholder="Vyberte kategorii" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {existingCategories.map((c) => (
-                        <SelectItem key={c} value={c}>{c}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                ) : (
-                  <Input
-                    value={customCategory}
-                    onChange={(e) => setCustomCategory(e.target.value)}
-                    placeholder="Nová kategorie"
-                  />
-                )}
-                <Button
-                  type="button"
-                  variant="link"
-                  size="sm"
-                  className="h-auto p-0 text-xs"
-                  onClick={() => setIsCustomCat(!isCustomCat)}
-                >
-                  {isCustomCat ? "Vybrat existující" : "+ Nová kategorie"}
-                </Button>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="phase">Fáze</Label>
-                <Select value={phase} onValueChange={setPhase}>
-                  <SelectTrigger id="phase">
-                    <SelectValue />
-=======
     <AddDialogShell
       open={open}
       onOpenChange={onOpenChange}
@@ -519,7 +403,6 @@ function BudgetItemForm({
                 <Select value={category} onValueChange={setCategory}>
                   <SelectTrigger id="category">
                     <SelectValue placeholder="Vyberte kategorii" />
->>>>>>> main
                   </SelectTrigger>
                   <SelectContent>
                     {existingCategories.map((c) => (
