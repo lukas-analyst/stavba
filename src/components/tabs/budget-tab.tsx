@@ -64,7 +64,6 @@ import {
   ArrowUp,
   ArrowDown,
   CheckCircle2,
-  Circle,
   PiggyBank,
   Download,
   Copy,
@@ -1667,19 +1666,15 @@ function BudgetRow({
             disabled={updateItem.isPending || item.rejected}
             aria-pressed={item.completed}
             className={cn(
-              "h-7 gap-1 px-2 text-xs",
+              "h-7 w-7 p-0",
               item.completed
                 ? "border-success bg-success text-white hover:bg-success-strong hover:text-white dark:border-success dark:bg-success dark:hover:bg-success-strong"
                 : "text-success-strong hover:border-success/50 hover:bg-success-soft/50 hover:text-success-strong dark:text-success dark:hover:bg-success-soft",
             )}
             title={item.completed ? "Označit jako nedokončené" : "Označit jako hotové"}
+            aria-label={item.completed ? "Označit jako nedokončené" : "Označit jako hotové"}
           >
-            {item.completed ? (
-              <CheckCircle2 className="h-3.5 w-3.5" />
-            ) : (
-              <Circle className="h-3.5 w-3.5" />
-            )}
-            Hotovo
+            <CheckCircle2 className="h-3.5 w-3.5" />
           </Button>
           <Button
             type="button"
