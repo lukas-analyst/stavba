@@ -960,19 +960,29 @@ function SortableCategoryCard({
                 {formatCzk(totals.saved)}
               </Badge>
             )}
-            {/* Add item to this category (green plus) */}
+            {/* Add item to this category (green plus) — span instead of button
+                to avoid nested <button> inside CollapsibleTrigger */}
             {onAddItem && (
-              <button
+              <span
+                role="button"
+                tabIndex={0}
                 onClick={(e) => {
                   e.stopPropagation();
                   onAddItem();
                 }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onAddItem();
+                  }
+                }}
                 title={`Přidat položku do kategorie „${categoryName}"`}
                 aria-label="Přidat položku"
-                className="inline-flex h-5 w-5 items-center justify-center rounded-md text-success transition-colors hover:bg-success-soft hover:text-success-strong dark:text-success dark:hover:bg-success-soft"
+                className="inline-flex h-5 w-5 cursor-pointer items-center justify-center rounded-md text-success transition-colors hover:bg-success-soft hover:text-success-strong dark:text-success dark:hover:bg-success-soft"
               >
                 <Plus className="h-3.5 w-3.5" />
-              </button>
+              </span>
             )}
             <div className="ml-auto flex items-center gap-4 text-xs">
               <span className="text-muted-foreground">
@@ -1396,10 +1406,12 @@ function BudgetRow({
               aria-label={isExpanded ? "Sbalit" : "Rozbalit"}
             >
               {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-              {childCount > 0 && (
+              {childCount > 0 ? (
                 <span className="text-[11px]">
                   {childCount} {childCount === 1 ? "úkol" : childCount < 5 ? "úkoly" : "úkolů"}
                 </span>
+              ) : (
+                <span className="text-[11px] text-muted-foreground/50">Přidat úkol</span>
               )}
             </button>
           </div>
