@@ -1209,6 +1209,7 @@ function BudgetItemRows({
           item={item}
           saved={saved}
           projectId={projectId}
+          childItems={childItems}
         />
       )}
       {isExpanded &&
@@ -1770,10 +1771,12 @@ function DetailPanelRow({
   item,
   saved,
   projectId,
+  childItems = [],
 }: {
   item: BudgetItem;
   saved: number | null;
   projectId: string;
+  childItems?: BudgetItem[];
 }) {
   const updateItem = useUpdateBudgetItem(projectId);
 
@@ -1854,6 +1857,40 @@ function DetailPanelRow({
                   </li>
                 ))}
               </ul>
+            )}
+            {/* Odkazy z úkolů — zobrazeny pod odkazy položky */}
+            {childItems.filter((c) => c.links && c.links.length > 0).length > 0 && (
+              <div className="mt-2 space-y-1 border-t pt-2">
+                <div className="flex items-center gap-1 text-[10px] font-medium text-muted-foreground">
+                  <ChevronRight className="h-3 w-3" />
+                  Z úkolů
+                </div>
+                {childItems
+                  .filter((c) => c.links && c.links.length > 0)
+                  .map((child) => (
+                    <div key={child.id} className="space-y-0.5">
+                      <div className="text-[10px] text-muted-foreground/70">
+                        └ {child.subcategory || "(bez názvu)"}
+                      </div>
+                      <ul className="space-y-0.5 pl-3">
+                        {child.links!.map((link) => (
+                          <li key={link.id}>
+                            <a
+                              href={link.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              title={link.url}
+                              className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground underline-offset-2 hover:underline"
+                            >
+                              <ExternalLink className="h-3 w-3 shrink-0 opacity-40" />
+                              {link.label}
+                            </a>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ))}
+              </div>
             )}
           </div>
         </div>
