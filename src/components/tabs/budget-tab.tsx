@@ -672,7 +672,7 @@ function BudgetTab({ projectId, dragEndHandlerRef }: { projectId: string; dragEn
                 completionFilter === opt.id
                   ? "bg-background text-foreground shadow-sm"
                   : "text-muted-foreground hover:text-foreground",
-                opt.id === "rejected" && completionFilter !== opt.id && "text-rose-500 hover:text-rose-600",
+                opt.id === "rejected" && completionFilter !== opt.id && "text-danger hover:text-danger",
               )}
             >
               {opt.label}
@@ -732,7 +732,7 @@ function BudgetTab({ projectId, dragEndHandlerRef }: { projectId: string; dragEn
                 <SortableContext items={itemIds} strategy={verticalListSortingStrategy}>
                   <Table>
                     <TableHeader>
-                      <TableRow className="bg-muted/40 hover:bg-muted/40">
+                      <TableRow className="sticky top-0 z-30 bg-muted/40 hover:bg-muted/40">
                         <TableHead className="w-8"></TableHead>
                         <TableHead className="w-12"></TableHead>
                         <TableHead className="min-w-[200px]">Položka</TableHead>
@@ -959,7 +959,7 @@ function SortableCategoryCard({
               {totals.count}
             </Badge>
             {totals.saved > 0 && (
-              <Badge variant="outline" className="text-[10px] text-emerald-700">
+              <Badge variant="outline" className="text-[10px] text-success-strong">
                 <PiggyBank className="mr-1 h-2.5 w-2.5" />
                 {formatCzk(totals.saved)}
               </Badge>
@@ -973,7 +973,7 @@ function SortableCategoryCard({
                 }}
                 title={`Přidat položku do kategorie „${categoryName}"`}
                 aria-label="Přidat položku"
-                className="inline-flex h-5 w-5 items-center justify-center rounded-md text-emerald-700 transition-colors hover:bg-emerald-100 hover:text-emerald-800 dark:text-emerald-400 dark:hover:bg-emerald-900/40"
+                className="inline-flex h-5 w-5 items-center justify-center rounded-md text-success-strong transition-colors hover:bg-success-soft hover:text-success-strong dark:text-success dark:hover:bg-success-soft"
               >
                 <Plus className="h-3.5 w-3.5" />
               </button>
@@ -987,10 +987,10 @@ function SortableCategoryCard({
                   className={cn(
                     "h-full rounded-full",
                     burn > 100
-                      ? "bg-rose-500"
+                      ? "bg-danger"
                       : burn > 80
-                        ? "bg-amber-500"
-                        : "bg-emerald-500",
+                        ? "bg-warning"
+                        : "bg-success",
                   )}
                   style={{ width: `${Math.min(burn, 100)}%` }}
                 />
@@ -999,10 +999,10 @@ function SortableCategoryCard({
                 className={cn(
                   "font-semibold",
                   burn > 100
-                    ? "text-rose-600"
+                    ? "text-danger"
                     : burn > 80
-                      ? "text-amber-600"
-                      : "text-emerald-600",
+                      ? "text-warning"
+                      : "text-success",
                 )}
               >
                 {burn.toFixed(0)}%
@@ -1341,9 +1341,9 @@ function BudgetRow({
       }}
       style={dragCtx?.sortableStyle}
       {...(dragCtx?.sortableAttributes ?? {})}
-      onDoubleClick={() => onEdit(item)}
+      onClick={() => onEdit(item)}
       className={cn(
-        "group transition-colors",
+        "group cursor-pointer transition-colors",
         isChild
           ? cn(
               "bg-muted/30 hover:bg-muted/40",
@@ -1351,9 +1351,9 @@ function BudgetRow({
             )
           : cn(
               item.rejected
-                ? "opacity-60 bg-rose-50/40 dark:bg-rose-950/10"
+                ? "opacity-60 bg-danger-soft/30"
                 : item.completed
-                  ? "bg-emerald-50/40 dark:bg-emerald-950/10"
+                  ? "bg-success-soft/30"
                   : "hover:bg-muted/30",
             ),
         isHighlighted && "stavba-highlight-row",
@@ -1420,7 +1420,7 @@ function BudgetRow({
             className={cn(
               "absolute inset-y-0 left-0 w-1",
               item.rejected
-                ? "bg-rose-500"
+                ? "bg-danger"
                 : PHASE_BG_COLORS[item.phase] ?? "bg-zinc-300",
             )}
           />
@@ -1450,7 +1450,7 @@ function BudgetRow({
               <span
                 title="Povinné (nutné pro dokončení projektu)"
                 aria-label="Nutné"
-                className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-amber-100 text-[10px] font-bold leading-none text-amber-700 dark:bg-amber-900/40 dark:text-amber-300"
+                className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-warning-soft text-[10px] font-bold leading-none text-warning-strong dark:bg-warning-soft dark:text-warning-strong"
               >
                 !
               </span>
@@ -1469,12 +1469,12 @@ function BudgetRow({
               {item.subcategory || "(bez názvu)"}
             </span>
             {item.rejected && (
-              <Badge variant="outline" className="h-4 px-1 text-[9px] text-rose-700">
+              <Badge variant="outline" className="h-4 px-1 text-[9px] text-danger-strong">
                 Zavrženo
               </Badge>
             )}
             {item.completed && !item.rejected && (
-              <Badge variant="outline" className="h-4 px-1 text-[9px] text-emerald-700">
+              <Badge variant="outline" className="h-4 px-1 text-[9px] text-success-strong">
                 Hotovo
               </Badge>
             )}
@@ -1505,7 +1505,7 @@ function BudgetRow({
                 }}
                 title="Přidat úkol pod tuto položku"
                 aria-label="Přidat úkol"
-                className="inline-flex h-6 w-6 items-center justify-center rounded-md text-emerald-700 transition-colors hover:bg-emerald-100 hover:text-emerald-800 dark:text-emerald-400 dark:hover:bg-emerald-900/40"
+                className="inline-flex h-6 w-6 items-center justify-center rounded-md text-success-strong transition-colors hover:bg-success-soft hover:text-success-strong dark:text-success dark:hover:bg-success-soft"
               >
                 <Plus className="h-4 w-4" />
               </button>
@@ -1515,7 +1515,7 @@ function BudgetRow({
             (item._count.payments > 0 || item._count.timeEntries > 0) && (
               <div className="mt-0.5 flex flex-wrap gap-1">
                 {item._count.payments > 0 && (
-                  <Badge variant="outline" className="h-4 px-1 text-[10px] text-emerald-700">
+                  <Badge variant="outline" className="h-4 px-1 text-[10px] text-success-strong">
                     {item._count.payments === 1
                       ? "1 platba"
                       : item._count.payments < 5
@@ -1524,7 +1524,7 @@ function BudgetRow({
                   </Badge>
                 )}
                 {item._count.timeEntries > 0 && (
-                  <Badge variant="outline" className="h-4 px-1 text-[10px] text-violet-700">
+                  <Badge variant="outline" className="h-4 px-1 text-[10px] text-time-strong">
                     {item._count.timeEntries} časů
                   </Badge>
                 )}
@@ -1534,7 +1534,7 @@ function BudgetRow({
       </TableCell>
 
       {/* Fáze */}
-      <TableCell>
+      <TableCell onClick={(e) => e.stopPropagation()}>
         <Select
           value={item.phase}
           onValueChange={(v) => update("phase", v)}
@@ -1573,7 +1573,7 @@ function BudgetRow({
       </TableCell>
 
       {/* Dny */}
-      <TableCell className="text-right">
+      <TableCell onClick={(e) => e.stopPropagation()} className="text-right">
         {childCount > 0 ? (
           <span className="block w-full rounded px-1 py-0.5 text-right text-xs font-semibold">
             {(displayPlanDays ?? 0) > 0 ? formatNumber(displayPlanDays) : "—"}
@@ -1588,7 +1588,7 @@ function BudgetRow({
       </TableCell>
 
       {/* Datum od */}
-      <TableCell>
+      <TableCell onClick={(e) => e.stopPropagation()}>
         <InlineDate
           value={item.dateFrom}
           onCommit={(v) => update("dateFrom", v)}
@@ -1596,7 +1596,7 @@ function BudgetRow({
       </TableCell>
 
       {/* Datum do */}
-      <TableCell>
+      <TableCell onClick={(e) => e.stopPropagation()}>
         <InlineDate
           value={item.dateTo}
           onCommit={(v) => update("dateTo", v)}
@@ -1605,9 +1605,10 @@ function BudgetRow({
 
       {/* Skut. (Kč) */}
       <TableCell
+        onClick={(e) => e.stopPropagation()}
         className={cn(
           "text-right",
-          overBudget && "font-semibold text-rose-600",
+          overBudget && "font-semibold text-danger",
         )}
       >
         {childCount > 0 ? (
@@ -1622,14 +1623,14 @@ function BudgetRow({
           />
         )}
         {overBudget && (
-          <span className="ml-1 inline-flex items-center text-[10px] text-rose-500">
+          <span className="ml-1 inline-flex items-center text-[10px] text-danger">
             <AlertTriangle className="h-3 w-3" />
           </span>
         )}
       </TableCell>
 
       {/* Hodiny */}
-      <TableCell className="text-right text-[11px] text-violet-600">
+      <TableCell className="text-right text-[11px] text-time">
         {displayActualHours > 0 ? formatNumber(displayActualHours, " h") : "—"}
       </TableCell>
 
@@ -1647,8 +1648,8 @@ function BudgetRow({
             className={cn(
               "h-7 w-7 shrink-0 p-0",
               item.required
-                ? "border-amber-500 bg-amber-500 text-white hover:bg-amber-600 hover:text-white dark:border-amber-600 dark:bg-amber-600 dark:hover:bg-amber-700"
-                : "text-amber-600 hover:border-amber-300 hover:bg-amber-50 hover:text-amber-700 dark:text-amber-400 dark:hover:border-amber-800 dark:hover:bg-amber-950/40",
+                ? "border-warning bg-warning text-white hover:bg-warning-strong hover:text-white dark:border-warning dark:bg-warning dark:hover:bg-warning-strong"
+                : "text-warning hover:border-warning/50 hover:bg-warning-soft/50 hover:text-warning-strong dark:text-warning dark:hover:border-warning-strong dark:hover:bg-warning-soft",
             )}
             title={
               item.required
@@ -1668,8 +1669,8 @@ function BudgetRow({
             className={cn(
               "h-7 gap-1 px-2 text-xs",
               item.completed
-                ? "border-emerald-600 bg-emerald-600 text-white hover:bg-emerald-700 hover:text-white dark:border-emerald-700 dark:bg-emerald-700 dark:hover:bg-emerald-800"
-                : "text-emerald-700 hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-700 dark:text-emerald-400 dark:hover:bg-emerald-950/40",
+                ? "border-success bg-success text-white hover:bg-success-strong hover:text-white dark:border-success dark:bg-success dark:hover:bg-success-strong"
+                : "text-success-strong hover:border-success/50 hover:bg-success-soft/50 hover:text-success-strong dark:text-success dark:hover:bg-success-soft",
             )}
             title={item.completed ? "Označit jako nedokončené" : "Označit jako hotové"}
           >
@@ -1690,8 +1691,8 @@ function BudgetRow({
             className={cn(
               "h-7 w-7 p-0",
               item.rejected
-                ? "border-rose-600 bg-rose-600 text-white hover:bg-rose-700 hover:text-white dark:border-rose-700 dark:bg-rose-700 dark:hover:bg-rose-800"
-                : "text-rose-600 hover:border-rose-300 hover:bg-rose-50 hover:text-rose-700 dark:text-rose-400 dark:hover:bg-rose-950/40",
+                ? "border-danger bg-danger text-white hover:bg-danger-strong hover:text-white dark:border-danger dark:bg-danger dark:hover:bg-danger-strong"
+                : "text-danger hover:border-danger/50 hover:bg-danger-soft/50 hover:text-danger-strong dark:text-danger dark:hover:bg-danger-soft",
             )}
             title={item.rejected ? "Zrušit zavržení" : "Zavrhnout položku"}
             aria-label={item.rejected ? "Zrušit zavržení" : "Zavrhnout"}
@@ -1702,30 +1703,8 @@ function BudgetRow({
       </TableCell>
 
       {/* Akce */}
-      <TableCell>
+      <TableCell onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center">
-          <span className="flex flex-col">
-            <button
-              onClick={onMoveUp}
-              disabled={!canMoveUp}
-              className={cn(
-                "flex h-3.5 w-3.5 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground disabled:pointer-events-none disabled:opacity-20",
-              )}
-              aria-label="Přesunout nahoru"
-            >
-              <ArrowUp className="h-3 w-3" />
-            </button>
-            <button
-              onClick={onMoveDown}
-              disabled={!canMoveDown}
-              className={cn(
-                "flex h-3.5 w-3.5 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground disabled:pointer-events-none disabled:opacity-20",
-              )}
-              aria-label="Přesunout dolů"
-            >
-              <ArrowDown className="h-3 w-3" />
-            </button>
-          </span>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
@@ -1741,7 +1720,7 @@ function BudgetRow({
               <DropdownMenuItem
                 onClick={() => update("required", !item.required)}
               >
-                <AlertTriangle className="mr-2 h-3.5 w-3.5 text-amber-500" />
+                <AlertTriangle className="mr-2 h-3.5 w-3.5 text-warning" />
                 {item.required ? "Označit jako nepovinné" : "Označit jako povinné"}
               </DropdownMenuItem>
               <DropdownMenuItem
@@ -1849,27 +1828,13 @@ function DetailPanelRow({
           aria-hidden
           className="absolute inset-y-0 left-0 w-24 pointer-events-none"
           style={{
-            background: `linear-gradient(to right, var(--phase-color, transparent) 0%, transparent 100%)`,
+            background: `linear-gradient(to right, ${PHASE_CSS_VARS[item.rejected ? "rose" : item.phase] ?? PHASE_CSS_VARS.Neurčeno} 0%, transparent 100%)`,
             opacity: 0.12,
           }}
-          data-phase-color={item.rejected ? "rose" : item.phase}
-          ref={(el) => {
-            if (!el) return;
-            const colorMap: Record<string, string> = {
-              "Příprava": "#a78bfa",
-              "Demolice": "#f87171",
-              "Hrubá stavba": "#fbbf24",
-              "Zabydlování": "#34d399",
-              "Do budoucna": "#60a5fa",
-              "Neurčeno": "#a1a1aa",
-              "rose": "#f43f5e",
-            };
-            const key = el.getAttribute("data-phase-color") ?? "";
-            el.style.setProperty("--phase-color", colorMap[key] ?? "#a1a1aa");
-          }}
         />
-        <div className="relative grid grid-cols-1 gap-4 pl-10 sm:grid-cols-3">
-          <div className="sm:col-span-1">
+        <div className="relative grid grid-cols-1 gap-4 sm:grid-cols-2">
+          {/* Poznámka */}
+          <div>
             <div className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
               Poznámka
             </div>
@@ -1879,61 +1844,18 @@ function DetailPanelRow({
               placeholder="Doplňující informace, jednotkové ceny, postup…"
             />
           </div>
+          {/* Odkazy */}
           <div>
-            <div className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
-              Vůle (%)
-            </div>
-            <InlineNumber
-              value={item.flexibilityPercent}
-              onCommit={(v) => update("flexibilityPercent", v)}
-              suffix="%"
-              className="text-left text-xs"
-            />
-            <p className="mt-1 text-[10px] text-muted-foreground">
-              Míra flexibility odhadu.
-            </p>
-          </div>
-          <div>
-            <div className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
-              Ušetřeno
-            </div>
-            <div className="rounded border bg-background px-2 py-1.5 text-xs">
-              {item.completed ? (
-                saved !== null && saved > 0 ? (
-                  <span className="font-medium text-emerald-600" title="Ušetřeno od plánu">
-                    {formatCzk(saved)}
-                  </span>
-                ) : overSaved > 0 ? (
-                  <span className="font-medium text-rose-600" title="Překročeno oproti plánu">
-                    −{formatCzk(overSaved)}
-                  </span>
-                ) : (
-                  <span className="text-muted-foreground">0 Kč</span>
-                )
-              ) : (
-                <span
-                  className="text-muted-foreground/40"
-                  title="Označte jako hotové pro výpočet"
-                >
-                  —
+            <div className="mb-1 flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+              <LinkIcon className="h-3 w-3" />
+              Odkazy
+              {item.links && item.links.length > 0 && (
+                <span className="rounded bg-muted px-1.5 py-0.5 text-[11px] tabular-nums">
+                  {item.links.length}
                 </span>
               )}
             </div>
-            <p className="mt-1 text-[10px] text-muted-foreground">
-              Počítáno po dokončení položky.
-            </p>
-          </div>
-          {/* External hyperlinks — shown only in detail panel (hezký název).
-              Click opens in new tab. Edit happens via the edit dialog. */}
-          {item.links && item.links.length > 0 && (
-            <div className="sm:col-span-1">
-              <div className="mb-1 flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
-                <LinkIcon className="h-3 w-3" />
-                Odkazy
-                <span className="rounded bg-muted px-1 py-0.5 text-[9px] tabular-nums">
-                  {item.links.length}
-                </span>
-              </div>
+            {item.links && item.links.length > 0 ? (
               <ul className="space-y-0.5">
                 {item.links.map((link) => (
                   <li key={link.id}>
@@ -1950,8 +1872,10 @@ function DetailPanelRow({
                   </li>
                 ))}
               </ul>
-            </div>
-          )}
+            ) : (
+              <p className="text-xs text-muted-foreground">Žádné odkazy.</p>
+            )}
+          </div>
         </div>
       </TableCell>
     </TableRow>
