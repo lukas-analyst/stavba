@@ -563,6 +563,7 @@ function TimeDialogInner({
   const [date, setDate] = useState(toDateStr(editEntry?.date) || today);
   const [dateTo, setDateTo] = useState(toDateStr(editEntry?.dateTo));
   const [hours, setHours] = useState(editEntry ? String(editEntry.hours ?? "") : "");
+  const [workerCount, setWorkerCount] = useState(editEntry ? String(editEntry.workerCount ?? 1) : "1");
   const [description, setDescription] = useState(editEntry?.description ?? "");
   const [markCompleted, setMarkCompleted] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -601,6 +602,7 @@ function TimeDialogInner({
       date,
       dateTo: dateTo || null,
       hours: h,
+      workerCount: workerCount ? Math.max(1, Number(workerCount)) : 1,
       description,
     };
 
@@ -697,13 +699,10 @@ function TimeDialogInner({
         )}
       </div>
 
-      {/* Hodiny + Datum od
-          NOTE: task spec mentions "Počet lidí" as a 3rd column, but that field
-          doesn't exist in the current codebase (state/submit logic untouched).
-          Using grid-cols-1 sm:grid-cols-2 to fit the 2 existing fields cleanly. */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      {/* Hodiny + Počet lidí + Datum od */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <div className="space-y-2">
-          <Label htmlFor="hours">Hodiny celkem *</Label>
+          <Label htmlFor="hours">Hodiny *</Label>
           <Input
             id="hours"
             value={hours}
@@ -716,7 +715,7 @@ function TimeDialogInner({
                   return n;
                 });
             }}
-            placeholder="40"
+            placeholder="8"
             inputMode="decimal"
             aria-invalid={!!errors.hours}
             className={cn(errors.hours && "border-destructive ring-destructive")}
@@ -728,6 +727,23 @@ function TimeDialogInner({
           {daySpan > 1 && hoursPerDay && (
             <p className="text-[11px] text-muted-foreground">
               ≈ {hoursPerDay} h/den × {daySpan} dní
+            </p>
+          )}
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="workerCount">Počet lidí</Label>
+          <Input
+            id="workerCount"
+            type="number"
+            inputMode="numeric"
+            min="1"
+            value={workerCount}
+            onChange={(e) => setWorkerCount(e.target.value)}
+            placeholder="1"
+          />
+          {workerCount && Number(workerCount) > 1 && (
+            <p className="text-[11px] text-muted-foreground">
+              Celkem {formatNumber(Number(hours || 0) * Number(workerCount), " h")} osobohodin
             </p>
           )}
         </div>
