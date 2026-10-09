@@ -402,15 +402,13 @@ function TimeRow({
       title="Klikněte pro úpravu záznamu"
     >
       <TableCell className="w-16">
-        {entry.workerCount > 1 && (
-          <Badge
-            variant="outline"
-            className="text-[11px] text-time"
-            title={`${entry.workerCount} pracovníků`}
-          >
-            × {entry.workerCount}
-          </Badge>
-        )}
+        <Badge
+          variant="outline"
+          className="text-[11px] text-time"
+          title={`${entry.workerCount} ${entry.workerCount === 1 ? "pracovník" : entry.workerCount < 5 ? "pracovníci" : "pracovníků"}`}
+        >
+          × {entry.workerCount}
+        </Badge>
       </TableCell>
       <TableCell className="whitespace-nowrap text-xs text-muted-foreground">
         <div className="flex flex-col">
