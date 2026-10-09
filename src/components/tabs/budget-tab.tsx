@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useRef, useEffect, useCallback, createContext, useContext } from "react";
+import { useState, useMemo, useRef, useEffect, useCallback, createContext, useContext, memo } from "react";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import {
   useBudgetItems,
@@ -532,20 +532,7 @@ function BudgetTab({ projectId, dragEndHandlerRef }: { projectId: string; dragEn
     reorder.mutate({ categoryOrder: reordered });
   };
 
-  // Legacy move handlers (for arrow buttons — kept as fallback)
-  const moveItem = (catItems: BudgetItem[], currentIndex: number, direction: -1 | 1) => {
-    const targetIndex = currentIndex + direction;
-    if (targetIndex < 0 || targetIndex >= catItems.length) return;
-    const a = catItems[currentIndex];
-    const b = catItems[targetIndex];
-    const newItems = [
-      ...catItems.map((it) => ({ id: it.id, sortOrder: it.sortOrder })),
-    ];
-    newItems[currentIndex].sortOrder = b.sortOrder;
-    newItems[targetIndex].sortOrder = a.sortOrder;
-    reorder.mutate({ items: newItems });
-  };
-
+  // Legacy category arrow buttons handler (DnD remains primary mechanism)
   const moveCategory = (category: string, direction: -1 | 1) => {
     const currentCats = grouped.map(([c]) => c);
     const allCats = Array.from(new Set([...savedCategoryOrder, ...currentCats]));
@@ -1216,7 +1203,6 @@ function BudgetItemRows({
       {isExpanded && !isChild && (
         <DetailPanelRow
           item={item}
-          saved={saved}
           projectId={projectId}
           childItems={childItems}
         />
@@ -1252,7 +1238,7 @@ function BudgetItemRows({
 // BudgetRow — one row in the budget table
 // (Same as original, but now includes a drag handle cell)
 // =====================================================================
-function BudgetRow({
+const BudgetRow = memo(function BudgetRow({
   item,
   projectId,
   onEdit,
@@ -1295,11 +1281,6 @@ function BudgetRow({
   const displayPlanDays = childCount > 0 ? rolled.planDays : item.planDays;
   const displayActualCost = childCount > 0 ? rolled.actualCost : item.actualCost;
   const displayActualHours = childCount > 0 ? rolled.actualHours : item.actualHours;
-
-  const overSaved =
-    item.completed && rolled.planCost > 0
-      ? rolled.actualCost - rolled.planCost
-      : 0;
 
   const isHighlighted = !!highlightId && highlightId === item.id;
 
@@ -1771,17 +1752,15 @@ function BudgetRow({
       </TableCell>
     </TableRow>
   );
-}
+});
 
 // ===== DetailPanelRow — expandable panel below an item row with hidden fields =====
 function DetailPanelRow({
   item,
-  saved,
   projectId,
   childItems = [],
 }: {
   item: BudgetItem;
-  saved: number | null;
   projectId: string;
   childItems?: BudgetItem[];
 }) {
@@ -1790,11 +1769,6 @@ function DetailPanelRow({
   const update = (field: keyof BudgetItem, value: unknown) => {
     updateItem.mutate({ id: item.id, data: { [field]: value } });
   };
-
-  const overSaved =
-    item.completed && item.planCost
-      ? (item.actualCost || 0) - (item.planCost || 0)
-      : 0;
 
   return (
     <TableRow className="detail-panel bg-muted/20 hover:bg-muted/20">
