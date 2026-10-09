@@ -115,13 +115,41 @@ function HomeContent() {
     router.replace(nextUrl);
   }, [selectedProjectId, activeTab, pathname, router, projects]);
 
-  // Auto-select the starred/first project on initial load
+  // === Persist last selected project to localStorage (for new sessions) ===
+  useEffect(() => {
+    if (selectedProjectId && typeof window !== "undefined") {
+      localStorage.setItem("stavba:lastProjectId", selectedProjectId);
+    }
+  }, [selectedProjectId]);
+
+  // === Persist last active tab to localStorage (for new sessions) ===
+  useEffect(() => {
+    if (activeTab && typeof window !== "undefined") {
+      localStorage.setItem("stavba:lastTab", activeTab);
+    }
+  }, [activeTab]);
+
+  // Auto-select the starred/first project on initial load.
+  // Order of precedence: URL param (handled above) → localStorage → starred → first.
   useEffect(() => {
     if (!selectedProjectId && projects && projects.length > 0) {
+      // Try localStorage fallback for new sessions without URL param
+      if (typeof window !== "undefined") {
+        const lastProjectId = localStorage.getItem("stavba:lastProjectId");
+        if (lastProjectId && projects.find((p) => p.id === lastProjectId)) {
+          setSelectedProjectId(lastProjectId);
+          const lastTab = localStorage.getItem("stavba:lastTab");
+          if (lastTab && VALID_TABS.has(lastTab as TabId)) {
+            setActiveTab(lastTab as TabId);
+          }
+          return;
+        }
+      }
+      // Fallback: starred or first project
       const starred = projects.find((p) => p.starred);
       setSelectedProject(starred?.id ?? projects[0].id);
     }
-  }, [projects, selectedProjectId, setSelectedProject]);
+  }, [projects, selectedProjectId, setSelectedProject, setSelectedProjectId, setActiveTab]);
 
   const selectedProject = projects?.find((p) => p.id === selectedProjectId);
 

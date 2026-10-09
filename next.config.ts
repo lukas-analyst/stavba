@@ -9,6 +9,8 @@ const nextConfig: NextConfig = {
   },
   // Disable strict mode in production for better performance
   reactStrictMode: false,
+  // Allow dev server to be reached from preview-chat origins
+  allowedDevOrigins: ["preview-chat-*.space-z.ai"],
   // Enable experimental optimizations
   experimental: {
     // Optimize package imports
