@@ -173,7 +173,7 @@ export function TimeTab({ projectId }: { projectId: string }) {
           const w = workerTypeLabel(info.type);
           return (
             <Card key={name} className="p-3">
-              <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+              <div className="flex items-center gap-1 text-xs text-muted-foreground">
                 <span>{w.emoji}</span> {w.label}
               </div>
               <div className="mt-1 truncate text-sm font-bold" title={name}>
@@ -182,7 +182,7 @@ export function TimeTab({ projectId }: { projectId: string }) {
               <div className="mt-1 text-lg font-bold text-time">
                 {formatNumber(info.hours, " h")}
               </div>
-              <div className="text-[10px] text-muted-foreground">
+              <div className="text-xs text-muted-foreground">
                 {info.entries} záznamů
               </div>
             </Card>
@@ -324,7 +324,8 @@ export function TimeTab({ projectId }: { projectId: string }) {
         <div className="overflow-x-auto scrollbar-thin rounded-lg border">
           <Table className="min-w-[800px]">
             <TableHeader>
-              <TableRow className="bg-muted/40 hover:bg-muted/40">
+              <TableRow className="sticky top-0 z-30 bg-muted/40 hover:bg-muted/40">
+                <TableHead className="w-16"></TableHead>
                 <TableHead className="w-28">Datum</TableHead>
                 <TableHead className="min-w-[160px]">Pracovník</TableHead>
                 <TableHead className="w-32">Typ</TableHead>
@@ -400,11 +401,22 @@ function TimeRow({
       onClick={() => onEdit()}
       title="Klikněte pro úpravu záznamu"
     >
+      <TableCell className="w-16">
+        {entry.workerCount > 1 && (
+          <Badge
+            variant="outline"
+            className="text-[11px] text-time"
+            title={`${entry.workerCount} pracovníků`}
+          >
+            × {entry.workerCount}
+          </Badge>
+        )}
+      </TableCell>
       <TableCell className="whitespace-nowrap text-xs text-muted-foreground">
         <div className="flex flex-col">
           <span>{formatDate(entry.date)}</span>
           {entry.dateTo && (
-            <span className="text-[10px] text-time">
+            <span className="text-xs text-time">
               → {formatDate(entry.dateTo)}
             </span>
           )}
@@ -416,7 +428,7 @@ function TimeRow({
         </div>
       </TableCell>
       <TableCell>
-        <Badge variant="outline" className="text-[10px]">
+        <Badge variant="outline" className="text-[11px]">
           {w.emoji} {w.label}
         </Badge>
       </TableCell>
@@ -425,7 +437,7 @@ function TimeRow({
           <span className="text-xs font-medium">
             {entry.budgetItem?.subcategory || entry.budgetItem?.category}
           </span>
-          <span className="text-[10px] text-muted-foreground">
+          <span className="text-xs text-muted-foreground">
             {entry.budgetItem?.category}
           </span>
         </div>
@@ -445,7 +457,7 @@ function TimeRow({
             <Button
               variant="ghost"
               size="icon"
-              className="h-7 w-7 opacity-0 group-hover:opacity-100"
+              className="h-8 w-8 opacity-0 group-hover:opacity-100"
               onClick={(e) => e.stopPropagation()}
             >
               <MoreHorizontal className="h-4 w-4" />
