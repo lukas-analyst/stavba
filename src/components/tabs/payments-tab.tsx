@@ -337,7 +337,7 @@ export function PaymentsTab({ projectId }: { projectId: string }) {
             <div className="text-xs text-muted-foreground">
               Součet ({filteredStandalone.length + filteredGroups.length})
             </div>
-            <div className="text-lg font-bold text-amber-600 tabular-nums">{formatCzk(totalAmount)}</div>
+            <div className="text-lg font-bold text-warning tabular-nums">{formatCzk(totalAmount)}</div>
           </div>
           {/* VAT summary */}
           {(() => {
@@ -347,7 +347,7 @@ export function PaymentsTab({ projectId }: { projectId: string }) {
             return hasVat ? (
               <div className="text-right">
                 <div className="text-xs text-muted-foreground">z toho DPH</div>
-                <div className="text-sm font-semibold text-sky-600 tabular-nums">{formatCzk(totalVat)}</div>
+                <div className="text-sm font-semibold text-info tabular-nums">{formatCzk(totalVat)}</div>
               </div>
             ) : null;
           })()}
@@ -420,7 +420,8 @@ export function PaymentsTab({ projectId }: { projectId: string }) {
           <div className="overflow-hidden rounded-lg border">
             <Table>
               <TableHeader>
-                <TableRow className="bg-muted/40 hover:bg-muted/40">
+                <TableRow className="sticky top-0 z-30 bg-muted/40 hover:bg-muted/40">
+                  <TableHead className="w-16"></TableHead>
                   <TableHead className="w-28">Datum</TableHead>
                   <TableHead className="w-32">Typ</TableHead>
                   <TableHead className="min-w-[220px]">Položka rozpočtu</TableHead>
@@ -518,19 +519,36 @@ function PaymentRow({
     <TableRow
       className={cn(
         "group cursor-pointer hover:bg-muted/30",
-        isParent && "bg-amber-50/30 dark:bg-amber-950/10",
+        isParent && "bg-warning-soft/30 dark:bg-warning-soft/40",
       )}
       onClick={() => onEdit()}
       title="Klikněte pro úpravu platby"
     >
+      <TableCell className="w-16">
+        {hasInstallment && (
+          <Badge
+            variant="outline"
+            className="gap-0.5 text-[11px] text-warning-strong dark:text-warning-strong"
+            title={
+              meta?.invoiceTotal != null
+                ? `Faktura ve splátkách: ${formatCzk(meta.invoiceTotal)} — zaplaceno ${formatCzk(meta.paidTotal)} (${meta.percent.toFixed(0)} %), zbývá ${formatCzk(meta.remaining)}`
+                : "Faktura ve splátkách"
+            }
+          >
+            <Layers className="h-2.5 w-2.5" />
+            {isParent ? "1. splátka" : `${installmentNumber}. splátka`}
+            <span className="ml-0.5 tabular-nums">/ {totalInstallments}</span>
+          </Badge>
+        )}
+      </TableCell>
       <TableCell className="whitespace-nowrap text-xs text-muted-foreground">
         {hasInstallment && (
           <span
             className={cn(
-              "mr-1.5 inline-flex h-4 w-4 items-center justify-center rounded-full text-[9px] font-bold",
+              "mr-1.5 inline-flex h-4 w-4 items-center justify-center rounded-full text-[11px] font-bold",
               isParent
-                ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300"
-                : "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300",
+                ? "bg-success-soft text-success-strong dark:bg-success-soft dark:text-success-strong"
+                : "bg-warning-soft text-warning-strong dark:bg-warning-soft dark:text-warning-strong",
             )}
           >
             {installmentNumber}
@@ -539,33 +557,16 @@ function PaymentRow({
         {formatDate(payment.date)}
       </TableCell>
       <TableCell>
-        <div className="flex flex-wrap items-center gap-1">
-          <Badge variant="outline" className="text-[10px]">
-            {t.emoji} {t.label}
-          </Badge>
-          {hasInstallment && (
-            <Badge
-              variant="outline"
-              className="gap-0.5 text-[9px] text-amber-700 dark:text-amber-300"
-              title={
-                meta?.invoiceTotal != null
-                  ? `Faktura ve splátkách: ${formatCzk(meta.invoiceTotal)} — zaplaceno ${formatCzk(meta.paidTotal)} (${meta.percent.toFixed(0)} %), zbývá ${formatCzk(meta.remaining)}`
-                  : "Faktura ve splátkách"
-              }
-            >
-              <Layers className="h-2.5 w-2.5" />
-              {isParent ? "1. splátka" : `${installmentNumber}. splátka`}
-              <span className="ml-0.5 tabular-nums">/ {totalInstallments}</span>
-            </Badge>
-          )}
-        </div>
+        <Badge variant="outline" className="text-[11px]">
+          {t.emoji} {t.label}
+        </Badge>
       </TableCell>
       <TableCell>
         <div className={cn("flex flex-col", isChild && "pl-4")}>
           <span className="text-xs font-medium">
             {payment.budgetItem?.subcategory || payment.budgetItem?.category}
           </span>
-          <span className="text-[10px] text-muted-foreground">
+          <span className="text-xs text-muted-foreground">
             {payment.budgetItem?.category}
           </span>
         </div>
@@ -574,7 +575,7 @@ function PaymentRow({
         <div className="flex flex-col">
           <span className="text-xs">{payment.description || (isParent ? "1. splátka" : "—")}</span>
           {payment.vendor && (
-            <span className="text-[10px] text-muted-foreground">
+            <span className="text-xs text-muted-foreground">
               {payment.vendor}
               {payment.invoiceNumber ? ` · ${payment.invoiceNumber}` : ""}
             </span>
@@ -586,16 +587,16 @@ function PaymentRow({
       </TableCell>
       <TableCell className="text-right">
         <div className="flex flex-col items-end">
-          <span className="text-sm font-semibold text-amber-600 tabular-nums">
+          <span className="text-sm font-semibold text-warning tabular-nums">
             {formatCzk(payment.amount)}
           </span>
           {isParent && meta?.invoiceTotal != null && (
-            <span className="text-[10px] text-muted-foreground tabular-nums">
+            <span className="text-xs text-muted-foreground tabular-nums">
               z {formatCzk(meta.invoiceTotal)}
             </span>
           )}
           {payment.vatRate !== null && payment.vatRate !== undefined && (
-            <span className="text-[10px] text-muted-foreground tabular-nums">
+            <span className="text-xs text-muted-foreground tabular-nums">
               vč. DPH {payment.vatRate}%
             </span>
           )}
@@ -604,7 +605,7 @@ function PaymentRow({
       <TableCell onClick={(e) => e.stopPropagation()}>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-7 w-7 opacity-0 group-hover:opacity-100">
+            <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100">
               <MoreHorizontal className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
@@ -1096,7 +1097,7 @@ function PaymentDialogInner({
         )}
 
         {/* Hotovo checkbox - propojí platbu s dokončením budget item */}
-        <div className="flex flex-col gap-1 rounded-md border border-amber-200 bg-amber-50/50 p-3 dark:border-amber-900/60 dark:bg-amber-950/20">
+        <div className="flex flex-col gap-1 rounded-md border border-warning/30 bg-warning-soft/50 p-3 dark:border-warning-strong/60 dark:bg-warning-soft/40">
           <div className="flex items-start gap-2">
             <Checkbox
               id="markCompleted"
