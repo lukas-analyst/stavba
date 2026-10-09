@@ -2,11 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { AddDialogShell } from "@/components/ui/add-dialog-shell";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
+import { CollapsibleSection } from "@/components/ui/collapsible-section";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -34,7 +30,6 @@ import {
   Plus,
   ExternalLink,
   Trash2,
-  ChevronDown,
 } from "lucide-react";
 import { toast } from "sonner";
 import { SearchableSelect } from "@/components/ui/searchable-select";
@@ -135,52 +130,6 @@ function ToggleChip({
       <Icon className="h-4 w-4 shrink-0" />
       {label}
     </button>
-  );
-}
-
-// ============================================================
-// CollapsibleSection — MD3 tonal container for grouped fields
-// ============================================================
-function CollapsibleSection({
-  title,
-  badge,
-  children,
-}: {
-  title: string;
-  badge?: number;
-  children: React.ReactNode;
-}) {
-  // Synchronous check — avoids useIsMobile() race condition
-  const [isOpen] = useState(() => {
-    if (typeof window === "undefined") return true;
-    return window.innerWidth >= 768;
-  });
-  return (
-    <Collapsible defaultOpen={isOpen}>
-      <div className="rounded-2xl border bg-muted/20">
-        <CollapsibleTrigger asChild>
-          <button
-            type="button"
-            className="flex w-full items-center justify-between px-4 py-2.5 text-sm font-medium hover:bg-muted/40 rounded-2xl"
-          >
-            <span className="flex items-center gap-1.5">
-              {title}
-              {badge != null && badge > 0 && (
-                <span className="rounded bg-muted-foreground/15 px-1.5 py-0.5 text-[10px] font-semibold tabular-nums">
-                  {badge}
-                </span>
-              )}
-            </span>
-            <ChevronDown className="h-4 w-4 text-muted-foreground" />
-          </button>
-        </CollapsibleTrigger>
-        <CollapsibleContent>
-          <div className="space-y-4 p-4 pt-0">
-            {children}
-          </div>
-        </CollapsibleContent>
-      </div>
-    </Collapsible>
   );
 }
 

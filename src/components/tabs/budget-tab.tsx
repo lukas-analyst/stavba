@@ -61,8 +61,6 @@ import {
   Filter,
   Search,
   Loader2,
-  ArrowUp,
-  ArrowDown,
   CheckCircle2,
   PiggyBank,
   Download,
@@ -533,16 +531,6 @@ function BudgetTab({ projectId, dragEndHandlerRef }: { projectId: string; dragEn
   };
 
   // Legacy category arrow buttons handler (DnD remains primary mechanism)
-  const moveCategory = (category: string, direction: -1 | 1) => {
-    const currentCats = grouped.map(([c]) => c);
-    const allCats = Array.from(new Set([...savedCategoryOrder, ...currentCats]));
-    const idx = allCats.indexOf(category);
-    const target = idx + direction;
-    if (target < 0 || target >= allCats.length) return;
-    const reordered = [...allCats];
-    [reordered[idx], reordered[target]] = [reordered[target], reordered[idx]];
-    reorder.mutate({ categoryOrder: reordered });
-  };
 
   // Register DnD drag-end handler via ref so DndBudgetTab can call it.
   useEffect(() => {
@@ -703,10 +691,6 @@ function BudgetTab({ projectId, dragEndHandlerRef }: { projectId: string; dragEn
                 onToggle={() => toggleCat(category)}
                 totals={totals}
                 burn={burn}
-                groupIndex={groupIndex}
-                totalGroups={grouped.length}
-                onMoveCategoryUp={() => moveCategory(category, -1)}
-                onMoveCategoryDown={() => moveCategory(category, 1)}
                 onCategoryDragEnd={(oldIdx, newIdx) =>
                   handleCategoryReorder(oldIdx, newIdx)
                 }
@@ -865,10 +849,6 @@ function SortableCategoryCard({
   onToggle,
   totals,
   burn,
-  groupIndex,
-  totalGroups,
-  onMoveCategoryUp,
-  onMoveCategoryDown,
   onCategoryDragEnd,
   onAddItem,
   children,
@@ -879,10 +859,6 @@ function SortableCategoryCard({
   onToggle: () => void;
   totals: { plan: number; actual: number; count: number; saved: number };
   burn: number;
-  groupIndex: number;
-  totalGroups: number;
-  onMoveCategoryUp: () => void;
-  onMoveCategoryDown: () => void;
   onCategoryDragEnd: (oldIndex: number, newIndex: number) => void;
   onAddItem?: () => void;
   children: React.ReactNode;
@@ -1000,52 +976,6 @@ function SortableCategoryCard({
                 {burn.toFixed(0)}%
               </span>
             </div>
-            {/* Legacy arrow buttons (kept as fallback) */}
-            <span className="ml-1 flex flex-col">
-              <span
-                role="button"
-                tabIndex={0}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onMoveCategoryUp();
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.stopPropagation();
-                    onMoveCategoryUp();
-                  }
-                }}
-                className={cn(
-                  "flex h-3.5 w-3.5 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground",
-                  groupIndex === 0 && "pointer-events-none opacity-30",
-                )}
-                aria-label="Přesunout kategorii nahoru"
-              >
-                <ArrowUp className="h-3 w-3" />
-              </span>
-              <span
-                role="button"
-                tabIndex={0}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onMoveCategoryDown();
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.stopPropagation();
-                    onMoveCategoryDown();
-                  }
-                }}
-                className={cn(
-                  "flex h-3.5 w-3.5 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground",
-                  groupIndex === totalGroups - 1 &&
-                    "pointer-events-none opacity-30",
-                )}
-                aria-label="Přesunout kategorii dolů"
-              >
-                <ArrowDown className="h-3 w-3" />
-              </span>
-            </span>
           </button>
         </CollapsibleTrigger>
         <CollapsibleContent>{children}</CollapsibleContent>
