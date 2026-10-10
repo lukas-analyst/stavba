@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { formatDate, formatCzk, PHASE_COLORS } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { EmptyStateBox } from "@/components/empty-state-box";
 
 type ZoomLevel = "days" | "months" | "quarters" | "years";
 
@@ -226,10 +227,11 @@ export function TimelineTab({ projectId }: { projectId: string }) {
 
   if (items.length === 0) {
     return (
-      <div className="rounded-lg border border-dashed py-12 text-center text-sm text-muted-foreground">
-        <CalendarRange className="mx-auto mb-2 h-8 w-8 opacity-40" />
-        Žádné položky s datem. Přiřaďte datumy od/do v tabulce rozpočtu.
-      </div>
+      <EmptyStateBox
+        icon={CalendarRange}
+        title="Žádné položky s datem"
+        description="Přiřaďte datumy od/do v tabulce rozpočtu a položky se zde zobrazí na časové ose."
+      />
     );
   }
 

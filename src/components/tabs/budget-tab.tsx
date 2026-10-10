@@ -82,6 +82,7 @@ import {
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { BudgetItemDialog } from "@/components/budget-item-dialog";
+import { EmptyStateBox } from "@/components/empty-state-box";
 import { useAppStore } from "@/lib/store";
 import {
   DndContext,
@@ -530,7 +531,9 @@ function BudgetTab({ projectId, dragEndHandlerRef }: { projectId: string; dragEn
     reorder.mutate({ categoryOrder: reordered });
   };
 
-  // Legacy category arrow buttons handler (DnD remains primary mechanism)
+  // Note: Category & item ordering is performed exclusively via drag-and-drop
+  // (dnd-kit). Legacy arrow-button reorder handlers were removed in favour of
+  // the DnD-first UX.
 
   // Register DnD drag-end handler via ref so DndBudgetTab can call it.
   useEffect(() => {
@@ -666,9 +669,11 @@ function BudgetTab({ projectId, dragEndHandlerRef }: { projectId: string; dragEn
       <SortableContext items={categoryIds} strategy={verticalListSortingStrategy}>
         <div id="budget-categories" className="space-y-3">
           {grouped.length === 0 && (
-            <div className="rounded-lg border border-dashed py-12 text-center text-sm text-muted-foreground">
-              Žádné položky neodpovídají filtru.
-            </div>
+            <EmptyStateBox
+              icon={Filter}
+              title="Žádné položky neodpovídají filtru"
+              description="Zkuste změnit filtr fáze, stavu nebo hledaný výraz. Nebo vymažte filtr pro zobrazení všech položek."
+            />
           )}
           {grouped.map(([category, catItems], groupIndex) => {
             const collapsed = collapsedCats.has(category);
