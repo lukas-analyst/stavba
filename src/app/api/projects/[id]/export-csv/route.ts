@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 import { dbRead } from "@/lib/db";
 
 // GET /api/projects/[id]/export-csv?type=budget|payments|time
+// Optional query params (budget type only):
+//   ?phase=Příprava       — filter by phase
+//   ?status=active|done|rejected  — filter by completion state
 // Returns a CSV file with the project's data, ready for Excel/Google Sheets.
 // Uses `dbRead` (read replica if configured, falls back to primary).
 export async function GET(
@@ -12,6 +15,8 @@ export async function GET(
     const { id } = await params;
     const { searchParams } = new URL(request.url);
     const type = searchParams.get("type") || "budget";
+    const phaseFilter = searchParams.get("phase");
+    const statusFilter = searchParams.get("status");
 
     const project = await dbRead.project.findUnique({ where: { id } });
     if (!project) {
@@ -98,7 +103,9 @@ export async function GET(
         "Položka",
         "Pracovník",
         "Typ",
+        "Počet lidí",
         "Hodiny",
+        "Osobohodiny",
         "Kontakt",
         "Popis",
       ];
@@ -115,16 +122,33 @@ export async function GET(
         t.budgetItem?.subcategory ?? "",
         t.workerName,
         workerTypeLabels[t.workerType] ?? t.workerType,
+        String(t.workerCount ?? 1),
         String(t.hours),
+        String((t.hours ?? 0) * (t.workerCount ?? 1)),
         t.contact?.name ?? "",
         t.description ?? "",
       ]);
       filename = `${project.name}-cas.csv`;
     } else {
-      // budget
+      // budget — with optional phase + status filters
+      const where: { projectId: string; phase?: string; completed?: boolean; rejected?: boolean } = { projectId: id };
+      if (phaseFilter) where.phase = phaseFilter;
+      if (statusFilter === "done") where.completed = true;
+      if (statusFilter === "rejected") where.rejected = true;
+      if (statusFilter === "active") {
+        where.completed = false;
+        where.rejected = false;
+      }
+
       const items = await dbRead.budgetItem.findMany({
-        where: { projectId: id },
+        where,
         orderBy: [{ sortOrder: "asc" }],
+        include: {
+          links: {
+            orderBy: { sortOrder: "asc" },
+            select: { label: true, url: true },
+          },
+        },
       });
       header = [
         "Kategorie",
@@ -133,6 +157,7 @@ export async function GET(
         "Fáze",
         "Nutné",
         "Hotovo",
+        "Zavrženo",
         "Poznámka",
         "Jednotková cena",
         "Plán (Kč)",
@@ -143,12 +168,18 @@ export async function GET(
         "Skutečnost (Kč)",
         "Skutečnost (hod)",
         "Ušetřeno",
+        "Dotace",
+        "Částka dotace",
+        "Odkazy",
       ];
       rows = items.map((it) => {
         const saved =
           it.completed && it.planCost
             ? Math.max(0, it.planCost - (it.actualCost || 0))
             : 0;
+        const linksStr = it.links.length > 0
+          ? it.links.map((l) => `${l.label}: ${l.url}`).join(" | ")
+          : "";
         return [
           it.category,
           it.subcategory ?? "",
@@ -156,6 +187,7 @@ export async function GET(
           it.phase,
           it.required ? "Ano" : "",
           it.completed ? "Ano" : "",
+          it.rejected ? "Ano" : "",
           it.note ?? "",
           it.unitPrice ?? "",
           it.planCost ? String(it.planCost) : "",
@@ -166,9 +198,15 @@ export async function GET(
           String(it.actualCost),
           String(it.actualHours),
           String(saved),
+          it.subsidyEligible ? "Ano" : "",
+          it.subsidyAmount ? String(it.subsidyAmount) : "",
+          linksStr,
         ];
       });
-      filename = `${project.name}-rozpocet.csv`;
+      const filterSuffix = phaseFilter || statusFilter
+        ? `-${phaseFilter ?? statusFilter}`
+        : "";
+      filename = `${project.name}-rozpocet${filterSuffix}.csv`;
     }
 
     // BOM for Excel UTF-8 detection

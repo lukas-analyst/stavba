@@ -526,6 +526,185 @@ export function DashboardTab({ projectId }: { projectId: string }) {
       <SpendingTrendCard projectId={projectId} />
       </div>
 
+      {/* ===== DASH+: Cashflow projekce + Heatmapa fáze ===== */}
+      <div className={cn("grid grid-cols-1 gap-4 lg:grid-cols-3")}>
+        {/* Cashflow projekce */}
+        <Card id="dash-cashflow" className="hover-lift lg:col-span-2">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <TrendingUp className="h-4 w-4 text-info" />
+              Cashflow projekce
+            </CardTitle>
+            <CardDescription>
+              Odhadovaný finální rozpočet vs. plán a nejhorší scénář
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {/* Hlavní číslo */}
+            <div className="flex items-end justify-between gap-4">
+              <div>
+                <div className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                  Projekce konce
+                </div>
+                <div className={cn(
+                  "text-2xl font-bold tabular-nums",
+                  totals.projectedOverrun > 0 ? "text-danger" : "text-success",
+                )}>
+                  {formatCzk(totals.projectedFinal)}
+                </div>
+                {totals.projectedOverrun > 0 ? (
+                  <div className="text-xs text-danger">
+                    +{formatCzk(totals.projectedOverrun)} nad rozpočet
+                  </div>
+                ) : (
+                  <div className="text-xs text-success">
+                    V rozpočtu (+{formatCzk(-totals.projectedOverrun)} rezerva)
+                  </div>
+                )}
+              </div>
+              <div className="text-right">
+                <div className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                  Prům. přesah položky
+                </div>
+                <div className={cn(
+                  "text-lg font-semibold tabular-nums",
+                  totals.avgOverrunRatio > 1.1 ? "text-danger" : totals.avgOverrunRatio > 1 ? "text-warning" : "text-success",
+                )}>
+                  {((totals.avgOverrunRatio - 1) * 100).toFixed(0)}%
+                </div>
+                <div className="text-[10px] text-muted-foreground">
+                  nad plán dle dokončených
+                </div>
+              </div>
+            </div>
+
+            {/* Vizualizace: plán → projekce → nejhorší scénář */}
+            <div className="space-y-2">
+              {[
+                { label: "Plán", value: totals.planTotal, color: "bg-info", text: "text-info" },
+                { label: "Projekce", value: totals.projectedFinal, color: totals.projectedOverrun > 0 ? "bg-danger" : "bg-success", text: totals.projectedOverrun > 0 ? "text-danger" : "text-success" },
+                { label: "Nejhorší", value: totals.worstCase, color: "bg-warning", text: "text-warning" },
+              ].map((row) => {
+                const maxVal = Math.max(totals.planTotal, totals.projectedFinal, totals.worstCase, 1);
+                const pct = (row.value / maxVal) * 100;
+                return (
+                  <div key={row.label} className="flex items-center gap-3">
+                    <div className="w-16 text-xs text-muted-foreground">{row.label}</div>
+                    <div className="h-5 flex-1 overflow-hidden rounded bg-muted">
+                      <div
+                        className={cn("h-full rounded transition-all", row.color)}
+                        style={{ width: `${pct}%` }}
+                      />
+                    </div>
+                    <div className={cn("w-24 text-right text-xs font-semibold tabular-nums", row.text)}>
+                      {formatCzk(row.value)}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Zbývající rezerva / překročení */}
+            <div className={cn(
+              "flex items-center justify-between rounded-lg border p-3",
+              totals.worstCaseRemaining < 0
+                ? "border-danger/30 bg-danger-soft/30"
+                : "border-success/30 bg-success-soft/30",
+            )}>
+              <div className="flex items-center gap-2">
+                <PiggyBank className={cn("h-4 w-4", totals.worstCaseRemaining < 0 ? "text-danger" : "text-success")} />
+                <span className="text-xs font-medium">
+                  {totals.worstCaseRemaining < 0
+                    ? "Překročení při nejhorším scénáři"
+                    : "Rezerva při nejhorším scénáři"}
+                </span>
+              </div>
+              <span className={cn(
+                "text-sm font-bold tabular-nums",
+                totals.worstCaseRemaining < 0 ? "text-danger" : "text-success",
+              )}>
+                {formatCzk(Math.abs(totals.worstCaseRemaining))}
+              </span>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Heatmapa čerpání dle fáze */}
+        <Card id="dash-phase-heatmap" className="hover-lift">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Activity className="h-4 w-4 text-warning" />
+              Čerpání dle fáze
+            </CardTitle>
+            <CardDescription>
+              Plán vs. skutečnost + stav dokončení
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2.5">
+              {byPhase
+                .slice()
+                .sort((a, b) => {
+                  const order = ["Příprava", "Demolice", "Hrubá stavba", "Zabydlování", "Do budoucna", "Neurčeno"];
+                  return order.indexOf(a.phase) - order.indexOf(b.phase);
+                })
+                .map((p) => {
+                  const burnPct = p.plan > 0 ? (p.actual / p.plan) * 100 : 0;
+                  const completionPct = p.count > 0 ? (p.completedCount / p.count) * 100 : 0;
+                  const intensity = Math.min(burnPct / 100, 1);
+                  // Heat color: green (low burn) → yellow → red (high burn)
+                  const heatColor =
+                    intensity > 0.8 ? "bg-danger"
+                    : intensity > 0.5 ? "bg-warning"
+                    : intensity > 0.1 ? "bg-success"
+                    : "bg-muted";
+                  return (
+                    <div key={p.phase} className="space-y-1">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="font-medium">{p.phase}</span>
+                        <span className="text-muted-foreground tabular-nums">
+                          {p.count} položek
+                        </span>
+                      </div>
+                      {/* Heat bar */}
+                      <div className="flex items-center gap-2">
+                        <div className="h-3 flex-1 overflow-hidden rounded-full bg-muted">
+                          <div
+                            className={cn("h-full rounded-full transition-all", heatColor)}
+                            style={{ width: `${Math.min(burnPct, 100)}%` }}
+                            title={`${formatCzk(p.actual)} z ${formatCzk(p.plan)} (${burnPct.toFixed(0)}%)`}
+                          />
+                        </div>
+                        <span className={cn(
+                          "w-12 text-right text-[11px] font-semibold tabular-nums",
+                          burnPct > 100 ? "text-danger" : burnPct > 80 ? "text-warning" : "text-muted-foreground",
+                        )}>
+                          {burnPct.toFixed(0)}%
+                        </span>
+                      </div>
+                      {/* Completion bar (thinner, below) */}
+                      {p.count > 0 && (
+                        <div className="flex items-center gap-2">
+                          <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted/50">
+                            <div
+                              className="h-full rounded-full bg-subsidy transition-all"
+                              style={{ width: `${completionPct}%` }}
+                              title={`${p.completedCount}/${p.count} dokončeno (${completionPct.toFixed(0)}%)`}
+                            />
+                          </div>
+                          <span className="w-12 text-right text-[10px] text-muted-foreground tabular-nums">
+                            {p.completedCount}/{p.count}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
       {/* Charts */}
       <div className={cn("grid grid-cols-1 gap-4 lg:grid-cols-2 ")}>
         <Card className="hover-lift">
