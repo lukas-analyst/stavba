@@ -27,6 +27,7 @@ import {
 import { formatDate } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { EmptyStateBox } from "@/components/empty-state-box";
 
 // localStorage key for remembering the user's chosen author name across
 // sessions and across projects.
@@ -200,10 +201,11 @@ export function NotesTab({ projectId }: { projectId: string }) {
           ))}
         </div>
       ) : (
-        <div className="rounded-lg border border-dashed py-12 text-center text-sm text-muted-foreground">
-          <StickyNote className="mx-auto mb-2 h-8 w-8 opacity-40" />
-          Zatím žádné poznámky. Napište první poznámku výše.
-        </div>
+        <EmptyStateBox
+          icon={StickyNote}
+          title="Zatím žádné poznámky"
+          description="Napište první poznámku do pole výše. Poznámky slouží pro rychlé úryvky, odkazy a připomínky."
+        />
       )}
     </div>
   );

@@ -88,11 +88,34 @@ export async function POST(
       actualHours,
       subsidyEligible,
       subsidyAmount,
+      links,
     } = body;
 
     if (!category || typeof category !== "string" || !category.trim()) {
       return NextResponse.json({ error: "Category is required" }, { status: 400 });
     }
+
+    // Normalize incoming links — same validation as PATCH endpoint.
+    // Drops entries without a non-empty label AND url. Assigns sortOrder
+    // based on the array order so display is stable in the detail panel.
+    const normalizedLinks = Array.isArray(links)
+      ? links
+          .filter(
+            (l: unknown): l is { id?: string; label: string; url: string } => {
+              if (!l || typeof l !== "object") return false;
+              const obj = l as Record<string, unknown>;
+              return (
+                typeof obj.label === "string" && obj.label.trim() !== "" &&
+                typeof obj.url === "string" && obj.url.trim() !== ""
+              );
+            },
+          )
+          .map((l, idx) => ({
+            label: l.label.trim(),
+            url: l.url.trim(),
+            sortOrder: idx,
+          }))
+      : [];
 
     // If parentId is set, validate it belongs to this project
     if (parentId) {
@@ -146,6 +169,8 @@ export async function POST(
         subsidyEligible: Boolean(subsidyEligible),
         subsidyAmount: subsidyAmount !== undefined && subsidyAmount !== null && subsidyAmount !== "" ? Number(subsidyAmount) : null,
         sortOrder: (maxOrder._max.sortOrder ?? -1) + 1,
+        // Persist external hyperlinks (1:N). Empty array → no rows created.
+        links: { create: normalizedLinks },
       },
       select: BUDGET_ITEM_SELECT,
     });
