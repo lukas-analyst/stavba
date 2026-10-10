@@ -1,16 +1,8 @@
 "use client";
 
-import {
-  ResponsiveDialog,
-  ResponsiveDialogHeader,
-  ResponsiveDialogTitle,
-  ResponsiveDialogDescription,
-  ResponsiveDialogFooter,
-} from "@/components/ui/responsive-dialog";
-import { Button } from "@/components/ui/button";
+import { AddDialogShell } from "@/components/ui/add-dialog-shell";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -20,8 +12,8 @@ import {
 } from "@/components/ui/select";
 import { useCreateProject, useUpdateProject, type Project } from "@/lib/api";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
 import { useState } from "react";
+import { CollapsibleSection } from "@/components/ui/collapsible-section";
 
 type Props = {
   open: boolean;
@@ -30,10 +22,13 @@ type Props = {
 };
 
 export function ProjectDialog({ open, onOpenChange, project }: Props) {
+  if (!open) return null;
   return (
-    <ResponsiveDialog open={open} onOpenChange={onOpenChange} className="max-w-lg">
-      {open && <ProjectForm key={project?.id ?? "new"} project={project} onDone={() => onOpenChange(false)} />}
-    </ResponsiveDialog>
+    <ProjectForm
+      key={project?.id ?? "new"}
+      project={project}
+      onDone={() => onOpenChange(false)}
+    />
   );
 }
 
@@ -47,8 +42,8 @@ function ProjectForm({
   const createProject = useCreateProject();
   const updateProject = useUpdateProject(project?.id ?? "");
   const [name, setName] = useState(project?.name ?? "");
-  const [address, setAddress] = useState(project?.address ?? "");
   const [description, setDescription] = useState(project?.description ?? "");
+  const [address, setAddress] = useState(project?.address ?? "");
   const [status, setStatus] = useState(project?.status ?? "planning");
   const [startDate, setStartDate] = useState(
     project?.startDate ? project.startDate.substring(0, 10) : "",
@@ -60,8 +55,7 @@ function ProjectForm({
   const isEditMode = !!project;
   const isLoading = createProject.isPending || updateProject.isPending;
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async () => {
     if (!name.trim()) {
       toast.error("Název projektu je povinný");
       return;
@@ -89,48 +83,34 @@ function ProjectForm({
   };
 
   return (
-    <>
-      <ResponsiveDialogHeader>
-        <ResponsiveDialogTitle>
-          {project ? "Upravit projekt" : "Nový projekt"}
-        </ResponsiveDialogTitle>
-        <ResponsiveDialogDescription>
-          {isEditMode
-            ? "Upravte název, popis a termíny projektu."
-            : "Vytvořte nový projekt pro stavbu nebo rekonstrukci domu, bytu, chalupy."}
-        </ResponsiveDialogDescription>
-      </ResponsiveDialogHeader>
-      <form onSubmit={handleSubmit} className="space-y-4 px-4 pb-4">
-        <div className="space-y-2">
-          <Label htmlFor="name">Název projektu *</Label>
-          <Input
-            id="name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="např. Troja, Chalupa, Byt v Praze"
-            required
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="address">Adresa</Label>
-          <Input
-            id="address"
-            value={address}
-            onChange={(e) => setAddress(e.target.value)}
-            placeholder="např. Praha - Troja"
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="description">Popis</Label>
-          <Textarea
-            id="description"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder="Krátký popis projektu…"
-            rows={3}
-          />
-        </div>
-        <div className="grid grid-cols-2 gap-3">
+    <AddDialogShell
+      open
+      onOpenChange={() => onDone()}
+      titleValue={name}
+      onTitleChange={setName}
+      titlePlaceholder="Název projektu…"
+      descriptionValue={description}
+      onDescriptionChange={setDescription}
+      descriptionPlaceholder="Krátký popis projektu…"
+      contextText={isEditMode ? "Úprava projektu" : "Nový projekt"}
+      submitLabel={isEditMode ? "Uložit změny" : "Vytvořit projekt"}
+      onSubmit={handleSubmit}
+      isSubmitting={isLoading}
+      submitDisabled={!name.trim()}
+      maxWidth="max-w-2xl"
+    >
+      <div className="space-y-4">
+        {/* ===== ADRESA + STAV (vedle sebe) ===== */}
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div className="space-y-2">
+            <Label htmlFor="address">Adresa</Label>
+            <Input
+              id="address"
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+              placeholder="např. Praha - Troja"
+            />
+          </div>
           <div className="space-y-2">
             <Label htmlFor="status">Stav</Label>
             <Select value={status} onValueChange={setStatus}>
@@ -146,38 +126,31 @@ function ProjectForm({
             </Select>
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-3">
-          <div className="space-y-2">
-            <Label htmlFor="startDate">Datum zahájení</Label>
-            <Input
-              id="startDate"
-              type="date"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-            />
+
+        {/* ===== TERMÍNY (volitelné) — MD3 tonal section ===== */}
+        <CollapsibleSection title="Termíny (volitelné)">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="startDate">Datum zahájení</Label>
+              <Input
+                id="startDate"
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="endDate">Datum dokončení</Label>
+              <Input
+                id="endDate"
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+              />
+            </div>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="endDate">Datum dokončení</Label>
-            <Input
-              id="endDate"
-              type="date"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-            />
-          </div>
-        </div>
-        <ResponsiveDialogFooter>
-          <Button type="button" variant="outline" onClick={onDone}>
-            Zrušit
-          </Button>
-          <Button type="submit" disabled={isLoading}>
-            {isLoading && (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            )}
-            {isEditMode ? "Uložit změny" : "Vytvořit projekt"}
-          </Button>
-        </ResponsiveDialogFooter>
-      </form>
-    </>
+        </CollapsibleSection>
+      </div>
+    </AddDialogShell>
   );
 }
