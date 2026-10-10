@@ -302,6 +302,29 @@
 }
 
 /* ============================================================
+   Virtual paint hint for large tables (Budget, Payments, Time)
+   ------------------------------------------------------------
+   `content-visibility: auto` tells the browser to skip rendering
+   work for rows that are off-screen, dramatically improving paint
+   performance for tables with 100+ rows. `contain-intrinsic-size`
+   reserves space so the scrollbar doesn't jump as rows scroll in.
+
+   This is NOT full virtualization (DOM nodes still exist), but it
+   is a safe, progressive enhancement that:
+     - works with DnD (rows stay in DOM, just not painted)
+     - works with expand/collapse (children render on demand)
+     - degrades gracefully (older browsers ignore it)
+
+   Apply to <tr> elements in large tables.
+   ============================================================ */
+@layer utilities {
+  .cv-row {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 48px;
+  }
+}
+
+/* ============================================================
    Newly-added / just-edited row highlight (Budget tab)
    ------------------------------------------------------------
    Triggered by adding the `.stavba-highlight-row` class to a

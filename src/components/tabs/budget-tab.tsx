@@ -1230,6 +1230,10 @@ const BudgetRow = memo(function BudgetRow({
       onClick={() => onEdit(item)}
       className={cn(
         "group cursor-pointer transition-colors",
+        // Virtual paint hint — browser skips painting off-screen rows,
+        // dramatically improving scroll perf for 100+ item projects.
+        // Children rows inherit from parent's expanded state.
+        "cv-row",
         isChild
           ? cn(
               "bg-muted/30 hover:bg-muted/40",

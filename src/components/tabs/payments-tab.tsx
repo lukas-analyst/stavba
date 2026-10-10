@@ -518,7 +518,7 @@ function PaymentRow({
   return (
     <TableRow
       className={cn(
-        "group cursor-pointer hover:bg-muted/30",
+        "group cursor-pointer hover:bg-muted/30 cv-row",
         isParent && "bg-warning-soft/30 dark:bg-warning-soft/40",
       )}
       onClick={() => onEdit()}

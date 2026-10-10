@@ -397,7 +397,7 @@ function TimeRow({
   const w = workerTypeLabel(entry.workerType);
   return (
     <TableRow
-      className="group cursor-pointer hover:bg-muted/30"
+      className="group cursor-pointer hover:bg-muted/30 cv-row"
       onClick={() => onEdit()}
       title="Klikněte pro úpravu záznamu"
     >
