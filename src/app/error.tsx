@@ -80,7 +80,7 @@ export default function Error({
         <AlertTriangle className="h-8 w-8" />
       </div>
       <div className="space-y-2">
-        <h1 className="text-2xl font-bold tracking-tight md:text-3xl">
+        <h1 className="type-display tracking-tight">
           Něco se pokazilo
         </h1>
         <p className="mx-auto max-w-md text-sm text-muted-foreground">

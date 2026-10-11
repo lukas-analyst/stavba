@@ -83,6 +83,8 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { BudgetItemDialog } from "@/components/budget-item-dialog";
 import { EmptyStateBox } from "@/components/empty-state-box";
+import { FilterChip, FilterChipGroup } from "@/components/ui/filter-chip";
+import { SegmentedButton } from "@/components/ui/segmented-button";
 import { useAppStore } from "@/lib/store";
 import {
   DndContext,
@@ -262,7 +264,7 @@ function BudgetTab({ projectId, dragEndHandlerRef }: { projectId: string; dragEn
   const exportCsv = useExportCsv(projectId);
   const [collapsedCats, setCollapsedCats] = useState<Set<string>>(new Set());
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
-  const [phaseFilter, setPhaseFilter] = useState<string>("all");
+  const [phaseFilter, setPhaseFilter] = useState<Set<string>>(new Set()); // multi-select (empty = all)
   const [completionFilter, setCompletionFilter] =
     useState<CompletionFilter>("all");
   const [search, setSearch] = useState("");
@@ -389,7 +391,8 @@ function BudgetTab({ projectId, dragEndHandlerRef }: { projectId: string; dragEn
   const itemMatches = useMemo(() => {
     return (i: BudgetItem): boolean => {
       if (categoryFilter !== "all" && i.category !== categoryFilter) return false;
-      if (phaseFilter !== "all" && i.phase !== phaseFilter) return false;
+      // Multi-select phase filter: if set is non-empty, item's phase must be in it
+      if (phaseFilter.size > 0 && !phaseFilter.has(i.phase)) return false;
       if (completionFilter === "done" && !i.completed) return false;
       if (completionFilter === "todo" && (i.completed || i.rejected)) return false;
       if (completionFilter === "rejected" && !i.rejected) return false;
@@ -614,55 +617,74 @@ function BudgetTab({ projectId, dragEndHandlerRef }: { projectId: string; dragEn
 
   return (
     <div id="budget-root" className="space-y-4">
-      {/* Toolbar */}
-      <div id="budget-toolbar" className="flex flex-wrap items-center gap-2">
-        <div id="budget-search" className="relative">
-          <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Hledat položku…"
-            className="h-9 w-56 pl-8"
+      {/* Toolbar — MD3 filter pattern */}
+      <div id="budget-toolbar" className="space-y-3">
+        {/* Row 1: Search + Status segmented + Add button */}
+        <div className="flex flex-wrap items-center gap-2">
+          {/* MD3 Search bar — with clear (×) button */}
+          <div id="budget-search" className="relative flex-1 min-w-[200px] max-w-xs">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-on-surface-variant" />
+            <Input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Hledat položku…"
+              className="h-9 rounded-full border-outline-variant bg-surface-container-low pl-9 pr-9"
+            />
+            {search && (
+              <button
+                type="button"
+                onClick={() => setSearch("")}
+                aria-label="Vymazat hledání"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-foreground state-layer-on-surface rounded-full p-0.5"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+
+          {/* MD3 Segmented Button — completion status */}
+          <SegmentedButton
+            value={completionFilter}
+            onChange={(v) => setCompletionFilter(v as CompletionFilter)}
+            options={COMPLETION_OPTIONS.map((opt) => ({
+              value: opt.id,
+              label: opt.label,
+            }))}
+            size="md"
           />
+
+          <Button
+            size="sm"
+            onClick={() => setAddOpen(true)}
+            className="ml-auto h-9 gap-1.5 rounded-full"
+          >
+            <Plus className="h-4 w-4" /> Přidat položku
+          </Button>
         </div>
-        <Select value={phaseFilter} onValueChange={setPhaseFilter}>
-          <SelectTrigger className="h-9 w-44">
-            <Filter className="mr-2 h-3.5 w-3.5" />
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Všechny fáze</SelectItem>
-            {PHASES.map((p) => (
-              <SelectItem key={p} value={p}>
-                {p}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <div id="budget-completion-filter" className="flex items-center gap-0.5 rounded-md border bg-muted/40 p-0.5">
-          {COMPLETION_OPTIONS.map((opt) => (
-            <button
-              key={opt.id}
-              onClick={() => setCompletionFilter(opt.id)}
-              className={cn(
-                "rounded px-2.5 py-1 text-xs font-medium transition-colors",
-                completionFilter === opt.id
-                  ? "bg-background text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground",
-                opt.id === "rejected" && completionFilter !== opt.id && "text-danger hover:text-danger-strong",
-              )}
-            >
-              {opt.label}
-            </button>
-          ))}
-        </div>
-        <Button
-          size="sm"
-          onClick={() => setAddOpen(true)}
-          className="ml-auto h-9 gap-1.5"
+
+        {/* Row 2: Phase filter chips (multi-select) */}
+        <FilterChipGroup
+          hasActiveFilters={phaseFilter.size > 0}
+          onClear={() => setPhaseFilter(new Set())}
         >
-          <Plus className="h-4 w-4" /> Přidat položku
-        </Button>
+          <span className="mr-1 text-xs font-medium text-on-surface-variant">Fáze:</span>
+          {PHASES.map((phase) => (
+            <FilterChip
+              key={phase}
+              label={phase}
+              selected={phaseFilter.has(phase)}
+              onClick={() => {
+                const next = new Set(phaseFilter);
+                if (next.has(phase)) {
+                  next.delete(phase);
+                } else {
+                  next.add(phase);
+                }
+                setPhaseFilter(next);
+              }}
+            />
+          ))}
+        </FilterChipGroup>
       </div>
 
       {/* Budget table grouped by category — wrapped in SortableContext for category DnD */}

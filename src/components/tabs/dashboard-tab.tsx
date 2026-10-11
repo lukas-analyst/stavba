@@ -84,7 +84,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
       <div id="kpi-cards" className={cn("grid grid-cols-2 gap-2 sm:gap-3 md:grid-cols-3 lg:grid-cols-6 lg:gap-4")}>
         <Card id="kpi-plan" className="rounded-2xl border-success/40 bg-gradient-to-br from-success-soft to-white shadow-sm dark:border-success/30 dark:from-success-soft dark:to-card hover-lift">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            <CardTitle className="type-overline text-muted-foreground">
               Plán rozpočtu
             </CardTitle>
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-success-soft">
@@ -92,7 +92,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-lg font-bold tabular-nums md:text-2xl">{formatCzk(totals.planTotal)}</div>
+            <div className="type-display tabular-nums">{formatCzk(totals.planTotal)}</div>
             <p className="mt-1 text-xs text-muted-foreground">
               {totals.itemCount} položek · {totals.requiredCount} nutných
             </p>
@@ -101,7 +101,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
 
         <Card id="kpi-burn" className="rounded-2xl border-warning/40 bg-gradient-to-br from-warning-soft to-white shadow-sm dark:border-warning-strong/40 dark:from-warning-soft dark:to-card hover-lift cursor-pointer" onClick={() => setActiveTab("payments")}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            <CardTitle className="type-overline text-muted-foreground">
               Čerpání
             </CardTitle>
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-warning-soft">
@@ -109,7 +109,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-lg font-bold tabular-nums md:text-2xl">{formatCzk(totals.actualTotal)}</div>
+            <div className="type-display tabular-nums">{formatCzk(totals.actualTotal)}</div>
             <div className="mt-2">
               <div className="mb-1 flex items-center justify-between text-xs">
                 <span className={`font-semibold ${burnColor}`}>
@@ -134,7 +134,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
 
         <Card id="kpi-remaining" className={cn("rounded-2xl shadow-sm hover-lift cursor-pointer", totals.remaining >= 0 ? "border-info/40 bg-gradient-to-br from-info-soft to-white dark:border-info-strong/40 dark:from-info-soft dark:to-card" : "border-danger/40 bg-gradient-to-br from-danger-soft to-white dark:border-danger-strong/40 dark:from-danger-soft dark:to-card")} onClick={() => goToBudget({ type: "active" })}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            <CardTitle className="type-overline text-muted-foreground">
               Zbývá v rozpočtu
             </CardTitle>
             <div className={cn("flex h-8 w-8 items-center justify-center rounded-lg", totals.remaining >= 0 ? "bg-info-soft" : "bg-danger-soft")}>
@@ -146,7 +146,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
             </div>
           </CardHeader>
           <CardContent>
-            <div className={`text-lg font-bold tabular-nums md:text-2xl ${totals.remaining < 0 ? "text-danger" : ""}`}>
+            <div className={`type-display tabular-nums ${totals.remaining < 0 ? "text-danger" : ""}`}>
               {formatCzk(totals.remaining)}
             </div>
             <p className="mt-1 text-xs text-muted-foreground">
@@ -157,7 +157,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
 
         <Card id="kpi-hours" className="rounded-2xl border-time/40 bg-gradient-to-br from-time-soft to-white shadow-sm dark:border-time/30 dark:from-time-soft dark:to-card hover-lift cursor-pointer" onClick={() => setActiveTab("time")}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            <CardTitle className="type-overline text-muted-foreground">
               Odpracováno
             </CardTitle>
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-time-soft">
@@ -165,7 +165,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-lg font-bold tabular-nums md:text-2xl">{formatNumber(totals.hoursTotal, " h")}</div>
+            <div className="type-display tabular-nums">{formatNumber(totals.hoursTotal, " h")}</div>
             <p className="mt-1 text-xs text-muted-foreground">
               Plán: {formatNumber(totals.daysPlanned, " dní")}
             </p>
@@ -174,7 +174,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
 
         <Card id="kpi-saved" className="rounded-2xl border-success/50 bg-gradient-to-br from-success-soft to-white shadow-sm dark:border-success-strong/40 dark:from-success-soft dark:to-card hover-lift cursor-pointer" onClick={() => goToBudget({ type: "saved" })}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            <CardTitle className="type-overline text-muted-foreground">
               Ušetřeno
             </CardTitle>
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-success-soft">
@@ -182,7 +182,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-lg font-bold tabular-nums md:text-2xl text-success">
+            <div className="type-display tabular-nums text-success">
               {formatCzk(totals.savedTotal)}
             </div>
             <p className="mt-1 text-xs text-muted-foreground">
@@ -193,7 +193,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
 
         <Card id="kpi-completed" className="rounded-2xl border-subsidy/40 bg-gradient-to-br from-subsidy-soft to-white shadow-sm dark:border-subsidy-strong/40 dark:from-subsidy-soft dark:to-card hover-lift cursor-pointer" onClick={() => goToBudget({ type: "completion", value: "done" })}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            <CardTitle className="type-overline text-muted-foreground">
               Hotovo
             </CardTitle>
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-subsidy-soft">
@@ -201,7 +201,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-lg font-bold tabular-nums md:text-2xl">
+            <div className="type-display tabular-nums">
               {totals.completedCount} / {totals.itemCount}
             </div>
             <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-muted">
@@ -223,7 +223,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
             <div className="flex items-center gap-2">
               <CircleAlert className="h-5 w-5 text-warning" />
-              <CardTitle className="text-base">Upozornění a akce ({totalAlerts})</CardTitle>
+              <CardTitle className="type-title-lg">Upozornění a akce ({totalAlerts})</CardTitle>
             </div>
           </CardHeader>
           <CardContent className="space-y-3">
@@ -313,7 +313,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <TrendingUp className={cn("h-5 w-5", totals.projectedOverrun > 0 ? "text-danger" : "text-success")} />
-                <CardTitle className="text-base">Predikce konečných nákladů</CardTitle>
+                <CardTitle className="type-title-lg">Predikce konečných nákladů</CardTitle>
               </div>
               <Badge variant="outline" className="text-[10px]">
                 na základě {totals.completedCount} dokončených
@@ -397,7 +397,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
       <div>
       <Card className="hover-lift">
         <CardHeader className="pb-3">
-          <CardTitle className="text-base">Postup podle fází</CardTitle>
+          <CardTitle className="type-title-lg">Postup podle fází</CardTitle>
           <CardDescription>Rozpad plánu a čerpání pro každou fázi stavby</CardDescription>
         </CardHeader>
         <CardContent>
@@ -531,7 +531,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
         {/* Cashflow projekce */}
         <Card id="dash-cashflow" className="hover-lift lg:col-span-2">
           <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-base">
+            <CardTitle className="flex items-center gap-2 type-title-lg">
               <TrendingUp className="h-4 w-4 text-info" />
               Cashflow projekce
             </CardTitle>
@@ -632,7 +632,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
         {/* Heatmapa čerpání dle fáze */}
         <Card id="dash-phase-heatmap" className="hover-lift">
           <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-base">
+            <CardTitle className="flex items-center gap-2 type-title-lg">
               <Activity className="h-4 w-4 text-warning" />
               Čerpání dle fáze
             </CardTitle>
@@ -709,7 +709,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
       <div className={cn("grid grid-cols-1 gap-4 lg:grid-cols-2 ")}>
         <Card className="hover-lift">
           <CardHeader>
-            <CardTitle className="text-base">Rozpočet podle fáze</CardTitle>
+            <CardTitle className="type-title-lg">Rozpočet podle fáze</CardTitle>
             <CardDescription>Plán vs skutečnost pro každou fázi projektu</CardDescription>
           </CardHeader>
           <CardContent>
@@ -721,7 +721,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
 
         <Card className="hover-lift">
           <CardHeader>
-            <CardTitle className="text-base">Rozpočet podle kategorie</CardTitle>
+            <CardTitle className="type-title-lg">Rozpočet podle kategorie</CardTitle>
             <CardDescription>Podíl plánovaných nákladů na jednotlivých kategoriích</CardDescription>
           </CardHeader>
           <CardContent>
@@ -736,7 +736,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
       <div className={cn("grid grid-cols-1 gap-4 md:grid-cols-3 ")}>
         <Card className="hover-lift">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Položky rozpočtu</CardTitle>
+            <CardTitle className="type-title">Položky rozpočtu</CardTitle>
             <ListChecks className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -757,7 +757,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
 
         <Card className="hover-lift">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Poslední platby</CardTitle>
+            <CardTitle className="type-title">Poslední platby</CardTitle>
             <Receipt className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent className="space-y-1.5">
@@ -788,7 +788,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
 
         <Card className="hover-lift">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Poslední časové záznamy</CardTitle>
+            <CardTitle className="type-title">Poslední časové záznamy</CardTitle>
             <Timer className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent className="space-y-1.5">
@@ -822,7 +822,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
       <div>
       <Card className="hover-lift">
         <CardHeader>
-          <CardTitle className="text-base">Náklady podle kategorie</CardTitle>
+          <CardTitle className="type-title-lg">Náklady podle kategorie</CardTitle>
           <CardDescription>Detailní rozpad plánu a skutečnosti</CardDescription>
         </CardHeader>
         <CardContent>
@@ -933,7 +933,7 @@ function SpendingTrendCard({ projectId }: { projectId: string }) {
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle className="text-base">Trend výdajů a času</CardTitle>
+            <CardTitle className="type-title-lg">Trend výdajů a času</CardTitle>
             <CardDescription>Posledních 12 měsíců — měsíční utrácení a odpracované hodiny</CardDescription>
           </div>
           <div className="flex gap-4 text-right">
