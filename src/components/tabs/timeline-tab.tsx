@@ -305,7 +305,7 @@ export function TimelineTab({ projectId }: { projectId: string }) {
       {/* Gantt */}
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-base">Harmonogram stavby</CardTitle>
+          <CardTitle className="type-title-lg">Harmonogram stavby</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto" onScroll={(e) => setScrollLeft(e.currentTarget.scrollLeft)}>
@@ -445,7 +445,7 @@ export function TimelineTab({ projectId }: { projectId: string }) {
       <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2 text-sm">
+            <CardTitle className="flex items-center gap-2 type-title">
               <CalendarDays className="h-4 w-4 text-info" />
               Nejbližší akce
             </CardTitle>
@@ -461,7 +461,7 @@ export function TimelineTab({ projectId }: { projectId: string }) {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2 text-sm">
+            <CardTitle className="flex items-center gap-2 type-title">
               <CalendarRange className="h-4 w-4 text-danger" />
               Zpožděné
             </CardTitle>
@@ -477,7 +477,7 @@ export function TimelineTab({ projectId }: { projectId: string }) {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2 text-sm">
+            <CardTitle className="flex items-center gap-2 type-title">
               <CalendarRange className="h-4 w-4 text-warning" />
               K naplánování
             </CardTitle>
