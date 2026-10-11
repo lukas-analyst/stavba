@@ -1371,7 +1371,7 @@ const BudgetRow = memo(function BudgetRow({
               <span
                 title="Povinné (nutné pro dokončení projektu)"
                 aria-label="Nutné"
-                className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-warning-soft text-[10px] font-bold leading-none text-warning-strong dark:bg-warning-soft dark:text-warning-strong"
+                className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-warning-soft text-[10px] font-bold leading-none text-warning-strong dark:bg-warning-soft/40 dark:text-warning/70"
               >
                 !
               </span>
@@ -1390,7 +1390,7 @@ const BudgetRow = memo(function BudgetRow({
               {item.subcategory || "(bez názvu)"}
             </span>
             {item.rejected && (
-              <Badge variant="outline" className="h-4 px-1 text-[9px] text-danger">
+              <Badge variant="outline" className="h-4 px-1 text-[9px] text-danger dark:text-danger/60">
                 Zavrženo
               </Badge>
             )}
@@ -1565,8 +1565,8 @@ const BudgetRow = memo(function BudgetRow({
             className={cn(
               "h-7 w-7 shrink-0 p-0",
               item.required
-                ? "border-warning bg-warning text-white hover:bg-warning-strong hover:text-white dark:border-warning-strong dark:bg-warning-strong dark:hover:bg-warning-strong"
-                : "text-warning hover:border-warning/50 hover:bg-warning-soft hover:text-warning-strong dark:text-warning dark:hover:border-warning-strong dark:hover:bg-warning-soft",
+                ? "border-warning bg-warning text-white hover:bg-warning-strong hover:text-white dark:border-warning/60 dark:bg-warning/70 dark:hover:bg-warning/80"
+                : "text-warning hover:border-warning/50 hover:bg-warning-soft hover:text-warning-strong dark:text-warning/70 dark:hover:border-warning/40 dark:hover:bg-warning-soft/50",
             )}
             title={
               item.required
@@ -1586,8 +1586,8 @@ const BudgetRow = memo(function BudgetRow({
             className={cn(
               "h-7 w-7 p-0",
               item.completed
-                ? "border-success bg-success text-white hover:bg-success-strong hover:text-white dark:border-success-strong dark:bg-success-strong dark:hover:bg-success-strong"
-                : "text-success hover:border-success/50 hover:bg-success-soft hover:text-success-strong dark:text-success dark:hover:bg-success-soft",
+                ? "border-success bg-success text-white hover:bg-success-strong hover:text-white dark:border-success/60 dark:bg-success/70 dark:hover:bg-success/80"
+                : "text-success hover:border-success/50 hover:bg-success-soft hover:text-success-strong dark:text-success/70 dark:hover:border-success/40 dark:hover:bg-success-soft/50",
             )}
             title={item.completed ? "Označit jako nedokončené" : "Označit jako hotové"}
             aria-label={item.completed ? "Označit jako nedokončené" : "Označit jako hotové"}
@@ -1604,8 +1604,8 @@ const BudgetRow = memo(function BudgetRow({
             className={cn(
               "h-7 w-7 p-0",
               item.rejected
-                ? "border-danger bg-danger text-white hover:bg-danger-strong hover:text-white dark:border-danger-strong dark:bg-danger-strong dark:hover:bg-danger-strong"
-                : "text-danger hover:border-danger/50 hover:bg-danger-soft hover:text-danger-strong dark:text-danger dark:hover:bg-danger-soft",
+                ? "border-danger bg-danger text-white hover:bg-danger-strong hover:text-white dark:border-danger/60 dark:bg-danger/70 dark:hover:bg-danger/80"
+                : "text-danger hover:border-danger/50 hover:bg-danger-soft hover:text-danger-strong dark:text-danger/70 dark:hover:border-danger/40 dark:hover:bg-danger-soft/50",
             )}
             title={item.rejected ? "Zrušit zavržení" : "Zavrhnout položku"}
             aria-label={item.rejected ? "Zrušit zavržení" : "Zavrhnout"}
