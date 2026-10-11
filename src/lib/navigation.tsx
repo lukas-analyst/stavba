@@ -14,27 +14,40 @@ import type { TabId } from "@/lib/store";
 // Shared navigation configuration — used by both AppSidebar (desktop/mobile)
 // and any other component that needs to reference tab metadata.
 //
-// Tabs are ordered by usage frequency:
-//   P0 (daily):     dashboard, budget, payments, time
-//   P2 (occasional): contacts, timeline, notes
+// MD3 NavigationRail / NavigationDrawer organization:
+//   Sekce "Hlavní":    dashboard (Přehled)
+//   Sekce "Práce":      budget, payments, time
+//   Sekce "Organizace": contacts, timeline, notes
 //
-// The `priority` field is used to add a visual separator between groups
-// in the sidebar navigation.
+// `badgeKey` identifies which alert/count to show on the icon.
+// `section` groups items into labeled sections (MD3 pattern).
+export type NavSection = "main" | "work" | "organization";
+
 export type NavItem = {
   id: TabId;
   label: string;
   icon: React.ComponentType<{ className?: string }>;
-  priority: "P0" | "P2";
+  section: NavSection;
+  // Which badge (count/alert) to show on this tab's icon.
+  // undefined = no badge. Keys correspond to useNavBadges() hook.
+  badgeKey?: "required" | "overdue" | "overdueUpcoming" | "unscheduled";
 };
 
 export const NAV_ITEMS: NavItem[] = [
-  { id: "dashboard", label: "Přehled", icon: LayoutDashboard, priority: "P0" },
-  { id: "budget", label: "Rozpočet", icon: Table2, priority: "P0" },
-  { id: "payments", label: "Platby", icon: Receipt, priority: "P0" },
-  { id: "time", label: "Čas", icon: Clock, priority: "P0" },
-  { id: "contacts", label: "Kontakty", icon: Users, priority: "P2" },
-  { id: "timeline", label: "Časová osa", icon: CalendarRange, priority: "P2" },
-  { id: "notes", label: "Poznámky", icon: FileText, priority: "P2" },
+  { id: "dashboard", label: "Přehled", icon: LayoutDashboard, section: "main" },
+  { id: "budget", label: "Rozpočet", icon: Table2, section: "work", badgeKey: "required" },
+  { id: "payments", label: "Platby", icon: Receipt, section: "work" },
+  { id: "time", label: "Čas", icon: Clock, section: "work" },
+  { id: "contacts", label: "Kontakty", icon: Users, section: "organization" },
+  { id: "timeline", label: "Časová osa", icon: CalendarRange, section: "organization", badgeKey: "overdueUpcoming" },
+  { id: "notes", label: "Poznámky", icon: FileText, section: "organization" },
+];
+
+// Section metadata (label + order) — used for rendering section headings.
+export const NAV_SECTIONS: { id: NavSection; label: string }[] = [
+  { id: "main", label: "Hlavní" },
+  { id: "work", label: "Práce" },
+  { id: "organization", label: "Organizace" },
 ];
 
 // Quick lookup for prefetching and validation

@@ -38,6 +38,32 @@
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
   /* ===========================================================
+     MD3 Tonal surface scale (Material Design 3 foundation)
+     -----------------------------------------------------------
+     5-level tonal elevation system. Higher = darker in light,
+     lighter in dark. Used for:
+       surface            — base background (cards, dialogs)
+       surface-low        — slightly recessed (page bg, sidebar)
+       surface-lowest     — most recessed (input fields)
+       surface-container  — default containers
+       surface-high       — elevated (headers, dropdowns)
+       surface-highest    — most elevated (menus, tooltips)
+
+     These complement (not replace) card/popover/muted tokens —
+     they give finer-grained tonal layering for MD3 components.
+     =========================================================== */
+  --color-surface: var(--surface);
+  --color-surface-low: var(--surface-low);
+  --color-surface-lowest: var(--surface-lowest);
+  --color-surface-container: var(--surface-container);
+  --color-surface-container-low: var(--surface-container-low);
+  --color-surface-container-high: var(--surface-container-high);
+  --color-surface-container-highest: var(--surface-container-highest);
+  --color-surface-variant: var(--surface-variant);
+  --color-on-surface: var(--on-surface);
+  --color-on-surface-variant: var(--on-surface-variant);
+  --color-outline-variant: var(--outline-variant);
+  /* ===========================================================
      Sémantické barevné tokeny (Fáze 1 — vizuální restrukturalizace)
      -----------------------------------------------------------
      6 konceptů × 3 shades (soft ~100, base ~500, strong ~700).
@@ -77,6 +103,7 @@
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
   --radius-2xl: calc(var(--radius) + 8px);
+  --radius-full: 9999px;
   /* ===========================================================
      Spacing scale (Fáze 3) — foundation for consistent padding
      -----------------------------------------------------------
@@ -153,6 +180,23 @@
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
   /* ===========================================================
+     MD3 Tonal surfaces (Light mode)
+     -----------------------------------------------------------
+     Neutral grayscale tonal scale based on M3 design system.
+     Used for layered surfaces (sidebar, headers, cards, menus).
+     =========================================================== */
+  --surface: oklch(0.98 0 0);                    /* base surface */
+  --surface-low: oklch(0.97 0 0);                /* recessed (page bg) */
+  --surface-lowest: oklch(1 0 0);                /* most recessed */
+  --surface-container: oklch(0.96 0 0);          /* default container */
+  --surface-container-low: oklch(0.97 0 0);      /* sidebar, subtle */
+  --surface-container-high: oklch(0.94 0 0);     /* active indicator bg */
+  --surface-container-highest: oklch(0.92 0 0); /* menus, tooltips */
+  --surface-variant: oklch(0.92 0 0);            /* M3 surface-variant */
+  --on-surface: oklch(0.18 0 0);                /* text on surface */
+  --on-surface-variant: oklch(0.45 0 0);        /* secondary text */
+  --outline-variant: oklch(0.88 0 0);           /* subtle dividers */
+  /* ===========================================================
      Sémantické barevné hodnoty (Light mode)
      -----------------------------------------------------------
      oklch hodnoty ekvivalentní Tailwind paletám pro vizuální
@@ -218,6 +262,22 @@
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
   /* ===========================================================
+     MD3 Tonal surfaces (Dark mode)
+     -----------------------------------------------------------
+     In dark mode, higher elevation = lighter surface.
+     =========================================================== */
+  --surface: oklch(0.18 0 0);                    /* base surface */
+  --surface-low: oklch(0.15 0 0);                /* recessed */
+  --surface-lowest: oklch(0.12 0 0);             /* most recessed */
+  --surface-container: oklch(0.20 0 0);          /* default container */
+  --surface-container-low: oklch(0.17 0 0);      /* sidebar */
+  --surface-container-high: oklch(0.24 0 0);     /* active indicator */
+  --surface-container-highest: oklch(0.28 0 0); /* menus */
+  --surface-variant: oklch(0.30 0 0);
+  --on-surface: oklch(0.95 0 0);
+  --on-surface-variant: oklch(0.75 0 0);
+  --outline-variant: oklch(1 0 0 / 12%);
+  /* ===========================================================
      Sémantické barevné hodnoty (Dark mode)
      -----------------------------------------------------------
      Soft = tmavší varianta (pro dark:bg-* pozadí),
@@ -259,6 +319,66 @@
     font-variant-numeric: tabular-nums;
     font-feature-settings: "tnum";
   }
+}
+
+/* ============================================================
+   MD3 State Layers
+   ------------------------------------------------------------
+   Material Design 3 interaction states use semi-transparent
+   overlays on top of the content (not background-color changes).
+   This preserves text contrast while giving clear hover/focus/press feedback.
+
+   Usage:
+     <button class="state-layer hover:state-layer-hover focus:state-layer-focus">
+   Or apply directly:
+     <div class="hover:bg-state-layer-primary/8">
+
+   States (opacity %):
+     hover   = 8%
+     focus   = 10%
+     pressed = 10% (short)
+     dragged = 16%
+   ============================================================ */
+@layer utilities {
+  /* Primary-tinted state layer (for primary-colored interactive elements) */
+  .state-layer-primary {
+    position: relative;
+    isolation: isolate;
+  }
+  .state-layer-primary::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: var(--primary);
+    opacity: 0;
+    transition: opacity 150ms ease;
+    pointer-events: none;
+    border-radius: inherit;
+    z-index: -1;
+  }
+  .state-layer-primary:hover::after { opacity: 0.08; }
+  .state-layer-primary:focus-visible::after { opacity: 0.10; }
+  .state-layer-primary:active::after { opacity: 0.10; }
+
+  /* On-surface-tinted state layer (for neutral interactive elements) */
+  .state-layer-on-surface {
+    position: relative;
+    isolation: isolate;
+  }
+  .state-layer-on-surface::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: var(--on-surface);
+    opacity: 0;
+    transition: opacity 150ms ease;
+    pointer-events: none;
+    border-radius: inherit;
+    z-index: -1;
+  }
+  .state-layer-on-surface:hover::after { opacity: 0.08; }
+  .state-layer-on-surface:focus-visible::after { opacity: 0.10; }
+  .state-layer-on-surface:active::after { opacity: 0.10; }
 }
 
 /* Custom scrollbar styling for better appearance */
