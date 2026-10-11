@@ -34,6 +34,7 @@ import {
 } from "lucide-react";
 import { formatCzk, formatNumber, formatDate, PHASE_COLORS, PHASE_DOT_COLORS } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { getPhoneInfo } from "@/lib/phone";
 import { useAppStore } from "@/lib/store";
 // Charts are lazy-loaded via next/dynamic — reduces initial bundle by ~200KB.
 // See src/components/charts/lazy-charts.tsx
@@ -704,6 +705,83 @@ export function DashboardTab({ projectId }: { projectId: string }) {
           </CardContent>
         </Card>
       </div>
+
+      {/* ===== Práce dle kontaktu — workload chart ===== */}
+      {data.byContact && data.byContact.length > 0 && (
+        <Card id="dash-contact-workload" className="hover-lift">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 type-title-lg">
+              <Users2 className="h-4 w-4 text-info" />
+              Práce dle kontaktu
+            </CardTitle>
+            <CardDescription>
+              Plánované náklady a dny dle přiřazené osoby / firmy
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {data.byContact.map((c) => {
+                const maxPlan = Math.max(...data.byContact.map((x) => x.plan), 1);
+                const pct = (c.plan / maxPlan) * 100;
+                const phoneInfo = c.phone ? getPhoneInfo(c.phone) : null;
+                return (
+                  <div key={c.contactId} className="space-y-1">
+                    <div className="flex items-center justify-between gap-2 text-xs">
+                      <div className="flex min-w-0 items-center gap-1.5">
+                        <span className="truncate font-medium">{c.name}</span>
+                        {c.role && (
+                          <span className="hidden text-muted-foreground sm:inline">· {c.role}</span>
+                        )}
+                        {phoneInfo?.flag && (
+                          <span className="text-sm leading-none" aria-hidden title={phoneInfo.countryName}>
+                            {phoneInfo.flag}
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex shrink-0 items-center gap-2 tabular-nums text-muted-foreground">
+                        <span>{c.count} {c.count === 1 ? "položka" : c.count < 5 ? "položky" : "položek"}</span>
+                        <span className="font-semibold text-foreground">{formatCzk(c.plan)}</span>
+                      </div>
+                    </div>
+                    {/* Workload bar */}
+                    <div className="flex items-center gap-2">
+                      <div className="h-2.5 flex-1 overflow-hidden rounded-full bg-muted">
+                        <div
+                          className="h-full rounded-full bg-info transition-all"
+                          style={{ width: `${pct}%` }}
+                          title={`${formatCzk(c.plan)} plánováno`}
+                        />
+                      </div>
+                      {c.planDays > 0 && (
+                        <span className="text-[10px] text-muted-foreground tabular-nums">
+                          {Math.round(c.planDays)} d
+                        </span>
+                      )}
+                    </div>
+                    {/* Actual vs plan indicator */}
+                    {c.actual > 0 && (
+                      <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                        <span>čerpáno:</span>
+                        <span className={cn(
+                          "font-semibold tabular-nums",
+                          c.plan > 0 && c.actual > c.plan ? "text-danger" : "text-success",
+                        )}>
+                          {formatCzk(c.actual)}
+                        </span>
+                        {c.plan > 0 && (
+                          <span>
+                            ({((c.actual / c.plan) * 100).toFixed(0)}%)
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Charts */}
       <div className={cn("grid grid-cols-1 gap-4 lg:grid-cols-2 ")}>

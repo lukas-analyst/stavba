@@ -16,6 +16,7 @@ import {
 import { PHASES } from "@/lib/format";
 import {
   useBudgetItems,
+  useContacts,
   useCreateBudgetItem,
   useUpdateBudgetItem,
   type BudgetItem,
@@ -30,6 +31,7 @@ import {
   Plus,
   ExternalLink,
   Trash2,
+  User,
 } from "lucide-react";
 import { toast } from "sonner";
 import { SearchableSelect } from "@/components/ui/searchable-select";
@@ -159,6 +161,7 @@ function BudgetItemForm({
   onSubmitted?: (item: BudgetItem, isNew: boolean) => void;
 }) {
   const { data: items } = useBudgetItems(projectId);
+  const { data: contacts } = useContacts(projectId);
   const createItem = useCreateBudgetItem(projectId);
   const updateItem = useUpdateBudgetItem(projectId);
 
@@ -205,6 +208,7 @@ function BudgetItemForm({
     item?.dateTo ? item.dateTo.substring(0, 10) : (defaultDateTo ?? ""),
   );
   const [dependsOnId, setDependsOnId] = useState<string>(item?.dependsOnId ?? "__none__");
+  const [contactId, setContactId] = useState<string>(item?.contactId ?? "__none__");
 
   const dependsOnOptions = useMemo(
     () => topLevelItems.filter((i) => i.id !== item?.id),
@@ -300,6 +304,7 @@ function BudgetItemForm({
           : dependsOnId === "__none__"
             ? null
             : dependsOnId,
+        contactId: contactId === "__none__" ? null : contactId,
       };
       if (!item && parentId) {
         data.parentId = parentId;
@@ -495,6 +500,34 @@ function BudgetItemForm({
               <Input id="flexibility" value={flexibility} onChange={(e) => setFlexibility(e.target.value)} placeholder="50" inputMode="decimal" />
             </div>
           </div>
+        </CollapsibleSection>
+
+        {/* ===== KONTAKT (volitelné) — přiřazená osoba/firma ===== */}
+        <CollapsibleSection title="Kontakt (volitelné)">
+          <Label className="flex items-center gap-1.5 text-xs">
+            <User className="h-3.5 w-3.5 text-muted-foreground" />
+            Zodpovědná osoba / firma
+          </Label>
+          <SearchableSelect
+            options={[
+              { value: "__none__", label: "— bez kontaktu —", hint: "" },
+              ...((contacts ?? []).map((c) => ({
+                value: c.id,
+                label: c.name,
+                hint: [c.role, c.company].filter(Boolean).join(" · "),
+              }))),
+            ]}
+            value={contactId}
+            onChange={setContactId}
+            placeholder="— bez kontaktu —"
+            searchPlaceholder="Hledat kontakt…"
+            emptyText="Žádné kontakty nenalezeny"
+          />
+          {(contacts ?? []).length === 0 && (
+            <p className="text-[10px] text-muted-foreground">
+              Zatím nejsou žádné kontakty. Přidejte je v záložce Kontakty.
+            </p>
+          )}
         </CollapsibleSection>
 
         {/* ===== ODKAZY (volitelné) — MD3 tonal section ===== */}

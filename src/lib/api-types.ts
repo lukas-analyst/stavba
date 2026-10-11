@@ -64,6 +64,16 @@ export type DashboardData = {
     startingSoon: boolean;
   }[];
   byCategory: { category: string; plan: number; actual: number; hours: number; count: number }[];
+  byContact: {
+    contactId: string;
+    name: string;
+    role: string | null;
+    phone: string | null;
+    plan: number;
+    actual: number;
+    planDays: number;
+    count: number;
+  }[];
   alerts: {
     inProgress: AlertItem[];
     upcoming: AlertItem[];

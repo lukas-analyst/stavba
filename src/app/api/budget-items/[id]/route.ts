@@ -42,6 +42,7 @@ export async function PATCH(
     if (body.actualHours !== undefined) updateData.actualHours = numOrUndef(body.actualHours) ?? 0;
     if (body.subsidyEligible !== undefined) updateData.subsidyEligible = Boolean(body.subsidyEligible);
     if (body.subsidyAmount !== undefined) updateData.subsidyAmount = numOrUndef(body.subsidyAmount);
+    if (body.contactId !== undefined) updateData.contactId = body.contactId || null;
     if (body.sortOrder !== undefined) updateData.sortOrder = Number(body.sortOrder);
 
     // Synchronize external hyperlinks (1:N) when `links` is provided.
@@ -81,9 +82,14 @@ export async function PATCH(
     const updated = await db.budgetItem.update({
       where: { id },
       data: updateData,
-      include: linksWereSynced
-        ? { links: { orderBy: { sortOrder: "asc" }, select: { id: true, label: true, url: true, sortOrder: true } } }
-        : undefined,
+      include: {
+        // Always include contact so the UI can display it after update
+        contact: { select: { id: true, name: true, role: true, phone: true } },
+        // Include links only when they were synced in this request
+        ...(linksWereSynced
+          ? { links: { orderBy: { sortOrder: "asc" }, select: { id: true, label: true, url: true, sortOrder: true } } }
+          : {}),
+      },
     });
 
     // Log changes to audit log

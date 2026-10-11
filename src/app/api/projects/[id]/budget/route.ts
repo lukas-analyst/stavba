@@ -27,6 +27,12 @@ const BUDGET_ITEM_SELECT = {
   actualHours: true,
   subsidyEligible: true,
   subsidyAmount: true,
+  contactId: true,
+  // Primary contact assigned to this item (optional). Only the fields
+  // needed by the UI are selected to keep the payload small.
+  contact: {
+    select: { id: true, name: true, role: true, phone: true },
+  },
   sortOrder: true,
   createdAt: true,
   updatedAt: true,
@@ -88,6 +94,7 @@ export async function POST(
       actualHours,
       subsidyEligible,
       subsidyAmount,
+      contactId,
       links,
     } = body;
 
@@ -168,6 +175,7 @@ export async function POST(
         actualHours: actualHours !== undefined ? Number(actualHours) : 0,
         subsidyEligible: Boolean(subsidyEligible),
         subsidyAmount: subsidyAmount !== undefined && subsidyAmount !== null && subsidyAmount !== "" ? Number(subsidyAmount) : null,
+        contactId: contactId || null,
         sortOrder: (maxOrder._max.sortOrder ?? -1) + 1,
         // Persist external hyperlinks (1:N). Empty array → no rows created.
         links: { create: normalizedLinks },
