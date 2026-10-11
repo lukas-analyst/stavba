@@ -27,7 +27,7 @@ export default function Home() {
   return (
     <Suspense
       fallback={
-        <div className="flex h-screen w-full items-center justify-center bg-muted/30">
+        <div className="flex h-screen w-full items-center justify-center bg-background">
           <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
         </div>
       }
@@ -154,7 +154,7 @@ function HomeContent() {
   const selectedProject = projects?.find((p) => p.id === selectedProjectId);
 
   return (
-    <div className="flex h-screen w-full flex-col overflow-hidden bg-muted/30">
+    <div className="flex h-screen w-full flex-col overflow-hidden bg-background">
       {/* TopBar — sticky, full width, same on mobile + desktop */}
       <TopBar />
 
