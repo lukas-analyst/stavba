@@ -610,6 +610,92 @@
       max-height: 500px;
     }
   }
+
+  /* ============================================================
+     MD3 Dialog motion + scrim
+     ------------------------------------------------------------
+     Material Design 3 dialog entrance pattern:
+       - Scrim: 32% black + subtle blur (backdrop-filter)
+       - Content: scale 0.95 → 1 + fade in (emphasized easing)
+       - Exit: reverse with faster duration
+
+     Applied via data-state="open" / data-state="closed" attributes
+     that shadcn/ui Dialog + Drawer already set.
+     ============================================================ */
+
+  /* MD3 Scrim — backdrop overlay (Dialog + Drawer) */
+  [data-state="open"][data-vaul-overlay] ,
+  .dialog-scrim[data-state="open"],
+  .fixed.inset-0.z-50[data-state="open"] {
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+  }
+
+  /* MD3 Dialog content entrance — scale + fade (emphasized easing) */
+  [role="dialog"][data-state="open"] {
+    animation: md3-dialog-enter 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  [role="dialog"][data-state="closed"] {
+    animation: md3-dialog-exit 0.15s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  @keyframes md3-dialog-enter {
+    from {
+      opacity: 0;
+      transform: scale(0.95) translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
+  }
+  @keyframes md3-dialog-exit {
+    from {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
+    to {
+      opacity: 0;
+      transform: scale(0.95) translateY(8px);
+    }
+  }
+
+  /* MD3 Drawer (bottom sheet) entrance — slide up + fade */
+  [data-vaul-drawer][data-state="open"] {
+    animation: md3-drawer-enter 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  @keyframes md3-drawer-enter {
+    from {
+      transform: translateY(100%);
+    }
+    to {
+      transform: translateY(0);
+    }
+  }
+
+  /* MD3 Popover / Dropdown entrance — subtle scale + fade */
+  [data-radix-popper-content-wrapper][data-state="open"] > * {
+    animation: md3-popover-enter 0.15s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  @keyframes md3-popover-enter {
+    from {
+      opacity: 0;
+      transform: scale(0.96);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  /* Reduced motion: disable all dialog/popover animations */
+  @media (prefers-reduced-motion: reduce) {
+    [role="dialog"][data-state="open"],
+    [role="dialog"][data-state="closed"],
+    [data-vaul-drawer][data-state="open"],
+    [data-radix-popper-content-wrapper][data-state="open"] > * {
+      animation: none !important;
+    }
+  }
 }
 
 /* ============================================================
