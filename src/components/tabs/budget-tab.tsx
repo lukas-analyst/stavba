@@ -730,7 +730,7 @@ function BudgetTab({ projectId, dragEndHandlerRef }: { projectId: string; dragEn
                 <SortableContext items={itemIds} strategy={verticalListSortingStrategy}>
                   <Table>
                     <TableHeader>
-                      <TableRow className="sticky top-0 z-30 bg-muted/40 hover:bg-muted/40">
+                      <TableRow className="sticky top-0 z-30 bg-surface-container-high">
                         <TableHead className="w-8"></TableHead>
                         <TableHead className="w-12"></TableHead>
                         <TableHead className="min-w-[200px]">Položka</TableHead>
@@ -913,7 +913,7 @@ function SortableCategoryCard({
       style={style}
       id={`category-${categoryName.replace(/[^a-zA-Z0-9]/g, "-").toLowerCase()}`}
       className={cn(
-        "rounded-lg border bg-card",
+        "rounded-lg border border-outline-variant bg-surface-container-low",
         isDragging && "shadow-xl ring-2 ring-primary/30",
       )}
     >
