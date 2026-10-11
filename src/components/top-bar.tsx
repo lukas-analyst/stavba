@@ -13,6 +13,8 @@ import {
 } from "lucide-react";
 import { useProjects } from "@/lib/api";
 import { useAppStore } from "@/lib/store";
+import { NAV_ITEMS } from "@/lib/navigation";
+import { useScrollState } from "@/hooks/use-scroll-state";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -39,9 +41,11 @@ export function TopBar() {
   const toggleSidebar = useAppStore((s) => s.toggleSidebar);
   const selectedProjectId = useAppStore((s) => s.selectedProjectId);
   const setSelectedProjectId = useAppStore((s) => s.setSelectedProjectId);
+  const activeTab = useAppStore((s) => s.activeTab);
   const setActiveTab = useAppStore((s) => s.setActiveTab);
   const { data: projects } = useProjects();
   const qc = useQueryClient();
+  const isScrolled = useScrollState();
 
   const [projectOpen, setProjectOpen] = useState(false);
   const [search, setSearch] = useState("");
@@ -49,6 +53,8 @@ export function TopBar() {
   const [globalSearchOpen, setGlobalSearchOpen] = useState(false);
 
   const selectedProject = projects?.find((p) => p.id === selectedProjectId);
+  const activeNavItem = NAV_ITEMS.find((t) => t.id === activeTab);
+  const activeTabLabel = activeNavItem?.label ?? "Přehled";
 
   const handleSelectProject = useCallback(
     (id: string) => {
@@ -94,103 +100,120 @@ export function TopBar() {
 
   return (
     <>
-      <header className="sticky top-0 z-40 flex h-14 shrink-0 items-center gap-1.5 border-b bg-background px-2 sm:px-3">
+      <header
+        className={cn(
+          "sticky top-0 z-40 flex h-14 shrink-0 items-center gap-1.5 px-2 transition-all duration-200 sm:px-3",
+          // MD3 scroll-aware color: transparent at top, tonal surface when scrolled
+          isScrolled
+            ? "bg-surface-container border-b border-outline-variant shadow-sm"
+            : "bg-surface border-b border-transparent",
+        )}
+      >
         {/* Hamburger — same position mobile + desktop */}
         <Button
           variant="ghost"
           size="icon"
           onClick={toggleSidebar}
           aria-label={sidebarOpen ? "Zavřít panel" : "Otevřít panel"}
-          className="h-9 w-9 shrink-0"
+          className="h-9 w-9 shrink-0 state-layer-on-surface rounded-full"
         >
           <Menu className="h-5 w-5" />
         </Button>
 
-        {/* Project dropdown */}
-        <Popover open={projectOpen} onOpenChange={setProjectOpen}>
-          <PopoverTrigger asChild>
-            <Button
-              variant="ghost"
-              className="h-9 gap-1.5 px-2.5 text-sm font-semibold"
-            >
-              <span className="max-w-[120px] truncate sm:max-w-[180px]">
-                {selectedProject ? selectedProject.name : "Vyberte projekt"}
-              </span>
-              <ChevronDown className="h-4 w-4 text-muted-foreground" />
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent
-            className="w-80 p-0"
-            align="start"
-            onCloseAutoFocus={(e) => e.preventDefault()}
-          >
-            {/* Search field */}
-            <div className="border-b p-2">
-              <Input
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Hledat projekt…"
-                className="h-8 text-sm"
-                autoFocus
-              />
-            </div>
-
-            {/* Project list */}
-            <div className="max-h-[50vh] overflow-y-auto scrollbar-thin">
-              {starred.length > 0 && (
-                <>
-                  {starred.map((p) => (
-                    <ProjectDropdownItem
-                      key={p.id}
-                      project={p}
-                      isSelected={p.id === selectedProjectId}
-                      onSelect={handleSelectProject}
-                      onToggleStar={(e) => {
-                        e.stopPropagation();
-                        toggleStar(p.id, !p.starred);
-                      }}
-                    />
-                  ))}
-                  {others.length > 0 && (
-                    <div className="h-px bg-border" aria-hidden />
-                  )}
-                </>
-              )}
-              {others.map((p) => (
-                <ProjectDropdownItem
-                  key={p.id}
-                  project={p}
-                  isSelected={p.id === selectedProjectId}
-                  onSelect={handleSelectProject}
-                  onToggleStar={(e) => {
-                    e.stopPropagation();
-                    toggleStar(p.id, !p.starred);
-                  }}
-                />
-              ))}
-              {filtered?.length === 0 && (
-                <div className="px-3 py-6 text-center text-xs text-muted-foreground">
-                  Žádné projekty nenalezeny.
-                </div>
-              )}
-            </div>
-
-            {/* Add project */}
-            <div className="border-t p-2">
-              <Button
-                variant="outline"
-                size="sm"
-                className="w-full gap-1.5"
-                onClick={() => {
-                  setAddOpen(true);
-                  setProjectOpen(false);
-                }}
+        {/* MD3 title hierarchy: Project name (title) + active tab (subtitle) */}
+        <div className="flex min-w-0 flex-col">
+          {/* Project dropdown trigger */}
+          <Popover open={projectOpen} onOpenChange={setProjectOpen}>
+            <PopoverTrigger asChild>
+              <button
+                className="flex h-7 items-center gap-1 rounded-full px-1.5 text-sm font-semibold leading-none state-layer-on-surface"
               >
-                <Plus className="h-4 w-4" /> Přidat projekt
-              </Button>
-            </div>
-          </PopoverContent>
-        </Popover>
+                <span className="max-w-[120px] truncate sm:max-w-[180px]">
+                  {selectedProject ? selectedProject.name : "Vyberte projekt"}
+                </span>
+                <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+              </button>
+            </PopoverTrigger>
+            <PopoverContent
+              className="w-80 p-0"
+              align="start"
+              onCloseAutoFocus={(e) => e.preventDefault()}
+            >
+              {/* Search field */}
+              <div className="border-b p-2">
+                <Input
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Hledat projekt…"
+                  className="h-8 text-sm"
+                  autoFocus
+                />
+              </div>
+
+              {/* Project list */}
+              <div className="max-h-[50vh] overflow-y-auto scrollbar-thin">
+                {starred.length > 0 && (
+                  <>
+                    {starred.map((p) => (
+                      <ProjectDropdownItem
+                        key={p.id}
+                        project={p}
+                        isSelected={p.id === selectedProjectId}
+                        onSelect={handleSelectProject}
+                        onToggleStar={(e) => {
+                          e.stopPropagation();
+                          toggleStar(p.id, !p.starred);
+                        }}
+                      />
+                    ))}
+                    {others.length > 0 && (
+                      <div className="h-px bg-outline-variant" aria-hidden />
+                    )}
+                  </>
+                )}
+                {others.map((p) => (
+                  <ProjectDropdownItem
+                    key={p.id}
+                    project={p}
+                    isSelected={p.id === selectedProjectId}
+                    onSelect={handleSelectProject}
+                    onToggleStar={(e) => {
+                      e.stopPropagation();
+                      toggleStar(p.id, !p.starred);
+                    }}
+                  />
+                ))}
+                {filtered?.length === 0 && (
+                  <div className="px-3 py-6 text-center text-xs text-muted-foreground">
+                    Žádné projekty nenalezeny.
+                  </div>
+                )}
+              </div>
+
+              {/* Add project */}
+              <div className="border-t p-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full gap-1.5 rounded-full"
+                  onClick={() => {
+                    setAddOpen(true);
+                    setProjectOpen(false);
+                  }}
+                >
+                  <Plus className="h-4 w-4" /> Přidat projekt
+                </Button>
+              </div>
+            </PopoverContent>
+          </Popover>
+
+          {/* Active tab subtitle (MD3 medium app bar pattern) */}
+          {selectedProject && (
+            <span className="hidden px-1.5 text-[10px] leading-tight text-on-surface-variant sm:block">
+              {activeTabLabel}
+            </span>
+          )}
+        </div>
 
         {/* Search button — opens global search (⌘K) */}
         <Button
@@ -198,7 +221,7 @@ export function TopBar() {
           size="icon"
           onClick={() => setGlobalSearchOpen(true)}
           aria-label="Hledat"
-          className="h-9 w-9 shrink-0"
+          className="h-9 w-9 shrink-0 state-layer-on-surface rounded-full"
         >
           <Search className="h-4 w-4" />
         </Button>
@@ -206,14 +229,19 @@ export function TopBar() {
         {/* Spacer */}
         <div className="flex-1" />
 
-        {/* Budget summary — clickable to Přehled */}
+        {/* Budget summary — MD3 tonal chip, clickable to Přehled */}
         {selectedProject && planTotal > 0 && (
           <button
             onClick={() => setActiveTab("dashboard")}
-            className="flex shrink-0 items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs hover:bg-muted"
+            className={cn(
+              "flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs transition-colors state-layer-on-surface",
+              isScrolled
+                ? "bg-surface-container-high"
+                : "bg-surface-container",
+            )}
             title={`Čerpání: ${formatCzk(actualTotal)} z ${formatCzk(planTotal)}`}
           >
-            <span className="hidden tabular-nums text-muted-foreground sm:inline">
+            <span className="hidden tabular-nums text-on-surface-variant sm:inline">
               {formatCzk(actualTotal)} / {formatCzk(planTotal)}
             </span>
             <span className="tabular-nums font-semibold sm:hidden">
@@ -238,7 +266,7 @@ export function TopBar() {
         <Button
           variant="ghost"
           size="icon"
-          className="h-9 w-9 shrink-0"
+          className="h-9 w-9 shrink-0 state-layer-on-surface rounded-full"
           aria-label="Účet"
           title="Přihlášení (brzy)"
           onClick={() => toast.info("Přihlášení bude brzy dostupné")}
@@ -257,7 +285,7 @@ export function TopBar() {
   );
 }
 
-// ===== Project dropdown item =====
+// ===== Project dropdown item (MD3 menu item pattern) =====
 function ProjectDropdownItem({
   project,
   isSelected,
@@ -281,7 +309,10 @@ function ProjectDropdownItem({
   return (
     <button
       onClick={() => onSelect(project.id)}
-      className="flex w-full items-center gap-2 px-3 py-2.5 text-left hover:bg-muted/60"
+      className={cn(
+        "flex w-full items-center gap-2 px-3 py-2.5 text-left transition-colors hover:bg-surface-container-high",
+        isSelected && "bg-secondary/50",
+      )}
     >
       {/* Star toggle */}
       <span
@@ -294,7 +325,7 @@ function ProjectDropdownItem({
             onToggleStar(e as unknown as React.MouseEvent);
           }
         }}
-        className="shrink-0 rounded p-0.5 hover:bg-muted"
+        className="shrink-0 rounded-full p-1 hover:bg-surface-container-high"
         aria-label={project.starred ? "Odebrat hvězdičku" : "Ohvězdičkovat"}
       >
         <Star
@@ -315,7 +346,7 @@ function ProjectDropdownItem({
             <Check className="h-3.5 w-3.5 shrink-0 text-primary" />
           )}
         </div>
-        <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+        <div className="flex items-center gap-1.5 text-[11px] text-on-surface-variant">
           {project.address && (
             <span className="truncate">{project.address}</span>
           )}
