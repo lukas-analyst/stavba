@@ -23,7 +23,7 @@ function TableHeader({ className, ...props }: React.ComponentProps<"thead">) {
   return (
     <thead
       data-slot="table-header"
-      className={cn("[&_tr]:border-b", className)}
+      className={cn("[&_tr]:border-b [&_tr]:border-outline-variant", className)}
       {...props}
     />
   )
@@ -56,8 +56,10 @@ function TableRow({ className, ...props }: React.ComponentProps<"tr">) {
   return (
     <tr
       data-slot="table-row"
+      // MD3 DataTable row: state layer on hover (instead of bg change),
+      // selected = secondary-container tonal fill, divider = outline-variant
       className={cn(
-        "hover:bg-muted/50 data-[state=selected]:bg-muted border-b transition-colors",
+        "border-b border-outline-variant transition-colors hover:bg-surface-container-high/60 data-[state=selected]:bg-secondary-container/50",
         className
       )}
       {...props}
@@ -69,8 +71,10 @@ function TableHead({ className, ...props }: React.ComponentProps<"th">) {
   return (
     <th
       data-slot="table-head"
+      // MD3 DataTable header: type-overline (uppercase, letter-spacing),
+      // h-11 = 44px touch target, on-surface-variant color
       className={cn(
-        "text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]",
+        "text-on-surface-variant type-overline h-11 px-2 text-left align-middle whitespace-nowrap [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]",
         className
       )}
       {...props}
@@ -82,8 +86,9 @@ function TableCell({ className, ...props }: React.ComponentProps<"td">) {
   return (
     <td
       data-slot="table-cell"
+      // MD3 DataTable cell: type-body default, p-2 = compact padding
       className={cn(
-        "p-2 align-middle whitespace-nowrap [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]",
+        "type-body p-2 align-middle whitespace-nowrap [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]",
         className
       )}
       {...props}

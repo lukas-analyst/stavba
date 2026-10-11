@@ -401,7 +401,7 @@ export function PaymentsTab({ projectId }: { projectId: string }) {
           <div className="overflow-hidden rounded-lg border">
             <Table>
               <TableHeader>
-                <TableRow className="sticky top-0 z-30 bg-muted/40 hover:bg-muted/40">
+                <TableRow className="sticky top-0 z-30 bg-surface-container-high">
                   <TableHead className="w-16"></TableHead>
                   <TableHead className="w-28">Datum</TableHead>
                   <TableHead className="w-32">Typ</TableHead>

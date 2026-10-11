@@ -305,7 +305,7 @@ export function TimeTab({ projectId }: { projectId: string }) {
         <div className="overflow-x-auto scrollbar-thin rounded-lg border">
           <Table className="min-w-[800px]">
             <TableHeader>
-              <TableRow className="sticky top-0 z-30 bg-muted/40 hover:bg-muted/40">
+              <TableRow className="sticky top-0 z-30 bg-surface-container-high">
                 <TableHead className="w-16"></TableHead>
                 <TableHead className="w-28">Datum</TableHead>
                 <TableHead className="min-w-[160px]">Pracovník</TableHead>
