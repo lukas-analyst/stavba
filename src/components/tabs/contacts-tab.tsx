@@ -7,7 +7,6 @@ import {
   useUpdateContact,
   useDeleteContact,
   useContactStats,
-  useExportCsv,
   type Contact,
   type ContactStat,
 } from "@/lib/api";
@@ -68,7 +67,6 @@ import {
   Loader2,
   TrendingUp,
   Clock,
-  Download,
   ExternalLink,
   Wallet,
   Clock3,
@@ -95,7 +93,6 @@ export function ContactsTab({ projectId }: { projectId: string }) {
   const { data: contacts, isLoading } = useContacts(projectId);
   const { data: statsData } = useContactStats(projectId);
   const createContact = useCreateContact(projectId);
-  const exportCsv = useExportCsv(projectId);
   const [addOpen, setAddOpen] = useState(false);
   const [editContact, setEditContact] = useState<Contact | null>(null);
   const [detailContact, setDetailContact] = useState<Contact | null>(null);
@@ -128,22 +125,6 @@ export function ContactsTab({ projectId }: { projectId: string }) {
           {contacts?.length ?? 0} kontaktů v projektu
         </div>
         <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={exportCsv.isPending || (contacts?.length ?? 0) === 0}
-            onClick={async () => {
-              try {
-                await exportCsv.mutateAsync("contacts");
-                toast.success("Kontakty exportovány do CSV");
-              } catch {
-                toast.error("Export selhal");
-              }
-            }}
-            title="Exportovat do CSV (Excel/Google Sheets)"
-          >
-            <Download className="mr-1 h-4 w-4" /> CSV
-          </Button>
           <Button size="sm" onClick={() => setAddOpen(true)}>
             <Plus className="mr-1 h-4 w-4" /> Přidat kontakt
           </Button>

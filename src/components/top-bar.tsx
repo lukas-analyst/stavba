@@ -103,10 +103,13 @@ export function TopBar() {
       <header
         className={cn(
           "sticky top-0 z-40 flex h-14 shrink-0 items-center gap-1.5 px-2 transition-all duration-200 sm:px-3",
-          // MD3 scroll-aware color: transparent at top, tonal surface when scrolled
+          // MD3 TopAppBar: always has border + subtle shadow for visual consistency
+          // with the sidebar (both use tonal surface scale). When scrolled,
+          // the tonal elevation increases slightly (surface-container-high)
+          // to reinforce separation from scrolling content below.
           isScrolled
-            ? "bg-surface-container border-b border-outline-variant shadow-sm"
-            : "bg-surface border-b border-transparent",
+            ? "bg-surface-container-high border-b border-outline-variant shadow-md"
+            : "bg-surface-container-low border-b border-outline-variant shadow-sm",
         )}
       >
         {/* Hamburger — same position mobile + desktop */}

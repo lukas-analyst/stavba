@@ -33,6 +33,10 @@
   --color-secondary: var(--secondary);
   --color-primary-foreground: var(--primary-foreground);
   --color-primary: var(--primary);
+  --color-primary-container-foreground: var(--primary-container-foreground);
+  --color-primary-container: var(--primary-container);
+  --color-secondary-container-foreground: var(--secondary-container-foreground);
+  --color-secondary-container: var(--secondary-container);
   --color-popover-foreground: var(--popover-foreground);
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
@@ -156,6 +160,13 @@
   --popover-foreground: oklch(0.145 0 0);
   --primary: oklch(0.205 0 0);
   --primary-foreground: oklch(0.985 0 0);
+  /* MD3 primary-container — tonal fill for active/highlighted elements.
+     In light mode: soft tint of primary (warm grey). In dark: lighter grey.
+     Used by sidebar active indicator, FAB, active chips. */
+  --primary-container: oklch(0.92 0.01 250);
+  --primary-container-foreground: oklch(0.20 0.02 250);
+  --secondary-container: oklch(0.93 0 0);
+  --secondary-container-foreground: oklch(0.20 0 0);
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);
   --muted: oklch(0.97 0 0);
@@ -186,12 +197,12 @@
      Used for layered surfaces (sidebar, headers, cards, menus).
      =========================================================== */
   --surface: oklch(0.98 0 0);                    /* base surface */
-  --surface-low: oklch(0.97 0 0);                /* recessed (page bg) */
+  --surface-low: oklch(0.96 0 0);                /* recessed (page bg) */
   --surface-lowest: oklch(1 0 0);                /* most recessed */
-  --surface-container: oklch(0.96 0 0);          /* default container */
-  --surface-container-low: oklch(0.97 0 0);      /* sidebar, subtle */
-  --surface-container-high: oklch(0.94 0 0);     /* active indicator bg */
-  --surface-container-highest: oklch(0.92 0 0); /* menus, tooltips */
+  --surface-container: oklch(0.95 0 0);          /* default container */
+  --surface-container-low: oklch(0.95 0 0);      /* sidebar + topbar — darker for visible tonal contrast vs white content */
+  --surface-container-high: oklch(0.93 0 0);     /* active indicator bg */
+  --surface-container-highest: oklch(0.91 0 0); /* menus, tooltips */
   --surface-variant: oklch(0.92 0 0);            /* M3 surface-variant */
   --on-surface: oklch(0.18 0 0);                /* text on surface */
   --on-surface-variant: oklch(0.45 0 0);        /* secondary text */
@@ -238,6 +249,11 @@
   --popover-foreground: oklch(0.985 0 0);
   --primary: oklch(0.922 0 0);
   --primary-foreground: oklch(0.205 0 0);
+  /* MD3 primary-container — darker tint for active elements in dark mode */
+  --primary-container: oklch(0.35 0.02 250);
+  --primary-container-foreground: oklch(0.95 0.01 250);
+  --secondary-container: oklch(0.32 0 0);
+  --secondary-container-foreground: oklch(0.95 0 0);
   --secondary: oklch(0.269 0 0);
   --secondary-foreground: oklch(0.985 0 0);
   --muted: oklch(0.269 0 0);

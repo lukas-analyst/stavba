@@ -9,7 +9,10 @@ import {
   Pencil,
   Printer,
   History,
+  Sun,
+  Moon,
 } from "lucide-react";
+import { useTheme } from "next-themes";
 import { NAV_ITEMS, NAV_SECTIONS, type NavItem, type NavSection } from "@/lib/navigation";
 import { useAppStore } from "@/lib/store";
 import { useExportState, useImportState, useExportCsv } from "@/lib/api";
@@ -48,6 +51,8 @@ export function AppSidebar() {
   const selectedProjectId = useAppStore((s) => s.selectedProjectId);
   const setSidebarOpen = useAppStore((s) => s.setSidebarOpen);
   const badges = useNavBadges(selectedProjectId);
+  const { theme, setTheme } = useTheme();
+  const isDark = theme === "dark";
 
   const exportState = useExportState();
   const importState = useImportState();
@@ -86,10 +91,10 @@ export function AppSidebar() {
     e.target.value = "";
   };
 
-  const handleCsv = async () => {
+  const handleCsv = async (type: "budget" | "payments" | "time" | "contacts") => {
     try {
-      await exportCsv.mutateAsync();
-      toast.success("CSV staženo");
+      await exportCsv.mutateAsync(type);
+      toast.success(`${type === "budget" ? "Rozpočet" : type === "payments" ? "Platby" : type === "time" ? "Čas" : "Kontakty"} exportován do CSV`);
     } catch {
       toast.error("CSV export selhal");
     }
@@ -163,6 +168,22 @@ export function AppSidebar() {
             <DropdownMenuSeparator />
 
             <DropdownMenuLabel className="text-xs text-muted-foreground">
+              Vzhled
+            </DropdownMenuLabel>
+            <DropdownMenuItem
+              onClick={() => setTheme(isDark ? "light" : "dark")}
+            >
+              {isDark ? (
+                <Sun className="mr-2 h-3.5 w-3.5" />
+              ) : (
+                <Moon className="mr-2 h-3.5 w-3.5" />
+              )}
+              {isDark ? "Světlý motiv" : "Tmavý motiv"}
+            </DropdownMenuItem>
+
+            <DropdownMenuSeparator />
+
+            <DropdownMenuLabel className="text-xs text-muted-foreground">
               Data
             </DropdownMenuLabel>
             <DropdownMenuItem
@@ -181,10 +202,31 @@ export function AppSidebar() {
             </DropdownMenuItem>
             <DropdownMenuItem
               disabled={exportCsv.isPending || !selectedProjectId}
-              onClick={handleCsv}
+              onClick={() => handleCsv("budget")}
             >
               <FileSpreadsheet className="mr-2 h-3.5 w-3.5" />
-              Stáhnout CSV
+              CSV — Rozpočet
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              disabled={exportCsv.isPending || !selectedProjectId}
+              onClick={() => handleCsv("payments")}
+            >
+              <FileSpreadsheet className="mr-2 h-3.5 w-3.5" />
+              CSV — Platby
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              disabled={exportCsv.isPending || !selectedProjectId}
+              onClick={() => handleCsv("time")}
+            >
+              <FileSpreadsheet className="mr-2 h-3.5 w-3.5" />
+              CSV — Čas
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              disabled={exportCsv.isPending || !selectedProjectId}
+              onClick={() => handleCsv("contacts")}
+            >
+              <FileSpreadsheet className="mr-2 h-3.5 w-3.5" />
+              CSV — Kontakty
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -227,16 +269,18 @@ function NavButton({
       className={cn(
         "group relative flex w-full items-center gap-3 rounded-full px-4 py-2.5 text-sm font-medium transition-all duration-150",
         isActive
-          ? // Active: MD3 secondary-container tonal pill — stronger contrast
-            // than surface-container-high so the pill shape is clearly visible.
-            "bg-secondary text-secondary-foreground font-semibold shadow-sm"
+          ? // Active: MD3 primary-container tonal pill — most prominent highlight.
+            // primary-container is a soft tint of the primary color, clearly
+            // distinguishing the active item from inactive ones and from the
+            // sidebar's surface-container-low background.
+            "bg-primary-container text-primary-container-foreground font-semibold shadow-sm"
           : // Inactive: subtle text + state layer on hover
             "text-on-surface-variant hover:bg-surface-container-high",
       )}
     >
       {/* Icon with optional badge */}
       <span className="relative shrink-0">
-        <Icon className={cn("h-5 w-5", isActive && "text-primary")} />
+        <Icon className={cn("h-5 w-5", isActive && "text-primary-container-foreground")} />
         {showBadge && (
           <Badge count={badgeCount} active={isActive} />
         )}

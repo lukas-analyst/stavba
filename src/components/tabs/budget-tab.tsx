@@ -1455,34 +1455,30 @@ const BudgetRow = memo(function BudgetRow({
         </Select>
       </TableCell>
 
-      {/* Plán (Kč) */}
+      {/* Plán (Kč) — editable for ALL items (parent + leaf).
+          Parent items show their OWN planCost (not rolled-up) so users
+          can always click and edit directly. */}
       <TableCell onClick={(e) => e.stopPropagation()} className="text-right">
-        {childCount > 0 ? (
-          <span className="block w-full rounded px-1 py-0.5 text-right text-xs font-semibold">
-            {formatNumber(displayPlanCost, " Kč")}
+        <InlineNumber
+          value={item.planCost}
+          onCommit={(v) => update("planCost", v)}
+          className={cn("text-right", childCount > 0 && "font-semibold")}
+          suffix=" Kč"
+        />
+        {childCount > 0 && item.planCost == null && displayPlanCost > 0 && (
+          <span className="block text-right text-[9px] text-muted-foreground tabular-nums">
+            (sum: {formatNumber(displayPlanCost, " Kč")})
           </span>
-        ) : (
-          <InlineNumber
-            value={item.planCost}
-            onCommit={(v) => update("planCost", v)}
-            className="text-right"
-          />
         )}
       </TableCell>
 
-      {/* Dny */}
+      {/* Dny — editable for ALL items */}
       <TableCell onClick={(e) => e.stopPropagation()} className="text-right">
-        {childCount > 0 ? (
-          <span className="block w-full rounded px-1 py-0.5 text-right text-xs font-semibold">
-            {(displayPlanDays ?? 0) > 0 ? formatNumber(displayPlanDays) : "—"}
-          </span>
-        ) : (
-          <InlineNumber
-            value={item.planDays}
-            onCommit={(v) => update("planDays", v)}
-            className="text-right text-[11px]"
-          />
-        )}
+        <InlineNumber
+          value={item.planDays}
+          onCommit={(v) => update("planDays", v)}
+          className={cn("text-right text-[11px]", childCount > 0 && "font-semibold")}
+        />
       </TableCell>
 
       {/* Datum od */}
@@ -1532,14 +1528,14 @@ const BudgetRow = memo(function BudgetRow({
         {displayActualHours > 0 ? formatNumber(displayActualHours, " h") : "—"}
       </TableCell>
 
-      {/* Stav: Nutné + Hotovo + Rejected (X) */}
-      <TableCell className="text-center">
+      {/* Stav: Nutné + Hotovo + Rejected (X) — stopPropagation prevents row edit dialog */}
+      <TableCell className="text-center" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-center gap-1">
           <Button
             type="button"
             size="sm"
             variant={item.required ? "default" : "outline"}
-            onClick={() => update("required", !item.required)}
+            onClick={(e) => { e.stopPropagation(); update("required", !item.required); }}
             disabled={updateItem.isPending}
             aria-pressed={item.required}
             aria-label={item.required ? "Zrušit nutné" : "Označit jako nutné"}
@@ -1561,7 +1557,7 @@ const BudgetRow = memo(function BudgetRow({
             type="button"
             size="sm"
             variant={item.completed ? "default" : "outline"}
-            onClick={() => update("completed", !item.completed)}
+            onClick={(e) => { e.stopPropagation(); update("completed", !item.completed); }}
             disabled={updateItem.isPending || item.rejected}
             aria-pressed={item.completed}
             className={cn(
@@ -1579,7 +1575,7 @@ const BudgetRow = memo(function BudgetRow({
             type="button"
             size="sm"
             variant={item.rejected ? "default" : "outline"}
-            onClick={() => update("rejected", !item.rejected)}
+            onClick={(e) => { e.stopPropagation(); update("rejected", !item.rejected); }}
             disabled={updateItem.isPending}
             aria-pressed={item.rejected}
             className={cn(
@@ -1596,8 +1592,8 @@ const BudgetRow = memo(function BudgetRow({
         </div>
       </TableCell>
 
-      {/* Akce */}
-      <TableCell>
+      {/* Akce — stopPropagation prevents row edit dialog when opening menu */}
+      <TableCell onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

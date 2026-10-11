@@ -9,7 +9,6 @@ import {
   useUpdatePayment,
   useDeletePayment,
   useUpdateBudgetItem,
-  useExportCsv,
   type Payment,
 } from "@/lib/api";
 import {
@@ -60,7 +59,6 @@ import {
   Layers,
   CircleDollarSign,
   ArrowUpDown,
-  Download,
 } from "lucide-react";
 import { formatCzk, formatDate, PAYMENT_TYPES, paymentTypeLabel } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -140,7 +138,6 @@ export function PaymentsTab({ projectId }: { projectId: string }) {
   const updatePayment = useUpdatePayment(projectId);
   const deletePayment = useDeletePayment(projectId);
   const updateBudgetItem = useUpdateBudgetItem(projectId);
-  const exportCsv = useExportCsv(projectId);
   const [addOpen, setAddOpen] = useState(false);
   const [editPayment, setEditPayment] = useState<Payment | null>(null);
   const [search, setSearch] = useState("");
@@ -351,22 +348,6 @@ export function PaymentsTab({ projectId }: { projectId: string }) {
               </div>
             ) : null;
           })()}
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={exportCsv.isPending || (payments?.length ?? 0) === 0}
-            onClick={async () => {
-              try {
-                await exportCsv.mutateAsync("payments");
-                toast.success("Platby exportovány do CSV");
-              } catch {
-                toast.error("Export selhal");
-              }
-            }}
-            title="Exportovat do CSV (Excel/Google Sheets)"
-          >
-            <Download className="mr-1 h-4 w-4" /> CSV
-          </Button>
           <Button size="sm" onClick={() => setAddOpen(true)}>
             <Plus className="mr-1 h-4 w-4" /> Přidat platbu
           </Button>
