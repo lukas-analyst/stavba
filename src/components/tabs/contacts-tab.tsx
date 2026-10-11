@@ -85,6 +85,7 @@ import {
   formatDate,
 } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { getPhoneInfo } from "@/lib/phone";
 import { toast } from "sonner";
 import { EmptyStateBox } from "@/components/empty-state-box";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -321,9 +322,15 @@ function ContactCard({
             href={`tel:${contact.phone}`}
             onClick={(e) => e.stopPropagation()}
             className="flex items-center gap-1.5 text-xs hover:text-primary"
+            title={getPhoneInfo(contact.phone).countryName || undefined}
           >
             <Phone className="h-3 w-3 text-muted-foreground" />
-            <span>{contact.phone}</span>
+            {getPhoneInfo(contact.phone).flag && (
+              <span className="text-sm leading-none" aria-hidden>
+                {getPhoneInfo(contact.phone).flag}
+              </span>
+            )}
+            <span className="tabular-nums">{getPhoneInfo(contact.phone).formatted}</span>
           </a>
         )}
         {contact.email && (
@@ -555,7 +562,12 @@ function ContactDetailDialog({
                     <DetailRow
                       icon={<Phone className="h-3.5 w-3.5" />}
                       label="Telefon"
-                      value={contact.phone}
+                      value={
+                        <span className="tabular-nums">
+                          {getPhoneInfo(contact.phone).formatted}
+                        </span>
+                      }
+                      prefix={getPhoneInfo(contact.phone).flag || undefined}
                       href={`tel:${contact.phone}`}
                     />
                   )}
@@ -645,19 +657,24 @@ function DetailRow({
   value,
   href,
   external,
+  prefix,
 }: {
   icon: React.ReactNode;
   label: string;
-  value: string;
+  value: React.ReactNode;
   href?: string;
   external?: boolean;
+  prefix?: React.ReactNode;
 }) {
   const content = (
     <div className="flex items-center gap-2 rounded-md border bg-card px-2.5 py-1.5">
       <span className="text-muted-foreground">{icon}</span>
       <div className="min-w-0">
         <div className="text-[10px] uppercase tracking-wide text-muted-foreground">{label}</div>
-        <div className="truncate text-xs font-medium">{value}</div>
+        <div className="truncate text-xs font-medium">
+          {prefix && <span className="mr-1" aria-hidden>{prefix}</span>}
+          {value}
+        </div>
       </div>
       {external && <ExternalLink className="ml-auto h-3 w-3 shrink-0 text-muted-foreground/60" />}
     </div>

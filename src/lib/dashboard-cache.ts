@@ -352,6 +352,52 @@ export const getDashboardData = unstable_cache(
     const projectedFinal = actualTotal + projectedRemaining;
     const projectedOverrun = projectedFinal - planTotal;
 
+    // ===== byContact — aggregation of budget items by assigned contact =====
+    // Used by the dashboard "workload by contact" chart. Runs as a single
+    // Prisma groupBy query (uses index on contactId + projectId). Null
+    // contactId items are excluded (they have no one assigned).
+    const contactRows = await db.budgetItem.groupBy({
+      by: ["contactId"],
+      where: {
+        projectId,
+        contactId: { not: null },
+        // Exclude rejected items from workload (they won't be done)
+        rejected: false,
+      },
+      _sum: {
+        planCost: true,
+        actualCost: true,
+        planDays: true,
+      },
+      _count: { id: true },
+    });
+    // Fetch contact names for the grouped contactIds
+    const contactIds = contactRows
+      .map((r) => r.contactId)
+      .filter((id): id is string => id !== null);
+    const contactNames = await db.contact.findMany({
+      where: { id: { in: contactIds } },
+      select: { id: true, name: true, role: true, phone: true },
+    });
+    const contactNameMap = new Map(contactNames.map((c) => [c.id, c]));
+    const byContact = contactRows
+      .map((r) => {
+        const contact = r.contactId ? contactNameMap.get(r.contactId) : null;
+        if (!contact) return null;
+        return {
+          contactId: r.contactId as string,
+          name: contact.name,
+          role: contact.role,
+          phone: contact.phone,
+          plan: r._sum.planCost ?? 0,
+          actual: r._sum.actualCost ?? 0,
+          planDays: r._sum.planDays ?? 0,
+          count: r._count.id,
+        };
+      })
+      .filter((r): r is NonNullable<typeof r> => r !== null)
+      .sort((a, b) => b.plan - a.plan); // highest plan first
+
     // ===== Assemble byPhase =====
     const byPhase = phaseRows.map((row) => {
       const r = normalizeRow(row as unknown as Record<string, unknown>) as RawPhaseRow & Record<string, unknown>;
@@ -483,6 +529,7 @@ export const getDashboardData = unstable_cache(
       },
       byPhase,
       byCategory,
+      byContact,
       alerts,
       timeline,
       recent: {

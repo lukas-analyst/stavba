@@ -478,6 +478,12 @@ model BudgetItem {
   /// item/task. Null = not yet specified. Only meaningful when
   /// subsidyEligible = true, but stored independently for flexibility.
   subsidyAmount      Float?
+  /// FK to Contact — the primary contact assigned to this item/task
+  /// (e.g., the contractor/craftsman responsible). Optional (null = unassigned).
+  /// Set to null via onDelete: SetNull if the contact is deleted (we keep
+  /// the budget item; only the link is severed).
+  contactId          String?
+  contact            Contact?     @relation(fields: [contactId], references: [id], onDelete: SetNull)
   /// Sort order within the category (for manual reordering)
   sortOrder          Int          @default(0)
   /// When this budget item was created
@@ -497,6 +503,7 @@ model BudgetItem {
   @@index([category])
   @@index([completed])
   @@index([subsidyEligible])
+  @@index([contactId])
   @@index([sortOrder])
   @@index([dateFrom])
   @@index([dateTo])
@@ -604,6 +611,9 @@ model Contact {
 
   timeEntries TimeEntry[]
   payments    Payment[]
+  /// Budget items / tasks assigned to this contact (the primary
+  /// contractor/craftsman). Null FK items not included (Prisma default).
+  budgetItems BudgetItem[]
 
   @@index([projectId])
   @@index([type])

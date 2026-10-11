@@ -78,6 +78,10 @@ export type BudgetItem = {
   actualHours: number;
   subsidyEligible: boolean;
   subsidyAmount: number | null;
+  // FK to Contact — primary contact assigned to this item/task (nullable).
+  // Present (non-undefined) when the budget GET endpoint includes contact.
+  contactId: string | null;
+  contact?: { id: string; name: string; role: string | null; phone: string | null } | null;
   sortOrder: number;
   _count?: { payments: number; timeEntries: number; comments: number };
   // External hyperlinks (1:N) — present when the budget GET endpoint

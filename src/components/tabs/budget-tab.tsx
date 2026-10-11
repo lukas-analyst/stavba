@@ -70,6 +70,7 @@ import {
   HandCoins,
   Link as LinkIcon,
   ExternalLink,
+  User,
 } from "lucide-react";
 import {
   formatCzk,
@@ -1765,6 +1766,35 @@ function DetailPanelRow({
               onCommit={(v) => update("note", v)}
               placeholder="Doplňující informace, jednotkové ceny, postup…"
             />
+          </div>
+
+          {/* Kontakt — přiřazená osoba/firma */}
+          <div className="space-y-2">
+            <div className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+              <User className="h-3 w-3" />
+              Kontakt
+            </div>
+            {item.contact ? (
+              <div className="flex items-center gap-1.5 text-xs">
+                <span className="font-medium text-foreground">{item.contact.name}</span>
+                {item.contact.role && (
+                  <span className="text-muted-foreground">· {item.contact.role}</span>
+                )}
+                {item.contact.phone && (
+                  <a
+                    href={`tel:${item.contact.phone}`}
+                    className="ml-auto inline-flex items-center gap-0.5 text-primary hover:underline"
+                    title={item.contact.phone}
+                  >
+                    {item.contact.phone}
+                  </a>
+                )}
+              </div>
+            ) : (
+              <span className="text-[11px] text-muted-foreground/60">
+                Není přiřazen — klikněte na položku pro úpravu
+              </span>
+            )}
           </div>
 
           {/* Odkazy */}
