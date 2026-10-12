@@ -3,6 +3,8 @@ import { dbRead } from "@/lib/db";
 
 // GET /api/projects/[id]/audit
 // Returns audit log entries for the project, most recent first.
+// Includes the user who made each change (name, email) and field-level
+// change details (field, oldValue, newValue).
 // Supports optional ?limit=50 query param.
 // Uses `dbRead` (read replica if configured, falls back to primary).
 export async function GET(
@@ -18,6 +20,11 @@ export async function GET(
       where: { projectId: id },
       orderBy: { createdAt: "desc" },
       take: limit,
+      include: {
+        user: {
+          select: { id: true, name: true, email: true, image: true },
+        },
+      },
     });
 
     return NextResponse.json(logs);

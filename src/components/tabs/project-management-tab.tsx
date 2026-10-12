@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   Card,
   CardContent,
@@ -22,43 +23,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  Building2,
-  MapPin,
-  Calendar,
-  Wallet,
-  Users,
-  Table2,
-  Receipt,
-  Clock,
-  Download,
-  Upload,
-  FileSpreadsheet,
-  Copy,
-  Trash2,
-  History,
-  AlertTriangle,
-  Settings,
-  Star,
-  Pencil,
-  Check,
-  X,
-  Loader2,
-} from "lucide-react";
-import {
-  useProjects,
-  useUpdateProject,
-  useDashboard,
-  useContacts,
-  useBudgetItems,
-  useExportState,
-  useImportState,
-  useExportCsv,
-} from "@/lib/api";
-import { formatCzk, formatDate, STATUS_LABELS } from "@/lib/format";
-import { cn } from "@/lib/utils";
-import { toast } from "sonner";
-import { CollapsibleSection } from "@/components/ui/collapsible-section";
-import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -69,20 +33,60 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+  MapPin,
+  Calendar,
+  Building2,
+  Wallet,
+  Users,
+  Table2,
+  Receipt,
+  Clock,
+  CalendarRange,
+  Download,
+  Upload,
+  FileSpreadsheet,
+  Copy,
+  Trash2,
+  History,
+  AlertTriangle,
+  Pencil,
+  Check,
+  X,
+  Loader2,
+  Crown,
+  Eye,
+  Edit3,
+  UserPlus,
+  Shield,
+  ArrowRight,
+} from "lucide-react";
+import {
+  useProjects,
+  useUpdateProject,
+  useDashboard,
+  useContacts,
+  useBudgetItems,
+  usePayments,
+  useExportState,
+  useImportState,
+  useExportCsv,
+} from "@/lib/api";
+import { formatCzk, formatDate, STATUS_LABELS } from "@/lib/format";
+import { cn } from "@/lib/utils";
+import { toast } from "sonner";
+import { CollapsibleSection } from "@/components/ui/collapsible-section";
 
 // ============================================================
 // ProjectManagementTab — full project management page
-// ------------------------------------------------------------
-// Accessible from TopBar project dropdown ("Spravovat projekt").
-// Contains: project info (inline edit), quick stats, category/phase
-// overview, contacts summary, export/import, audit log, danger zone.
 // ============================================================
 
 export function ProjectManagementTab({ projectId }: { projectId: string }) {
   const { data: projects, isLoading: projectsLoading } = useProjects();
-  const { data: dashboard, isLoading: dashLoading } = useDashboard(projectId);
+  const { data: dashboard } = useDashboard(projectId);
   const { data: contacts } = useContacts(projectId);
   const { data: budgetItems } = useBudgetItems(projectId);
+  const { data: payments } = usePayments(projectId);
   const updateProject = useUpdateProject(projectId);
   const exportState = useExportState();
   const importState = useImportState();
@@ -100,10 +104,6 @@ export function ProjectManagementTab({ projectId }: { projectId: string }) {
     );
   }
 
-  const totals = dashboard?.totals;
-  const stats = project.stats;
-
-  // ===== Handlers =====
   const handleExport = async () => {
     try {
       await exportState.mutateAsync();
@@ -138,7 +138,6 @@ export function ProjectManagementTab({ projectId }: { projectId: string }) {
       });
       if (!res.ok) throw new Error("Failed to duplicate project");
       const newProject = await res.json();
-      // Copy budget items
       if (budgetItems && budgetItems.length > 0) {
         await Promise.all(
           budgetItems.map((item) =>
@@ -169,132 +168,22 @@ export function ProjectManagementTab({ projectId }: { projectId: string }) {
       {/* ===== Project Info Card (inline editable) ===== */}
       <ProjectInfoCard project={project} updateProject={updateProject} />
 
-      {/* ===== Quick Stats Grid ===== */}
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4 lg:grid-cols-6">
-        <StatCard
-          icon={<Wallet className="h-4 w-4 text-success" />}
-          label="Plán rozpočtu"
-          value={stats ? formatCzk(stats.planTotal) : "—"}
-          subtitle={stats ? `${stats.itemCount} položek` : ""}
-          tone="success"
-          loading={projectsLoading}
-        />
-        <StatCard
-          icon={<Receipt className="h-4 w-4 text-warning" />}
-          label="Čerpání"
-          value={stats ? formatCzk(stats.actualTotal) : "—"}
-          subtitle={stats ? `${stats.burnRate.toFixed(0)}%` : ""}
-          tone="warning"
-          loading={projectsLoading}
-        />
-        <StatCard
-          icon={<Wallet className="h-4 w-4 text-info" />}
-          label="Zbývá"
-          value={stats ? formatCzk(stats.remaining) : "—"}
-          subtitle=""
-          tone="info"
-          loading={projectsLoading}
-        />
-        <StatCard
-          icon={<Clock className="h-4 w-4 text-time" />}
-          label="Hodiny"
-          value={stats ? `${stats.hoursTotal} h` : "—"}
-          subtitle={stats ? `${stats.daysPlanned} dní plán` : ""}
-          tone="time"
-          loading={projectsLoading}
-        />
-        <StatCard
-          icon={<Users className="h-4 w-4 text-primary" />}
-          label="Kontakty"
-          value={String(contacts?.length ?? 0)}
-          subtitle={project._count?.contacts ? `${project._count.contacts} celkem` : ""}
-          tone="primary"
-          loading={false}
-        />
-        <StatCard
-          icon={<Table2 className="h-4 w-4 text-subsidy" />}
-          label="Položky"
-          value={String(budgetItems?.length ?? 0)}
-          subtitle={stats ? `${stats.requiredCount} nutných` : ""}
-          tone="subsidy"
-          loading={false}
-        />
-      </div>
+      {/* ===== Project Statistics ===== */}
+      <ProjectStatistics
+        contactsCount={contacts?.length ?? 0}
+        budgetItemsCount={budgetItems?.length ?? 0}
+        paymentsCount={payments?.length ?? 0}
+        timeline={dashboard?.timeline}
+        paymentsData={payments}
+        budgetData={budgetItems}
+        loading={projectsLoading}
+      />
 
-      {/* ===== Category & Phase Overview ===== */}
-      {dashboard && (
-        <Card className="bg-card shadow-sm">
-          <CardHeader className="pb-3">
-            <CardTitle className="type-title-lg">Přehled fází</CardTitle>
-            <CardDescription>Plán vs. skutečnost a stav dokončení</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {dashboard.byPhase.map((p) => {
-                const burnPct = p.plan > 0 ? (p.actual / p.plan) * 100 : 0;
-                const completionPct = p.count > 0 ? (p.completedCount / p.count) * 100 : 0;
-                return (
-                  <div key={p.phase} className="space-y-1">
-                    <div className="flex items-center justify-between type-body">
-                      <span className="font-medium">{p.phase}</span>
-                      <span className="type-label text-on-surface-variant tabular-nums">
-                        {p.count} položek · {formatCzk(p.actual)} / {formatCzk(p.plan)}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="h-2 flex-1 overflow-hidden rounded-full bg-surface-container-high">
-                        <div
-                          className={cn(
-                            "h-full rounded-full transition-all",
-                            burnPct > 100 ? "bg-danger" : burnPct > 80 ? "bg-warning" : "bg-success",
-                          )}
-                          style={{ width: `${Math.min(burnPct, 100)}%` }}
-                        />
-                      </div>
-                      <span className="w-24 text-right type-label-sm text-on-surface-variant tabular-nums">
-                        {p.completedCount}/{p.count} ({completionPct.toFixed(0)}%)
-                      </span>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* ===== Contacts Summary ===== */}
-      {contacts && contacts.length > 0 && (
-        <Card className="bg-card shadow-sm">
-          <CardHeader className="pb-3">
-            <CardTitle className="type-title-lg">Kontakty projektu</CardTitle>
-            <CardDescription>{contacts.length} kontaktů přiřazeno k projektu</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
-              {contacts.map((c) => (
-                <div
-                  key={c.id}
-                  className="flex items-center gap-2 rounded-lg border border-outline-variant bg-surface-container-low px-3 py-2"
-                >
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-secondary-container type-label-sm font-bold text-secondary-container-foreground">
-                    {c.name[0]?.toUpperCase()}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="truncate type-body font-medium">{c.name}</div>
-                    <div className="truncate type-label text-on-surface-variant">
-                      {c.role || c.type}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
+      {/* ===== Sharing & Permissions ===== */}
+      <SharingSection projectId={projectId} />
 
       {/* ===== Export & Import ===== */}
-      <CollapsibleSection title="Export a Import dat" defaultOpen>
+      <CollapsibleSection title="Export a Import dat">
         <div className="space-y-3">
           <div className="flex flex-wrap gap-2">
             <Button variant="outline" size="sm" className="rounded-full gap-1.5" onClick={handleExport} disabled={exportState.isPending}>
@@ -314,13 +203,33 @@ export function ProjectManagementTab({ projectId }: { projectId: string }) {
               <FileSpreadsheet className="h-3.5 w-3.5" /> CSV — Kontakty
             </Button>
           </div>
-          <ImportButton importState={importState} />
+          <label className="inline-flex">
+            <input
+              type="file"
+              accept="application/json,.json"
+              className="hidden"
+              onChange={async (e) => {
+                const file = e.target.files?.[0];
+                if (!file) return;
+                try {
+                  await importState.mutateAsync(file);
+                  toast.success("Stav importován");
+                } catch {
+                  toast.error("Import selhal");
+                }
+                e.target.value = "";
+              }}
+            />
+            <span className="inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-full border px-3 type-label hover:bg-surface-container-high">
+              <Upload className="h-3.5 w-3.5" /> Import stavu (JSON)
+            </span>
+          </label>
         </div>
       </CollapsibleSection>
 
-      {/* ===== Audit Log ===== */}
-      <CollapsibleSection title="Audit log — nedávné změny">
-        <AuditSummary projectId={projectId} />
+      {/* ===== Enhanced Audit Log ===== */}
+      <CollapsibleSection title="Audit log — nedávné změny" defaultOpen>
+        <EnhancedAuditLog projectId={projectId} />
       </CollapsibleSection>
 
       {/* ===== Danger Zone ===== */}
@@ -333,31 +242,24 @@ export function ProjectManagementTab({ projectId }: { projectId: string }) {
           <CardDescription>Duplikovat nebo smazat projekt — akce nelze vrátit zpět</CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
-          {/* Duplicate */}
           <div className="flex items-center justify-between gap-3 rounded-lg border border-outline-variant bg-card p-3">
             <div className="flex items-center gap-2">
               <Copy className="h-4 w-4 text-info" />
               <div>
                 <div className="type-body font-medium">Duplikovat projekt</div>
-                <div className="type-label text-on-surface-variant">
-                  Vytvoří kopii s rozpočtem (bez plateb a času)
-                </div>
+                <div className="type-label text-on-surface-variant">Vytvoří kopii s rozpočtem (bez plateb a času)</div>
               </div>
             </div>
             <Button variant="outline" size="sm" className="rounded-full gap-1.5" onClick={handleDuplicate}>
               <Copy className="h-3.5 w-3.5" /> Duplikovat
             </Button>
           </div>
-
-          {/* Delete */}
           <div className="flex items-center justify-between gap-3 rounded-lg border border-danger/30 bg-danger-soft/20 p-3">
             <div className="flex items-center gap-2">
               <Trash2 className="h-4 w-4 text-danger" />
               <div>
                 <div className="type-body font-medium">Smazat projekt</div>
-                <div className="type-label text-on-surface-variant">
-                  Trvale smaže projekt, rozpočet, platby, čas, kontakty a poznámky
-                </div>
+                <div className="type-label text-on-surface-variant">Trvale smaže všechna data</div>
               </div>
             </div>
             <DeleteProjectButton projectId={projectId} projectName={project.name} />
@@ -422,26 +324,16 @@ function ProjectInfoCard({
           <div className="min-w-0 flex-1">
             <CardTitle className="flex items-center gap-2 type-headline">
               {editing ? (
-                <Input
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="h-8 max-w-md text-lg font-bold"
-                  autoFocus
-                />
+                <Input value={name} onChange={(e) => setName(e.target.value)} className="h-8 max-w-md text-lg font-bold" autoFocus />
               ) : (
                 <>
                   {project.name}
-                  <Badge variant="outline" className={cn("type-label-sm", statusInfo.color)}>
-                    {statusInfo.label}
-                  </Badge>
-                  {project.starred && <Star className="h-4 w-4 fill-amber-400 text-amber-400" />}
+                  <Badge variant="outline" className={cn("type-label-sm", statusInfo.color)}>{statusInfo.label}</Badge>
                 </>
               )}
             </CardTitle>
             {!editing && project.description && (
-              <CardDescription className="mt-1 type-body">
-                {project.description}
-              </CardDescription>
+              <CardDescription className="mt-1 type-body">{project.description}</CardDescription>
             )}
           </div>
           {editing ? (
@@ -471,9 +363,7 @@ function ProjectInfoCard({
             <div className="space-y-1">
               <Label htmlFor="mgmt-status" className="type-label-sm">Stav</Label>
               <Select value={status} onValueChange={setStatus}>
-                <SelectTrigger id="mgmt-status" className="h-9">
-                  <SelectValue />
-                </SelectTrigger>
+                <SelectTrigger id="mgmt-status" className="h-9"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="planning">Plánování</SelectItem>
                   <SelectItem value="active">Aktivní</SelectItem>
@@ -502,23 +392,10 @@ function ProjectInfoCard({
       {!editing && (
         <CardContent className="pt-0">
           <div className="flex flex-wrap gap-4 type-label text-on-surface-variant">
-            {project.address && (
-              <span className="flex items-center gap-1">
-                <MapPin className="h-3 w-3" /> {project.address}
-              </span>
-            )}
-            {project.startDate && (
-              <span className="flex items-center gap-1">
-                <Calendar className="h-3 w-3" /> {formatDate(project.startDate)}
-                {project.endDate && ` — ${formatDate(project.endDate)}`}
-              </span>
-            )}
-            <span className="flex items-center gap-1">
-              <Building2 className="h-3 w-3" /> {project.currency}
-            </span>
-            <span className="type-label-sm text-on-surface-variant/60">
-              Vytvořeno: {formatDate(project.createdAt)}
-            </span>
+            {project.address && (<span className="flex items-center gap-1"><MapPin className="h-3 w-3" /> {project.address}</span>)}
+            {project.startDate && (<span className="flex items-center gap-1"><Calendar className="h-3 w-3" /> {formatDate(project.startDate)}{project.endDate && ` — ${formatDate(project.endDate)}`}</span>)}
+            <span className="flex items-center gap-1"><Building2 className="h-3 w-3" /> {project.currency}</span>
+            <span className="type-label-sm text-on-surface-variant/60">Vytvořeno: {formatDate(project.createdAt)}</span>
           </div>
         </CardContent>
       )}
@@ -527,91 +404,330 @@ function ProjectInfoCard({
 }
 
 // ============================================================
-// StatCard — compact stat card for quick stats grid
+// ProjectStatistics — counts + timeline range
 // ============================================================
-function StatCard({
-  icon,
-  label,
-  value,
-  subtitle,
-  tone,
+function ProjectStatistics({
+  contactsCount,
+  budgetItemsCount,
+  paymentsCount,
+  timeline,
   loading,
 }: {
-  icon: React.ReactNode;
-  label: string;
-  value: string;
-  subtitle: string;
-  tone: "success" | "warning" | "info" | "time" | "primary" | "subsidy";
+  contactsCount: number;
+  budgetItemsCount: number;
+  paymentsCount: number;
+  timeline?: { dateFrom: string | null; dateTo: string | null }[];
+  paymentsData?: unknown;
+  budgetData?: unknown;
   loading: boolean;
 }) {
-  const toneBg: Record<string, string> = {
-    success: "bg-success-soft",
-    warning: "bg-warning-soft",
-    info: "bg-info-soft",
-    time: "bg-time-soft",
-    primary: "bg-primary/10",
-    subsidy: "bg-subsidy-soft",
-  };
+  // Compute timeline min/max from dashboard.timeline
+  const timelineItems = timeline ?? [];
+  const datesFrom = timelineItems.map((t) => t.dateFrom).filter(Boolean) as string[];
+  const datesTo = timelineItems.map((t) => t.dateTo).filter(Boolean) as string[];
+  const minDate = datesFrom.length > 0 ? datesFrom.sort()[0] : null;
+  const maxDate = datesTo.length > 0 ? datesTo.sort().reverse()[0] : null;
+
   return (
-    <Card className={cn("bg-card shadow-sm", `border-${tone}/30`)}>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="type-overline text-on-surface-variant">{label}</CardTitle>
-        <div className={cn("flex h-7 w-7 items-center justify-center rounded-lg", toneBg[tone])}>
-          {icon}
-        </div>
+    <Card className="bg-card shadow-sm">
+      <CardHeader className="pb-3">
+        <CardTitle className="type-title-lg">Statistiky projektu</CardTitle>
+        <CardDescription>Počty záznamů a časový rozsah</CardDescription>
       </CardHeader>
       <CardContent>
-        {loading ? (
-          <Skeleton className="h-6 w-20" />
-        ) : (
-          <div className="type-display tabular-nums">{value}</div>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+          <StatBox icon={<Users className="h-4 w-4 text-primary" />} label="Kontakty" value={contactsCount} loading={loading} />
+          <StatBox icon={<Table2 className="h-4 w-4 text-subsidy" />} label="Položky rozpočtu" value={budgetItemsCount} loading={loading} />
+          <StatBox icon={<Receipt className="h-4 w-4 text-warning" />} label="Platby" value={paymentsCount} loading={loading} />
+          <StatBox icon={<CalendarRange className="h-4 w-4 text-info" />} label="Časová osa" value={minDate && maxDate ? `${formatDate(minDate)} — ${formatDate(maxDate)}` : "—"} loading={loading} />
+          <StatBox icon={<Clock className="h-4 w-4 text-time" />} label="Timeline položek" value={timelineItems.length} loading={loading} />
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function StatBox({ icon, label, value, loading }: { icon: React.ReactNode; label: string; value: number | string; loading: boolean }) {
+  return (
+    <div className="rounded-lg border border-outline-variant bg-surface-container-low p-3 text-center">
+      <div className="mb-1 flex justify-center">{icon}</div>
+      <div className="type-overline text-on-surface-variant">{label}</div>
+      {loading ? <Skeleton className="mx-auto mt-1 h-5 w-12" /> : <div className="type-display tabular-nums">{value}</div>}
+    </div>
+  );
+}
+
+// ============================================================
+// SharingSection — project members + owner management
+// ============================================================
+type Member = {
+  id: string;
+  role: string;
+  createdAt: string;
+  updatedAt: string;
+  user: { id: string; name: string | null; email: string; image: string | null };
+};
+
+type MembersResponse = {
+  owner: { id: string; name: string | null; email: string; image: string | null };
+  members: Member[];
+};
+
+function SharingSection({ projectId }: { projectId: string }) {
+  const [data, setData] = useState<MembersResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [addEmail, setAddEmail] = useState("");
+  const [addRole, setAddRole] = useState("viewer");
+  const [adding, setAdding] = useState(false);
+  const [allUsers, setAllUsers] = useState<{ id: string; name: string | null; email: string }[]>([]);
+  const qc = useQueryClient();
+
+  const fetchMembers = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/projects/${projectId}/members`);
+      if (res.ok) {
+        const json = await res.json();
+        setData(json);
+      }
+    } catch {
+      // ignore
+    } finally {
+      setLoading(false);
+    }
+  }, [projectId]);
+
+  // Fetch members + all users on mount
+  useEffect(() => {
+    fetchMembers();
+    // Fetch all users for owner change dropdown
+    fetch("/api/users")
+      .then((r) => (r.ok ? r.json() : []))
+      .then((users) => setAllUsers(users))
+      .catch(() => setAllUsers([]));
+  }, [fetchMembers]);
+
+  const handleAdd = async () => {
+    if (!addEmail.trim()) return;
+    setAdding(true);
+    try {
+      const res = await fetch(`/api/projects/${projectId}/members`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: addEmail.trim(), role: addRole }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || "Failed to add member");
+      }
+      toast.success(`Přidán člen: ${addEmail.trim()}`);
+      setAddEmail("");
+      fetchMembers();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Nepodařilo se přidat člena");
+    } finally {
+      setAdding(false);
+    }
+  };
+
+  const handleRoleChange = async (memberId: string, role: string) => {
+    try {
+      await fetch(`/api/projects/${projectId}/members/${memberId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ role }),
+      });
+      toast.success("Role upravena");
+      fetchMembers();
+    } catch {
+      toast.error("Nepodařilo se upravit roli");
+    }
+  };
+
+  const handleRemove = async (memberId: string, name: string) => {
+    try {
+      await fetch(`/api/projects/${projectId}/members/${memberId}`, { method: "DELETE" });
+      toast.success(`Člen "${name}" odebrán`);
+      fetchMembers();
+    } catch {
+      toast.error("Nepodařilo se odebrat člena");
+    }
+  };
+
+  const handleChangeOwner = async (newOwnerId: string) => {
+    try {
+      await fetch(`/api/projects/${projectId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ownerId: newOwnerId }),
+      });
+      toast.success("Vlastník změněn");
+      qc.invalidateQueries({ queryKey: ["projects"] });
+      fetchMembers();
+    } catch {
+      toast.error("Nepodařilo se změnit vlastníka");
+    }
+  };
+
+  if (loading) return <Skeleton className="h-48" />;
+
+  const owner = data?.owner;
+  const members = data?.members ?? [];
+
+  return (
+    <Card className="bg-card shadow-sm">
+      <CardHeader className="pb-3">
+        <CardTitle className="flex items-center gap-2 type-title-lg">
+          <Shield className="h-4 w-4 text-primary" />
+          Sdílení a přístupová práva
+        </CardTitle>
+        <CardDescription>Správa vlastníka a členů projektu</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {/* Owner */}
+        {owner && (
+          <div className="flex items-center gap-3 rounded-lg border border-primary/30 bg-primary/5 p-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-secondary-container">
+              <Crown className="h-5 w-5 text-primary" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-1.5">
+                <span className="type-body font-semibold">{owner.name || owner.email}</span>
+                <Badge variant="secondary" className="type-label-sm">Vlastník</Badge>
+              </div>
+              <div className="type-label text-on-surface-variant truncate">{owner.email}</div>
+            </div>
+            {/* Change owner dropdown */}
+            {allUsers.length > 0 && (
+              <Select onValueChange={handleChangeOwner}>
+                <SelectTrigger className="h-8 w-auto rounded-full type-label-sm">
+                  <span className="flex items-center gap-1"><ArrowRight className="h-3 w-3" /> Předat</span>
+                </SelectTrigger>
+                <SelectContent>
+                  {allUsers
+                    .filter((u) => u.id !== owner.id)
+                    .map((u) => (
+                      <SelectItem key={u.id} value={u.id}>
+                        {u.name || u.email}
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+            )}
+          </div>
         )}
-        {subtitle && <p className="mt-0.5 type-label text-on-surface-variant">{subtitle}</p>}
+
+        {/* Members list */}
+        {members.length > 0 && (
+          <div className="space-y-1.5">
+            {members.map((m) => (
+              <div
+                key={m.id}
+                className="flex items-center gap-3 rounded-lg border border-outline-variant bg-surface-container-low p-2.5"
+              >
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-secondary-container type-label-sm font-bold text-secondary-container-foreground">
+                  {(m.user.name || m.user.email)[0]?.toUpperCase()}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="type-body font-medium truncate">{m.user.name || m.user.email}</div>
+                  <div className="type-label text-on-surface-variant truncate">{m.user.email}</div>
+                </div>
+                {/* Role selector */}
+                <Select value={m.role} onValueChange={(v) => handleRoleChange(m.id, v)}>
+                  <SelectTrigger className="h-7 w-auto rounded-full type-label-sm gap-1">
+                    {m.role === "editor" ? <Edit3 className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+                    {m.role === "editor" ? "Editor" : "Prohlížeč"}
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="viewer"><Eye className="mr-1.5 inline h-3 w-3" /> Prohlížeč (pouze čtení)</SelectItem>
+                    <SelectItem value="editor"><Edit3 className="mr-1.5 inline h-3 w-3" /> Editor (úpravy)</SelectItem>
+                  </SelectContent>
+                </Select>
+                {/* Remove */}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7 shrink-0 rounded-full state-layer-on-surface text-muted-foreground hover:text-danger"
+                  onClick={() => handleRemove(m.id, m.user.name || m.user.email)}
+                  aria-label="Odebrat člena"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Add member */}
+        <div className="rounded-lg border border-dashed border-outline-variant p-3">
+          <div className="mb-2 flex items-center gap-1.5 type-label text-on-surface-variant">
+            <UserPlus className="h-3.5 w-3.5" /> Přidat člena
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <Input
+              value={addEmail}
+              onChange={(e) => setAddEmail(e.target.value)}
+              placeholder="email@uzivatel.cz"
+              className="h-8 flex-1 min-w-[200px] type-body"
+              onKeyDown={(e) => e.key === "Enter" && handleAdd()}
+            />
+            <Select value={addRole} onValueChange={setAddRole}>
+              <SelectTrigger className="h-8 w-auto rounded-full type-label-sm gap-1">
+                {addRole === "editor" ? <Edit3 className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+                {addRole === "editor" ? "Editor" : "Prohlížeč"}
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="viewer"><Eye className="mr-1.5 inline h-3 w-3" /> Prohlížeč</SelectItem>
+                <SelectItem value="editor"><Edit3 className="mr-1.5 inline h-3 w-3" /> Editor</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button size="sm" className="rounded-full gap-1.5" onClick={handleAdd} disabled={!addEmail.trim() || adding}>
+              {adding ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <UserPlus className="h-3.5 w-3.5" />}
+              Přidat
+            </Button>
+          </div>
+          {allUsers.length > 0 && (
+            <div className="mt-2 flex flex-wrap gap-1">
+              <span className="type-label-sm text-on-surface-variant">Rychlý výběr:</span>
+              {allUsers.slice(0, 5).map((u) => (
+                <button
+                  key={u.id}
+                  onClick={() => setAddEmail(u.email)}
+                  className="rounded-full border border-outline-variant px-2 py-0.5 type-label-sm hover:bg-surface-container-high"
+                >
+                  {u.email}
+                </button>
+              ))}
+              {allUsers.length > 5 && <span className="type-label-sm text-on-surface-variant">+{allUsers.length - 5} dalších</span>}
+            </div>
+          )}
+        </div>
       </CardContent>
     </Card>
   );
 }
 
 // ============================================================
-// ImportButton — hidden file input for JSON import
+// EnhancedAuditLog — with author + change details
 // ============================================================
-function ImportButton({ importState }: { importState: ReturnType<typeof useImportState> }) {
-  return (
-    <label className="inline-flex">
-      <input
-        type="file"
-        accept="application/json,.json"
-        className="hidden"
-        onChange={async (e) => {
-          const file = e.target.files?.[0];
-          if (!file) return;
-          try {
-            await importState.mutateAsync(file);
-            toast.success("Stav importován");
-          } catch {
-            toast.error("Import selhal");
-          }
-          e.target.value = "";
-        }}
-      />
-      <span className="inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-full border px-3 type-label hover:bg-surface-container-high">
-        <Upload className="h-3.5 w-3.5" /> Import stavu (JSON)
-      </span>
-    </label>
-  );
-}
+type AuditEntry = {
+  id: string;
+  action: string;
+  entityType: string;
+  entityId: string;
+  field: string | null;
+  oldValue: string | null;
+  newValue: string | null;
+  createdAt: string;
+  user: { id: string; name: string | null; email: string; image: string | null } | null;
+};
 
-// ============================================================
-// AuditSummary — recent changes
-// ============================================================
-function AuditSummary({ projectId }: { projectId: string }) {
-  const [entries, setEntries] = useState<AuditEntry[] | null>(null);
+function EnhancedAuditLog({ projectId }: { projectId: string }) {
+  const [entries, setEntries] = useState<AuditEntry[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Fetch audit log on mount
-  useState(() => {
-    fetch(`/api/projects/${projectId}/audit?limit=10`)
-      .then((r) => r.ok ? r.json() : [])
+  useEffect(() => {
+    fetch(`/api/projects/${projectId}/audit?limit=20`)
+      .then((r) => (r.ok ? r.json() : []))
       .then((data) => {
         setEntries(data);
         setLoading(false);
@@ -620,36 +736,110 @@ function AuditSummary({ projectId }: { projectId: string }) {
         setEntries([]);
         setLoading(false);
       });
-  });
+  }, [projectId]);
 
-  if (loading) return <Skeleton className="h-20" />;
-  if (!entries || entries.length === 0) {
+  if (loading) return <Skeleton className="h-32" />;
+  if (entries.length === 0) {
     return <p className="type-label text-on-surface-variant">Žádné zaznamenané změny.</p>;
   }
 
+  const actionLabels: Record<string, string> = {
+    create: "Vytvořeno",
+    update: "Upraveno",
+    delete: "Smazáno",
+  };
+
+  const actionColors: Record<string, string> = {
+    create: "text-success",
+    update: "text-info",
+    delete: "text-danger",
+  };
+
+  const entityLabels: Record<string, string> = {
+    BudgetItem: "Položka rozpočtu",
+    Payment: "Platba",
+    TimeEntry: "Časový záznam",
+    Contact: "Kontakt",
+    Project: "Projekt",
+    Note: "Poznámka",
+    ContactPerson: "Kontaktní osoba",
+  };
+
+  const formatValue = (val: string | null): string => {
+    if (val === null) return "—";
+    // Try to parse as JSON (could be an object)
+    try {
+      const parsed = JSON.parse(val);
+      if (typeof parsed === "object" && parsed !== null) {
+        // Show key fields
+        const keys = Object.keys(parsed).slice(0, 3);
+        return keys.map((k) => `${k}: ${parsed[k]}`).join(", ");
+      }
+      return String(parsed);
+    } catch {
+      return val.length > 80 ? val.slice(0, 80) + "…" : val;
+    }
+  };
+
   return (
     <div className="space-y-1.5">
-      {entries.map((entry, i) => (
-        <div key={i} className="flex items-center gap-2 rounded-lg border border-outline-variant bg-surface-container-low px-3 py-1.5">
-          <History className="h-3 w-3 shrink-0 text-muted-foreground" />
-          <span className="type-body font-medium">{entry.action}</span>
-          <span className="type-label text-on-surface-variant">{entry.entityType}</span>
-          <span className="ml-auto type-label-sm text-on-surface-variant tabular-nums">
-            {formatDate(entry.createdAt)}
-          </span>
-        </div>
-      ))}
+      {entries.map((entry) => {
+        const authorName = entry.user?.name || entry.user?.email || "Neznámý";
+        const authorInitials = authorName
+          .split(/\s+/)
+          .slice(0, 2)
+          .map((s) => s[0]?.toUpperCase() ?? "")
+          .join("") || "?";
+
+        return (
+          <div
+            key={entry.id}
+            className="flex items-start gap-3 rounded-lg border border-outline-variant bg-surface-container-low px-3 py-2.5"
+          >
+            {/* Author avatar */}
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-secondary-container type-label-sm font-bold text-secondary-container-foreground">
+              {authorInitials}
+            </div>
+            {/* Change details */}
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-1.5">
+                <span className={cn("type-label-sm font-semibold", actionColors[entry.action] ?? "text-muted-foreground")}>
+                  {actionLabels[entry.action] ?? entry.action}
+                </span>
+                <span className="type-label text-on-surface-variant">
+                  {entityLabels[entry.entityType] ?? entry.entityType}
+                </span>
+                <span className="type-label-sm text-on-surface-variant">·</span>
+                <span className="type-label text-on-surface-variant truncate">{authorName}</span>
+              </div>
+              {/* Field-level change details */}
+              {entry.field && (
+                <div className="mt-1 flex flex-wrap items-center gap-1 type-label-sm">
+                  <span className="rounded bg-surface-container-high px-1.5 py-0.5 font-mono text-[10px] text-on-surface-variant">
+                    {entry.field}
+                  </span>
+                  {entry.oldValue !== null && (
+                    <>
+                      <span className="text-danger/70 line-through">{formatValue(entry.oldValue)}</span>
+                      <ArrowRight className="h-3 w-3 text-on-surface-variant/40" />
+                    </>
+                  )}
+                  {entry.newValue !== null && (
+                    <span className="text-success/80">{formatValue(entry.newValue)}</span>
+                  )}
+                </div>
+              )}
+            </div>
+            {/* Timestamp */}
+            <span className="shrink-0 type-label-sm text-on-surface-variant tabular-nums">
+              {formatDate(entry.createdAt)}
+            </span>
+          </div>
+        );
+      })}
     </div>
   );
 }
-
-type AuditEntry = {
-  id: string;
-  action: string;
-  entityType: string;
-  entityId: string;
-  createdAt: string;
-};
 
 // ============================================================
 // DeleteProjectButton — with confirmation dialog
@@ -686,24 +876,13 @@ function DeleteProjectButton({ projectId, projectName }: { projectId: string; pr
         <AlertDialogHeader>
           <AlertDialogTitle>Smazat projekt „{projectName}"?</AlertDialogTitle>
           <AlertDialogDescription>
-            Tato akce je nevratná. Všechna data (rozpočet, platby, čas, kontakty, poznámky)
-            budou trvale smazána. Pro potvrzení napište název projektu:
+            Tato akce je nevratná. Všechna data budou trvale smazána. Pro potvrzení napište název projektu:
           </AlertDialogDescription>
         </AlertDialogHeader>
-        <Input
-          value={confirmName}
-          onChange={(e) => setConfirmName(e.target.value)}
-          placeholder={projectName}
-          className="h-9"
-          autoFocus
-        />
+        <Input value={confirmName} onChange={(e) => setConfirmName(e.target.value)} placeholder={projectName} className="h-9" autoFocus />
         <AlertDialogFooter>
           <AlertDialogCancel onClick={() => setConfirmName("")}>Zrušit</AlertDialogCancel>
-          <AlertDialogAction
-            onClick={handleDelete}
-            disabled={confirmName !== projectName || deleting}
-            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-          >
+          <AlertDialogAction onClick={handleDelete} disabled={confirmName !== projectName || deleting} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
             {deleting && <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />}
             Smazat projekt
           </AlertDialogAction>
