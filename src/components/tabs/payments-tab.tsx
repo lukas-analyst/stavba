@@ -368,7 +368,7 @@ export function PaymentsTab({ projectId }: { projectId: string }) {
             </div>
           </div>
           {/* Table skeleton */}
-          <div className="overflow-hidden rounded-lg border">
+          <div className="overflow-hidden rounded-lg border border-outline-variant bg-card">
             <div className="border-b bg-muted/40 px-4 py-2.5">
               <Skeleton className="h-4 w-full" />
             </div>
@@ -399,7 +399,7 @@ export function PaymentsTab({ projectId }: { projectId: string }) {
       ) : (
         <div className="space-y-3">
           {/* Unified payments table — standalone + installment invoices merged */}
-          <div className="overflow-hidden rounded-lg border">
+          <div className="overflow-hidden rounded-lg border border-outline-variant bg-card">
             <Table>
               <TableHeader>
                 <TableRow className="sticky top-0 z-30 bg-surface-container-high">

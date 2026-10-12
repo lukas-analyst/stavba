@@ -914,7 +914,7 @@ function SortableCategoryCard({
       style={style}
       id={`category-${categoryName.replace(/[^a-zA-Z0-9]/g, "-").toLowerCase()}`}
       className={cn(
-        "rounded-lg border border-outline-variant bg-background shadow-sm",
+        "rounded-lg border border-outline-variant bg-card shadow-sm",
         isDragging && "shadow-xl ring-2 ring-primary/30",
       )}
     >
