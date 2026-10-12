@@ -10,6 +10,7 @@ import {
   Star,
   Plus,
   Check,
+  Settings,
 } from "lucide-react";
 import { useProjects } from "@/lib/api";
 import { useAppStore } from "@/lib/store";
@@ -189,8 +190,21 @@ export function TopBar() {
                 )}
               </div>
 
-              {/* Add project */}
-              <div className="border-t p-2">
+              {/* Manage current project + Add project */}
+              <div className="border-t p-2 space-y-1.5">
+                {selectedProjectId && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-full justify-start gap-1.5 rounded-full"
+                    onClick={() => {
+                      setActiveTab("management");
+                      setProjectOpen(false);
+                    }}
+                  >
+                    <Settings className="h-4 w-4" /> Spravovat projekt
+                  </Button>
+                )}
                 <Button
                   variant="outline"
                   size="sm"
