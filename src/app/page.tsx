@@ -21,6 +21,7 @@ const VALID_TABS: ReadonlySet<TabId> = new Set<TabId>([
   "contacts",
   "timeline",
   "notes",
+  "management",
 ]);
 
 export default function Home() {

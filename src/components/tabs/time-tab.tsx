@@ -61,6 +61,7 @@ import {
 import { formatNumber, formatDate, WORKER_TYPES, workerTypeLabel } from "@/lib/format";
 import { toast } from "sonner";
 import { EmptyStateBox } from "@/components/empty-state-box";
+import { InlineDate, InlineNumber } from "@/components/ui/inline-editors";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { useLastValue } from "@/hooks/use-last-value";
@@ -302,16 +303,16 @@ export function TimeTab({ projectId }: { projectId: string }) {
           }
         />
       ) : (
-        <div className="overflow-x-auto scrollbar-thin rounded-lg border">
+        <div className="overflow-x-auto scrollbar-thin rounded-lg border border-outline-variant bg-card">
           <Table className="min-w-[800px]">
             <TableHeader>
               <TableRow className="sticky top-0 z-30 bg-surface-container-high">
                 <TableHead className="w-16"></TableHead>
                 <TableHead className="w-28">Datum</TableHead>
-                <TableHead className="min-w-[160px]">Pracovník</TableHead>
-                <TableHead className="w-32">Typ</TableHead>
                 <TableHead className="min-w-[200px]">Položka rozpočtu</TableHead>
-                <TableHead className="min-w-[180px]">Popis práce</TableHead>
+                <TableHead className="min-w-[180px]">Popis</TableHead>
+                <TableHead className="w-32">Typ</TableHead>
+                <TableHead className="min-w-[160px]">Kontakt</TableHead>
                 <TableHead className="text-right">Hodiny</TableHead>
                 <TableHead className="w-8"></TableHead>
               </TableRow>
@@ -322,6 +323,7 @@ export function TimeTab({ projectId }: { projectId: string }) {
                   key={t.id}
                   entry={t}
                   onEdit={() => setEditEntry(t)}
+                  updateTimeEntry={updateTimeEntry}
                   onDelete={async () => {
                     try {
                       await deleteTimeEntry.mutateAsync(t.id);
@@ -369,13 +371,21 @@ function TimeRow({
   entry,
   onEdit,
   onDelete,
+  updateTimeEntry,
 }: {
   entry: TimeEntry;
   onEdit: () => void;
   onDelete: () => void;
+  updateTimeEntry?: ReturnType<typeof useUpdateTimeEntry>;
 }) {
   const [confirm, setConfirm] = useState(false);
   const w = workerTypeLabel(entry.workerType);
+
+  // Inline update helper — patches a single field without opening the edit dialog.
+  const update = (field: keyof TimeEntry, value: unknown) => {
+    updateTimeEntry?.mutate({ id: entry.id, data: { [field]: value } });
+  };
+
   return (
     <TableRow
       className="group cursor-pointer hover:bg-muted/30 cv-row"
@@ -385,47 +395,72 @@ function TimeRow({
       <TableCell className="w-16">
         <Badge
           variant="outline"
-          className="text-[11px] text-time"
+          className="type-label-sm text-time"
           title={`${entry.workerCount} ${entry.workerCount === 1 ? "pracovník" : entry.workerCount < 5 ? "pracovníci" : "pracovníků"}`}
         >
           × {entry.workerCount}
         </Badge>
       </TableCell>
-      <TableCell className="whitespace-nowrap text-xs text-muted-foreground">
+      <TableCell className="whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
         <div className="flex flex-col">
-          <span>{formatDate(entry.date)}</span>
+          <InlineDate
+            value={entry.date}
+            onCommit={(v) => update("date", v)}
+          />
           {entry.dateTo && (
-            <span className="text-xs text-time">
+            <span className="type-label text-time">
               → {formatDate(entry.dateTo)}
             </span>
           )}
         </div>
       </TableCell>
       <TableCell>
-        <div className="flex items-center gap-1.5">
-          <span className="text-sm font-medium">{entry.workerName}</span>
-        </div>
-      </TableCell>
-      <TableCell>
-        <Badge variant="outline" className="text-[11px]">
-          {w.emoji} {w.label}
-        </Badge>
-      </TableCell>
-      <TableCell>
         <div className="flex flex-col">
-          <span className="text-xs font-medium">
+          <span className="type-body font-medium">
             {entry.budgetItem?.subcategory || entry.budgetItem?.category}
           </span>
-          <span className="text-xs text-muted-foreground">
+          <span className="type-label text-on-surface-variant">
             {entry.budgetItem?.category}
           </span>
         </div>
       </TableCell>
-      <TableCell className="text-xs text-muted-foreground">
+      <TableCell className="type-label text-on-surface-variant">
         {entry.description || "—"}
       </TableCell>
-      <TableCell className="text-right text-sm font-semibold text-time">
-        {formatNumber(entry.hours, " h")}
+      <TableCell onClick={(e) => e.stopPropagation()}>
+        <Select
+          value={entry.workerType}
+          onValueChange={(v) => update("workerType", v)}
+          disabled={!!entry.contact}
+        >
+          <SelectTrigger className="h-7 w-auto border-0 px-1 type-label-sm shadow-none hover:bg-surface-container-high gap-1 data-[disabled]:opacity-100">
+            <Badge variant="outline" className="type-label-sm">
+              {w.emoji} {w.label}
+            </Badge>
+          </SelectTrigger>
+          <SelectContent>
+            {WORKER_TYPES.map((wt) => (
+              <SelectItem key={wt.value} value={wt.value}>
+                {wt.emoji} {wt.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </TableCell>
+      <TableCell>
+        <div className="flex items-center gap-1.5">
+          <span className="type-body font-medium">
+            {entry.contact?.name || entry.workerName}
+          </span>
+        </div>
+      </TableCell>
+      <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
+        <InlineNumber
+          value={entry.hours}
+          onCommit={(v) => update("hours", v)}
+          suffix=" h"
+          className="font-semibold text-time"
+        />
       </TableCell>
       <TableCell
         className="text-right"
@@ -798,7 +833,24 @@ function TimeDialogInner({
               hint: `${c.type}${c.role ? ` · ${c.role}` : ""}${c.company ? ` · ${c.company}` : ""}`,
             }))}
             value={contactId}
-            onChange={setContactId}
+            onChange={(v) => {
+              setContactId(v);
+              // Auto-derive workerType + workerName from contact when assigned
+              const selected = contacts.find((c) => c.id === v);
+              if (selected) {
+                // Map contact.type to workerType (company→company, craftsman→craftsman,
+                // self→self, family→family, others default to "company")
+                const typeMap: Record<string, string> = {
+                  company: "company",
+                  craftsman: "craftsman",
+                  self: "self",
+                  family: "family",
+                };
+                const derivedType = typeMap[selected.type] ?? "company";
+                setWorkerType(derivedType);
+                setWorkerName(selected.name);
+              }
+            }}
             placeholder="Bez kontaktu"
             searchPlaceholder="Hledat kontakt…"
             emptyText="Žádné kontakty nenalezeny"

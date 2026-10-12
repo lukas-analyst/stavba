@@ -7,7 +7,10 @@ import {
   useUpdateContact,
   useDeleteContact,
   useContactStats,
+  useCreateContactPerson,
+  useDeleteContactPerson,
   type Contact,
+  type ContactPerson,
   type ContactStat,
 } from "@/lib/api";
 import { Button } from "@/components/ui/button";
@@ -121,12 +124,12 @@ export function ContactsTab({ projectId }: { projectId: string }) {
   return (
     <div id="contacts-root" className="space-y-4">
       <div id="contacts-header" className="flex items-center justify-between">
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+        <div className="flex items-center gap-2 type-body text-on-surface-variant">
           <Users className="h-4 w-4" />
           {contacts?.length ?? 0} kontaktů v projektu
         </div>
         <div className="flex items-center gap-2">
-          <Button size="sm" onClick={() => setAddOpen(true)}>
+          <Button size="sm" className="rounded-full" onClick={() => setAddOpen(true)}>
             <Plus className="mr-1 h-4 w-4" /> Přidat kontakt
           </Button>
         </div>
@@ -189,6 +192,7 @@ export function ContactsTab({ projectId }: { projectId: string }) {
         contact={editContact}
       />
       <ContactDetailDialog
+        projectId={projectId}
         contact={detailContact}
         stat={detailContact ? statsByContactId.get(detailContact.id) ?? null : null}
         open={!!detailContact}
@@ -239,22 +243,24 @@ function ContactCard({
 
   return (
     <Card
-      className="group relative cursor-pointer overflow-hidden transition-shadow hover:shadow-md hover-lift"
+      // MD3 Card: tonal surface-container-low + outline-variant border + subtle shadow
+      className="group relative cursor-pointer overflow-hidden border-outline-variant bg-card shadow-sm transition-shadow hover:shadow-md hover-lift"
       onClick={onOpenDetail}
     >
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div className="flex items-start gap-2">
+            {/* MD3 avatar: secondary-container tonal fill */}
             <div
               className={cn(
-                "flex h-10 w-10 items-center justify-center rounded-lg text-lg",
-                "bg-muted",
+                "flex h-10 w-10 items-center justify-center rounded-xl text-lg",
+                "bg-secondary-container text-secondary-container-foreground",
               )}
             >
               {t.emoji}
             </div>
             <div className="min-w-0">
-              <h3 className="truncate text-sm font-bold">{contact.name}</h3>
+              <h3 className="type-title truncate">{contact.name}</h3>
               <Badge variant="outline" className="mt-0.5 text-[10px]">
                 {t.label}
               </Badge>
@@ -265,7 +271,7 @@ function ContactCard({
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-7 w-7 opacity-0 group-hover:opacity-100"
+                className="h-7 w-7 rounded-full state-layer-on-surface opacity-0 group-hover:opacity-100"
                 onClick={(e) => e.stopPropagation()}
               >
                 <MoreHorizontal className="h-4 w-4" />
@@ -295,16 +301,16 @@ function ContactCard({
       </CardHeader>
       <CardContent className="space-y-2">
         {contact.role && (
-          <p className="text-xs font-medium text-muted-foreground">{contact.role}</p>
+          <p className="type-label text-on-surface-variant">{contact.role}</p>
         )}
         {contact.company && (
-          <div className="flex items-center gap-1.5 text-xs">
+          <div className="flex items-center gap-1.5 type-body">
             <Building2 className="h-3 w-3 text-muted-foreground" />
             <span className="truncate">{contact.company}</span>
           </div>
         )}
         {(contact.ico || contact.dic) && (
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] text-muted-foreground">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] text-on-surface-variant">
             {contact.ico && (
               <span className="tabular-nums">
                 IČO: <span className="font-medium text-foreground/80">{contact.ico}</span>
@@ -321,7 +327,8 @@ function ContactCard({
           <a
             href={`tel:${contact.phone}`}
             onClick={(e) => e.stopPropagation()}
-            className="flex items-center gap-1.5 text-xs hover:text-primary"
+            // MD3 state layer on interactive communication rows
+            className="flex items-center gap-1.5 rounded-lg px-1 py-0.5 type-body hover:bg-surface-container-high state-layer-on-surface"
             title={getPhoneInfo(contact.phone).countryName || undefined}
           >
             <Phone className="h-3 w-3 text-muted-foreground" />
@@ -337,7 +344,7 @@ function ContactCard({
           <a
             href={`mailto:${contact.email}`}
             onClick={(e) => e.stopPropagation()}
-            className="flex items-center gap-1.5 text-xs hover:text-primary"
+            className="flex items-center gap-1.5 rounded-lg px-1 py-0.5 type-body hover:bg-surface-container-high state-layer-on-surface"
           >
             <Mail className="h-3 w-3 text-muted-foreground" />
             <span className="truncate">{contact.email}</span>
@@ -349,7 +356,7 @@ function ContactCard({
             target="_blank"
             rel="noopener noreferrer"
             onClick={(e) => e.stopPropagation()}
-            className="flex items-center gap-1.5 text-xs hover:text-primary"
+            className="flex items-center gap-1.5 rounded-lg px-1 py-0.5 type-body hover:bg-surface-container-high state-layer-on-surface"
           >
             <Globe className="h-3 w-3 text-muted-foreground" />
             <span className="truncate">{contact.website}</span>
@@ -357,13 +364,15 @@ function ContactCard({
           </a>
         )}
         {contact.notes && (
-          <p className="border-t pt-2 text-[11px] text-muted-foreground">{contact.notes}</p>
+          // MD3 divider: outline-variant
+          <p className="type-label border-t border-outline-variant pt-2 text-on-surface-variant">{contact.notes}</p>
         )}
       </CardContent>
       {(hasStats || contact.rating) && (
         <CardFooter className="flex flex-col items-stretch gap-2 pt-0">
           {hasStats && (
-            <div className="grid grid-cols-2 gap-2 border-t pt-2">
+            // MD3 divider: outline-variant, neutral surface-container-high
+            <div className="grid grid-cols-2 gap-2 border-t border-outline-variant pt-2">
               <StatPill
                 icon={<Wallet className="h-3 w-3" />}
                 label="Zaplaceno"
@@ -390,8 +399,9 @@ function ContactCard({
               />
             </div>
           )}
-          {!hasStats && contact.rating && <div className="border-t" />}
+          {!hasStats && contact.rating && <div className="border-t border-outline-variant" />}
           {contact.rating && (
+            // MD3 rating: primary selected, on-surface-variant unselected
             <div className="flex items-center justify-end gap-0.5">
               {[1, 2, 3, 4, 5].map((s) => (
                 <Star
@@ -399,8 +409,8 @@ function ContactCard({
                   className={cn(
                     "h-3 w-3",
                     s <= contact.rating!
-                      ? "fill-warning text-warning"
-                      : "text-muted-foreground/30",
+                      ? "fill-primary text-primary"
+                      : "text-on-surface-variant/30",
                   )}
                 />
               ))}
@@ -461,26 +471,253 @@ function StatPill({
   value: string;
   tone: "amber" | "violet";
 }) {
-  const toneClasses =
-    tone === "amber"
-      ? "bg-warning-soft/50 text-warning-strong dark:bg-warning-soft/70 dark:text-warning-strong"
-      : "bg-time-soft/50 text-time-strong dark:bg-time-soft/70 dark:text-time-strong";
+  // MD3: neutral surface-container-high background, tone only in icon/text color
+  const iconColor = tone === "amber" ? "text-warning" : "text-time";
+  const valueColor = tone === "amber" ? "text-warning-strong dark:text-warning/80" : "text-time-strong dark:text-time/80";
   return (
-    <div className={cn("flex items-center gap-1.5 rounded-md px-2 py-1 text-[11px]", toneClasses)}>
-      {icon}
-      <span className="text-muted-foreground/80">{label}:</span>
-      <span className="ml-auto font-bold tabular-nums">{value}</span>
+    <div className="flex items-center gap-1.5 rounded-lg bg-surface-container-high px-2 py-1 type-label-sm">
+      <span className={iconColor}>{icon}</span>
+      <span className="text-on-surface-variant/80">{label}:</span>
+      <span className={cn("ml-auto font-bold tabular-nums", valueColor)}>{value}</span>
     </div>
   );
 }
 
+// ============================================================
+// ContactPersonsSection — manage 1:N persons for a contact
+// ------------------------------------------------------------
+// Displays a list of persons (firstName, lastName, phone, email, role)
+// with inline add/edit/remove. Each person row has clickable
+// phone/email links. Add form is a simple inline expandable.
+// ============================================================
+function ContactPersonsSection({
+  projectId,
+  contactId,
+  persons,
+}: {
+  projectId: string;
+  contactId: string;
+  persons: ContactPerson[];
+}) {
+  const createPerson = useCreateContactPerson(projectId, contactId);
+  const deletePerson = useDeleteContactPerson(projectId, contactId);
+
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [newPerson, setNewPerson] = useState({
+    firstName: "",
+    lastName: "",
+    phone: "",
+    email: "",
+    role: "",
+  });
+
+  const handleAdd = async () => {
+    if (!newPerson.firstName.trim() || !newPerson.lastName.trim()) {
+      toast.error("Jméno a příjmení jsou povinné");
+      return;
+    }
+    try {
+      await createPerson.mutateAsync({
+        firstName: newPerson.firstName.trim(),
+        lastName: newPerson.lastName.trim(),
+        phone: newPerson.phone.trim() || undefined,
+        email: newPerson.email.trim() || undefined,
+        role: newPerson.role.trim() || undefined,
+      });
+      toast.success("Osoba přidána");
+      setNewPerson({ firstName: "", lastName: "", phone: "", email: "", role: "" });
+      setShowAddForm(false);
+    } catch {
+      toast.error("Nepodařilo se přidat osobu");
+    }
+  };
+
+  const handleDelete = async (personId: string, name: string) => {
+    try {
+      await deletePerson.mutateAsync(personId);
+      toast.success(`Osoba "${name}" smazána`);
+    } catch {
+      toast.error("Nepodařilo se smazat osobu");
+    }
+  };
+
+  return (
+    <section className="space-y-2">
+      <div className="flex items-center justify-between">
+        <h4 className="type-overline text-on-surface-variant">
+          Kontaktní osoby
+          {persons.length > 0 && (
+            <span className="ml-1.5 rounded bg-surface-container-high px-1.5 py-0.5 text-[9px] tabular-nums text-on-surface">
+              {persons.length}
+            </span>
+          )}
+        </h4>
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-7 gap-1 rounded-full px-2 text-xs"
+          onClick={() => setShowAddForm(!showAddForm)}
+        >
+          <Plus className="h-3 w-3" /> {showAddForm ? "Zrušit" : "Přidat"}
+        </Button>
+      </div>
+
+      {/* Add form (expandable) */}
+      {showAddForm && (
+        <div className="space-y-2 rounded-lg border border-outline-variant bg-surface-container-low p-3">
+          <div className="grid grid-cols-2 gap-2">
+            <div className="space-y-1">
+              <Label htmlFor="person-firstName" className="type-label-sm">Jméno *</Label>
+              <Input
+                id="person-firstName"
+                value={newPerson.firstName}
+                onChange={(e) => setNewPerson({ ...newPerson, firstName: e.target.value })}
+                placeholder="Pavel"
+                className="h-8"
+                autoFocus
+              />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="person-lastName" className="type-label-sm">Příjmení *</Label>
+              <Input
+                id="person-lastName"
+                value={newPerson.lastName}
+                onChange={(e) => setNewPerson({ ...newPerson, lastName: e.target.value })}
+                placeholder="Novák"
+                className="h-8"
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <div className="space-y-1">
+              <Label htmlFor="person-phone" className="type-label-sm">Telefon</Label>
+              <Input
+                id="person-phone"
+                value={newPerson.phone}
+                onChange={(e) => setNewPerson({ ...newPerson, phone: e.target.value })}
+                placeholder="+420 777 123 456"
+                className="h-8"
+              />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="person-email" className="type-label-sm">E-mail</Label>
+              <Input
+                id="person-email"
+                value={newPerson.email}
+                onChange={(e) => setNewPerson({ ...newPerson, email: e.target.value })}
+                placeholder="pavel@firma.cz"
+                className="h-8"
+              />
+            </div>
+          </div>
+          <div className="space-y-1">
+            <Label htmlFor="person-role" className="type-label-sm">Role / pozice</Label>
+            <Input
+              id="person-role"
+              value={newPerson.role}
+              onChange={(e) => setNewPerson({ ...newPerson, role: e.target.value })}
+              placeholder="Vedoucí, Účetní, ..."
+              className="h-8"
+            />
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button variant="ghost" size="sm" className="rounded-full" onClick={() => setShowAddForm(false)}>
+              Zrušit
+            </Button>
+            <Button
+              size="sm"
+              className="rounded-full"
+              onClick={handleAdd}
+              disabled={createPerson.isPending || !newPerson.firstName.trim() || !newPerson.lastName.trim()}
+            >
+              {createPerson.isPending && <Loader2 className="mr-1 h-3 w-3 animate-spin" />}
+              Přidat osobu
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Persons list */}
+      {persons.length > 0 ? (
+        <div className="space-y-1.5">
+          {persons.map((p) => {
+            const phoneInfo = p.phone ? getPhoneInfo(p.phone) : null;
+            return (
+              <div
+                key={p.id}
+                className="group flex items-center gap-2 rounded-lg border border-outline-variant bg-surface-container-low px-2.5 py-2"
+              >
+                {/* Avatar initials */}
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-secondary-container text-xs font-bold text-secondary-container-foreground">
+                  {(p.firstName[0] ?? "") + (p.lastName[0] ?? "")}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-1.5">
+                    <span className="type-body font-medium truncate">
+                      {p.firstName} {p.lastName}
+                    </span>
+                    {p.role && (
+                      <span className="type-label text-on-surface-variant truncate">· {p.role}</span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2 type-label text-on-surface-variant">
+                    {phoneInfo && (
+                      <a
+                        href={`tel:${p.phone}`}
+                        className="flex items-center gap-1 hover:text-primary"
+                        title={phoneInfo.countryName || undefined}
+                      >
+                        {phoneInfo.flag && <span aria-hidden>{phoneInfo.flag}</span>}
+                        <span className="tabular-nums">{phoneInfo.formatted}</span>
+                      </a>
+                    )}
+                    {p.email && (
+                      <a
+                        href={`mailto:${p.email}`}
+                        className="flex items-center gap-1 truncate hover:text-primary"
+                      >
+                        <Mail className="h-2.5 w-2.5" />
+                        <span className="truncate">{p.email}</span>
+                      </a>
+                    )}
+                  </div>
+                </div>
+                {/* Delete button */}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7 shrink-0 rounded-full state-layer-on-surface opacity-0 group-hover:opacity-100"
+                  onClick={() => handleDelete(p.id, `${p.firstName} ${p.lastName}`)}
+                  disabled={deletePerson.isPending}
+                  aria-label={`Smazat ${p.firstName} ${p.lastName}`}
+                  title="Smazat osobu"
+                >
+                  <Trash2 className="h-3.5 w-3.5 text-muted-foreground hover:text-danger" />
+                </Button>
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        !showAddForm && (
+          <div className="rounded-lg border border-dashed border-outline-variant px-3 py-4 text-center type-label text-on-surface-variant">
+            Žádné kontaktní osoby. Klikněte „Přidat" pro přidání.
+          </div>
+        )
+      )}
+    </section>
+  );
+}
+
 function ContactDetailDialog({
+  projectId,
   contact,
   stat,
   open,
   onOpenChange,
   onEdit,
 }: {
+  projectId: string;
   contact: Contact | null;
   stat: ContactStat | null;
   open: boolean;
@@ -602,6 +839,9 @@ function ContactDetailDialog({
                   </div>
                 )}
               </section>
+
+              {/* Kontaktní osoby (1:N) */}
+              <ContactPersonsSection projectId={projectId} contactId={contact.id} persons={contact.persons ?? []} />
 
               <Separator />
 

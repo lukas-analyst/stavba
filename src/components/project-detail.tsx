@@ -41,6 +41,10 @@ const NotesTab = dynamic(() => import("@/components/tabs/notes-tab").then(m => m
   ssr: false,
   loading: () => <TabSkeleton />,
 });
+const ProjectManagementTab = dynamic(() => import("@/components/tabs/project-management-tab").then(m => m.ProjectManagementTab), {
+  ssr: false,
+  loading: () => <TabSkeleton />,
+});
 
 function TabSkeleton() {
   return (
@@ -191,6 +195,7 @@ export function ProjectDetail({ project }: { project: Project }) {
         {activeTab === "contacts" && <ContactsTab projectId={project.id} />}
         {activeTab === "timeline" && <TimelineTab projectId={project.id} />}
         {activeTab === "notes" && <NotesTab projectId={project.id} />}
+        {activeTab === "management" && <ProjectManagementTab projectId={project.id} />}
       </div>
 
       {/* Dialogs — triggered from Settings menu in sidebar */}

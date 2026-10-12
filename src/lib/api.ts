@@ -100,6 +100,17 @@ export type BudgetItemLink = {
   sortOrder: number;
 };
 
+export type ContactPerson = {
+  id: string;
+  contactId: string;
+  firstName: string;
+  lastName: string;
+  phone: string | null;
+  email: string | null;
+  role: string | null;
+  sortOrder: number;
+};
+
 export type Contact = {
   id: string;
   projectId: string;
@@ -115,6 +126,9 @@ export type Contact = {
   notes: string | null;
   rating: number | null;
   _count?: { timeEntries: number; payments: number };
+  // Associated persons (1:N) — present when the contacts GET endpoint
+  // includes them. Ordered by sortOrder.
+  persons?: ContactPerson[];
 };
 
 export type Payment = {
@@ -763,6 +777,60 @@ export function useDeleteContact(projectId: string) {
       qc.invalidateQueries({ queryKey: ["contactStats", projectId] });
       qc.invalidateQueries({ queryKey: ["dashboard", projectId] });
       bustServerCache(projectId);
+    },
+  });
+}
+
+// ===== Contact Persons (1:N) =====
+// Persons are sub-entities of a contact — when a person is created/updated/
+// deleted, we invalidate the parent contacts list so the UI re-fetches
+// the nested persons array.
+export function useCreateContactPerson(projectId: string, contactId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: { firstName: string; lastName: string; phone?: string; email?: string; role?: string }) => {
+      const res = await fetch(`/api/contacts/${contactId}/persons`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) throw new Error("Failed to create person");
+      return res.json();
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["contacts", projectId] });
+    },
+  });
+}
+
+export function useUpdateContactPerson(projectId: string, contactId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ personId, data }: { personId: string; data: Partial<{ firstName: string; lastName: string; phone: string; email: string; role: string; sortOrder: number }> }) => {
+      const res = await fetch(`/api/contacts/${contactId}/persons/${personId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) throw new Error("Failed to update person");
+      return res.json();
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["contacts", projectId] });
+    },
+  });
+}
+
+export function useDeleteContactPerson(projectId: string, contactId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (personId: string) => {
+      const res = await fetch(`/api/contacts/${contactId}/persons/${personId}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Failed to delete person");
+      return res.json();
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["contacts", projectId] });
     },
   });
 }

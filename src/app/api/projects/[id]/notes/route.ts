@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { db, dbRead } from "@/lib/db";
+import { logChanges } from "@/lib/audit";
 
 // GET /api/projects/[id]/notes - list all notes for a project (newest first)
 // Uses `dbRead` (read replica if configured, falls back to primary).
@@ -41,6 +42,20 @@ export async function POST(
         text: text.trim(),
       },
     });
+
+    // Log creation to audit log
+    await logChanges(
+      id,
+      "Note",
+      note.id,
+      "create",
+      null,
+      {
+        author: note.author,
+        text: note.text,
+      },
+      note.author,
+    );
 
     return NextResponse.json(note, { status: 201 });
   } catch (error) {
