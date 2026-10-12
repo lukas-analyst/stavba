@@ -59,6 +59,7 @@ import {
   Info,
   Pause,
   Play,
+  Search,
 } from "lucide-react";
 import {
   useProjects,
@@ -70,6 +71,7 @@ import {
 } from "@/lib/api";
 import { formatDate, STATUS_LABELS } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { useAppStore, type TabId } from "@/lib/store";
 import { toast } from "sonner";
 import { CollapsibleSection } from "@/components/ui/collapsible-section";
 
@@ -100,6 +102,12 @@ export function ProjectManagementTab({ projectId }: { projectId: string }) {
   const handleExport = async () => {
     try {
       await exportState.mutateAsync();
+      // C5: Audit log pro exporty
+      await fetch(`/api/projects/${projectId}/audit`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ entityType: "Export", action: "export", entityLabel: "Export stavu (JSON)" }),
+      }).catch(() => {}); // non-blocking — don't fail if audit fails
       toast.success("Stav exportován");
     } catch {
       toast.error("Export selhal");
@@ -115,6 +123,12 @@ export function ProjectManagementTab({ projectId }: { projectId: string }) {
         time: "Čas",
         contacts: "Kontakty",
       };
+      // C5: Audit log pro CSV exporty
+      await fetch(`/api/projects/${projectId}/audit`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ entityType: "Export", action: "export", entityLabel: `CSV — ${labels[type]}` }),
+      }).catch(() => {}); // non-blocking
       toast.success(`CSV — ${labels[type]} exportováno`);
     } catch {
       toast.error("CSV export selhal");
@@ -864,12 +878,14 @@ const ACTION_LABELS: Record<string, string> = {
   create: "Vytvořeno",
   update: "Upraveno",
   delete: "Smazáno",
+  export: "Exportováno",
 };
 
 const ACTION_COLORS: Record<string, string> = {
   create: "text-success",
   update: "text-info",
   delete: "text-danger",
+  export: "text-info",
 };
 
 const ENTITY_LABELS: Record<string, string> = {
@@ -881,6 +897,7 @@ const ENTITY_LABELS: Record<string, string> = {
   Note: "Poznámka",
   ContactPerson: "Kontaktní osoba",
   ProjectMember: "Člen",
+  Export: "Export",
 };
 
 // Generate a human-readable description of what happened
@@ -1032,7 +1049,19 @@ function formatTimestamp(iso: string): { date: string; time: string } {
   };
 }
 
+// C6: Map audit entity types → app tab IDs (for deep-link navigation
+// when the user clicks on an entity label in the audit table).
+const ENTITY_TAB_MAP: Record<string, TabId> = {
+  BudgetItem: "budget",
+  Payment: "payments",
+  TimeEntry: "time",
+  Contact: "contacts",
+  Note: "notes",
+};
+
 function EnhancedAuditLog({ projectId }: { projectId: string }) {
+  // C6: deep-link to other tabs
+  const setActiveTab = useAppStore((s) => s.setActiveTab);
   // Server-side pagination state
   const [entries, setEntries] = useState<AuditEntry[]>([]);
   const [total, setTotal] = useState(0);
@@ -1052,11 +1081,33 @@ function EnhancedAuditLog({ projectId }: { projectId: string }) {
   // Filters / sort
   const [actionFilter, setActionFilter] = useState<string>("all");
   const [entityFilter, setEntityFilter] = useState<string>("all");
+  const [userFilter, setUserFilter] = useState<string>("all");
   const [sortBy, setSortBy] = useState<string>("desc");
+  // B1: full-text search (raw input + debounced query)
+  const [searchInput, setSearchInput] = useState<string>("");
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  // B2: date range
+  const [fromDate, setFromDate] = useState<string>("");
+  const [toDate, setToDate] = useState<string>("");
+  // B7: users that have audit entries (populated from API response)
+  const [users, setUsers] = useState<
+    Array<{ id: string; name: string | null; email: string; image: string | null }>
+  >([]);
 
   // Derive loading from the current vs. last-fetched filter/page key.
-  const currentKey = `${projectId}|${actionFilter}|${entityFilter}|${page}|${pageSize}|${sortBy}`;
+  const currentKey = `${projectId}|${actionFilter}|${entityFilter}|${userFilter}|${searchQuery}|${fromDate}|${toDate}|${page}|${pageSize}|${sortBy}`;
   const loading = loadedKey !== currentKey;
+
+  // B1: Debounced search input — 300ms after the last keystroke,
+  // commits the value to `searchQuery` (which is part of the fetch
+  // dependency) and resets the page to 1.
+  useEffect(() => {
+    const t = setTimeout(() => {
+      setSearchQuery(searchInput);
+      setPage(1);
+    }, 300);
+    return () => clearTimeout(t);
+  }, [searchInput]);
 
   // Main fetch — runs on mount and whenever filters/page/sort change.
   // The skeleton shows while `loading` is true (i.e. until the first
@@ -1067,6 +1118,10 @@ function EnhancedAuditLog({ projectId }: { projectId: string }) {
     const params = new URLSearchParams();
     if (actionFilter !== "all") params.set("action", actionFilter);
     if (entityFilter !== "all") params.set("entity", entityFilter);
+    if (userFilter !== "all") params.set("userId", userFilter);
+    if (searchQuery.trim()) params.set("search", searchQuery.trim());
+    if (fromDate) params.set("from", fromDate);
+    if (toDate) params.set("to", toDate);
     params.set("page", String(page));
     params.set("pageSize", String(pageSize));
     params.set("sort", sortBy);
@@ -1078,6 +1133,7 @@ function EnhancedAuditLog({ projectId }: { projectId: string }) {
           setEntries(data.entries as AuditEntry[]);
           setTotal(typeof data.total === "number" ? data.total : 0);
           setTotalPages(typeof data.totalPages === "number" ? data.totalPages : 1);
+          if (Array.isArray(data.users)) setUsers(data.users);
         } else {
           setEntries([]);
           setTotal(0);
@@ -1095,7 +1151,19 @@ function EnhancedAuditLog({ projectId }: { projectId: string }) {
     return () => {
       cancelled = true;
     };
-  }, [projectId, page, pageSize, actionFilter, entityFilter, sortBy, currentKey]);
+  }, [
+    projectId,
+    page,
+    pageSize,
+    actionFilter,
+    entityFilter,
+    userFilter,
+    searchQuery,
+    fromDate,
+    toDate,
+    sortBy,
+    currentKey,
+  ]);
 
   // Real-time polling — every 5s while the section is expanded.
   // Uses a subtle "Načítání..." indicator (does not flip the skeleton).
@@ -1106,6 +1174,10 @@ function EnhancedAuditLog({ projectId }: { projectId: string }) {
       const params = new URLSearchParams();
       if (actionFilter !== "all") params.set("action", actionFilter);
       if (entityFilter !== "all") params.set("entity", entityFilter);
+      if (userFilter !== "all") params.set("userId", userFilter);
+      if (searchQuery.trim()) params.set("search", searchQuery.trim());
+      if (fromDate) params.set("from", fromDate);
+      if (toDate) params.set("to", toDate);
       params.set("page", String(page));
       params.set("pageSize", String(pageSize));
       params.set("sort", sortBy);
@@ -1116,6 +1188,7 @@ function EnhancedAuditLog({ projectId }: { projectId: string }) {
             setEntries(data.entries as AuditEntry[]);
             setTotal(typeof data.total === "number" ? data.total : 0);
             setTotalPages(typeof data.totalPages === "number" ? data.totalPages : 1);
+            if (Array.isArray(data.users)) setUsers(data.users);
           }
           setPolling(false);
         })
@@ -1123,7 +1196,19 @@ function EnhancedAuditLog({ projectId }: { projectId: string }) {
     };
     const interval = setInterval(fetchAudit, 5000);
     return () => clearInterval(interval);
-  }, [isExpanded, page, pageSize, actionFilter, entityFilter, sortBy, projectId]);
+  }, [
+    isExpanded,
+    page,
+    pageSize,
+    actionFilter,
+    entityFilter,
+    userFilter,
+    searchQuery,
+    fromDate,
+    toDate,
+    sortBy,
+    projectId,
+  ]);
 
   // Reset page to 1 when filters/sort/page-size change — done via
   // wrapper handlers to avoid setState-in-effect lint error.
@@ -1135,6 +1220,10 @@ function EnhancedAuditLog({ projectId }: { projectId: string }) {
     setEntityFilter(v);
     setPage(1);
   };
+  const handleUserFilterChange = (v: string) => {
+    setUserFilter(v);
+    setPage(1);
+  };
   const handleSortChange = (v: string) => {
     setSortBy(v);
     setPage(1);
@@ -1143,11 +1232,24 @@ function EnhancedAuditLog({ projectId }: { projectId: string }) {
     setPageSize(Number(v));
     setPage(1);
   };
+  const handleFromDateChange = (v: string) => {
+    setFromDate(v);
+    setPage(1);
+  };
+  const handleToDateChange = (v: string) => {
+    setToDate(v);
+    setPage(1);
+  };
+  const handleClearSearch = () => {
+    setSearchInput("");
+    setSearchQuery("");
+    setPage(1);
+  };
 
   return (
     <div className="space-y-3">
-      {/* Toolbar: live toggle + export + polling indicator */}
-      <div className="flex flex-wrap items-center justify-between gap-2">
+      {/* Row 1: Live toggle + Export CSV + polling indicator + search input */}
+      <div className="flex flex-wrap items-center gap-2">
         <div className="flex items-center gap-2">
           <Button
             variant={isExpanded ? "default" : "outline"}
@@ -1180,10 +1282,32 @@ function EnhancedAuditLog({ projectId }: { projectId: string }) {
             Načítání...
           </span>
         )}
+        {/* B1: Full-text search input with debounce (300ms) */}
+        <div className="relative ml-auto min-w-[200px] flex-1 sm:max-w-xs">
+          <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-on-surface-variant/50" />
+          <Input
+            type="text"
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            placeholder="Hledat v audit logu…"
+            className="h-8 pl-8 pr-8 type-label-sm"
+            aria-label="Hledat v audit logu"
+          />
+          {searchInput && (
+            <button
+              type="button"
+              onClick={handleClearSearch}
+              className="absolute right-1.5 top-1/2 -translate-y-1/2 rounded-full p-1 text-on-surface-variant/60 hover:bg-surface-container-high hover:text-on-surface"
+              aria-label="Vyčistit hledání"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          )}
+        </div>
       </div>
 
-      {/* Filter controls */}
-      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
+      {/* Row 2: Filter dropdowns + date range + page size + sort */}
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-7">
         <div className="space-y-1">
           <Label className="type-label-sm text-on-surface-variant">Akce</Label>
           <Select value={actionFilter} onValueChange={handleActionFilterChange}>
@@ -1193,11 +1317,12 @@ function EnhancedAuditLog({ projectId }: { projectId: string }) {
               <SelectItem value="create">Vytvořeno</SelectItem>
               <SelectItem value="update">Upraveno</SelectItem>
               <SelectItem value="delete">Smazáno</SelectItem>
+              <SelectItem value="export">Exportováno</SelectItem>
             </SelectContent>
           </Select>
         </div>
         <div className="space-y-1">
-          <Label className="type-label-sm text-on-surface-variant">Typ entity</Label>
+          <Label className="type-label-sm text-on-surface-variant">Entita</Label>
           <Select value={entityFilter} onValueChange={handleEntityFilterChange}>
             <SelectTrigger className="h-8 type-label-sm"><SelectValue /></SelectTrigger>
             <SelectContent>
@@ -1208,8 +1333,47 @@ function EnhancedAuditLog({ projectId }: { projectId: string }) {
               <SelectItem value="Contact">Kontakt</SelectItem>
               <SelectItem value="Project">Projekt</SelectItem>
               <SelectItem value="ProjectMember">Člen</SelectItem>
+              <SelectItem value="Note">Poznámka</SelectItem>
+              <SelectItem value="Export">Export</SelectItem>
             </SelectContent>
           </Select>
+        </div>
+        {/* B7: User filter — populated from the `users` array in the API response */}
+        <div className="space-y-1">
+          <Label className="type-label-sm text-on-surface-variant">Autor</Label>
+          <Select value={userFilter} onValueChange={handleUserFilterChange}>
+            <SelectTrigger className="h-8 type-label-sm"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Vše</SelectItem>
+              {users.map((u) => (
+                <SelectItem key={u.id} value={u.id}>
+                  {u.name || u.email}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        {/* B2: Date range — Od */}
+        <div className="space-y-1">
+          <Label className="type-label-sm text-on-surface-variant">Od</Label>
+          <Input
+            type="date"
+            value={fromDate}
+            onChange={(e) => handleFromDateChange(e.target.value)}
+            className="h-8 type-label-sm"
+            aria-label="Filtr od data"
+          />
+        </div>
+        {/* B2: Date range — Do */}
+        <div className="space-y-1">
+          <Label className="type-label-sm text-on-surface-variant">Do</Label>
+          <Input
+            type="date"
+            value={toDate}
+            onChange={(e) => handleToDateChange(e.target.value)}
+            className="h-8 type-label-sm"
+            aria-label="Filtr do data"
+          />
         </div>
         <div className="space-y-1">
           <Label className="type-label-sm text-on-surface-variant">Řazení</Label>
@@ -1222,7 +1386,7 @@ function EnhancedAuditLog({ projectId }: { projectId: string }) {
           </Select>
         </div>
         <div className="space-y-1">
-          <Label className="type-label-sm text-on-surface-variant">Položek na stránku</Label>
+          <Label className="type-label-sm text-on-surface-variant">Na stránku</Label>
           <Select value={String(pageSize)} onValueChange={handlePageSizeChange}>
             <SelectTrigger className="h-8 type-label-sm"><SelectValue /></SelectTrigger>
             <SelectContent>
@@ -1268,6 +1432,15 @@ function EnhancedAuditLog({ projectId }: { projectId: string }) {
                     .join("") || "?";
                 const { date, time } = formatTimestamp(entry.createdAt);
                 const description = describeChange(entry);
+                // B4: diff-viewer branch — for update entries where
+                // both oldValue and newValue exist (with a field label).
+                const hasDiff =
+                  entry.action === "update" &&
+                  !!entry.field &&
+                  !!entry.oldValue &&
+                  !!entry.newValue;
+                // C6: deep-link target tab (if any)
+                const entityTab = ENTITY_TAB_MAP[entry.entityType];
                 return (
                   <tr key={entry.id} className="border-b border-outline-variant last:border-0 hover:bg-surface-container-high/60">
                     {/* Úkon — action + entity type badge */}
@@ -1284,12 +1457,38 @@ function EnhancedAuditLog({ projectId }: { projectId: string }) {
                     {/* Detail změny — human-readable description */}
                     <td className="px-3 py-2 align-top">
                       <div className="flex flex-col gap-0.5">
-                        {/* Entity label (name of what changed) */}
+                        {/* C6: Entity label — clickable deep-link when there's a tab mapping */}
                         {entry.entityLabel && (
-                          <span className="type-body font-medium">{entry.entityLabel}</span>
+                          entityTab ? (
+                            <button
+                              type="button"
+                              onClick={() => setActiveTab(entityTab)}
+                              className="type-body text-left font-medium text-primary hover:underline"
+                              title={`Přejít na záložku ${ENTITY_LABELS[entry.entityType] ?? entry.entityType}`}
+                            >
+                              {entry.entityLabel}
+                            </button>
+                          ) : (
+                            <span className="type-body font-medium">{entry.entityLabel}</span>
+                          )
                         )}
-                        {/* Human-readable change description */}
-                        <span className="type-label text-on-surface-variant">{description}</span>
+                        {/* B4: Diff viewer for update entries with both old & new values */}
+                        {hasDiff && entry.field ? (
+                          <div className="flex flex-wrap items-center gap-1.5">
+                            <span className="type-label-sm text-on-surface-variant/70">
+                              {FIELD_LABELS_UI[entry.field] ?? entry.field}:
+                            </span>
+                            <span className="type-label text-danger/70 line-through">
+                              {entry.oldValue}
+                            </span>
+                            <ArrowRight className="h-3 w-3 text-on-surface-variant/40" />
+                            <span className="type-label text-success/80">
+                              {entry.newValue}
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="type-label text-on-surface-variant">{description}</span>
+                        )}
                       </div>
                     </td>
                     {/* Autor — avatar + name */}
