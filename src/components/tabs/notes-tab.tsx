@@ -127,11 +127,11 @@ export function NotesTab({ projectId }: { projectId: string }) {
       >
         <div className="flex items-center gap-2">
           <StickyNote className="h-4 w-4 text-primary" />
-          <h3 className="text-sm font-semibold">Nová poznámka</h3>
+          <h3 className="type-title">Nová poznámka</h3>
         </div>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-[200px_1fr]">
           <div className="space-y-1">
-            <label htmlFor="note-author" className="text-xs font-medium text-muted-foreground">
+            <label htmlFor="note-author" className="type-label text-on-surface-variant">
               Jméno autora
             </label>
             <Input
@@ -142,12 +142,9 @@ export function NotesTab({ projectId }: { projectId: string }) {
               className="h-9 text-sm"
               maxLength={100}
             />
-            <p className="text-[10px] text-muted-foreground">
-              Jméno si pamatujeme pro příště.
-            </p>
           </div>
           <div className="space-y-1">
-            <label htmlFor="note-text" className="text-xs font-medium text-muted-foreground">
+            <label htmlFor="note-text" className="type-label text-on-surface-variant">
               Text poznámky
             </label>
             <Textarea
@@ -162,7 +159,7 @@ export function NotesTab({ projectId }: { projectId: string }) {
           </div>
         </div>
         <div className="flex items-center justify-between gap-2">
-          <p className="text-[11px] text-muted-foreground">
+          <p className="type-label text-on-surface-variant">
             {notes?.length ?? 0} {notes?.length === 1 ? "poznámka" : (notes?.length ?? 0) >= 2 && (notes?.length ?? 0) <= 4 ? "poznámky" : "poznámek"}
           </p>
           <Button
@@ -284,17 +281,17 @@ function NoteCard({
     <div className="group relative rounded-lg border bg-card p-4 shadow-sm transition-all hover:shadow-md hover-lift">
       <div className="flex items-start gap-3">
         <Avatar className="h-9 w-9 shrink-0">
-          <AvatarFallback className="bg-primary/10 text-xs font-semibold text-primary">
+          <AvatarFallback className="bg-secondary-container type-label-sm font-semibold text-secondary-container-foreground">
             {initials}
           </AvatarFallback>
         </Avatar>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="flex items-center gap-1 text-sm font-semibold">
-              <User className="h-3 w-3 text-muted-foreground" />
+            <span className="flex items-center gap-1 type-title">
+              <User className="h-3 w-3 text-on-surface-variant" />
               {note.author}
             </span>
-            <Badge variant="secondary" className="text-[10px] font-normal">
+            <Badge variant="secondary" className="type-label-sm font-normal">
               {formatDate(note.createdAt, {
                 day: "2-digit",
                 month: "2-digit",
@@ -304,7 +301,7 @@ function NoteCard({
               })}
             </Badge>
             {isEditing && (
-              <Badge variant="outline" className="text-[10px] font-normal text-info-strong">
+              <Badge variant="outline" className="type-label-sm font-normal text-info-strong">
                 úprava
               </Badge>
             )}
@@ -323,13 +320,13 @@ function NoteCard({
                 disabled={isSaving}
                 maxLength={5000}
               />
-              <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+              <div className="flex items-center gap-1.5 type-label-sm text-on-surface-variant">
                 <span>Enter = uložit · Shift+Enter = nový řádek · Esc = zrušit</span>
               </div>
             </div>
           ) : (
             <p
-              className="mt-1.5 cursor-text whitespace-pre-wrap break-words text-sm leading-relaxed text-foreground/90"
+              className="mt-1.5 cursor-text whitespace-pre-wrap break-words type-body leading-relaxed text-foreground/90"
               onClick={startEdit}
               title="Klikněte pro úpravu"
             >
@@ -346,7 +343,7 @@ function NoteCard({
               variant="ghost"
               size="icon"
               className={cn(
-                "h-7 w-7 text-muted-foreground opacity-0 transition-opacity hover:bg-info-soft/50 hover:text-info-strong group-hover:opacity-100",
+                "h-7 w-7 text-on-surface-variant opacity-0 transition-opacity hover:bg-surface-container-high hover:text-info-strong group-hover:opacity-100",
               )}
               onClick={startEdit}
               aria-label="Upravit poznámku"
@@ -360,7 +357,7 @@ function NoteCard({
                 type="button"
                 variant="ghost"
                 size="icon"
-                className="h-7 w-7 text-success hover:bg-success-soft/50 hover:text-success-strong"
+                className="h-7 w-7 text-success hover:bg-surface-container-high hover:text-success-strong"
                 onClick={commitEdit}
                 aria-label="Uložit úpravy"
                 disabled={isSaving || !draft.trim()}
@@ -375,7 +372,7 @@ function NoteCard({
                 type="button"
                 variant="ghost"
                 size="icon"
-                className="h-7 w-7 text-muted-foreground hover:bg-muted hover:text-foreground"
+                className="h-7 w-7 text-on-surface-variant hover:bg-surface-container-high hover:text-foreground"
                 onClick={cancelEdit}
                 aria-label="Zrušit úpravy"
                 disabled={isSaving}
@@ -389,7 +386,7 @@ function NoteCard({
               variant="ghost"
               size="icon"
               className={cn(
-                "h-7 w-7 text-muted-foreground opacity-0 transition-opacity hover:bg-destructive/10 hover:text-destructive group-hover:opacity-100",
+                "h-7 w-7 text-on-surface-variant opacity-0 transition-opacity hover:bg-surface-container-high hover:text-destructive group-hover:opacity-100",
                 isDeleting && "opacity-100",
               )}
               onClick={onDelete}

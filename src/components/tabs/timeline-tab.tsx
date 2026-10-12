@@ -239,17 +239,17 @@ export function TimelineTab({ projectId }: { projectId: string }) {
     <div id="timeline-root" className="space-y-4">
       {/* Controls */}
       <div id="timeline-controls" className="flex flex-wrap items-center justify-between gap-2">
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+        <div className="flex items-center gap-2 type-body text-on-surface-variant">
           <CalendarRange className="h-4 w-4" />
           <span>
             {formatDate(rangeStart)} — {formatDate(rangeEnd)}
           </span>
-          <Badge variant="secondary" className="text-[10px]">
+          <Badge variant="secondary" className="type-label-sm">
             {items.length} položek
           </Badge>
         </div>
         <div className="flex items-center gap-1">
-          <span className="mr-2 text-xs text-muted-foreground">Zoom:</span>
+          <span className="mr-2 type-label text-on-surface-variant">Zoom:</span>
           <Button
             size="sm"
             variant={zoom === "days" ? "default" : "outline"}
@@ -288,13 +288,13 @@ export function TimelineTab({ projectId }: { projectId: string }) {
             <Badge
               key={g.phase}
               variant="outline"
-              className={cn("text-[10px]", PHASE_COLORS[g.phase] ?? "")}
+              className={cn("type-label-sm", PHASE_COLORS[g.phase] ?? "")}
             >
               {g.phase} ({g.items.length})
             </Badge>
           ))}
         </div>
-        <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
+        <div className="flex items-center gap-3 type-label text-on-surface-variant">
           <span className="flex items-center gap-1">
             <span className="inline-block h-2 w-2 rounded-full bg-danger" /> Dnes
           </span>
@@ -311,8 +311,8 @@ export function TimelineTab({ projectId }: { projectId: string }) {
           <div className="overflow-x-auto" onScroll={(e) => setScrollLeft(e.currentTarget.scrollLeft)}>
             <div className="min-w-max">
               {/* Header */}
-              <div className="sticky top-0 z-20 flex border-b bg-muted/80 backdrop-blur">
-                <div className="sticky left-0 z-30 w-64 shrink-0 border-r bg-muted/80 px-3 py-2 text-xs font-semibold">
+              <div className="sticky top-0 z-20 flex border-b bg-surface-container-high backdrop-blur">
+                <div className="sticky left-0 z-30 w-64 shrink-0 border-r bg-surface-container-high px-3 py-2 type-label font-semibold">
                   Položka
                 </div>
                 <div className="flex">
@@ -321,7 +321,7 @@ export function TimelineTab({ projectId }: { projectId: string }) {
                     {headerCells.groupCells.map((c, i) => (
                       <div
                         key={i}
-                        className="border-l px-2 py-1 text-center text-[10px] font-medium"
+                        className="border-l px-2 py-1 text-center type-label-sm font-medium"
                         style={{ width: `${c.width * unitW}px` }}
                       >
                         {c.label}
@@ -332,8 +332,8 @@ export function TimelineTab({ projectId }: { projectId: string }) {
               </div>
               {/* Day subheader (only for days zoom) */}
               {zoom === "days" && headerCells.dayCells && (
-                <div className="flex border-b bg-muted/40">
-                  <div className="sticky left-0 z-30 w-64 shrink-0 border-r bg-muted/40" />
+                <div className="flex border-b bg-surface-container-low">
+                  <div className="sticky left-0 z-30 w-64 shrink-0 border-r bg-surface-container-low" />
                   <div className="flex">
                     {headerCells.dayCells.map((c, i) => {
                       const dow = new Date(rangeStart.getTime() + i * DAY_MS).getDay();
@@ -342,13 +342,13 @@ export function TimelineTab({ projectId }: { projectId: string }) {
                         <div
                           key={i}
                           className={cn(
-                            "border-l px-1 py-0.5 text-center text-[9px]",
-                            isWeekend ? "bg-danger-soft/50 text-danger dark:bg-danger-soft/60" : "text-muted-foreground",
+                            "border-l px-1 py-0.5 text-center type-label-sm",
+                            isWeekend ? "bg-danger-soft/50 text-danger dark:bg-danger-soft/60" : "text-on-surface-variant",
                           )}
                           style={{ width: `${unitW}px` }}
                         >
                           <div className="font-medium">{c.label}</div>
-                          <div className="text-[8px] opacity-60">{c.sub}</div>
+                          <div className="type-label-sm opacity-60">{c.sub}</div>
                         </div>
                       );
                     })}
@@ -363,7 +363,7 @@ export function TimelineTab({ projectId }: { projectId: string }) {
                     className="pointer-events-none absolute top-0 bottom-0 z-10 border-l-2 border-dashed border-danger"
                     style={{ left: `calc(16rem + ${todayOffset * unitW}px)` }}
                   >
-                    <div className="absolute -top-0.5 left-1 whitespace-nowrap rounded bg-danger px-1 text-[9px] text-white">
+                    <div className="absolute -top-0.5 left-1 whitespace-nowrap rounded bg-danger px-1 type-label-sm text-white">
                       Dnes
                     </div>
                   </div>
@@ -372,8 +372,8 @@ export function TimelineTab({ projectId }: { projectId: string }) {
                 {phaseGroups.map((group) => (
                   <div key={group.phase}>
                     {/* Phase label row */}
-                    <div className="flex border-b bg-muted/20">
-                      <div className="sticky left-0 z-20 w-64 shrink-0 border-r bg-muted/20 px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
+                    <div className="flex border-b bg-surface-container-low">
+                      <div className="sticky left-0 z-20 w-64 shrink-0 border-r bg-surface-container-low px-3 py-1 type-overline text-on-surface-variant">
                         {group.phase}
                       </div>
                       <div className="flex-1" />
@@ -393,7 +393,7 @@ export function TimelineTab({ projectId }: { projectId: string }) {
                       const isActive = start <= today && end >= today;
 
                       return (
-                        <div key={it.id} className="flex border-b hover:bg-muted/10">
+                        <div key={it.id} className="flex border-b hover:bg-surface-container-high/60">
                           <div className="sticky left-0 z-20 w-64 shrink-0 border-r bg-card px-3 py-2">
                             <div className="flex items-center gap-1.5">
                               {it.completed ? (
@@ -401,13 +401,13 @@ export function TimelineTab({ projectId }: { projectId: string }) {
                               ) : it.required ? (
                                 <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-danger" />
                               ) : (
-                                <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-muted-foreground/30" />
+                                <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-on-surface-variant/30" />
                               )}
                               <div className="min-w-0">
-                                <div className={cn("truncate text-xs font-medium", it.completed && "line-through decoration-success/50")}>
+                                <div className={cn("truncate type-body font-medium", it.completed && "line-through decoration-success/50")}>
                                   {it.subcategory || it.category}
                                 </div>
-                                <div className="truncate text-[10px] text-muted-foreground">
+                                <div className="truncate type-label-sm text-on-surface-variant">
                                   {it.category}
                                   {it.planCost ? ` · ${formatCzk(it.planCost)}` : ""}
                                 </div>
@@ -450,13 +450,13 @@ export function TimelineTab({ projectId }: { projectId: string }) {
               Nejbližší akce
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-1 text-xs">
+          <CardContent className="space-y-1 type-body">
             {data?.alerts.upcoming.slice(0, 3).map((it) => (
               <div key={it.id} className="flex items-center justify-between">
                 <span className="truncate">{it.subcategory || it.category}</span>
                 <span className="ml-2 font-medium text-info">{formatDate(it.dateFrom)}</span>
               </div>
-            )) ?? <p className="text-muted-foreground">Žádné blížící se termíny</p>}
+            )) ?? <p className="text-on-surface-variant">Žádné blížící se termíny</p>}
           </CardContent>
         </Card>
         <Card>
@@ -466,13 +466,13 @@ export function TimelineTab({ projectId }: { projectId: string }) {
               Zpožděné
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-1 text-xs">
+          <CardContent className="space-y-1 type-body">
             {data?.alerts.overdue.slice(0, 3).map((it) => (
               <div key={it.id} className="flex items-center justify-between">
                 <span className="truncate">{it.subcategory || it.category}</span>
                 <span className="ml-2 font-medium text-danger">{formatDate(it.dateTo)}</span>
               </div>
-            )) ?? <p className="text-muted-foreground">Žádné zpožděné položky</p>}
+            )) ?? <p className="text-on-surface-variant">Žádné zpožděné položky</p>}
           </CardContent>
         </Card>
         <Card>
@@ -482,13 +482,13 @@ export function TimelineTab({ projectId }: { projectId: string }) {
               K naplánování
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-1 text-xs">
+          <CardContent className="space-y-1 type-body">
             {data?.alerts.unscheduled.slice(0, 3).map((it) => (
               <div key={it.id} className="flex items-center justify-between">
                 <span className="truncate">{it.subcategory || it.category}</span>
                 <span className="ml-2 font-medium text-warning">{formatCzk(it.planCost)}</span>
               </div>
-            )) ?? <p className="text-muted-foreground">Vše naplánováno</p>}
+            )) ?? <p className="text-on-surface-variant">Vše naplánováno</p>}
           </CardContent>
         </Card>
       </div>
@@ -562,7 +562,7 @@ function GanttBar({
       }}
       title={`${item.subcategory || item.category}\n${formatDate(item.dateFrom)} — ${formatDate(item.dateTo)}\n${formatCzk(item.planCost)}${item.completed ? " · Hotovo" : ""}`}
     >
-      <span className="flex-1 truncate px-1.5 text-[10px] font-medium">
+      <span className="flex-1 truncate px-1.5 type-label-sm font-medium">
         {item.subcategory || item.category}
         {item.completed && " ✓"}
       </span>
