@@ -98,7 +98,7 @@ export function TopBar() {
     <>
       <header
         className={cn(
-          "sticky top-0 z-40 flex h-14 shrink-0 items-center gap-1.5 px-2 transition-all duration-200 sm:px-3",
+          "sticky top-0 z-40 flex h-16 shrink-0 items-center gap-1.5 px-2 transition-all duration-200 sm:h-14 sm:px-3",
           // MD3 TopAppBar: always has border + subtle shadow for visual consistency
           // with the sidebar (both use tonal surface scale). When scrolled,
           // the tonal elevation increases slightly (surface-container-high)
@@ -108,13 +108,13 @@ export function TopBar() {
             : "bg-surface-container-low border-b border-outline-variant shadow-sm",
         )}
       >
-        {/* Hamburger — same position mobile + desktop */}
+        {/* Hamburger — larger touch target on mobile (44px → 36px on desktop) */}
         <Button
           variant="ghost"
           size="icon"
           onClick={toggleSidebar}
           aria-label={sidebarOpen ? "Zavřít panel" : "Otevřít panel"}
-          className="h-9 w-9 shrink-0 state-layer-on-surface rounded-full"
+          className="h-11 w-11 shrink-0 state-layer-on-surface rounded-full sm:h-9 sm:w-9"
         >
           <Menu className="h-5 w-5" />
         </Button>
@@ -125,12 +125,12 @@ export function TopBar() {
           <Popover open={projectOpen} onOpenChange={setProjectOpen}>
             <PopoverTrigger asChild>
               <button
-                className="flex h-7 items-center gap-1 rounded-full px-1.5 text-sm font-semibold leading-none state-layer-on-surface"
+                className="flex h-9 items-center gap-1 rounded-full px-2 text-sm font-semibold leading-none state-layer-on-surface sm:h-7 sm:px-1.5"
               >
                 <span className="max-w-[120px] truncate sm:max-w-[180px]">
                   {selectedProject ? selectedProject.name : "Vyberte projekt"}
                 </span>
-                <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+                <ChevronDown className="h-4 w-4 text-muted-foreground sm:h-3.5 sm:w-3.5" />
               </button>
             </PopoverTrigger>
             <PopoverContent
@@ -227,15 +227,15 @@ export function TopBar() {
           <span className="truncate">Hledat v projektu…</span>
         </button>
 
-        {/* Mobile search icon (compact) */}
+        {/* Mobile search icon — larger touch target (44px) */}
         <Button
           variant="ghost"
           size="icon"
           onClick={() => setGlobalSearchOpen(true)}
           aria-label="Hledat"
-          className="h-9 w-9 shrink-0 state-layer-on-surface rounded-full md:hidden"
+          className="h-11 w-11 shrink-0 state-layer-on-surface rounded-full sm:h-9 sm:w-9 md:hidden"
         >
-          <Search className="h-4 w-4" />
+          <Search className="h-5 w-5 sm:h-4 sm:w-4" />
         </Button>
 
         {/* Spacer (right) — balances layout on desktop */}
@@ -246,7 +246,7 @@ export function TopBar() {
           <button
             onClick={() => setActiveTab("dashboard")}
             className={cn(
-              "flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs transition-colors state-layer-on-surface",
+              "flex shrink-0 items-center gap-1.5 rounded-full px-3 py-2 text-xs transition-colors state-layer-on-surface sm:py-1.5",
               isScrolled
                 ? "bg-surface-container-high"
                 : "bg-surface-container",
@@ -274,11 +274,11 @@ export function TopBar() {
           </button>
         )}
 
-        {/* Auth placeholder — feature flag via constant */}
+        {/* Auth placeholder — larger touch target on mobile */}
         <Button
           variant="ghost"
           size="icon"
-          className="h-9 w-9 shrink-0 state-layer-on-surface rounded-full"
+          className="h-11 w-11 shrink-0 state-layer-on-surface rounded-full sm:h-9 sm:w-9"
           aria-label="Účet"
           title="Přihlášení (brzy)"
           onClick={() => toast.info("Přihlášení bude brzy dostupné")}
