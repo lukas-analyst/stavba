@@ -614,11 +614,52 @@ model Contact {
   /// Budget items / tasks assigned to this contact (the primary
   /// contractor/craftsman). Null FK items not included (Prisma default).
   budgetItems BudgetItem[]
+  /// Persons associated with this contact (1:N) — e.g., multiple
+  /// employees of a company, each with their own phone/email.
+  persons     ContactPerson[]
 
   @@index([projectId])
   @@index([type])
   @@index([ico])
   @@map("contacts")
+}
+
+/// Person associated with a Contact (1:N). A contact (company/craftsman)
+/// can have multiple people — e.g., a foreman, an accountant, a project
+/// manager — each with their own direct phone and email.
+///
+/// Design notes:
+///   - Separate table (not JSON array in Contact) for query efficiency
+///     and partial updates.
+///   - CASCADE delete: removing a contact removes its persons.
+///   - Indexed on contactId for O(log n) lookup.
+///   - sortOrder supports manual reordering in the UI.
+model ContactPerson {
+  id        String   @id @default(cuid())
+  /// FK to Contact — the contact this person belongs to
+  contactId String
+  contact   Contact  @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  /// First name (e.g., "Pavel")
+  firstName String
+  /// Last name (e.g., "Novák")
+  lastName  String
+  /// Direct phone number (optional, may inherit from parent contact)
+  phone     String?
+  /// Direct email address (optional, may inherit from parent contact)
+  email     String?
+  /// Role/position within the contact's organization (e.g., "Vedoucí", "Účetní")
+  role      String?
+  /// Manual sort order (for reordering persons in UI)
+  sortOrder Int     @default(0)
+  /// When this person was created
+  createdAt DateTime @default(now())
+  /// When this person was last updated
+  updatedAt DateTime @updatedAt
+
+  @@index([contactId])
+  @@index([sortOrder])
+  @@index([contactId, sortOrder])
+  @@map("contact_persons")
 }
 
 /// Financial transaction (payment, invoice, receipt). Linked to a

@@ -36,6 +36,12 @@ export async function PATCH(
               : Number(body.rating)
             : undefined,
       },
+      include: {
+        persons: {
+          orderBy: { sortOrder: "asc" },
+          select: { id: true, firstName: true, lastName: true, phone: true, email: true, role: true, sortOrder: true },
+        },
+      },
     });
 
     return NextResponse.json(updated);
