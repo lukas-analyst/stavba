@@ -84,6 +84,7 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { BudgetItemDialog } from "@/components/budget-item-dialog";
 import { EmptyStateBox } from "@/components/empty-state-box";
+import { InlineNumber, InlineDate } from "@/components/ui/inline-editors";
 import { FilterChip, FilterChipGroup } from "@/components/ui/filter-chip";
 import { SegmentedButton } from "@/components/ui/segmented-button";
 import { useAppStore } from "@/lib/store";
@@ -1867,108 +1868,9 @@ function DetailPanelRow({
 }
 
 // ===== Inline editors =====
-function InlineNumber({
-  value,
-  onCommit,
-  suffix,
-  className,
-}: {
-  value: number | null;
-  onCommit: (v: number | null) => void;
-  suffix?: string;
-  className?: string;
-}) {
-  const [editing, setEditing] = useState(false);
-  const [draft, setDraft] = useState(value?.toString() ?? "");
-
-  if (editing) {
-    return (
-      <Input
-        autoFocus
-        value={draft}
-        onChange={(e) => setDraft(e.target.value)}
-        onBlur={() => {
-          setEditing(false);
-          const n = draft.trim() === "" ? null : Number(draft.replace(",", "."));
-          if (n !== value && (n === null || !isNaN(n))) onCommit(n);
-        }}
-        onKeyDown={(e) => {
-          if (e.key === "Enter") (e.target as HTMLInputElement).blur();
-          if (e.key === "Escape") {
-            setDraft(value?.toString() ?? "");
-            setEditing(false);
-          }
-        }}
-        className={cn("h-7 w-20 text-xs", className)}
-      />
-    );
-  }
-  return (
-    <button
-      onClick={() => {
-        setDraft(value?.toString() ?? "");
-        setEditing(true);
-      }}
-      className={cn(
-        "block w-full rounded px-1 py-0.5 text-right text-xs hover:bg-muted",
-        className,
-      )}
-    >
-      {value === null || value === undefined ? (
-        <span className="text-muted-foreground/50">—</span>
-      ) : (
-        <>{formatNumber(value, suffix ?? "")}</>
-      )}
-    </button>
-  );
-}
-
-function InlineDate({
-  value,
-  onCommit,
-}: {
-  value: string | null;
-  onCommit: (v: string | null) => void;
-}) {
-  const [editing, setEditing] = useState(false);
-  const [draft, setDraft] = useState(value ? value.substring(0, 10) : "");
-
-  if (editing) {
-    return (
-      <Input
-        type="date"
-        autoFocus
-        value={draft}
-        onChange={(e) => setDraft(e.target.value)}
-        onBlur={() => {
-          setEditing(false);
-          if (draft !== (value ? value.substring(0, 10) : "")) {
-            onCommit(draft || null);
-          }
-        }}
-        onKeyDown={(e) => {
-          if (e.key === "Enter") (e.target as HTMLInputElement).blur();
-          if (e.key === "Escape") {
-            setDraft(value ? value.substring(0, 10) : "");
-            setEditing(false);
-          }
-        }}
-        className="h-7 w-36 text-xs"
-      />
-    );
-  }
-  return (
-    <button
-      onClick={() => {
-        setDraft(value ? value.substring(0, 10) : "");
-        setEditing(true);
-      }}
-      className="block w-full rounded px-1 py-0.5 text-left text-xs hover:bg-muted"
-    >
-      {value ? formatDate(value) : <span className="text-muted-foreground/50">—</span>}
-    </button>
-  );
-}
+// InlineNumber and InlineDate are now imported from @/components/ui/inline-editors
+// (shared with Payments and Time tabs for consistency).
+// InlineTextarea is still local because it's only used in the budget detail panel.
 
 function InlineTextarea({
   value,

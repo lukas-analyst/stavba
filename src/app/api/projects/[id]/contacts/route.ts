@@ -19,6 +19,19 @@ const CONTACT_SELECT = {
   createdAt: true,
   updatedAt: true,
   _count: { select: { timeEntries: true, payments: true } },
+  // Associated persons (1:N) — ordered by sortOrder for stable display.
+  persons: {
+    orderBy: { sortOrder: "asc" },
+    select: {
+      id: true,
+      firstName: true,
+      lastName: true,
+      phone: true,
+      email: true,
+      role: true,
+      sortOrder: true,
+    },
+  },
 } as const;
 
 // GET /api/projects/[id]/contacts - list all contacts for a project

@@ -61,6 +61,7 @@ import {
 import { formatNumber, formatDate, WORKER_TYPES, workerTypeLabel } from "@/lib/format";
 import { toast } from "sonner";
 import { EmptyStateBox } from "@/components/empty-state-box";
+import { InlineDate, InlineNumber } from "@/components/ui/inline-editors";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { useLastValue } from "@/hooks/use-last-value";
@@ -308,10 +309,10 @@ export function TimeTab({ projectId }: { projectId: string }) {
               <TableRow className="sticky top-0 z-30 bg-surface-container-high">
                 <TableHead className="w-16"></TableHead>
                 <TableHead className="w-28">Datum</TableHead>
-                <TableHead className="min-w-[160px]">Pracovník</TableHead>
-                <TableHead className="w-32">Typ</TableHead>
                 <TableHead className="min-w-[200px]">Položka rozpočtu</TableHead>
-                <TableHead className="min-w-[180px]">Popis práce</TableHead>
+                <TableHead className="min-w-[180px]">Popis</TableHead>
+                <TableHead className="w-32">Typ</TableHead>
+                <TableHead className="min-w-[160px]">Kontakt</TableHead>
                 <TableHead className="text-right">Hodiny</TableHead>
                 <TableHead className="w-8"></TableHead>
               </TableRow>
@@ -322,6 +323,7 @@ export function TimeTab({ projectId }: { projectId: string }) {
                   key={t.id}
                   entry={t}
                   onEdit={() => setEditEntry(t)}
+                  updateTimeEntry={updateTimeEntry}
                   onDelete={async () => {
                     try {
                       await deleteTimeEntry.mutateAsync(t.id);
@@ -369,13 +371,21 @@ function TimeRow({
   entry,
   onEdit,
   onDelete,
+  updateTimeEntry,
 }: {
   entry: TimeEntry;
   onEdit: () => void;
   onDelete: () => void;
+  updateTimeEntry?: ReturnType<typeof useUpdateTimeEntry>;
 }) {
   const [confirm, setConfirm] = useState(false);
   const w = workerTypeLabel(entry.workerType);
+
+  // Inline update helper — patches a single field without opening the edit dialog.
+  const update = (field: keyof TimeEntry, value: unknown) => {
+    updateTimeEntry?.mutate({ id: entry.id, data: { [field]: value } });
+  };
+
   return (
     <TableRow
       className="group cursor-pointer hover:bg-muted/30 cv-row"
@@ -391,25 +401,18 @@ function TimeRow({
           × {entry.workerCount}
         </Badge>
       </TableCell>
-      <TableCell className="whitespace-nowrap type-label text-on-surface-variant">
+      <TableCell className="whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
         <div className="flex flex-col">
-          <span>{formatDate(entry.date)}</span>
+          <InlineDate
+            value={entry.date}
+            onCommit={(v) => update("date", v)}
+          />
           {entry.dateTo && (
             <span className="type-label text-time">
               → {formatDate(entry.dateTo)}
             </span>
           )}
         </div>
-      </TableCell>
-      <TableCell>
-        <div className="flex items-center gap-1.5">
-          <span className="type-body font-medium">{entry.workerName}</span>
-        </div>
-      </TableCell>
-      <TableCell>
-        <Badge variant="outline" className="type-label-sm">
-          {w.emoji} {w.label}
-        </Badge>
       </TableCell>
       <TableCell>
         <div className="flex flex-col">
@@ -424,8 +427,23 @@ function TimeRow({
       <TableCell className="type-label text-on-surface-variant">
         {entry.description || "—"}
       </TableCell>
-      <TableCell className="text-right type-body font-semibold text-time tabular-nums">
-        {formatNumber(entry.hours, " h")}
+      <TableCell>
+        <Badge variant="outline" className="type-label-sm">
+          {w.emoji} {w.label}
+        </Badge>
+      </TableCell>
+      <TableCell>
+        <div className="flex items-center gap-1.5">
+          <span className="type-body font-medium">{entry.workerName}</span>
+        </div>
+      </TableCell>
+      <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
+        <InlineNumber
+          value={entry.hours}
+          onCommit={(v) => update("hours", v)}
+          suffix=" h"
+          className="font-semibold text-time"
+        />
       </TableCell>
       <TableCell
         className="text-right"
