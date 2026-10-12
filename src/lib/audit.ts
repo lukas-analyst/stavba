@@ -59,6 +59,30 @@ const FIELD_LABELS: Record<string, string> = {
 function translateValue(field: string, val: unknown): string {
   if (val === null || val === undefined || val === "") return "—";
 
+  // Handle objects (e.g., contact, budgetItem relations) — extract readable name
+  if (typeof val === "object") {
+    const obj = val as Record<string, unknown>;
+    // Try common name fields
+    if (typeof obj.name === "string") return obj.name;
+    if (typeof obj.subcategory === "string") return obj.subcategory;
+    if (typeof obj.category === "string") return obj.category;
+    if (typeof obj.workerName === "string") return obj.workerName;
+    if (typeof obj.author === "string") return obj.author;
+    if (typeof obj.email === "string") return obj.email;
+    if (typeof obj.firstName === "string" && typeof obj.lastName === "string") {
+      return `${obj.firstName} ${obj.lastName}`;
+    }
+    // For objects with just an id, show the id (short)
+    if (typeof obj.id === "string") return `ID: ${obj.id.slice(-8)}`;
+    // Fallback: try JSON stringify but truncate
+    try {
+      const json = JSON.stringify(obj);
+      return json.length > 60 ? json.slice(0, 60) + "…" : json;
+    } catch {
+      return "[objekt]";
+    }
+  }
+
   const str = String(val);
 
   // Boolean fields → Czech
