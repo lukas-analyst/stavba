@@ -85,7 +85,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
       <div id="kpi-cards" className={cn("grid grid-cols-2 gap-2 sm:gap-3 md:grid-cols-3 lg:grid-cols-6 lg:gap-4")}>
         <Card id="kpi-plan" className="rounded-2xl border-success/40 bg-gradient-to-br from-success-soft to-white shadow-sm dark:border-success/30 dark:from-success-soft dark:to-card hover-lift">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="type-overline text-muted-foreground">
+            <CardTitle className="type-overline text-on-surface-variant">
               Plán rozpočtu
             </CardTitle>
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-success-soft">
@@ -94,7 +94,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
           </CardHeader>
           <CardContent>
             <div className="type-display tabular-nums">{formatCzk(totals.planTotal)}</div>
-            <p className="mt-1 text-xs text-muted-foreground">
+            <p className="mt-1 type-label text-on-surface-variant">
               {totals.itemCount} položek · {totals.requiredCount} nutných
             </p>
           </CardContent>
@@ -102,7 +102,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
 
         <Card id="kpi-burn" className="rounded-2xl border-warning/40 bg-gradient-to-br from-warning-soft to-white shadow-sm dark:border-warning-strong/40 dark:from-warning-soft dark:to-card hover-lift cursor-pointer" onClick={() => setActiveTab("payments")}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="type-overline text-muted-foreground">
+            <CardTitle className="type-overline text-on-surface-variant">
               Čerpání
             </CardTitle>
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-warning-soft">
@@ -116,11 +116,11 @@ export function DashboardTab({ projectId }: { projectId: string }) {
                 <span className={`font-semibold ${burnColor}`}>
                   {burnRate.toFixed(1)} %
                 </span>
-                <span className="text-muted-foreground">
+                <span className="text-on-surface-variant">
                   z {formatCzk(totals.planTotal)}
                 </span>
               </div>
-              <div className="h-1.5 overflow-hidden rounded-full bg-muted">
+              <div className="h-1.5 overflow-hidden rounded-full bg-surface-container-high">
                 <div
                   className={cn(
                     "h-full rounded-full transition-all",
@@ -135,7 +135,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
 
         <Card id="kpi-remaining" className={cn("rounded-2xl shadow-sm hover-lift cursor-pointer", totals.remaining >= 0 ? "border-info/40 bg-gradient-to-br from-info-soft to-white dark:border-info-strong/40 dark:from-info-soft dark:to-card" : "border-danger/40 bg-gradient-to-br from-danger-soft to-white dark:border-danger-strong/40 dark:from-danger-soft dark:to-card")} onClick={() => goToBudget({ type: "active" })}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="type-overline text-muted-foreground">
+            <CardTitle className="type-overline text-on-surface-variant">
               Zbývá v rozpočtu
             </CardTitle>
             <div className={cn("flex h-8 w-8 items-center justify-center rounded-lg", totals.remaining >= 0 ? "bg-info-soft" : "bg-danger-soft")}>
@@ -150,7 +150,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
             <div className={`type-display tabular-nums ${totals.remaining < 0 ? "text-danger" : ""}`}>
               {formatCzk(totals.remaining)}
             </div>
-            <p className="mt-1 text-xs text-muted-foreground">
+            <p className="mt-1 type-label text-on-surface-variant">
               Nejhorší scénář: {formatCzk(totals.worstCase)}
             </p>
           </CardContent>
@@ -158,7 +158,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
 
         <Card id="kpi-hours" className="rounded-2xl border-time/40 bg-gradient-to-br from-time-soft to-white shadow-sm dark:border-time/30 dark:from-time-soft dark:to-card hover-lift cursor-pointer" onClick={() => setActiveTab("time")}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="type-overline text-muted-foreground">
+            <CardTitle className="type-overline text-on-surface-variant">
               Odpracováno
             </CardTitle>
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-time-soft">
@@ -167,7 +167,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
           </CardHeader>
           <CardContent>
             <div className="type-display tabular-nums">{formatNumber(totals.hoursTotal, " h")}</div>
-            <p className="mt-1 text-xs text-muted-foreground">
+            <p className="mt-1 type-label text-on-surface-variant">
               Plán: {formatNumber(totals.daysPlanned, " dní")}
             </p>
           </CardContent>
@@ -175,7 +175,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
 
         <Card id="kpi-saved" className="rounded-2xl border-success/50 bg-gradient-to-br from-success-soft to-white shadow-sm dark:border-success-strong/40 dark:from-success-soft dark:to-card hover-lift cursor-pointer" onClick={() => goToBudget({ type: "saved" })}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="type-overline text-muted-foreground">
+            <CardTitle className="type-overline text-on-surface-variant">
               Ušetřeno
             </CardTitle>
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-success-soft">
@@ -186,7 +186,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
             <div className="type-display tabular-nums text-success">
               {formatCzk(totals.savedTotal)}
             </div>
-            <p className="mt-1 text-xs text-muted-foreground">
+            <p className="mt-1 type-label text-on-surface-variant">
               Od dokončených položek
             </p>
           </CardContent>
@@ -194,7 +194,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
 
         <Card id="kpi-completed" className="rounded-2xl border-subsidy/40 bg-gradient-to-br from-subsidy-soft to-white shadow-sm dark:border-subsidy-strong/40 dark:from-subsidy-soft dark:to-card hover-lift cursor-pointer" onClick={() => goToBudget({ type: "completion", value: "done" })}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="type-overline text-muted-foreground">
+            <CardTitle className="type-overline text-on-surface-variant">
               Hotovo
             </CardTitle>
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-subsidy-soft">
@@ -205,7 +205,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
             <div className="type-display tabular-nums">
               {totals.completedCount} / {totals.itemCount}
             </div>
-            <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-muted">
+            <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-surface-container-high">
               <div
                 className="h-full rounded-full bg-subsidy"
                 style={{
@@ -316,7 +316,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
                 <TrendingUp className={cn("h-5 w-5", totals.projectedOverrun > 0 ? "text-danger" : "text-success")} />
                 <CardTitle className="type-title-lg">Predikce konečných nákladů</CardTitle>
               </div>
-              <Badge variant="outline" className="text-[10px]">
+              <Badge variant="outline" className="type-label-sm">
                 na základě {totals.completedCount} dokončených
               </Badge>
             </div>
@@ -327,23 +327,23 @@ export function DashboardTab({ projectId }: { projectId: string }) {
           <CardContent>
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
               <div className="space-y-0.5">
-                <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Dosud čerpáno</div>
+                <div className="type-label-sm uppercase tracking-wide text-on-surface-variant">Dosud čerpáno</div>
                 <div className="text-lg font-bold tabular-nums">{formatCzk(totals.actualTotal)}</div>
               </div>
               <div className="space-y-0.5">
-                <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Odhad zbytku</div>
+                <div className="type-label-sm uppercase tracking-wide text-on-surface-variant">Odhad zbytku</div>
                 <div className="text-lg font-bold tabular-nums text-warning">
                   {formatCzk(totals.projectedFinal - totals.actualTotal)}
                 </div>
               </div>
               <div className="space-y-0.5">
-                <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Odhad celkem</div>
+                <div className="type-label-sm uppercase tracking-wide text-on-surface-variant">Odhad celkem</div>
                 <div className={cn("text-lg font-bold tabular-nums", totals.projectedOverrun > 0 ? "text-danger" : "text-success")}>
                   {formatCzk(totals.projectedFinal)}
                 </div>
               </div>
               <div className="space-y-0.5">
-                <div className="text-[10px] uppercase tracking-wide text-muted-foreground">vs. Plán</div>
+                <div className="type-label-sm uppercase tracking-wide text-on-surface-variant">vs. Plán</div>
                 <div className={cn("text-lg font-bold tabular-nums", totals.projectedOverrun > 0 ? "text-danger" : "text-success")}>
                   {totals.projectedOverrun > 0 ? "+" : ""}
                   {formatCzk(totals.projectedOverrun)}
@@ -352,13 +352,13 @@ export function DashboardTab({ projectId }: { projectId: string }) {
             </div>
             {/* Visual comparison bar */}
             <div className="mt-4 space-y-1.5">
-              <div className="flex items-center justify-between text-[11px]">
-                <span className="text-muted-foreground">Plán → Odhad</span>
+              <div className="flex items-center justify-between type-label">
+                <span className="text-on-surface-variant">Plán → Odhad</span>
                 <span className={cn("font-semibold", totals.projectedOverrun > 0 ? "text-danger" : "text-success")}>
                   {totals.planTotal > 0 ? ((totals.projectedFinal / totals.planTotal) * 100).toFixed(0) : 0} % plánu
                 </span>
               </div>
-              <div className="relative h-3 overflow-hidden rounded-full bg-muted">
+              <div className="relative h-3 overflow-hidden rounded-full bg-surface-container-high">
                 {/* Plan marker (100%) */}
                 <div
                   className="absolute top-0 bottom-0 w-0.5 bg-foreground/40"
@@ -377,7 +377,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
                   />
                 </div>
               </div>
-              <div className="flex items-center gap-3 text-[10px] text-muted-foreground">
+              <div className="flex items-center gap-3 type-label-sm text-on-surface-variant">
                 <span className="flex items-center gap-1">
                   <span className="inline-block h-2 w-2 rounded-sm bg-warning" /> Čerpáno
                 </span>
@@ -444,11 +444,11 @@ export function DashboardTab({ projectId }: { projectId: string }) {
                     </div>
                     <div className="flex shrink-0 items-center gap-1">
                       {p.completedCount > 0 && (
-                        <Badge variant="outline" className="h-4 px-1 text-[10px] text-success-strong">
+                        <Badge variant="outline" className="h-4 px-1 type-label-sm text-success-strong">
                           {p.completedCount}/{p.count} ✓
                         </Badge>
                       )}
-                      <Badge variant="secondary" className="h-4 px-1 text-[10px]">
+                      <Badge variant="secondary" className="h-4 px-1 type-label-sm">
                         {p.count}
                       </Badge>
                     </div>
@@ -456,13 +456,13 @@ export function DashboardTab({ projectId }: { projectId: string }) {
                   <div className="space-y-1.5">
                     {/* Financial progress */}
                     <div className="flex items-baseline justify-between text-xs">
-                      <span className="text-muted-foreground">Finance</span>
+                      <span className="text-on-surface-variant">Finance</span>
                       <span className="font-medium tabular-nums">
                         {formatCzk(p.actual)}{" "}
-                        <span className="text-muted-foreground">/ {formatCzk(p.plan)}</span>
+                        <span className="text-on-surface-variant">/ {formatCzk(p.plan)}</span>
                       </span>
                     </div>
-                    <div className="h-2 overflow-hidden rounded-full bg-muted">
+                    <div className="h-2 overflow-hidden rounded-full bg-surface-container-high">
                       <div
                         className={cn(
                           "h-full rounded-full transition-all",
@@ -475,13 +475,13 @@ export function DashboardTab({ projectId }: { projectId: string }) {
                     {p.plannedHours > 0 && (
                       <>
                         <div className="flex items-baseline justify-between text-xs">
-                          <span className="text-muted-foreground">Čas</span>
+                          <span className="text-on-surface-variant">Čas</span>
                           <span className="font-medium tabular-nums">
                             {formatNumber(p.hours, " h")}{" "}
-                            <span className="text-muted-foreground">/ {formatNumber(p.plannedHours, " h")}</span>
+                            <span className="text-on-surface-variant">/ {formatNumber(p.plannedHours, " h")}</span>
                           </span>
                         </div>
-                        <div className="h-2 overflow-hidden rounded-full bg-muted">
+                        <div className="h-2 overflow-hidden rounded-full bg-surface-container-high">
                           <div
                             className={cn(
                               "h-full rounded-full transition-all",
@@ -493,8 +493,8 @@ export function DashboardTab({ projectId }: { projectId: string }) {
                       </>
                     )}
                     {/* Overrun indicators */}
-                    <div className="flex items-center justify-between pt-0.5 text-[10px]">
-                      <span className="text-muted-foreground">
+                    <div className="flex items-center justify-between pt-0.5 type-label-sm">
+                      <span className="text-on-surface-variant">
                         {burn.toFixed(0)}% fin
                         {p.plannedHours > 0 && ` · ${timeBurn.toFixed(0)}% čas`}
                       </span>
@@ -544,7 +544,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
             {/* Hlavní číslo */}
             <div className="flex items-end justify-between gap-4">
               <div>
-                <div className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                <div className="type-label-sm uppercase tracking-wide text-on-surface-variant">
                   Projekce konce
                 </div>
                 <div className={cn(
@@ -564,7 +564,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
                 )}
               </div>
               <div className="text-right">
-                <div className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                <div className="type-label-sm uppercase tracking-wide text-on-surface-variant">
                   Prům. přesah položky
                 </div>
                 <div className={cn(
@@ -573,7 +573,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
                 )}>
                   {((totals.avgOverrunRatio - 1) * 100).toFixed(0)}%
                 </div>
-                <div className="text-[10px] text-muted-foreground">
+                <div className="type-label-sm text-on-surface-variant">
                   nad plán dle dokončených
                 </div>
               </div>
@@ -590,8 +590,8 @@ export function DashboardTab({ projectId }: { projectId: string }) {
                 const pct = (row.value / maxVal) * 100;
                 return (
                   <div key={row.label} className="flex items-center gap-3">
-                    <div className="w-16 text-xs text-muted-foreground">{row.label}</div>
-                    <div className="h-5 flex-1 overflow-hidden rounded bg-muted">
+                    <div className="w-16 type-label text-on-surface-variant">{row.label}</div>
+                    <div className="h-5 flex-1 overflow-hidden rounded bg-surface-container-high">
                       <div
                         className={cn("h-full rounded transition-all", row.color)}
                         style={{ width: `${pct}%` }}
@@ -658,18 +658,18 @@ export function DashboardTab({ projectId }: { projectId: string }) {
                     intensity > 0.8 ? "bg-danger"
                     : intensity > 0.5 ? "bg-warning"
                     : intensity > 0.1 ? "bg-success"
-                    : "bg-muted";
+                    : "bg-surface-container-high";
                   return (
                     <div key={p.phase} className="space-y-1">
                       <div className="flex items-center justify-between text-xs">
                         <span className="font-medium">{p.phase}</span>
-                        <span className="text-muted-foreground tabular-nums">
+                        <span className="text-on-surface-variant tabular-nums">
                           {p.count} položek
                         </span>
                       </div>
                       {/* Heat bar */}
                       <div className="flex items-center gap-2">
-                        <div className="h-3 flex-1 overflow-hidden rounded-full bg-muted">
+                        <div className="h-3 flex-1 overflow-hidden rounded-full bg-surface-container-high">
                           <div
                             className={cn("h-full rounded-full transition-all", heatColor)}
                             style={{ width: `${Math.min(burnPct, 100)}%` }}
@@ -677,8 +677,8 @@ export function DashboardTab({ projectId }: { projectId: string }) {
                           />
                         </div>
                         <span className={cn(
-                          "w-12 text-right text-[11px] font-semibold tabular-nums",
-                          burnPct > 100 ? "text-danger" : burnPct > 80 ? "text-warning" : "text-muted-foreground",
+                          "w-12 text-right type-label font-semibold tabular-nums",
+                          burnPct > 100 ? "text-danger" : burnPct > 80 ? "text-warning" : "text-on-surface-variant",
                         )}>
                           {burnPct.toFixed(0)}%
                         </span>
@@ -686,14 +686,14 @@ export function DashboardTab({ projectId }: { projectId: string }) {
                       {/* Completion bar (thinner, below) */}
                       {p.count > 0 && (
                         <div className="flex items-center gap-2">
-                          <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted/50">
+                          <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-surface-container-high/50">
                             <div
                               className="h-full rounded-full bg-subsidy transition-all"
                               style={{ width: `${completionPct}%` }}
                               title={`${p.completedCount}/${p.count} dokončeno (${completionPct.toFixed(0)}%)`}
                             />
                           </div>
-                          <span className="w-12 text-right text-[10px] text-muted-foreground tabular-nums">
+                          <span className="w-12 text-right type-label-sm text-on-surface-variant tabular-nums">
                             {p.completedCount}/{p.count}
                           </span>
                         </div>
@@ -730,7 +730,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
                       <div className="flex min-w-0 items-center gap-1.5">
                         <span className="truncate font-medium">{c.name}</span>
                         {c.role && (
-                          <span className="hidden text-muted-foreground sm:inline">· {c.role}</span>
+                          <span className="hidden text-on-surface-variant sm:inline">· {c.role}</span>
                         )}
                         {phoneInfo?.flag && (
                           <span className="text-sm leading-none" aria-hidden title={phoneInfo.countryName}>
@@ -738,14 +738,14 @@ export function DashboardTab({ projectId }: { projectId: string }) {
                           </span>
                         )}
                       </div>
-                      <div className="flex shrink-0 items-center gap-2 tabular-nums text-muted-foreground">
+                      <div className="flex shrink-0 items-center gap-2 tabular-nums text-on-surface-variant">
                         <span>{c.count} {c.count === 1 ? "položka" : c.count < 5 ? "položky" : "položek"}</span>
                         <span className="font-semibold text-foreground">{formatCzk(c.plan)}</span>
                       </div>
                     </div>
                     {/* Workload bar */}
                     <div className="flex items-center gap-2">
-                      <div className="h-2.5 flex-1 overflow-hidden rounded-full bg-muted">
+                      <div className="h-2.5 flex-1 overflow-hidden rounded-full bg-surface-container-high">
                         <div
                           className="h-full rounded-full bg-info transition-all"
                           style={{ width: `${pct}%` }}
@@ -753,14 +753,14 @@ export function DashboardTab({ projectId }: { projectId: string }) {
                         />
                       </div>
                       {c.planDays > 0 && (
-                        <span className="text-[10px] text-muted-foreground tabular-nums">
+                        <span className="type-label-sm text-on-surface-variant tabular-nums">
                           {Math.round(c.planDays)} d
                         </span>
                       )}
                     </div>
                     {/* Actual vs plan indicator */}
                     {c.actual > 0 && (
-                      <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                      <div className="flex items-center gap-1 type-label-sm text-on-surface-variant">
                         <span>čerpáno:</span>
                         <span className={cn(
                           "font-semibold tabular-nums",
@@ -815,7 +815,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
         <Card className="hover-lift">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="type-title">Položky rozpočtu</CardTitle>
-            <ListChecks className="h-4 w-4 text-muted-foreground" />
+            <ListChecks className="h-4 w-4 text-on-surface-variant" />
           </CardHeader>
           <CardContent>
             <div className="text-xl font-bold">{totals.itemCount}</div>
@@ -824,7 +824,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
                 <Badge
                   key={p.phase}
                   variant="outline"
-                  className={`text-[10px] ${PHASE_COLORS[p.phase] ?? ""}`}
+                  className={`type-label-sm ${PHASE_COLORS[p.phase] ?? ""}`}
                 >
                   {p.phase}: {p.count}
                 </Badge>
@@ -836,11 +836,11 @@ export function DashboardTab({ projectId }: { projectId: string }) {
         <Card className="hover-lift">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="type-title">Poslední platby</CardTitle>
-            <Receipt className="h-4 w-4 text-muted-foreground" />
+            <Receipt className="h-4 w-4 text-on-surface-variant" />
           </CardHeader>
           <CardContent className="space-y-1.5">
             {recent.payments.length === 0 ? (
-              <p className="text-xs text-muted-foreground">Zatím žádné platby</p>
+              <p className="type-label text-on-surface-variant">Zatím žádné platby</p>
             ) : (
               recent.payments.map((p) => (
                 <div key={p.id} className="flex items-center justify-between text-xs">
@@ -867,11 +867,11 @@ export function DashboardTab({ projectId }: { projectId: string }) {
         <Card className="hover-lift">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="type-title">Poslední časové záznamy</CardTitle>
-            <Timer className="h-4 w-4 text-muted-foreground" />
+            <Timer className="h-4 w-4 text-on-surface-variant" />
           </CardHeader>
           <CardContent className="space-y-1.5">
             {recent.timeEntries.length === 0 ? (
-              <p className="text-xs text-muted-foreground">Zatím žádné záznamy</p>
+              <p className="type-label text-on-surface-variant">Zatím žádné záznamy</p>
             ) : (
               recent.timeEntries.map((t) => (
                 <div key={t.id} className="flex items-center justify-between text-xs">
@@ -915,7 +915,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
                     {c.category}
                   </div>
                   <div className="col-span-6">
-                    <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
+                    <div className="h-2 w-full overflow-hidden rounded-full bg-surface-container-high">
                       <div
                         className={`h-full rounded-full ${color}`}
                         style={{ width: `${Math.min(burn, 100)}%` }}
@@ -924,7 +924,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
                   </div>
                   <div className="col-span-3 text-right text-xs">
                     <span className="font-medium">{formatCzk(c.actual)}</span>
-                    <span className="text-muted-foreground"> / {formatCzk(c.plan)}</span>
+                    <span className="text-on-surface-variant"> / {formatCzk(c.plan)}</span>
                   </div>
                 </div>
               );
@@ -957,7 +957,7 @@ function AlertGroup({
       <div className={`flex items-center gap-1.5 ${color}`}>
         {icon}
         <span className="text-xs font-semibold">{title}</span>
-        <Badge variant="secondary" className="ml-1 h-4 px-1.5 text-[10px]">
+        <Badge variant="secondary" className="ml-1 h-4 px-1.5 type-label-sm">
           {items.length}
         </Badge>
       </div>
@@ -965,11 +965,11 @@ function AlertGroup({
         {shown.map((it) => (
           <li key={it.id} className="text-xs">
             <span className="font-medium">{it.primary}</span>{" "}
-            <span className="text-muted-foreground">— {it.secondary}</span>
+            <span className="text-on-surface-variant">— {it.secondary}</span>
           </li>
         ))}
         {remaining > 0 && (
-          <li className="text-xs text-muted-foreground">
+          <li className="type-label text-on-surface-variant">
             … a dalších {remaining}
           </li>
         )}
@@ -1016,13 +1016,13 @@ function SpendingTrendCard({ projectId }: { projectId: string }) {
           </div>
           <div className="flex gap-4 text-right">
             <div>
-              <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Celkem vydáno</div>
+              <div className="type-label-sm uppercase tracking-wide text-on-surface-variant">Celkem vydáno</div>
               <div className="text-sm font-bold tabular-nums text-warning">
                 {formatCzk(data.totals.totalSpend)}
               </div>
             </div>
             <div>
-              <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Celkem hodin</div>
+              <div className="type-label-sm uppercase tracking-wide text-on-surface-variant">Celkem hodin</div>
               <div className="text-sm font-bold tabular-nums text-time">
                 {formatNumber(data.totals.totalHours, " h")}
               </div>
@@ -1036,7 +1036,7 @@ function SpendingTrendCard({ projectId }: { projectId: string }) {
             <SpendingTrendChart data={data.months} />
           </div>
         ) : (
-          <div className="flex h-56 flex-col items-center justify-center gap-2 text-sm text-muted-foreground">
+          <div className="flex h-56 flex-col items-center justify-center gap-2 text-sm text-on-surface-variant">
             <TrendingDown className="h-8 w-8 opacity-40" />
             <p>Zatím žádné platby ani časové záznamy.</p>
             <p className="text-xs">Po přidání plateb a času se zde zobrazí trend za posledních 12 měsíců.</p>
@@ -1054,7 +1054,7 @@ function SpendingTrendCard({ projectId }: { projectId: string }) {
                 }}
                 title={`${m.label}: ${formatCzk(m.spend)}`}
               />
-              <span className="text-[8px] text-muted-foreground">{m.label[0]}</span>
+              <span className="text-[8px] text-on-surface-variant">{m.label[0]}</span>
             </div>
           ))}
         </div>

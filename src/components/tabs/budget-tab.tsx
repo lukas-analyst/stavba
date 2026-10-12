@@ -84,6 +84,7 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { BudgetItemDialog } from "@/components/budget-item-dialog";
 import { EmptyStateBox } from "@/components/empty-state-box";
+import { InlineNumber, InlineDate } from "@/components/ui/inline-editors";
 import { FilterChip, FilterChipGroup } from "@/components/ui/filter-chip";
 import { SegmentedButton } from "@/components/ui/segmented-button";
 import { useAppStore } from "@/lib/store";
@@ -913,7 +914,7 @@ function SortableCategoryCard({
       style={style}
       id={`category-${categoryName.replace(/[^a-zA-Z0-9]/g, "-").toLowerCase()}`}
       className={cn(
-        "rounded-lg border border-outline-variant bg-surface-container-low",
+        "rounded-lg border border-outline-variant bg-card shadow-sm",
         isDragging && "shadow-xl ring-2 ring-primary/30",
       )}
     >
@@ -941,11 +942,11 @@ function SortableCategoryCard({
               <ChevronDown className="h-4 w-4" />
             )}
             <span className="text-sm font-bold">{categoryName}</span>
-            <Badge variant="secondary" className="text-[10px]">
+            <Badge variant="secondary" className="type-label-sm">
               {totals.count}
             </Badge>
             {totals.saved > 0 && (
-              <Badge variant="outline" className="text-[10px] text-success">
+              <Badge variant="outline" className="type-label-sm text-success">
                 <PiggyBank className="mr-1 h-2.5 w-2.5" />
                 {formatCzk(totals.saved)}
               </Badge>
@@ -1349,11 +1350,11 @@ const BudgetRow = memo(function BudgetRow({
             >
               {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
               {childCount > 0 ? (
-                <span className="text-[11px]">
+                <span className="type-label">
                   {childCount} {childCount === 1 ? "úkol" : childCount < 5 ? "úkoly" : "úkolů"}
                 </span>
               ) : (
-                <span className="text-[11px] text-muted-foreground/50">Přidat úkol</span>
+                <span className="type-label text-muted-foreground/50">Přidat úkol</span>
               )}
             </button>
           </div>
@@ -1371,16 +1372,15 @@ const BudgetRow = memo(function BudgetRow({
               <span
                 title="Povinné (nutné pro dokončení projektu)"
                 aria-label="Nutné"
-                className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-warning-soft text-[10px] font-bold leading-none text-warning-strong dark:bg-warning-soft/40 dark:text-warning/70"
+                className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-warning-soft type-label-sm font-bold leading-none text-warning-strong dark:bg-warning-soft/40 dark:text-warning/70"
               >
                 !
               </span>
             )}
             <span
               className={cn(
-                "text-left font-medium",
+                "type-body text-left font-medium",
                 isChild ? "cursor-pointer hover:underline" : "",
-                isChild ? "text-xs" : "text-sm",
                 item.rejected
                   ? "line-through decoration-danger/70"
                   : item.completed && "line-through decoration-success/50",
@@ -1390,12 +1390,12 @@ const BudgetRow = memo(function BudgetRow({
               {item.subcategory || "(bez názvu)"}
             </span>
             {item.rejected && (
-              <Badge variant="outline" className="h-4 px-1 text-[9px] text-danger dark:text-danger/60">
+              <Badge variant="outline" className="type-label-sm h-4 px-1 text-danger dark:text-danger/60">
                 Zavrženo
               </Badge>
             )}
             {item.completed && !item.rejected && (
-              <Badge variant="outline" className="h-4 px-1 text-[9px] text-success">
+              <Badge variant="outline" className="type-label-sm h-4 px-1 text-success">
                 Hotovo
               </Badge>
             )}
@@ -1407,7 +1407,7 @@ const BudgetRow = memo(function BudgetRow({
                     ? `Možná dotace: ${formatCzk(item.subsidyAmount)}`
                     : "Možná dotace (částka nezadána)"
                 }
-                className="h-4 gap-0.5 px-1 text-[9px] text-teal-700 dark:text-teal-300"
+                className="type-label-sm h-4 gap-0.5 px-1 text-teal-700 dark:text-teal-300"
               >
                 <HandCoins className="h-2.5 w-2.5" />
                 Dotace
@@ -1436,7 +1436,7 @@ const BudgetRow = memo(function BudgetRow({
             (item._count.payments > 0 || item._count.timeEntries > 0) && (
               <div className="mt-0.5 flex flex-wrap gap-1">
                 {item._count.payments > 0 && (
-                  <Badge variant="outline" className="h-4 px-1 text-[10px] text-success">
+                  <Badge variant="outline" className="h-4 px-1 type-label-sm text-success">
                     {item._count.payments === 1
                       ? "1 platba"
                       : item._count.payments < 5
@@ -1445,7 +1445,7 @@ const BudgetRow = memo(function BudgetRow({
                   </Badge>
                 )}
                 {item._count.timeEntries > 0 && (
-                  <Badge variant="outline" className="h-4 px-1 text-[10px] text-time">
+                  <Badge variant="outline" className="h-4 px-1 type-label-sm text-time">
                     {item._count.timeEntries} časů
                   </Badge>
                 )}
@@ -1460,10 +1460,10 @@ const BudgetRow = memo(function BudgetRow({
           value={item.phase}
           onValueChange={(v) => update("phase", v)}
         >
-          <SelectTrigger className="h-7 border-0 px-1 text-[11px] shadow-none hover:bg-muted">
+          <SelectTrigger className="h-7 border-0 px-1 type-label shadow-none hover:bg-muted">
             <Badge
               variant="outline"
-              className={cn("h-5 px-1.5 text-[10px]", PHASE_COLORS[item.phase] ?? "")}
+              className={cn("h-5 px-1.5 type-label-sm", PHASE_COLORS[item.phase] ?? "")}
             >
               {item.phase}
             </Badge>
@@ -1489,7 +1489,7 @@ const BudgetRow = memo(function BudgetRow({
           suffix=" Kč"
         />
         {childCount > 0 && item.planCost == null && displayPlanCost > 0 && (
-          <span className="block text-right text-[9px] text-muted-foreground tabular-nums">
+          <span className="block text-right type-label-sm text-muted-foreground tabular-nums">
             (sum: {formatNumber(displayPlanCost, " Kč")})
           </span>
         )}
@@ -1500,7 +1500,7 @@ const BudgetRow = memo(function BudgetRow({
         <InlineNumber
           value={item.planDays}
           onCommit={(v) => update("planDays", v)}
-          className={cn("text-right text-[11px]", childCount > 0 && "font-semibold")}
+          className={cn("text-right type-label", childCount > 0 && "font-semibold")}
         />
       </TableCell>
 
@@ -1540,14 +1540,14 @@ const BudgetRow = memo(function BudgetRow({
           />
         )}
         {overBudget && (
-          <span className="ml-1 inline-flex items-center text-[10px] text-danger">
+          <span className="ml-1 inline-flex items-center type-label-sm text-danger">
             <AlertTriangle className="h-3 w-3" />
           </span>
         )}
       </TableCell>
 
       {/* Hodiny */}
-      <TableCell className="text-right text-[11px] text-time">
+      <TableCell className="text-right type-label text-time">
         {displayActualHours > 0 ? formatNumber(displayActualHours, " h") : "—"}
       </TableCell>
 
@@ -1758,7 +1758,7 @@ function DetailPanelRow({
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           {/* Poznámka */}
           <div className="space-y-2">
-            <div className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+            <div className="type-label-sm font-semibold uppercase tracking-wide text-muted-foreground">
               Poznámka
             </div>
             <InlineTextarea
@@ -1770,7 +1770,7 @@ function DetailPanelRow({
 
           {/* Kontakt — přiřazená osoba/firma */}
           <div className="space-y-2">
-            <div className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+            <div className="flex items-center gap-1 type-label-sm font-semibold uppercase tracking-wide text-muted-foreground">
               <User className="h-3 w-3" />
               Kontakt
             </div>
@@ -1791,7 +1791,7 @@ function DetailPanelRow({
                 )}
               </div>
             ) : (
-              <span className="text-[11px] text-muted-foreground/60">
+              <span className="type-label text-muted-foreground/60">
                 Není přiřazen — klikněte na položku pro úpravu
               </span>
             )}
@@ -1799,11 +1799,11 @@ function DetailPanelRow({
 
           {/* Odkazy */}
           <div className="space-y-2">
-            <div className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+            <div className="flex items-center gap-1 type-label-sm font-semibold uppercase tracking-wide text-muted-foreground">
               <LinkIcon className="h-3 w-3" />
               Odkazy
               {item.links && item.links.length > 0 && (
-                <span className="rounded bg-muted px-1.5 py-0.5 text-[9px] tabular-nums">
+                <span className="rounded bg-muted px-1.5 py-0.5 type-label-sm tabular-nums">
                   {item.links.length}
                 </span>
               )}
@@ -1829,7 +1829,7 @@ function DetailPanelRow({
             {/* Odkazy z úkolů — zobrazeny pod odkazy položky */}
             {childItems.filter((c) => c.links && c.links.length > 0).length > 0 && (
               <div className="mt-2 space-y-1 border-t pt-2">
-                <div className="flex items-center gap-1 text-[10px] font-medium text-muted-foreground">
+                <div className="flex items-center gap-1 type-label-sm font-medium text-muted-foreground">
                   <ChevronRight className="h-3 w-3" />
                   Z úkolů
                 </div>
@@ -1837,7 +1837,7 @@ function DetailPanelRow({
                   .filter((c) => c.links && c.links.length > 0)
                   .map((child) => (
                     <div key={child.id} className="space-y-0.5">
-                      <div className="text-[10px] text-muted-foreground/70">
+                      <div className="type-label-sm text-muted-foreground/70">
                         └ {child.subcategory || "(bez názvu)"}
                       </div>
                       <ul className="space-y-0.5 pl-3">
@@ -1868,108 +1868,9 @@ function DetailPanelRow({
 }
 
 // ===== Inline editors =====
-function InlineNumber({
-  value,
-  onCommit,
-  suffix,
-  className,
-}: {
-  value: number | null;
-  onCommit: (v: number | null) => void;
-  suffix?: string;
-  className?: string;
-}) {
-  const [editing, setEditing] = useState(false);
-  const [draft, setDraft] = useState(value?.toString() ?? "");
-
-  if (editing) {
-    return (
-      <Input
-        autoFocus
-        value={draft}
-        onChange={(e) => setDraft(e.target.value)}
-        onBlur={() => {
-          setEditing(false);
-          const n = draft.trim() === "" ? null : Number(draft.replace(",", "."));
-          if (n !== value && (n === null || !isNaN(n))) onCommit(n);
-        }}
-        onKeyDown={(e) => {
-          if (e.key === "Enter") (e.target as HTMLInputElement).blur();
-          if (e.key === "Escape") {
-            setDraft(value?.toString() ?? "");
-            setEditing(false);
-          }
-        }}
-        className={cn("h-7 w-20 text-xs", className)}
-      />
-    );
-  }
-  return (
-    <button
-      onClick={() => {
-        setDraft(value?.toString() ?? "");
-        setEditing(true);
-      }}
-      className={cn(
-        "block w-full rounded px-1 py-0.5 text-right text-xs hover:bg-muted",
-        className,
-      )}
-    >
-      {value === null || value === undefined ? (
-        <span className="text-muted-foreground/50">—</span>
-      ) : (
-        <>{formatNumber(value, suffix ?? "")}</>
-      )}
-    </button>
-  );
-}
-
-function InlineDate({
-  value,
-  onCommit,
-}: {
-  value: string | null;
-  onCommit: (v: string | null) => void;
-}) {
-  const [editing, setEditing] = useState(false);
-  const [draft, setDraft] = useState(value ? value.substring(0, 10) : "");
-
-  if (editing) {
-    return (
-      <Input
-        type="date"
-        autoFocus
-        value={draft}
-        onChange={(e) => setDraft(e.target.value)}
-        onBlur={() => {
-          setEditing(false);
-          if (draft !== (value ? value.substring(0, 10) : "")) {
-            onCommit(draft || null);
-          }
-        }}
-        onKeyDown={(e) => {
-          if (e.key === "Enter") (e.target as HTMLInputElement).blur();
-          if (e.key === "Escape") {
-            setDraft(value ? value.substring(0, 10) : "");
-            setEditing(false);
-          }
-        }}
-        className="h-7 w-36 text-xs"
-      />
-    );
-  }
-  return (
-    <button
-      onClick={() => {
-        setDraft(value ? value.substring(0, 10) : "");
-        setEditing(true);
-      }}
-      className="block w-full rounded px-1 py-0.5 text-left text-xs hover:bg-muted"
-    >
-      {value ? formatDate(value) : <span className="text-muted-foreground/50">—</span>}
-    </button>
-  );
-}
+// InlineNumber and InlineDate are now imported from @/components/ui/inline-editors
+// (shared with Payments and Time tabs for consistency).
+// InlineTextarea is still local because it's only used in the budget detail panel.
 
 function InlineTextarea({
   value,

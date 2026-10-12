@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { db, dbRead } from "@/lib/db";
+import { logChanges } from "@/lib/audit";
 
 // Explicit field selection — fetch only what the frontend uses.
 // `include` would fetch every column of budgetItem + contact (10+ columns each);
@@ -130,6 +131,22 @@ export async function POST(
       where: { id: budgetItemId },
       data: { actualCost: agg._sum.amount ?? 0 },
     });
+
+    // Log creation to audit log. `item.projectId` is the parent project
+    // (validated above to match the URL param `id`).
+    await logChanges(
+      item.projectId,
+      "Payment",
+      payment.id,
+      "create",
+      null,
+      {
+        amount: payment.amount,
+        type: payment.type,
+        budgetItemId,
+      },
+      payment.description || payment.vendor,
+    );
 
     return NextResponse.json(payment, { status: 201 });
   } catch (error) {

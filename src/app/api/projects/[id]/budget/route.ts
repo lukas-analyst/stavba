@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { db, dbRead } from "@/lib/db";
+import { logChanges } from "@/lib/audit";
 import { recalcParentDates } from "@/lib/recalc-parent-dates";
 
 // Explicit field selection — only fetch what the frontend actually uses.
@@ -187,6 +188,22 @@ export async function POST(
     if (parentId) {
       await recalcParentDates(parentId);
     }
+
+    // Log creation to audit log
+    await logChanges(
+      id,
+      "BudgetItem",
+      item.id,
+      "create",
+      null,
+      {
+        category: item.category,
+        subcategory: item.subcategory,
+        phase: item.phase,
+        planCost: item.planCost,
+      },
+      item.subcategory || item.category,
+    );
 
     return NextResponse.json(item, { status: 201 });
   } catch (error) {

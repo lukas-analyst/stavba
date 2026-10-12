@@ -1,0 +1,1347 @@
+"use client";
+
+import { useState, useEffect, useCallback } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import {
+  MapPin,
+  Calendar,
+  Building2,
+  Download,
+  Upload,
+  FileSpreadsheet,
+  Copy,
+  Trash2,
+  AlertTriangle,
+  Pencil,
+  Check,
+  X,
+  Loader2,
+  Crown,
+  Eye,
+  Edit3,
+  UserPlus,
+  Shield,
+  ArrowRight,
+  ChevronLeft,
+  ChevronRight,
+  Info,
+  Pause,
+  Play,
+} from "lucide-react";
+import {
+  useProjects,
+  useUpdateProject,
+  useBudgetItems,
+  useExportState,
+  useImportState,
+  useExportCsv,
+} from "@/lib/api";
+import { formatDate, STATUS_LABELS } from "@/lib/format";
+import { cn } from "@/lib/utils";
+import { toast } from "sonner";
+import { CollapsibleSection } from "@/components/ui/collapsible-section";
+
+// ============================================================
+// ProjectManagementTab — full project management page
+// ============================================================
+
+export function ProjectManagementTab({ projectId }: { projectId: string }) {
+  const { data: projects, isLoading: projectsLoading } = useProjects();
+  const { data: budgetItems } = useBudgetItems(projectId);
+  const updateProject = useUpdateProject(projectId);
+  const exportState = useExportState();
+  const importState = useImportState();
+  const exportCsv = useExportCsv(projectId);
+
+  const project = projects?.find((p) => p.id === projectId);
+
+  if (projectsLoading || !project) {
+    return (
+      <div className="space-y-4">
+        <Skeleton className="h-32" />
+        <Skeleton className="h-48" />
+        <Skeleton className="h-48" />
+      </div>
+    );
+  }
+
+  const handleExport = async () => {
+    try {
+      await exportState.mutateAsync();
+      toast.success("Stav exportován");
+    } catch {
+      toast.error("Export selhal");
+    }
+  };
+
+  const handleCsv = async (type: "budget" | "payments" | "time" | "contacts") => {
+    try {
+      await exportCsv.mutateAsync(type);
+      const labels: Record<typeof type, string> = {
+        budget: "Rozpočet",
+        payments: "Platby",
+        time: "Čas",
+        contacts: "Kontakty",
+      };
+      toast.success(`CSV — ${labels[type]} exportováno`);
+    } catch {
+      toast.error("CSV export selhal");
+    }
+  };
+
+  const handleDuplicate = async () => {
+    try {
+      const res = await fetch("/api/projects", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: `${project.name} (kopie)`,
+          address: project.address,
+          description: project.description,
+          status: "planning",
+          startDate: project.startDate,
+          endDate: project.endDate,
+        }),
+      });
+      if (!res.ok) throw new Error("Failed to duplicate project");
+      const newProject = await res.json();
+      if (budgetItems && budgetItems.length > 0) {
+        await Promise.all(
+          budgetItems.map((item) =>
+            fetch(`/api/projects/${newProject.id}/budget`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                category: item.category,
+                subcategory: item.subcategory,
+                phase: item.phase,
+                required: item.required,
+                planCost: item.planCost,
+                flexibilityPercent: item.flexibilityPercent,
+                planDays: item.planDays,
+              }),
+            }),
+          ),
+        );
+      }
+      toast.success(`Projekt duplikován jako "${newProject.name}"`);
+    } catch {
+      toast.error("Nepodařilo se duplikovat projekt");
+    }
+  };
+
+  return (
+    <div id="management-root" className="space-y-6">
+      {/* ===== Project Info Card (inline editable) ===== */}
+      <ProjectInfoCard project={project} updateProject={updateProject} />
+
+      {/* ===== Sharing & Permissions ===== */}
+      <SharingSection projectId={projectId} />
+
+      {/* ===== Export & Import (split into Projekt + Data subsections) ===== */}
+      <div className="space-y-4">
+        <CollapsibleSection title="Projekt" defaultOpen>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="rounded-full gap-1.5"
+              onClick={handleExport}
+              disabled={exportState.isPending}
+            >
+              {exportState.isPending ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <Download className="h-3.5 w-3.5" />
+              )}
+              Export stavu (JSON)
+            </Button>
+            <label className="inline-flex">
+              <input
+                type="file"
+                accept="application/json,.json"
+                className="hidden"
+                onChange={async (e) => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+                  try {
+                    await importState.mutateAsync(file);
+                    toast.success("Stav importován");
+                  } catch {
+                    toast.error("Import selhal");
+                  }
+                  e.target.value = "";
+                }}
+              />
+              <span
+                className={cn(
+                  "inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-full border px-3 type-label hover:bg-surface-container-high",
+                  importState.isPending && "pointer-events-none opacity-50",
+                )}
+              >
+                {importState.isPending ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <Upload className="h-3.5 w-3.5" />
+                )}
+                Import stavu (JSON)
+              </span>
+            </label>
+          </div>
+          <p className="type-label-sm text-on-surface-variant">
+            Záloha kompletního stavu projektu (JSON) — lze importovat do jiného projektu.
+          </p>
+        </CollapsibleSection>
+
+        <CollapsibleSection title="Data" defaultOpen>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="rounded-full gap-1.5"
+              onClick={() => handleCsv("budget")}
+              disabled={exportCsv.isPending}
+            >
+              <FileSpreadsheet className="h-3.5 w-3.5" /> CSV — Rozpočet
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="rounded-full gap-1.5"
+              onClick={() => handleCsv("payments")}
+              disabled={exportCsv.isPending}
+            >
+              <FileSpreadsheet className="h-3.5 w-3.5" /> CSV — Platby
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="rounded-full gap-1.5"
+              onClick={() => handleCsv("time")}
+              disabled={exportCsv.isPending}
+            >
+              <FileSpreadsheet className="h-3.5 w-3.5" /> CSV — Čas
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="rounded-full gap-1.5"
+              onClick={() => handleCsv("contacts")}
+              disabled={exportCsv.isPending}
+            >
+              <FileSpreadsheet className="h-3.5 w-3.5" /> CSV — Kontakty
+            </Button>
+          </div>
+          <p className="type-label-sm text-on-surface-variant">
+            Tabulkový export jednotlivých sekcí (CSV) pro analýzu v Excelu nebo Google Sheets.
+          </p>
+        </CollapsibleSection>
+      </div>
+
+      {/* ===== Enhanced Audit Log ===== */}
+      <CollapsibleSection title="Audit log — nedávné změny" defaultOpen>
+        <EnhancedAuditLog projectId={projectId} />
+      </CollapsibleSection>
+
+      {/* ===== Danger Zone ===== */}
+      <Card className="border-danger/30 bg-danger-soft/10">
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 type-title-lg text-danger">
+            <AlertTriangle className="h-4 w-4" />
+            Správa projektu
+          </CardTitle>
+          <CardDescription>Duplikovat nebo smazat projekt — akce nelze vrátit zpět</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="flex items-center justify-between gap-3 rounded-lg border border-outline-variant bg-card p-3">
+            <div className="flex items-center gap-2">
+              <Copy className="h-4 w-4 text-info" />
+              <div>
+                <div className="type-body font-medium">Duplikovat projekt</div>
+                <div className="type-label text-on-surface-variant">Vytvoří kopii s rozpočtem (bez plateb a času)</div>
+              </div>
+            </div>
+            <Button variant="outline" size="sm" className="rounded-full gap-1.5" onClick={handleDuplicate}>
+              <Copy className="h-3.5 w-3.5" /> Duplikovat
+            </Button>
+          </div>
+          <div className="flex items-center justify-between gap-3 rounded-lg border border-danger/30 bg-danger-soft/20 p-3">
+            <div className="flex items-center gap-2">
+              <Trash2 className="h-4 w-4 text-danger" />
+              <div>
+                <div className="type-body font-medium">Smazat projekt</div>
+                <div className="type-label text-on-surface-variant">Trvale smaže všechna data</div>
+              </div>
+            </div>
+            <DeleteProjectButton projectId={projectId} projectName={project.name} />
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+// ============================================================
+// ProjectInfoCard — inline editable project info
+// ============================================================
+function ProjectInfoCard({
+  project,
+  updateProject,
+}: {
+  project: NonNullable<ReturnType<typeof useProjects>["data"]>[number];
+  updateProject: ReturnType<typeof useUpdateProject>;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [name, setName] = useState(project.name);
+  const [description, setDescription] = useState(project.description ?? "");
+  const [address, setAddress] = useState(project.address ?? "");
+  const [status, setStatus] = useState(project.status);
+  const [startDate, setStartDate] = useState(project.startDate ? project.startDate.substring(0, 10) : "");
+  const [endDate, setEndDate] = useState(project.endDate ? project.endDate.substring(0, 10) : "");
+
+  const handleSave = async () => {
+    try {
+      await updateProject.mutateAsync({
+        name: name.trim() || project.name,
+        description: description.trim() || null,
+        address: address.trim() || null,
+        status,
+        startDate: startDate || null,
+        endDate: endDate || null,
+      });
+      toast.success("Projekt upraven");
+      setEditing(false);
+    } catch {
+      toast.error("Nepodařilo se upravit projekt");
+    }
+  };
+
+  const handleCancel = () => {
+    setName(project.name);
+    setDescription(project.description ?? "");
+    setAddress(project.address ?? "");
+    setStatus(project.status);
+    setStartDate(project.startDate ? project.startDate.substring(0, 10) : "");
+    setEndDate(project.endDate ? project.endDate.substring(0, 10) : "");
+    setEditing(false);
+  };
+
+  const statusInfo = STATUS_LABELS[project.status] ?? STATUS_LABELS.active;
+
+  return (
+    <Card className="bg-card shadow-sm">
+      <CardHeader className="pb-3">
+        <div className="flex items-start justify-between">
+          <div className="min-w-0 flex-1">
+            <CardTitle className="flex items-center gap-2 type-headline">
+              {editing ? (
+                <Input value={name} onChange={(e) => setName(e.target.value)} className="h-8 max-w-md text-lg font-bold" autoFocus />
+              ) : (
+                <>
+                  {project.name}
+                  <Badge variant="outline" className={cn("type-label-sm", statusInfo.color)}>{statusInfo.label}</Badge>
+                </>
+              )}
+            </CardTitle>
+            {!editing && project.description && (
+              <CardDescription className="mt-1 type-body">{project.description}</CardDescription>
+            )}
+          </div>
+          {editing ? (
+            <div className="flex shrink-0 gap-1">
+              <Button size="sm" className="rounded-full gap-1.5" onClick={handleSave} disabled={updateProject.isPending}>
+                {updateProject.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
+                Uložit
+              </Button>
+              <Button variant="outline" size="sm" className="rounded-full" onClick={handleCancel}>
+                <X className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+          ) : (
+            <Button variant="outline" size="sm" className="shrink-0 rounded-full gap-1.5" onClick={() => setEditing(true)}>
+              <Pencil className="h-3.5 w-3.5" /> Upravit
+            </Button>
+          )}
+        </div>
+      </CardHeader>
+      {editing && (
+        <CardContent className="space-y-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div className="space-y-1">
+              <Label htmlFor="mgmt-address" className="type-label-sm">Adresa</Label>
+              <Input id="mgmt-address" value={address} onChange={(e) => setAddress(e.target.value)} placeholder="např. Praha - Troja" className="h-9" />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="mgmt-status" className="type-label-sm">Stav</Label>
+              <Select value={status} onValueChange={setStatus}>
+                <SelectTrigger id="mgmt-status" className="h-9"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="planning">Plánování</SelectItem>
+                  <SelectItem value="active">Aktivní</SelectItem>
+                  <SelectItem value="paused">Pozastaveno</SelectItem>
+                  <SelectItem value="completed">Dokončeno</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div className="space-y-1">
+              <Label htmlFor="mgmt-start" className="type-label-sm">Datum zahájení</Label>
+              <Input id="mgmt-start" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="h-9" />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="mgmt-end" className="type-label-sm">Datum dokončení</Label>
+              <Input id="mgmt-end" type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="h-9" />
+            </div>
+          </div>
+          <div className="space-y-1">
+            <Label htmlFor="mgmt-desc" className="type-label-sm">Popis</Label>
+            <Textarea id="mgmt-desc" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Krátký popis projektu…" rows={2} className="resize-y" />
+          </div>
+        </CardContent>
+      )}
+      {!editing && (
+        <CardContent className="pt-0">
+          <div className="flex flex-wrap gap-4 type-label text-on-surface-variant">
+            {project.address && (<span className="flex items-center gap-1"><MapPin className="h-3 w-3" /> {project.address}</span>)}
+            {project.startDate && (<span className="flex items-center gap-1"><Calendar className="h-3 w-3" /> {formatDate(project.startDate)}{project.endDate && ` — ${formatDate(project.endDate)}`}</span>)}
+            <span className="flex items-center gap-1"><Building2 className="h-3 w-3" /> {project.currency}</span>
+            <span className="type-label-sm text-on-surface-variant/60">Vytvořeno: {formatDate(project.createdAt)}</span>
+          </div>
+        </CardContent>
+      )}
+    </Card>
+  );
+}
+
+// ============================================================
+// SharingSection — project members + owner management
+// ------------------------------------------------------------
+// - Avatar with image (Google auth ready) + initials fallback
+// - "Správce" badge instead of "Vlastník"
+// - "Čtenář" role label instead of "Prohlížeč"
+// - Email autocomplete via datalist (existing users)
+// - Detect existing member (warning ring + toast)
+// - Detect unknown email (info hint)
+// - Optimistic removal with brief loading state on the row
+// ============================================================
+type Member = {
+  id: string;
+  role: string;
+  createdAt: string;
+  updatedAt: string;
+  user: { id: string; name: string | null; email: string; image: string | null };
+};
+
+type MembersResponse = {
+  owner: { id: string; name: string | null; email: string; image: string | null };
+  members: Member[];
+};
+
+function SharingSection({ projectId }: { projectId: string }) {
+  const [data, setData] = useState<MembersResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [addEmail, setAddEmail] = useState("");
+  const [addRole, setAddRole] = useState("viewer");
+  const [adding, setAdding] = useState(false);
+  const [removingIds, setRemovingIds] = useState<Set<string>>(new Set());
+  const [allUsers, setAllUsers] = useState<{ id: string; name: string | null; email: string }[]>([]);
+  const [lastToastEmail, setLastToastEmail] = useState<string>("");
+  const qc = useQueryClient();
+
+  const fetchMembers = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/projects/${projectId}/members`);
+      if (res.ok) {
+        const json = await res.json();
+        setData(json);
+      }
+    } catch {
+      // ignore
+    } finally {
+      setLoading(false);
+    }
+  }, [projectId]);
+
+  // Fetch members + all users on mount
+  useEffect(() => {
+    fetchMembers();
+    fetch("/api/users")
+      .then((r) => (r.ok ? r.json() : []))
+      .then((users) => setAllUsers(users))
+      .catch(() => setAllUsers([]));
+  }, [fetchMembers]);
+
+  // Detect typed email matches (existing member or owner)
+  const typedEmail = addEmail.trim().toLowerCase();
+  const matchedMember =
+    typedEmail && data?.members.find((m) => m.user.email.toLowerCase() === typedEmail);
+  const matchedOwner =
+    typedEmail && data?.owner?.email?.toLowerCase() === typedEmail;
+  const isExistingMember = !!(matchedMember || matchedOwner);
+  const isKnownUser =
+    typedEmail && allUsers.some((u) => u.email.toLowerCase() === typedEmail);
+  const hasAt = typedEmail.includes("@");
+  const isNewUserHint = hasAt && !isExistingMember && !isKnownUser && typedEmail.length > 3;
+
+  // Show toast once when email matches existing member
+  useEffect(() => {
+    if (isExistingMember && lastToastEmail !== typedEmail) {
+      toast.warning("Tento uživatel je již členem projektu");
+      setLastToastEmail(typedEmail);
+    } else if (!isExistingMember && lastToastEmail && lastToastEmail !== typedEmail) {
+      setLastToastEmail("");
+    }
+  }, [isExistingMember, typedEmail, lastToastEmail]);
+
+  const handleAdd = async () => {
+    if (!addEmail.trim()) return;
+    if (isExistingMember) {
+      toast.warning("Tento uživatel je již členem projektu");
+      return;
+    }
+    setAdding(true);
+    try {
+      const res = await fetch(`/api/projects/${projectId}/members`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: addEmail.trim(), role: addRole }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || "Nepodařilo se přidat člena");
+      }
+      toast.success(`Přidán člen: ${addEmail.trim()}`);
+      setAddEmail("");
+      setLastToastEmail("");
+      fetchMembers();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Nepodařilo se přidat člena");
+    } finally {
+      setAdding(false);
+    }
+  };
+
+  const handleRoleChange = async (memberId: string, role: string) => {
+    // Optimistic role update
+    const prev = data;
+    setData((cur) =>
+      cur
+        ? { ...cur, members: cur.members.map((m) => (m.id === memberId ? { ...m, role } : m)) }
+        : cur,
+    );
+    try {
+      const res = await fetch(`/api/projects/${projectId}/members/${memberId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ role }),
+      });
+      if (!res.ok) throw new Error("Failed");
+      toast.success("Role upravena");
+    } catch {
+      toast.error("Nepodařilo se upravit roli");
+      setData(prev); // restore previous state
+    }
+  };
+
+  const handleRemove = async (memberId: string, name: string) => {
+    const memberToRestore = data?.members.find((m) => m.id === memberId);
+    // Brief loading state on the specific row
+    setRemovingIds((prev) => {
+      const next = new Set(prev);
+      next.add(memberId);
+      return next;
+    });
+    // Optimistically remove from local state after brief delay
+    const removeTimer = setTimeout(() => {
+      setData((cur) =>
+        cur ? { ...cur, members: cur.members.filter((m) => m.id !== memberId) } : cur,
+      );
+    }, 220);
+
+    try {
+      const res = await fetch(`/api/projects/${projectId}/members/${memberId}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) throw new Error("Failed");
+      clearTimeout(removeTimer);
+      // Ensure removed from state immediately on success
+      setData((cur) =>
+        cur ? { ...cur, members: cur.members.filter((m) => m.id !== memberId) } : cur,
+      );
+      setRemovingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(memberId);
+        return next;
+      });
+      toast.success(`Člen "${name}" odebrán`);
+    } catch {
+      clearTimeout(removeTimer);
+      setRemovingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(memberId);
+        return next;
+      });
+      // Restore the member at original position
+      if (memberToRestore) {
+        setData((cur) => {
+          if (!cur) return cur;
+          if (cur.members.some((m) => m.id === memberId)) return cur;
+          return { ...cur, members: [...cur.members, memberToRestore] };
+        });
+      } else {
+        fetchMembers();
+      }
+      toast.error("Nepodařilo se odebrat člena — člen byl obnoven");
+    }
+  };
+
+  const handleChangeOwner = async (newOwnerId: string) => {
+    try {
+      await fetch(`/api/projects/${projectId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ownerId: newOwnerId }),
+      });
+      toast.success("Správce změněn");
+      qc.invalidateQueries({ queryKey: ["projects"] });
+      fetchMembers();
+    } catch {
+      toast.error("Nepodařilo se změnit správce");
+    }
+  };
+
+  if (loading) return <Skeleton className="h-48" />;
+
+  const owner = data?.owner;
+  const members = data?.members ?? [];
+
+  return (
+    <Card className="bg-card shadow-sm">
+      <CardHeader className="pb-3">
+        <CardTitle className="flex items-center gap-2 type-title-lg">
+          <Shield className="h-4 w-4 text-primary" />
+          Sdílení a přístupová práva
+        </CardTitle>
+        <CardDescription>Správa správce a členů projektu</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {/* Owner */}
+        {owner && (
+          <div className="flex items-center gap-3 rounded-lg border border-primary/30 bg-primary/5 p-3">
+            <Avatar className="h-10 w-10 shrink-0 border border-primary/30">
+              {owner.image ? (
+                <AvatarImage src={owner.image} alt={owner.name || owner.email} />
+              ) : null}
+              <AvatarFallback className="bg-secondary-container type-label-sm font-bold text-secondary-container-foreground">
+                <Crown className="h-5 w-5 text-primary" />
+              </AvatarFallback>
+            </Avatar>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-1.5">
+                <span className="type-body font-semibold">{owner.name || owner.email}</span>
+                <Badge variant="secondary" className="type-label-sm">Správce</Badge>
+              </div>
+              <div className="type-label text-on-surface-variant truncate">{owner.email}</div>
+            </div>
+            {/* Change owner dropdown */}
+            {allUsers.length > 0 && (
+              <Select onValueChange={handleChangeOwner}>
+                <SelectTrigger className="h-8 w-auto rounded-full type-label-sm">
+                  <span className="flex items-center gap-1"><ArrowRight className="h-3 w-3" /> Předat</span>
+                </SelectTrigger>
+                <SelectContent>
+                  {allUsers
+                    .filter((u) => u.id !== owner.id)
+                    .map((u) => (
+                      <SelectItem key={u.id} value={u.id}>
+                        {u.name || u.email}
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+            )}
+          </div>
+        )}
+
+        {/* Members list */}
+        {members.length > 0 ? (
+          <div className="space-y-1.5">
+            {members.map((m) => {
+              const isRemoving = removingIds.has(m.id);
+              const isMatched = matchedMember?.id === m.id;
+              return (
+                <div
+                  key={m.id}
+                  className={cn(
+                    "flex items-center gap-3 rounded-lg border bg-surface-container-low p-2.5 transition-all",
+                    isMatched
+                      ? "border-warning ring-2 ring-warning/30"
+                      : "border-outline-variant",
+                    isRemoving && "opacity-50",
+                  )}
+                >
+                  <Avatar className="h-8 w-8 shrink-0">
+                    {m.user.image ? (
+                      <AvatarImage src={m.user.image} alt={m.user.name || m.user.email} />
+                    ) : null}
+                    <AvatarFallback className="bg-secondary-container type-label-sm font-bold text-secondary-container-foreground">
+                      {(m.user.name || m.user.email)[0]?.toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="min-w-0 flex-1">
+                    <div className="type-body font-medium truncate">{m.user.name || m.user.email}</div>
+                    <div className="type-label text-on-surface-variant truncate">{m.user.email}</div>
+                  </div>
+                  {/* Role selector */}
+                  <Select value={m.role} onValueChange={(v) => handleRoleChange(m.id, v)}>
+                    <SelectTrigger className="h-7 w-auto rounded-full type-label-sm gap-1">
+                      {m.role === "editor" ? <Edit3 className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+                      {m.role === "editor" ? "Editor" : "Čtenář"}
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="viewer"><Eye className="mr-1.5 inline h-3 w-3" /> Čtenář (pouze čtení)</SelectItem>
+                      <SelectItem value="editor"><Edit3 className="mr-1.5 inline h-3 w-3" /> Editor (úpravy)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {/* Remove */}
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 shrink-0 rounded-full state-layer-on-surface text-muted-foreground hover:text-danger"
+                    onClick={() => handleRemove(m.id, m.user.name || m.user.email)}
+                    disabled={isRemoving}
+                    aria-label="Odebrat člena"
+                  >
+                    {isRemoving ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      <X className="h-3.5 w-3.5" />
+                    )}
+                  </Button>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <p className="type-label text-on-surface-variant">Zatím nebyli přidáni žádní členové.</p>
+        )}
+
+        {/* Add member */}
+        <div className="rounded-lg border border-dashed border-outline-variant p-3">
+          <div className="mb-2 flex items-center gap-1.5 type-label text-on-surface-variant">
+            <UserPlus className="h-3.5 w-3.5" /> Přidat člena
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <Input
+              value={addEmail}
+              onChange={(e) => setAddEmail(e.target.value)}
+              placeholder="email@uzivatel.cz"
+              list="users-datalist"
+              className={cn(
+                "h-8 flex-1 min-w-[200px] type-body",
+                isExistingMember && "border-warning ring-2 ring-warning/30",
+                isNewUserHint && "border-info/50",
+              )}
+              onKeyDown={(e) => e.key === "Enter" && handleAdd()}
+            />
+            <datalist id="users-datalist">
+              {allUsers.map((u) => (
+                <option key={u.id} value={u.email}>
+                  {u.name || u.email}
+                </option>
+              ))}
+            </datalist>
+            <Select value={addRole} onValueChange={setAddRole}>
+              <SelectTrigger className="h-8 w-auto rounded-full type-label-sm gap-1">
+                {addRole === "editor" ? <Edit3 className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+                {addRole === "editor" ? "Editor" : "Čtenář"}
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="viewer"><Eye className="mr-1.5 inline h-3 w-3" /> Čtenář</SelectItem>
+                <SelectItem value="editor"><Edit3 className="mr-1.5 inline h-3 w-3" /> Editor</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button size="sm" className="rounded-full gap-1.5" onClick={handleAdd} disabled={!addEmail.trim() || adding}>
+              {adding ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <UserPlus className="h-3.5 w-3.5" />}
+              Přidat
+            </Button>
+          </div>
+          {/* Hints */}
+          {isExistingMember && (
+            <div className="mt-2 flex items-center gap-1.5 type-label-sm text-warning">
+              <AlertTriangle className="h-3 w-3" /> Tento uživatel je již členem projektu
+            </div>
+          )}
+          {isNewUserHint && !isExistingMember && (
+            <div className="mt-2 flex items-center gap-1.5 type-label-sm text-info">
+              <Info className="h-3 w-3" /> Nový uživatel bude vytvořen při přidání
+            </div>
+          )}
+          {allUsers.length > 0 && (
+            <div className="mt-2 flex flex-wrap gap-1">
+              <span className="type-label-sm text-on-surface-variant">Rychlý výběr:</span>
+              {allUsers.slice(0, 5).map((u) => (
+                <button
+                  key={u.id}
+                  type="button"
+                  onClick={() => setAddEmail(u.email)}
+                  className="rounded-full border border-outline-variant px-2 py-0.5 type-label-sm hover:bg-surface-container-high"
+                >
+                  {u.email}
+                </button>
+              ))}
+              {allUsers.length > 5 && (
+                <span className="type-label-sm text-on-surface-variant">+{allUsers.length - 5} dalších</span>
+              )}
+            </div>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+// ============================================================
+// EnhancedAuditLog — server-side pagination + live polling
+// ------------------------------------------------------------
+// - Fetches ONLY the current page from API:
+//   GET /api/projects/[id]/audit?action=&entity=&page=&pageSize=&sort=
+// - Response shape: { entries, total, page, pageSize, totalPages }
+// - Real-time polling every 5s while section is expanded
+//   (controlled by `isExpanded` state, toggled via Live button).
+// - Filters / sort / page-size / page changes trigger API refetch.
+// - Export CSV button → /api/projects/[id]/audit/export (new tab).
+// - entityLabel (human-readable name) shown alongside the
+//   entityType translation.
+// ============================================================
+type AuditEntry = {
+  id: string;
+  action: string;
+  entityType: string;
+  entityId: string;
+  entityLabel: string | null;
+  field: string | null;
+  oldValue: string | null;
+  newValue: string | null;
+  createdAt: string;
+  user: { id: string; name: string | null; email: string; image: string | null } | null;
+};
+
+const ACTION_LABELS: Record<string, string> = {
+  create: "Vytvořeno",
+  update: "Upraveno",
+  delete: "Smazáno",
+};
+
+const ACTION_COLORS: Record<string, string> = {
+  create: "text-success",
+  update: "text-info",
+  delete: "text-danger",
+};
+
+const ENTITY_LABELS: Record<string, string> = {
+  BudgetItem: "Položka rozpočtu",
+  Payment: "Platba",
+  TimeEntry: "Čas",
+  Contact: "Kontakt",
+  Project: "Projekt",
+  Note: "Poznámka",
+  ContactPerson: "Kontaktní osoba",
+  ProjectMember: "Člen",
+};
+
+// Generate a human-readable description of what happened
+function describeChange(entry: AuditEntry): string {
+  const entityLabel = entry.entityLabel || ENTITY_LABELS[entry.entityType] || entry.entityType;
+
+  // Create — newValue contains a summary string like "Přidán člen (Čtenář): email@..."
+  if (entry.action === "create" && entry.newValue) {
+    return entry.newValue.length < 200 ? entry.newValue : entityLabel;
+  }
+
+  // Delete — oldValue contains a summary string like "Odebrán člen (Editor): email@..."
+  if (entry.action === "delete" && entry.oldValue) {
+    return entry.oldValue.length < 200 ? entry.oldValue : entityLabel;
+  }
+
+  // Update — field-level change
+  if (entry.action === "update" && entry.field) {
+    const fieldLabel = FIELD_LABELS_UI[entry.field] ?? entry.field;
+    if (entry.oldValue && entry.newValue) {
+      return `${fieldLabel}: ${entry.oldValue} → ${entry.newValue}`;
+    }
+    if (entry.newValue) {
+      return `${fieldLabel}: ${entry.newValue}`;
+    }
+    if (entry.oldValue) {
+      return `${fieldLabel}: odstraněno (${entry.oldValue})`;
+    }
+  }
+
+  return entityLabel;
+}
+
+// Human-readable field labels for UI display
+const FIELD_LABELS_UI: Record<string, string> = {
+  required: "Povinnost",
+  completed: "Hotovo",
+  rejected: "Zavržení",
+  starred: "Oblíbený",
+  status: "Stav",
+  role: "Role",
+  phase: "Fáze",
+  category: "Kategorie",
+  subcategory: "Název",
+  planCost: "Plán (Kč)",
+  actualCost: "Skutečnost (Kč)",
+  planDays: "Plán (dní)",
+  flexibilityPercent: "Vůle (%)",
+  dateFrom: "Datum od",
+  dateTo: "Datum do",
+  note: "Poznámka",
+  name: "Jméno",
+  email: "E-mail",
+  phone: "Telefon",
+  address: "Adresa",
+  description: "Popis",
+  currency: "Měna",
+  ownerId: "Vlastník",
+  contactId: "Kontakt",
+  workerName: "Pracovník",
+  workerType: "Typ pracovníka",
+  workerCount: "Počet pracovníků",
+  hours: "Hodiny",
+  amount: "Částka",
+  type: "Typ",
+  vendor: "Firma",
+  invoiceNumber: "Číslo faktury",
+  vatRate: "Sazba DPH",
+  vatAmount: "Částka DPH",
+  website: "Web",
+  company: "Firma",
+  ico: "IČO",
+  dic: "DIČ",
+  rating: "Hodnocení",
+  sortOrder: "Pořadí",
+  text: "Text",
+  author: "Autor",
+  userEmail: "E-mail člena",
+};
+
+function formatTimestamp(iso: string): { date: string; time: string } {
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return { date: iso, time: "" };
+  const day = String(d.getDate()).padStart(2, "0");
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const hours = String(d.getHours()).padStart(2, "0");
+  const minutes = String(d.getMinutes()).padStart(2, "0");
+  return {
+    date: `${day}.${month}.${d.getFullYear()}`,
+    time: `${hours}:${minutes}`,
+  };
+}
+
+function EnhancedAuditLog({ projectId }: { projectId: string }) {
+  // Server-side pagination state
+  const [entries, setEntries] = useState<AuditEntry[]>([]);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
+  // Loading / polling states
+  // `loading` is DERIVED from comparing the current filter/page key
+  // against the last successfully fetched key. This avoids calling
+  // setLoading(true) synchronously inside the effect body (which
+  // trips the react-hooks/set-state-in-effect rule and causes
+  // cascading renders). The skeleton shows whenever the current
+  // filter/page state hasn't been fetched yet.
+  const [loadedKey, setLoadedKey] = useState<string>("");
+  const [polling, setPolling] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(true);
+  // Filters / sort
+  const [actionFilter, setActionFilter] = useState<string>("all");
+  const [entityFilter, setEntityFilter] = useState<string>("all");
+  const [sortBy, setSortBy] = useState<string>("desc");
+
+  // Derive loading from the current vs. last-fetched filter/page key.
+  const currentKey = `${projectId}|${actionFilter}|${entityFilter}|${page}|${pageSize}|${sortBy}`;
+  const loading = loadedKey !== currentKey;
+
+  // Main fetch — runs on mount and whenever filters/page/sort change.
+  // The skeleton shows while `loading` is true (i.e. until the first
+  // fetch for the current key completes).
+  useEffect(() => {
+    let cancelled = false;
+    const fetchKey = currentKey;
+    const params = new URLSearchParams();
+    if (actionFilter !== "all") params.set("action", actionFilter);
+    if (entityFilter !== "all") params.set("entity", entityFilter);
+    params.set("page", String(page));
+    params.set("pageSize", String(pageSize));
+    params.set("sort", sortBy);
+    fetch(`/api/projects/${projectId}/audit?${params.toString()}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (cancelled) return;
+        if (data && Array.isArray(data.entries)) {
+          setEntries(data.entries as AuditEntry[]);
+          setTotal(typeof data.total === "number" ? data.total : 0);
+          setTotalPages(typeof data.totalPages === "number" ? data.totalPages : 1);
+        } else {
+          setEntries([]);
+          setTotal(0);
+          setTotalPages(1);
+        }
+        setLoadedKey(fetchKey);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setEntries([]);
+        setTotal(0);
+        setTotalPages(1);
+        setLoadedKey(fetchKey);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [projectId, page, pageSize, actionFilter, entityFilter, sortBy, currentKey]);
+
+  // Real-time polling — every 5s while the section is expanded.
+  // Uses a subtle "Načítání..." indicator (does not flip the skeleton).
+  useEffect(() => {
+    if (!isExpanded) return;
+    const fetchAudit = () => {
+      setPolling(true);
+      const params = new URLSearchParams();
+      if (actionFilter !== "all") params.set("action", actionFilter);
+      if (entityFilter !== "all") params.set("entity", entityFilter);
+      params.set("page", String(page));
+      params.set("pageSize", String(pageSize));
+      params.set("sort", sortBy);
+      fetch(`/api/projects/${projectId}/audit?${params.toString()}`)
+        .then((r) => (r.ok ? r.json() : null))
+        .then((data) => {
+          if (data && Array.isArray(data.entries)) {
+            setEntries(data.entries as AuditEntry[]);
+            setTotal(typeof data.total === "number" ? data.total : 0);
+            setTotalPages(typeof data.totalPages === "number" ? data.totalPages : 1);
+          }
+          setPolling(false);
+        })
+        .catch(() => setPolling(false));
+    };
+    const interval = setInterval(fetchAudit, 5000);
+    return () => clearInterval(interval);
+  }, [isExpanded, page, pageSize, actionFilter, entityFilter, sortBy, projectId]);
+
+  // Reset page to 1 when filters/sort/page-size change — done via
+  // wrapper handlers to avoid setState-in-effect lint error.
+  const handleActionFilterChange = (v: string) => {
+    setActionFilter(v);
+    setPage(1);
+  };
+  const handleEntityFilterChange = (v: string) => {
+    setEntityFilter(v);
+    setPage(1);
+  };
+  const handleSortChange = (v: string) => {
+    setSortBy(v);
+    setPage(1);
+  };
+  const handlePageSizeChange = (v: string) => {
+    setPageSize(Number(v));
+    setPage(1);
+  };
+
+  return (
+    <div className="space-y-3">
+      {/* Toolbar: live toggle + export + polling indicator */}
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <Button
+            variant={isExpanded ? "default" : "outline"}
+            size="sm"
+            className="rounded-full gap-1.5"
+            onClick={() => setIsExpanded((v) => !v)}
+            aria-pressed={isExpanded}
+            aria-label={isExpanded ? "Pozastavit live aktualizace" : "Spustit live aktualizace"}
+          >
+            {isExpanded ? (
+              <Pause className="h-3.5 w-3.5" />
+            ) : (
+              <Play className="h-3.5 w-3.5" />
+            )}
+            {isExpanded ? "Pozastavit live" : "Spustit live"}
+          </Button>
+          <Button asChild variant="outline" size="sm" className="rounded-full gap-1.5">
+            <a
+              href={`/api/projects/${projectId}/audit/export`}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <Download className="h-3.5 w-3.5" /> Export CSV
+            </a>
+          </Button>
+        </div>
+        {polling && (
+          <span className="flex items-center gap-1 type-label-sm text-on-surface-variant">
+            <Loader2 className="h-3 w-3 animate-spin" />
+            Načítání...
+          </span>
+        )}
+      </div>
+
+      {/* Filter controls */}
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="space-y-1">
+          <Label className="type-label-sm text-on-surface-variant">Akce</Label>
+          <Select value={actionFilter} onValueChange={handleActionFilterChange}>
+            <SelectTrigger className="h-8 type-label-sm"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Vše</SelectItem>
+              <SelectItem value="create">Vytvořeno</SelectItem>
+              <SelectItem value="update">Upraveno</SelectItem>
+              <SelectItem value="delete">Smazáno</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-1">
+          <Label className="type-label-sm text-on-surface-variant">Typ entity</Label>
+          <Select value={entityFilter} onValueChange={handleEntityFilterChange}>
+            <SelectTrigger className="h-8 type-label-sm"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Vše</SelectItem>
+              <SelectItem value="BudgetItem">Položka rozpočtu</SelectItem>
+              <SelectItem value="Payment">Platba</SelectItem>
+              <SelectItem value="TimeEntry">Čas</SelectItem>
+              <SelectItem value="Contact">Kontakt</SelectItem>
+              <SelectItem value="Project">Projekt</SelectItem>
+              <SelectItem value="ProjectMember">Člen</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-1">
+          <Label className="type-label-sm text-on-surface-variant">Řazení</Label>
+          <Select value={sortBy} onValueChange={handleSortChange}>
+            <SelectTrigger className="h-8 type-label-sm"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="desc">Nejnovější</SelectItem>
+              <SelectItem value="asc">Nejstarší</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-1">
+          <Label className="type-label-sm text-on-surface-variant">Položek na stránku</Label>
+          <Select value={String(pageSize)} onValueChange={handlePageSizeChange}>
+            <SelectTrigger className="h-8 type-label-sm"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="10">10</SelectItem>
+              <SelectItem value="50">50</SelectItem>
+              <SelectItem value="100">100</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      {/* Entries */}
+      {loading ? (
+        <div className="space-y-1.5">
+          <Skeleton className="h-12" />
+          <Skeleton className="h-12" />
+          <Skeleton className="h-12" />
+        </div>
+      ) : entries.length === 0 ? (
+        <p className="py-6 text-center type-label text-on-surface-variant">
+          Žádné záznamy pro vybrané filtry.
+        </p>
+      ) : (
+        <div className="overflow-x-auto rounded-lg border border-outline-variant">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-outline-variant bg-surface-container-high">
+                <th className="type-overline text-on-surface-variant px-3 py-2 text-left">Úkon</th>
+                <th className="type-overline text-on-surface-variant px-3 py-2 text-left">Detail změny</th>
+                <th className="type-overline text-on-surface-variant px-3 py-2 text-left">Autor</th>
+                <th className="type-overline text-on-surface-variant px-3 py-2 text-left whitespace-nowrap">Datum</th>
+                <th className="type-overline text-on-surface-variant px-3 py-2 text-left whitespace-nowrap">Čas</th>
+              </tr>
+            </thead>
+            <tbody>
+              {entries.map((entry) => {
+                const authorName = entry.user?.name || entry.user?.email || "Neznámý";
+                const authorInitials =
+                  authorName
+                    .split(/\s+/)
+                    .slice(0, 2)
+                    .map((s) => s[0]?.toUpperCase() ?? "")
+                    .join("") || "?";
+                const { date, time } = formatTimestamp(entry.createdAt);
+                const description = describeChange(entry);
+                return (
+                  <tr key={entry.id} className="border-b border-outline-variant last:border-0 hover:bg-surface-container-high/60">
+                    {/* Úkon — action + entity type badge */}
+                    <td className="px-3 py-2 align-top">
+                      <div className="flex flex-col gap-0.5">
+                        <span className={cn("type-label-sm font-semibold", ACTION_COLORS[entry.action] ?? "text-muted-foreground")}>
+                          {ACTION_LABELS[entry.action] ?? entry.action}
+                        </span>
+                        <span className="type-label text-on-surface-variant">
+                          {ENTITY_LABELS[entry.entityType] ?? entry.entityType}
+                        </span>
+                      </div>
+                    </td>
+                    {/* Detail změny — human-readable description */}
+                    <td className="px-3 py-2 align-top">
+                      <div className="flex flex-col gap-0.5">
+                        {/* Entity label (name of what changed) */}
+                        {entry.entityLabel && (
+                          <span className="type-body font-medium">{entry.entityLabel}</span>
+                        )}
+                        {/* Human-readable change description */}
+                        <span className="type-label text-on-surface-variant">{description}</span>
+                      </div>
+                    </td>
+                    {/* Autor — avatar + name */}
+                    <td className="px-3 py-2 align-top">
+                      <div className="flex items-center gap-1.5">
+                        <Avatar className="h-6 w-6 shrink-0">
+                          {entry.user?.image ? (
+                            <AvatarImage src={entry.user.image} alt={authorName} />
+                          ) : null}
+                          <AvatarFallback className="bg-secondary-container text-[9px] font-bold text-secondary-container-foreground">
+                            {authorInitials}
+                          </AvatarFallback>
+                        </Avatar>
+                        <span className="type-label text-on-surface-variant truncate">{authorName}</span>
+                      </div>
+                    </td>
+                    {/* Datum */}
+                    <td className="px-3 py-2 align-top type-label text-on-surface-variant tabular-nums whitespace-nowrap">{date}</td>
+                    {/* Čas */}
+                    <td className="px-3 py-2 align-top type-label text-on-surface-variant tabular-nums whitespace-nowrap">{time}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* Pagination */}
+      {!loading && total > 0 && (
+        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-outline-variant pt-3">
+          <div className="type-label-sm text-on-surface-variant tabular-nums">
+            Zobrazeno {(page - 1) * pageSize + 1}–{Math.min(page * pageSize, total)} z {total}
+          </div>
+          <div className="flex items-center gap-1">
+            <Button
+              variant="outline"
+              size="sm"
+              className="rounded-full gap-1.5"
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page <= 1}
+            >
+              <ChevronLeft className="h-3.5 w-3.5" /> Předchozí
+            </Button>
+            <span className="type-label-sm tabular-nums px-2">
+              {page} / {totalPages}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              className="rounded-full gap-1.5"
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              disabled={page >= totalPages}
+            >
+              Další <ChevronRight className="h-3.5 w-3.5" />
+            </Button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ============================================================
+// DeleteProjectButton — with confirmation dialog
+// ============================================================
+function DeleteProjectButton({ projectId, projectName }: { projectId: string; projectName: string }) {
+  const [confirmName, setConfirmName] = useState("");
+  const [deleting, setDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    if (confirmName !== projectName) {
+      toast.error("Název projektu se neshoduje");
+      return;
+    }
+    setDeleting(true);
+    try {
+      const res = await fetch(`/api/projects/${projectId}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Failed to delete project");
+      toast.success("Projekt smazán");
+      window.location.href = "/";
+    } catch {
+      toast.error("Nepodařilo se smazat projekt");
+      setDeleting(false);
+    }
+  };
+
+  return (
+    <AlertDialog>
+      <AlertDialogTrigger asChild>
+        <Button variant="destructive" size="sm" className="rounded-full gap-1.5">
+          <Trash2 className="h-3.5 w-3.5" /> Smazat
+        </Button>
+      </AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Smazat projekt „{projectName}"?</AlertDialogTitle>
+          <AlertDialogDescription>
+            Tato akce je nevratná. Všechna data budou trvale smazána. Pro potvrzení napište název projektu:
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <Input value={confirmName} onChange={(e) => setConfirmName(e.target.value)} placeholder={projectName} className="h-9" autoFocus />
+        <AlertDialogFooter>
+          <AlertDialogCancel onClick={() => setConfirmName("")}>Zrušit</AlertDialogCancel>
+          <AlertDialogAction onClick={handleDelete} disabled={confirmName !== projectName || deleting} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+            {deleting && <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />}
+            Smazat projekt
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+}

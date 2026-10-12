@@ -64,6 +64,7 @@ import { formatCzk, formatDate, PAYMENT_TYPES, paymentTypeLabel } from "@/lib/fo
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { EmptyStateBox } from "@/components/empty-state-box";
+import { InlineDate, InlineNumber } from "@/components/ui/inline-editors";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { useLastValue } from "@/hooks/use-last-value";
 
@@ -367,7 +368,7 @@ export function PaymentsTab({ projectId }: { projectId: string }) {
             </div>
           </div>
           {/* Table skeleton */}
-          <div className="overflow-hidden rounded-lg border">
+          <div className="overflow-hidden rounded-lg border border-outline-variant bg-card">
             <div className="border-b bg-muted/40 px-4 py-2.5">
               <Skeleton className="h-4 w-full" />
             </div>
@@ -398,16 +399,16 @@ export function PaymentsTab({ projectId }: { projectId: string }) {
       ) : (
         <div className="space-y-3">
           {/* Unified payments table — standalone + installment invoices merged */}
-          <div className="overflow-hidden rounded-lg border">
+          <div className="overflow-hidden rounded-lg border border-outline-variant bg-card">
             <Table>
               <TableHeader>
                 <TableRow className="sticky top-0 z-30 bg-surface-container-high">
                   <TableHead className="w-16"></TableHead>
                   <TableHead className="w-28">Datum</TableHead>
-                  <TableHead className="w-32">Typ</TableHead>
                   <TableHead className="min-w-[220px]">Položka rozpočtu</TableHead>
-                  <TableHead className="min-w-[160px]">Popis / Firma</TableHead>
-                  <TableHead>Osoba / Kontakt</TableHead>
+                  <TableHead className="min-w-[160px]">Popis</TableHead>
+                  <TableHead className="w-32">Typ</TableHead>
+                  <TableHead>Kontakt</TableHead>
                   <TableHead className="text-right">Částka</TableHead>
                   <TableHead className="w-8"></TableHead>
                 </TableRow>
@@ -419,6 +420,7 @@ export function PaymentsTab({ projectId }: { projectId: string }) {
                     payment={payment}
                     meta={meta}
                     onEdit={() => setEditPayment(payment)}
+                    updatePayment={updatePayment}
                     onDelete={async () => {
                       try {
                         await deletePayment.mutateAsync(payment.id);
@@ -482,11 +484,13 @@ function PaymentRow({
   meta,
   onEdit,
   onDelete,
+  updatePayment,
 }: {
   payment: Payment;
   meta?: RowMeta;
   onEdit: () => void;
   onDelete: () => void;
+  updatePayment?: ReturnType<typeof useUpdatePayment>;
 }) {
   const [confirm, setConfirm] = useState(false);
   const t = paymentTypeLabel(payment.type);
@@ -495,6 +499,11 @@ function PaymentRow({
   const installmentNumber = meta?.installmentNumber ?? 0;
   const totalInstallments = meta?.totalInstallments ?? 0;
   const hasInstallment = isParent || isChild;
+
+  // Inline update helper — patches a single field without opening the edit dialog.
+  const update = (field: keyof Payment, value: unknown) => {
+    updatePayment?.mutate({ id: payment.id, data: { [field]: value } });
+  };
 
   return (
     <TableRow
@@ -509,7 +518,7 @@ function PaymentRow({
         {hasInstallment && (
           <Badge
             variant="outline"
-            className="gap-0.5 text-[11px] text-warning-strong dark:text-warning-strong"
+            className="gap-0.5 type-label-sm text-warning-strong dark:text-warning/80"
             title={
               meta?.invoiceTotal != null
                 ? `Faktura ve splátkách: ${formatCzk(meta.invoiceTotal)} — zaplaceno ${formatCzk(meta.paidTotal)} (${meta.percent.toFixed(0)} %), zbývá ${formatCzk(meta.remaining)}`
@@ -522,62 +531,81 @@ function PaymentRow({
           </Badge>
         )}
       </TableCell>
-      <TableCell className="whitespace-nowrap text-xs text-muted-foreground">
-        {hasInstallment && (
-          <span
-            className={cn(
-              "mr-1.5 inline-flex h-4 w-4 items-center justify-center rounded-full text-[11px] font-bold",
-              isParent
-                ? "bg-success-soft text-success-strong dark:bg-success-soft dark:text-success-strong"
-                : "bg-warning-soft text-warning-strong dark:bg-warning-soft dark:text-warning-strong",
-            )}
-          >
-            {installmentNumber}
-          </span>
-        )}
-        {formatDate(payment.date)}
-      </TableCell>
-      <TableCell>
-        <Badge variant="outline" className="text-[11px]">
-          {t.emoji} {t.label}
-        </Badge>
+      <TableCell className="whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center gap-1.5">
+          {hasInstallment && (
+            <span
+              className={cn(
+                "inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full type-label-sm font-bold",
+                isParent
+                  ? "bg-success-soft text-success-strong dark:bg-success-soft/40 dark:text-success/70"
+                  : "bg-warning-soft text-warning-strong dark:bg-warning-soft/40 dark:text-warning/70",
+              )}
+            >
+              {installmentNumber}
+            </span>
+          )}
+          <InlineDate
+            value={payment.date}
+            onCommit={(v) => update("date", v)}
+          />
+        </div>
       </TableCell>
       <TableCell>
         <div className={cn("flex flex-col", isChild && "pl-4")}>
-          <span className="text-xs font-medium">
+          <span className="type-body font-medium">
             {payment.budgetItem?.subcategory || payment.budgetItem?.category}
           </span>
-          <span className="text-xs text-muted-foreground">
+          <span className="type-label text-on-surface-variant">
             {payment.budgetItem?.category}
           </span>
         </div>
       </TableCell>
       <TableCell>
         <div className="flex flex-col">
-          <span className="text-xs">{payment.description || (isParent ? "1. splátka" : "—")}</span>
+          <span className="type-body">{payment.description || (isParent ? "1. splátka" : "—")}</span>
           {payment.vendor && (
-            <span className="text-xs text-muted-foreground">
+            <span className="type-label text-on-surface-variant">
               {payment.vendor}
               {payment.invoiceNumber ? ` · ${payment.invoiceNumber}` : ""}
             </span>
           )}
         </div>
       </TableCell>
-      <TableCell className="text-xs">
+      <TableCell onClick={(e) => e.stopPropagation()}>
+        <Select value={payment.type} onValueChange={(v) => update("type", v)}>
+          <SelectTrigger className="h-7 w-auto border-0 px-1 type-label-sm shadow-none hover:bg-surface-container-high gap-1">
+            <Badge variant="outline" className="type-label-sm">
+              {t.emoji} {t.label}
+            </Badge>
+          </SelectTrigger>
+          <SelectContent>
+            {PAYMENT_TYPES.map((pt) => (
+              <SelectItem key={pt.value} value={pt.value}>
+                {pt.emoji} {pt.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </TableCell>
+      <TableCell className="type-label text-on-surface-variant">
         {payment.contact?.name || "—"}
       </TableCell>
-      <TableCell className="text-right">
+      <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
         <div className="flex flex-col items-end">
-          <span className="text-sm font-semibold text-warning tabular-nums">
-            {formatCzk(payment.amount)}
-          </span>
+          <InlineNumber
+            value={payment.amount}
+            onCommit={(v) => update("amount", v)}
+            suffix=" Kč"
+            className="font-semibold text-warning"
+          />
           {isParent && meta?.invoiceTotal != null && (
-            <span className="text-xs text-muted-foreground tabular-nums">
+            <span className="type-label text-on-surface-variant tabular-nums">
               z {formatCzk(meta.invoiceTotal)}
             </span>
           )}
           {payment.vatRate !== null && payment.vatRate !== undefined && (
-            <span className="text-xs text-muted-foreground tabular-nums">
+            <span className="type-label text-on-surface-variant tabular-nums">
               vč. DPH {payment.vatRate}%
             </span>
           )}

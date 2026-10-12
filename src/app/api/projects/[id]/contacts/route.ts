@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { db, dbRead } from "@/lib/db";
+import { logChanges } from "@/lib/audit";
 
 // Explicit field selection — fetch only what the frontend uses.
 const CONTACT_SELECT = {
@@ -19,6 +20,19 @@ const CONTACT_SELECT = {
   createdAt: true,
   updatedAt: true,
   _count: { select: { timeEntries: true, payments: true } },
+  // Associated persons (1:N) — ordered by sortOrder for stable display.
+  persons: {
+    orderBy: { sortOrder: "asc" },
+    select: {
+      id: true,
+      firstName: true,
+      lastName: true,
+      phone: true,
+      email: true,
+      role: true,
+      sortOrder: true,
+    },
+  },
 } as const;
 
 // GET /api/projects/[id]/contacts - list all contacts for a project
@@ -70,6 +84,21 @@ export async function POST(
         rating: rating !== undefined && rating !== null ? Number(rating) : null,
       },
     });
+
+    // Log creation to audit log
+    await logChanges(
+      id,
+      "Contact",
+      contact.id,
+      "create",
+      null,
+      {
+        name: contact.name,
+        type: contact.type,
+        role: contact.role,
+      },
+      contact.name,
+    );
 
     return NextResponse.json(contact, { status: 201 });
   } catch (error) {

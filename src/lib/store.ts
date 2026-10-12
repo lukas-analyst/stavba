@@ -9,7 +9,8 @@ export type TabId =
   | "time"
   | "contacts"
   | "timeline"
-  | "notes";
+  | "notes"
+  | "management";
 
 export type BudgetFilter =
   | { type: "completion"; value: "all" | "todo" | "done" | "rejected" }
