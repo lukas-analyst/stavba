@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { logChanges } from "@/lib/audit";
 
 // PATCH /api/notes/[id] - update text and/or author of an existing note.
 // Body: { text?: string, author?: string }
@@ -39,6 +40,18 @@ export async function PATCH(
       where: { id },
       data,
     });
+
+    // Log update to audit log
+    await logChanges(
+      existing.projectId,
+      "Note",
+      id,
+      "update",
+      existing as unknown as Record<string, unknown>,
+      { text: body.text },
+      null,
+    );
+
     return NextResponse.json(updated);
   } catch (error) {
     console.error("PATCH note error:", error);
@@ -57,6 +70,18 @@ export async function DELETE(
     if (!existing) {
       return NextResponse.json({ error: "Note not found" }, { status: 404 });
     }
+
+    // Log deletion before deleting (entity is gone after delete)
+    await logChanges(
+      existing.projectId,
+      "Note",
+      id,
+      "delete",
+      existing as unknown as Record<string, unknown>,
+      null,
+      existing.author,
+    );
+
     await db.note.delete({ where: { id } });
     return NextResponse.json({ success: true });
   } catch (error) {

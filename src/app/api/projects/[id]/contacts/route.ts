@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { db, dbRead } from "@/lib/db";
+import { logChanges } from "@/lib/audit";
 
 // Explicit field selection — fetch only what the frontend uses.
 const CONTACT_SELECT = {
@@ -83,6 +84,21 @@ export async function POST(
         rating: rating !== undefined && rating !== null ? Number(rating) : null,
       },
     });
+
+    // Log creation to audit log
+    await logChanges(
+      id,
+      "Contact",
+      contact.id,
+      "create",
+      null,
+      {
+        name: contact.name,
+        type: contact.type,
+        role: contact.role,
+      },
+      contact.name,
+    );
 
     return NextResponse.json(contact, { status: 201 });
   } catch (error) {

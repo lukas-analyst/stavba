@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { logChanges } from "@/lib/audit";
 
 // PATCH /api/contacts/[id]/persons/[personId] — update a person
 export async function PATCH(
@@ -17,6 +18,16 @@ export async function PATCH(
       return NextResponse.json({ error: "Person not found" }, { status: 404 });
     }
 
+    // Fetch parent contact to resolve projectId (ContactPerson is a grandchild
+    // of Project: Person → Contact → Project).
+    const contact = await db.contact.findUnique({
+      where: { id },
+      select: { projectId: true },
+    });
+    if (!contact) {
+      return NextResponse.json({ error: "Contact not found" }, { status: 404 });
+    }
+
     const updated = await db.contactPerson.update({
       where: { id: personId },
       data: {
@@ -28,6 +39,17 @@ export async function PATCH(
         sortOrder: body.sortOrder !== undefined ? Number(body.sortOrder) : undefined,
       },
     });
+
+    // Log update to audit log
+    await logChanges(
+      contact.projectId,
+      "ContactPerson",
+      personId,
+      "update",
+      existing as unknown as Record<string, unknown>,
+      body,
+      null,
+    );
 
     return NextResponse.json(updated);
   } catch (error) {
@@ -50,6 +72,27 @@ export async function DELETE(
     if (!existing) {
       return NextResponse.json({ error: "Person not found" }, { status: 404 });
     }
+
+    // Fetch parent contact to resolve projectId (ContactPerson is a grandchild
+    // of Project: Person → Contact → Project).
+    const contact = await db.contact.findUnique({
+      where: { id },
+      select: { projectId: true },
+    });
+    if (!contact) {
+      return NextResponse.json({ error: "Contact not found" }, { status: 404 });
+    }
+
+    // Log deletion before deleting (entity is gone after delete)
+    await logChanges(
+      contact.projectId,
+      "ContactPerson",
+      personId,
+      "delete",
+      existing as unknown as Record<string, unknown>,
+      null,
+      `${existing.firstName} ${existing.lastName}`,
+    );
 
     await db.contactPerson.delete({ where: { id: personId } });
 

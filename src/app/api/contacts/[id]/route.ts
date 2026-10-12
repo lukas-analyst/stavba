@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { logChanges } from "@/lib/audit";
 
 // PATCH /api/contacts/[id]
 export async function PATCH(
@@ -44,6 +45,22 @@ export async function PATCH(
       },
     });
 
+    // Log update to audit log
+    await logChanges(
+      existing.projectId,
+      "Contact",
+      id,
+      "update",
+      existing as unknown as Record<string, unknown>,
+      {
+        name: body.name,
+        type: body.type,
+        phone: body.phone,
+        email: body.email,
+      },
+      updated.name,
+    );
+
     return NextResponse.json(updated);
   } catch (error) {
     console.error("PATCH contact error:", error);
@@ -62,6 +79,18 @@ export async function DELETE(
     if (!existing) {
       return NextResponse.json({ error: "Contact not found" }, { status: 404 });
     }
+
+    // Log deletion before deleting (entity is gone after delete)
+    await logChanges(
+      existing.projectId,
+      "Contact",
+      id,
+      "delete",
+      existing as unknown as Record<string, unknown>,
+      null,
+      existing.name,
+    );
+
     await db.contact.delete({ where: { id } });
     return NextResponse.json({ success: true });
   } catch (error) {

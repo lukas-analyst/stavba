@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { db, dbRead } from "@/lib/db";
+import { logChanges } from "@/lib/audit";
 
 // Explicit field selection — fetch only what the frontend uses.
 const TIME_ENTRY_SELECT = {
@@ -96,6 +97,22 @@ export async function POST(
       where: { id: budgetItemId },
       data: { actualHours: agg._sum.hours ?? 0 },
     });
+
+    // Log creation to audit log. `item.projectId` is the parent project
+    // (validated above to match the URL param `id`).
+    await logChanges(
+      item.projectId,
+      "TimeEntry",
+      entry.id,
+      "create",
+      null,
+      {
+        workerName: entry.workerName,
+        hours: entry.hours,
+        budgetItemId,
+      },
+      entry.workerName,
+    );
 
     return NextResponse.json(entry, { status: 201 });
   } catch (error) {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   Card,
@@ -57,6 +57,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Info,
+  Pause,
+  Play,
 } from "lucide-react";
 import {
   useProjects,
@@ -833,23 +835,24 @@ function SharingSection({ projectId }: { projectId: string }) {
 }
 
 // ============================================================
-// EnhancedAuditLog — with author + filters + pagination
+// EnhancedAuditLog — server-side pagination + live polling
 // ------------------------------------------------------------
-// - Client-side filtering + sorting + pagination of fetched
-//   entries (limit=500 from API).
-// - Filter by action (Vše/Vytvořeno/Upraveno/Smazáno) and
-//   by entity type (Vše/Položka rozpočtu/Platba/Čas/Kontakt/
-//   Projekt/Člen).
-// - Sort: by date (Nejnovější/Nejstarší), by action, by entity.
-// - Page size: 10/50/100, with Previous/Next + page number.
-// - Author avatar (image or initials) + name + action label
-//   + entity label + field-level change details (old → new).
+// - Fetches ONLY the current page from API:
+//   GET /api/projects/[id]/audit?action=&entity=&page=&pageSize=&sort=
+// - Response shape: { entries, total, page, pageSize, totalPages }
+// - Real-time polling every 5s while section is expanded
+//   (controlled by `isExpanded` state, toggled via Live button).
+// - Filters / sort / page-size / page changes trigger API refetch.
+// - Export CSV button → /api/projects/[id]/audit/export (new tab).
+// - entityLabel (human-readable name) shown alongside the
+//   entityType translation.
 // ============================================================
 type AuditEntry = {
   id: string;
   action: string;
   entityType: string;
   entityId: string;
+  entityLabel: string | null;
   field: string | null;
   oldValue: string | null;
   newValue: string | null;
@@ -881,41 +884,106 @@ const ENTITY_LABELS: Record<string, string> = {
 };
 
 function EnhancedAuditLog({ projectId }: { projectId: string }) {
+  // Server-side pagination state
   const [entries, setEntries] = useState<AuditEntry[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [filterAction, setFilterAction] = useState<string>("all");
-  const [filterEntity, setFilterEntity] = useState<string>("all");
-  const [sortBy, setSortBy] = useState<string>("date-desc");
-  const [pageSize, setPageSize] = useState<number>(10);
-  const [page, setPage] = useState<number>(1);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
+  // Loading / polling states
+  // `loading` is DERIVED from comparing the current filter/page key
+  // against the last successfully fetched key. This avoids calling
+  // setLoading(true) synchronously inside the effect body (which
+  // trips the react-hooks/set-state-in-effect rule and causes
+  // cascading renders). The skeleton shows whenever the current
+  // filter/page state hasn't been fetched yet.
+  const [loadedKey, setLoadedKey] = useState<string>("");
+  const [polling, setPolling] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(true);
+  // Filters / sort
+  const [actionFilter, setActionFilter] = useState<string>("all");
+  const [entityFilter, setEntityFilter] = useState<string>("all");
+  const [sortBy, setSortBy] = useState<string>("desc");
 
+  // Derive loading from the current vs. last-fetched filter/page key.
+  const currentKey = `${projectId}|${actionFilter}|${entityFilter}|${page}|${pageSize}|${sortBy}`;
+  const loading = loadedKey !== currentKey;
+
+  // Main fetch — runs on mount and whenever filters/page/sort change.
+  // The skeleton shows while `loading` is true (i.e. until the first
+  // fetch for the current key completes).
   useEffect(() => {
     let cancelled = false;
-    fetch(`/api/projects/${projectId}/audit?limit=500`)
-      .then((r) => (r.ok ? r.json() : []))
+    const fetchKey = currentKey;
+    const params = new URLSearchParams();
+    if (actionFilter !== "all") params.set("action", actionFilter);
+    if (entityFilter !== "all") params.set("entity", entityFilter);
+    params.set("page", String(page));
+    params.set("pageSize", String(pageSize));
+    params.set("sort", sortBy);
+    fetch(`/api/projects/${projectId}/audit?${params.toString()}`)
+      .then((r) => (r.ok ? r.json() : null))
       .then((data) => {
         if (cancelled) return;
-        setEntries(Array.isArray(data) ? data : []);
-        setLoading(false);
+        if (data && Array.isArray(data.entries)) {
+          setEntries(data.entries as AuditEntry[]);
+          setTotal(typeof data.total === "number" ? data.total : 0);
+          setTotalPages(typeof data.totalPages === "number" ? data.totalPages : 1);
+        } else {
+          setEntries([]);
+          setTotal(0);
+          setTotalPages(1);
+        }
+        setLoadedKey(fetchKey);
       })
       .catch(() => {
         if (cancelled) return;
         setEntries([]);
-        setLoading(false);
+        setTotal(0);
+        setTotalPages(1);
+        setLoadedKey(fetchKey);
       });
     return () => {
       cancelled = true;
     };
-  }, [projectId]);
+  }, [projectId, page, pageSize, actionFilter, entityFilter, sortBy, currentKey]);
+
+  // Real-time polling — every 5s while the section is expanded.
+  // Uses a subtle "Načítání..." indicator (does not flip the skeleton).
+  useEffect(() => {
+    if (!isExpanded) return;
+    const fetchAudit = () => {
+      setPolling(true);
+      const params = new URLSearchParams();
+      if (actionFilter !== "all") params.set("action", actionFilter);
+      if (entityFilter !== "all") params.set("entity", entityFilter);
+      params.set("page", String(page));
+      params.set("pageSize", String(pageSize));
+      params.set("sort", sortBy);
+      fetch(`/api/projects/${projectId}/audit?${params.toString()}`)
+        .then((r) => (r.ok ? r.json() : null))
+        .then((data) => {
+          if (data && Array.isArray(data.entries)) {
+            setEntries(data.entries as AuditEntry[]);
+            setTotal(typeof data.total === "number" ? data.total : 0);
+            setTotalPages(typeof data.totalPages === "number" ? data.totalPages : 1);
+          }
+          setPolling(false);
+        })
+        .catch(() => setPolling(false));
+    };
+    const interval = setInterval(fetchAudit, 5000);
+    return () => clearInterval(interval);
+  }, [isExpanded, page, pageSize, actionFilter, entityFilter, sortBy, projectId]);
 
   // Reset page to 1 when filters/sort/page-size change — done via
   // wrapper handlers to avoid setState-in-effect lint error.
-  const handleFilterActionChange = (v: string) => {
-    setFilterAction(v);
+  const handleActionFilterChange = (v: string) => {
+    setActionFilter(v);
     setPage(1);
   };
-  const handleFilterEntityChange = (v: string) => {
-    setFilterEntity(v);
+  const handleEntityFilterChange = (v: string) => {
+    setEntityFilter(v);
     setPage(1);
   };
   const handleSortChange = (v: string) => {
@@ -926,45 +994,6 @@ function EnhancedAuditLog({ projectId }: { projectId: string }) {
     setPageSize(Number(v));
     setPage(1);
   };
-
-  // Filter + sort (memoized)
-  const processed = useMemo(() => {
-    let result = entries;
-    if (filterAction !== "all") {
-      result = result.filter((e) => e.action === filterAction);
-    }
-    if (filterEntity !== "all") {
-      result = result.filter((e) => e.entityType === filterEntity);
-    }
-    const sorted = [...result];
-    sorted.sort((a, b) => {
-      switch (sortBy) {
-        case "date-desc":
-          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-        case "date-asc":
-          return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
-        case "action":
-          return (ACTION_LABELS[a.action] ?? a.action).localeCompare(
-            ACTION_LABELS[b.action] ?? b.action,
-          );
-        case "entity":
-          return (ENTITY_LABELS[a.entityType] ?? a.entityType).localeCompare(
-            ENTITY_LABELS[b.entityType] ?? b.entityType,
-          );
-        default:
-          return 0;
-      }
-    });
-    return sorted;
-  }, [entries, filterAction, filterEntity, sortBy]);
-
-  // Pagination math
-  const totalPages = Math.max(1, Math.ceil(processed.length / pageSize));
-  const currentPage = Math.min(Math.max(1, page), totalPages);
-  const paginated = processed.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize,
-  );
 
   const formatValue = (val: string | null): string => {
     if (val === null) return "—";
@@ -982,11 +1011,47 @@ function EnhancedAuditLog({ projectId }: { projectId: string }) {
 
   return (
     <div className="space-y-3">
+      {/* Toolbar: live toggle + export + polling indicator */}
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <Button
+            variant={isExpanded ? "default" : "outline"}
+            size="sm"
+            className="rounded-full gap-1.5"
+            onClick={() => setIsExpanded((v) => !v)}
+            aria-pressed={isExpanded}
+            aria-label={isExpanded ? "Pozastavit live aktualizace" : "Spustit live aktualizace"}
+          >
+            {isExpanded ? (
+              <Pause className="h-3.5 w-3.5" />
+            ) : (
+              <Play className="h-3.5 w-3.5" />
+            )}
+            {isExpanded ? "Pozastavit live" : "Spustit live"}
+          </Button>
+          <Button asChild variant="outline" size="sm" className="rounded-full gap-1.5">
+            <a
+              href={`/api/projects/${projectId}/audit/export`}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <Download className="h-3.5 w-3.5" /> Export CSV
+            </a>
+          </Button>
+        </div>
+        {polling && (
+          <span className="flex items-center gap-1 type-label-sm text-on-surface-variant">
+            <Loader2 className="h-3 w-3 animate-spin" />
+            Načítání...
+          </span>
+        )}
+      </div>
+
       {/* Filter controls */}
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
         <div className="space-y-1">
           <Label className="type-label-sm text-on-surface-variant">Akce</Label>
-          <Select value={filterAction} onValueChange={handleFilterActionChange}>
+          <Select value={actionFilter} onValueChange={handleActionFilterChange}>
             <SelectTrigger className="h-8 type-label-sm"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Vše</SelectItem>
@@ -998,7 +1063,7 @@ function EnhancedAuditLog({ projectId }: { projectId: string }) {
         </div>
         <div className="space-y-1">
           <Label className="type-label-sm text-on-surface-variant">Typ entity</Label>
-          <Select value={filterEntity} onValueChange={handleFilterEntityChange}>
+          <Select value={entityFilter} onValueChange={handleEntityFilterChange}>
             <SelectTrigger className="h-8 type-label-sm"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Vše</SelectItem>
@@ -1016,10 +1081,8 @@ function EnhancedAuditLog({ projectId }: { projectId: string }) {
           <Select value={sortBy} onValueChange={handleSortChange}>
             <SelectTrigger className="h-8 type-label-sm"><SelectValue /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="date-desc">Nejnovější</SelectItem>
-              <SelectItem value="date-asc">Nejstarší</SelectItem>
-              <SelectItem value="action">Akce</SelectItem>
-              <SelectItem value="entity">Entita</SelectItem>
+              <SelectItem value="desc">Nejnovější</SelectItem>
+              <SelectItem value="asc">Nejstarší</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -1043,13 +1106,13 @@ function EnhancedAuditLog({ projectId }: { projectId: string }) {
           <Skeleton className="h-12" />
           <Skeleton className="h-12" />
         </div>
-      ) : paginated.length === 0 ? (
+      ) : entries.length === 0 ? (
         <p className="py-6 text-center type-label text-on-surface-variant">
-          Žádné zaznamenané změny pro vybrané filtry.
+          Žádné záznamy pro vybrané filtry.
         </p>
       ) : (
         <div className="max-h-[600px] space-y-1.5 overflow-y-auto pr-1">
-          {paginated.map((entry) => {
+          {entries.map((entry) => {
             const authorName = entry.user?.name || entry.user?.email || "Neznámý";
             const authorInitials =
               authorName
@@ -1085,6 +1148,14 @@ function EnhancedAuditLog({ projectId }: { projectId: string }) {
                     <span className="type-label text-on-surface-variant">
                       {ENTITY_LABELS[entry.entityType] ?? entry.entityType}
                     </span>
+                    {entry.entityLabel && (
+                      <>
+                        <span className="type-label-sm text-on-surface-variant">·</span>
+                        <span className="type-label-sm text-on-surface-variant truncate">
+                          {entry.entityLabel}
+                        </span>
+                      </>
+                    )}
                     <span className="type-label-sm text-on-surface-variant">·</span>
                     <span className="type-label text-on-surface-variant truncate">{authorName}</span>
                   </div>
@@ -1117,11 +1188,10 @@ function EnhancedAuditLog({ projectId }: { projectId: string }) {
       )}
 
       {/* Pagination */}
-      {!loading && processed.length > 0 && (
+      {!loading && total > 0 && (
         <div className="flex flex-wrap items-center justify-between gap-2 border-t border-outline-variant pt-3">
           <div className="type-label-sm text-on-surface-variant tabular-nums">
-            Zobrazeno {(currentPage - 1) * pageSize + 1}–
-            {Math.min(currentPage * pageSize, processed.length)} z {processed.length}
+            Zobrazeno {(page - 1) * pageSize + 1}–{Math.min(page * pageSize, total)} z {total}
           </div>
           <div className="flex items-center gap-1">
             <Button
@@ -1129,19 +1199,19 @@ function EnhancedAuditLog({ projectId }: { projectId: string }) {
               size="sm"
               className="rounded-full gap-1.5"
               onClick={() => setPage((p) => Math.max(1, p - 1))}
-              disabled={currentPage <= 1}
+              disabled={page <= 1}
             >
               <ChevronLeft className="h-3.5 w-3.5" /> Předchozí
             </Button>
             <span className="type-label-sm tabular-nums px-2">
-              {currentPage} / {totalPages}
+              {page} / {totalPages}
             </span>
             <Button
               variant="outline"
               size="sm"
               className="rounded-full gap-1.5"
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-              disabled={currentPage >= totalPages}
+              disabled={page >= totalPages}
             >
               Další <ChevronRight className="h-3.5 w-3.5" />
             </Button>

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { logChanges } from "@/lib/audit";
 
 // GET /api/contacts/[id]/persons — list all persons for a contact
 export async function GET(
@@ -58,6 +59,22 @@ export async function POST(
         sortOrder: (maxOrder._max.sortOrder ?? -1) + 1,
       },
     });
+
+    // Log creation to audit log. `contact.projectId` is the parent project
+    // (ContactPerson is a grandchild of Project: Person → Contact → Project).
+    await logChanges(
+      contact.projectId,
+      "ContactPerson",
+      person.id,
+      "create",
+      null,
+      {
+        firstName: person.firstName,
+        lastName: person.lastName,
+        role: person.role,
+      },
+      `${person.firstName} ${person.lastName}`,
+    );
 
     return NextResponse.json(person, { status: 201 });
   } catch (error) {

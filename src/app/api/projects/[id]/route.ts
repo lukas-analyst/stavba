@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { db, dbRead } from "@/lib/db";
+import { logChanges } from "@/lib/audit";
 
 // GET /api/projects/[id]
 // Uses `dbRead` (read replica if configured, falls back to primary).
@@ -89,6 +90,17 @@ export async function PATCH(
       },
     });
 
+    // Log update to audit log
+    await logChanges(
+      id,
+      "Project",
+      id,
+      "update",
+      existing as unknown as Record<string, unknown>,
+      body,
+      existing.name,
+    );
+
     return NextResponse.json(updated);
   } catch (error) {
     console.error("PATCH /api/projects/[id] error:", error);
@@ -107,6 +119,18 @@ export async function DELETE(
     if (!existing) {
       return NextResponse.json({ error: "Project not found" }, { status: 404 });
     }
+
+    // Log deletion before deleting (entity is gone after delete)
+    await logChanges(
+      id,
+      "Project",
+      id,
+      "delete",
+      existing as unknown as Record<string, unknown>,
+      null,
+      existing.name,
+    );
+
     await db.project.delete({ where: { id } });
     return NextResponse.json({ success: true });
   } catch (error) {

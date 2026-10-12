@@ -4,6 +4,7 @@ import { getDefaultOwnerId } from "@/lib/default-owner";
 // Helper to log changes to the audit log.
 // Compares old and new values and logs only changed fields.
 // userId is resolved from getDefaultOwnerId() until auth is implemented.
+// entityLabel is a human-readable name for the entity (e.g. "Architektonický koncept").
 export async function logChanges(
   projectId: string,
   entityType: string,
@@ -11,9 +12,19 @@ export async function logChanges(
   action: "create" | "update" | "delete",
   oldData: Record<string, unknown> | null,
   newData: Record<string, unknown> | null,
+  entityLabel?: string | null,
 ) {
   // Resolve the current user (until auth, this is the default owner)
   const userId = await getDefaultOwnerId();
+
+  // Derive entityLabel from old/new data if not provided
+  const label =
+    entityLabel ??
+    (newData as Record<string, unknown> | null)?.subcategory as string | null ??
+    (newData as Record<string, unknown> | null)?.name as string | null ??
+    (oldData as Record<string, unknown> | null)?.subcategory as string | null ??
+    (oldData as Record<string, unknown> | null)?.name as string | null ??
+    null;
 
   if (action === "create" && newData) {
     await db.auditLog.create({
@@ -22,6 +33,7 @@ export async function logChanges(
         userId,
         entityType,
         entityId,
+        entityLabel: label,
         action: "create",
         field: null,
         oldValue: null,
@@ -38,6 +50,7 @@ export async function logChanges(
         userId,
         entityType,
         entityId,
+        entityLabel: label,
         action: "delete",
         field: null,
         oldValue: JSON.stringify(oldData),
@@ -63,6 +76,7 @@ export async function logChanges(
           userId,
           entityType,
           entityId,
+          entityLabel: label,
           action: "update",
           field: key,
           oldValue: oldStr || null,
