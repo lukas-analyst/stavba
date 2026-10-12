@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { logChanges } from "@/lib/audit";
 
 // PATCH /api/projects/[id]/members/[memberId] — update member role
 // Body: { role: "viewer" | "editor" }
@@ -29,6 +30,14 @@ export async function PATCH(
       },
     });
 
+    // Audit log: member role changed
+    await logChanges(id, "ProjectMember", memberId, "update", {
+      role: existing.role,
+    }, {
+      role: validRole,
+      userEmail: updated.user.email,
+    });
+
     return NextResponse.json({
       id: updated.id,
       role: updated.role,
@@ -50,14 +59,23 @@ export async function DELETE(
   try {
     const { id, memberId } = await params;
 
-    const existing = await db.projectMember.findFirst({
+    // Get user info before deleting for audit log
+    const memberWithUser = await db.projectMember.findFirst({
       where: { id: memberId, projectId: id },
+      include: { user: { select: { email: true, name: true } } },
     });
-    if (!existing) {
+    if (!memberWithUser) {
       return NextResponse.json({ error: "Member not found" }, { status: 404 });
     }
 
     await db.projectMember.delete({ where: { id: memberId } });
+
+    // Audit log: member removed
+    await logChanges(id, "ProjectMember", memberId, "delete", {
+      userId: memberWithUser.userId,
+      userEmail: memberWithUser.user.email,
+      role: memberWithUser.role,
+    }, null);
 
     return NextResponse.json({ success: true });
   } catch (error) {

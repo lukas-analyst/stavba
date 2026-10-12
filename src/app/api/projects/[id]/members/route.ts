@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { db, dbRead } from "@/lib/db";
+import { logChanges } from "@/lib/audit";
 
 // GET /api/projects/[id]/members — list all members of a project
 export async function GET(
@@ -79,7 +80,7 @@ export async function POST(
     });
     if (existing) {
       return NextResponse.json(
-        { error: "User is already a member of this project" },
+        { error: "Tento uživatel je již členem projektu" },
         { status: 409 },
       );
     }
@@ -91,7 +92,7 @@ export async function POST(
     }
     if (project.ownerId === user.id) {
       return NextResponse.json(
-        { error: "User is already the owner of this project" },
+        { error: "Tento uživatel je již správcem projektu" },
         { status: 409 },
       );
     }
@@ -105,6 +106,13 @@ export async function POST(
       include: {
         user: { select: { id: true, name: true, email: true, image: true } },
       },
+    });
+
+    // Audit log: member added
+    await logChanges(id, "ProjectMember", member.id, "create", null, {
+      userId: user.id,
+      userEmail: user.email,
+      role: validRole,
     });
 
     return NextResponse.json({

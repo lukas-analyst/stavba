@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   Card,
@@ -15,6 +15,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import {
   Select,
   SelectContent,
@@ -37,18 +38,11 @@ import {
   MapPin,
   Calendar,
   Building2,
-  Wallet,
-  Users,
-  Table2,
-  Receipt,
-  Clock,
-  CalendarRange,
   Download,
   Upload,
   FileSpreadsheet,
   Copy,
   Trash2,
-  History,
   AlertTriangle,
   Pencil,
   Check,
@@ -60,19 +54,19 @@ import {
   UserPlus,
   Shield,
   ArrowRight,
+  ChevronLeft,
+  ChevronRight,
+  Info,
 } from "lucide-react";
 import {
   useProjects,
   useUpdateProject,
-  useDashboard,
-  useContacts,
   useBudgetItems,
-  usePayments,
   useExportState,
   useImportState,
   useExportCsv,
 } from "@/lib/api";
-import { formatCzk, formatDate, STATUS_LABELS } from "@/lib/format";
+import { formatDate, STATUS_LABELS } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { CollapsibleSection } from "@/components/ui/collapsible-section";
@@ -83,10 +77,7 @@ import { CollapsibleSection } from "@/components/ui/collapsible-section";
 
 export function ProjectManagementTab({ projectId }: { projectId: string }) {
   const { data: projects, isLoading: projectsLoading } = useProjects();
-  const { data: dashboard } = useDashboard(projectId);
-  const { data: contacts } = useContacts(projectId);
   const { data: budgetItems } = useBudgetItems(projectId);
-  const { data: payments } = usePayments(projectId);
   const updateProject = useUpdateProject(projectId);
   const exportState = useExportState();
   const importState = useImportState();
@@ -116,7 +107,13 @@ export function ProjectManagementTab({ projectId }: { projectId: string }) {
   const handleCsv = async (type: "budget" | "payments" | "time" | "contacts") => {
     try {
       await exportCsv.mutateAsync(type);
-      toast.success(`CSV — ${type} exportováno`);
+      const labels: Record<typeof type, string> = {
+        budget: "Rozpočet",
+        payments: "Platby",
+        time: "Čas",
+        contacts: "Kontakty",
+      };
+      toast.success(`CSV — ${labels[type]} exportováno`);
     } catch {
       toast.error("CSV export selhal");
     }
@@ -168,64 +165,108 @@ export function ProjectManagementTab({ projectId }: { projectId: string }) {
       {/* ===== Project Info Card (inline editable) ===== */}
       <ProjectInfoCard project={project} updateProject={updateProject} />
 
-      {/* ===== Project Statistics ===== */}
-      <ProjectStatistics
-        contactsCount={contacts?.length ?? 0}
-        budgetItemsCount={budgetItems?.length ?? 0}
-        paymentsCount={payments?.length ?? 0}
-        timeline={dashboard?.timeline}
-        paymentsData={payments}
-        budgetData={budgetItems}
-        loading={projectsLoading}
-      />
-
       {/* ===== Sharing & Permissions ===== */}
       <SharingSection projectId={projectId} />
 
-      {/* ===== Export & Import ===== */}
-      <CollapsibleSection title="Export a Import dat">
-        <div className="space-y-3">
+      {/* ===== Export & Import (split into Projekt + Data subsections) ===== */}
+      <div className="space-y-4">
+        <CollapsibleSection title="Projekt" defaultOpen>
           <div className="flex flex-wrap gap-2">
-            <Button variant="outline" size="sm" className="rounded-full gap-1.5" onClick={handleExport} disabled={exportState.isPending}>
-              {exportState.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />}
+            <Button
+              variant="outline"
+              size="sm"
+              className="rounded-full gap-1.5"
+              onClick={handleExport}
+              disabled={exportState.isPending}
+            >
+              {exportState.isPending ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <Download className="h-3.5 w-3.5" />
+              )}
               Export stavu (JSON)
             </Button>
-            <Button variant="outline" size="sm" className="rounded-full gap-1.5" onClick={() => handleCsv("budget")} disabled={exportCsv.isPending}>
+            <label className="inline-flex">
+              <input
+                type="file"
+                accept="application/json,.json"
+                className="hidden"
+                onChange={async (e) => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+                  try {
+                    await importState.mutateAsync(file);
+                    toast.success("Stav importován");
+                  } catch {
+                    toast.error("Import selhal");
+                  }
+                  e.target.value = "";
+                }}
+              />
+              <span
+                className={cn(
+                  "inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-full border px-3 type-label hover:bg-surface-container-high",
+                  importState.isPending && "pointer-events-none opacity-50",
+                )}
+              >
+                {importState.isPending ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <Upload className="h-3.5 w-3.5" />
+                )}
+                Import stavu (JSON)
+              </span>
+            </label>
+          </div>
+          <p className="type-label-sm text-on-surface-variant">
+            Záloha kompletního stavu projektu (JSON) — lze importovat do jiného projektu.
+          </p>
+        </CollapsibleSection>
+
+        <CollapsibleSection title="Data" defaultOpen>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="rounded-full gap-1.5"
+              onClick={() => handleCsv("budget")}
+              disabled={exportCsv.isPending}
+            >
               <FileSpreadsheet className="h-3.5 w-3.5" /> CSV — Rozpočet
             </Button>
-            <Button variant="outline" size="sm" className="rounded-full gap-1.5" onClick={() => handleCsv("payments")} disabled={exportCsv.isPending}>
+            <Button
+              variant="outline"
+              size="sm"
+              className="rounded-full gap-1.5"
+              onClick={() => handleCsv("payments")}
+              disabled={exportCsv.isPending}
+            >
               <FileSpreadsheet className="h-3.5 w-3.5" /> CSV — Platby
             </Button>
-            <Button variant="outline" size="sm" className="rounded-full gap-1.5" onClick={() => handleCsv("time")} disabled={exportCsv.isPending}>
+            <Button
+              variant="outline"
+              size="sm"
+              className="rounded-full gap-1.5"
+              onClick={() => handleCsv("time")}
+              disabled={exportCsv.isPending}
+            >
               <FileSpreadsheet className="h-3.5 w-3.5" /> CSV — Čas
             </Button>
-            <Button variant="outline" size="sm" className="rounded-full gap-1.5" onClick={() => handleCsv("contacts")} disabled={exportCsv.isPending}>
+            <Button
+              variant="outline"
+              size="sm"
+              className="rounded-full gap-1.5"
+              onClick={() => handleCsv("contacts")}
+              disabled={exportCsv.isPending}
+            >
               <FileSpreadsheet className="h-3.5 w-3.5" /> CSV — Kontakty
             </Button>
           </div>
-          <label className="inline-flex">
-            <input
-              type="file"
-              accept="application/json,.json"
-              className="hidden"
-              onChange={async (e) => {
-                const file = e.target.files?.[0];
-                if (!file) return;
-                try {
-                  await importState.mutateAsync(file);
-                  toast.success("Stav importován");
-                } catch {
-                  toast.error("Import selhal");
-                }
-                e.target.value = "";
-              }}
-            />
-            <span className="inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-full border px-3 type-label hover:bg-surface-container-high">
-              <Upload className="h-3.5 w-3.5" /> Import stavu (JSON)
-            </span>
-          </label>
-        </div>
-      </CollapsibleSection>
+          <p className="type-label-sm text-on-surface-variant">
+            Tabulkový export jednotlivých sekcí (CSV) pro analýzu v Excelu nebo Google Sheets.
+          </p>
+        </CollapsibleSection>
+      </div>
 
       {/* ===== Enhanced Audit Log ===== */}
       <CollapsibleSection title="Audit log — nedávné změny" defaultOpen>
@@ -404,61 +445,15 @@ function ProjectInfoCard({
 }
 
 // ============================================================
-// ProjectStatistics — counts + timeline range
-// ============================================================
-function ProjectStatistics({
-  contactsCount,
-  budgetItemsCount,
-  paymentsCount,
-  timeline,
-  loading,
-}: {
-  contactsCount: number;
-  budgetItemsCount: number;
-  paymentsCount: number;
-  timeline?: { dateFrom: string | null; dateTo: string | null }[];
-  paymentsData?: unknown;
-  budgetData?: unknown;
-  loading: boolean;
-}) {
-  // Compute timeline min/max from dashboard.timeline
-  const timelineItems = timeline ?? [];
-  const datesFrom = timelineItems.map((t) => t.dateFrom).filter(Boolean) as string[];
-  const datesTo = timelineItems.map((t) => t.dateTo).filter(Boolean) as string[];
-  const minDate = datesFrom.length > 0 ? datesFrom.sort()[0] : null;
-  const maxDate = datesTo.length > 0 ? datesTo.sort().reverse()[0] : null;
-
-  return (
-    <Card className="bg-card shadow-sm">
-      <CardHeader className="pb-3">
-        <CardTitle className="type-title-lg">Statistiky projektu</CardTitle>
-        <CardDescription>Počty záznamů a časový rozsah</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-          <StatBox icon={<Users className="h-4 w-4 text-primary" />} label="Kontakty" value={contactsCount} loading={loading} />
-          <StatBox icon={<Table2 className="h-4 w-4 text-subsidy" />} label="Položky rozpočtu" value={budgetItemsCount} loading={loading} />
-          <StatBox icon={<Receipt className="h-4 w-4 text-warning" />} label="Platby" value={paymentsCount} loading={loading} />
-          <StatBox icon={<CalendarRange className="h-4 w-4 text-info" />} label="Časová osa" value={minDate && maxDate ? `${formatDate(minDate)} — ${formatDate(maxDate)}` : "—"} loading={loading} />
-          <StatBox icon={<Clock className="h-4 w-4 text-time" />} label="Timeline položek" value={timelineItems.length} loading={loading} />
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-function StatBox({ icon, label, value, loading }: { icon: React.ReactNode; label: string; value: number | string; loading: boolean }) {
-  return (
-    <div className="rounded-lg border border-outline-variant bg-surface-container-low p-3 text-center">
-      <div className="mb-1 flex justify-center">{icon}</div>
-      <div className="type-overline text-on-surface-variant">{label}</div>
-      {loading ? <Skeleton className="mx-auto mt-1 h-5 w-12" /> : <div className="type-display tabular-nums">{value}</div>}
-    </div>
-  );
-}
-
-// ============================================================
 // SharingSection — project members + owner management
+// ------------------------------------------------------------
+// - Avatar with image (Google auth ready) + initials fallback
+// - "Správce" badge instead of "Vlastník"
+// - "Čtenář" role label instead of "Prohlížeč"
+// - Email autocomplete via datalist (existing users)
+// - Detect existing member (warning ring + toast)
+// - Detect unknown email (info hint)
+// - Optimistic removal with brief loading state on the row
 // ============================================================
 type Member = {
   id: string;
@@ -479,7 +474,9 @@ function SharingSection({ projectId }: { projectId: string }) {
   const [addEmail, setAddEmail] = useState("");
   const [addRole, setAddRole] = useState("viewer");
   const [adding, setAdding] = useState(false);
+  const [removingIds, setRemovingIds] = useState<Set<string>>(new Set());
   const [allUsers, setAllUsers] = useState<{ id: string; name: string | null; email: string }[]>([]);
+  const [lastToastEmail, setLastToastEmail] = useState<string>("");
   const qc = useQueryClient();
 
   const fetchMembers = useCallback(async () => {
@@ -499,15 +496,40 @@ function SharingSection({ projectId }: { projectId: string }) {
   // Fetch members + all users on mount
   useEffect(() => {
     fetchMembers();
-    // Fetch all users for owner change dropdown
     fetch("/api/users")
       .then((r) => (r.ok ? r.json() : []))
       .then((users) => setAllUsers(users))
       .catch(() => setAllUsers([]));
   }, [fetchMembers]);
 
+  // Detect typed email matches (existing member or owner)
+  const typedEmail = addEmail.trim().toLowerCase();
+  const matchedMember =
+    typedEmail && data?.members.find((m) => m.user.email.toLowerCase() === typedEmail);
+  const matchedOwner =
+    typedEmail && data?.owner?.email?.toLowerCase() === typedEmail;
+  const isExistingMember = !!(matchedMember || matchedOwner);
+  const isKnownUser =
+    typedEmail && allUsers.some((u) => u.email.toLowerCase() === typedEmail);
+  const hasAt = typedEmail.includes("@");
+  const isNewUserHint = hasAt && !isExistingMember && !isKnownUser && typedEmail.length > 3;
+
+  // Show toast once when email matches existing member
+  useEffect(() => {
+    if (isExistingMember && lastToastEmail !== typedEmail) {
+      toast.warning("Tento uživatel je již členem projektu");
+      setLastToastEmail(typedEmail);
+    } else if (!isExistingMember && lastToastEmail && lastToastEmail !== typedEmail) {
+      setLastToastEmail("");
+    }
+  }, [isExistingMember, typedEmail, lastToastEmail]);
+
   const handleAdd = async () => {
     if (!addEmail.trim()) return;
+    if (isExistingMember) {
+      toast.warning("Tento uživatel je již členem projektu");
+      return;
+    }
     setAdding(true);
     try {
       const res = await fetch(`/api/projects/${projectId}/members`, {
@@ -517,10 +539,11 @@ function SharingSection({ projectId }: { projectId: string }) {
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        throw new Error(err.error || "Failed to add member");
+        throw new Error(err.error || "Nepodařilo se přidat člena");
       }
       toast.success(`Přidán člen: ${addEmail.trim()}`);
       setAddEmail("");
+      setLastToastEmail("");
       fetchMembers();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Nepodařilo se přidat člena");
@@ -530,26 +553,76 @@ function SharingSection({ projectId }: { projectId: string }) {
   };
 
   const handleRoleChange = async (memberId: string, role: string) => {
+    // Optimistic role update
+    const prev = data;
+    setData((cur) =>
+      cur
+        ? { ...cur, members: cur.members.map((m) => (m.id === memberId ? { ...m, role } : m)) }
+        : cur,
+    );
     try {
-      await fetch(`/api/projects/${projectId}/members/${memberId}`, {
+      const res = await fetch(`/api/projects/${projectId}/members/${memberId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ role }),
       });
+      if (!res.ok) throw new Error("Failed");
       toast.success("Role upravena");
-      fetchMembers();
     } catch {
       toast.error("Nepodařilo se upravit roli");
+      setData(prev); // restore previous state
     }
   };
 
   const handleRemove = async (memberId: string, name: string) => {
+    const memberToRestore = data?.members.find((m) => m.id === memberId);
+    // Brief loading state on the specific row
+    setRemovingIds((prev) => {
+      const next = new Set(prev);
+      next.add(memberId);
+      return next;
+    });
+    // Optimistically remove from local state after brief delay
+    const removeTimer = setTimeout(() => {
+      setData((cur) =>
+        cur ? { ...cur, members: cur.members.filter((m) => m.id !== memberId) } : cur,
+      );
+    }, 220);
+
     try {
-      await fetch(`/api/projects/${projectId}/members/${memberId}`, { method: "DELETE" });
+      const res = await fetch(`/api/projects/${projectId}/members/${memberId}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) throw new Error("Failed");
+      clearTimeout(removeTimer);
+      // Ensure removed from state immediately on success
+      setData((cur) =>
+        cur ? { ...cur, members: cur.members.filter((m) => m.id !== memberId) } : cur,
+      );
+      setRemovingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(memberId);
+        return next;
+      });
       toast.success(`Člen "${name}" odebrán`);
-      fetchMembers();
     } catch {
-      toast.error("Nepodařilo se odebrat člena");
+      clearTimeout(removeTimer);
+      setRemovingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(memberId);
+        return next;
+      });
+      // Restore the member at original position
+      if (memberToRestore) {
+        setData((cur) => {
+          if (!cur) return cur;
+          if (cur.members.some((m) => m.id === memberId)) return cur;
+          return { ...cur, members: [...cur.members, memberToRestore] };
+        });
+      } else {
+        fetchMembers();
+      }
+      toast.error("Nepodařilo se odebrat člena — člen byl obnoven");
     }
   };
 
@@ -560,11 +633,11 @@ function SharingSection({ projectId }: { projectId: string }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ownerId: newOwnerId }),
       });
-      toast.success("Vlastník změněn");
+      toast.success("Správce změněn");
       qc.invalidateQueries({ queryKey: ["projects"] });
       fetchMembers();
     } catch {
-      toast.error("Nepodařilo se změnit vlastníka");
+      toast.error("Nepodařilo se změnit správce");
     }
   };
 
@@ -580,19 +653,24 @@ function SharingSection({ projectId }: { projectId: string }) {
           <Shield className="h-4 w-4 text-primary" />
           Sdílení a přístupová práva
         </CardTitle>
-        <CardDescription>Správa vlastníka a členů projektu</CardDescription>
+        <CardDescription>Správa správce a členů projektu</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Owner */}
         {owner && (
           <div className="flex items-center gap-3 rounded-lg border border-primary/30 bg-primary/5 p-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-secondary-container">
-              <Crown className="h-5 w-5 text-primary" />
-            </div>
+            <Avatar className="h-10 w-10 shrink-0 border border-primary/30">
+              {owner.image ? (
+                <AvatarImage src={owner.image} alt={owner.name || owner.email} />
+              ) : null}
+              <AvatarFallback className="bg-secondary-container type-label-sm font-bold text-secondary-container-foreground">
+                <Crown className="h-5 w-5 text-primary" />
+              </AvatarFallback>
+            </Avatar>
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-1.5">
                 <span className="type-body font-semibold">{owner.name || owner.email}</span>
-                <Badge variant="secondary" className="type-label-sm">Vlastník</Badge>
+                <Badge variant="secondary" className="type-label-sm">Správce</Badge>
               </div>
               <div className="type-label text-on-surface-variant truncate">{owner.email}</div>
             </div>
@@ -617,44 +695,66 @@ function SharingSection({ projectId }: { projectId: string }) {
         )}
 
         {/* Members list */}
-        {members.length > 0 && (
+        {members.length > 0 ? (
           <div className="space-y-1.5">
-            {members.map((m) => (
-              <div
-                key={m.id}
-                className="flex items-center gap-3 rounded-lg border border-outline-variant bg-surface-container-low p-2.5"
-              >
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-secondary-container type-label-sm font-bold text-secondary-container-foreground">
-                  {(m.user.name || m.user.email)[0]?.toUpperCase()}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="type-body font-medium truncate">{m.user.name || m.user.email}</div>
-                  <div className="type-label text-on-surface-variant truncate">{m.user.email}</div>
-                </div>
-                {/* Role selector */}
-                <Select value={m.role} onValueChange={(v) => handleRoleChange(m.id, v)}>
-                  <SelectTrigger className="h-7 w-auto rounded-full type-label-sm gap-1">
-                    {m.role === "editor" ? <Edit3 className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
-                    {m.role === "editor" ? "Editor" : "Prohlížeč"}
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="viewer"><Eye className="mr-1.5 inline h-3 w-3" /> Prohlížeč (pouze čtení)</SelectItem>
-                    <SelectItem value="editor"><Edit3 className="mr-1.5 inline h-3 w-3" /> Editor (úpravy)</SelectItem>
-                  </SelectContent>
-                </Select>
-                {/* Remove */}
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-7 w-7 shrink-0 rounded-full state-layer-on-surface text-muted-foreground hover:text-danger"
-                  onClick={() => handleRemove(m.id, m.user.name || m.user.email)}
-                  aria-label="Odebrat člena"
+            {members.map((m) => {
+              const isRemoving = removingIds.has(m.id);
+              const isMatched = matchedMember?.id === m.id;
+              return (
+                <div
+                  key={m.id}
+                  className={cn(
+                    "flex items-center gap-3 rounded-lg border bg-surface-container-low p-2.5 transition-all",
+                    isMatched
+                      ? "border-warning ring-2 ring-warning/30"
+                      : "border-outline-variant",
+                    isRemoving && "opacity-50",
+                  )}
                 >
-                  <X className="h-3.5 w-3.5" />
-                </Button>
-              </div>
-            ))}
+                  <Avatar className="h-8 w-8 shrink-0">
+                    {m.user.image ? (
+                      <AvatarImage src={m.user.image} alt={m.user.name || m.user.email} />
+                    ) : null}
+                    <AvatarFallback className="bg-secondary-container type-label-sm font-bold text-secondary-container-foreground">
+                      {(m.user.name || m.user.email)[0]?.toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="min-w-0 flex-1">
+                    <div className="type-body font-medium truncate">{m.user.name || m.user.email}</div>
+                    <div className="type-label text-on-surface-variant truncate">{m.user.email}</div>
+                  </div>
+                  {/* Role selector */}
+                  <Select value={m.role} onValueChange={(v) => handleRoleChange(m.id, v)}>
+                    <SelectTrigger className="h-7 w-auto rounded-full type-label-sm gap-1">
+                      {m.role === "editor" ? <Edit3 className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+                      {m.role === "editor" ? "Editor" : "Čtenář"}
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="viewer"><Eye className="mr-1.5 inline h-3 w-3" /> Čtenář (pouze čtení)</SelectItem>
+                      <SelectItem value="editor"><Edit3 className="mr-1.5 inline h-3 w-3" /> Editor (úpravy)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {/* Remove */}
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 shrink-0 rounded-full state-layer-on-surface text-muted-foreground hover:text-danger"
+                    onClick={() => handleRemove(m.id, m.user.name || m.user.email)}
+                    disabled={isRemoving}
+                    aria-label="Odebrat člena"
+                  >
+                    {isRemoving ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      <X className="h-3.5 w-3.5" />
+                    )}
+                  </Button>
+                </div>
+              );
+            })}
           </div>
+        ) : (
+          <p className="type-label text-on-surface-variant">Zatím nebyli přidáni žádní členové.</p>
         )}
 
         {/* Add member */}
@@ -667,16 +767,28 @@ function SharingSection({ projectId }: { projectId: string }) {
               value={addEmail}
               onChange={(e) => setAddEmail(e.target.value)}
               placeholder="email@uzivatel.cz"
-              className="h-8 flex-1 min-w-[200px] type-body"
+              list="users-datalist"
+              className={cn(
+                "h-8 flex-1 min-w-[200px] type-body",
+                isExistingMember && "border-warning ring-2 ring-warning/30",
+                isNewUserHint && "border-info/50",
+              )}
               onKeyDown={(e) => e.key === "Enter" && handleAdd()}
             />
+            <datalist id="users-datalist">
+              {allUsers.map((u) => (
+                <option key={u.id} value={u.email}>
+                  {u.name || u.email}
+                </option>
+              ))}
+            </datalist>
             <Select value={addRole} onValueChange={setAddRole}>
               <SelectTrigger className="h-8 w-auto rounded-full type-label-sm gap-1">
                 {addRole === "editor" ? <Edit3 className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
-                {addRole === "editor" ? "Editor" : "Prohlížeč"}
+                {addRole === "editor" ? "Editor" : "Čtenář"}
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="viewer"><Eye className="mr-1.5 inline h-3 w-3" /> Prohlížeč</SelectItem>
+                <SelectItem value="viewer"><Eye className="mr-1.5 inline h-3 w-3" /> Čtenář</SelectItem>
                 <SelectItem value="editor"><Edit3 className="mr-1.5 inline h-3 w-3" /> Editor</SelectItem>
               </SelectContent>
             </Select>
@@ -685,19 +797,33 @@ function SharingSection({ projectId }: { projectId: string }) {
               Přidat
             </Button>
           </div>
+          {/* Hints */}
+          {isExistingMember && (
+            <div className="mt-2 flex items-center gap-1.5 type-label-sm text-warning">
+              <AlertTriangle className="h-3 w-3" /> Tento uživatel je již členem projektu
+            </div>
+          )}
+          {isNewUserHint && !isExistingMember && (
+            <div className="mt-2 flex items-center gap-1.5 type-label-sm text-info">
+              <Info className="h-3 w-3" /> Nový uživatel bude vytvořen při přidání
+            </div>
+          )}
           {allUsers.length > 0 && (
             <div className="mt-2 flex flex-wrap gap-1">
               <span className="type-label-sm text-on-surface-variant">Rychlý výběr:</span>
               {allUsers.slice(0, 5).map((u) => (
                 <button
                   key={u.id}
+                  type="button"
                   onClick={() => setAddEmail(u.email)}
                   className="rounded-full border border-outline-variant px-2 py-0.5 type-label-sm hover:bg-surface-container-high"
                 >
                   {u.email}
                 </button>
               ))}
-              {allUsers.length > 5 && <span className="type-label-sm text-on-surface-variant">+{allUsers.length - 5} dalších</span>}
+              {allUsers.length > 5 && (
+                <span className="type-label-sm text-on-surface-variant">+{allUsers.length - 5} dalších</span>
+              )}
             </div>
           )}
         </div>
@@ -707,7 +833,17 @@ function SharingSection({ projectId }: { projectId: string }) {
 }
 
 // ============================================================
-// EnhancedAuditLog — with author + change details
+// EnhancedAuditLog — with author + filters + pagination
+// ------------------------------------------------------------
+// - Client-side filtering + sorting + pagination of fetched
+//   entries (limit=500 from API).
+// - Filter by action (Vše/Vytvořeno/Upraveno/Smazáno) and
+//   by entity type (Vše/Položka rozpočtu/Platba/Čas/Kontakt/
+//   Projekt/Člen).
+// - Sort: by date (Nejnovější/Nejstarší), by action, by entity.
+// - Page size: 10/50/100, with Previous/Next + page number.
+// - Author avatar (image or initials) + name + action label
+//   + entity label + field-level change details (old → new).
 // ============================================================
 type AuditEntry = {
   id: string;
@@ -721,57 +857,120 @@ type AuditEntry = {
   user: { id: string; name: string | null; email: string; image: string | null } | null;
 };
 
+const ACTION_LABELS: Record<string, string> = {
+  create: "Vytvořeno",
+  update: "Upraveno",
+  delete: "Smazáno",
+};
+
+const ACTION_COLORS: Record<string, string> = {
+  create: "text-success",
+  update: "text-info",
+  delete: "text-danger",
+};
+
+const ENTITY_LABELS: Record<string, string> = {
+  BudgetItem: "Položka rozpočtu",
+  Payment: "Platba",
+  TimeEntry: "Čas",
+  Contact: "Kontakt",
+  Project: "Projekt",
+  Note: "Poznámka",
+  ContactPerson: "Kontaktní osoba",
+  ProjectMember: "Člen",
+};
+
 function EnhancedAuditLog({ projectId }: { projectId: string }) {
   const [entries, setEntries] = useState<AuditEntry[]>([]);
   const [loading, setLoading] = useState(true);
+  const [filterAction, setFilterAction] = useState<string>("all");
+  const [filterEntity, setFilterEntity] = useState<string>("all");
+  const [sortBy, setSortBy] = useState<string>("date-desc");
+  const [pageSize, setPageSize] = useState<number>(10);
+  const [page, setPage] = useState<number>(1);
 
   useEffect(() => {
-    fetch(`/api/projects/${projectId}/audit?limit=20`)
+    let cancelled = false;
+    fetch(`/api/projects/${projectId}/audit?limit=500`)
       .then((r) => (r.ok ? r.json() : []))
       .then((data) => {
-        setEntries(data);
+        if (cancelled) return;
+        setEntries(Array.isArray(data) ? data : []);
         setLoading(false);
       })
       .catch(() => {
+        if (cancelled) return;
         setEntries([]);
         setLoading(false);
       });
+    return () => {
+      cancelled = true;
+    };
   }, [projectId]);
 
-  if (loading) return <Skeleton className="h-32" />;
-  if (entries.length === 0) {
-    return <p className="type-label text-on-surface-variant">Žádné zaznamenané změny.</p>;
-  }
-
-  const actionLabels: Record<string, string> = {
-    create: "Vytvořeno",
-    update: "Upraveno",
-    delete: "Smazáno",
+  // Reset page to 1 when filters/sort/page-size change — done via
+  // wrapper handlers to avoid setState-in-effect lint error.
+  const handleFilterActionChange = (v: string) => {
+    setFilterAction(v);
+    setPage(1);
+  };
+  const handleFilterEntityChange = (v: string) => {
+    setFilterEntity(v);
+    setPage(1);
+  };
+  const handleSortChange = (v: string) => {
+    setSortBy(v);
+    setPage(1);
+  };
+  const handlePageSizeChange = (v: string) => {
+    setPageSize(Number(v));
+    setPage(1);
   };
 
-  const actionColors: Record<string, string> = {
-    create: "text-success",
-    update: "text-info",
-    delete: "text-danger",
-  };
+  // Filter + sort (memoized)
+  const processed = useMemo(() => {
+    let result = entries;
+    if (filterAction !== "all") {
+      result = result.filter((e) => e.action === filterAction);
+    }
+    if (filterEntity !== "all") {
+      result = result.filter((e) => e.entityType === filterEntity);
+    }
+    const sorted = [...result];
+    sorted.sort((a, b) => {
+      switch (sortBy) {
+        case "date-desc":
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        case "date-asc":
+          return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+        case "action":
+          return (ACTION_LABELS[a.action] ?? a.action).localeCompare(
+            ACTION_LABELS[b.action] ?? b.action,
+          );
+        case "entity":
+          return (ENTITY_LABELS[a.entityType] ?? a.entityType).localeCompare(
+            ENTITY_LABELS[b.entityType] ?? b.entityType,
+          );
+        default:
+          return 0;
+      }
+    });
+    return sorted;
+  }, [entries, filterAction, filterEntity, sortBy]);
 
-  const entityLabels: Record<string, string> = {
-    BudgetItem: "Položka rozpočtu",
-    Payment: "Platba",
-    TimeEntry: "Časový záznam",
-    Contact: "Kontakt",
-    Project: "Projekt",
-    Note: "Poznámka",
-    ContactPerson: "Kontaktní osoba",
-  };
+  // Pagination math
+  const totalPages = Math.max(1, Math.ceil(processed.length / pageSize));
+  const currentPage = Math.min(Math.max(1, page), totalPages);
+  const paginated = processed.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize,
+  );
 
   const formatValue = (val: string | null): string => {
     if (val === null) return "—";
-    // Try to parse as JSON (could be an object)
     try {
       const parsed = JSON.parse(val);
       if (typeof parsed === "object" && parsed !== null) {
-        // Show key fields
         const keys = Object.keys(parsed).slice(0, 3);
         return keys.map((k) => `${k}: ${parsed[k]}`).join(", ");
       }
@@ -782,61 +981,173 @@ function EnhancedAuditLog({ projectId }: { projectId: string }) {
   };
 
   return (
-    <div className="space-y-1.5">
-      {entries.map((entry) => {
-        const authorName = entry.user?.name || entry.user?.email || "Neznámý";
-        const authorInitials = authorName
-          .split(/\s+/)
-          .slice(0, 2)
-          .map((s) => s[0]?.toUpperCase() ?? "")
-          .join("") || "?";
+    <div className="space-y-3">
+      {/* Filter controls */}
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="space-y-1">
+          <Label className="type-label-sm text-on-surface-variant">Akce</Label>
+          <Select value={filterAction} onValueChange={handleFilterActionChange}>
+            <SelectTrigger className="h-8 type-label-sm"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Vše</SelectItem>
+              <SelectItem value="create">Vytvořeno</SelectItem>
+              <SelectItem value="update">Upraveno</SelectItem>
+              <SelectItem value="delete">Smazáno</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-1">
+          <Label className="type-label-sm text-on-surface-variant">Typ entity</Label>
+          <Select value={filterEntity} onValueChange={handleFilterEntityChange}>
+            <SelectTrigger className="h-8 type-label-sm"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Vše</SelectItem>
+              <SelectItem value="BudgetItem">Položka rozpočtu</SelectItem>
+              <SelectItem value="Payment">Platba</SelectItem>
+              <SelectItem value="TimeEntry">Čas</SelectItem>
+              <SelectItem value="Contact">Kontakt</SelectItem>
+              <SelectItem value="Project">Projekt</SelectItem>
+              <SelectItem value="ProjectMember">Člen</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-1">
+          <Label className="type-label-sm text-on-surface-variant">Řazení</Label>
+          <Select value={sortBy} onValueChange={handleSortChange}>
+            <SelectTrigger className="h-8 type-label-sm"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="date-desc">Nejnovější</SelectItem>
+              <SelectItem value="date-asc">Nejstarší</SelectItem>
+              <SelectItem value="action">Akce</SelectItem>
+              <SelectItem value="entity">Entita</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-1">
+          <Label className="type-label-sm text-on-surface-variant">Položek na stránku</Label>
+          <Select value={String(pageSize)} onValueChange={handlePageSizeChange}>
+            <SelectTrigger className="h-8 type-label-sm"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="10">10</SelectItem>
+              <SelectItem value="50">50</SelectItem>
+              <SelectItem value="100">100</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
 
-        return (
-          <div
-            key={entry.id}
-            className="flex items-start gap-3 rounded-lg border border-outline-variant bg-surface-container-low px-3 py-2.5"
-          >
-            {/* Author avatar */}
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-secondary-container type-label-sm font-bold text-secondary-container-foreground">
-              {authorInitials}
-            </div>
-            {/* Change details */}
-            <div className="min-w-0 flex-1">
-              <div className="flex flex-wrap items-center gap-1.5">
-                <span className={cn("type-label-sm font-semibold", actionColors[entry.action] ?? "text-muted-foreground")}>
-                  {actionLabels[entry.action] ?? entry.action}
-                </span>
-                <span className="type-label text-on-surface-variant">
-                  {entityLabels[entry.entityType] ?? entry.entityType}
-                </span>
-                <span className="type-label-sm text-on-surface-variant">·</span>
-                <span className="type-label text-on-surface-variant truncate">{authorName}</span>
-              </div>
-              {/* Field-level change details */}
-              {entry.field && (
-                <div className="mt-1 flex flex-wrap items-center gap-1 type-label-sm">
-                  <span className="rounded bg-surface-container-high px-1.5 py-0.5 font-mono text-[10px] text-on-surface-variant">
-                    {entry.field}
-                  </span>
-                  {entry.oldValue !== null && (
-                    <>
-                      <span className="text-danger/70 line-through">{formatValue(entry.oldValue)}</span>
-                      <ArrowRight className="h-3 w-3 text-on-surface-variant/40" />
-                    </>
-                  )}
-                  {entry.newValue !== null && (
-                    <span className="text-success/80">{formatValue(entry.newValue)}</span>
+      {/* Entries */}
+      {loading ? (
+        <div className="space-y-1.5">
+          <Skeleton className="h-12" />
+          <Skeleton className="h-12" />
+          <Skeleton className="h-12" />
+        </div>
+      ) : paginated.length === 0 ? (
+        <p className="py-6 text-center type-label text-on-surface-variant">
+          Žádné zaznamenané změny pro vybrané filtry.
+        </p>
+      ) : (
+        <div className="max-h-[600px] space-y-1.5 overflow-y-auto pr-1">
+          {paginated.map((entry) => {
+            const authorName = entry.user?.name || entry.user?.email || "Neznámý";
+            const authorInitials =
+              authorName
+                .split(/\s+/)
+                .slice(0, 2)
+                .map((s) => s[0]?.toUpperCase() ?? "")
+                .join("") || "?";
+            return (
+              <div
+                key={entry.id}
+                className="flex items-start gap-3 rounded-lg border border-outline-variant bg-surface-container-low px-3 py-2.5"
+              >
+                {/* Author avatar */}
+                <Avatar className="h-8 w-8 shrink-0">
+                  {entry.user?.image ? (
+                    <AvatarImage src={entry.user.image} alt={authorName} />
+                  ) : null}
+                  <AvatarFallback className="bg-secondary-container type-label-sm font-bold text-secondary-container-foreground">
+                    {authorInitials}
+                  </AvatarFallback>
+                </Avatar>
+                {/* Change details */}
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <span
+                      className={cn(
+                        "type-label-sm font-semibold",
+                        ACTION_COLORS[entry.action] ?? "text-muted-foreground",
+                      )}
+                    >
+                      {ACTION_LABELS[entry.action] ?? entry.action}
+                    </span>
+                    <span className="type-label text-on-surface-variant">
+                      {ENTITY_LABELS[entry.entityType] ?? entry.entityType}
+                    </span>
+                    <span className="type-label-sm text-on-surface-variant">·</span>
+                    <span className="type-label text-on-surface-variant truncate">{authorName}</span>
+                  </div>
+                  {/* Field-level change details */}
+                  {entry.field && (
+                    <div className="mt-1 flex flex-wrap items-center gap-1 type-label-sm">
+                      <span className="rounded bg-surface-container-high px-1.5 py-0.5 font-mono text-[10px] text-on-surface-variant">
+                        {entry.field}
+                      </span>
+                      {entry.oldValue !== null && (
+                        <>
+                          <span className="text-danger/70 line-through">{formatValue(entry.oldValue)}</span>
+                          <ArrowRight className="h-3 w-3 text-on-surface-variant/40" />
+                        </>
+                      )}
+                      {entry.newValue !== null && (
+                        <span className="text-success/80">{formatValue(entry.newValue)}</span>
+                      )}
+                    </div>
                   )}
                 </div>
-              )}
-            </div>
-            {/* Timestamp */}
-            <span className="shrink-0 type-label-sm text-on-surface-variant tabular-nums">
-              {formatDate(entry.createdAt)}
-            </span>
+                {/* Timestamp */}
+                <span className="shrink-0 type-label-sm text-on-surface-variant tabular-nums">
+                  {formatDate(entry.createdAt)}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Pagination */}
+      {!loading && processed.length > 0 && (
+        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-outline-variant pt-3">
+          <div className="type-label-sm text-on-surface-variant tabular-nums">
+            Zobrazeno {(currentPage - 1) * pageSize + 1}–
+            {Math.min(currentPage * pageSize, processed.length)} z {processed.length}
           </div>
-        );
-      })}
+          <div className="flex items-center gap-1">
+            <Button
+              variant="outline"
+              size="sm"
+              className="rounded-full gap-1.5"
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={currentPage <= 1}
+            >
+              <ChevronLeft className="h-3.5 w-3.5" /> Předchozí
+            </Button>
+            <span className="type-label-sm tabular-nums px-2">
+              {currentPage} / {totalPages}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              className="rounded-full gap-1.5"
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              disabled={currentPage >= totalPages}
+            >
+              Další <ChevronRight className="h-3.5 w-3.5" />
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
