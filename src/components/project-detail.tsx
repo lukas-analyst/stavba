@@ -8,6 +8,7 @@ import type { Project } from "@/lib/api";
 import { ProjectDialog } from "@/components/project-dialog";
 import { PrintReportDialog } from "@/components/print-report-dialog";
 import { AuditLogDialog } from "@/components/audit-log-dialog";
+import { usePageViewTracking } from "@/hooks/use-analytics";
 
 // ===== Code splitting per tab =====
 // Each tab is loaded lazily (only when the user navigates to it).
@@ -45,6 +46,10 @@ const ProjectManagementTab = dynamic(() => import("@/components/tabs/project-man
   ssr: false,
   loading: () => <TabSkeleton />,
 });
+const TelemetryTab = dynamic(() => import("@/components/tabs/telemetry-tab").then(m => m.TelemetryTab), {
+  ssr: false,
+  loading: () => <TabSkeleton />,
+});
 
 function TabSkeleton() {
   return (
@@ -67,6 +72,12 @@ export function ProjectDetail({ project }: { project: Project }) {
   const [reportOpen, setReportOpen] = useState(false);
   const [auditOpen, setAuditOpen] = useState(false);
   const qc = useQueryClient();
+
+  // === Analytics: track page_view + timeSpent for the current tab ===
+  // Each tab is treated as a "page" for analytics purposes. When the user
+  // switches tabs, we record a new page_view with the tab name as pageUrl
+  // and emit the timeSpent (in seconds) for the previous tab.
+  usePageViewTracking(activeTab);
 
   // Listen for custom events from sidebar Settings menu
   useEffect(() => {
@@ -196,6 +207,7 @@ export function ProjectDetail({ project }: { project: Project }) {
         {activeTab === "timeline" && <TimelineTab projectId={project.id} />}
         {activeTab === "notes" && <NotesTab projectId={project.id} />}
         {activeTab === "management" && <ProjectManagementTab projectId={project.id} />}
+        {activeTab === "telemetry" && <TelemetryTab projectId={project.id} />}
       </div>
 
       {/* Dialogs — triggered from Settings menu in sidebar */}

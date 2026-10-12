@@ -55,6 +55,9 @@ model User {
   // Relations — projects this user has been invited to / is a member of
   memberships ProjectMember[]
 
+  // Relations — analytics/telemetry events recorded by this user
+  analyticsEvents AnalyticsEvent[]
+
   // Relations — NextAuth OAuth accounts (one user can have multiple providers)
   accounts Account[]
 
@@ -665,6 +668,34 @@ model ContactPerson {
   @@index([sortOrder])
   @@index([contactId, sortOrder])
   @@map("contact_persons")
+}
+
+/// Analytics/telemetry event — records user interactions with the app.
+/// Used for internal analytics only (no third-party sharing).
+/// Events include: page_view, add_payment, add_time_entry, edit_time_entry,
+/// edit_payment, delete_payment, add_contact, add_note, edit_note, login, logout.
+model AnalyticsEvent {
+  id        String   @id @default(cuid())
+  /// FK to User — who performed the action
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// Event type: "page_view", "add_payment", "add_time_entry", etc.
+  eventType String
+  /// Page URL where the event occurred (for page_view: the URL visited)
+  pageUrl   String?
+  /// Time spent on page in seconds (only for page_view events)
+  timeSpent Int?
+  /// Additional event metadata (JSON string — e.g., {"amount": 5000})
+  metadata  String?
+  /// When this event was recorded
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([eventType])
+  @@index([createdAt])
+  @@index([userId, createdAt])
+  @@index([eventType, createdAt])
+  @@map("analytics_events")
 }
 
 /// Financial transaction (payment, invoice, receipt). Linked to a
