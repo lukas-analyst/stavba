@@ -572,10 +572,21 @@ function PaymentRow({
           )}
         </div>
       </TableCell>
-      <TableCell>
-        <Badge variant="outline" className="type-label-sm">
-          {t.emoji} {t.label}
-        </Badge>
+      <TableCell onClick={(e) => e.stopPropagation()}>
+        <Select value={payment.type} onValueChange={(v) => update("type", v)}>
+          <SelectTrigger className="h-7 w-auto border-0 px-1 type-label-sm shadow-none hover:bg-surface-container-high gap-1">
+            <Badge variant="outline" className="type-label-sm">
+              {t.emoji} {t.label}
+            </Badge>
+          </SelectTrigger>
+          <SelectContent>
+            {PAYMENT_TYPES.map((pt) => (
+              <SelectItem key={pt.value} value={pt.value}>
+                {pt.emoji} {pt.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </TableCell>
       <TableCell className="type-label text-on-surface-variant">
         {payment.contact?.name || "—"}

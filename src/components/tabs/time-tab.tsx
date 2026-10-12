@@ -427,14 +427,31 @@ function TimeRow({
       <TableCell className="type-label text-on-surface-variant">
         {entry.description || "—"}
       </TableCell>
-      <TableCell>
-        <Badge variant="outline" className="type-label-sm">
-          {w.emoji} {w.label}
-        </Badge>
+      <TableCell onClick={(e) => e.stopPropagation()}>
+        <Select
+          value={entry.workerType}
+          onValueChange={(v) => update("workerType", v)}
+          disabled={!!entry.contact}
+        >
+          <SelectTrigger className="h-7 w-auto border-0 px-1 type-label-sm shadow-none hover:bg-surface-container-high gap-1 data-[disabled]:opacity-100">
+            <Badge variant="outline" className="type-label-sm">
+              {w.emoji} {w.label}
+            </Badge>
+          </SelectTrigger>
+          <SelectContent>
+            {WORKER_TYPES.map((wt) => (
+              <SelectItem key={wt.value} value={wt.value}>
+                {wt.emoji} {wt.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </TableCell>
       <TableCell>
         <div className="flex items-center gap-1.5">
-          <span className="type-body font-medium">{entry.workerName}</span>
+          <span className="type-body font-medium">
+            {entry.contact?.name || entry.workerName}
+          </span>
         </div>
       </TableCell>
       <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
@@ -816,7 +833,24 @@ function TimeDialogInner({
               hint: `${c.type}${c.role ? ` · ${c.role}` : ""}${c.company ? ` · ${c.company}` : ""}`,
             }))}
             value={contactId}
-            onChange={setContactId}
+            onChange={(v) => {
+              setContactId(v);
+              // Auto-derive workerType + workerName from contact when assigned
+              const selected = contacts.find((c) => c.id === v);
+              if (selected) {
+                // Map contact.type to workerType (company→company, craftsman→craftsman,
+                // self→self, family→family, others default to "company")
+                const typeMap: Record<string, string> = {
+                  company: "company",
+                  craftsman: "craftsman",
+                  self: "self",
+                  family: "family",
+                };
+                const derivedType = typeMap[selected.type] ?? "company";
+                setWorkerType(derivedType);
+                setWorkerName(selected.name);
+              }
+            }}
             placeholder="Bez kontaktu"
             searchPlaceholder="Hledat kontakt…"
             emptyText="Žádné kontakty nenalezeny"

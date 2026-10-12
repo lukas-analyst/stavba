@@ -152,7 +152,10 @@
 
 :root {
   --radius: 0.625rem;
-  --background: oklch(1 0 0);
+  /* Light mode: subtle blue tint (oklch 0.99 lightness, 0.006 chroma, 250 hue)
+     — barely perceptible warmth so the app doesn't feel sterile monochrome,
+     while still being essentially white for readability. */
+  --background: oklch(0.99 0.006 250);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.145 0 0);
