@@ -11,6 +11,7 @@ import {
   History,
   Sun,
   Moon,
+  BarChart3,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { NAV_ITEMS, NAV_SECTIONS, type NavItem, type NavSection } from "@/lib/navigation";
@@ -163,6 +164,10 @@ export function AppSidebar() {
             <DropdownMenuItem onClick={() => window.dispatchEvent(new CustomEvent("stavba:open-audit"))}>
               <History className="mr-2 h-3.5 w-3.5" />
               Historie změn
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => handleNavClick("telemetry")}>
+              <BarChart3 className="mr-2 h-3.5 w-3.5" />
+              Telemetrie
             </DropdownMenuItem>
 
             <DropdownMenuSeparator />

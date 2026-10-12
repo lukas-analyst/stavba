@@ -57,8 +57,6 @@ import {
   ChevronLeft,
   ChevronRight,
   Info,
-  Pause,
-  Play,
   Search,
 } from "lucide-react";
 import {
@@ -276,6 +274,15 @@ export function ProjectManagementTab({ projectId }: { projectId: string }) {
               disabled={exportCsv.isPending}
             >
               <FileSpreadsheet className="h-3.5 w-3.5" /> CSV — Kontakty
+            </Button>
+            <Button asChild variant="outline" size="sm" className="rounded-full gap-1.5">
+              <a
+                href={`/api/projects/${projectId}/audit/export`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <FileSpreadsheet className="h-3.5 w-3.5" /> CSV — Audit log
+              </a>
             </Button>
           </div>
           <p className="type-label-sm text-on-surface-variant">
@@ -1077,7 +1084,6 @@ function EnhancedAuditLog({ projectId }: { projectId: string }) {
   // filter/page state hasn't been fetched yet.
   const [loadedKey, setLoadedKey] = useState<string>("");
   const [polling, setPolling] = useState(false);
-  const [isExpanded, setIsExpanded] = useState(true);
   // Filters / sort
   const [actionFilter, setActionFilter] = useState<string>("all");
   const [entityFilter, setEntityFilter] = useState<string>("all");
@@ -1165,10 +1171,9 @@ function EnhancedAuditLog({ projectId }: { projectId: string }) {
     currentKey,
   ]);
 
-  // Real-time polling — every 5s while the section is expanded.
+  // Real-time polling — every 5s, always active (no toggle).
   // Uses a subtle "Načítání..." indicator (does not flip the skeleton).
   useEffect(() => {
-    if (!isExpanded) return;
     const fetchAudit = () => {
       setPolling(true);
       const params = new URLSearchParams();
@@ -1197,7 +1202,6 @@ function EnhancedAuditLog({ projectId }: { projectId: string }) {
     const interval = setInterval(fetchAudit, 5000);
     return () => clearInterval(interval);
   }, [
-    isExpanded,
     page,
     pageSize,
     actionFilter,
@@ -1248,34 +1252,8 @@ function EnhancedAuditLog({ projectId }: { projectId: string }) {
 
   return (
     <div className="space-y-3">
-      {/* Row 1: Live toggle + Export CSV + polling indicator + search input */}
+      {/* Row 1: Polling indicator + search input */}
       <div className="flex flex-wrap items-center gap-2">
-        <div className="flex items-center gap-2">
-          <Button
-            variant={isExpanded ? "default" : "outline"}
-            size="sm"
-            className="rounded-full gap-1.5"
-            onClick={() => setIsExpanded((v) => !v)}
-            aria-pressed={isExpanded}
-            aria-label={isExpanded ? "Pozastavit live aktualizace" : "Spustit live aktualizace"}
-          >
-            {isExpanded ? (
-              <Pause className="h-3.5 w-3.5" />
-            ) : (
-              <Play className="h-3.5 w-3.5" />
-            )}
-            {isExpanded ? "Pozastavit live" : "Spustit live"}
-          </Button>
-          <Button asChild variant="outline" size="sm" className="rounded-full gap-1.5">
-            <a
-              href={`/api/projects/${projectId}/audit/export`}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <Download className="h-3.5 w-3.5" /> Export CSV
-            </a>
-          </Button>
-        </div>
         {polling && (
           <span className="flex items-center gap-1 type-label-sm text-on-surface-variant">
             <Loader2 className="h-3 w-3 animate-spin" />
