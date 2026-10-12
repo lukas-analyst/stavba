@@ -888,12 +888,66 @@ function describeChange(entry: AuditEntry): string {
   const entityLabel = entry.entityLabel || ENTITY_LABELS[entry.entityType] || entry.entityType;
 
   // Create — newValue contains a summary string like "Přidán člen (Čtenář): email@..."
+  // But older entries may have raw JSON — try to parse and extract readable info
   if (entry.action === "create" && entry.newValue) {
+    // Check if it's a human-readable summary (starts with known prefix)
+    if (
+      entry.newValue.startsWith("Přidán") ||
+      entry.newValue.startsWith("Vytvořen") ||
+      entry.newValue.startsWith("Odebrán") ||
+      entry.newValue.startsWith("Smazán")
+    ) {
+      return entry.newValue.length < 200 ? entry.newValue : entityLabel;
+    }
+    // Try parsing as JSON (older format)
+    try {
+      const parsed = JSON.parse(entry.newValue);
+      if (typeof parsed === "object" && parsed !== null) {
+        // Extract key info for create entries
+        const email = parsed.userEmail ?? parsed.email;
+        const role = parsed.role;
+        const name = parsed.name ?? parsed.subcategory ?? parsed.workerName ?? parsed.author;
+        if (email && role) {
+          const roleLabel = role === "editor" ? "Editor" : role === "owner" ? "Správce" : "Čtenář";
+          return `Přidán člen (${roleLabel}): ${email}`;
+        }
+        if (name) return `Vytvořeno: ${name}`;
+        // Generic: show first 3 fields
+        const keys = Object.keys(parsed).filter((k) => k !== "userId" && k !== "id").slice(0, 3);
+        return keys.map((k) => `${k}: ${parsed[k]}`).join(", ") || entityLabel;
+      }
+    } catch {
+      // Not JSON, use as-is
+    }
     return entry.newValue.length < 200 ? entry.newValue : entityLabel;
   }
 
   // Delete — oldValue contains a summary string like "Odebrán člen (Editor): email@..."
   if (entry.action === "delete" && entry.oldValue) {
+    if (
+      entry.oldValue.startsWith("Přidán") ||
+      entry.oldValue.startsWith("Vytvořen") ||
+      entry.oldValue.startsWith("Odebrán") ||
+      entry.oldValue.startsWith("Smazán")
+    ) {
+      return entry.oldValue.length < 200 ? entry.oldValue : entityLabel;
+    }
+    // Try parsing as JSON (older format)
+    try {
+      const parsed = JSON.parse(entry.oldValue);
+      if (typeof parsed === "object" && parsed !== null) {
+        const email = parsed.userEmail ?? parsed.email;
+        const role = parsed.role;
+        if (email && role) {
+          const roleLabel = role === "editor" ? "Editor" : role === "owner" ? "Správce" : "Čtenář";
+          return `Odebrán člen (${roleLabel}): ${email}`;
+        }
+        const name = parsed.name ?? parsed.subcategory ?? parsed.workerName ?? parsed.author;
+        if (name) return `Smazáno: ${name}`;
+      }
+    } catch {
+      // Not JSON
+    }
     return entry.oldValue.length < 200 ? entry.oldValue : entityLabel;
   }
 
@@ -902,6 +956,10 @@ function describeChange(entry: AuditEntry): string {
     const fieldLabel = FIELD_LABELS_UI[entry.field] ?? entry.field;
     if (entry.oldValue && entry.newValue) {
       return `${fieldLabel}: ${entry.oldValue} → ${entry.newValue}`;
+    }
+    // userEmail field — show as "E-mail člena: xxx@..." (newValue only, no oldValue)
+    if (entry.field === "userEmail" && entry.newValue) {
+      return `${fieldLabel}: ${entry.newValue}`;
     }
     if (entry.newValue) {
       return `${fieldLabel}: ${entry.newValue}`;
