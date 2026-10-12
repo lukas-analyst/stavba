@@ -13,7 +13,6 @@ import {
 } from "lucide-react";
 import { useProjects } from "@/lib/api";
 import { useAppStore } from "@/lib/store";
-import { NAV_ITEMS } from "@/lib/navigation";
 import { useScrollState } from "@/hooks/use-scroll-state";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -41,7 +40,6 @@ export function TopBar() {
   const toggleSidebar = useAppStore((s) => s.toggleSidebar);
   const selectedProjectId = useAppStore((s) => s.selectedProjectId);
   const setSelectedProjectId = useAppStore((s) => s.setSelectedProjectId);
-  const activeTab = useAppStore((s) => s.activeTab);
   const setActiveTab = useAppStore((s) => s.setActiveTab);
   const { data: projects } = useProjects();
   const qc = useQueryClient();
@@ -53,8 +51,6 @@ export function TopBar() {
   const [globalSearchOpen, setGlobalSearchOpen] = useState(false);
 
   const selectedProject = projects?.find((p) => p.id === selectedProjectId);
-  const activeNavItem = NAV_ITEMS.find((t) => t.id === activeTab);
-  const activeTabLabel = activeNavItem?.label ?? "Přehled";
 
   const handleSelectProject = useCallback(
     (id: string) => {
@@ -210,27 +206,40 @@ export function TopBar() {
             </PopoverContent>
           </Popover>
 
-          {/* Active tab subtitle (MD3 medium app bar pattern) */}
-          {selectedProject && (
-            <span className="hidden px-1.5 text-[10px] leading-tight text-on-surface-variant sm:block">
-              {activeTabLabel}
+          {/* Project description subtitle (MD3 medium app bar pattern) */}
+          {selectedProject && selectedProject.description && (
+            <span className="hidden max-w-[200px] truncate px-1.5 type-label-sm leading-tight text-on-surface-variant sm:block">
+              {selectedProject.description}
             </span>
           )}
         </div>
 
-        {/* Search button — opens global search (⌘K) */}
+        {/* Spacer (left) — pushes search bar to center on desktop */}
+        <div className="hidden flex-1 md:block" />
+
+        {/* MD3 Search bar — centered on desktop, hidden on mobile (icon only) */}
+        <button
+          onClick={() => setGlobalSearchOpen(true)}
+          aria-label="Hledat"
+          className="hidden h-9 max-w-md flex-1 items-center gap-2 rounded-full border border-outline-variant bg-surface-container-low px-3 text-sm text-on-surface-variant/60 transition-colors hover:bg-surface-container-high md:flex"
+        >
+          <Search className="h-4 w-4 shrink-0" />
+          <span className="truncate">Hledat v projektu…</span>
+        </button>
+
+        {/* Mobile search icon (compact) */}
         <Button
           variant="ghost"
           size="icon"
           onClick={() => setGlobalSearchOpen(true)}
           aria-label="Hledat"
-          className="h-9 w-9 shrink-0 state-layer-on-surface rounded-full"
+          className="h-9 w-9 shrink-0 state-layer-on-surface rounded-full md:hidden"
         >
           <Search className="h-4 w-4" />
         </Button>
 
-        {/* Spacer */}
-        <div className="flex-1" />
+        {/* Spacer (right) — balances layout on desktop */}
+        <div className="hidden flex-1 md:block" />
 
         {/* Budget summary — MD3 tonal chip, clickable to Přehled */}
         {selectedProject && planTotal > 0 && (
