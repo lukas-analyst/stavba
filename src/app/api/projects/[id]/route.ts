@@ -48,11 +48,29 @@ export async function PATCH(
   try {
     const { id } = await params;
     const body = await request.json();
-    const { name, address, description, starred, status, currency, startDate, endDate, notes } = body;
+    const { name, address, description, starred, status, currency, startDate, endDate, notes, ownerId } = body;
 
     const existing = await db.project.findUnique({ where: { id } });
     if (!existing) {
       return NextResponse.json({ error: "Project not found" }, { status: 404 });
+    }
+
+    // If changing owner, validate the new owner exists and is a user
+    if (ownerId !== undefined && ownerId !== existing.ownerId) {
+      const newOwner = await db.user.findUnique({ where: { id: ownerId } });
+      if (!newOwner) {
+        return NextResponse.json({ error: "New owner not found" }, { status: 404 });
+      }
+      // If the old owner is not already a member, add them as editor
+      // so they don't lose access entirely
+      const oldOwnerMembership = await db.projectMember.findUnique({
+        where: { projectId_userId: { projectId: id, userId: existing.ownerId } },
+      });
+      if (!oldOwnerMembership) {
+        await db.projectMember.create({
+          data: { projectId: id, userId: existing.ownerId, role: "editor" },
+        });
+      }
     }
 
     const updated = await db.project.update({
@@ -67,6 +85,7 @@ export async function PATCH(
         startDate: startDate !== undefined ? (startDate ? new Date(startDate) : null) : undefined,
         endDate: endDate !== undefined ? (endDate ? new Date(endDate) : null) : undefined,
         notes: notes !== undefined ? (typeof notes === "string" ? notes : null) : undefined,
+        ownerId: ownerId !== undefined ? ownerId : undefined,
       },
     });
 
