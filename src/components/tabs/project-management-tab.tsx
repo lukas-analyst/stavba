@@ -883,6 +883,97 @@ const ENTITY_LABELS: Record<string, string> = {
   ProjectMember: "Člen",
 };
 
+// Generate a human-readable description of what happened
+function describeChange(entry: AuditEntry): string {
+  const entityLabel = entry.entityLabel || ENTITY_LABELS[entry.entityType] || entry.entityType;
+
+  // Create — newValue contains a summary string like "Přidán člen (Čtenář): email@..."
+  if (entry.action === "create" && entry.newValue) {
+    return entry.newValue.length < 200 ? entry.newValue : entityLabel;
+  }
+
+  // Delete — oldValue contains a summary string like "Odebrán člen (Editor): email@..."
+  if (entry.action === "delete" && entry.oldValue) {
+    return entry.oldValue.length < 200 ? entry.oldValue : entityLabel;
+  }
+
+  // Update — field-level change
+  if (entry.action === "update" && entry.field) {
+    const fieldLabel = FIELD_LABELS_UI[entry.field] ?? entry.field;
+    if (entry.oldValue && entry.newValue) {
+      return `${fieldLabel}: ${entry.oldValue} → ${entry.newValue}`;
+    }
+    if (entry.newValue) {
+      return `${fieldLabel}: ${entry.newValue}`;
+    }
+    if (entry.oldValue) {
+      return `${fieldLabel}: odstraněno (${entry.oldValue})`;
+    }
+  }
+
+  return entityLabel;
+}
+
+// Human-readable field labels for UI display
+const FIELD_LABELS_UI: Record<string, string> = {
+  required: "Povinnost",
+  completed: "Hotovo",
+  rejected: "Zavržení",
+  starred: "Oblíbený",
+  status: "Stav",
+  role: "Role",
+  phase: "Fáze",
+  category: "Kategorie",
+  subcategory: "Název",
+  planCost: "Plán (Kč)",
+  actualCost: "Skutečnost (Kč)",
+  planDays: "Plán (dní)",
+  flexibilityPercent: "Vůle (%)",
+  dateFrom: "Datum od",
+  dateTo: "Datum do",
+  note: "Poznámka",
+  name: "Jméno",
+  email: "E-mail",
+  phone: "Telefon",
+  address: "Adresa",
+  description: "Popis",
+  currency: "Měna",
+  ownerId: "Vlastník",
+  contactId: "Kontakt",
+  workerName: "Pracovník",
+  workerType: "Typ pracovníka",
+  workerCount: "Počet pracovníků",
+  hours: "Hodiny",
+  amount: "Částka",
+  type: "Typ",
+  vendor: "Firma",
+  invoiceNumber: "Číslo faktury",
+  vatRate: "Sazba DPH",
+  vatAmount: "Částka DPH",
+  website: "Web",
+  company: "Firma",
+  ico: "IČO",
+  dic: "DIČ",
+  rating: "Hodnocení",
+  sortOrder: "Pořadí",
+  text: "Text",
+  author: "Autor",
+  userEmail: "E-mail člena",
+};
+
+function formatTimestamp(iso: string): { date: string; time: string } {
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return { date: iso, time: "" };
+  const day = String(d.getDate()).padStart(2, "0");
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const hours = String(d.getHours()).padStart(2, "0");
+  const minutes = String(d.getMinutes()).padStart(2, "0");
+  return {
+    date: `${day}.${month}.${d.getFullYear()}`,
+    time: `${hours}:${minutes}`,
+  };
+}
+
 function EnhancedAuditLog({ projectId }: { projectId: string }) {
   // Server-side pagination state
   const [entries, setEntries] = useState<AuditEntry[]>([]);
@@ -995,20 +1086,6 @@ function EnhancedAuditLog({ projectId }: { projectId: string }) {
     setPage(1);
   };
 
-  const formatValue = (val: string | null): string => {
-    if (val === null) return "—";
-    try {
-      const parsed = JSON.parse(val);
-      if (typeof parsed === "object" && parsed !== null) {
-        const keys = Object.keys(parsed).slice(0, 3);
-        return keys.map((k) => `${k}: ${parsed[k]}`).join(", ");
-      }
-      return String(parsed);
-    } catch {
-      return val.length > 80 ? val.slice(0, 80) + "…" : val;
-    }
-  };
-
   return (
     <div className="space-y-3">
       {/* Toolbar: live toggle + export + polling indicator */}
@@ -1111,79 +1188,75 @@ function EnhancedAuditLog({ projectId }: { projectId: string }) {
           Žádné záznamy pro vybrané filtry.
         </p>
       ) : (
-        <div className="max-h-[600px] space-y-1.5 overflow-y-auto pr-1">
-          {entries.map((entry) => {
-            const authorName = entry.user?.name || entry.user?.email || "Neznámý";
-            const authorInitials =
-              authorName
-                .split(/\s+/)
-                .slice(0, 2)
-                .map((s) => s[0]?.toUpperCase() ?? "")
-                .join("") || "?";
-            return (
-              <div
-                key={entry.id}
-                className="flex items-start gap-3 rounded-lg border border-outline-variant bg-surface-container-low px-3 py-2.5"
-              >
-                {/* Author avatar */}
-                <Avatar className="h-8 w-8 shrink-0">
-                  {entry.user?.image ? (
-                    <AvatarImage src={entry.user.image} alt={authorName} />
-                  ) : null}
-                  <AvatarFallback className="bg-secondary-container type-label-sm font-bold text-secondary-container-foreground">
-                    {authorInitials}
-                  </AvatarFallback>
-                </Avatar>
-                {/* Change details */}
-                <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center gap-1.5">
-                    <span
-                      className={cn(
-                        "type-label-sm font-semibold",
-                        ACTION_COLORS[entry.action] ?? "text-muted-foreground",
-                      )}
-                    >
-                      {ACTION_LABELS[entry.action] ?? entry.action}
-                    </span>
-                    <span className="type-label text-on-surface-variant">
-                      {ENTITY_LABELS[entry.entityType] ?? entry.entityType}
-                    </span>
-                    {entry.entityLabel && (
-                      <>
-                        <span className="type-label-sm text-on-surface-variant">·</span>
-                        <span className="type-label-sm text-on-surface-variant truncate">
-                          {entry.entityLabel}
+        <div className="overflow-x-auto rounded-lg border border-outline-variant">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-outline-variant bg-surface-container-high">
+                <th className="type-overline text-on-surface-variant px-3 py-2 text-left">Úkon</th>
+                <th className="type-overline text-on-surface-variant px-3 py-2 text-left">Detail změny</th>
+                <th className="type-overline text-on-surface-variant px-3 py-2 text-left">Autor</th>
+                <th className="type-overline text-on-surface-variant px-3 py-2 text-left whitespace-nowrap">Datum</th>
+                <th className="type-overline text-on-surface-variant px-3 py-2 text-left whitespace-nowrap">Čas</th>
+              </tr>
+            </thead>
+            <tbody>
+              {entries.map((entry) => {
+                const authorName = entry.user?.name || entry.user?.email || "Neznámý";
+                const authorInitials =
+                  authorName
+                    .split(/\s+/)
+                    .slice(0, 2)
+                    .map((s) => s[0]?.toUpperCase() ?? "")
+                    .join("") || "?";
+                const { date, time } = formatTimestamp(entry.createdAt);
+                const description = describeChange(entry);
+                return (
+                  <tr key={entry.id} className="border-b border-outline-variant last:border-0 hover:bg-surface-container-high/60">
+                    {/* Úkon — action + entity type badge */}
+                    <td className="px-3 py-2 align-top">
+                      <div className="flex flex-col gap-0.5">
+                        <span className={cn("type-label-sm font-semibold", ACTION_COLORS[entry.action] ?? "text-muted-foreground")}>
+                          {ACTION_LABELS[entry.action] ?? entry.action}
                         </span>
-                      </>
-                    )}
-                    <span className="type-label-sm text-on-surface-variant">·</span>
-                    <span className="type-label text-on-surface-variant truncate">{authorName}</span>
-                  </div>
-                  {/* Field-level change details */}
-                  {entry.field && (
-                    <div className="mt-1 flex flex-wrap items-center gap-1 type-label-sm">
-                      <span className="rounded bg-surface-container-high px-1.5 py-0.5 font-mono text-[10px] text-on-surface-variant">
-                        {entry.field}
-                      </span>
-                      {entry.oldValue !== null && (
-                        <>
-                          <span className="text-danger/70 line-through">{formatValue(entry.oldValue)}</span>
-                          <ArrowRight className="h-3 w-3 text-on-surface-variant/40" />
-                        </>
-                      )}
-                      {entry.newValue !== null && (
-                        <span className="text-success/80">{formatValue(entry.newValue)}</span>
-                      )}
-                    </div>
-                  )}
-                </div>
-                {/* Timestamp */}
-                <span className="shrink-0 type-label-sm text-on-surface-variant tabular-nums">
-                  {formatDate(entry.createdAt)}
-                </span>
-              </div>
-            );
-          })}
+                        <span className="type-label text-on-surface-variant">
+                          {ENTITY_LABELS[entry.entityType] ?? entry.entityType}
+                        </span>
+                      </div>
+                    </td>
+                    {/* Detail změny — human-readable description */}
+                    <td className="px-3 py-2 align-top">
+                      <div className="flex flex-col gap-0.5">
+                        {/* Entity label (name of what changed) */}
+                        {entry.entityLabel && (
+                          <span className="type-body font-medium">{entry.entityLabel}</span>
+                        )}
+                        {/* Human-readable change description */}
+                        <span className="type-label text-on-surface-variant">{description}</span>
+                      </div>
+                    </td>
+                    {/* Autor — avatar + name */}
+                    <td className="px-3 py-2 align-top">
+                      <div className="flex items-center gap-1.5">
+                        <Avatar className="h-6 w-6 shrink-0">
+                          {entry.user?.image ? (
+                            <AvatarImage src={entry.user.image} alt={authorName} />
+                          ) : null}
+                          <AvatarFallback className="bg-secondary-container text-[9px] font-bold text-secondary-container-foreground">
+                            {authorInitials}
+                          </AvatarFallback>
+                        </Avatar>
+                        <span className="type-label text-on-surface-variant truncate">{authorName}</span>
+                      </div>
+                    </td>
+                    {/* Datum */}
+                    <td className="px-3 py-2 align-top type-label text-on-surface-variant tabular-nums whitespace-nowrap">{date}</td>
+                    {/* Čas */}
+                    <td className="px-3 py-2 align-top type-label text-on-surface-variant tabular-nums whitespace-nowrap">{time}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
       )}
 
