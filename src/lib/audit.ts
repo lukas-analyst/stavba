@@ -1,7 +1,9 @@
 import { db } from "@/lib/db";
+import { getDefaultOwnerId } from "@/lib/default-owner";
 
 // Helper to log changes to the audit log.
 // Compares old and new values and logs only changed fields.
+// userId is resolved from getDefaultOwnerId() until auth is implemented.
 export async function logChanges(
   projectId: string,
   entityType: string,
@@ -10,16 +12,20 @@ export async function logChanges(
   oldData: Record<string, unknown> | null,
   newData: Record<string, unknown> | null,
 ) {
+  // Resolve the current user (until auth, this is the default owner)
+  const userId = await getDefaultOwnerId();
+
   if (action === "create" && newData) {
     await db.auditLog.create({
       data: {
         projectId,
+        userId,
         entityType,
         entityId,
         action: "create",
         field: null,
         oldValue: null,
-        newValue: null,
+        newValue: JSON.stringify(newData),
       },
     });
     return;
@@ -29,6 +35,7 @@ export async function logChanges(
     await db.auditLog.create({
       data: {
         projectId,
+        userId,
         entityType,
         entityId,
         action: "delete",
@@ -53,6 +60,7 @@ export async function logChanges(
       if (oldStr !== newStr) {
         entries.push({
           projectId,
+          userId,
           entityType,
           entityId,
           action: "update",
