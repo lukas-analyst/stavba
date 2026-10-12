@@ -385,17 +385,17 @@ function TimeRow({
       <TableCell className="w-16">
         <Badge
           variant="outline"
-          className="text-[11px] text-time"
+          className="type-label-sm text-time"
           title={`${entry.workerCount} ${entry.workerCount === 1 ? "pracovník" : entry.workerCount < 5 ? "pracovníci" : "pracovníků"}`}
         >
           × {entry.workerCount}
         </Badge>
       </TableCell>
-      <TableCell className="whitespace-nowrap text-xs text-muted-foreground">
+      <TableCell className="whitespace-nowrap type-label text-on-surface-variant">
         <div className="flex flex-col">
           <span>{formatDate(entry.date)}</span>
           {entry.dateTo && (
-            <span className="text-xs text-time">
+            <span className="type-label text-time">
               → {formatDate(entry.dateTo)}
             </span>
           )}
@@ -403,28 +403,28 @@ function TimeRow({
       </TableCell>
       <TableCell>
         <div className="flex items-center gap-1.5">
-          <span className="text-sm font-medium">{entry.workerName}</span>
+          <span className="type-body font-medium">{entry.workerName}</span>
         </div>
       </TableCell>
       <TableCell>
-        <Badge variant="outline" className="text-[11px]">
+        <Badge variant="outline" className="type-label-sm">
           {w.emoji} {w.label}
         </Badge>
       </TableCell>
       <TableCell>
         <div className="flex flex-col">
-          <span className="text-xs font-medium">
+          <span className="type-body font-medium">
             {entry.budgetItem?.subcategory || entry.budgetItem?.category}
           </span>
-          <span className="text-xs text-muted-foreground">
+          <span className="type-label text-on-surface-variant">
             {entry.budgetItem?.category}
           </span>
         </div>
       </TableCell>
-      <TableCell className="text-xs text-muted-foreground">
+      <TableCell className="type-label text-on-surface-variant">
         {entry.description || "—"}
       </TableCell>
-      <TableCell className="text-right text-sm font-semibold text-time">
+      <TableCell className="text-right type-body font-semibold text-time tabular-nums">
         {formatNumber(entry.hours, " h")}
       </TableCell>
       <TableCell

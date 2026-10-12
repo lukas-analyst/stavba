@@ -121,12 +121,12 @@ export function ContactsTab({ projectId }: { projectId: string }) {
   return (
     <div id="contacts-root" className="space-y-4">
       <div id="contacts-header" className="flex items-center justify-between">
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+        <div className="flex items-center gap-2 type-body text-on-surface-variant">
           <Users className="h-4 w-4" />
           {contacts?.length ?? 0} kontaktů v projektu
         </div>
         <div className="flex items-center gap-2">
-          <Button size="sm" onClick={() => setAddOpen(true)}>
+          <Button size="sm" className="rounded-full" onClick={() => setAddOpen(true)}>
             <Plus className="mr-1 h-4 w-4" /> Přidat kontakt
           </Button>
         </div>
@@ -239,22 +239,24 @@ function ContactCard({
 
   return (
     <Card
-      className="group relative cursor-pointer overflow-hidden transition-shadow hover:shadow-md hover-lift"
+      // MD3 Card: tonal surface-container-low + outline-variant border + subtle shadow
+      className="group relative cursor-pointer overflow-hidden border-outline-variant bg-surface-container-low shadow-sm transition-shadow hover:shadow-md hover-lift"
       onClick={onOpenDetail}
     >
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div className="flex items-start gap-2">
+            {/* MD3 avatar: secondary-container tonal fill */}
             <div
               className={cn(
-                "flex h-10 w-10 items-center justify-center rounded-lg text-lg",
-                "bg-muted",
+                "flex h-10 w-10 items-center justify-center rounded-xl text-lg",
+                "bg-secondary-container text-secondary-container-foreground",
               )}
             >
               {t.emoji}
             </div>
             <div className="min-w-0">
-              <h3 className="truncate text-sm font-bold">{contact.name}</h3>
+              <h3 className="type-title truncate">{contact.name}</h3>
               <Badge variant="outline" className="mt-0.5 text-[10px]">
                 {t.label}
               </Badge>
@@ -265,7 +267,7 @@ function ContactCard({
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-7 w-7 opacity-0 group-hover:opacity-100"
+                className="h-7 w-7 rounded-full state-layer-on-surface opacity-0 group-hover:opacity-100"
                 onClick={(e) => e.stopPropagation()}
               >
                 <MoreHorizontal className="h-4 w-4" />
@@ -295,16 +297,16 @@ function ContactCard({
       </CardHeader>
       <CardContent className="space-y-2">
         {contact.role && (
-          <p className="text-xs font-medium text-muted-foreground">{contact.role}</p>
+          <p className="type-label text-on-surface-variant">{contact.role}</p>
         )}
         {contact.company && (
-          <div className="flex items-center gap-1.5 text-xs">
+          <div className="flex items-center gap-1.5 type-body">
             <Building2 className="h-3 w-3 text-muted-foreground" />
             <span className="truncate">{contact.company}</span>
           </div>
         )}
         {(contact.ico || contact.dic) && (
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] text-muted-foreground">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] text-on-surface-variant">
             {contact.ico && (
               <span className="tabular-nums">
                 IČO: <span className="font-medium text-foreground/80">{contact.ico}</span>
@@ -321,7 +323,8 @@ function ContactCard({
           <a
             href={`tel:${contact.phone}`}
             onClick={(e) => e.stopPropagation()}
-            className="flex items-center gap-1.5 text-xs hover:text-primary"
+            // MD3 state layer on interactive communication rows
+            className="flex items-center gap-1.5 rounded-lg px-1 py-0.5 type-body hover:bg-surface-container-high state-layer-on-surface"
             title={getPhoneInfo(contact.phone).countryName || undefined}
           >
             <Phone className="h-3 w-3 text-muted-foreground" />
@@ -337,7 +340,7 @@ function ContactCard({
           <a
             href={`mailto:${contact.email}`}
             onClick={(e) => e.stopPropagation()}
-            className="flex items-center gap-1.5 text-xs hover:text-primary"
+            className="flex items-center gap-1.5 rounded-lg px-1 py-0.5 type-body hover:bg-surface-container-high state-layer-on-surface"
           >
             <Mail className="h-3 w-3 text-muted-foreground" />
             <span className="truncate">{contact.email}</span>
@@ -349,7 +352,7 @@ function ContactCard({
             target="_blank"
             rel="noopener noreferrer"
             onClick={(e) => e.stopPropagation()}
-            className="flex items-center gap-1.5 text-xs hover:text-primary"
+            className="flex items-center gap-1.5 rounded-lg px-1 py-0.5 type-body hover:bg-surface-container-high state-layer-on-surface"
           >
             <Globe className="h-3 w-3 text-muted-foreground" />
             <span className="truncate">{contact.website}</span>
@@ -357,13 +360,15 @@ function ContactCard({
           </a>
         )}
         {contact.notes && (
-          <p className="border-t pt-2 text-[11px] text-muted-foreground">{contact.notes}</p>
+          // MD3 divider: outline-variant
+          <p className="type-label border-t border-outline-variant pt-2 text-on-surface-variant">{contact.notes}</p>
         )}
       </CardContent>
       {(hasStats || contact.rating) && (
         <CardFooter className="flex flex-col items-stretch gap-2 pt-0">
           {hasStats && (
-            <div className="grid grid-cols-2 gap-2 border-t pt-2">
+            // MD3 divider: outline-variant, neutral surface-container-high
+            <div className="grid grid-cols-2 gap-2 border-t border-outline-variant pt-2">
               <StatPill
                 icon={<Wallet className="h-3 w-3" />}
                 label="Zaplaceno"
@@ -390,8 +395,9 @@ function ContactCard({
               />
             </div>
           )}
-          {!hasStats && contact.rating && <div className="border-t" />}
+          {!hasStats && contact.rating && <div className="border-t border-outline-variant" />}
           {contact.rating && (
+            // MD3 rating: primary selected, on-surface-variant unselected
             <div className="flex items-center justify-end gap-0.5">
               {[1, 2, 3, 4, 5].map((s) => (
                 <Star
@@ -399,8 +405,8 @@ function ContactCard({
                   className={cn(
                     "h-3 w-3",
                     s <= contact.rating!
-                      ? "fill-warning text-warning"
-                      : "text-muted-foreground/30",
+                      ? "fill-primary text-primary"
+                      : "text-on-surface-variant/30",
                   )}
                 />
               ))}
@@ -461,15 +467,14 @@ function StatPill({
   value: string;
   tone: "amber" | "violet";
 }) {
-  const toneClasses =
-    tone === "amber"
-      ? "bg-warning-soft/50 text-warning-strong dark:bg-warning-soft/70 dark:text-warning-strong"
-      : "bg-time-soft/50 text-time-strong dark:bg-time-soft/70 dark:text-time-strong";
+  // MD3: neutral surface-container-high background, tone only in icon/text color
+  const iconColor = tone === "amber" ? "text-warning" : "text-time";
+  const valueColor = tone === "amber" ? "text-warning-strong dark:text-warning/80" : "text-time-strong dark:text-time/80";
   return (
-    <div className={cn("flex items-center gap-1.5 rounded-md px-2 py-1 text-[11px]", toneClasses)}>
-      {icon}
-      <span className="text-muted-foreground/80">{label}:</span>
-      <span className="ml-auto font-bold tabular-nums">{value}</span>
+    <div className="flex items-center gap-1.5 rounded-lg bg-surface-container-high px-2 py-1 type-label-sm">
+      <span className={iconColor}>{icon}</span>
+      <span className="text-on-surface-variant/80">{label}:</span>
+      <span className={cn("ml-auto font-bold tabular-nums", valueColor)}>{value}</span>
     </div>
   );
 }
