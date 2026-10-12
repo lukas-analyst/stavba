@@ -244,7 +244,7 @@ function ContactCard({
   return (
     <Card
       // MD3 Card: tonal surface-container-low + outline-variant border + subtle shadow
-      className="group relative cursor-pointer overflow-hidden border-outline-variant bg-surface-container-low shadow-sm transition-shadow hover:shadow-md hover-lift"
+      className="group relative cursor-pointer overflow-hidden border-outline-variant bg-card shadow-sm transition-shadow hover:shadow-md hover-lift"
       onClick={onOpenDetail}
     >
       <CardHeader className="pb-3">

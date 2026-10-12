@@ -303,7 +303,7 @@ export function TimeTab({ projectId }: { projectId: string }) {
           }
         />
       ) : (
-        <div className="overflow-x-auto scrollbar-thin rounded-lg border">
+        <div className="overflow-x-auto scrollbar-thin rounded-lg border border-outline-variant bg-card">
           <Table className="min-w-[800px]">
             <TableHeader>
               <TableRow className="sticky top-0 z-30 bg-surface-container-high">
