@@ -9,12 +9,22 @@ import { usePathname } from "next/navigation";
 //   • useAnalytics()         → returns a stable `trackEvent` function
 //   • usePageViewTracking()  → auto-tracks page_view events + timeSpent
 //
+// Time tracking uses Page Visibility API + 15min cap:
+//   - When user switches to another tab/window → pause timer, record
+//   - When user returns → start a new session segment
+//   - Absolute maximum 15 min per session (AFK fallback)
+//
 // Events are sent via `navigator.sendBeacon` (survives page unload)
 // or fetch fallback. All errors are silently ignored — telemetry
 // must never break the app.
 // ============================================================
 
 const PAGE_VIEW_DEBOUNCE_MS = 1500;
+// Cap: maximum recorded timeSpent per session segment (15 minutes).
+// If user leaves a tab visible but walks away, we don't want to record
+// 3 hours. This is the fallback — the primary mechanism is the Page
+// Visibility API which pauses the timer when the tab is hidden.
+const MAX_SESSION_SECONDS = 15 * 60;
 
 /**
  * Stable `trackEvent` function.
@@ -37,10 +47,10 @@ export function useAnalytics(projectId?: string) {
       if (typeof window === "undefined") return;
       const payload = JSON.stringify({
         eventType,
-        // Use explicit pageUrl if provided (e.g., tab name), otherwise pathname
         pageUrl: pageUrl ?? pathname ?? window.location.pathname,
-        timeSpent,
-        // Include projectId in metadata for analytics per project
+        // Cap timeSpent at MAX_SESSION_SECONDS to avoid unrealistic values
+        // from users who leave the tab open and walk away.
+        timeSpent: timeSpent !== undefined ? Math.min(timeSpent, MAX_SESSION_SECONDS) : undefined,
         metadata: { ...metadata, projectId: projectId ?? null },
       });
       try {
@@ -68,62 +78,109 @@ export function useAnalytics(projectId?: string) {
 /**
  * usePageViewTracking — track page_view events + timeSpent.
  *
+ * Uses Page Visibility API to pause/resume the timer:
+ *   • Tab visible → timer running
+ *   • Tab hidden (user switched to another tab/app) → pause, record elapsed
+ *   • Tab visible again → new session segment starts
+ *   • Page unload/unmount → record final elapsed
+ *
+ * Additionally, timeSpent is capped at MAX_SESSION_SECONDS (15 min) as a
+ * fallback for users who leave the tab visible but are AFK.
+ *
  * @param currentPageKey — a string identifying the "page" (e.g., "budget")
  * @param projectId — current project ID (for per-project analytics)
  */
 export function usePageViewTracking(currentPageKey: string, projectId?: string) {
   const { trackEvent } = useAnalytics(projectId);
-  const enteredAtRef = useRef<number | null>(null);
-  const lastPageRef = useRef<string | null>(null);
-  const lastFireRef = useRef<number>(0);
 
-  // Send timeSpent for previous page, then start tracking the new one.
+  // Session tracking refs
+  const sessionStartRef = useRef<number | null>(null); // when current visible session started
+  const currentPageRef = useRef<string | null>(null);  // which page we're on
+  const lastFireRef = useRef<number>(0);               // StrictMode debounce
+  const isHiddenRef = useRef<boolean>(false);           // is the tab currently hidden?
+
+  // ── Helper: record elapsed time for the current session segment ──
+  const recordSession = useCallback(() => {
+    if (sessionStartRef.current === null || currentPageRef.current === null) return;
+    const elapsed = Math.round((Date.now() - sessionStartRef.current) / 1000);
+    if (elapsed >= 1) {
+      // Cap at MAX_SESSION_SECONDS — if user was somehow visible but AFK
+      // for a very long time, we don't want to record 3 hours.
+      const capped = Math.min(elapsed, MAX_SESSION_SECONDS);
+      trackEvent("page_view", { page: currentPageRef.current }, capped, currentPageRef.current);
+    }
+    sessionStartRef.current = null; // session ended
+  }, [trackEvent]);
+
+  // ── Helper: start a new session segment ──
+  const startSession = useCallback(() => {
+    sessionStartRef.current = Date.now();
+    isHiddenRef.current = false;
+  }, []);
+
+  // ── Tab/page change: record previous, start new ──
   useEffect(() => {
     if (typeof window === "undefined") return;
     const now = Date.now();
 
-    if (enteredAtRef.current !== null && lastPageRef.current !== null) {
-      const seconds = Math.round((now - enteredAtRef.current) / 1000);
-      if (seconds >= 1) {
-        // Send timeSpent for the PREVIOUS page with its pageUrl
-        trackEvent("page_view", { page: lastPageRef.current }, seconds, lastPageRef.current);
-      }
-    }
-
-    // Debounce duplicate consecutive events (StrictMode)
+    // StrictMode debounce
     if (
-      lastPageRef.current === currentPageKey &&
+      currentPageRef.current === currentPageKey &&
       now - lastFireRef.current < PAGE_VIEW_DEBOUNCE_MS
     ) {
       return;
     }
 
-    enteredAtRef.current = now;
-    lastPageRef.current = currentPageKey;
-    lastFireRef.current = now;
-    // New page_view — send pageUrl as the tab name (not pathname)
-    trackEvent("page_view", { page: currentPageKey }, undefined, currentPageKey);
-  }, [currentPageKey, trackEvent]);
+    // Record time spent on previous page (if any active session)
+    recordSession();
 
-  // On unmount / beforeunload → send final timeSpent
+    // Start tracking the new page
+    currentPageRef.current = currentPageKey;
+    lastFireRef.current = now;
+    startSession();
+
+    // New page_view event (no timeSpent yet — that comes when leaving)
+    trackEvent("page_view", { page: currentPageKey }, undefined, currentPageKey);
+  }, [currentPageKey, trackEvent, recordSession, startSession]);
+
+  // ── Page Visibility API: pause when tab hidden, resume when visible ──
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    const sendFinal = () => {
-      if (enteredAtRef.current === null || lastPageRef.current === null) return;
-      const seconds = Math.round((Date.now() - enteredAtRef.current) / 1000);
-      if (seconds >= 1) {
-        trackEvent("page_view", { page: lastPageRef.current }, seconds, lastPageRef.current);
+    const handleVisibilityChange = () => {
+      const isHidden = document.hidden;
+      if (isHidden && !isHiddenRef.current) {
+        // Tab became hidden → record session, pause
+        recordSession();
+        isHiddenRef.current = true;
+      } else if (!isHidden && isHiddenRef.current) {
+        // Tab became visible again → start new session segment
+        // (no new page_view event — same page, just resumed)
+        startSession();
       }
     };
 
-    const handleBeforeUnload = () => sendFinal();
-    window.addEventListener("beforeunload", handleBeforeUnload);
-    window.addEventListener("pagehide", handleBeforeUnload);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
     return () => {
-      sendFinal();
-      window.removeEventListener("beforeunload", handleBeforeUnload);
-      window.removeEventListener("pagehide", handleBeforeUnload);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [trackEvent]);
+  }, [recordSession, startSession]);
+
+  // ── Page unload / unmount: record final session ──
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const handleUnload = () => {
+      recordSession();
+    };
+
+    window.addEventListener("beforeunload", handleUnload);
+    window.addEventListener("pagehide", handleUnload);
+    return () => {
+      // Also fire on React unmount (e.g., navigating to a different project)
+      recordSession();
+      window.removeEventListener("beforeunload", handleUnload);
+      window.removeEventListener("pagehide", handleUnload);
+    };
+  }, [recordSession]);
 }
