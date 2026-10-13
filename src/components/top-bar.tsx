@@ -166,7 +166,7 @@ export function TopBar() {
           aria-label={sidebarOpen ? "Zavřít panel" : "Otevřít panel"}
           className="h-11 w-11 shrink-0 state-layer-on-surface rounded-full sm:h-9 sm:w-9"
         >
-          <Menu className="h-5 w-5" />
+          <Menu className="h-6 w-6 sm:h-5 sm:w-5" />
         </Button>
 
         {/* MD3 title hierarchy: Project name (title) + active tab (subtitle) */}
@@ -343,19 +343,19 @@ export function TopBar() {
             <Button
               variant="ghost"
               size="icon"
-              className="h-11 w-11 shrink-0 state-layer-on-surface rounded-full sm:h-9 sm:w-9"
+              className="h-12 w-12 shrink-0 state-layer-on-surface rounded-full sm:h-9 sm:w-9"
               aria-label="Účet"
               title={currentUser?.name ?? currentUser?.email ?? "Účet"}
             >
               {currentUser?.image ? (
-                <Avatar className="h-7 w-7 sm:h-5 sm:w-5">
+                <Avatar className="h-8 w-8 sm:h-6 sm:w-6">
                   <AvatarImage src={currentUser.image} alt={currentUser.name ?? currentUser.email} />
                   <AvatarFallback className="bg-secondary-container type-label-sm font-bold text-secondary-container-foreground">
-                    <User className="h-5 w-5" />
+                    <User className="h-6 w-6 sm:h-5 sm:w-5" />
                   </AvatarFallback>
                 </Avatar>
               ) : (
-                <User className="h-5 w-5" />
+                <User className="h-6 w-6 sm:h-5 sm:w-5" />
               )}
             </Button>
           </DropdownMenuTrigger>

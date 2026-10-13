@@ -17,6 +17,13 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Switch } from "@/components/ui/switch";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -822,13 +829,29 @@ function ProjectsSection({
 // Section 3: Stats — KPIs + bar chart + top pages
 // =====================================================================
 function StatsSection({ currentUser }: { currentUser: CurrentUser }) {
+  const [selectedProjectId, setSelectedProjectId] = useState<string>("all");
+
+  // Fetch projects for the dropdown
+  const { data: projects } = useQuery({
+    queryKey: ["projects"],
+    queryFn: async () => {
+      const res = await fetch("/api/projects");
+      if (!res.ok) throw new Error("Failed to fetch projects");
+      return res.json() as Promise<{ id: string; name: string }[]>;
+    },
+    staleTime: 60_000,
+  });
+
   const { data, isLoading, refetch, isFetching } = useQuery({
-    queryKey: ["admin-analytics", currentUser.id],
+    queryKey: ["admin-analytics", currentUser.id, selectedProjectId],
     queryFn: async () => {
       const params = new URLSearchParams({
         userId: currentUser.id,
         pageSize: "100",
       });
+      if (selectedProjectId !== "all") {
+        params.set("projectId", selectedProjectId);
+      }
       const res = await fetch(`/api/analytics?${params.toString()}`);
       if (!res.ok) throw new Error("Failed to fetch analytics");
       return (await res.json()) as AnalyticsResponse;
@@ -870,6 +893,20 @@ function StatsSection({ currentUser }: { currentUser: CurrentUser }) {
                 Přehled vašich akcí v aplikaci za celé období.
               </CardDescription>
             </div>
+            {/* Project filter dropdown */}
+            {projects && projects.length > 0 && (
+              <Select value={selectedProjectId} onValueChange={setSelectedProjectId}>
+                <SelectTrigger className="h-8 w-auto min-w-[160px] type-label-sm rounded-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Všechny projekty</SelectItem>
+                  {projects.map((p) => (
+                    <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
             <Button
               variant="outline"
               size="sm"

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQueryClient, useQuery } from "@tanstack/react-query";
 import {
   Card,
   CardContent,
@@ -89,6 +89,28 @@ export function ProjectManagementTab({ projectId }: { projectId: string }) {
   const importState = useImportState();
   const exportCsv = useExportCsv(projectId);
   const { trackEvent } = useAnalytics(projectId);
+
+  // Fetch current user + project members to determine if user is owner (Správce)
+  const { data: currentUser } = useQuery({
+    queryKey: ["user-profile"],
+    queryFn: async () => {
+      const res = await fetch("/api/users/profile");
+      if (!res.ok) return null;
+      return res.json();
+    },
+    staleTime: 60_000,
+  });
+  const { data: membersData } = useQuery({
+    queryKey: ["members", projectId],
+    queryFn: async () => {
+      const res = await fetch(`/api/projects/${projectId}/members`);
+      if (!res.ok) return null;
+      return res.json();
+    },
+    staleTime: 30_000,
+  });
+
+  const isOwner = currentUser?.id && membersData?.owner?.id === currentUser.id;
 
   const project = projects?.find((p) => p.id === projectId);
 
@@ -349,16 +371,29 @@ export function ProjectManagementTab({ projectId }: { projectId: string }) {
               <Copy className="h-3.5 w-3.5" /> Duplikovat
             </Button>
           </div>
-          <div className="flex items-center justify-between gap-3 rounded-lg border border-danger/30 bg-danger-soft/20 p-3">
-            <div className="flex items-center gap-2">
-              <Trash2 className="h-4 w-4 text-danger" />
-              <div>
-                <div className="type-body font-medium">Smazat projekt</div>
-                <div className="type-label text-on-surface-variant">Trvale smaže všechna data</div>
+          {isOwner ? (
+            <div className="flex items-center justify-between gap-3 rounded-lg border border-danger/30 bg-danger-soft/20 p-3">
+              <div className="flex items-center gap-2">
+                <Trash2 className="h-4 w-4 text-danger" />
+                <div>
+                  <div className="type-body font-medium">Smazat projekt</div>
+                  <div className="type-label text-on-surface-variant">Trvale smaže všechna data</div>
+                </div>
               </div>
+              <DeleteProjectButton projectId={projectId} projectName={project.name} />
             </div>
-            <DeleteProjectButton projectId={projectId} projectName={project.name} />
-          </div>
+          ) : (
+            <div className="flex items-center justify-between gap-3 rounded-lg border border-outline-variant bg-surface-container-low p-3 opacity-60">
+              <div className="flex items-center gap-2">
+                <Trash2 className="h-4 w-4 text-muted-foreground" />
+                <div>
+                  <div className="type-body font-medium">Smazat projekt</div>
+                  <div className="type-label text-on-surface-variant">Pouze správce projektu může smazat projekt</div>
+                </div>
+              </div>
+              <Trash2 className="h-3.5 w-3.5 text-muted-foreground" aria-hidden />
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
