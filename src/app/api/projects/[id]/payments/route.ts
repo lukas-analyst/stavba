@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { unstable_cache } from "next/cache";
 import { db, dbRead } from "@/lib/db";
 import { logChanges } from "@/lib/audit";
 
@@ -25,6 +26,26 @@ const PAYMENT_SELECT = {
   contact: { select: { id: true, name: true, type: true } },
 } as const;
 
+// Cached version of the payments list query — keyed by projectId (passed
+// as the function argument, which Next.js includes in the cache key
+// automatically), tagged "payments" with a short 15s TTL. Payment mutations
+// bust this tag via `bustServerCache(projectId, [...])` in src/lib/api.ts.
+const getCachedPayments = unstable_cache(
+  async (projectId: string) => {
+    const payments = await dbRead.payment.findMany({
+      where: { budgetItem: { projectId } },
+      orderBy: { date: "desc" },
+      select: PAYMENT_SELECT,
+    });
+    return payments;
+  },
+  ["payments"],
+  {
+    tags: ["payments"],
+    revalidate: 15, // 15 seconds — user adds payments often
+  }
+);
+
 // GET /api/projects/[id]/payments - list all payments for a project
 export async function GET(
   _request: Request,
@@ -32,11 +53,7 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
-    const payments = await dbRead.payment.findMany({
-      where: { budgetItem: { projectId: id } },
-      orderBy: { date: "desc" },
-      select: PAYMENT_SELECT,
-    });
+    const payments = await getCachedPayments(id);
     return NextResponse.json(payments);
   } catch (error) {
     console.error("GET payments error:", error);

@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
@@ -65,6 +65,21 @@ export const metadata: Metadata = {
     index: true,
     follow: true,
   },
+};
+
+// Next.js 14+ requires `themeColor` (and other viewport-related metadata)
+// to be exported separately from the `metadata` export. The light color
+// `#f7f9fc` matches the subtle blue-tinted app background
+// (oklch(0.99 0.006 250) ≈ #f7f9fc) so the browser chrome (mobile address
+// bar on iOS Safari, PWA window controls, etc.) blends with the page.
+// The dark color `#0a0a0a` matches the dark-mode background.
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#f7f9fc" },
+    { media: "(prefers-color-scheme: dark)", color: "#0a0a0a" },
+  ],
+  width: "device-width",
+  initialScale: 1,
 };
 
 export default function RootLayout({

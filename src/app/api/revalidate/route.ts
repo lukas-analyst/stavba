@@ -10,7 +10,8 @@ import { refreshMaterializedViews } from "@/lib/materialized-views";
 // Body: { tags: string[] }  OR  { tag: "dashboards" }
 // Query: ?tag=dashboards
 //
-// Allowed tags: "dashboards", "spending-trends", "projects"
+// Allowed tags: "dashboards", "spending-trends", "projects", "budgets",
+// "payments", "time-entries", "contacts", "contact-stats", "snapshots", "notes".
 // (Next.js unstable_cache requires static tag strings, so we use a small
 // set of fixed tags rather than per-project tags.)
 //
@@ -41,7 +42,18 @@ export async function POST(request: Request) {
     }
 
     // Validate tag — only allow known tags to prevent abuse.
-    const ALLOWED_TAGS = ["dashboards", "spending-trends", "projects"];
+    const ALLOWED_TAGS = [
+      "dashboards",
+      "spending-trends",
+      "projects",
+      "budgets",
+      "payments",
+      "time-entries",
+      "contacts",
+      "contact-stats",
+      "snapshots",
+      "notes",
+    ];
     for (const tag of tags) {
       if (!ALLOWED_TAGS.includes(tag)) {
         return NextResponse.json({ error: `Tag not allowed: ${tag}` }, { status: 400 });
