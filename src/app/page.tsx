@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense, useEffect, useRef } from "react";
+import dynamic from "next/dynamic";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { useProjects } from "@/lib/api";
 import { useAppStore, type TabId } from "@/lib/store";
@@ -23,7 +24,20 @@ const VALID_TABS: ReadonlySet<TabId> = new Set<TabId>([
   "notes",
   "management",
   "telemetry",
+  "admin",
 ]);
+
+// AdminTab is account-level (not project-scoped), so it can render even
+// when no project is selected. We lazy-load it separately at the page
+// level so the no-project branch doesn't have to go through EmptyState.
+const AdminTab = dynamic(() => import("@/components/tabs/admin-tab").then((m) => m.AdminTab), {
+  ssr: false,
+  loading: () => (
+    <div className="flex h-full items-center justify-center">
+      <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+    </div>
+  ),
+});
 
 export default function Home() {
   return (
@@ -199,6 +213,12 @@ function HomeContent() {
             <div className="flex h-full items-center justify-center">
               <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
             </div>
+          ) : activeTab === "admin" ? (
+            // Admin tab is account-level — render it directly even when
+            // no project is selected. When a project IS selected, we still
+            // render AdminTab directly (rather than via ProjectDetail) so
+            // account-level actions stay decoupled from project state.
+            <AdminTab />
           ) : selectedProject ? (
             <ProjectDetail project={selectedProject} />
           ) : (
