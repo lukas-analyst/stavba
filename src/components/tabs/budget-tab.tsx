@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useRef, useEffect, useCallback, createContext, useContext, memo } from "react";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
+import { useAnalytics } from "@/hooks/use-analytics";
 import {
   useBudgetItems,
   useUpdateBudgetItem,
@@ -264,6 +265,7 @@ function BudgetTab({ projectId, dragEndHandlerRef }: { projectId: string; dragEn
   const project = projects?.find((p) => p.id === projectId);
   const reorder = useReorder(projectId);
   const exportCsv = useExportCsv(projectId);
+  const { trackEvent } = useAnalytics(projectId);
   const [collapsedCats, setCollapsedCats] = useState<Set<string>>(new Set());
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
   const [phaseFilter, setPhaseFilter] = useState<Set<string>>(new Set()); // multi-select (empty = all)
@@ -792,7 +794,7 @@ function BudgetTab({ projectId, dragEndHandlerRef }: { projectId: string; dragEn
         open={addOpen}
         onOpenChange={setAddOpen}
         projectId={projectId}
-        onSubmitted={(created) => {
+        onSubmitted={(created, isNew) => {
           setCollapsedCats((prev) => {
             const next = new Set(prev);
             next.delete(created.category);
@@ -802,6 +804,13 @@ function BudgetTab({ projectId, dragEndHandlerRef }: { projectId: string; dragEn
           setPhaseFilter("all");
           setCompletionFilter("all");
           setHighlightId(created.id);
+          if (isNew) {
+            trackEvent("add_budget_item", {
+              category: created.category,
+              subcategory: created.subcategory,
+              planCost: created.planCost,
+            });
+          }
         }}
       />
       <BudgetItemDialog
@@ -809,13 +818,20 @@ function BudgetTab({ projectId, dragEndHandlerRef }: { projectId: string; dragEn
         onOpenChange={(o) => !o && setEditingItem(null)}
         projectId={projectId}
         item={editingItem}
-        onSubmitted={(updated) => {
+        onSubmitted={(updated, isNew) => {
           setCollapsedCats((prev) => {
             const next = new Set(prev);
             next.delete(updated.category);
             return next;
           });
           setHighlightId(updated.id);
+          if (isNew) {
+            trackEvent("add_budget_item", {
+              category: updated.category,
+              subcategory: updated.subcategory,
+              planCost: updated.planCost,
+            });
+          }
         }}
       />
       {addTaskFor && (
@@ -829,7 +845,7 @@ function BudgetTab({ projectId, dragEndHandlerRef }: { projectId: string; dragEn
           parentItemName={addTaskFor.subcategory ?? addTaskFor.category}
           defaultDateFrom={addTaskFor.dateFrom ? addTaskFor.dateFrom.substring(0, 10) : undefined}
           defaultDateTo={addTaskFor.dateTo ? addTaskFor.dateTo.substring(0, 10) : undefined}
-          onSubmitted={(created) => {
+          onSubmitted={(created, isNew) => {
             setExpandedItems((prev) => {
               const next = new Set(prev);
               next.add(addTaskFor.id);
@@ -844,6 +860,13 @@ function BudgetTab({ projectId, dragEndHandlerRef }: { projectId: string; dragEn
             setPhaseFilter("all");
             setCompletionFilter("all");
             setHighlightId(created.id);
+            if (isNew) {
+              trackEvent("add_budget_item", {
+                category: created.category,
+                subcategory: created.subcategory,
+                planCost: created.planCost,
+              });
+            }
           }}
         />
       )}
@@ -852,7 +875,7 @@ function BudgetTab({ projectId, dragEndHandlerRef }: { projectId: string; dragEn
         onOpenChange={(o) => !o && setAddOpenForCategory(null)}
         projectId={projectId}
         defaultCategory={addOpenForCategory ?? undefined}
-        onSubmitted={(created) => {
+        onSubmitted={(created, isNew) => {
           setCollapsedCats((prev) => {
             const next = new Set(prev);
             next.delete(created.category);
@@ -862,6 +885,13 @@ function BudgetTab({ projectId, dragEndHandlerRef }: { projectId: string; dragEn
           setPhaseFilter("all");
           setCompletionFilter("all");
           setHighlightId(created.id);
+          if (isNew) {
+            trackEvent("add_budget_item", {
+              category: created.category,
+              subcategory: created.subcategory,
+              planCost: created.planCost,
+            });
+          }
         }}
       />
     </div>
@@ -1231,9 +1261,11 @@ const BudgetRow = memo(function BudgetRow({
   const duplicateItem = useDuplicateBudgetItem(projectId);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const dragCtx = useRowDragListeners();
+  const { trackEvent } = useAnalytics(projectId);
 
   const update = (field: keyof BudgetItem, value: unknown) => {
     updateItem.mutate({ id: item.id, data: { [field]: value } });
+    trackEvent("edit_budget_item", { field });
   };
 
   const displayPlanCost = childCount > 0 ? rolled.planCost : item.planCost;
@@ -1723,9 +1755,11 @@ function DetailPanelRow({
   childItems?: BudgetItem[];
 }) {
   const updateItem = useUpdateBudgetItem(projectId);
+  const { trackEvent } = useAnalytics(projectId);
 
   const update = (field: keyof BudgetItem, value: unknown) => {
     updateItem.mutate({ id: item.id, data: { [field]: value } });
+    trackEvent("edit_budget_item", { field });
   };
 
   return (

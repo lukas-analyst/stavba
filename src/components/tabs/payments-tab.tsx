@@ -67,6 +67,7 @@ import { EmptyStateBox } from "@/components/empty-state-box";
 import { InlineDate, InlineNumber } from "@/components/ui/inline-editors";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { useLastValue } from "@/hooks/use-last-value";
+import { useAnalytics } from "@/hooks/use-analytics";
 
 // ===== Sorting =====
 type SortKey =
@@ -139,6 +140,7 @@ export function PaymentsTab({ projectId }: { projectId: string }) {
   const updatePayment = useUpdatePayment(projectId);
   const deletePayment = useDeletePayment(projectId);
   const updateBudgetItem = useUpdateBudgetItem(projectId);
+  const { trackEvent } = useAnalytics(projectId);
   const [addOpen, setAddOpen] = useState(false);
   const [editPayment, setEditPayment] = useState<Payment | null>(null);
   const [search, setSearch] = useState("");
@@ -419,11 +421,13 @@ export function PaymentsTab({ projectId }: { projectId: string }) {
                     key={payment.id}
                     payment={payment}
                     meta={meta}
+                    projectId={projectId}
                     onEdit={() => setEditPayment(payment)}
                     updatePayment={updatePayment}
                     onDelete={async () => {
                       try {
                         await deletePayment.mutateAsync(payment.id);
+                        trackEvent("delete_payment", { amount: payment.amount });
                         toast.success("Platba smazána");
                       } catch {
                         toast.error("Nepodařilo se smazat");
@@ -482,17 +486,20 @@ type RowMeta = {
 function PaymentRow({
   payment,
   meta,
+  projectId,
   onEdit,
   onDelete,
   updatePayment,
 }: {
   payment: Payment;
   meta?: RowMeta;
+  projectId: string;
   onEdit: () => void;
   onDelete: () => void;
   updatePayment?: ReturnType<typeof useUpdatePayment>;
 }) {
   const [confirm, setConfirm] = useState(false);
+  const { trackEvent } = useAnalytics(projectId);
   const t = paymentTypeLabel(payment.type);
   const isParent = meta?.isInstallmentParent ?? false;
   const isChild = meta?.isInstallmentChild ?? false;
@@ -503,6 +510,7 @@ function PaymentRow({
   // Inline update helper — patches a single field without opening the edit dialog.
   const update = (field: keyof Payment, value: unknown) => {
     updatePayment?.mutate({ id: payment.id, data: { [field]: value } });
+    trackEvent("edit_payment", { field, amount: payment.amount });
   };
 
   return (
@@ -694,6 +702,7 @@ function PaymentDialogInner({
   onClose,
 }: PaymentDialogProps) {
   const isEdit = !!payment;
+  const { trackEvent } = useAnalytics(projectId);
   const isInstallment = !!payment?.installmentOf;
   const today = new Date().toISOString().substring(0, 10);
 
@@ -800,6 +809,7 @@ function PaymentDialogInner({
           invoiceNumber,
           description: description || "1. splátka",
         });
+        trackEvent("add_payment", { amount: amt, type, invoice: true });
         if (markCompleted) {
           try {
             await updateBudgetItem.mutateAsync({ id: budgetItemId, data: { completed: true } });
@@ -822,6 +832,7 @@ function PaymentDialogInner({
           invoiceNumber,
           description,
         });
+        trackEvent("add_payment", { amount: amt, type, invoice: false });
         if (markCompleted) {
           try {
             await updateBudgetItem.mutateAsync({ id: budgetItemId, data: { completed: true } });
