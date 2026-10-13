@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { dbRead } from "@/lib/db";
 
 // GET /api/search?q=query
-// Global search across projects, budget items, and contacts.
+// Global search across projects, budget items, contacts, payments, and notes.
 // Uses `dbRead` (read replica if configured, falls back to primary).
 export async function GET(request: Request) {
   try {
@@ -10,10 +10,16 @@ export async function GET(request: Request) {
     const q = searchParams.get("q")?.trim() ?? "";
 
     if (q.length < 2) {
-      return NextResponse.json({ projects: [], items: [], contacts: [] });
+      return NextResponse.json({
+        projects: [],
+        items: [],
+        contacts: [],
+        payments: [],
+        notes: [],
+      });
     }
 
-    const [projects, items, contacts] = await Promise.all([
+    const [projects, items, contacts, payments, notes] = await Promise.all([
       dbRead.project.findMany({
         where: {
           OR: [
@@ -73,9 +79,52 @@ export async function GET(request: Request) {
         },
         orderBy: { name: "asc" },
       }),
+      dbRead.payment.findMany({
+        where: {
+          OR: [
+            { description: { contains: q } },
+            { vendor: { contains: q } },
+            { invoiceNumber: { contains: q } },
+          ],
+        },
+        take: 5,
+        select: {
+          id: true,
+          amount: true,
+          type: true,
+          description: true,
+          vendor: true,
+          date: true,
+          budgetItem: {
+            select: {
+              projectId: true,
+              category: true,
+              subcategory: true,
+            },
+          },
+        },
+        orderBy: { date: "desc" },
+      }),
+      dbRead.note.findMany({
+        where: {
+          OR: [
+            { text: { contains: q } },
+            { author: { contains: q } },
+          ],
+        },
+        take: 5,
+        select: {
+          id: true,
+          projectId: true,
+          text: true,
+          author: true,
+          createdAt: true,
+        },
+        orderBy: { createdAt: "desc" },
+      }),
     ]);
 
-    return NextResponse.json({ projects, items, contacts });
+    return NextResponse.json({ projects, items, contacts, payments, notes });
   } catch (error) {
     console.error("GET search error:", error);
     return NextResponse.json({ error: "Failed to search" }, { status: 500 });

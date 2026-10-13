@@ -344,6 +344,10 @@ model Note {
   @@index([projectId])
   @@index([userId])
   @@index([createdAt])
+  /// Composite index for the common listing query: `where: { projectId }, orderBy: { createdAt: "desc" }`.
+  /// Backs the GET /api/projects/[id]/notes endpoint and the global search
+  /// `where: { OR: [{ text: { contains: q } }, ...] }, orderBy: { createdAt: "desc" }`.
+  @@index([projectId, createdAt])
   @@map("notes")
 }
 
@@ -695,6 +699,14 @@ model AnalyticsEvent {
   @@index([createdAt])
   @@index([userId, createdAt])
   @@index([eventType, createdAt])
+  /// Single-column index on `pageUrl` — used by 4 query patterns in
+  /// /api/analytics: (1) `where: { pageUrl: pageUrlFilter }` exact-match
+  /// filter from the dashboard filter dropdown, (2) `where: { pageUrl: { not: null } }`
+  /// for the "Top pages" aggregation, (3) `distinct: ["pageUrl"]` for the
+  /// page filter dropdown, (4) `where: { eventType: "page_view", pageUrl: { not: null } }`
+  /// for time-by-page aggregation. Without this index, all four queries
+  /// fall back to full-table scans.
+  @@index([pageUrl])
   @@map("analytics_events")
 }
 
