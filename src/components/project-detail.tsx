@@ -77,7 +77,7 @@ export function ProjectDetail({ project }: { project: Project }) {
   // Each tab is treated as a "page" for analytics purposes. When the user
   // switches tabs, we record a new page_view with the tab name as pageUrl
   // and emit the timeSpent (in seconds) for the previous tab.
-  usePageViewTracking(activeTab);
+  usePageViewTracking(activeTab, project.id);
 
   // Listen for custom events from sidebar Settings menu
   useEffect(() => {

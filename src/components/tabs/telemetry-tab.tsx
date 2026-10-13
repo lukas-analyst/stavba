@@ -88,6 +88,7 @@ const EVENT_TYPE_LABELS: Record<string, string> = {
   add_contact: "Přidání kontaktu",
   add_note: "Přidání poznámky",
   edit_note: "Úprava poznámky",
+  download_data: "Stažení dat",
   login: "Přihlášení",
   logout: "Odhlášení",
 };
@@ -103,6 +104,7 @@ const EVENT_TYPE_COLORS: Record<string, string> = {
   add_contact: "bg-secondary",
   add_note: "bg-primary/80",
   edit_note: "bg-warning/80",
+  download_data: "bg-subsidy",
   login: "bg-success/80",
   logout: "bg-danger/80",
 };
@@ -124,9 +126,10 @@ function formatEventTimestamp(iso: string): { date: string; time: string } {
   const month = String(d.getMonth() + 1).padStart(2, "0");
   const hours = String(d.getHours()).padStart(2, "0");
   const minutes = String(d.getMinutes()).padStart(2, "0");
+  const seconds = String(d.getSeconds()).padStart(2, "0");
   return {
     date: `${day}.${month}.${d.getFullYear()}`,
-    time: `${hours}:${minutes}`,
+    time: `${hours}:${minutes}:${seconds}`,
   };
 }
 
@@ -154,6 +157,21 @@ function formatPageLabel(url: string | null): string {
     telemetry: "Telemetrie",
   };
   return labels[cleaned] ?? url;
+}
+
+// Extract project name from analytics metadata (JSON string)
+function extractProjectName(metadata: string | null): string {
+  if (!metadata) return "—";
+  try {
+    const parsed = JSON.parse(metadata);
+    if (parsed.projectId) {
+      // We don't have project lookup here — show short ID
+      return parsed.projectId.slice(-8);
+    }
+    return "—";
+  } catch {
+    return "—";
+  }
 }
 
 export function TelemetryTab({ projectId: _projectId }: { projectId: string }) {
@@ -266,8 +284,7 @@ export function TelemetryTab({ projectId: _projectId }: { projectId: string }) {
             Telemetrie
           </h2>
           <p className="type-body text-on-surface-variant">
-            Interní analytika uživatelských akcí. Žádné cookies, žádné sdílení
-            dat třetím stranám.
+            Interní analytika uživatelských akcí.
           </p>
         </div>
         <Button
@@ -545,6 +562,9 @@ export function TelemetryTab({ projectId: _projectId }: { projectId: string }) {
                       <th className="type-overline text-on-surface-variant px-3 py-2 text-left">
                         Stránka
                       </th>
+                      <th className="type-overline text-on-surface-variant px-3 py-2 text-left">
+                        Projekt
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
@@ -605,6 +625,11 @@ export function TelemetryTab({ projectId: _projectId }: { projectId: string }) {
                                   · {formatTimeSpent(entry.timeSpent)}
                                 </span>
                               )}
+                          </td>
+                          <td className="px-3 py-2">
+                            <span className="type-label text-on-surface-variant">
+                              {extractProjectName(entry.metadata)}
+                            </span>
                           </td>
                         </tr>
                       );
