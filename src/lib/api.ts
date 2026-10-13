@@ -305,7 +305,7 @@ export function useCreateBudgetItem(projectId: string) {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["budget", projectId] });
       qc.invalidateQueries({ queryKey: ["dashboard", projectId] });
-      bustServerCache(projectId);
+      bustServerCache(projectId, ["dashboards", "budgets"]);
     },
   });
 }
@@ -333,7 +333,7 @@ export function useUpdateBudgetItem(projectId: string) {
     onSettled: () => {
       qc.invalidateQueries({ queryKey: ["budget", projectId] });
       qc.invalidateQueries({ queryKey: ["dashboard", projectId] });
-      bustServerCache(projectId);
+      bustServerCache(projectId, ["dashboards", "budgets"]);
     },
     mutationFn: async ({ id, data }: { id: string; data: Partial<BudgetItem> }) => {
       const res = await fetch(`/api/budget-items/${id}`, {
@@ -358,7 +358,7 @@ export function useDeleteBudgetItem(projectId: string) {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["budget", projectId] });
       qc.invalidateQueries({ queryKey: ["dashboard", projectId] });
-      bustServerCache(projectId);
+      bustServerCache(projectId, ["dashboards", "budgets"]);
     },
   });
 }
@@ -374,7 +374,7 @@ export function useDuplicateBudgetItem(projectId: string) {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["budget", projectId] });
       qc.invalidateQueries({ queryKey: ["dashboard", projectId] });
-      bustServerCache(projectId);
+      bustServerCache(projectId, ["dashboards", "budgets"]);
     },
   });
 }
@@ -447,7 +447,7 @@ export function useReorder(projectId: string) {
       qc.invalidateQueries({ queryKey: ["budget", projectId] });
       qc.invalidateQueries({ queryKey: ["projects"] });
       qc.invalidateQueries({ queryKey: ["dashboard", projectId] });
-      bustServerCache(projectId);
+      bustServerCache(projectId, ["dashboards", "budgets"]);
     },
     mutationFn: async (data: {
       items?: { id: string; sortOrder: number }[];
@@ -568,7 +568,7 @@ export function useCreatePayment(projectId: string) {
       qc.invalidateQueries({ queryKey: ["payments", projectId] });
       qc.invalidateQueries({ queryKey: ["budget", projectId] });
       qc.invalidateQueries({ queryKey: ["dashboard", projectId] });
-      bustServerCache(projectId);
+      bustServerCache(projectId, ["dashboards", "payments"]);
     },
   });
 }
@@ -597,7 +597,7 @@ export function useUpdatePayment(projectId: string) {
       qc.invalidateQueries({ queryKey: ["payments", projectId] });
       qc.invalidateQueries({ queryKey: ["budget", projectId] });
       qc.invalidateQueries({ queryKey: ["dashboard", projectId] });
-      bustServerCache(projectId);
+      bustServerCache(projectId, ["dashboards", "payments"]);
     },
     mutationFn: async ({ id, data }: { id: string; data: Partial<Payment> }) => {
       const res = await fetch(`/api/payments/${id}`, {
@@ -623,7 +623,7 @@ export function useDeletePayment(projectId: string) {
       qc.invalidateQueries({ queryKey: ["payments", projectId] });
       qc.invalidateQueries({ queryKey: ["budget", projectId] });
       qc.invalidateQueries({ queryKey: ["dashboard", projectId] });
-      bustServerCache(projectId);
+      bustServerCache(projectId, ["dashboards", "payments"]);
     },
   });
 }
@@ -658,7 +658,7 @@ export function useCreateTimeEntry(projectId: string) {
       qc.invalidateQueries({ queryKey: ["time", projectId] });
       qc.invalidateQueries({ queryKey: ["budget", projectId] });
       qc.invalidateQueries({ queryKey: ["dashboard", projectId] });
-      bustServerCache(projectId);
+      bustServerCache(projectId, ["dashboards", "time-entries"]);
     },
   });
 }
@@ -687,7 +687,7 @@ export function useUpdateTimeEntry(projectId: string) {
       qc.invalidateQueries({ queryKey: ["time", projectId] });
       qc.invalidateQueries({ queryKey: ["budget", projectId] });
       qc.invalidateQueries({ queryKey: ["dashboard", projectId] });
-      bustServerCache(projectId);
+      bustServerCache(projectId, ["dashboards", "time-entries"]);
     },
     mutationFn: async ({ id, data }: { id: string; data: Partial<TimeEntry> & { hours?: number } }) => {
       const res = await fetch(`/api/time-entries/${id}`, {
@@ -713,7 +713,7 @@ export function useDeleteTimeEntry(projectId: string) {
       qc.invalidateQueries({ queryKey: ["time", projectId] });
       qc.invalidateQueries({ queryKey: ["budget", projectId] });
       qc.invalidateQueries({ queryKey: ["dashboard", projectId] });
-      bustServerCache(projectId);
+      bustServerCache(projectId, ["dashboards", "time-entries"]);
     },
   });
 }
@@ -744,7 +744,12 @@ export function useCreateContact(projectId: string) {
       if (!res.ok) throw new Error("Failed to create contact");
       return res.json();
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["contacts", projectId] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["contacts", projectId] });
+      qc.invalidateQueries({ queryKey: ["contactStats", projectId] });
+      qc.invalidateQueries({ queryKey: ["dashboard", projectId] });
+      bustServerCache(projectId, ["dashboards", "contacts", "contact-stats"]);
+    },
   });
 }
 
@@ -760,7 +765,12 @@ export function useUpdateContact(projectId: string) {
       if (!res.ok) throw new Error("Failed to update contact");
       return res.json();
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["contacts", projectId] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["contacts", projectId] });
+      qc.invalidateQueries({ queryKey: ["contactStats", projectId] });
+      qc.invalidateQueries({ queryKey: ["dashboard", projectId] });
+      bustServerCache(projectId, ["dashboards", "contacts", "contact-stats"]);
+    },
   });
 }
 
@@ -776,7 +786,7 @@ export function useDeleteContact(projectId: string) {
       qc.invalidateQueries({ queryKey: ["contacts", projectId] });
       qc.invalidateQueries({ queryKey: ["contactStats", projectId] });
       qc.invalidateQueries({ queryKey: ["dashboard", projectId] });
-      bustServerCache(projectId);
+      bustServerCache(projectId, ["dashboards", "contacts", "contact-stats"]);
     },
   });
 }
@@ -799,6 +809,7 @@ export function useCreateContactPerson(projectId: string, contactId: string) {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["contacts", projectId] });
+      bustServerCache(projectId, ["dashboards", "contacts"]);
     },
   });
 }
@@ -817,6 +828,7 @@ export function useUpdateContactPerson(projectId: string, contactId: string) {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["contacts", projectId] });
+      bustServerCache(projectId, ["dashboards", "contacts"]);
     },
   });
 }
@@ -831,6 +843,7 @@ export function useDeleteContactPerson(projectId: string, contactId: string) {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["contacts", projectId] });
+      bustServerCache(projectId, ["dashboards", "contacts"]);
     },
   });
 }
@@ -976,6 +989,7 @@ export function useCreateSnapshot(projectId: string) {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["snapshots", projectId] });
+      bustServerCache(projectId, ["dashboards", "snapshots"]);
     },
   });
 }
@@ -990,6 +1004,7 @@ export function useDeleteSnapshot(projectId: string) {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["snapshots", projectId] });
+      bustServerCache(projectId, ["dashboards", "snapshots"]);
     },
   });
 }
@@ -1068,7 +1083,6 @@ export type Note = {
 export function useNotes(projectId: string | null) {
   return useQuery<Note[]>({
     queryKey: ["notes", projectId],
-    staleTime: 15 * 1000, // 15s — notes update on mutations
     queryFn: async () => {
       const res = await fetch(`/api/projects/${projectId}/notes`);
       if (!res.ok) throw new Error("Failed to load notes");
@@ -1127,6 +1141,7 @@ export function useCreateNote(projectId: string) {
     },
     onSettled: () => {
       qc.invalidateQueries({ queryKey: ["notes", projectId] });
+      bustServerCache(projectId, ["dashboards", "notes"]);
     },
   });
 }
@@ -1174,6 +1189,7 @@ export function useUpdateNote(projectId: string) {
     },
     onSettled: () => {
       qc.invalidateQueries({ queryKey: ["notes", projectId] });
+      bustServerCache(projectId, ["dashboards", "notes"]);
     },
   });
 }
@@ -1196,6 +1212,7 @@ export function useDeleteNote(projectId: string) {
     },
     onSettled: () => {
       qc.invalidateQueries({ queryKey: ["notes", projectId] });
+      bustServerCache(projectId, ["dashboards", "notes"]);
     },
     mutationFn: async (id: string) => {
       const res = await fetch(`/api/notes/${id}`, { method: "DELETE" });

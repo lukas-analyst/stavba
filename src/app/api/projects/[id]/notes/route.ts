@@ -1,6 +1,29 @@
 import { NextResponse } from "next/server";
+import { unstable_cache } from "next/cache";
 import { db, dbRead } from "@/lib/db";
 import { logChanges } from "@/lib/audit";
+
+// Cached version of the notes list query — keyed by projectId (passed as
+// the function argument, which Next.js includes in the cache key
+// automatically), tagged "notes" with a short 15s TTL. Notes are
+// conversation-like, so the client-side React Query uses staleTime: 0 +
+// refetchOnMount: "always"; this server cache just protects against
+// redundant DB hits when React Query refetches. Note mutations bust this
+// tag via `bustServerCache(projectId, [...])` in src/lib/api.ts.
+const getCachedNotes = unstable_cache(
+  async (projectId: string) => {
+    const notes = await dbRead.note.findMany({
+      where: { projectId },
+      orderBy: { createdAt: "desc" },
+    });
+    return notes;
+  },
+  ["notes"],
+  {
+    tags: ["notes"],
+    revalidate: 15, // 15 seconds — notes are conversation-like
+  }
+);
 
 // GET /api/projects/[id]/notes - list all notes for a project (newest first)
 // Uses `dbRead` (read replica if configured, falls back to primary).
@@ -10,10 +33,7 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
-    const notes = await dbRead.note.findMany({
-      where: { projectId: id },
-      orderBy: { createdAt: "desc" },
-    });
+    const notes = await getCachedNotes(id);
     return NextResponse.json(notes);
   } catch (error) {
     console.error("GET notes error:", error);

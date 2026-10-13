@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { unstable_cache } from "next/cache";
 import { db, dbRead } from "@/lib/db";
 import { logChanges } from "@/lib/audit";
 
@@ -35,6 +36,27 @@ const CONTACT_SELECT = {
   },
 } as const;
 
+// Cached version of the contacts list query — keyed by projectId (passed
+// as the function argument, which Next.js includes in the cache key
+// automatically), tagged "contacts" with a 30s TTL. Contacts change less
+// often than budget/payments/time. Contact mutations (incl. person edits)
+// bust this tag via `bustServerCache(projectId, [...])` in src/lib/api.ts.
+const getCachedContacts = unstable_cache(
+  async (projectId: string) => {
+    const contacts = await dbRead.contact.findMany({
+      where: { projectId },
+      orderBy: [{ name: "asc" }],
+      select: CONTACT_SELECT,
+    });
+    return contacts;
+  },
+  ["contacts"],
+  {
+    tags: ["contacts"],
+    revalidate: 30, // 30 seconds — contacts change less often
+  }
+);
+
 // GET /api/projects/[id]/contacts - list all contacts for a project
 export async function GET(
   _request: Request,
@@ -42,11 +64,7 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
-    const contacts = await dbRead.contact.findMany({
-      where: { projectId: id },
-      orderBy: [{ name: "asc" }],
-      select: CONTACT_SELECT,
-    });
+    const contacts = await getCachedContacts(id);
     return NextResponse.json(contacts);
   } catch (error) {
     console.error("GET contacts error:", error);
