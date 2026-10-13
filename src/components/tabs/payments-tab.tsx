@@ -515,10 +515,7 @@ function PaymentRow({
 
   return (
     <TableRow
-      className={cn(
-        "group cursor-pointer hover:bg-muted/30 cv-row",
-        isParent && "bg-warning-soft/30 dark:bg-warning-soft/40",
-      )}
+      className="group cursor-pointer hover:bg-muted/30 cv-row"
       onClick={() => onEdit()}
       title="Klikněte pro úpravu platby"
     >
@@ -560,7 +557,7 @@ function PaymentRow({
         </div>
       </TableCell>
       <TableCell>
-        <div className={cn("flex flex-col", isChild && "pl-4")}>
+        <div className="flex flex-col">
           <span className="type-body font-medium">
             {payment.budgetItem?.subcategory || payment.budgetItem?.category}
           </span>
