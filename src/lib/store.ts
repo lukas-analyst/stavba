@@ -11,7 +11,8 @@ export type TabId =
   | "timeline"
   | "notes"
   | "management"
-  | "telemetry";
+  | "telemetry"
+  | "admin";
 
 export type BudgetFilter =
   | { type: "completion"; value: "all" | "todo" | "done" | "rejected" }

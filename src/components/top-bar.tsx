@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQueryClient, useQuery } from "@tanstack/react-query";
+import { useTheme } from "next-themes";
 import {
   Menu,
   ChevronDown,
@@ -11,6 +12,10 @@ import {
   Plus,
   Check,
   Settings,
+  Sun,
+  Moon,
+  LogOut,
+  SlidersHorizontal,
 } from "lucide-react";
 import { useProjects } from "@/lib/api";
 import { useAppStore } from "@/lib/store";
@@ -18,11 +23,19 @@ import { useScrollState } from "@/hooks/use-scroll-state";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { NewProjectDialog } from "@/components/new-project-dialog";
 import { GlobalSearchDialog } from "@/components/global-search-dialog";
 import { formatCzk, STATUS_LABELS } from "@/lib/format";
@@ -36,6 +49,18 @@ function formatShort(n: number): string {
   return String(n);
 }
 
+// Compute up to 2 initials from a name/email for the avatar fallback.
+// "Lukáš Hanzlík" → "LH", "hanzlik@…" → "H".
+function getInitials(name: string | null | undefined): string {
+  if (!name) return "?";
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "?";
+  if (parts.length === 1) {
+    return parts[0][0]?.toUpperCase() ?? "?";
+  }
+  return (parts[0][0] ?? "").toUpperCase() + (parts[1][0] ?? "").toUpperCase();
+}
+
 export function TopBar() {
   const sidebarOpen = useAppStore((s) => s.sidebarOpen);
   const toggleSidebar = useAppStore((s) => s.toggleSidebar);
@@ -45,6 +70,30 @@ export function TopBar() {
   const { data: projects } = useProjects();
   const qc = useQueryClient();
   const isScrolled = useScrollState();
+  const { theme, setTheme } = useTheme();
+
+  // Fetch current user profile (default owner until Google Auth lands).
+  // Used by the avatar dropdown to show initials + name + email.
+  const { data: currentUser } = useQuery({
+    queryKey: ["user-profile"],
+    queryFn: async () => {
+      const res = await fetch("/api/users/profile");
+      if (!res.ok) return null;
+      return (await res.json()) as {
+        id: string;
+        name: string | null;
+        email: string;
+        image: string | null;
+        createdAt: string;
+      };
+    },
+    staleTime: 60_000,
+  });
+
+  // next-themes handles hydration internally; the dropdown menu content
+  // only renders after a user click (inside a Radix portal), so we can
+  // read `theme` directly without a mounted-guard.
+  const isDark = theme === "dark";
 
   const [projectOpen, setProjectOpen] = useState(false);
   const [search, setSearch] = useState("");
@@ -288,17 +337,89 @@ export function TopBar() {
           </button>
         )}
 
-        {/* Auth placeholder — larger touch target on mobile */}
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-11 w-11 shrink-0 state-layer-on-surface rounded-full sm:h-9 sm:w-9"
-          aria-label="Účet"
-          title="Přihlášení (brzy)"
-          onClick={() => toast.info("Přihlášení bude brzy dostupné")}
-        >
-          <User className="h-5 w-5" />
-        </Button>
+        {/* Account dropdown — avatar with initials + Preference + Odhlásit + theme toggle */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-11 w-11 shrink-0 state-layer-on-surface rounded-full sm:h-9 sm:w-9"
+              aria-label="Účet"
+              title={currentUser?.name ?? currentUser?.email ?? "Účet"}
+            >
+              {currentUser?.image ? (
+                <Avatar className="h-7 w-7 sm:h-5 sm:w-5">
+                  <AvatarImage src={currentUser.image} alt={currentUser.name ?? currentUser.email} />
+                  <AvatarFallback className="bg-secondary-container type-label-sm font-bold text-secondary-container-foreground">
+                    <User className="h-5 w-5" />
+                  </AvatarFallback>
+                </Avatar>
+              ) : (
+                <User className="h-5 w-5" />
+              )}
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent
+            align="end"
+            sideOffset={6}
+            className="w-[min(20rem,calc(100vw-1rem))] p-0 overflow-hidden rounded-2xl border-outline-variant"
+          >
+            {/* User info section */}
+            <div className="flex items-center gap-3 bg-surface-container-low p-3">
+              <Avatar className="h-11 w-11 shrink-0 border border-outline-variant">
+                {currentUser?.image ? (
+                  <AvatarImage src={currentUser.image} alt={currentUser.name ?? currentUser.email} />
+                ) : null}
+                <AvatarFallback className="bg-secondary-container type-label font-bold text-secondary-container-foreground">
+                  {getInitials(currentUser?.name ?? currentUser?.email ?? "?")}
+                </AvatarFallback>
+              </Avatar>
+              <div className="min-w-0 flex-1">
+                <div className="type-body font-semibold truncate">
+                  {currentUser?.name ?? "Načítání…"}
+                </div>
+                <div className="type-label text-on-surface-variant truncate">
+                  {currentUser?.email ?? ""}
+                </div>
+              </div>
+            </div>
+
+            <DropdownMenuSeparator className="bg-outline-variant" />
+
+            {/* Preference — open the Admin tab */}
+            <DropdownMenuItem
+              onSelect={() => setActiveTab("admin")}
+              className="cursor-pointer gap-2.5 rounded-none px-3 py-2.5 type-body hover:bg-surface-container-high"
+            >
+              <SlidersHorizontal className="h-4 w-4 text-primary" />
+              Preference
+            </DropdownMenuItem>
+
+            {/* Odhlásit — placeholder for future auth */}
+            <DropdownMenuItem
+              onSelect={() => toast.info("Odhlášení bude brzy dostupné")}
+              className="cursor-pointer gap-2.5 rounded-none px-3 py-2.5 type-body hover:bg-surface-container-high"
+            >
+              <LogOut className="h-4 w-4 text-muted-foreground" />
+              Odhlásit
+            </DropdownMenuItem>
+
+            <DropdownMenuSeparator className="bg-outline-variant" />
+
+            {/* Theme toggle — moved from sidebar settings to here */}
+            <DropdownMenuItem
+              onSelect={() => setTheme(isDark ? "light" : "dark")}
+              className="cursor-pointer gap-2.5 rounded-none px-3 py-2.5 type-body hover:bg-surface-container-high"
+            >
+              {isDark ? (
+                <Sun className="h-4 w-4 text-warning" />
+              ) : (
+                <Moon className="h-4 w-4 text-info" />
+              )}
+              {isDark ? "Světlý motiv" : "Tmavý motiv"}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </header>
 
       {/* Dialogs */}

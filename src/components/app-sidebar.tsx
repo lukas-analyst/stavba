@@ -9,11 +9,8 @@ import {
   Pencil,
   Printer,
   History,
-  Sun,
-  Moon,
   BarChart3,
 } from "lucide-react";
-import { useTheme } from "next-themes";
 import { NAV_ITEMS, NAV_SECTIONS, type NavItem, type NavSection } from "@/lib/navigation";
 import { useAppStore } from "@/lib/store";
 import { useExportState, useImportState, useExportCsv } from "@/lib/api";
@@ -49,8 +46,6 @@ export function AppSidebar() {
   const setActiveTab = useAppStore((s) => s.setActiveTab);
   const selectedProjectId = useAppStore((s) => s.selectedProjectId);
   const setSidebarOpen = useAppStore((s) => s.setSidebarOpen);
-  const { theme, setTheme } = useTheme();
-  const isDark = theme === "dark";
 
   const exportState = useExportState();
   const importState = useImportState();
@@ -164,22 +159,6 @@ export function AppSidebar() {
             <DropdownMenuItem onClick={() => handleNavClick("telemetry")}>
               <BarChart3 className="mr-2 h-3.5 w-3.5" />
               Telemetrie
-            </DropdownMenuItem>
-
-            <DropdownMenuSeparator />
-
-            <DropdownMenuLabel className="text-xs text-muted-foreground">
-              Vzhled
-            </DropdownMenuLabel>
-            <DropdownMenuItem
-              onClick={() => setTheme(isDark ? "light" : "dark")}
-            >
-              {isDark ? (
-                <Sun className="mr-2 h-3.5 w-3.5" />
-              ) : (
-                <Moon className="mr-2 h-3.5 w-3.5" />
-              )}
-              {isDark ? "Světlý motiv" : "Tmavý motiv"}
             </DropdownMenuItem>
 
             <DropdownMenuSeparator />
