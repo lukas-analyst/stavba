@@ -76,41 +76,6 @@ export async function GET() {
     return NextResponse.json(withStats);
   } catch (error) {
     console.error("GET /api/projects error:", error);
-    // === DEV FALLBACK (TEMPORARY — for mobile layout verification) ===
-    // When the database is unreachable (e.g. Neon cold start / network
-    // issues in dev sandboxes), return a single mock project so the UI
-    // can still be rendered and verified. This branch is DEV ONLY and
-    // should never fire in production (the DB is always reachable there).
-    if (process.env.NODE_ENV === "development") {
-      const mockProject = {
-        id: "mock-project-id",
-        name: "Troja — rekonstrukce bytu 2+1",
-        slug: "troja-rekonstrukce-bytu",
-        address: "Trojská 123, Praha 7",
-        description: "Kompletní rekonstrukce 75m² bytu",
-        starred: true,
-        status: "active",
-        currency: "CZK",
-        totalBudget: 5600000,
-        startDate: "2024-09-01T00:00:00.000Z",
-        endDate: "2025-03-31T00:00:00.000Z",
-        categoryOrder: null,
-        notes: null,
-        createdAt: "2024-08-15T10:00:00.000Z",
-        updatedAt: "2024-10-13T12:00:00.000Z",
-        _count: { budgetItems: 0, contacts: 0 },
-        stats: {
-          planTotal: 5600000,
-          actualTotal: 4860000,
-          remaining: 740000,
-          burnRate: 86.8,
-          hoursTotal: 0,
-          daysPlanned: 0,
-          itemCount: 0,
-        },
-      };
-      return NextResponse.json([mockProject]);
-    }
     return NextResponse.json(
       { error: "Failed to fetch projects" },
       { status: 500 },

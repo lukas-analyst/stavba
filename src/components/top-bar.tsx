@@ -3,6 +3,7 @@
 import { useState, useCallback } from "react";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { useTheme } from "next-themes";
+import { signOut, useSession } from "next-auth/react";
 import {
   Menu,
   ChevronDown,
@@ -72,9 +73,24 @@ export function TopBar() {
   const isScrolled = useScrollState();
   const { theme, setTheme } = useTheme();
 
-  // Fetch current user profile (default owner until Google Auth lands).
-  // Used by the avatar dropdown to show initials + name + email.
-  const { data: currentUser } = useQuery({
+  // Fetch current user profile from NextAuth session.
+  // The avatar dropdown shows initials + name + email from the session.
+  // Falls back to the /api/users/profile endpoint (which itself falls
+  // back to the default owner if no session — for backwards compat).
+  const { data: session } = useSession();
+  const currentUser = session?.user
+    ? {
+        id: (session.user as { id?: string }).id ?? "",
+        name: session.user.name ?? null,
+        email: session.user.email ?? "",
+        image: session.user.image ?? null,
+        createdAt: "",
+      }
+    : null;
+
+  // If session isn't loaded yet, fall back to the profile endpoint
+  // (which returns the default owner during dev / before auth).
+  const { data: profileUser } = useQuery({
     queryKey: ["user-profile"],
     queryFn: async () => {
       const res = await fetch("/api/users/profile");
@@ -87,8 +103,13 @@ export function TopBar() {
         createdAt: string;
       };
     },
+    // Only fetch if we don't have a session yet
+    enabled: !session,
     staleTime: 60_000,
   });
+
+  // Use session user if available, otherwise the profile endpoint fallback
+  const displayUser = currentUser ?? profileUser;
 
   // next-themes handles hydration internally; the dropdown menu content
   // only renders after a user click (inside a Radix portal), so we can
@@ -353,11 +374,11 @@ export function TopBar() {
               size="icon"
               className="h-12 w-12 shrink-0 state-layer-on-surface rounded-full sm:h-9 sm:w-9"
               aria-label="Účet"
-              title={currentUser?.name ?? currentUser?.email ?? "Účet"}
+              title={displayUser?.name ?? displayUser?.email ?? "Účet"}
             >
-              {currentUser?.image ? (
+              {displayUser?.image ? (
                 <Avatar className="h-8 w-8 sm:h-6 sm:w-6">
-                  <AvatarImage src={currentUser.image} alt={currentUser.name ?? currentUser.email} />
+                  <AvatarImage src={displayUser.image} alt={displayUser.name ?? displayUser.email} />
                   <AvatarFallback className="bg-secondary-container type-label-sm font-bold text-secondary-container-foreground">
                     <User className="h-6 w-6 sm:h-5 sm:w-5" />
                   </AvatarFallback>
@@ -375,19 +396,19 @@ export function TopBar() {
             {/* User info section */}
             <div className="flex items-center gap-3 bg-surface-container-low p-3">
               <Avatar className="h-11 w-11 shrink-0 border border-outline-variant">
-                {currentUser?.image ? (
-                  <AvatarImage src={currentUser.image} alt={currentUser.name ?? currentUser.email} />
+                {displayUser?.image ? (
+                  <AvatarImage src={displayUser.image} alt={displayUser.name ?? displayUser.email} />
                 ) : null}
                 <AvatarFallback className="bg-secondary-container type-label font-bold text-secondary-container-foreground">
-                  {getInitials(currentUser?.name ?? currentUser?.email ?? "?")}
+                  {getInitials(displayUser?.name ?? displayUser?.email ?? "?")}
                 </AvatarFallback>
               </Avatar>
               <div className="min-w-0 flex-1">
                 <div className="type-body font-semibold truncate">
-                  {currentUser?.name ?? "Načítání…"}
+                  {displayUser?.name ?? "Načítání…"}
                 </div>
                 <div className="type-label text-on-surface-variant truncate">
-                  {currentUser?.email ?? ""}
+                  {displayUser?.email ?? ""}
                 </div>
               </div>
             </div>
@@ -403,9 +424,9 @@ export function TopBar() {
               Preference
             </DropdownMenuItem>
 
-            {/* Odhlásit — placeholder for future auth */}
+            {/* Odhlásit — functional sign-out via NextAuth */}
             <DropdownMenuItem
-              onSelect={() => toast.info("Odhlášení bude brzy dostupné")}
+              onSelect={() => signOut({ callbackUrl: "/auth/login" })}
               className="cursor-pointer gap-2.5 rounded-none px-3 py-2.5 type-body hover:bg-surface-container-high"
             >
               <LogOut className="h-4 w-4 text-muted-foreground" />

@@ -44,6 +44,20 @@ model User {
   /// Full name as it appears on the user's Google account (cached for quick access)
   /// If null, the user hasn't completed their profile yet
   emailVerified DateTime?
+  /// Bcrypt-hashed password. Null for OAuth-only users (Google) or for
+  /// "ghost" users created by the app before auth was enabled (e.g. the
+  /// default owner). When such a ghost user registers, their password is
+  /// set here — this is the "account claiming" flow.
+  password      String?
+  /// Random token sent in the verification email. Null after verification
+  /// or when no verification is pending.
+  emailVerifyToken     String?
+  /// Expiry of the email verification token (typically 24h).
+  emailVerifyExpiry    DateTime?
+  /// Random token sent in the password-reset email. Null when not pending.
+  passwordResetToken   String?
+  /// Expiry of the password-reset token (typically 1h).
+  passwordResetExpiry  DateTime?
   /// When this user first signed in
   createdAt     DateTime  @default(now())
   /// When this user's record was last updated
