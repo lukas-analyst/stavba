@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { useQueryClient, useQuery } from "@tanstack/react-query";
 import {
   Card,
   CardContent,
@@ -58,6 +58,8 @@ import {
   ChevronRight,
   Info,
   Search,
+  QrCode as QrCodeIcon,
+  Link2,
 } from "lucide-react";
 import {
   useProjects,
@@ -70,8 +72,10 @@ import {
 import { formatDate, STATUS_LABELS } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { useAppStore, type TabId } from "@/lib/store";
+import { useAnalytics } from "@/hooks/use-analytics";
 import { toast } from "sonner";
 import { CollapsibleSection } from "@/components/ui/collapsible-section";
+import QRCode from "qrcode";
 
 // ============================================================
 // ProjectManagementTab — full project management page
@@ -84,6 +88,29 @@ export function ProjectManagementTab({ projectId }: { projectId: string }) {
   const exportState = useExportState();
   const importState = useImportState();
   const exportCsv = useExportCsv(projectId);
+  const { trackEvent } = useAnalytics(projectId);
+
+  // Fetch current user + project members to determine if user is owner (Správce)
+  const { data: currentUser } = useQuery({
+    queryKey: ["user-profile"],
+    queryFn: async () => {
+      const res = await fetch("/api/users/profile");
+      if (!res.ok) return null;
+      return res.json();
+    },
+    staleTime: 60_000,
+  });
+  const { data: membersData } = useQuery({
+    queryKey: ["members", projectId],
+    queryFn: async () => {
+      const res = await fetch(`/api/projects/${projectId}/members`);
+      if (!res.ok) return null;
+      return res.json();
+    },
+    staleTime: 30_000,
+  });
+
+  const isOwner = currentUser?.id && membersData?.owner?.id === currentUser.id;
 
   const project = projects?.find((p) => p.id === projectId);
 
@@ -105,28 +132,39 @@ export function ProjectManagementTab({ projectId }: { projectId: string }) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ entityType: "Export", action: "export", entityLabel: "Export stavu (JSON)" }),
-      }).catch(() => {}); // non-blocking — don't fail if audit fails
+      }).catch(() => {});
+      // Telemetry: download_data event
+      trackEvent("download_data", { format: "JSON", type: "project_state" });
       toast.success("Stav exportován");
     } catch {
       toast.error("Export selhal");
     }
   };
 
-  const handleCsv = async (type: "budget" | "payments" | "time" | "contacts") => {
+  const handleCsv = async (type: "budget" | "payments" | "time" | "contacts" | "audit") => {
     try {
-      await exportCsv.mutateAsync(type);
-      const labels: Record<typeof type, string> = {
+      if (type === "audit") {
+        window.open(`/api/projects/${projectId}/audit/export`, "_blank");
+      } else {
+        await exportCsv.mutateAsync(type);
+      }
+      const labels: Record<string, string> = {
         budget: "Rozpočet",
         payments: "Platby",
         time: "Čas",
         contacts: "Kontakty",
+        audit: "Audit log",
       };
       // C5: Audit log pro CSV exporty
-      await fetch(`/api/projects/${projectId}/audit`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ entityType: "Export", action: "export", entityLabel: `CSV — ${labels[type]}` }),
-      }).catch(() => {}); // non-blocking
+      if (type !== "audit") {
+        await fetch(`/api/projects/${projectId}/audit`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ entityType: "Export", action: "export", entityLabel: `CSV — ${labels[type]}` }),
+        }).catch(() => {});
+      }
+      // Telemetry: download_data event
+      trackEvent("download_data", { format: "CSV", type: labels[type] });
       toast.success(`CSV — ${labels[type]} exportováno`);
     } catch {
       toast.error("CSV export selhal");
@@ -296,6 +334,21 @@ export function ProjectManagementTab({ projectId }: { projectId: string }) {
         <EnhancedAuditLog projectId={projectId} />
       </CollapsibleSection>
 
+      {/* ===== QR Code for sharing ===== */}
+      <Card className="bg-card shadow-sm">
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 type-title-lg">
+            <QrCodeIcon className="h-4 w-4 text-primary" />
+            Sdílet projekt
+          </CardTitle>
+          <CardDescription>Naskenujte QR kód pro rychlý přístup k projektu</CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-col items-center gap-3">
+          {/* QR code canvas — generated on click */}
+          <QrCode projectId={projectId} projectName={project.name} />
+        </CardContent>
+      </Card>
+
       {/* ===== Danger Zone ===== */}
       <Card className="border-danger/30 bg-danger-soft/10">
         <CardHeader className="pb-3">
@@ -318,16 +371,29 @@ export function ProjectManagementTab({ projectId }: { projectId: string }) {
               <Copy className="h-3.5 w-3.5" /> Duplikovat
             </Button>
           </div>
-          <div className="flex items-center justify-between gap-3 rounded-lg border border-danger/30 bg-danger-soft/20 p-3">
-            <div className="flex items-center gap-2">
-              <Trash2 className="h-4 w-4 text-danger" />
-              <div>
-                <div className="type-body font-medium">Smazat projekt</div>
-                <div className="type-label text-on-surface-variant">Trvale smaže všechna data</div>
+          {isOwner ? (
+            <div className="flex items-center justify-between gap-3 rounded-lg border border-danger/30 bg-danger-soft/20 p-3">
+              <div className="flex items-center gap-2">
+                <Trash2 className="h-4 w-4 text-danger" />
+                <div>
+                  <div className="type-body font-medium">Smazat projekt</div>
+                  <div className="type-label text-on-surface-variant">Trvale smaže všechna data</div>
+                </div>
               </div>
+              <DeleteProjectButton projectId={projectId} projectName={project.name} />
             </div>
-            <DeleteProjectButton projectId={projectId} projectName={project.name} />
-          </div>
+          ) : (
+            <div className="flex items-center justify-between gap-3 rounded-lg border border-outline-variant bg-surface-container-low p-3 opacity-60">
+              <div className="flex items-center gap-2">
+                <Trash2 className="h-4 w-4 text-muted-foreground" />
+                <div>
+                  <div className="type-body font-medium">Smazat projekt</div>
+                  <div className="type-label text-on-surface-variant">Pouze správce projektu může smazat projekt</div>
+                </div>
+              </div>
+              <Trash2 className="h-3.5 w-3.5 text-muted-foreground" aria-hidden />
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
@@ -501,6 +567,9 @@ function SharingSection({ projectId }: { projectId: string }) {
   const [allUsers, setAllUsers] = useState<{ id: string; name: string | null; email: string }[]>([]);
   const [lastToastEmail, setLastToastEmail] = useState<string>("");
   const qc = useQueryClient();
+  // SharingSection has its own analytics scope (its own projectId) so we
+  // instantiate useAnalytics here to fire `project_share` telemetry events.
+  const { trackEvent } = useAnalytics(projectId);
 
   const fetchMembers = useCallback(async () => {
     try {
@@ -564,6 +633,12 @@ function SharingSection({ projectId }: { projectId: string }) {
         const err = await res.json().catch(() => ({}));
         throw new Error(err.error || "Nepodařilo se přidat člena");
       }
+      // Telemetry: project_share — add
+      trackEvent("project_share", {
+        action: "add",
+        email: addEmail.trim(),
+        role: addRole,
+      });
       toast.success(`Přidán člen: ${addEmail.trim()}`);
       setAddEmail("");
       setLastToastEmail("");
@@ -576,6 +651,10 @@ function SharingSection({ projectId }: { projectId: string }) {
   };
 
   const handleRoleChange = async (memberId: string, role: string) => {
+    // Look up old role + email BEFORE optimistic update for telemetry
+    const member = data?.members.find((m) => m.id === memberId);
+    const oldRole = member?.role;
+    const memberEmail = member?.user.email;
     // Optimistic role update
     const prev = data;
     setData((cur) =>
@@ -590,6 +669,13 @@ function SharingSection({ projectId }: { projectId: string }) {
         body: JSON.stringify({ role }),
       });
       if (!res.ok) throw new Error("Failed");
+      // Telemetry: project_share — role_change
+      trackEvent("project_share", {
+        action: "role_change",
+        email: memberEmail ?? null,
+        oldRole: oldRole ?? null,
+        newRole: role,
+      });
       toast.success("Role upravena");
     } catch {
       toast.error("Nepodařilo se upravit roli");
@@ -599,6 +685,7 @@ function SharingSection({ projectId }: { projectId: string }) {
 
   const handleRemove = async (memberId: string, name: string) => {
     const memberToRestore = data?.members.find((m) => m.id === memberId);
+    const memberEmail = memberToRestore?.user.email;
     // Brief loading state on the specific row
     setRemovingIds((prev) => {
       const next = new Set(prev);
@@ -626,6 +713,11 @@ function SharingSection({ projectId }: { projectId: string }) {
         const next = new Set(prev);
         next.delete(memberId);
         return next;
+      });
+      // Telemetry: project_share — remove
+      trackEvent("project_share", {
+        action: "remove",
+        email: memberEmail ?? null,
       });
       toast.success(`Člen "${name}" odebrán`);
     } catch {
@@ -1578,5 +1670,130 @@ function DeleteProjectButton({ projectId, projectName }: { projectId: string; pr
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
+  );
+}
+
+// ============================================================
+// QrCode — shareable QR code for the project URL
+// ------------------------------------------------------------
+// Generates a QR code as a data URL using the `qrcode` library.
+// The QR encodes `${origin}/?project=${projectId}` so scanning it
+// opens the project directly. Provides "Kopírovat odkaz" (copy URL)
+// and "Stáhnout PNG" (download QR as PNG) action buttons.
+// ============================================================
+function QrCode({ projectId, projectName }: { projectId: string; projectName: string }) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [dataUrl, setDataUrl] = useState<string>("");
+  const [shareUrl, setShareUrl] = useState<string>("");
+  const [copied, setCopied] = useState(false);
+
+  // Generate QR code on mount / when projectId changes.
+  // We compute the share URL inside the effect (not in render) because
+  // `window.location.origin` is only available client-side and we don't
+  // want SSR/client hydration mismatch. All setState calls happen inside
+  // the async `.then()` callback to avoid the "synchronous setState in
+  // effect" anti-pattern.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const origin = window.location.origin;
+    const url = `${origin}/?project=${projectId}`;
+    if (!canvasRef.current) {
+      // Still set the URL so the "Kopírovat odkaz" button works.
+      Promise.resolve().then(() => setShareUrl(url));
+      return;
+    }
+    QRCode.toCanvas(canvasRef.current, url, {
+      width: 200,
+      margin: 2,
+      color: {
+        dark: "#0a0a0a",
+        light: "#ffffff",
+      },
+      errorCorrectionLevel: "M",
+    })
+      .then(() => {
+        setShareUrl(url);
+        // Also capture the data URL for the download button
+        if (canvasRef.current) {
+          setDataUrl(canvasRef.current.toDataURL("image/png"));
+        }
+      })
+      .catch((err: unknown) => {
+        console.error("QR generation failed:", err);
+        toast.error("Nepodařilo se vygenerovat QR kód");
+      });
+  }, [projectId]);
+
+  const handleCopyLink = async () => {
+    if (!shareUrl) return;
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setCopied(true);
+      toast.success("Odkaz zkopírován do schránky");
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      toast.error("Kopírování selhalo — zkopírujte odkaz ručně");
+    }
+  };
+
+  const handleDownloadPng = () => {
+    if (!dataUrl) {
+      toast.error("QR kód ještě není vygenerován");
+      return;
+    }
+    const safeName = projectName
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 40) || "projekt";
+    const link = document.createElement("a");
+    link.href = dataUrl;
+    link.download = `qr-${safeName}.png`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast.success("QR kód stažen jako PNG");
+  };
+
+  return (
+    <>
+      {/* QR code canvas — fixed 200×200 with rounded border */}
+      <div className="rounded-2xl border border-outline-variant bg-white p-3 shadow-sm">
+        <canvas ref={canvasRef} className="block h-[200px] w-[200px]" aria-label={`QR kód pro projekt ${projectName}`} />
+      </div>
+
+      {/* Display the share URL (truncated) */}
+      <div className="type-label-sm flex items-center gap-1.5 text-on-surface-variant">
+        <Link2 className="h-3 w-3" />
+        <span className="truncate max-w-[280px]">{shareUrl}</span>
+      </div>
+
+      {/* Action buttons */}
+      <div className="flex flex-wrap items-center justify-center gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          className="rounded-full gap-1.5"
+          onClick={handleCopyLink}
+        >
+          {copied ? (
+            <Check className="h-3.5 w-3.5" />
+          ) : (
+            <Copy className="h-3.5 w-3.5" />
+          )}
+          {copied ? "Zkopírováno" : "Kopírovat odkaz"}
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          className="rounded-full gap-1.5"
+          onClick={handleDownloadPng}
+          disabled={!dataUrl}
+        >
+          <Download className="h-3.5 w-3.5" />
+          Stáhnout PNG
+        </Button>
+      </div>
+    </>
   );
 }

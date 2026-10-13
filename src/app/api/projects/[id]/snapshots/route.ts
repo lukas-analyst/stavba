@@ -1,5 +1,26 @@
 import { NextResponse } from "next/server";
+import { unstable_cache } from "next/cache";
 import { db, dbRead } from "@/lib/db";
+
+// Cached version of the snapshots list query — keyed by projectId (passed
+// as the function argument, which Next.js includes in the cache key
+// automatically), tagged "snapshots" with a 60s TTL. Snapshots rarely
+// change (only on explicit create/delete). Snapshot mutations bust this
+// tag via `bustServerCache(projectId, [...])` in src/lib/api.ts.
+const getCachedSnapshots = unstable_cache(
+  async (projectId: string) => {
+    const snapshots = await dbRead.snapshot.findMany({
+      where: { projectId },
+      orderBy: { createdAt: "desc" },
+    });
+    return snapshots;
+  },
+  ["snapshots"],
+  {
+    tags: ["snapshots"],
+    revalidate: 60, // 60 seconds — snapshots rarely change
+  }
+);
 
 // GET /api/projects/[id]/snapshots - list all snapshots for a project
 // Uses `dbRead` (read replica if configured, falls back to primary).
@@ -9,10 +30,7 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
-    const snapshots = await dbRead.snapshot.findMany({
-      where: { projectId: id },
-      orderBy: { createdAt: "desc" },
-    });
+    const snapshots = await getCachedSnapshots(id);
     return NextResponse.json(snapshots);
   } catch (error) {
     console.error("GET snapshots error:", error);

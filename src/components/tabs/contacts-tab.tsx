@@ -92,6 +92,7 @@ import { getPhoneInfo } from "@/lib/phone";
 import { toast } from "sonner";
 import { EmptyStateBox } from "@/components/empty-state-box";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useAnalytics } from "@/hooks/use-analytics";
 
 export function ContactsTab({ projectId }: { projectId: string }) {
   const { data: contacts, isLoading } = useContacts(projectId);
@@ -998,6 +999,7 @@ function ContactForm({
   createContact?: ReturnType<typeof useCreateContact>;
 }) {
   const updateContact = useUpdateContact(projectId);
+  const { trackEvent } = useAnalytics(projectId);
   const [name, setName] = useState(contact?.name ?? "");
   const [type, setType] = useState(contact?.type ?? "company");
   const [role, setRole] = useState(contact?.role ?? "");
@@ -1055,6 +1057,7 @@ function ContactForm({
         toast.success("Kontakt upraven");
       } else if (createContact) {
         await createContact.mutateAsync(data);
+        trackEvent("add_contact", { name, type });
         toast.success("Kontakt přidán");
       }
       onOpenChange(false);

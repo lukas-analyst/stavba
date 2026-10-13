@@ -28,6 +28,7 @@ import { formatDate } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { EmptyStateBox } from "@/components/empty-state-box";
+import { useAnalytics } from "@/hooks/use-analytics";
 
 // localStorage key for remembering the user's chosen author name across
 // sessions and across projects.
@@ -51,6 +52,7 @@ export function NotesTab({ projectId }: { projectId: string }) {
   const createNote = useCreateNote(projectId);
   const deleteNote = useDeleteNote(projectId);
   const updateNote = useUpdateNote(projectId);
+  const { trackEvent } = useAnalytics(projectId);
 
   // Author is remembered in localStorage so the user doesn't have to retype
   // their name on every visit / every project.
@@ -74,10 +76,12 @@ export function NotesTab({ projectId }: { projectId: string }) {
     if (e) e.preventDefault();
     if (!text.trim()) return;
     try {
+      const authorName = author.trim() || "Anonym";
       await createNote.mutateAsync({
-        author: author.trim() || "Anonym",
+        author: authorName,
         text: text.trim(),
       });
+      trackEvent("add_note", { author: authorName });
       setText("");
     } catch {
       toast.error("Nepodařilo se přidat poznámku");
@@ -100,7 +104,9 @@ export function NotesTab({ projectId }: { projectId: string }) {
       return false;
     }
     try {
+      const note = notes?.find((n) => n.id === id);
       await updateNote.mutateAsync({ id, text: trimmed });
+      trackEvent("edit_note", { author: note?.author ?? "Anonym" });
       toast.success("Poznámka upravena");
       return true;
     } catch {

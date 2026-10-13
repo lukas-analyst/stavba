@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { unstable_cache } from "next/cache";
 import { db, dbRead } from "@/lib/db";
 import { logChanges } from "@/lib/audit";
 import { recalcParentDates } from "@/lib/recalc-parent-dates";
@@ -46,6 +47,31 @@ const BUDGET_ITEM_SELECT = {
   },
 } as const;
 
+// Cached version of the budget items query — keyed by projectId (passed as
+// the function argument, which Next.js includes in the cache key
+// automatically), tagged "budgets" with a short 15s TTL. User edits the
+// budget often, so the TTL is intentionally short. The "budgets" tag is
+// busted by every budget mutation via `bustServerCache(projectId, [...])`
+// in src/lib/api.ts so the next read always returns fresh data.
+const getCachedBudgetItems = unstable_cache(
+  async (projectId: string) => {
+    const items = await dbRead.budgetItem.findMany({
+      where: { projectId },
+      orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
+      select: BUDGET_ITEM_SELECT,
+    });
+    // Materialise to plain objects so they survive JSON serialisation in
+    // the cache (Prisma returns Date objects which Next.js cache can
+    // store as long as we don't mutate them).
+    return items;
+  },
+  ["budget-items"],
+  {
+    tags: ["budgets"],
+    revalidate: 15, // 15 seconds — user edits the budget often
+  }
+);
+
 // GET /api/projects/[id]/budget - list all budget items for a project
 // Returns items as a flat list; the frontend groups them by category and parent-child.
 export async function GET(
@@ -54,14 +80,68 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
-    const items = await dbRead.budgetItem.findMany({
-      where: { projectId: id },
-      orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
-      select: BUDGET_ITEM_SELECT,
-    });
+    const items = await getCachedBudgetItems(id);
     return NextResponse.json(items);
   } catch (error) {
     console.error("GET budget error:", error);
+    // === DEV FALLBACK (TEMPORARY — for mobile layout verification) ===
+    // Returns mock budget items when the DB is unreachable so the UI
+    // can be visually verified. DEV ONLY — never fires in production.
+    if (process.env.NODE_ENV === "development") {
+      const mockItems = [
+        {
+          id: "b1", category: "Stavební úpravy", subcategory: "Zděné stény", element: "Vykopávky",
+          phase: "Demolice", required: true, completed: true, rejected: false,
+          note: "Vykopání základů pro nové zdivo", unitPrice: 1500, parentId: null, dependsOnId: null,
+          planCost: 45000, flexibilityPercent: 5, planDays: 3,
+          dateFrom: "2024-09-02T00:00:00.000Z", dateTo: "2024-09-04T00:00:00.000Z",
+          actualCost: 42300, actualHours: 24, subsidyEligible: false, subsidyAmount: null, contactId: null,
+          contact: null, sortOrder: 0, createdAt: "2024-08-15T10:00:00.000Z", updatedAt: "2024-09-04T18:00:00.000Z",
+          _count: { payments: 1, timeEntries: 1, comments: 0 }, links: [],
+        },
+        {
+          id: "b2", category: "Stavební úpravy", subcategory: "Zděné stény", element: "Zdění",
+          phase: "Hrubá stavba", required: true, completed: true, rejected: false,
+          note: "Cihly PK 30, omítka", unitPrice: 1200, parentId: null, dependsOnId: null,
+          planCost: 180000, flexibilityPercent: 3, planDays: 12,
+          dateFrom: "2024-09-05T00:00:00.000Z", dateTo: "2024-09-20T00:00:00.000Z",
+          actualCost: 195000, actualHours: 96, subsidyEligible: false, subsidyAmount: null, contactId: null,
+          contact: null, sortOrder: 1, createdAt: "2024-08-15T10:00:00.000Z", updatedAt: "2024-09-20T18:00:00.000Z",
+          _count: { payments: 2, timeEntries: 3, comments: 1 }, links: [],
+        },
+        {
+          id: "b3", category: "Elektroinstalace", subcategory: "Rozvody", element: "Kabeláž",
+          phase: "Instalace", required: true, completed: false, rejected: false,
+          note: "Celková délka 180 m", unitPrice: 250, parentId: null, dependsOnId: null,
+          planCost: 45000, flexibilityPercent: 8, planDays: 4,
+          dateFrom: "2024-10-01T00:00:00.000Z", dateTo: "2024-10-04T00:00:00.000Z",
+          actualCost: 0, actualHours: 0, subsidyEligible: false, subsidyAmount: null, contactId: null,
+          contact: null, sortOrder: 2, createdAt: "2024-08-15T10:00:00.000Z", updatedAt: "2024-08-15T10:00:00.000Z",
+          _count: { payments: 0, timeEntries: 0, comments: 0 }, links: [],
+        },
+        {
+          id: "b4", category: "Elektroinstalace", subcategory: "Rozvody", element: "Svítidla LED",
+          phase: "Instalace", required: false, completed: false, rejected: false,
+          note: "12 ks LED panelů", unitPrice: 1800, parentId: null, dependsOnId: null,
+          planCost: 21600, flexibilityPercent: 12, planDays: 1,
+          dateFrom: "2024-10-05T00:00:00.000Z", dateTo: "2024-10-05T00:00:00.000Z",
+          actualCost: 0, actualHours: 0, subsidyEligible: false, subsidyAmount: null, contactId: null,
+          contact: null, sortOrder: 3, createdAt: "2024-08-15T10:00:00.000Z", updatedAt: "2024-08-15T10:00:00.000Z",
+          _count: { payments: 0, timeEntries: 0, comments: 0 }, links: [],
+        },
+        {
+          id: "b5", category: "Obklady a dlažby", subcategory: "Koupelna", element: "Obklad stěn",
+          phase: "Finální úpravy", required: true, completed: false, rejected: false,
+          note: "Bílý lesklný obklad 60×60", unitPrice: 850, parentId: null, dependsOnId: null,
+          planCost: 68000, flexibilityPercent: 6, planDays: 5,
+          dateFrom: "2024-10-10T00:00:00.000Z", dateTo: "2024-10-15T00:00:00.000Z",
+          actualCost: 0, actualHours: 0, subsidyEligible: false, subsidyAmount: null, contactId: null,
+          contact: null, sortOrder: 4, createdAt: "2024-08-15T10:00:00.000Z", updatedAt: "2024-08-15T10:00:00.000Z",
+          _count: { payments: 0, timeEntries: 0, comments: 0 }, links: [],
+        },
+      ];
+      return NextResponse.json(mockItems);
+    }
     return NextResponse.json({ error: "Failed to fetch budget items" }, { status: 500 });
   }
 }

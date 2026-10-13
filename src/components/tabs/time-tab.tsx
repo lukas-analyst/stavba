@@ -65,6 +65,7 @@ import { InlineDate, InlineNumber } from "@/components/ui/inline-editors";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { useLastValue } from "@/hooks/use-last-value";
+import { useAnalytics } from "@/hooks/use-analytics";
 import { cn } from "@/lib/utils";
 
 type SortKey = "date" | "worker" | "hours" | "workerType";
@@ -84,6 +85,7 @@ export function TimeTab({ projectId }: { projectId: string }) {
   const updateTimeEntry = useUpdateTimeEntry(projectId);
   const deleteTimeEntry = useDeleteTimeEntry(projectId);
   const updateBudgetItem = useUpdateBudgetItem(projectId);
+  const { trackEvent } = useAnalytics(projectId);
   const [addOpen, setAddOpen] = useState(false);
   const [editEntry, setEditEntry] = useState<TimeEntry | null>(null);
   const [search, setSearch] = useState("");
@@ -322,6 +324,7 @@ export function TimeTab({ projectId }: { projectId: string }) {
                 <TimeRow
                   key={t.id}
                   entry={t}
+                  projectId={projectId}
                   onEdit={() => setEditEntry(t)}
                   updateTimeEntry={updateTimeEntry}
                   onDelete={async () => {
@@ -369,21 +372,25 @@ export function TimeTab({ projectId }: { projectId: string }) {
 
 function TimeRow({
   entry,
+  projectId,
   onEdit,
   onDelete,
   updateTimeEntry,
 }: {
   entry: TimeEntry;
+  projectId: string;
   onEdit: () => void;
   onDelete: () => void;
   updateTimeEntry?: ReturnType<typeof useUpdateTimeEntry>;
 }) {
   const [confirm, setConfirm] = useState(false);
+  const { trackEvent } = useAnalytics(projectId);
   const w = workerTypeLabel(entry.workerType);
 
   // Inline update helper — patches a single field without opening the edit dialog.
   const update = (field: keyof TimeEntry, value: unknown) => {
     updateTimeEntry?.mutate({ id: entry.id, data: { [field]: value } });
+    trackEvent("edit_time_entry", { field, value });
   };
 
   return (
@@ -565,6 +572,7 @@ function TimeDialogInner({
 }: TimeDialogProps) {
   const isEdit = !!editEntry;
   const today = new Date().toISOString().substring(0, 10);
+  const { trackEvent } = useAnalytics(projectId);
   // Smart defaults: remember last used value per project (only persisted on
   // create — edit mode seeds from editEntry and skips localStorage writes).
   const [lastWorkerName, setLastWorkerName] = useLastValue<string>(
@@ -648,6 +656,7 @@ function TimeDialogInner({
         }
       } else {
         await createTimeEntry.mutateAsync(payload);
+        trackEvent("add_time_entry", { hours: h, workerName });
         // Persist last-used values for the next "new" entry (edit mode is skipped).
         setLastWorkerName(workerName);
         setLastWorkerType(workerType);

@@ -9,15 +9,11 @@ import {
   Pencil,
   Printer,
   History,
-  Sun,
-  Moon,
   BarChart3,
 } from "lucide-react";
-import { useTheme } from "next-themes";
 import { NAV_ITEMS, NAV_SECTIONS, type NavItem, type NavSection } from "@/lib/navigation";
 import { useAppStore } from "@/lib/store";
 import { useExportState, useImportState, useExportCsv } from "@/lib/api";
-import { useNavBadges } from "@/hooks/use-nav-badges";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -38,7 +34,6 @@ import { toast } from "sonner";
 //   - Active item: pill-shaped indicator (rounded-full)
 //     with surface-container-high tonal fill + primary text/icon
 //   - Inactive items: on-surface-variant text, hover state layer
-//   - Badge count on icon corner (alert/notification indicator)
 //   - Settings dropdown pinned to bottom
 //
 // Responsive:
@@ -51,9 +46,6 @@ export function AppSidebar() {
   const setActiveTab = useAppStore((s) => s.setActiveTab);
   const selectedProjectId = useAppStore((s) => s.selectedProjectId);
   const setSidebarOpen = useAppStore((s) => s.setSidebarOpen);
-  const badges = useNavBadges(selectedProjectId);
-  const { theme, setTheme } = useTheme();
-  const isDark = theme === "dark";
 
   const exportState = useExportState();
   const importState = useImportState();
@@ -127,7 +119,6 @@ export function AppSidebar() {
                   key={tab.id}
                   tab={tab}
                   isActive={activeTab === tab.id}
-                  badgeCount={tab.badgeKey ? badges[tab.badgeKey] : 0}
                   onClick={() => handleNavClick(tab.id)}
                 />
               ))}
@@ -168,22 +159,6 @@ export function AppSidebar() {
             <DropdownMenuItem onClick={() => handleNavClick("telemetry")}>
               <BarChart3 className="mr-2 h-3.5 w-3.5" />
               Telemetrie
-            </DropdownMenuItem>
-
-            <DropdownMenuSeparator />
-
-            <DropdownMenuLabel className="text-xs text-muted-foreground">
-              Vzhled
-            </DropdownMenuLabel>
-            <DropdownMenuItem
-              onClick={() => setTheme(isDark ? "light" : "dark")}
-            >
-              {isDark ? (
-                <Sun className="mr-2 h-3.5 w-3.5" />
-              ) : (
-                <Moon className="mr-2 h-3.5 w-3.5" />
-              )}
-              {isDark ? "Světlý motiv" : "Tmavý motiv"}
             </DropdownMenuItem>
 
             <DropdownMenuSeparator />
@@ -250,22 +225,18 @@ export function AppSidebar() {
 }
 
 // ===== Navigation button (MD3 NavigationRail item) =====
-// Active state: pill-shaped tonal indicator (surface-container-high)
+// Active state: pill-shaped tonal indicator (primary-container)
 // Inactive: on-surface-variant text + hover state layer
-// Badge: small count bubble in icon's top-right corner
 function NavButton({
   tab,
   isActive,
-  badgeCount,
   onClick,
 }: {
   tab: NavItem;
   isActive: boolean;
-  badgeCount: number;
   onClick: () => void;
 }) {
   const Icon = tab.icon;
-  const showBadge = badgeCount > 0;
 
   return (
     <button
@@ -283,34 +254,12 @@ function NavButton({
             "text-on-surface-variant hover:bg-surface-container-high",
       )}
     >
-      {/* Icon with optional badge */}
+      {/* Icon */}
       <span className="relative shrink-0">
         <Icon className={cn("h-5 w-5", isActive && "text-primary-container-foreground")} />
-        {showBadge && (
-          <Badge count={badgeCount} active={isActive} />
-        )}
       </span>
       {/* Label */}
       <span className={cn(isActive && "font-semibold")}>{tab.label}</span>
     </button>
-  );
-}
-
-// ===== Badge — MD3 small count indicator =====
-// Positioned at icon's top-right corner.
-// Active state uses primary fill, inactive uses tonal.
-function Badge({ count, active }: { count: number; active: boolean }) {
-  return (
-    <span
-      className={cn(
-        "absolute -right-1.5 -top-1.5 flex min-w-[16px] h-4 items-center justify-center rounded-full px-1 text-[9px] font-bold leading-none tabular-nums",
-        active
-          ? "bg-primary text-primary-foreground"
-          : "bg-danger text-white",
-      )}
-      aria-label={`${count} upozornění`}
-    >
-      {count > 99 ? "99+" : count}
-    </span>
   );
 }

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { unstable_cache } from "next/cache";
 import { db, dbRead } from "@/lib/db";
 import { logChanges } from "@/lib/audit";
 
@@ -20,6 +21,27 @@ const TIME_ENTRY_SELECT = {
   contact: { select: { id: true, name: true, type: true } },
 } as const;
 
+// Cached version of the time entries list query — keyed by projectId
+// (passed as the function argument, which Next.js includes in the cache
+// key automatically), tagged "time-entries" with a short 15s TTL. Time
+// mutations bust this tag via `bustServerCache(projectId, [...])` in
+// src/lib/api.ts.
+const getCachedTimeEntries = unstable_cache(
+  async (projectId: string) => {
+    const entries = await dbRead.timeEntry.findMany({
+      where: { budgetItem: { projectId } },
+      orderBy: { date: "desc" },
+      select: TIME_ENTRY_SELECT,
+    });
+    return entries;
+  },
+  ["time-entries"],
+  {
+    tags: ["time-entries"],
+    revalidate: 15, // 15 seconds — user adds time entries often
+  }
+);
+
 // GET /api/projects/[id]/time - list all time entries for a project
 export async function GET(
   _request: Request,
@@ -27,11 +49,7 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
-    const entries = await dbRead.timeEntry.findMany({
-      where: { budgetItem: { projectId: id } },
-      orderBy: { date: "desc" },
-      select: TIME_ENTRY_SELECT,
-    });
+    const entries = await getCachedTimeEntries(id);
     return NextResponse.json(entries);
   } catch (error) {
     console.error("GET time entries error:", error);

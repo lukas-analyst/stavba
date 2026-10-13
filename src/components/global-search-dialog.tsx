@@ -16,10 +16,12 @@ import {
   FolderKanban,
   Package,
   Users,
+  Receipt,
+  FileText,
   ArrowRight,
   CornerDownLeft,
 } from "lucide-react";
-import { formatCzk, PHASE_COLORS } from "@/lib/format";
+import { formatCzk, PHASE_COLORS, formatDate, paymentTypeLabel } from "@/lib/format";
 import { useContacts } from "@/lib/api";
 
 type SearchResult = {
@@ -45,6 +47,26 @@ type SearchResult = {
     type: string;
     role: string | null;
     phone: string | null;
+  }[];
+  payments: {
+    id: string;
+    amount: number;
+    type: string;
+    description: string | null;
+    vendor: string | null;
+    date: string;
+    budgetItem: {
+      projectId: string;
+      category: string;
+      subcategory: string | null;
+    };
+  }[];
+  notes: {
+    id: string;
+    projectId: string;
+    text: string;
+    author: string;
+    createdAt: string;
   }[];
 };
 
@@ -93,6 +115,8 @@ function GlobalSearchInner({ onOpenChange }: { onOpenChange: (open: boolean) => 
         ...data.projects.map((p) => ({ type: "project" as const, ...p })),
         ...data.items.map((i) => ({ type: "item" as const, ...i })),
         ...data.contacts.map((c) => ({ type: "contact" as const, ...c })),
+        ...data.payments.map((p) => ({ type: "payment" as const, ...p })),
+        ...data.notes.map((n) => ({ type: "note" as const, ...n })),
       ]
     : [];
 
@@ -109,6 +133,12 @@ function GlobalSearchInner({ onOpenChange }: { onOpenChange: (open: boolean) => 
     } else if (result.type === "contact") {
       setSelectedProject(result.projectId);
       setActiveTab("contacts");
+    } else if (result.type === "payment") {
+      setSelectedProject(result.budgetItem.projectId);
+      setActiveTab("payments");
+    } else if (result.type === "note") {
+      setSelectedProject(result.projectId);
+      setActiveTab("notes");
     }
     onOpenChange(false);
   };
@@ -140,7 +170,7 @@ function GlobalSearchInner({ onOpenChange }: { onOpenChange: (open: boolean) => 
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Hledat projekty, položky rozpočtu, kontakty…"
+            placeholder="Hledat projekty, položky, kontakty, platby, poznámky…"
             className="h-8 border-0 px-0 text-sm shadow-none focus-visible:ring-0"
           />
           <kbd className="shrink-0 rounded border bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground">
@@ -163,6 +193,12 @@ function GlobalSearchInner({ onOpenChange }: { onOpenChange: (open: boolean) => 
                 </span>
                 <span className="rounded-md border bg-muted/50 px-2 py-1">
                   Kontakty
+                </span>
+                <span className="rounded-md border bg-muted/50 px-2 py-1">
+                  Platby
+                </span>
+                <span className="rounded-md border bg-muted/50 px-2 py-1">
+                  Poznámky
                 </span>
               </div>
             </div>
@@ -239,6 +275,53 @@ function GlobalSearchInner({ onOpenChange }: { onOpenChange: (open: boolean) => 
                         title={contact.name}
                         subtitle={contact.role ?? contact.type}
                         badge={contact.phone ?? undefined}
+                      />
+                    );
+                  })}
+                </ResultGroup>
+              )}
+
+              {/* Group: Payments */}
+              {data && data.payments.length > 0 && (
+                <ResultGroup label="Platby" icon={<Receipt className="h-3.5 w-3.5" />}>
+                  {data.payments.map((payment) => {
+                    const flatIdx = flatResults.findIndex(
+                      (r) => r.type === "payment" && r.id === payment.id,
+                    );
+                    return (
+                      <ResultItem
+                        key={payment.id}
+                        selected={safeSelectedIndex === flatIdx}
+                        onClick={() => handleSelect(flatResults[flatIdx])}
+                        icon={<Receipt className="h-4 w-4 text-danger" />}
+                        title={payment.vendor || payment.description || formatCzk(payment.amount)}
+                        subtitle={`${paymentTypeLabel(payment.type).label} · ${formatDate(payment.date)}`}
+                        badge={formatCzk(payment.amount)}
+                      />
+                    );
+                  })}
+                </ResultGroup>
+              )}
+
+              {/* Group: Notes */}
+              {data && data.notes.length > 0 && (
+                <ResultGroup label="Poznámky" icon={<FileText className="h-3.5 w-3.5" />}>
+                  {data.notes.map((note) => {
+                    const flatIdx = flatResults.findIndex(
+                      (r) => r.type === "note" && r.id === note.id,
+                    );
+                    const snippet =
+                      note.text.length > 80
+                        ? note.text.slice(0, 80) + "…"
+                        : note.text;
+                    return (
+                      <ResultItem
+                        key={note.id}
+                        selected={safeSelectedIndex === flatIdx}
+                        onClick={() => handleSelect(flatResults[flatIdx])}
+                        icon={<FileText className="h-4 w-4 text-info" />}
+                        title={snippet}
+                        subtitle={`${note.author} · ${formatDate(note.createdAt)}`}
                       />
                     );
                   })}

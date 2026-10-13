@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useRef, useEffect, useCallback, createContext, useContext, memo } from "react";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
+import { useAnalytics } from "@/hooks/use-analytics";
 import {
   useBudgetItems,
   useUpdateBudgetItem,
@@ -264,6 +265,7 @@ function BudgetTab({ projectId, dragEndHandlerRef }: { projectId: string; dragEn
   const project = projects?.find((p) => p.id === projectId);
   const reorder = useReorder(projectId);
   const exportCsv = useExportCsv(projectId);
+  const { trackEvent } = useAnalytics(projectId);
   const [collapsedCats, setCollapsedCats] = useState<Set<string>>(new Set());
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
   const [phaseFilter, setPhaseFilter] = useState<Set<string>>(new Set()); // multi-select (empty = all)
@@ -619,12 +621,20 @@ function BudgetTab({ projectId, dragEndHandlerRef }: { projectId: string; dragEn
 
   return (
     <div id="budget-root" className="space-y-4">
-      {/* Toolbar — MD3 filter pattern */}
+      {/* Toolbar — MD3 filter pattern
+          MOBILE LAYOUT: Stack vertically on phones so each control gets
+          its own full-width row (Search → Status). The "Přidat položku"
+          button is HIDDEN on mobile because the ContextualFab (bottom-
+          right FAB) already triggers the same "add-item" action via the
+          `stavba:fab-add` custom event — having both would be redundant
+          and crowd the narrow mobile viewport. */}
       <div id="budget-toolbar" className="space-y-3">
-        {/* Row 1: Search + Status segmented + Add button */}
-        <div className="flex flex-wrap items-center gap-2">
+        {/* Row 1: Search + (desktop only) Add button
+            Mobile: flex-col → Search full-width, then Status Select below
+            Desktop: flex-row → Search + Segmented + Add on one line */}
+        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
           {/* MD3 Search bar — with clear (×) button */}
-          <div id="budget-search" className="relative flex-1 min-w-[200px] max-w-xs">
+          <div id="budget-search" className="relative flex-1 min-w-0 sm:min-w-[200px] sm:max-w-xs">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-on-surface-variant" />
             <Input
               value={search}
@@ -644,21 +654,51 @@ function BudgetTab({ projectId, dragEndHandlerRef }: { projectId: string; dragEn
             )}
           </div>
 
-          {/* MD3 Segmented Button — completion status */}
-          <SegmentedButton
-            value={completionFilter}
-            onChange={(v) => setCompletionFilter(v as CompletionFilter)}
-            options={COMPLETION_OPTIONS.map((opt) => ({
-              value: opt.id,
-              label: opt.label,
-            }))}
-            size="md"
-          />
+          {/* MD3 Segmented Button — completion status
+              Hidden on mobile (< sm) and replaced by the compact
+              <Select> dropdown below (mobile-only) to save horizontal
+              space. */}
+          <div className="hidden sm:block">
+            <SegmentedButton
+              value={completionFilter}
+              onChange={(v) => setCompletionFilter(v as CompletionFilter)}
+              options={COMPLETION_OPTIONS.map((opt) => ({
+                value: opt.id,
+                label: opt.label,
+              }))}
+              size="md"
+            />
+          </div>
 
+          {/* Compact Select dropdown — mobile only (< sm)
+              Replaces the SegmentedButton to save space. Same options,
+              same state, just a smaller footprint. Full-width on mobile
+              so it aligns with the search bar above. */}
+          <div className="sm:hidden">
+            <Select
+              value={completionFilter}
+              onValueChange={(v) => setCompletionFilter(v as CompletionFilter)}
+            >
+              <SelectTrigger className="h-9 w-full rounded-full border-outline-variant bg-surface-container-low">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {COMPLETION_OPTIONS.map((opt) => (
+                  <SelectItem key={opt.id} value={opt.id}>
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Add button — desktop/tablet only (hidden on mobile).
+              On mobile the ContextualFab (bottom-right +) triggers the
+              same "add-item" action via the `stavba:fab-add` event. */}
           <Button
             size="sm"
             onClick={() => setAddOpen(true)}
-            className="ml-auto h-9 gap-1.5 rounded-full"
+            className="ml-auto hidden h-9 gap-1.5 rounded-full sm:inline-flex"
           >
             <Plus className="h-4 w-4" /> Přidat položku
           </Button>
@@ -792,7 +832,7 @@ function BudgetTab({ projectId, dragEndHandlerRef }: { projectId: string; dragEn
         open={addOpen}
         onOpenChange={setAddOpen}
         projectId={projectId}
-        onSubmitted={(created) => {
+        onSubmitted={(created, isNew) => {
           setCollapsedCats((prev) => {
             const next = new Set(prev);
             next.delete(created.category);
@@ -802,6 +842,13 @@ function BudgetTab({ projectId, dragEndHandlerRef }: { projectId: string; dragEn
           setPhaseFilter("all");
           setCompletionFilter("all");
           setHighlightId(created.id);
+          if (isNew) {
+            trackEvent("add_budget_item", {
+              category: created.category,
+              subcategory: created.subcategory,
+              planCost: created.planCost,
+            });
+          }
         }}
       />
       <BudgetItemDialog
@@ -809,13 +856,20 @@ function BudgetTab({ projectId, dragEndHandlerRef }: { projectId: string; dragEn
         onOpenChange={(o) => !o && setEditingItem(null)}
         projectId={projectId}
         item={editingItem}
-        onSubmitted={(updated) => {
+        onSubmitted={(updated, isNew) => {
           setCollapsedCats((prev) => {
             const next = new Set(prev);
             next.delete(updated.category);
             return next;
           });
           setHighlightId(updated.id);
+          if (isNew) {
+            trackEvent("add_budget_item", {
+              category: updated.category,
+              subcategory: updated.subcategory,
+              planCost: updated.planCost,
+            });
+          }
         }}
       />
       {addTaskFor && (
@@ -829,7 +883,7 @@ function BudgetTab({ projectId, dragEndHandlerRef }: { projectId: string; dragEn
           parentItemName={addTaskFor.subcategory ?? addTaskFor.category}
           defaultDateFrom={addTaskFor.dateFrom ? addTaskFor.dateFrom.substring(0, 10) : undefined}
           defaultDateTo={addTaskFor.dateTo ? addTaskFor.dateTo.substring(0, 10) : undefined}
-          onSubmitted={(created) => {
+          onSubmitted={(created, isNew) => {
             setExpandedItems((prev) => {
               const next = new Set(prev);
               next.add(addTaskFor.id);
@@ -844,6 +898,13 @@ function BudgetTab({ projectId, dragEndHandlerRef }: { projectId: string; dragEn
             setPhaseFilter("all");
             setCompletionFilter("all");
             setHighlightId(created.id);
+            if (isNew) {
+              trackEvent("add_budget_item", {
+                category: created.category,
+                subcategory: created.subcategory,
+                planCost: created.planCost,
+              });
+            }
           }}
         />
       )}
@@ -852,7 +913,7 @@ function BudgetTab({ projectId, dragEndHandlerRef }: { projectId: string; dragEn
         onOpenChange={(o) => !o && setAddOpenForCategory(null)}
         projectId={projectId}
         defaultCategory={addOpenForCategory ?? undefined}
-        onSubmitted={(created) => {
+        onSubmitted={(created, isNew) => {
           setCollapsedCats((prev) => {
             const next = new Set(prev);
             next.delete(created.category);
@@ -862,6 +923,13 @@ function BudgetTab({ projectId, dragEndHandlerRef }: { projectId: string; dragEn
           setPhaseFilter("all");
           setCompletionFilter("all");
           setHighlightId(created.id);
+          if (isNew) {
+            trackEvent("add_budget_item", {
+              category: created.category,
+              subcategory: created.subcategory,
+              planCost: created.planCost,
+            });
+          }
         }}
       />
     </div>
@@ -1231,9 +1299,11 @@ const BudgetRow = memo(function BudgetRow({
   const duplicateItem = useDuplicateBudgetItem(projectId);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const dragCtx = useRowDragListeners();
+  const { trackEvent } = useAnalytics(projectId);
 
   const update = (field: keyof BudgetItem, value: unknown) => {
     updateItem.mutate({ id: item.id, data: { [field]: value } });
+    trackEvent("edit_budget_item", { field });
   };
 
   const displayPlanCost = childCount > 0 ? rolled.planCost : item.planCost;
@@ -1723,9 +1793,11 @@ function DetailPanelRow({
   childItems?: BudgetItem[];
 }) {
   const updateItem = useUpdateBudgetItem(projectId);
+  const { trackEvent } = useAnalytics(projectId);
 
   const update = (field: keyof BudgetItem, value: unknown) => {
     updateItem.mutate({ id: item.id, data: { [field]: value } });
+    trackEvent("edit_budget_item", { field });
   };
 
   return (

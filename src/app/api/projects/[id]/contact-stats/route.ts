@@ -1,26 +1,53 @@
 import { NextResponse } from "next/server";
+import { unstable_cache } from "next/cache";
 import { dbRead } from "@/lib/db";
 
 // GET /api/projects/[id]/contact-stats
 // Returns aggregated stats per contact: total paid, total hours, payment count, time entry count
 // Performance: uses Prisma `groupBy` for aggregation in the DB instead of
 // fetching all rows and aggregating in JS (N+1 → 3 queries total).
-export async function GET(
-  _request: Request,
-  { params }: { params: Promise<{ id: string }> },
-) {
-  try {
-    const { id } = await params;
+//
+// Cached with `unstable_cache` keyed by projectId, tagged "contact-stats"
+// with a 30s TTL. Contact mutations (create/update/delete incl. persons)
+// and payment/time mutations bust the relevant tags via
+// `bustServerCache(projectId, [...])` in src/lib/api.ts — contact mutations
+// also include "contact-stats" in the bust list.
 
+type ContactStatRow = {
+  contactId: string;
+  name: string;
+  type: string;
+  rating: number | null;
+  totalPaid: number;
+  totalHours: number;
+  paymentCount: number;
+  timeEntryCount: number;
+  lastActivity: string | null;
+};
+
+type WorkerStatRow = {
+  name: string;
+  hours: number;
+  entries: number;
+  type: string;
+};
+
+type ContactStatsResult = {
+  contactStats: ContactStatRow[];
+  workerStats: WorkerStatRow[];
+};
+
+const getCachedContactStats = unstable_cache(
+  async (projectId: string): Promise<ContactStatsResult> => {
     // 1) Contact metadata (name, type, rating)
     const contacts = await dbRead.contact.findMany({
-      where: { projectId: id },
+      where: { projectId },
       select: { id: true, name: true, type: true, rating: true },
       orderBy: { name: "asc" },
     });
 
     if (contacts.length === 0) {
-      return NextResponse.json({ contactStats: [], workerStats: [] });
+      return { contactStats: [], workerStats: [] };
     }
 
     const contactIds = contacts.map((c) => c.id);
@@ -47,7 +74,7 @@ export async function GET(
     const paymentMap = new Map(paymentAgg.map((p) => [p.contactId, p]));
     const timeMap = new Map(timeAgg.map((t) => [t.contactId, t]));
 
-    const contactStats = contacts.map((c) => {
+    const contactStats: ContactStatRow[] = contacts.map((c) => {
       const p = paymentMap.get(c.id);
       const t = timeMap.get(c.id);
       const totalPaid = p?._sum.amount ?? 0;
@@ -58,7 +85,7 @@ export async function GET(
       const pDate = p?._max.date?.getTime() ?? 0;
       const tDate = t?._max.date?.getTime() ?? 0;
       const lastActivityTs = Math.max(pDate, tDate);
-      const lastActivity = lastActivityTs > 0 ? new Date(lastActivityTs) : null;
+      const lastActivity = lastActivityTs > 0 ? new Date(lastActivityTs).toISOString() : null;
       return {
         contactId: c.id,
         name: c.name,
@@ -82,11 +109,11 @@ export async function GET(
     // Worker stats (time entries grouped by worker name, regardless of contact)
     const workerAgg = await dbRead.timeEntry.groupBy({
       by: ["workerName", "workerType"],
-      where: { budgetItem: { projectId: id } },
+      where: { budgetItem: { projectId } },
       _sum: { hours: true },
       _count: { id: true },
     });
-    const workerStats = workerAgg
+    const workerStats: WorkerStatRow[] = workerAgg
       .map((w) => ({
         name: w.workerName,
         type: w.workerType,
@@ -95,7 +122,23 @@ export async function GET(
       }))
       .sort((a, b) => b.hours - a.hours);
 
-    return NextResponse.json({ contactStats, workerStats });
+    return { contactStats, workerStats };
+  },
+  ["contact-stats"],
+  {
+    tags: ["contact-stats"],
+    revalidate: 30, // 30 seconds — moderate change frequency
+  }
+);
+
+export async function GET(
+  _request: Request,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  try {
+    const { id } = await params;
+    const data = await getCachedContactStats(id);
+    return NextResponse.json(data);
   } catch (error) {
     console.error("GET contact-stats error:", error);
     return NextResponse.json({ error: "Failed to fetch contact stats" }, { status: 500 });

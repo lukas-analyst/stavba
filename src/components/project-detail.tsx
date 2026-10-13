@@ -50,6 +50,10 @@ const TelemetryTab = dynamic(() => import("@/components/tabs/telemetry-tab").the
   ssr: false,
   loading: () => <TabSkeleton />,
 });
+const AdminTab = dynamic(() => import("@/components/tabs/admin-tab").then(m => m.AdminTab), {
+  ssr: false,
+  loading: () => <TabSkeleton />,
+});
 
 function TabSkeleton() {
   return (
@@ -77,7 +81,7 @@ export function ProjectDetail({ project }: { project: Project }) {
   // Each tab is treated as a "page" for analytics purposes. When the user
   // switches tabs, we record a new page_view with the tab name as pageUrl
   // and emit the timeSpent (in seconds) for the previous tab.
-  usePageViewTracking(activeTab);
+  usePageViewTracking(activeTab, project.id);
 
   // Listen for custom events from sidebar Settings menu
   useEffect(() => {
@@ -208,6 +212,7 @@ export function ProjectDetail({ project }: { project: Project }) {
         {activeTab === "notes" && <NotesTab projectId={project.id} />}
         {activeTab === "management" && <ProjectManagementTab projectId={project.id} />}
         {activeTab === "telemetry" && <TelemetryTab projectId={project.id} />}
+        {activeTab === "admin" && <AdminTab />}
       </div>
 
       {/* Dialogs — triggered from Settings menu in sidebar */}
