@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   Card,
@@ -58,6 +58,8 @@ import {
   ChevronRight,
   Info,
   Search,
+  QrCode as QrCodeIcon,
+  Link2,
 } from "lucide-react";
 import {
   useProjects,
@@ -73,6 +75,7 @@ import { useAppStore, type TabId } from "@/lib/store";
 import { useAnalytics } from "@/hooks/use-analytics";
 import { toast } from "sonner";
 import { CollapsibleSection } from "@/components/ui/collapsible-section";
+import QRCode from "qrcode";
 
 // ============================================================
 // ProjectManagementTab — full project management page
@@ -308,6 +311,21 @@ export function ProjectManagementTab({ projectId }: { projectId: string }) {
       <CollapsibleSection title="Audit log — nedávné změny" defaultOpen>
         <EnhancedAuditLog projectId={projectId} />
       </CollapsibleSection>
+
+      {/* ===== QR Code for sharing ===== */}
+      <Card className="bg-card shadow-sm">
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 type-title-lg">
+            <QrCodeIcon className="h-4 w-4 text-primary" />
+            Sdílet projekt
+          </CardTitle>
+          <CardDescription>Naskenujte QR kód pro rychlý přístup k projektu</CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-col items-center gap-3">
+          {/* QR code canvas — generated on click */}
+          <QrCode projectId={projectId} projectName={project.name} />
+        </CardContent>
+      </Card>
 
       {/* ===== Danger Zone ===== */}
       <Card className="border-danger/30 bg-danger-soft/10">
@@ -1617,5 +1635,130 @@ function DeleteProjectButton({ projectId, projectName }: { projectId: string; pr
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
+  );
+}
+
+// ============================================================
+// QrCode — shareable QR code for the project URL
+// ------------------------------------------------------------
+// Generates a QR code as a data URL using the `qrcode` library.
+// The QR encodes `${origin}/?project=${projectId}` so scanning it
+// opens the project directly. Provides "Kopírovat odkaz" (copy URL)
+// and "Stáhnout PNG" (download QR as PNG) action buttons.
+// ============================================================
+function QrCode({ projectId, projectName }: { projectId: string; projectName: string }) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [dataUrl, setDataUrl] = useState<string>("");
+  const [shareUrl, setShareUrl] = useState<string>("");
+  const [copied, setCopied] = useState(false);
+
+  // Generate QR code on mount / when projectId changes.
+  // We compute the share URL inside the effect (not in render) because
+  // `window.location.origin` is only available client-side and we don't
+  // want SSR/client hydration mismatch. All setState calls happen inside
+  // the async `.then()` callback to avoid the "synchronous setState in
+  // effect" anti-pattern.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const origin = window.location.origin;
+    const url = `${origin}/?project=${projectId}`;
+    if (!canvasRef.current) {
+      // Still set the URL so the "Kopírovat odkaz" button works.
+      Promise.resolve().then(() => setShareUrl(url));
+      return;
+    }
+    QRCode.toCanvas(canvasRef.current, url, {
+      width: 200,
+      margin: 2,
+      color: {
+        dark: "#0a0a0a",
+        light: "#ffffff",
+      },
+      errorCorrectionLevel: "M",
+    })
+      .then(() => {
+        setShareUrl(url);
+        // Also capture the data URL for the download button
+        if (canvasRef.current) {
+          setDataUrl(canvasRef.current.toDataURL("image/png"));
+        }
+      })
+      .catch((err: unknown) => {
+        console.error("QR generation failed:", err);
+        toast.error("Nepodařilo se vygenerovat QR kód");
+      });
+  }, [projectId]);
+
+  const handleCopyLink = async () => {
+    if (!shareUrl) return;
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setCopied(true);
+      toast.success("Odkaz zkopírován do schránky");
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      toast.error("Kopírování selhalo — zkopírujte odkaz ručně");
+    }
+  };
+
+  const handleDownloadPng = () => {
+    if (!dataUrl) {
+      toast.error("QR kód ještě není vygenerován");
+      return;
+    }
+    const safeName = projectName
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 40) || "projekt";
+    const link = document.createElement("a");
+    link.href = dataUrl;
+    link.download = `qr-${safeName}.png`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast.success("QR kód stažen jako PNG");
+  };
+
+  return (
+    <>
+      {/* QR code canvas — fixed 200×200 with rounded border */}
+      <div className="rounded-2xl border border-outline-variant bg-white p-3 shadow-sm">
+        <canvas ref={canvasRef} className="block h-[200px] w-[200px]" aria-label={`QR kód pro projekt ${projectName}`} />
+      </div>
+
+      {/* Display the share URL (truncated) */}
+      <div className="type-label-sm flex items-center gap-1.5 text-on-surface-variant">
+        <Link2 className="h-3 w-3" />
+        <span className="truncate max-w-[280px]">{shareUrl}</span>
+      </div>
+
+      {/* Action buttons */}
+      <div className="flex flex-wrap items-center justify-center gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          className="rounded-full gap-1.5"
+          onClick={handleCopyLink}
+        >
+          {copied ? (
+            <Check className="h-3.5 w-3.5" />
+          ) : (
+            <Copy className="h-3.5 w-3.5" />
+          )}
+          {copied ? "Zkopírováno" : "Kopírovat odkaz"}
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          className="rounded-full gap-1.5"
+          onClick={handleDownloadPng}
+          disabled={!dataUrl}
+        >
+          <Download className="h-3.5 w-3.5" />
+          Stáhnout PNG
+        </Button>
+      </div>
+    </>
   );
 }
