@@ -70,6 +70,7 @@ import {
 import { formatDate, STATUS_LABELS } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { useAppStore, type TabId } from "@/lib/store";
+import { useAnalytics } from "@/hooks/use-analytics";
 import { toast } from "sonner";
 import { CollapsibleSection } from "@/components/ui/collapsible-section";
 
@@ -84,6 +85,7 @@ export function ProjectManagementTab({ projectId }: { projectId: string }) {
   const exportState = useExportState();
   const importState = useImportState();
   const exportCsv = useExportCsv(projectId);
+  const { trackEvent } = useAnalytics(projectId);
 
   const project = projects?.find((p) => p.id === projectId);
 
@@ -105,28 +107,39 @@ export function ProjectManagementTab({ projectId }: { projectId: string }) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ entityType: "Export", action: "export", entityLabel: "Export stavu (JSON)" }),
-      }).catch(() => {}); // non-blocking — don't fail if audit fails
+      }).catch(() => {});
+      // Telemetry: download_data event
+      trackEvent("download_data", { format: "JSON", type: "project_state" });
       toast.success("Stav exportován");
     } catch {
       toast.error("Export selhal");
     }
   };
 
-  const handleCsv = async (type: "budget" | "payments" | "time" | "contacts") => {
+  const handleCsv = async (type: "budget" | "payments" | "time" | "contacts" | "audit") => {
     try {
-      await exportCsv.mutateAsync(type);
-      const labels: Record<typeof type, string> = {
+      if (type === "audit") {
+        window.open(`/api/projects/${projectId}/audit/export`, "_blank");
+      } else {
+        await exportCsv.mutateAsync(type);
+      }
+      const labels: Record<string, string> = {
         budget: "Rozpočet",
         payments: "Platby",
         time: "Čas",
         contacts: "Kontakty",
+        audit: "Audit log",
       };
       // C5: Audit log pro CSV exporty
-      await fetch(`/api/projects/${projectId}/audit`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ entityType: "Export", action: "export", entityLabel: `CSV — ${labels[type]}` }),
-      }).catch(() => {}); // non-blocking
+      if (type !== "audit") {
+        await fetch(`/api/projects/${projectId}/audit`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ entityType: "Export", action: "export", entityLabel: `CSV — ${labels[type]}` }),
+        }).catch(() => {});
+      }
+      // Telemetry: download_data event
+      trackEvent("download_data", { format: "CSV", type: labels[type] });
       toast.success(`CSV — ${labels[type]} exportováno`);
     } catch {
       toast.error("CSV export selhal");
