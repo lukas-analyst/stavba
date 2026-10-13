@@ -19,7 +19,6 @@ import type { TabId } from "@/lib/store";
 //   Sekce "Práce":      budget, payments, time
 //   Sekce "Organizace": contacts, timeline, notes
 //
-// `badgeKey` identifies which alert/count to show on the icon.
 // `section` groups items into labeled sections (MD3 pattern).
 export type NavSection = "main" | "work" | "organization";
 
@@ -28,18 +27,15 @@ export type NavItem = {
   label: string;
   icon: React.ComponentType<{ className?: string }>;
   section: NavSection;
-  // Which badge (count/alert) to show on this tab's icon.
-  // undefined = no badge. Keys correspond to useNavBadges() hook.
-  badgeKey?: "required" | "overdue" | "overdueUpcoming" | "unscheduled";
 };
 
 export const NAV_ITEMS: NavItem[] = [
   { id: "dashboard", label: "Přehled", icon: LayoutDashboard, section: "main" },
-  { id: "budget", label: "Rozpočet", icon: Table2, section: "work", badgeKey: "required" },
+  { id: "budget", label: "Rozpočet", icon: Table2, section: "work" },
   { id: "payments", label: "Platby", icon: Receipt, section: "work" },
   { id: "time", label: "Čas", icon: Clock, section: "work" },
   { id: "contacts", label: "Kontakty", icon: Users, section: "organization" },
-  { id: "timeline", label: "Časová osa", icon: CalendarRange, section: "organization", badgeKey: "overdueUpcoming" },
+  { id: "timeline", label: "Časová osa", icon: CalendarRange, section: "organization" },
   { id: "notes", label: "Poznámky", icon: FileText, section: "organization" },
 ];
 
