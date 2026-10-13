@@ -514,6 +514,9 @@ function SharingSection({ projectId }: { projectId: string }) {
   const [allUsers, setAllUsers] = useState<{ id: string; name: string | null; email: string }[]>([]);
   const [lastToastEmail, setLastToastEmail] = useState<string>("");
   const qc = useQueryClient();
+  // SharingSection has its own analytics scope (its own projectId) so we
+  // instantiate useAnalytics here to fire `project_share` telemetry events.
+  const { trackEvent } = useAnalytics(projectId);
 
   const fetchMembers = useCallback(async () => {
     try {
@@ -577,6 +580,12 @@ function SharingSection({ projectId }: { projectId: string }) {
         const err = await res.json().catch(() => ({}));
         throw new Error(err.error || "Nepodařilo se přidat člena");
       }
+      // Telemetry: project_share — add
+      trackEvent("project_share", {
+        action: "add",
+        email: addEmail.trim(),
+        role: addRole,
+      });
       toast.success(`Přidán člen: ${addEmail.trim()}`);
       setAddEmail("");
       setLastToastEmail("");
@@ -589,6 +598,10 @@ function SharingSection({ projectId }: { projectId: string }) {
   };
 
   const handleRoleChange = async (memberId: string, role: string) => {
+    // Look up old role + email BEFORE optimistic update for telemetry
+    const member = data?.members.find((m) => m.id === memberId);
+    const oldRole = member?.role;
+    const memberEmail = member?.user.email;
     // Optimistic role update
     const prev = data;
     setData((cur) =>
@@ -603,6 +616,13 @@ function SharingSection({ projectId }: { projectId: string }) {
         body: JSON.stringify({ role }),
       });
       if (!res.ok) throw new Error("Failed");
+      // Telemetry: project_share — role_change
+      trackEvent("project_share", {
+        action: "role_change",
+        email: memberEmail ?? null,
+        oldRole: oldRole ?? null,
+        newRole: role,
+      });
       toast.success("Role upravena");
     } catch {
       toast.error("Nepodařilo se upravit roli");
@@ -612,6 +632,7 @@ function SharingSection({ projectId }: { projectId: string }) {
 
   const handleRemove = async (memberId: string, name: string) => {
     const memberToRestore = data?.members.find((m) => m.id === memberId);
+    const memberEmail = memberToRestore?.user.email;
     // Brief loading state on the specific row
     setRemovingIds((prev) => {
       const next = new Set(prev);
@@ -639,6 +660,11 @@ function SharingSection({ projectId }: { projectId: string }) {
         const next = new Set(prev);
         next.delete(memberId);
         return next;
+      });
+      // Telemetry: project_share — remove
+      trackEvent("project_share", {
+        action: "remove",
+        email: memberEmail ?? null,
       });
       toast.success(`Člen "${name}" odebrán`);
     } catch {
