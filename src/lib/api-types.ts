@@ -85,6 +85,7 @@ export type DashboardData = {
     id: string;
     category: string;
     subcategory: string | null;
+    element: string | null;
     phase: string;
     dateFrom: string | null;
     dateTo: string | null;
@@ -94,6 +95,8 @@ export type DashboardData = {
     required: boolean;
     completed: boolean;
     rejected: boolean;
+    parentId: string | null;
+    parentSubcategory: string | null;
   }[];
   recent: {
     payments: {

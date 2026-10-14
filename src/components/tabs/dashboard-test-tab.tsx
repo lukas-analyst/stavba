@@ -79,6 +79,7 @@ type TimelineItem = {
   id: string;
   category: string;
   subcategory: string | null;
+  element: string | null;
   phase: string;
   dateFrom: string | null;
   dateTo: string | null;
@@ -88,6 +89,8 @@ type TimelineItem = {
   required: boolean;
   completed: boolean;
   rejected: boolean;
+  parentId: string | null;
+  parentSubcategory: string | null;
 };
 
 export function DashboardTestTab({ projectId }: { projectId: string }) {
@@ -819,6 +822,10 @@ export function DashboardTestTab({ projectId }: { projectId: string }) {
                 const endDate = item.dateTo ? new Date(item.dateTo) : null;
                 const now = new Date();
                 const isOverdue = endDate && endDate < now;
+                const isTask = !!item.parentId;
+                const name = isTask
+                  ? (item.element || item.subcategory || item.category)
+                  : (item.subcategory || item.category);
                 return (
                   <button
                     key={item.id}
@@ -831,10 +838,13 @@ export function DashboardTestTab({ projectId }: { projectId: string }) {
                     <span className={cn("h-2 w-2 shrink-0 rounded-full", PHASE_DOT_COLORS[item.phase] ?? "bg-muted-foreground")} />
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium truncate">
-                        {item.subcategory || item.category}
+                        {isTask && <span className="text-muted-foreground/60">↳ </span>}
+                        {name}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        {item.phase}
+                        {isTask && item.parentSubcategory
+                          ? `${item.parentSubcategory} · ${item.phase}`
+                          : `${item.phase}`}
                         {item.planCost && ` · ${formatCzk(item.planCost)}`}
                       </p>
                     </div>
@@ -1139,21 +1149,33 @@ function PlanBucket({
         </Badge>
       </div>
       <div className="mt-1 space-y-0.5">
-        {items.map((item) => (
-          <button
-            key={item.id}
-            onClick={() => onNavigate({ type: "category", value: item.category })}
-            className="flex w-full items-center gap-2 rounded-md p-1.5 text-left text-sm transition-colors hover:bg-surface-container-high"
-          >
-            <span className={cn("h-1.5 w-1.5 shrink-0 rounded-full", PHASE_DOT_COLORS[item.phase] ?? "bg-muted-foreground")} />
-            <span className="flex-1 truncate">
-              <span className="font-medium">{item.subcategory || item.category}</span>
-            </span>
-            <span className="text-xs text-muted-foreground tabular-nums">
-              {item.dateFrom ? formatDate(item.dateFrom) : "—"}
-            </span>
-          </button>
-        ))}
+        {items.map((item) => {
+          const isTask = !!item.parentId;
+          const name = isTask
+            ? (item.element || item.subcategory || item.category)
+            : (item.subcategory || item.category);
+          return (
+            <button
+              key={item.id}
+              onClick={() => onNavigate({ type: "category", value: item.category })}
+              className="flex w-full items-center gap-2 rounded-md p-1.5 text-left text-sm transition-colors hover:bg-surface-container-high"
+            >
+              <span className={cn("h-1.5 w-1.5 shrink-0 rounded-full", PHASE_DOT_COLORS[item.phase] ?? "bg-muted-foreground")} />
+              <span className="flex-1 truncate">
+                {isTask && <span className="text-muted-foreground/60">↳ </span>}
+                <span className="font-medium">{name}</span>
+                {isTask && item.parentSubcategory && (
+                  <span className="ml-1.5 text-[10px] text-muted-foreground/70">
+                    ({item.parentSubcategory})
+                  </span>
+                )}
+              </span>
+              <span className="text-xs text-muted-foreground tabular-nums">
+                {item.dateFrom ? formatDate(item.dateFrom) : "—"}
+              </span>
+            </button>
+          );
+        })}
       </div>
     </div>
   );

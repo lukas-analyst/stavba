@@ -76,6 +76,7 @@ type RawTimelineRow = {
   id: string;
   category: string;
   subcategory: string | null;
+  element: string | null;
   phase: string;
   dateFrom: Date | null;
   dateTo: Date | null;
@@ -85,6 +86,8 @@ type RawTimelineRow = {
   required: boolean;
   completed: boolean;
   rejected: boolean;
+  parentId: string | null;
+  parentSubcategory: string | null;
 };
 
 type RawPaymentRow = {
@@ -288,16 +291,23 @@ export const getDashboardData = unstable_cache(
         ORDER BY bi."sortOrder" ASC
       `,
 
-      // 5) Timeline — items with at least one date
+      // 5) Timeline — ALL items (top-level + child tasks) with at least one date
+      //    Includes parentId + parent's subcategory for tasks, so the UI can
+      //    distinguish items from tasks and show the parent context.
       db.$queryRaw<RawTimelineRow[]>`
         SELECT
-          id, category, subcategory, phase, "dateFrom",
-          COALESCE("dateTo", "dateFrom") AS "dateTo",
-          "planCost", "actualCost", "planDays", required, completed, rejected
-        FROM "budget_items"
-        WHERE "projectId" = ${projectId}
-          AND ("dateFrom" IS NOT NULL OR "dateTo" IS NOT NULL)
-        ORDER BY "dateFrom" ASC NULLS LAST
+          bi.id, bi.category, bi.subcategory, bi.element, bi.phase,
+          bi."dateFrom",
+          COALESCE(bi."dateTo", bi."dateFrom") AS "dateTo",
+          bi."planCost", bi."actualCost", bi."planDays",
+          bi.required, bi.completed, bi.rejected,
+          bi."parentId",
+          parent.subcategory AS "parentSubcategory"
+        FROM "budget_items" bi
+        LEFT JOIN "budget_items" parent ON parent.id = bi."parentId"
+        WHERE bi."projectId" = ${projectId}
+          AND (bi."dateFrom" IS NOT NULL OR bi."dateTo" IS NOT NULL)
+        ORDER BY bi."dateFrom" ASC NULLS LAST
       `,
 
       // 6) Recent payments (top 5)
@@ -454,11 +464,12 @@ export const getDashboardData = unstable_cache(
       unscheduled: unscheduledRows.map(toAlert),
     };
 
-    // ===== Assemble timeline =====
+    // ===== Assemble timeline (includes top-level items AND child tasks) =====
     const timeline = timelineRows.map((row) => ({
       id: row.id,
       category: row.category,
       subcategory: row.subcategory,
+      element: row.element,
       phase: row.phase,
       dateFrom: row.dateFrom ? row.dateFrom.toISOString() : null,
       dateTo: row.dateTo ? row.dateTo.toISOString() : null,
@@ -468,6 +479,8 @@ export const getDashboardData = unstable_cache(
       required: row.required,
       completed: row.completed,
       rejected: row.rejected,
+      parentId: row.parentId,
+      parentSubcategory: row.parentSubcategory,
     }));
 
     // ===== Assemble recent activity =====
