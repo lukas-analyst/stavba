@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { unstable_cache } from "next/cache";
 import { db, dbRead } from "@/lib/db";
 import { logChanges } from "@/lib/audit";
 import { recalcParentDates } from "@/lib/recalc-parent-dates";
@@ -48,33 +47,15 @@ const BUDGET_ITEM_SELECT = {
   },
 } as const;
 
-// Cached version of the budget items query — keyed by projectId (passed as
-// the function argument, which Next.js includes in the cache key
-// automatically), tagged "budgets" with a short 15s TTL. User edits the
-// budget often, so the TTL is intentionally short. The "budgets" tag is
-// busted by every budget mutation via `bustServerCache(projectId, [...])`
-// in src/lib/api.ts so the next read always returns fresh data.
-const getCachedBudgetItems = unstable_cache(
-  async (projectId: string) => {
-    const items = await dbRead.budgetItem.findMany({
-      where: { projectId },
-      orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
-      select: BUDGET_ITEM_SELECT,
-    });
-    // Materialise to plain objects so they survive JSON serialisation in
-    // the cache (Prisma returns Date objects which Next.js cache can
-    // store as long as we don't mutate them).
-    return items;
-  },
-  ["budget-items"],
-  {
-    tags: ["budgets"],
-    revalidate: 15, // 15 seconds — user edits the budget often
-  }
-);
-
 // GET /api/projects/[id]/budget - list all budget items for a project
 // Returns items as a flat list; the frontend groups them by category and parent-child.
+//
+// NOTE: We intentionally do NOT use unstable_cache here. Budget items
+// change frequently (user adds/edits/deletes items often), and server-side
+// caching causes a race condition where the client-side refetch (triggered
+// by React Query invalidation) arrives before the cache-busting
+// revalidateTag call completes — resulting in stale data being returned
+// and the newly added item not appearing until a manual page refresh.
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ id: string }> },
@@ -83,7 +64,11 @@ export async function GET(
     const { id } = await params;
     const access = await requireProjectAccess(id, "viewer");
     if (!access.ok) return access.response;
-    const items = await getCachedBudgetItems(id);
+    const items = await dbRead.budgetItem.findMany({
+      where: { projectId: id },
+      orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
+      select: BUDGET_ITEM_SELECT,
+    });
     return NextResponse.json(items);
   } catch (error) {
     console.error("GET budget error:", error);
