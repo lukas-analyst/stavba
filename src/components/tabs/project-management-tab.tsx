@@ -70,7 +70,7 @@ import {
   useExportCsv,
 } from "@/lib/api";
 import { formatDate, STATUS_LABELS } from "@/lib/format";
-import { getFieldValue } from "@/lib/audit";
+import { getFieldValue } from "@/lib/audit-fields";
 import { cn } from "@/lib/utils";
 import { useAppStore, type TabId } from "@/lib/store";
 import { useAnalytics } from "@/hooks/use-analytics";

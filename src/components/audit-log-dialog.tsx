@@ -10,7 +10,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuditLog, type AuditLog } from "@/lib/api";
-import { getFieldValue } from "@/lib/audit";
+import { getFieldValue } from "@/lib/audit-fields";
 import { formatDate } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import {
