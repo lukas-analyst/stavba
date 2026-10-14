@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { logChanges } from "@/lib/audit";
+import { requireProjectAccess } from "@/lib/authz";
 
 // PATCH /api/contacts/[id]
 export async function PATCH(
@@ -15,6 +16,10 @@ export async function PATCH(
     if (!existing) {
       return NextResponse.json({ error: "Contact not found" }, { status: 404 });
     }
+
+    // IDOR fix: verify editor access to the project that owns this contact.
+    const access = await requireProjectAccess(existing.projectId, "editor");
+    if (!access.ok) return access.response;
 
     const updated = await db.contact.update({
       where: { id },
@@ -79,6 +84,10 @@ export async function DELETE(
     if (!existing) {
       return NextResponse.json({ error: "Contact not found" }, { status: 404 });
     }
+
+    // IDOR fix: verify editor access to the project that owns this contact.
+    const access = await requireProjectAccess(existing.projectId, "editor");
+    if (!access.ok) return access.response;
 
     // Log deletion before deleting (entity is gone after delete)
     await logChanges(

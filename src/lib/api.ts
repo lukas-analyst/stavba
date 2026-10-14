@@ -932,12 +932,21 @@ export type AuditLog = {
   createdAt: string;
 };
 
+export type AuditLogResponse = {
+  entries: AuditLog[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+  users: { id: string; name: string | null; email: string }[];
+};
+
 export function useAuditLog(projectId: string | null) {
-  return useQuery<AuditLog[]>({
+  return useQuery<AuditLogResponse>({
     queryKey: ["auditLog", projectId],
     staleTime: 30 * 1000, // 30s — audit log updates on mutations
     queryFn: async () => {
-      const res = await fetch(`/api/projects/${projectId}/audit?limit=100`);
+      const res = await fetch(`/api/projects/${projectId}/audit?pageSize=100`);
       if (!res.ok) throw new Error("Failed to load audit log");
       return res.json();
     },

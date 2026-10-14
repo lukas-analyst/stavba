@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { verifyEmailToken, sendVerificationEmail } from "@/lib/email";
 import { db } from "@/lib/db";
+import { checkRateLimit, getClientIp, VERIFY_RESEND_RATE_LIMIT } from "@/lib/rate-limit";
 
 // =====================================================================
 // GET /api/auth/verify-email?token=...
@@ -54,6 +55,16 @@ export async function POST(request: Request) {
     }
 
     const normalizedEmail = email.trim().toLowerCase();
+
+    // Rate limit: 3 resends per hour per e-mail (prevents e-mail flooding)
+    const rl = checkRateLimit(`verify-resend:${normalizedEmail}`, VERIFY_RESEND_RATE_LIMIT);
+    if (rl.limited) {
+      const minutes = Math.ceil(rl.retryAfter / 60);
+      return NextResponse.json(
+        { error: `Příliš mnoho požadavků. Zkuste to za ${minutes} minut.` },
+        { status: 429, headers: { "Retry-After": String(rl.retryAfter) } },
+      );
+    }
 
     const user = await db.user.findUnique({
       where: { email: normalizedEmail },

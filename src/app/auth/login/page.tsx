@@ -25,7 +25,13 @@ function GoogleIcon({ className }: { className?: string }) {
 export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get("callbackUrl") || "/";
+  // Validate callbackUrl is a safe relative path (prevent open redirect).
+  // Only allow paths starting with "/" but not "//" (protocol-relative).
+  const rawCallbackUrl = searchParams.get("callbackUrl") || "/";
+  const callbackUrl =
+    rawCallbackUrl.startsWith("/") && !rawCallbackUrl.startsWith("//")
+      ? rawCallbackUrl
+      : "/";
   const registeredParam = searchParams.get("registered");
   const errorParam = searchParams.get("error");
 
@@ -66,6 +72,14 @@ export default function LoginPage() {
       if (result?.error) {
         if (result.error === "use-oauth") {
           setError("Tento e-mail je zaregistrován přes Google. Použijte tlačítko „Přihlásit přes Google“.");
+        } else if (result.error.startsWith("rate_limited:")) {
+          const retryAfter = result.error.split(":")[1];
+          const minutes = Math.ceil(Number(retryAfter) / 60);
+          setError(
+            minutes > 1
+              ? `Příliš mnoho pokusů o přihlášení. Zkuste to za ${minutes} minut.`
+              : `Příliš mnoho pokusů o přihlášení. Zkuste to za ${retryAfter} sekund.`,
+          );
         } else {
           setError("Neplatný e-mail nebo heslo.");
         }
@@ -74,13 +88,6 @@ export default function LoginPage() {
       }
 
       if (result?.url) {
-        // Check if the user's e-mail is verified by fetching the session
-        const res = await fetch("/api/auth/session");
-        const session = await res.json();
-        if (session?.user && !session.user.emailVerified) {
-          router.push("/auth/verify-pending");
-          return;
-        }
         router.push(callbackUrl);
         router.refresh();
       }

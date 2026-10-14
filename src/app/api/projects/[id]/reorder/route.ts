@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { requireProjectAccess } from "@/lib/authz";
 
 // PATCH /api/projects/[id]/reorder
 // Body: { items: [{ id, sortOrder }], categoryOrder?: string[] (JSON-serializable) }
@@ -10,16 +11,16 @@ export async function PATCH(
 ) {
   try {
     const { id } = await params;
+    const access = await requireProjectAccess(id, "editor");
+    if (!access.ok) return access.response;
     const body = await request.json();
     const { items, categoryOrder } = body as {
       items?: { id: string; sortOrder: number }[];
       categoryOrder?: string[];
     };
 
-    const project = await db.project.findUnique({ where: { id } });
-    if (!project) {
-      return NextResponse.json({ error: "Project not found" }, { status: 404 });
-    }
+    // `requireProjectAccess` already verified the project exists, so we can
+    // drop the redundant findUnique lookup here.
 
     // Update each item's sortOrder in a transaction
     if (items && Array.isArray(items)) {

@@ -19,6 +19,7 @@ export async function GET() {
   try {
     const { user, response } = await requireUser();
     if (response) return response;
+    if (!user) return NextResponse.json({ error: "Nejste přihlášen." }, { status: 401 });
 
     const userProfile = await dbRead.user.findUnique({
       where: { id: user.id },

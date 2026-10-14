@@ -7,6 +7,7 @@ import {
   normalizeEmail,
 } from "@/lib/auth-helpers";
 import { sendVerificationEmail } from "@/lib/email";
+import { checkRateLimit, getClientIp, REGISTER_RATE_LIMIT } from "@/lib/rate-limit";
 
 // =====================================================================
 // POST /api/auth/register
@@ -35,6 +36,17 @@ export async function POST(request: Request) {
       name?: string;
     };
 
+    // --- Rate limiting (IP-based: 3 registrations per hour) ---
+    const ip = getClientIp(request);
+    const rl = checkRateLimit(`register:${ip}`, REGISTER_RATE_LIMIT);
+    if (rl.limited) {
+      const minutes = Math.ceil(rl.retryAfter / 60);
+      return NextResponse.json(
+        { error: `Příliš mnoho registrací. Zkuste to za ${minutes} minut.` },
+        { status: 429, headers: { "Retry-After": String(rl.retryAfter) } },
+      );
+    }
+
     // --- Validation ---
     if (!email || !password) {
       return NextResponse.json(
@@ -56,13 +68,25 @@ export async function POST(request: Request) {
     const normalizedEmail = normalizeEmail(email);
 
     // --- Find existing user ---
+    // Also check for linked OAuth accounts to prevent account takeover
+    // (S7): if a user already has a Google Account linked, we must NOT
+    // allow setting a password via registration — that would let an
+    // attacker who knows the e-mail take over the account.
     const existing = await db.user.findUnique({
       where: { email: normalizedEmail },
-      select: { id: true, password: true, name: true },
+      select: {
+        id: true,
+        password: true,
+        name: true,
+        accounts: {
+          select: { provider: true },
+          take: 1,
+        },
+      },
     });
 
     if (existing && existing.password) {
-      // Scenario 3: already registered
+      // Scenario 3: already registered with password
       return NextResponse.json(
         {
           error: "Účet s tímto e-mailem již existuje. Přihlaste se nebo si resetujte heslo.",
@@ -76,11 +100,31 @@ export async function POST(request: Request) {
 
     if (existing) {
       // Scenario 2: account claiming
-      // Update the existing ghost user — preserve their projects, contacts, etc.
+      // SECURITY (S7): Only allow claiming if the existing user has NO
+      // linked OAuth account. If they have a Google Account, they are a
+      // real Google user — not a ghost user — and must NOT be claimable
+      // via password registration. This prevents account takeover.
+      const hasOAuthAccount = existing.accounts.length > 0;
+      if (hasOAuthAccount) {
+        // This e-mail is already registered via Google — reject
+        // registration. Don't reveal which provider — same message as
+        // "already exists" to avoid enumeration.
+        return NextResponse.json(
+          {
+            error: "Účet s tímto e-mailem již existuje. Přihlaste se nebo si resetujte heslo.",
+          },
+          { status: 409 },
+        );
+      }
+
+      // Safe to claim — this is a genuine ghost user (created by the app
+      // before auth, no OAuth link). Set their password + increment
+      // tokenVersion to invalidate any stale sessions.
       await db.user.update({
         where: { id: existing.id },
         data: {
           password: passwordHash,
+          tokenVersion: { increment: 1 },
           // Only update name if the existing user doesn't have one
           ...(existing.name ? {} : { name: name?.trim() || null }),
         },

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { db, dbRead, Prisma } from "@/lib/db";
-import { requireUser } from "@/lib/require-user";
+import { requireProjectAccess } from "@/lib/authz";
 
 // GET /api/projects/[id]/audit
 // Returns audit log entries with server-side filtering, sorting, pagination.
@@ -23,6 +23,8 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
+    const access = await requireProjectAccess(id, "viewer");
+    if (!access.ok) return access.response;
     const { searchParams } = new URL(request.url);
 
     // Parse query params
@@ -135,10 +137,10 @@ export async function POST(
       return NextResponse.json({ error: "entityType and action are required" }, { status: 400 });
     }
 
-    // Attribute audit entry to the authenticated user
-    const { user, response: authResponse } = await requireUser();
-    if (authResponse) return authResponse;
-    const userId = user.id;
+    // Attribute audit entry to the authenticated user with project access
+    const access = await requireProjectAccess(id, "editor");
+    if (!access.ok) return access.response;
+    const userId = access.user.id;
 
     const entry = await db.auditLog.create({
       data: {

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { verifyResetToken, clearResetToken } from "@/lib/email";
 import { hashPassword, validatePassword } from "@/lib/auth-helpers";
 import { db } from "@/lib/db";
+import { checkRateLimit, getClientIp, RESET_SUBMIT_RATE_LIMIT } from "@/lib/rate-limit";
 
 // =====================================================================
 // POST /api/auth/reset-password
@@ -17,6 +18,17 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { token, password } = body as { token?: string; password?: string };
 
+    // --- Rate limiting (IP-based: 5 per hour) ---
+    const ip = getClientIp(request);
+    const rl = checkRateLimit(`reset:${ip}`, RESET_SUBMIT_RATE_LIMIT);
+    if (rl.limited) {
+      const minutes = Math.ceil(rl.retryAfter / 60);
+      return NextResponse.json(
+        { error: `Příliš mnoho pokusů. Zkuste to za ${minutes} minut.` },
+        { status: 429, headers: { "Retry-After": String(rl.retryAfter) } },
+      );
+    }
+
     if (!token || !password) {
       return NextResponse.json(
         { error: "Token a nové heslo jsou povinné." },
@@ -29,8 +41,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: passwordError }, { status: 400 });
     }
 
-    const result = verifyResetToken;
-
     const tokenResult = await verifyResetToken(token);
 
     if (!tokenResult.success) {
@@ -41,12 +51,16 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: message }, { status: 400 });
     }
 
-    // Set the new password
+    // Set the new password + increment tokenVersion to invalidate all
+    // existing JWT sessions (S10 — "Odhlásit všude" after password reset).
     const passwordHash = await hashPassword(password);
 
     await db.user.update({
       where: { id: tokenResult.userId },
-      data: { password: passwordHash },
+      data: {
+        password: passwordHash,
+        tokenVersion: { increment: 1 },
+      },
     });
 
     // Clear the reset token

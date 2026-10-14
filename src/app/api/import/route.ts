@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { requireVerifiedUser } from "@/lib/authz";
 
 export const dynamic = "force-dynamic";
 
@@ -51,10 +52,28 @@ interface ImportPayload {
 }
 
 // POST /api/import
-// Accepts a JSON payload produced by /api/export and replaces the entire
-// application state with it. Idempotent: calling it repeatedly with the same
-// payload yields the same end-state. Returns the counts of inserted records.
+// Accepts a JSON payload produced by /api/export and REPLACES THE USER'S
+// application state (only projects they own + child records) with it.
+//
+// SECURITY:
+//   - Requires an authenticated, verified user.
+//   - All `ownerId` fields on imported projects are overwritten to
+//     `user.id` — the import cannot claim ownership of someone else's
+//     projects.
+//   - NEVER calls `deleteMany({})` on entire tables — only deletes the
+//     user's owned projects and their child records.
+//   - Each budget item / contact / payment / time entry must reference a
+//     project (or budget item) that is being imported in the same payload.
+//     Records referencing foreign project IDs are silently dropped to
+//     prevent IDOR-style data injection into other users' projects.
+//
+// Idempotent: calling it repeatedly with the same payload yields the same
+// end-state (relative to the user's data). Returns the counts of inserted
+// records.
 export async function POST(request: Request) {
+  const { user, response } = await requireVerifiedUser();
+  if (response || !user) return response!;
+
   let payload: ImportPayload;
   try {
     payload = (await request.json()) as ImportPayload;
@@ -69,69 +88,173 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
   }
 
-  const projects = Array.isArray(payload.projects) ? payload.projects : [];
-  const contacts = Array.isArray(payload.contacts) ? payload.contacts : [];
-  const budgetItems = Array.isArray(payload.budgetItems)
+  const rawProjects = Array.isArray(payload.projects) ? payload.projects : [];
+  const rawContacts = Array.isArray(payload.contacts) ? payload.contacts : [];
+  const rawBudgetItems = Array.isArray(payload.budgetItems)
     ? payload.budgetItems
     : [];
-  const payments = Array.isArray(payload.payments) ? payload.payments : [];
-  const timeEntries = Array.isArray(payload.timeEntries)
+  const rawPayments = Array.isArray(payload.payments) ? payload.payments : [];
+  const rawTimeEntries = Array.isArray(payload.timeEntries)
     ? payload.timeEntries
     : [];
 
+  // -----------------------------------------------------------------
+  // Pre-process projects: override ownerId, normalize dates.
+  // -----------------------------------------------------------------
+  const projects: Record<string, unknown>[] = [];
+  const importedProjectIds = new Set<string>();
+  for (const raw of rawProjects) {
+    const data = normalizeDates("project", raw as Record<string, unknown>);
+    // SECURITY: always override ownerId — never trust the payload.
+    data.ownerId = user.id;
+    if (typeof data.id === "string" && data.id.length > 0) {
+      importedProjectIds.add(data.id);
+    }
+    projects.push(data);
+  }
+
+  // -----------------------------------------------------------------
+  // Pre-process budget items: only keep those whose projectId is in
+  // the set of imported projects.
+  // -----------------------------------------------------------------
+  const budgetItems: Record<string, unknown>[] = [];
+  const importedBudgetItemIds = new Set<string>();
+  for (const raw of rawBudgetItems) {
+    const data = normalizeDates(
+      "budgetItem",
+      raw as Record<string, unknown>,
+    );
+    const projectId = data.projectId;
+    if (typeof projectId !== "string" || !importedProjectIds.has(projectId)) {
+      // Drop budget items that don't belong to an imported project —
+      // protects against injecting items into foreign projects.
+      continue;
+    }
+    if (typeof data.id === "string" && data.id.length > 0) {
+      importedBudgetItemIds.add(data.id);
+    }
+    budgetItems.push(data);
+  }
+
+  // -----------------------------------------------------------------
+  // Pre-process contacts: only keep those whose projectId is in the
+  // set of imported projects.
+  // -----------------------------------------------------------------
+  const contacts: Record<string, unknown>[] = [];
+  for (const raw of rawContacts) {
+    const data = normalizeDates("contact", raw as Record<string, unknown>);
+    const projectId = data.projectId;
+    if (typeof projectId !== "string" || !importedProjectIds.has(projectId)) {
+      continue;
+    }
+    contacts.push(data);
+  }
+
+  // -----------------------------------------------------------------
+  // Pre-process payments: only keep those whose budgetItemId is in the
+  // set of imported budget items.
+  // -----------------------------------------------------------------
+  const payments: Record<string, unknown>[] = [];
+  for (const raw of rawPayments) {
+    const data = normalizeDates("payment", raw as Record<string, unknown>);
+    const budgetItemId = data.budgetItemId;
+    if (
+      typeof budgetItemId !== "string" ||
+      !importedBudgetItemIds.has(budgetItemId)
+    ) {
+      continue;
+    }
+    // Strip contactId if the contact wasn't imported (avoid FK violation).
+    // The contact may legitimately belong to a different project we don't
+    // own — better to drop the link than to fail the whole import.
+    if (
+      typeof data.contactId === "string" &&
+      !contacts.some((c) => c.id === data.contactId)
+    ) {
+      data.contactId = null;
+    }
+    payments.push(data);
+  }
+
+  // -----------------------------------------------------------------
+  // Pre-process time entries: only keep those whose budgetItemId is in
+  // the set of imported budget items.
+  // -----------------------------------------------------------------
+  const timeEntries: Record<string, unknown>[] = [];
+  for (const raw of rawTimeEntries) {
+    const data = normalizeDates("timeEntry", raw as Record<string, unknown>);
+    const budgetItemId = data.budgetItemId;
+    if (
+      typeof budgetItemId !== "string" ||
+      !importedBudgetItemIds.has(budgetItemId)
+    ) {
+      continue;
+    }
+    if (
+      typeof data.contactId === "string" &&
+      !contacts.some((c) => c.id === data.contactId)
+    ) {
+      data.contactId = null;
+    }
+    timeEntries.push(data);
+  }
+
   try {
     const result = await db.$transaction(async (tx) => {
-      // 1) Delete everything in FK-respecting order (children first).
-      await tx.timeEntry.deleteMany({});
-      await tx.payment.deleteMany({});
-      await tx.budgetItem.deleteMany({});
-      await tx.contact.deleteMany({});
-      await tx.project.deleteMany({});
+      // 1) Find project IDs currently owned by the user. We will only
+      //    delete these + their child records. Other users' data is
+      //    never touched.
+      const ownedProjects = await tx.project.findMany({
+        where: { ownerId: user.id },
+        select: { id: true },
+      });
+      const ownedProjectIds = ownedProjects.map((p) => p.id);
 
-      // 2) Insert in FK-respecting order (parents first). IDs from the JSON
-      //    are preserved so cross-table relationships stay intact.
-      //    - Projects (root)
+      if (ownedProjectIds.length > 0) {
+        // FK-respecting order: children first.
+        // TimeEntries and Payments reference BudgetItem, so delete them
+        // before BudgetItems. BudgetItems and Contacts reference Project.
+        await tx.timeEntry.deleteMany({
+          where: { budgetItem: { projectId: { in: ownedProjectIds } } },
+        });
+        await tx.payment.deleteMany({
+          where: { budgetItem: { projectId: { in: ownedProjectIds } } },
+        });
+        await tx.budgetItem.deleteMany({
+          where: { projectId: { in: ownedProjectIds } },
+        });
+        await tx.contact.deleteMany({
+          where: { projectId: { in: ownedProjectIds } },
+        });
+        await tx.project.deleteMany({
+          where: { id: { in: ownedProjectIds } },
+        });
+      }
+
+      // 2) Insert in FK-respecting order (parents first). IDs from the
+      //    JSON are preserved so cross-table relationships stay intact.
+      //    - Projects (root) — ownerId was overwritten above
       //    - Contacts (depends on Project)
       //    - BudgetItems (depends on Project)
       //    - Payments (depends on BudgetItem + optional Contact)
       //    - TimeEntries (depends on BudgetItem + optional Contact)
-      for (const raw of projects) {
-        const data = normalizeDates(
-          "project",
-          raw as Record<string, unknown>,
-        );
+      for (const data of projects) {
         await tx.project.create({ data: data as never });
       }
 
-      for (const raw of contacts) {
-        const data = normalizeDates(
-          "contact",
-          raw as Record<string, unknown>,
-        );
+      for (const data of contacts) {
         await tx.contact.create({ data: data as never });
       }
 
-      for (const raw of budgetItems) {
-        const data = normalizeDates(
-          "budgetItem",
-          raw as Record<string, unknown>,
-        );
+      for (const data of budgetItems) {
         await tx.budgetItem.create({ data: data as never });
       }
 
-      for (const raw of payments) {
-        const data = normalizeDates(
-          "payment",
-          raw as Record<string, unknown>,
-        );
+      for (const data of payments) {
         await tx.payment.create({ data: data as never });
       }
 
-      for (const raw of timeEntries) {
-        const data = normalizeDates(
-          "timeEntry",
-          raw as Record<string, unknown>,
-        );
+      for (const data of timeEntries) {
         await tx.timeEntry.create({ data: data as never });
       }
 
@@ -141,6 +264,15 @@ export async function POST(request: Request) {
         budgetItems: budgetItems.length,
         payments: payments.length,
         timeEntries: timeEntries.length,
+        // Diagnostics: how many records were dropped as unsafe (FK into
+        // projects/items not in the payload).
+        dropped: {
+          projects: rawProjects.length - projects.length,
+          contacts: rawContacts.length - contacts.length,
+          budgetItems: rawBudgetItems.length - budgetItems.length,
+          payments: rawPayments.length - payments.length,
+          timeEntries: rawTimeEntries.length - timeEntries.length,
+        },
       };
     });
 

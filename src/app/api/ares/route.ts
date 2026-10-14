@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { requireVerifiedUser } from "@/lib/authz";
 
 // GET /api/ares?q={ico nebo nazev}
 // Vyhledává české firmy v ARES (Registr ekonomických subjektů).
@@ -8,8 +9,15 @@ import { NextResponse } from "next/server";
 //
 // Pokud ARES_API_KEY není nastaven, endpoint vrátí { results: [], needsApiKey: true }
 // a uživatel může zadat firmu manuálně.
+//
+// SECURITY: Requires an authenticated, verified user. ARES lookups are a
+// privileged operation (we forward our API key to the ARES service on the
+// user's behalf).
 
 export async function GET(request: Request) {
+  const { response } = await requireVerifiedUser();
+  if (response) return response;
+
   try {
     const { searchParams } = new URL(request.url);
     const q = searchParams.get("q")?.trim() ?? "";

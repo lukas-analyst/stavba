@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { sendPasswordResetEmail } from "@/lib/email";
+import { checkRateLimit, getClientIp, RESET_REQUEST_RATE_LIMIT } from "@/lib/rate-limit";
 
 // =====================================================================
 // POST /api/auth/forgot-password
@@ -12,6 +13,17 @@ import { sendPasswordResetEmail } from "@/lib/email";
 
 export async function POST(request: Request) {
   try {
+    // --- Rate limiting (IP-based: 3 requests per hour) ---
+    const ip = getClientIp(request);
+    const rl = checkRateLimit(`forgot:${ip}`, RESET_REQUEST_RATE_LIMIT);
+    if (rl.limited) {
+      const minutes = Math.ceil(rl.retryAfter / 60);
+      return NextResponse.json(
+        { error: `Příliš mnoho požadavků. Zkuste to za ${minutes} minut.` },
+        { status: 429, headers: { "Retry-After": String(rl.retryAfter) } },
+      );
+    }
+
     const body = await request.json();
     const { email } = body as { email?: string };
 

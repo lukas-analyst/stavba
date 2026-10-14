@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getDashboardData } from "@/lib/dashboard-cache";
+import { requireProjectAccess } from "@/lib/authz";
 
 // GET /api/projects/[id]/dashboard
 // Aggregated stats: totals, by-phase breakdown, by-category breakdown,
@@ -15,6 +16,8 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
+    const access = await requireProjectAccess(id, "viewer");
+    if (!access.ok) return access.response;
     const data = await getDashboardData(id);
     if (!data) {
       return NextResponse.json({ error: "Project not found" }, { status: 404 });

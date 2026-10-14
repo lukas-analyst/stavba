@@ -4,12 +4,15 @@ import withBundleAnalyzer from "@next/bundle-analyzer";
 const nextConfig: NextConfig = {
   // Standalone output for smaller deployments (Vercel auto-detects this)
   output: "standalone",
-  // Ignore TypeScript errors during build (we have some pre-existing ones)
+  // Ignore TypeScript errors during build (pre-existing TS errors in scripts/
+  // and skills/ — fixing all is a separate task). Dev mode still shows
+  // errors in the editor.
   typescript: {
     ignoreBuildErrors: true,
   },
-  // Disable strict mode in production for better performance
-  reactStrictMode: false,
+  // Enable React StrictMode in dev — catches memory leaks, effect bugs,
+  // and double-invocation issues.
+  reactStrictMode: true,
   // Allow dev server to be reached from preview-chat origins + external IPs
   // (the Preview Panel accesses the app through the external IP, not localhost)
   allowedDevOrigins: [

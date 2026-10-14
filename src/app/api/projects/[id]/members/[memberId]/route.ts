@@ -1,15 +1,22 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { logChanges } from "@/lib/audit";
+import { requireProjectAccess } from "@/lib/authz";
 
 // PATCH /api/projects/[id]/members/[memberId] — update member role
 // Body: { role: "viewer" | "editor" }
+//
+// SECURITY: Requires the project owner role. Editors and viewers cannot
+// promote/demote other members.
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string; memberId: string }> },
 ) {
+  const { id, memberId } = await params;
+  const access = await requireProjectAccess(id, "owner");
+  if (!access.ok) return access.response;
+
   try {
-    const { id, memberId } = await params;
     const body = await request.json();
     const { role } = body;
 
@@ -52,20 +59,43 @@ export async function PATCH(
 }
 
 // DELETE /api/projects/[id]/members/[memberId] — remove member
+//
+// SECURITY:
+//   - The project owner can remove any member.
+//   - A member can also remove THEMSELF (self-leave), even with just the
+//     "viewer" role — this allows users to leave projects they no longer
+//     want to be part of.
 export async function DELETE(
   _request: Request,
   { params }: { params: Promise<{ id: string; memberId: string }> },
 ) {
-  try {
-    const { id, memberId } = await params;
+  const { id, memberId } = await params;
 
-    // Get user info before deleting for audit log
+  // First, require at least viewer access so we can read the project.
+  const access = await requireProjectAccess(id, "viewer");
+  if (!access.ok) return access.response;
+  const { user } = access;
+
+  try {
+    // Look up the member record so we can decide authorization.
     const memberWithUser = await db.projectMember.findFirst({
       where: { id: memberId, projectId: id },
       include: { user: { select: { email: true, name: true } } },
     });
     if (!memberWithUser) {
       return NextResponse.json({ error: "Member not found" }, { status: 404 });
+    }
+
+    // Authorization: owner can delete anyone; otherwise only self-deletion
+    // is allowed.
+    const isOwner = access.project.ownerId === user.id;
+    const isSelf = memberWithUser.userId === user.id;
+
+    if (!isOwner && !isSelf) {
+      return NextResponse.json(
+        { error: `Pro tuto akci je vyžadována role „owner".` },
+        { status: 403 },
+      );
     }
 
     await db.projectMember.delete({ where: { id: memberId } });

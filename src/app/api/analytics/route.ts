@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { db, dbRead, Prisma } from "@/lib/db";
+import { Prisma } from "@prisma/client";
+import { db, dbRead } from "@/lib/db";
 import { requireUser } from "@/lib/require-user";
 
 // =====================================================================
@@ -43,6 +44,7 @@ export async function POST(request: Request) {
     // Attribute events to the authenticated user
     const { user, response } = await requireUser();
     if (response) return response;
+    if (!user) return NextResponse.json({ error: "Nejste přihlášen." }, { status: 401 });
     const userId = user.id;
 
     const event = await db.analyticsEvent.create({

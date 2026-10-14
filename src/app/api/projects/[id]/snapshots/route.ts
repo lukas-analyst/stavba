@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { unstable_cache } from "next/cache";
 import { db, dbRead } from "@/lib/db";
+import { requireProjectAccess } from "@/lib/authz";
 
 // Cached version of the snapshots list query — keyed by projectId (passed
 // as the function argument, which Next.js includes in the cache key
@@ -30,6 +31,8 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
+    const access = await requireProjectAccess(id, "viewer");
+    if (!access.ok) return access.response;
     const snapshots = await getCachedSnapshots(id);
     return NextResponse.json(snapshots);
   } catch (error) {
@@ -46,6 +49,8 @@ export async function POST(
 ) {
   try {
     const { id } = await params;
+    const access = await requireProjectAccess(id, "editor");
+    if (!access.ok) return access.response;
     const body = await request.json();
     const { label } = body;
 
@@ -53,10 +58,8 @@ export async function POST(
       return NextResponse.json({ error: "Label is required" }, { status: 400 });
     }
 
-    const project = await db.project.findUnique({ where: { id } });
-    if (!project) {
-      return NextResponse.json({ error: "Project not found" }, { status: 404 });
-    }
+    // `requireProjectAccess` already verified the project exists & user has
+    // access, so we can drop the redundant findUnique lookup here.
 
     // Compute current totals from budget items
     const items = await db.budgetItem.findMany({

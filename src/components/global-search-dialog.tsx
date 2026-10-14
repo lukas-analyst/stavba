@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAppStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import {
   Search,
   FolderKanban,
@@ -22,7 +22,6 @@ import {
   CornerDownLeft,
 } from "lucide-react";
 import { formatCzk, PHASE_COLORS, formatDate, paymentTypeLabel } from "@/lib/format";
-import { useContacts } from "@/lib/api";
 
 type SearchResult = {
   projects: {
@@ -159,19 +158,17 @@ function GlobalSearchInner({ onOpenChange }: { onOpenChange: (open: boolean) => 
   const hasResults = flatResults.length > 0;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl gap-0 overflow-hidden p-0">
-        <DialogTitle className="sr-only">Globální vyhledávání</DialogTitle>
-        {/* Search input */}
-        <div className="flex items-center gap-3 border-b px-4 py-3">
-          <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
-          <Input
-            ref={inputRef}
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="Hledat projekty, položky, kontakty, platby, poznámky…"
-            className="h-8 border-0 px-0 text-sm shadow-none focus-visible:ring-0"
+    <>
+      {/* Search input */}
+      <div className="flex items-center gap-3 border-b px-4 py-3">
+        <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
+        <Input
+          ref={inputRef}
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          onKeyDown={handleKeyDown}
+          placeholder="Hledat projekty, položky, kontakty, platby, poznámky…"
+          className="h-8 border-0 px-0 text-sm shadow-none focus-visible:ring-0"
           />
           <kbd className="shrink-0 rounded border bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground">
             ESC
@@ -339,8 +336,7 @@ function GlobalSearchInner({ onOpenChange }: { onOpenChange: (open: boolean) => 
             </div>
           )}
         </div>
-      </DialogContent>
-    </Dialog>
+    </>
   );
 }
 

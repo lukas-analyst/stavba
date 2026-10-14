@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { logChanges } from "@/lib/audit";
+import { requireProjectAccess } from "@/lib/authz";
 
 // GET /api/contacts/[id]/persons — list all persons for a contact
 export async function GET(
@@ -9,6 +10,19 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
+
+    // IDOR fix: resolve the contact's projectId and verify viewer access
+    // before returning its persons.
+    const contact = await db.contact.findUnique({
+      where: { id },
+      select: { projectId: true },
+    });
+    if (!contact) {
+      return NextResponse.json({ error: "Contact not found" }, { status: 404 });
+    }
+    const access = await requireProjectAccess(contact.projectId, "viewer");
+    if (!access.ok) return access.response;
+
     const persons = await db.contactPerson.findMany({
       where: { contactId: id },
       orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
@@ -34,6 +48,10 @@ export async function POST(
     if (!contact) {
       return NextResponse.json({ error: "Contact not found" }, { status: 404 });
     }
+
+    // IDOR fix: require editor access to the project that owns the contact.
+    const access = await requireProjectAccess(contact.projectId, "editor");
+    if (!access.ok) return access.response;
 
     if (!body.firstName || typeof body.firstName !== "string" || !body.firstName.trim()) {
       return NextResponse.json({ error: "First name is required" }, { status: 400 });

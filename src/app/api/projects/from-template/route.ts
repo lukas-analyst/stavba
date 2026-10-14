@@ -49,6 +49,7 @@ export async function POST(request: Request) {
     // Require authentication — projects are owned by the logged-in user
     const { user, response } = await requireUser();
     if (response) return response;
+    if (!user) return NextResponse.json({ error: "Nejste přihlášen." }, { status: 401 });
     const ownerId = user.id;
 
     // Create the project

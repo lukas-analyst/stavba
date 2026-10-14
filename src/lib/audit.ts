@@ -1,6 +1,5 @@
 import { db } from "@/lib/db";
 import { requireUser } from "@/lib/require-user";
-import { getDefaultOwnerId } from "@/lib/default-owner";
 
 // ============================================================
 // Human-readable field value translations
@@ -192,12 +191,11 @@ export async function logChanges(
   newData: Record<string, unknown> | null,
   entityLabel?: string | null,
 ) {
-  // Get the authenticated user's ID. Fall back to the default owner
-  // only if the request is unauthenticated (e.g. internal scripts).
-  // This is a defense-in-depth — middleware should block unauthenticated
-  // API requests, but this ensures audit logs are attributed correctly.
+  // Get the authenticated user's ID. If unauthenticated, log with null
+  // userId (AuditLog.userId is String? with onDelete: SetNull) rather
+  // than attributing to a hardcoded "default owner".
   const { user } = await requireUser();
-  const userId = user?.id ?? (await getDefaultOwnerId());
+  const userId = user?.id ?? null;
 
   // Derive entityLabel from old/new data if not provided
   const label =

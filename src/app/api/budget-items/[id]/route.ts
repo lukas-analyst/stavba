@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { logChanges } from "@/lib/audit";
 import { recalcParentDates } from "@/lib/recalc-parent-dates";
+import { requireProjectAccess } from "@/lib/authz";
 
 // PATCH /api/budget-items/[id]
 export async function PATCH(
@@ -16,6 +17,12 @@ export async function PATCH(
     if (!existing) {
       return NextResponse.json({ error: "Budget item not found" }, { status: 404 });
     }
+
+    // IDOR fix: verify the caller has editor access to the project that owns
+    // this budget item. Item-scoped routes can't rely on a projectId in the
+    // URL, so we resolve it from the item itself.
+    const access = await requireProjectAccess(existing.projectId, "editor");
+    if (!access.ok) return access.response;
 
     const numOrUndef = (v: unknown) =>
       v === undefined ? undefined : v === null || v === "" ? null : Number(v);
@@ -134,6 +141,10 @@ export async function DELETE(
     if (!existing) {
       return NextResponse.json({ error: "Budget item not found" }, { status: 404 });
     }
+
+    // IDOR fix: verify editor access to the owning project before deleting.
+    const access = await requireProjectAccess(existing.projectId, "editor");
+    if (!access.ok) return access.response;
 
     // Log deletion before deleting
     await logChanges(

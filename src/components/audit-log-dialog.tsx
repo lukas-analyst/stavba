@@ -62,7 +62,8 @@ const FIELD_LABELS: Record<string, string> = {
 };
 
 export function AuditLogDialog({ open, onOpenChange, projectId }: Props) {
-  const { data: logs, isLoading } = useAuditLog(open ? projectId : null);
+  const { data: auditData, isLoading } = useAuditLog(open ? projectId : null);
+  const logs = auditData?.entries ?? [];
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -75,7 +76,7 @@ export function AuditLogDialog({ open, onOpenChange, projectId }: Props) {
             <DialogTitle>Historie změn</DialogTitle>
           </div>
           <DialogDescription>
-            Posledních 100 změn v projektu (úpravy, vytvoření, mazání).
+            Posledních {logs.length || 100} změn v projektu (úpravy, vytvoření, mazání).
           </DialogDescription>
         </DialogHeader>
 

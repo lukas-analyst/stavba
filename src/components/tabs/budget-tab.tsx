@@ -282,21 +282,21 @@ function BudgetTab({ projectId, dragEndHandlerRef }: { projectId: string; dragEn
     queueMicrotask(() => {
       if (budgetFilter.type === "completion") {
         setCompletionFilter(budgetFilter.value);
-        setPhaseFilter("all");
+        setPhaseFilter(new Set());
         setCategoryFilter("all");
         setSearch("");
       } else if (budgetFilter.type === "category") {
         setCategoryFilter(budgetFilter.value);
         setCompletionFilter("all");
-        setPhaseFilter("all");
+        setPhaseFilter(new Set());
         setSearch("");
       } else if (budgetFilter.type === "saved") {
         setCompletionFilter("done");
-        setPhaseFilter("all");
+        setPhaseFilter(new Set());
         setCategoryFilter("all");
       } else if (budgetFilter.type === "active") {
         setCompletionFilter("todo");
-        setPhaseFilter("all");
+        setPhaseFilter(new Set());
         setCategoryFilter("all");
         setSearch("");
       }
@@ -839,7 +839,7 @@ function BudgetTab({ projectId, dragEndHandlerRef }: { projectId: string; dragEn
             return next;
           });
           setSearch("");
-          setPhaseFilter("all");
+          setPhaseFilter(new Set());
           setCompletionFilter("all");
           setHighlightId(created.id);
           if (isNew) {
@@ -895,7 +895,7 @@ function BudgetTab({ projectId, dragEndHandlerRef }: { projectId: string; dragEn
               return next;
             });
             setSearch("");
-            setPhaseFilter("all");
+            setPhaseFilter(new Set());
             setCompletionFilter("all");
             setHighlightId(created.id);
             if (isNew) {
@@ -920,7 +920,7 @@ function BudgetTab({ projectId, dragEndHandlerRef }: { projectId: string; dragEn
             return next;
           });
           setSearch("");
-          setPhaseFilter("all");
+          setPhaseFilter(new Set());
           setCompletionFilter("all");
           setHighlightId(created.id);
           if (isNew) {

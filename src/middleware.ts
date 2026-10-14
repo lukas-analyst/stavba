@@ -62,12 +62,22 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  // Authenticated but e-mail not verified → redirect to verify-pending
+  // Authenticated but e-mail not verified
   if (!(token as { emailVerified?: string | null }).emailVerified) {
     // Allow access to the verify-pending page itself
     if (pathname === "/auth/verify-pending") {
       return NextResponse.next();
     }
+
+    // For API routes (non-auth), return 403 JSON instead of redirect
+    if (pathname.startsWith("/api/")) {
+      return NextResponse.json(
+        { error: "E-mail není ověřen. Zkontrolujte svou schránku." },
+        { status: 403 },
+      );
+    }
+
+    // For pages, redirect to verify-pending
     return NextResponse.redirect(new URL("/auth/verify-pending", req.url));
   }
 

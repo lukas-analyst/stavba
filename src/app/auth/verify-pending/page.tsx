@@ -26,7 +26,8 @@ export default function VerifyPendingPage() {
   // If the user becomes verified (e.g. they opened the link in another tab),
   // redirect them home.
   useEffect(() => {
-    if (session?.user?.emailVerified) {
+    const emailVerified = (session?.user as { emailVerified?: string | null } | undefined)?.emailVerified;
+    if (emailVerified) {
       router.push("/");
       router.refresh();
     }

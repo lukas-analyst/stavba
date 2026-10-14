@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { unstable_cache } from "next/cache";
 import { db, dbRead } from "@/lib/db";
 import { logChanges } from "@/lib/audit";
+import { requireProjectAccess } from "@/lib/authz";
 
 // Explicit field selection — fetch only what the frontend uses.
 const CONTACT_SELECT = {
@@ -64,6 +65,8 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
+    const access = await requireProjectAccess(id, "viewer");
+    if (!access.ok) return access.response;
     const contacts = await getCachedContacts(id);
     return NextResponse.json(contacts);
   } catch (error) {
@@ -79,6 +82,8 @@ export async function POST(
 ) {
   try {
     const { id } = await params;
+    const access = await requireProjectAccess(id, "editor");
+    if (!access.ok) return access.response;
     const body = await request.json();
     const { name, type, role, phone, email, company, ico, dic, website, notes, rating } = body;
 

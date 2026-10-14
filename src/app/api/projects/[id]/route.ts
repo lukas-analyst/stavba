@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { db, dbRead } from "@/lib/db";
 import { logChanges } from "@/lib/audit";
+import { requireProjectAccess } from "@/lib/authz";
 
 // GET /api/projects/[id]
 // Uses `dbRead` (read replica if configured, falls back to primary).
@@ -10,6 +11,8 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
+    const access = await requireProjectAccess(id, "viewer");
+    if (!access.ok) return access.response;
     const project = await dbRead.project.findUnique({
       where: { id },
       select: {
@@ -48,6 +51,8 @@ export async function PATCH(
 ) {
   try {
     const { id } = await params;
+    const access = await requireProjectAccess(id, "owner");
+    if (!access.ok) return access.response;
     const body = await request.json();
     const { name, address, description, starred, status, currency, startDate, endDate, notes, ownerId } = body;
 
@@ -115,6 +120,8 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params;
+    const access = await requireProjectAccess(id, "owner");
+    if (!access.ok) return access.response;
     const existing = await db.project.findUnique({ where: { id } });
     if (!existing) {
       return NextResponse.json({ error: "Project not found" }, { status: 404 });

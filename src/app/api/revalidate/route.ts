@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { revalidateTag } from "next/cache";
 import { refreshMaterializedViews } from "@/lib/materialized-views";
+import { requireVerifiedUser } from "@/lib/authz";
 
 // POST /api/revalidate
 // Busts the server-side cache for a given tag AND refreshes materialized
@@ -20,7 +21,15 @@ import { refreshMaterializedViews } from "@/lib/materialized-views";
 // are updated in the background. The 60s server-side cache TTL ensures
 // the next request after 60s will see the refreshed data even if the
 // refresh is still in flight.
+//
+// SECURITY: Requires an authenticated, verified user. Cache invalidation
+// is a privileged operation (even though tags are validated against an
+// allow-list) — anonymous abuse could be used to force expensive
+// materialized-view refreshes.
 export async function POST(request: Request) {
+  const { response } = await requireVerifiedUser();
+  if (response) return response;
+
   try {
     const url = new URL(request.url);
     const tagParam = url.searchParams.get("tag");

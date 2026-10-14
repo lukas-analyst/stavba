@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { unstable_cache } from "next/cache";
 import { db, dbRead } from "@/lib/db";
 import { logChanges } from "@/lib/audit";
+import { requireProjectAccess } from "@/lib/authz";
 
 // Cached version of the notes list query — keyed by projectId (passed as
 // the function argument, which Next.js includes in the cache key
@@ -33,6 +34,8 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
+    const access = await requireProjectAccess(id, "viewer");
+    if (!access.ok) return access.response;
     const notes = await getCachedNotes(id);
     return NextResponse.json(notes);
   } catch (error) {
@@ -48,6 +51,8 @@ export async function POST(
 ) {
   try {
     const { id } = await params;
+    const access = await requireProjectAccess(id, "editor");
+    if (!access.ok) return access.response;
     const body = await request.json();
     const { author, text } = body;
 
@@ -55,10 +60,15 @@ export async function POST(
       return NextResponse.json({ error: "Text is required" }, { status: 400 });
     }
 
+    // Attribute note to the authenticated user. Prefer the user-provided
+    // author label, but fall back to the user's display name / e-mail so
+    // notes are never anonymously authored once auth is enforced.
+    const fallbackAuthor = access.user.name ?? access.user.email;
     const note = await db.note.create({
       data: {
         projectId: id,
-        author: (author || "Anonym").trim().slice(0, 100),
+        userId: access.user.id,
+        author: (author?.trim() || fallbackAuthor).slice(0, 100),
         text: text.trim(),
       },
     });

@@ -52,12 +52,26 @@ export const authOptions: NextAuthOptions = {
         email: { label: "E-mail", type: "email" },
         password: { label: "Heslo", type: "password" },
       },
-      async authorize(credentials) {
+      async authorize(credentials, req) {
         if (!credentials?.email || !credentials?.password) {
           return null;
         }
 
         const email = credentials.email.trim().toLowerCase();
+
+        // Rate limit by e-mail + IP (prevents brute-force on a specific account).
+        // For registration, see the register endpoint (IP-based).
+        const { checkRateLimit, LOGIN_RATE_LIMIT } = await import("@/lib/rate-limit");
+        const ip = req?.headers?.get?.("x-forwarded-for")?.split(",")[0]?.trim()
+          ?? req?.headers?.get?.("x-real-ip")?.trim()
+          ?? "unknown";
+        const rlKey = `login:${ip}:${email}`;
+        const rl = checkRateLimit(rlKey, LOGIN_RATE_LIMIT);
+        if (rl.limited) {
+          // Throwing an error with a specific code lets the client
+          // display "Too many attempts" instead of "Invalid credentials"
+          throw new Error(`rate_limited:${rl.retryAfter}`);
+        }
 
         // Find the user by e-mail
         const user = await db.user.findUnique({
@@ -69,6 +83,7 @@ export const authOptions: NextAuthOptions = {
             image: true,
             password: true,
             emailVerified: true,
+            tokenVersion: true,
           },
         });
 
@@ -98,12 +113,14 @@ export const authOptions: NextAuthOptions = {
           name: user.name,
           image: user.image,
           emailVerified: user.emailVerified?.toISOString() ?? null,
+          tokenVersion: user.tokenVersion,
         } as unknown as {
           id: string;
           email: string;
           name: string | null;
           image: string | null;
           emailVerified: string | null;
+          tokenVersion: number;
         };
       },
     }),
@@ -126,28 +143,22 @@ export const authOptions: NextAuthOptions = {
 
   callbacks: {
     // ===== signIn callback =====
-    // Called when a user signs in. For Google OAuth, we need to:
-    //   1. Find or create the user in our DB
-    //   2. If new, mark emailVerified = now (Google pre-verified)
-    //   3. If existing ghost user (password=null), link the account
-    //   4. If existing with password, link the Google account too
-    //      (user can log in with either method)
-    //
-    // For Credentials, we just return true (authorize() already
-    // verified the password).
+    // For Google OAuth: find or create the user in DB + create Account
+    // record (so we can distinguish Google-only users from ghost users,
+    // which is critical for the account-claiming security check in the
+    // register endpoint).
     async signIn({ user, account }) {
-      // Only handle Google OAuth sign-ins (account.provider === "google")
-      // Credentials sign-ins are already handled by authorize().
+      // Only handle Google OAuth sign-ins
       if (account?.provider !== "google") {
         return true;
       }
 
-      if (!user.email) {
-        // Google didn't return an e-mail — reject
+      if (!user.email || !account.providerAccountId) {
         return false;
       }
 
       const email = user.email.toLowerCase();
+      const googleSub = account.providerAccountId;
 
       // Find or create the user in our DB
       const existing = await db.user.findUnique({
@@ -158,13 +169,51 @@ export const authOptions: NextAuthOptions = {
           name: true,
           image: true,
           emailVerified: true,
-          password: true,
+          tokenVersion: true,
+          accounts: {
+            where: { provider: "google" },
+            select: { providerAccountId: true },
+            take: 1,
+          },
         },
       });
 
       if (existing) {
-        // User exists — update image/name from Google if changed
-        // (Google profile picture URL can change over time)
+        // User exists. Check if they already have a Google Account linked.
+        const existingGoogleAccount = existing.accounts[0];
+
+        if (existingGoogleAccount) {
+          // Already linked — verify it's the SAME Google account
+          // (prevent account takeover via creating a fake Google account
+          // with the victim's e-mail)
+          if (existingGoogleAccount.providerAccountId !== googleSub) {
+            // Different Google account for the same e-mail — reject
+            console.warn(
+              `[auth] Google sign-in rejected: e-mail ${email} is already linked to a different Google account.`,
+            );
+            return false;
+          }
+          // Same Google account — update token + profile if needed
+        } else {
+          // User exists (password-based or ghost) but no Google Account
+          // linked yet — link it now. This is safe because Google verified
+          // the e-mail.
+          await db.account.create({
+            data: {
+              userId: existing.id,
+              provider: "google",
+              providerAccountId: googleSub,
+              access_token: account.access_token ?? null,
+              refresh_token: account.refresh_token ?? null,
+              expires_at: account.expires_at ?? null,
+              token_type: account.token_type ?? null,
+              scope: account.scope ?? null,
+              id_token: account.id_token ?? null,
+            },
+          });
+        }
+
+        // Update image/name from Google if changed
         if (user.image && user.image !== existing.image) {
           await db.user.update({
             where: { id: existing.id },
@@ -184,59 +233,90 @@ export const authOptions: NextAuthOptions = {
             data: { emailVerified: new Date() },
           });
         }
-        // Attach the user's DB id + emailVerified to the JWT token
-        // (user.id from Google is the Google subject, not our DB id)
+
+        // Attach DB id + emailVerified + tokenVersion to JWT
         user.id = existing.id;
         (user as { emailVerified?: string | null }).emailVerified =
           existing.emailVerified?.toISOString() ?? new Date().toISOString();
+        (user as { tokenVersion?: number }).tokenVersion = existing.tokenVersion;
       } else {
-        // New user — create in DB
+        // New user — create in DB + create Account record
         const newUser = await db.user.create({
           data: {
             email,
             name: user.name ?? null,
             image: user.image ?? null,
-            // Google pre-verified the e-mail
             emailVerified: new Date(),
+          },
+        });
+        // Create the Google Account link
+        await db.account.create({
+          data: {
+            userId: newUser.id,
+            provider: "google",
+            providerAccountId: googleSub,
+            access_token: account.access_token ?? null,
+            refresh_token: account.refresh_token ?? null,
+            expires_at: account.expires_at ?? null,
+            token_type: account.token_type ?? null,
+            scope: account.scope ?? null,
+            id_token: account.id_token ?? null,
           },
         });
         user.id = newUser.id;
         (user as { emailVerified?: string | null }).emailVerified =
-          newUser.emailVerified.toISOString();
+          newUser.emailVerified?.toISOString() ?? new Date().toISOString();
+        (user as { tokenVersion?: number }).tokenVersion = newUser.tokenVersion;
       }
 
       return true;
     },
 
     // ===== jwt callback =====
-    // Called on every request that has a JWT. We use it to include
-    // `emailVerified` in the token so the middleware can check it
-    // without hitting the DB.
+    // Called on every request that has a JWT. We use it to:
+    //   1. Include `emailVerified` + `tokenVersion` in the token
+    //   2. Periodically re-check DB for emailVerified + tokenVersion
+    //      (enables "log out everywhere" via tokenVersion increment)
     //
-    // IMPORTANT: When a user verifies their e-mail (clicks the link in
-    // the verification e-mail), the existing JWT still has
-    // `emailVerified: null`. To handle this, we check the DB on each
-    // request IF the token says `emailVerified` is null. This is a
-    // single extra DB query only for unverified users — once they're
-    // verified, the token is updated and no more DB queries happen.
+    // To avoid a DB query on EVERY request, we check only when:
+    //   - emailVerified is null (user might have verified in another tab)
+    //   - OR lastChecked is > 60 seconds ago (periodic tokenVersion check)
     async jwt({ token, user }) {
       // `user` is only present on the initial sign-in
       if (user) {
         token.id = user.id;
         token.emailVerified = (user as { emailVerified?: string | null }).emailVerified ?? null;
+        token.tokenVersion = (user as { tokenVersion?: number }).tokenVersion ?? 0;
+        token.lastChecked = Date.now();
       }
 
-      // If the token says emailVerified is null, re-check the DB.
-      // This handles the case where the user verified their e-mail in
-      // another tab/device and the old JWT hasn't been refreshed yet.
-      if (token.emailVerified === null && token.email) {
+      const lastChecked = (token.lastChecked as number) ?? 0;
+      const now = Date.now();
+      const STALE_MS = 60_000; // re-check DB at most once per minute
+      const needsCheck =
+        token.emailVerified === null || now - lastChecked > STALE_MS;
+
+      if (needsCheck && token.email) {
         const dbUser = await db.user.findUnique({
           where: { email: token.email },
-          select: { emailVerified: true },
+          select: { emailVerified: true, tokenVersion: true },
         });
-        if (dbUser?.emailVerified) {
-          token.emailVerified = dbUser.emailVerified.toISOString();
+
+        if (dbUser) {
+          // Update emailVerified if it changed
+          if (dbUser.emailVerified) {
+            token.emailVerified = dbUser.emailVerified.toISOString();
+          }
+          // Check tokenVersion — if mismatch, revoke session
+          if (dbUser.tokenVersion !== (token.tokenVersion as number)) {
+            // Token version mismatch — password was reset or "log out
+            // everywhere" was triggered. Return empty token to force
+            // re-authentication.
+            return { ...token, id: undefined, email: undefined } as typeof token;
+          }
         }
+
+        token.lastChecked = now;
       }
 
       return token;

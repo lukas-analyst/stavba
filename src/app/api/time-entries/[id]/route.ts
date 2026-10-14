@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { logChanges } from "@/lib/audit";
+import { requireProjectAccess } from "@/lib/authz";
 
 // PATCH /api/time-entries/[id]
 export async function PATCH(
@@ -15,6 +16,19 @@ export async function PATCH(
     if (!existing) {
       return NextResponse.json({ error: "Time entry not found" }, { status: 404 });
     }
+
+    // IDOR fix: resolve projectId via the parent BudgetItem and verify
+    // editor access before performing the update. The same fetch is reused
+    // below for the audit log, so we hoist it here.
+    const budgetItem = await db.budgetItem.findUnique({
+      where: { id: existing.budgetItemId },
+      select: { projectId: true },
+    });
+    if (!budgetItem) {
+      return NextResponse.json({ error: "Budget item not found" }, { status: 404 });
+    }
+    const access = await requireProjectAccess(budgetItem.projectId, "editor");
+    if (!access.ok) return access.response;
 
     const updated = await db.timeEntry.update({
       where: { id },
@@ -40,21 +54,15 @@ export async function PATCH(
       },
     });
 
-    // Get projectId for audit log
-    const budgetItem = await db.budgetItem.findUnique({
-      where: { id: existing.budgetItemId },
-      select: { projectId: true },
-    });
-    if (budgetItem) {
-      await logChanges(
-        budgetItem.projectId,
-        "TimeEntry",
-        id,
-        "update",
-        existing as unknown as Record<string, unknown>,
-        updated as unknown as Record<string, unknown>,
-      );
-    }
+    // Audit log (projectId already resolved above for authz)
+    await logChanges(
+      budgetItem.projectId,
+      "TimeEntry",
+      id,
+      "update",
+      existing as unknown as Record<string, unknown>,
+      updated as unknown as Record<string, unknown>,
+    );
 
     // Recompute affected budget item actualHours
     const budgetItemId = existing.budgetItemId;
@@ -87,21 +95,28 @@ export async function DELETE(
     }
     const budgetItemId = existing.budgetItemId;
 
-    // Get projectId for audit log before deleting
+    // IDOR fix: resolve projectId via the parent BudgetItem and require
+    // editor access before deleting. The same fetch is reused below for
+    // the audit log.
     const budgetItem = await db.budgetItem.findUnique({
       where: { id: budgetItemId },
       select: { projectId: true },
     });
-    if (budgetItem) {
-      await logChanges(
-        budgetItem.projectId,
-        "TimeEntry",
-        id,
-        "delete",
-        existing as unknown as Record<string, unknown>,
-        null,
-      );
+    if (!budgetItem) {
+      return NextResponse.json({ error: "Budget item not found" }, { status: 404 });
     }
+    const access = await requireProjectAccess(budgetItem.projectId, "editor");
+    if (!access.ok) return access.response;
+
+    // Audit log before deleting (projectId already resolved above for authz)
+    await logChanges(
+      budgetItem.projectId,
+      "TimeEntry",
+      id,
+      "delete",
+      existing as unknown as Record<string, unknown>,
+      null,
+    );
 
     await db.timeEntry.delete({ where: { id } });
 

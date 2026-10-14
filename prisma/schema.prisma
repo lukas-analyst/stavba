@@ -58,6 +58,12 @@ model User {
   passwordResetToken   String?
   /// Expiry of the password-reset token (typically 1h).
   passwordResetExpiry  DateTime?
+  /// Token version for JWT invalidation. Incremented on password reset,
+  /// password change, or "log out everywhere". The JWT callback compares
+  /// this with the token's version — if they differ, the token is rejected.
+  /// This enables "Odhlásit všude" (revoke all sessions) without DB
+  /// sessions (which would be needed for pure stateless JWT).
+  tokenVersion   Int       @default(0)
   /// When this user first signed in
   createdAt     DateTime  @default(now())
   /// When this user's record was last updated

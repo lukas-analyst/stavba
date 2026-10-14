@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { unstable_cache } from "next/cache";
 import { dbRead } from "@/lib/db";
+import { requireProjectAccess } from "@/lib/authz";
 
 // GET /api/projects/[id]/spending-trend
 // Returns monthly spending + time data for the last 12 months (or all available).
@@ -93,11 +94,10 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
-    const project = await dbRead.project.findUnique({ where: { id } });
-    if (!project) {
-      return NextResponse.json({ error: "Project not found" }, { status: 404 });
-    }
-
+    const access = await requireProjectAccess(id, "viewer");
+    if (!access.ok) return access.response;
+    // `requireProjectAccess` already verified the project exists, so we can
+    // drop the redundant findUnique lookup here.
     const data = await getCachedSpendingTrend(id);
     return NextResponse.json(data);
   } catch (error) {

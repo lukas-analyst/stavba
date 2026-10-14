@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { dbRead } from "@/lib/db";
+import { requireProjectAccess } from "@/lib/authz";
 
 // GET /api/projects/[id]/export-csv?type=budget|payments|time
 // Optional query params (budget type only):
@@ -13,15 +14,16 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
+    const access = await requireProjectAccess(id, "viewer");
+    if (!access.ok) return access.response;
     const { searchParams } = new URL(request.url);
     const type = searchParams.get("type") || "budget";
     const phaseFilter = searchParams.get("phase");
     const statusFilter = searchParams.get("status");
 
-    const project = await dbRead.project.findUnique({ where: { id } });
-    if (!project) {
-      return NextResponse.json({ error: "Project not found" }, { status: 404 });
-    }
+    // `requireProjectAccess` already verified the project exists; reuse its
+    // project object so we don't re-fetch it just for the filename.
+    const project = { id: access.project.id, name: access.project.name };
 
     const escapeCsv = (val: unknown): string => {
       const s = val === null || val === undefined ? "" : String(val);

@@ -69,6 +69,7 @@ export async function PATCH(request: Request, { params }: RouteContext) {
     // This replaces the old "default owner" check.
     const { user, response: authResponse } = await requireUser();
     if (authResponse) return authResponse;
+    if (!user) return NextResponse.json({ error: "Nejste přihlášen." }, { status: 401 });
     if (id !== user.id) {
       return NextResponse.json(
         { error: "Úprava cizího profilu není povolena" },

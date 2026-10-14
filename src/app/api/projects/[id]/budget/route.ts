@@ -3,6 +3,7 @@ import { unstable_cache } from "next/cache";
 import { db, dbRead } from "@/lib/db";
 import { logChanges } from "@/lib/audit";
 import { recalcParentDates } from "@/lib/recalc-parent-dates";
+import { requireProjectAccess } from "@/lib/authz";
 
 // Explicit field selection — only fetch what the frontend actually uses.
 // This reduces DB payload by ~40% compared to `include` (which fetches
@@ -80,6 +81,8 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
+    const access = await requireProjectAccess(id, "viewer");
+    if (!access.ok) return access.response;
     const items = await getCachedBudgetItems(id);
     return NextResponse.json(items);
   } catch (error) {
@@ -95,6 +98,8 @@ export async function POST(
 ) {
   try {
     const { id } = await params;
+    const access = await requireProjectAccess(id, "editor");
+    if (!access.ok) return access.response;
     const body = await request.json();
     const {
       category,

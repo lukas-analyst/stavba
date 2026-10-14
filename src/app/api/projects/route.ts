@@ -12,6 +12,7 @@ export async function GET() {
     // Require authentication — only show projects owned by the logged-in user
     const { user, response } = await requireUser();
     if (response) return response;
+    if (!user) return NextResponse.json({ error: "Nejste přihlášen." }, { status: 401 });
 
     const projects = await dbRead.project.findMany({
       where: { ownerId: user.id },
@@ -117,6 +118,7 @@ export async function POST(request: Request) {
     // Require authentication — projects are owned by the logged-in user
     const { user, response } = await requireUser();
     if (response) return response;
+    if (!user) return NextResponse.json({ error: "Nejste přihlášen." }, { status: 401 });
     const ownerId = user.id;
 
     const project = await db.project.create({

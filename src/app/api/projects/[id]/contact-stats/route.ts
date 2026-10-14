@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { unstable_cache } from "next/cache";
 import { dbRead } from "@/lib/db";
+import { requireProjectAccess } from "@/lib/authz";
 
 // GET /api/projects/[id]/contact-stats
 // Returns aggregated stats per contact: total paid, total hours, payment count, time entry count
@@ -137,6 +138,8 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
+    const access = await requireProjectAccess(id, "viewer");
+    if (!access.ok) return access.response;
     const data = await getCachedContactStats(id);
     return NextResponse.json(data);
   } catch (error) {

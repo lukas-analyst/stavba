@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { requireProjectAccess } from "@/lib/authz";
 
 // POST /api/budget-items/[id]/duplicate
 // Creates a copy of the budget item with "(kopie)" suffix in the same project,
@@ -14,6 +15,11 @@ export async function POST(
     if (!original) {
       return NextResponse.json({ error: "Budget item not found" }, { status: 404 });
     }
+
+    // IDOR fix: duplicating an item is a write operation — require editor
+    // access to the project that owns the source item.
+    const access = await requireProjectAccess(original.projectId, "editor");
+    if (!access.ok) return access.response;
 
     const maxOrder = await db.budgetItem.aggregate({
       where: { projectId: original.projectId },
