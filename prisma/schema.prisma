@@ -35,7 +35,9 @@ datasource db {
 /// Google OAuth (NextAuth.js), but other providers can be added later.
 model User {
   id            String    @id @default(cuid())
-  /// Google email address — unique, used as the primary identifier
+  /// Google email address — unique, used as the primary identifier.
+  /// Stored lowercase for case-insensitive matching (Postgres default
+  /// is case-sensitive; we normalize in auth-helpers.ts before DB write).
   email         String    @unique
   /// Display name from Google profile (e.g., "Lukáš Hanzlík")
   name          String?
@@ -482,13 +484,13 @@ model BudgetItem {
   /// FK to BudgetItem (self-reference) — if set, this is a child "task"
   /// under the parent item. If null, this is a top-level item.
   parentId           String?
-  parent             BudgetItem?  @relation("BudgetItemHierarchy", fields: [parentId], references: [id], onDelete: NoAction)
+  parent             BudgetItem?  @relation("BudgetItemHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
   children           BudgetItem[] @relation("BudgetItemHierarchy")
   /// FK to BudgetItem (self-reference) — if set, this item "depends on"
   /// another top-level item. Used to auto-fill `dateFrom` from the
   /// referenced item's `dateTo` in the UI.
   dependsOnId        String?
-  dependsOn          BudgetItem?  @relation("BudgetItemDependency", fields: [dependsOnId], references: [id], onDelete: NoAction)
+  dependsOn          BudgetItem?  @relation("BudgetItemDependency", fields: [dependsOnId], references: [id], onDelete: SetNull)
   dependents         BudgetItem[] @relation("BudgetItemDependency")
   /// Planned cost in the project currency (Kč). Null = not yet estimated.
   planCost           Float?
@@ -704,9 +706,10 @@ model ContactPerson {
 /// edit_payment, delete_payment, add_contact, add_note, edit_note, login, logout.
 model AnalyticsEvent {
   id        String   @id @default(cuid())
-  /// FK to User — who performed the action
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// FK to User — who performed the action. Nullable for auth-related
+  /// events (login failures, etc.) where the user may not be authenticated.
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
   /// Event type: "page_view", "add_payment", "add_time_entry", etc.
   eventType String
   /// Page URL where the event occurred (for page_view: the URL visited)

@@ -8,7 +8,32 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2, Mail, Lock, AlertCircle } from "lucide-react";
-import { toast } from "sonner";
+
+// =====================================================================
+// Helper: log auth event to /api/auth/audit-log (F8).
+// Fire-and-forget — telemetry must never block the login flow.
+// Uses sendBeacon where available (survives page navigation after
+// successful login), falls back to fetch with keepalive: true.
+// =====================================================================
+function logAuthEvent(action: string, success: boolean, metadata?: Record<string, unknown>) {
+  if (typeof window === "undefined") return;
+  const payload = JSON.stringify({ action, success, metadata });
+  try {
+    if (navigator.sendBeacon) {
+      const blob = new Blob([payload], { type: "application/json" });
+      const queued = navigator.sendBeacon("/api/auth/audit-log", blob);
+      if (queued) return;
+    }
+    void fetch("/api/auth/audit-log", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: payload,
+      keepalive: true,
+    }).catch(() => {});
+  } catch {
+    // ignore
+  }
+}
 
 // Google "G" logo SVG (official Google brand colors)
 function GoogleIcon({ className }: { className?: string }) {
@@ -74,8 +99,10 @@ export default function LoginPage() {
       if (result?.error) {
         if (result.error === "use-oauth") {
           setError("Tento e-mail je zaregistrován přes Google. Použijte tlačítko „Přihlásit přes Google“.");
+          logAuthEvent("login", false, { reason: "use-oauth", email });
         } else if (result.error === "register-first") {
           setError("Pro tento e-mail ještě nebyl vytvořen účet. Zaregistrujte se prosím.");
+          logAuthEvent("login", false, { reason: "register-first", email });
         } else if (result.error.startsWith("rate_limited:")) {
           const retryAfter = result.error.split(":")[1];
           const minutes = Math.ceil(Number(retryAfter) / 60);
@@ -84,20 +111,24 @@ export default function LoginPage() {
               ? `Příliš mnoho pokusů o přihlášení. Zkuste to za ${minutes} minut.`
               : `Příliš mnoho pokusů o přihlášení. Zkuste to za ${retryAfter} sekund.`,
           );
+          logAuthEvent("login", false, { reason: "rate_limited", email });
         } else {
           setError("Neplatný e-mail nebo heslo.");
+          logAuthEvent("login", false, { reason: "invalid_credentials", email });
         }
         setLoading(false);
         return;
       }
 
       if (result?.url) {
+        logAuthEvent("login", true, { email });
         router.push(callbackUrl);
         router.refresh();
       }
     } catch (err) {
       console.error("Login error:", err);
       setError("Přihlášení selhalo. Zkuste to prosím znovu.");
+      logAuthEvent("login", false, { reason: "exception", email });
       setLoading(false);
     }
   };

@@ -272,10 +272,10 @@ export async function GET(request: Request) {
         }
         pageStats.set(ev.pageUrl, cur);
       }
-      const u = userTimeStats.get(ev.userId) ?? { views: 0, totalTime: 0 };
+      const u = userTimeStats.get(ev.userId ?? "__null__") ?? { views: 0, totalTime: 0 };
       u.views += 1;
       if (ev.timeSpent !== null) u.totalTime += ev.timeSpent;
-      userTimeStats.set(ev.userId, u);
+      userTimeStats.set(ev.userId ?? "__null__", u);
     }
     const topPages = Array.from(pageStats.entries())
       .map(([pageUrl, s]) => ({
@@ -324,7 +324,10 @@ export async function GET(request: Request) {
 
     // === Top users by events (over full filtered range) ===
     // We already have groupedByUser — fetch user names.
-    const userIds = groupedByUser.map((g) => g.userId);
+    // Filter out null userIds (auth events can have null userId).
+    const userIds = groupedByUser
+      .map((g) => g.userId)
+      .filter((id): id is string => id !== null);
     const usersFromDb =
       userIds.length > 0
         ? await dbRead.user.findMany({
@@ -335,6 +338,7 @@ export async function GET(request: Request) {
     const userMap = new Map(usersFromDb.map((u) => [u.id, u]));
 
     const topUsersByEvents = groupedByUser
+      .filter((g): g is typeof g & { userId: string } => g.userId !== null)
       .map((g) => {
         const u = userMap.get(g.userId);
         return {
@@ -405,7 +409,9 @@ export async function GET(request: Request) {
       by: ["userId"],
       _count: { _all: true },
     });
-    const allUserIds = allUsersWithEvents.map((g) => g.userId);
+    const allUserIds = allUsersWithEvents
+      .map((g) => g.userId)
+      .filter((id): id is string => id !== null);
     const allUsersDb =
       allUserIds.length > 0
         ? await dbRead.user.findMany({

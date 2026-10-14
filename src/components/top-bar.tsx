@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { useTheme } from "next-themes";
 import { signOut, useSession } from "next-auth/react";
@@ -63,6 +64,7 @@ function getInitials(name: string | null | undefined): string {
 }
 
 export function TopBar() {
+  const router = useRouter();
   const sidebarOpen = useAppStore((s) => s.sidebarOpen);
   const toggleSidebar = useAppStore((s) => s.toggleSidebar);
   const selectedProjectId = useAppStore((s) => s.selectedProjectId);
@@ -162,6 +164,34 @@ export function TopBar() {
     },
     [qc],
   );
+
+  // ===== Sign-out with audit log =====
+  // We fire a non-blocking POST /api/auth/audit-log before calling
+  // signOut(). If sendBeacon is available, it will survive the page
+  // navigation triggered by signOut(); otherwise we fall back to fetch
+  // with `keepalive: true`. Telemetry must never block sign-out.
+  const handleSignOut = useCallback(() => {
+    const payload = JSON.stringify({ action: "logout", success: true });
+    try {
+      if (navigator.sendBeacon) {
+        const blob = new Blob([payload], { type: "application/json" });
+        const queued = navigator.sendBeacon("/api/auth/audit-log", blob);
+        if (queued) {
+          signOut({ callbackUrl: "/auth/login" });
+          return;
+        }
+      }
+      void fetch("/api/auth/audit-log", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: payload,
+        keepalive: true,
+      }).catch(() => {});
+    } catch {
+      // ignore
+    }
+    signOut({ callbackUrl: "/auth/login" });
+  }, []);
 
   // Filtered project list
   const filtered = projects?.filter((p) => {
@@ -439,9 +469,18 @@ export function TopBar() {
               Preference
             </DropdownMenuItem>
 
+            {/* Profil — profile page (name, password, sessions) */}
+            <DropdownMenuItem
+              onSelect={() => router.push("/auth/profile")}
+              className="cursor-pointer gap-2.5 rounded-none px-3 py-2.5 type-body hover:bg-surface-container-high"
+            >
+              <User className="h-4 w-4 text-primary" />
+              Profil
+            </DropdownMenuItem>
+
             {/* Odhlásit — functional sign-out via NextAuth */}
             <DropdownMenuItem
-              onSelect={() => signOut({ callbackUrl: "/auth/login" })}
+              onSelect={handleSignOut}
               className="cursor-pointer gap-2.5 rounded-none px-3 py-2.5 type-body hover:bg-surface-container-high"
             >
               <LogOut className="h-4 w-4 text-muted-foreground" />

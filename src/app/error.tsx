@@ -17,6 +17,7 @@ import {
   Bug,
 } from "lucide-react";
 import { toast } from "sonner";
+import { reportError } from "@/lib/error-reporting";
 
 /**
  * Next.js route-level error boundary.
@@ -48,6 +49,8 @@ export default function Error({
   useEffect(() => {
     // Surface the error to dev tools so debugging is straightforward.
     console.error("Route error boundary caught:", error);
+    // Report to error reporting pipeline (console + optional webhook).
+    reportError(error, { digest: error.digest, source: "route-error-boundary" });
   }, [error]);
 
   const handleCopy = async () => {

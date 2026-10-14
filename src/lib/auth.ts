@@ -318,8 +318,19 @@ export const authOptions: NextAuthOptions = {
           if (dbUser.emailVerified) {
             token.emailVerified = dbUser.emailVerified.toISOString();
           }
-          // Check tokenVersion — if mismatch, revoke session
-          if (dbUser.tokenVersion !== (token.tokenVersion as number)) {
+          // tokenVersion check for "log out everywhere" (S10/F9).
+          // If the token's version doesn't match the DB, the session
+          // was revoked (password reset, "log out everywhere", etc.).
+          //
+          // IMPORTANT: Old tokens created before tokenVersion was added
+          // have `token.tokenVersion === undefined`. We treat undefined
+          // as "needs sync" — update the token with the DB version
+          // instead of revoking (backwards compat with existing sessions).
+          const tokenVersion = (token.tokenVersion as number | undefined) ?? undefined;
+          if (tokenVersion === undefined) {
+            // Old token without tokenVersion — sync from DB (don't revoke)
+            token.tokenVersion = dbUser.tokenVersion;
+          } else if (dbUser.tokenVersion !== tokenVersion) {
             // Token version mismatch — password was reset or "log out
             // everywhere" was triggered. Return empty token to force
             // re-authentication.

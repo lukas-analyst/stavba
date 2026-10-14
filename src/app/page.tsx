@@ -10,6 +10,7 @@ import { AppSidebar } from "@/components/app-sidebar";
 import { ContextualFab } from "@/components/contextual-fab";
 import { ProjectDetail } from "@/components/project-detail";
 import { EmptyState } from "@/components/empty-state";
+import { SessionTimeoutWarning } from "@/components/session-timeout-warning";
 import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Loader2, X } from "lucide-react";
@@ -171,6 +172,10 @@ function HomeContent() {
 
   return (
     <div className="flex h-screen w-full flex-col overflow-hidden bg-background">
+      {/* Session timeout warning — emits a toast 5 min before JWT
+          expiry; renders nothing visually. */}
+      <SessionTimeoutWarning />
+
       {/* TopBar — sticky, full width, same on mobile + desktop */}
       <TopBar />
 

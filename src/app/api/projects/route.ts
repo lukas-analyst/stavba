@@ -99,7 +99,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Name is required" }, { status: 400 });
     }
 
-    // Generate slug from name
+    // Generate slug from name (lowercase, kebab-case, no diacritics)
     const baseSlug = name.trim()
       .toLowerCase()
       .normalize('NFD')
@@ -108,11 +108,15 @@ export async function POST(request: Request) {
       .replace(/^-+|-+$/g, '')
       .replace(/-{2,}/g, '-');
 
+    // If name produced empty slug (e.g., name was only emojis/symbols),
+    // generate a fallback slug from timestamp
+    const slug = baseSlug || `projekt-${Date.now().toString(36)}`;
+
     // Ensure uniqueness
-    let slug = baseSlug;
+    let finalSlug = slug;
     let suffix = 1;
-    while (await dbRead.project.findUnique({ where: { slug } })) {
-      slug = `${baseSlug}-${suffix++}`;
+    while (await dbRead.project.findUnique({ where: { slug: finalSlug } })) {
+      finalSlug = `${slug}-${suffix++}`;
     }
 
     // Require authentication — projects are owned by the logged-in user
@@ -124,7 +128,7 @@ export async function POST(request: Request) {
     const project = await db.project.create({
       data: {
         name: name.trim(),
-        slug,
+        slug: finalSlug,
         ownerId,
         address: address?.trim() || null,
         description: description?.trim() || null,
