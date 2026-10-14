@@ -2,6 +2,7 @@
 
 import {
   LayoutDashboard,
+  Sparkles,
   Table2,
   Receipt,
   Clock,
@@ -15,7 +16,7 @@ import type { TabId } from "@/lib/store";
 // and any other component that needs to reference tab metadata.
 //
 // MD3 NavigationRail / NavigationDrawer organization:
-//   Sekce "Hlavní":    dashboard (Přehled)
+//   Sekce "Hlavní":    dashboard (Přehled), dashboard-test (Přehled - Test)
 //   Sekce "Práce":      budget, payments, time
 //   Sekce "Organizace": contacts, timeline, notes
 //
@@ -31,6 +32,7 @@ export type NavItem = {
 
 export const NAV_ITEMS: NavItem[] = [
   { id: "dashboard", label: "Přehled", icon: LayoutDashboard, section: "main" },
+  { id: "dashboard-test", label: "Přehled - Test", icon: Sparkles, section: "main" },
   { id: "budget", label: "Rozpočet", icon: Table2, section: "work" },
   { id: "payments", label: "Platby", icon: Receipt, section: "work" },
   { id: "time", label: "Čas", icon: Clock, section: "work" },

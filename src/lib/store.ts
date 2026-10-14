@@ -4,6 +4,7 @@ import { create } from "zustand";
 
 export type TabId =
   | "dashboard"
+  | "dashboard-test"
   | "budget"
   | "payments"
   | "time"
