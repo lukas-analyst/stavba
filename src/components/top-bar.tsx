@@ -381,12 +381,13 @@ export function TopBar() {
             (hamburger + project title + search icon + avatar), so the
             chip shows ONLY the burn-rate % with color coding. The full
             "actual / plan" breakdown lives on the Dashboard tab anyway.
-            On sm+ screens the chip expands to show the actual/plan text. */}
+            On sm+ screens the chip expands to show the actual/plan text.
+            ml-auto pushes this + the avatar to the right side of the bar. */}
         {selectedProject && planTotal > 0 && (
           <button
             onClick={() => setActiveTab("dashboard")}
             className={cn(
-              "flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-2 text-xs transition-colors state-layer-on-surface sm:px-3 sm:py-1.5",
+              "ml-auto md:ml-0 flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-2 text-xs transition-colors state-layer-on-surface sm:px-3 sm:py-1.5",
               isScrolled
                 ? "bg-surface-container-high"
                 : "bg-surface-container",
@@ -417,13 +418,19 @@ export function TopBar() {
           </button>
         )}
 
-        {/* Account dropdown — avatar with initials + Preference + Odhlásit + theme toggle */}
+        {/* Account dropdown — avatar with initials + Preference + Odhlásit + theme toggle
+            ml-auto on mobile ensures the avatar is in the right corner even
+            when the budget chip is not rendered (no project selected). */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
               variant="ghost"
               size="icon"
-              className="h-12 w-12 shrink-0 state-layer-on-surface rounded-full sm:h-9 sm:w-9"
+              className={cn(
+                "shrink-0 state-layer-on-surface rounded-full h-12 w-12 sm:h-9 sm:w-9",
+                // On mobile, if no budget chip is shown, push avatar to right
+                (!selectedProject || planTotal === 0) && "ml-auto md:ml-0",
+              )}
               aria-label="Účet"
               title={displayUser?.name ?? displayUser?.email ?? "Účet"}
             >

@@ -13,6 +13,7 @@ import { EmptyState } from "@/components/empty-state";
 import { SessionTimeoutWarning } from "@/components/session-timeout-warning";
 import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useSwipeToOpenSidebar } from "@/hooks/use-swipe-sidebar";
 import { Loader2, X } from "lucide-react";
 
 const VALID_TABS: ReadonlySet<TabId> = new Set<TabId>([
@@ -71,6 +72,7 @@ function HomeContent() {
   const isMobile = useIsMobile();
 
   useKeyboardShortcuts();
+  useSwipeToOpenSidebar();
 
   // === Initialize sidebar state on mount ===
   // Desktop: open by default (or check localStorage)
@@ -113,7 +115,35 @@ function HomeContent() {
     }
   }, [projects]);
 
+  // === Browser back/forward (popstate) → Store sync ===
+  // When the user presses the browser back button, the URL changes but
+  // our store doesn't automatically update. This listener syncs the
+  // store with the new URL so the correct tab/project is shown.
+  useEffect(() => {
+    const handlePopState = () => {
+      const params = new URLSearchParams(window.location.search);
+      const urlProject = params.get("project");
+      const urlTab = params.get("tab");
+
+      if (urlProject && projects) {
+        const found = projects.find((p) => p.slug === urlProject || p.id === urlProject);
+        if (found) {
+          setSelectedProjectId(found.id);
+        }
+      }
+      if (urlTab && VALID_TABS.has(urlTab as TabId)) {
+        setActiveTab(urlTab as TabId);
+      }
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, [projects, setActiveTab, setSelectedProjectId]);
+
   // === Store → URL sync ===
+  // Use router.push (not replace) so the browser back button works:
+  // each tab/project change creates a new history entry, allowing the
+  // user to go back to the previous tab instead of leaving the app.
   useEffect(() => {
     if (!hasInitializedRef.current) {
       hasInitializedRef.current = true;
@@ -129,7 +159,7 @@ function HomeContent() {
     if (activeTab) params.set("tab", activeTab);
     const query = params.toString();
     const nextUrl = query ? `${pathname}?${query}` : pathname;
-    router.replace(nextUrl);
+    router.push(nextUrl);
   }, [selectedProjectId, activeTab, pathname, router, projects]);
 
   // === Persist last selected project to localStorage (for new sessions) ===
