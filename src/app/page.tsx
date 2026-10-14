@@ -17,7 +17,6 @@ import { Loader2, X } from "lucide-react";
 
 const VALID_TABS: ReadonlySet<TabId> = new Set<TabId>([
   "dashboard",
-  "dashboard-test",
   "budget",
   "payments",
   "time",

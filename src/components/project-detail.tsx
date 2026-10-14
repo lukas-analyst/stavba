@@ -18,10 +18,6 @@ const DashboardTab = dynamic(() => import("@/components/tabs/dashboard-tab").the
   ssr: false,
   loading: () => <TabSkeleton />,
 });
-const DashboardTestTab = dynamic(() => import("@/components/tabs/dashboard-test-tab").then(m => m.DashboardTestTab), {
-  ssr: false,
-  loading: () => <TabSkeleton />,
-});
 const BudgetTab = dynamic(() => import("@/components/tabs/budget-tab").then(m => m.DndBudgetTab), {
   ssr: false,
   loading: () => <TabSkeleton />,
@@ -110,7 +106,6 @@ export function ProjectDetail({ project }: { project: Project }) {
       const pid = project.id;
       switch (tabId) {
         case "dashboard":
-        case "dashboard-test":
           qc.prefetchQuery({
             queryKey: ["dashboard", pid],
             queryFn: async () => {
@@ -184,7 +179,7 @@ export function ProjectDetail({ project }: { project: Project }) {
 
   // === Background prefetch when Dashboard loads ===
   useEffect(() => {
-    if (activeTab !== "dashboard" && activeTab !== "dashboard-test") return;
+    if (activeTab !== "dashboard") return;
     const pid = project.id;
     qc.prefetchQuery({
       queryKey: ["budget", pid],
@@ -209,7 +204,6 @@ export function ProjectDetail({ project }: { project: Project }) {
       {/* Tab content */}
       <div id="tab-content" className="flex-1 px-4 py-4 md:px-6 md:py-6">
         {activeTab === "dashboard" && <DashboardTab projectId={project.id} />}
-        {activeTab === "dashboard-test" && <DashboardTestTab projectId={project.id} />}
         {activeTab === "budget" && <BudgetTab projectId={project.id} />}
         {activeTab === "payments" && <PaymentsTab projectId={project.id} />}
         {activeTab === "time" && <TimeTab projectId={project.id} />}
