@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { signOut, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -12,9 +12,10 @@ import { toast } from "sonner";
 
 export default function VerifyPendingPage() {
   const router = useRouter();
-  const { data: session, status } = useSession();
+  const { data: session, status, update } = useSession();
   const [email, setEmail] = useState("");
   const [sending, setSending] = useState(false);
+  const [checking, setChecking] = useState(false);
 
   // Pre-fill e-mail from session
   useEffect(() => {
@@ -23,8 +24,37 @@ export default function VerifyPendingPage() {
     }
   }, [session]);
 
-  // If the user becomes verified (e.g. they opened the link in another tab),
-  // redirect them home.
+  // Poll for e-mail verification status every 10 seconds.
+  // The user might verify their e-mail in another tab — we want to
+  // detect it and redirect them home automatically.
+  const checkVerification = useCallback(async () => {
+    if (status !== "authenticated") return;
+    setChecking(true);
+    try {
+      const res = await fetch("/api/auth/session");
+      if (res.ok) {
+        const freshSession = await res.json();
+        if (freshSession?.user?.emailVerified) {
+          // E-mail is now verified — refresh session + redirect
+          await update();
+          router.push("/");
+          router.refresh();
+        }
+      }
+    } catch {
+      // ignore polling errors
+    } finally {
+      setChecking(false);
+    }
+  }, [status, update, router]);
+
+  // Poll every 10 seconds
+  useEffect(() => {
+    const interval = setInterval(checkVerification, 10_000);
+    return () => clearInterval(interval);
+  }, [checkVerification]);
+
+  // Also check immediately when session changes
   useEffect(() => {
     const emailVerified = (session?.user as { emailVerified?: string | null } | undefined)?.emailVerified;
     if (emailVerified) {
@@ -129,7 +159,26 @@ export default function VerifyPendingPage() {
             </Button>
           </form>
 
-          <div className="mt-6 border-t pt-4">
+          <div className="mt-6 space-y-2 border-t pt-4">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-full text-muted-foreground"
+              onClick={checkVerification}
+              disabled={checking}
+            >
+              {checking ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Kontroluji…
+                </>
+              ) : (
+                <>
+                  <RefreshCw className="mr-2 h-4 w-4" />
+                  Již jsem ověřil — obnovit
+                </>
+              )}
+            </Button>
             <Button
               variant="ghost"
               size="sm"
@@ -143,7 +192,7 @@ export default function VerifyPendingPage() {
         </div>
 
         <p className="mt-6 text-center text-xs text-muted-foreground">
-          Po ověření e-mailu budete přesměrováni na hlavní stránku.
+          Po ověření e-mailu budete automaticky přesměrováni na hlavní stránku.
         </p>
       </div>
     </div>

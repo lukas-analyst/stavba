@@ -39,6 +39,22 @@ export default function VerifyEmailPage() {
             </div>
           )}
 
+          {status === "already" && (
+            <div className="flex flex-col items-center text-center">
+              <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-blue-50 dark:bg-blue-950">
+                <CheckCircle2 className="h-8 w-8 text-blue-600" />
+              </div>
+              <h1 className="mb-2 text-xl font-semibold">E-mail je již ověřen</h1>
+              <p className="mb-6 text-sm text-muted-foreground">
+                Vaše e-mailová adresa byla již dříve úspěšně ověřena.
+                Můžete se přihlásit ke svému účtu.
+              </p>
+              <Button asChild className="w-full" size="lg">
+                <Link href="/auth/login">Přihlásit se</Link>
+              </Button>
+            </div>
+          )}
+
           {status === "expired" && (
             <div className="flex flex-col items-center text-center">
               <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-amber-50 dark:bg-amber-950">

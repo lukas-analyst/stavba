@@ -59,6 +59,12 @@ export function NotesTab({ projectId }: { projectId: string }) {
   const [author, setAuthor] = useState<string>(readSavedAuthor);
   const [text, setText] = useState<string>("");
 
+  // Track which note is currently being deleted / saved so we only show
+  // the spinner on that one card (instead of on every card simultaneously).
+  // Reset back to null once the mutation settles.
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+  const [pendingSaveId, setPendingSaveId] = useState<string | null>(null);
+
   const persistAuthor = (value: string) => {
     setAuthor(value);
     try {
@@ -89,11 +95,14 @@ export function NotesTab({ projectId }: { projectId: string }) {
   };
 
   const handleDelete = async (id: string) => {
+    setPendingDeleteId(id);
     try {
       await deleteNote.mutateAsync(id);
       toast.success("Poznámka smazána");
     } catch {
       toast.error("Nepodařilo se smazat poznámku");
+    } finally {
+      setPendingDeleteId(null);
     }
   };
 
@@ -103,6 +112,7 @@ export function NotesTab({ projectId }: { projectId: string }) {
       toast.error("Text poznámky nemůže být prázdný");
       return false;
     }
+    setPendingSaveId(id);
     try {
       const note = notes?.find((n) => n.id === id);
       await updateNote.mutateAsync({ id, text: trimmed });
@@ -112,6 +122,8 @@ export function NotesTab({ projectId }: { projectId: string }) {
     } catch {
       toast.error("Nepodařilo se upravit poznámku");
       return false;
+    } finally {
+      setPendingSaveId(null);
     }
   };
 
@@ -197,9 +209,9 @@ export function NotesTab({ projectId }: { projectId: string }) {
               key={n.id}
               note={n}
               onDelete={() => handleDelete(n.id)}
-              isDeleting={deleteNote.isPending}
+              isDeleting={deleteNote.isPending && pendingDeleteId === n.id}
               onSave={handleUpdate}
-              isSaving={updateNote.isPending}
+              isSaving={updateNote.isPending && pendingSaveId === n.id}
             />
           ))}
         </div>
@@ -258,6 +270,13 @@ function NoteCard({
   };
 
   const commitEdit = async () => {
+    // Skip the API call entirely if the user didn't actually change the
+    // text — avoids redundant saves (e.g. when clicking "Uložit" without
+    // editing, or when onBlur fires after the same commit).
+    if (draft === note.text) {
+      setIsEditing(false);
+      return;
+    }
     const ok = await onSave(note.id, draft);
     if (ok) setIsEditing(false);
   };
@@ -364,6 +383,12 @@ function NoteCard({
                 variant="ghost"
                 size="icon"
                 className="h-7 w-7 text-success hover:bg-surface-container-high hover:text-success-strong"
+                // preventDefault on mouseDown keeps focus in the textarea
+                // so onBlur doesn't fire BEFORE the click handler —
+                // otherwise clicking "Save" would trigger commitEdit twice
+                // (once via blur, once via click) and "Cancel" would save
+                // instead of discarding.
+                onMouseDown={(e) => e.preventDefault()}
                 onClick={commitEdit}
                 aria-label="Uložit úpravy"
                 disabled={isSaving || !draft.trim()}
@@ -379,6 +404,7 @@ function NoteCard({
                 variant="ghost"
                 size="icon"
                 className="h-7 w-7 text-on-surface-variant hover:bg-surface-container-high hover:text-foreground"
+                onMouseDown={(e) => e.preventDefault()}
                 onClick={cancelEdit}
                 aria-label="Zrušit úpravy"
                 disabled={isSaving}

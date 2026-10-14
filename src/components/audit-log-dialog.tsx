@@ -10,6 +10,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuditLog, type AuditLog } from "@/lib/api";
+import { getFieldValue } from "@/lib/audit";
 import { formatDate } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import {
@@ -145,11 +146,12 @@ function AuditLogEntry({ log }: { log: AuditLog }) {
         {log.action === "update" && log.oldValue !== null && log.newValue !== null && (
           <div className="mt-1 flex items-center gap-2 font-mono text-[11px]">
             <span className="rounded bg-danger-soft/50 px-1.5 py-0.5 text-danger-strong line-through dark:bg-danger-soft/70 dark:text-danger-strong">
-              {log.oldValue || "(prázdné)"}
+              {/* B28: Translation happens here in the UI — DB stores raw values. */}
+              {getFieldValue(log.field ?? "", log.oldValue) || "(prázdné)"}
             </span>
             <span className="text-muted-foreground">→</span>
             <span className="rounded bg-success-soft/50 px-1.5 py-0.5 text-success-strong dark:bg-success-soft/70 dark:text-success-strong">
-              {log.newValue || "(prázdné)"}
+              {getFieldValue(log.field ?? "", log.newValue) || "(prázdné)"}
             </span>
           </div>
         )}

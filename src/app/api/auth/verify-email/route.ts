@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { verifyEmailToken, sendVerificationEmail } from "@/lib/email";
 import { db } from "@/lib/db";
 import { checkRateLimit, getClientIp, VERIFY_RESEND_RATE_LIMIT } from "@/lib/rate-limit";
+import { isValidTokenFormat } from "@/lib/auth-helpers";
 
 // =====================================================================
 // GET /api/auth/verify-email?token=...
@@ -19,11 +20,22 @@ export async function GET(request: Request) {
     return NextResponse.redirect(`${origin}/auth/verify-email?status=missing`);
   }
 
+  // Validate token format (64 hex chars) — prevents unnecessary DB queries
+  if (!isValidTokenFormat(token)) {
+    return NextResponse.redirect(`${origin}/auth/verify-email?status=invalid`);
+  }
+
   try {
     const result = await verifyEmailToken(token);
 
     if (!result.success) {
-      const status = result.reason === "expired" ? "expired" : "invalid";
+      // Map reason to URL status param
+      const statusMap: Record<string, string> = {
+        expired: "expired",
+        invalid: "invalid",
+        already: "already",
+      };
+      const status = statusMap[result.reason] ?? "invalid";
       return NextResponse.redirect(`${origin}/auth/verify-email?status=${status}`);
     }
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { useTheme } from "next-themes";
 import { signOut, useSession } from "next-auth/react";
@@ -120,6 +120,21 @@ export function TopBar() {
   const [search, setSearch] = useState("");
   const [addOpen, setAddOpen] = useState(false);
   const [globalSearchOpen, setGlobalSearchOpen] = useState(false);
+
+  // Listen for global shortcut events:
+  // - "stavba:new-project" → dispatched by Cmd/Ctrl+N (use-keyboard-shortcuts).
+  // - "stavba:open-search" → dispatched by Cmd/Ctrl+K (use-keyboard-shortcuts).
+  // Both handlers are no-ops if the target dialog is already open.
+  useEffect(() => {
+    const openNewProject = () => setAddOpen(true);
+    const openSearch = () => setGlobalSearchOpen(true);
+    window.addEventListener("stavba:new-project", openNewProject);
+    window.addEventListener("stavba:open-search", openSearch);
+    return () => {
+      window.removeEventListener("stavba:new-project", openNewProject);
+      window.removeEventListener("stavba:open-search", openSearch);
+    };
+  }, []);
 
   const selectedProject = projects?.find((p) => p.id === selectedProjectId);
 

@@ -41,13 +41,15 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(
     errorParam === "use-oauth"
       ? "Tento e-mail je zaregistrován přes Google. Použijte tlačítko „Přihlásit přes Google“."
-      : errorParam === "CredentialsSignin"
-        ? "Neplatný e-mail nebo heslo."
-        : errorParam === "Configuration"
-          ? "Chyba konfigurace přihlášení. Kontaktujte správce."
-          : errorParam === "OAuthSignin" || errorParam === "OAuthCallback"
-            ? "Přihlášení přes Google selhalo. Zkuste to znovu."
-            : null,
+      : errorParam === "register-first"
+        ? "Pro tento e-mail ještě nebyl vytvořen účet. Zaregistrujte se prosím."
+        : errorParam === "CredentialsSignin"
+          ? "Neplatný e-mail nebo heslo."
+          : errorParam === "Configuration"
+            ? "Chyba konfigurace přihlášení. Kontaktujte správce."
+            : errorParam === "OAuthSignin" || errorParam === "OAuthCallback"
+              ? "Přihlášení přes Google selhalo. Zkuste to znovu."
+              : null,
   );
 
   const [googleLoading, setGoogleLoading] = useState(false);
@@ -72,6 +74,8 @@ export default function LoginPage() {
       if (result?.error) {
         if (result.error === "use-oauth") {
           setError("Tento e-mail je zaregistrován přes Google. Použijte tlačítko „Přihlásit přes Google“.");
+        } else if (result.error === "register-first") {
+          setError("Pro tento e-mail ještě nebyl vytvořen účet. Zaregistrujte se prosím.");
         } else if (result.error.startsWith("rate_limited:")) {
           const retryAfter = result.error.split(":")[1];
           const minutes = Math.ceil(Number(retryAfter) / 60);

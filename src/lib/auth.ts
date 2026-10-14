@@ -73,7 +73,7 @@ export const authOptions: NextAuthOptions = {
           throw new Error(`rate_limited:${rl.retryAfter}`);
         }
 
-        // Find the user by e-mail
+        // Find the user by e-mail + check if they have a linked OAuth account
         const user = await db.user.findUnique({
           where: { email },
           select: {
@@ -84,6 +84,11 @@ export const authOptions: NextAuthOptions = {
             password: true,
             emailVerified: true,
             tokenVersion: true,
+            accounts: {
+              where: { provider: "google" },
+              select: { provider: true },
+              take: 1,
+            },
           },
         });
 
@@ -95,9 +100,15 @@ export const authOptions: NextAuthOptions = {
         // User must have a password set (either via registration or
         // account claiming). OAuth-only users can't log in via Credentials.
         if (!user.password) {
-          // This e-mail exists but was created via OAuth (Google) —
-          // tell the user to use that provider instead.
-          throw new Error("use-oauth");
+          // Distinguish between:
+          // 1. Google-only user (has Account linked) → "use Google"
+          // 2. Ghost user (no Account, no password) → "register first"
+          const hasGoogleAccount = user.accounts.length > 0;
+          if (hasGoogleAccount) {
+            throw new Error("use-oauth");
+          }
+          // Ghost user — hasn't registered yet
+          throw new Error("register-first");
         }
 
         // Verify password

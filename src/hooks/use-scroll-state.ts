@@ -31,20 +31,32 @@ export function useScrollState(threshold = 4): boolean {
     const container = findScrollContainer();
     if (!container) return;
 
-    const handleScroll = () => {
+    // Throttle scroll/resize via requestAnimationFrame so we don't
+    // call setState on every pixel of scroll (would cause hundreds of
+    // re-renders during a single scroll gesture).
+    let ticking = false;
+
+    const update = () => {
       setIsScrolled(container.scrollTop > threshold);
+      ticking = false;
     };
 
-    // Initial check
-    handleScroll();
+    const onScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(update);
+    };
 
-    container.addEventListener("scroll", handleScroll, { passive: true });
+    // Initial check (synchronous — no need for RAF)
+    update();
+
+    container.addEventListener("scroll", onScroll, { passive: true });
     // Also re-check on resize (layout might change scroll position)
-    window.addEventListener("resize", handleScroll);
+    window.addEventListener("resize", onScroll);
 
     return () => {
-      container.removeEventListener("scroll", handleScroll);
-      window.removeEventListener("resize", handleScroll);
+      container.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
     };
   }, [threshold]);
 

@@ -21,6 +21,7 @@ import {
   ArrowRight,
   CornerDownLeft,
 } from "lucide-react";
+import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { formatCzk, PHASE_COLORS, formatDate, paymentTypeLabel } from "@/lib/format";
 
 type SearchResult = {
@@ -93,14 +94,19 @@ function GlobalSearchInner({ onOpenChange }: { onOpenChange: (open: boolean) => 
   const setActiveTab = useAppStore((s) => s.setActiveTab);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // Debounce the query so we don't fire an API call on every keystroke.
+  // 250ms is short enough to feel instant but long enough to skip
+  // intermediate keys when the user types a few characters in a row.
+  const debouncedQuery = useDebouncedValue(query, 250);
+
   const { data, isLoading } = useQuery<SearchResult>({
-    queryKey: ["globalSearch", query],
+    queryKey: ["globalSearch", debouncedQuery],
     queryFn: async () => {
-      const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
+      const res = await fetch(`/api/search?q=${encodeURIComponent(debouncedQuery)}`);
       if (!res.ok) throw new Error("Search failed");
       return res.json();
     },
-    enabled: query.length >= 2,
+    enabled: debouncedQuery.length >= 2,
   });
 
   // Focus input on mount
@@ -177,7 +183,7 @@ function GlobalSearchInner({ onOpenChange }: { onOpenChange: (open: boolean) => 
 
         {/* Results */}
         <div className="max-h-[400px] overflow-y-auto scrollbar-thin">
-          {query.length < 2 ? (
+          {debouncedQuery.length < 2 ? (
             <div className="py-12 text-center text-sm text-muted-foreground">
               <Search className="mx-auto mb-2 h-8 w-8 opacity-30" />
               Začněte psát pro vyhledávání napříč aplikací
@@ -207,7 +213,7 @@ function GlobalSearchInner({ onOpenChange }: { onOpenChange: (open: boolean) => 
             </div>
           ) : !hasResults ? (
             <div className="py-12 text-center text-sm text-muted-foreground">
-              Žádné výsledky pro „{query}"
+              Žádné výsledky pro „{debouncedQuery}"
             </div>
           ) : (
             <div className="p-2">
@@ -222,6 +228,8 @@ function GlobalSearchInner({ onOpenChange }: { onOpenChange: (open: boolean) => 
                       <ResultItem
                         key={p.id}
                         selected={safeSelectedIndex === flatIdx}
+                        flatIdx={flatIdx}
+                        onHover={setSelectedIndex}
                         onClick={() => handleSelect(flatResults[flatIdx])}
                         icon={<FolderKanban className="h-4 w-4 text-primary" />}
                         title={p.name}
@@ -244,6 +252,8 @@ function GlobalSearchInner({ onOpenChange }: { onOpenChange: (open: boolean) => 
                       <ResultItem
                         key={item.id}
                         selected={safeSelectedIndex === flatIdx}
+                        flatIdx={flatIdx}
+                        onHover={setSelectedIndex}
                         onClick={() => handleSelect(flatResults[flatIdx])}
                         icon={<Package className="h-4 w-4 text-warning" />}
                         title={item.subcategory || item.category}
@@ -267,6 +277,8 @@ function GlobalSearchInner({ onOpenChange }: { onOpenChange: (open: boolean) => 
                       <ResultItem
                         key={contact.id}
                         selected={safeSelectedIndex === flatIdx}
+                        flatIdx={flatIdx}
+                        onHover={setSelectedIndex}
                         onClick={() => handleSelect(flatResults[flatIdx])}
                         icon={<Users className="h-4 w-4 text-time" />}
                         title={contact.name}
@@ -289,6 +301,8 @@ function GlobalSearchInner({ onOpenChange }: { onOpenChange: (open: boolean) => 
                       <ResultItem
                         key={payment.id}
                         selected={safeSelectedIndex === flatIdx}
+                        flatIdx={flatIdx}
+                        onHover={setSelectedIndex}
                         onClick={() => handleSelect(flatResults[flatIdx])}
                         icon={<Receipt className="h-4 w-4 text-danger" />}
                         title={payment.vendor || payment.description || formatCzk(payment.amount)}
@@ -315,6 +329,8 @@ function GlobalSearchInner({ onOpenChange }: { onOpenChange: (open: boolean) => 
                       <ResultItem
                         key={note.id}
                         selected={safeSelectedIndex === flatIdx}
+                        flatIdx={flatIdx}
+                        onHover={setSelectedIndex}
                         onClick={() => handleSelect(flatResults[flatIdx])}
                         icon={<FileText className="h-4 w-4 text-info" />}
                         title={snippet}
@@ -362,6 +378,8 @@ function ResultGroup({
 
 function ResultItem({
   selected,
+  flatIdx,
+  onHover,
   onClick,
   icon,
   title,
@@ -370,6 +388,8 @@ function ResultItem({
   phaseBadge,
 }: {
   selected: boolean;
+  flatIdx: number;
+  onHover: (idx: number) => void;
   onClick: () => void;
   icon: React.ReactNode;
   title: string;
@@ -380,9 +400,7 @@ function ResultItem({
   return (
     <button
       onClick={onClick}
-      onMouseEnter={() => {
-        // Update selected index on hover
-      }}
+      onMouseEnter={() => onHover(flatIdx)}
       className={cn(
         "flex w-full items-center gap-3 rounded-md px-2 py-2 text-left text-sm transition-colors",
         selected ? "bg-accent text-accent-foreground" : "hover:bg-muted/50",

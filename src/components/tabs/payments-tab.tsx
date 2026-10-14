@@ -675,12 +675,19 @@ interface PaymentDialogProps {
 
 // Wrapper component: handles Dialog open state and remounts inner form via `key`
 // whenever payment changes — ensures fresh state via useState initializers.
+//
+// B20 fix: key includes `${open}` so transitioning edit→create (or any
+// open→close→open cycle) forces a fresh mount — `useState(payment?.…)` then
+// re-initializes from the new `payment` (or `undefined` for create flow).
+// Previously, both Edit (with `payment=null` after Cancel) and Create had
+// the same key "new", so React could in some reconciliations preserve
+// stale state from the previous session.
 function PaymentDialog(props: PaymentDialogProps) {
-  const { open } = props;
+  const { open, payment } = props;
   if (!open) return null;
   return (
     <PaymentDialogInner
-      key={props.payment?.id ?? "new"}
+      key={`${payment?.id ?? "new"}-${open}`}
       {...props}
     />
   );

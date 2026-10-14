@@ -147,7 +147,11 @@ export async function POST(
         projectId: id,
         userId,
         entityType,
-        entityId: id,
+        // B27: An export/manual audit entry has no specific entity.
+        // Setting `entityId: id` (project id) was semantically wrong and
+        // could collide with real project audit entries. `null` is the
+        // correct value for an entity-less action.
+        entityId: null,
         entityLabel: entityLabel ?? null,
         action,
         field: null,

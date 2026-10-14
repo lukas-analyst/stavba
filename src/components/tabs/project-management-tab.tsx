@@ -70,6 +70,7 @@ import {
   useExportCsv,
 } from "@/lib/api";
 import { formatDate, STATUS_LABELS } from "@/lib/format";
+import { getFieldValue } from "@/lib/audit";
 import { cn } from "@/lib/utils";
 import { useAppStore, type TabId } from "@/lib/store";
 import { useAnalytics } from "@/hooks/use-analytics";
@@ -417,6 +418,33 @@ function ProjectInfoCard({
   const [status, setStatus] = useState(project.status);
   const [startDate, setStartDate] = useState(project.startDate ? project.startDate.substring(0, 10) : "");
   const [endDate, setEndDate] = useState(project.endDate ? project.endDate.substring(0, 10) : "");
+
+  // B26: Keep the local form state in sync with the React Query cache.
+  // `useState(project.name)` initializes once on mount and would
+  // otherwise stay stale whenever another component updates the project
+  // (or after our own save mutation invalidates the cache).
+  //
+  // We intentionally skip syncing while the user is actively editing so
+  // their in-progress input isn't clobbered.
+  //
+  // Implementation: React's "storing information from previous renders"
+  // pattern — calling setState during render (gated on a prop change)
+  // lets React immediately re-render before painting. This is the
+  // recommended alternative to `useEffect(() => setState(...), [deps])`
+  // which triggers a cascading render and is flagged by ESLint's
+  // `react-hooks/set-state-in-effect` rule.
+  // https://react.dev/reference/react/useState#storing-information-from-previous-renders
+  const projectSyncKey = `${project.name}\u0000${project.description ?? ""}\u0000${project.address ?? ""}\u0000${project.status}\u0000${project.startDate ?? ""}\u0000${project.endDate ?? ""}`;
+  const [lastSyncKey, setLastSyncKey] = useState(projectSyncKey);
+  if (!editing && projectSyncKey !== lastSyncKey) {
+    setLastSyncKey(projectSyncKey);
+    setName(project.name);
+    setDescription(project.description ?? "");
+    setAddress(project.address ?? "");
+    setStatus(project.status);
+    setStartDate(project.startDate ? project.startDate.substring(0, 10) : "");
+    setEndDate(project.endDate ? project.endDate.substring(0, 10) : "");
+  }
 
   const handleSave = async () => {
     try {
@@ -1070,18 +1098,19 @@ function describeChange(entry: AuditEntry): string {
   // Update — field-level change
   if (entry.action === "update" && entry.field) {
     const fieldLabel = FIELD_LABELS_UI[entry.field] ?? entry.field;
+    // B28: DB stores raw values; translate to human-readable here.
     if (entry.oldValue && entry.newValue) {
-      return `${fieldLabel}: ${entry.oldValue} → ${entry.newValue}`;
+      return `${fieldLabel}: ${getFieldValue(entry.field, entry.oldValue)} → ${getFieldValue(entry.field, entry.newValue)}`;
     }
     // userEmail field — show as "E-mail člena: xxx@..." (newValue only, no oldValue)
     if (entry.field === "userEmail" && entry.newValue) {
       return `${fieldLabel}: ${entry.newValue}`;
     }
     if (entry.newValue) {
-      return `${fieldLabel}: ${entry.newValue}`;
+      return `${fieldLabel}: ${getFieldValue(entry.field, entry.newValue)}`;
     }
     if (entry.oldValue) {
-      return `${fieldLabel}: odstraněno (${entry.oldValue})`;
+      return `${fieldLabel}: odstraněno (${getFieldValue(entry.field, entry.oldValue)})`;
     }
   }
 
@@ -1549,11 +1578,12 @@ function EnhancedAuditLog({ projectId }: { projectId: string }) {
                               {FIELD_LABELS_UI[entry.field] ?? entry.field}:
                             </span>
                             <span className="type-label text-danger/70 line-through">
-                              {entry.oldValue}
+                              {/* B28: DB stores raw values; translate via getFieldValue. */}
+                              {getFieldValue(entry.field, entry.oldValue)}
                             </span>
                             <ArrowRight className="h-3 w-3 text-on-surface-variant/40" />
                             <span className="type-label text-success/80">
-                              {entry.newValue}
+                              {getFieldValue(entry.field, entry.newValue)}
                             </span>
                           </div>
                         ) : (

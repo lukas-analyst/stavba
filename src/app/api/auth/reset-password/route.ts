@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
-import { verifyResetToken, clearResetToken } from "@/lib/email";
-import { hashPassword, validatePassword } from "@/lib/auth-helpers";
+import { verifyResetToken } from "@/lib/email";
+import {
+  hashPassword,
+  validatePassword,
+  isValidTokenFormat,
+} from "@/lib/auth-helpers";
 import { db } from "@/lib/db";
 import { checkRateLimit, getClientIp, RESET_SUBMIT_RATE_LIMIT } from "@/lib/rate-limit";
 
@@ -36,6 +40,14 @@ export async function POST(request: Request) {
       );
     }
 
+    // Validate token format (64 hex chars) — prevents unnecessary DB queries
+    if (!isValidTokenFormat(token)) {
+      return NextResponse.json(
+        { error: "Neplatný odkaz pro reset hesla." },
+        { status: 400 },
+      );
+    }
+
     const passwordError = validatePassword(password);
     if (passwordError) {
       return NextResponse.json({ error: passwordError }, { status: 400 });
@@ -51,20 +63,36 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: message }, { status: 400 });
     }
 
-    // Set the new password + increment tokenVersion to invalidate all
-    // existing JWT sessions (S10 — "Odhlásit všude" after password reset).
+    // Set the new password + clear reset token + increment tokenVersion
+    // to invalidate all existing JWT sessions (S10 — "Odhlásit všude").
+    //
+    // Use atomic conditional updateMany: only updates if the token still
+    // matches (prevents race condition if another request uses the same
+    // token concurrently). This combines password update + token clear
+    // + tokenVersion increment into a single atomic operation.
     const passwordHash = await hashPassword(password);
 
-    await db.user.update({
-      where: { id: tokenResult.userId },
+    const result = await db.user.updateMany({
+      where: {
+        id: tokenResult.userId,
+        passwordResetToken: token,
+        passwordResetExpiry: { gt: new Date() },
+      },
       data: {
         password: passwordHash,
+        passwordResetToken: null,
+        passwordResetExpiry: null,
         tokenVersion: { increment: 1 },
       },
     });
 
-    // Clear the reset token
-    await clearResetToken(tokenResult.userId);
+    if (result.count === 0) {
+      // Token was used by another request between our verify and update
+      return NextResponse.json(
+        { error: "Odkaz pro reset hesla byl již použit. Vyžádejte si nový." },
+        { status: 400 },
+      );
+    }
 
     return NextResponse.json({
       ok: true,

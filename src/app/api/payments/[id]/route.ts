@@ -90,16 +90,36 @@ export async function PATCH(
       updated as unknown as Record<string, unknown>,
     );
 
-    // Recompute the affected budget item actualCost
-    const budgetItemId = existing.budgetItemId;
-    const agg = await db.payment.aggregate({
-      where: { budgetItemId },
+    // Recompute the affected budget item actualCost.
+    // B24: If the payment was moved from one BudgetItem to another, both
+    // the new AND the original item need to have actualCost recalculated —
+    // otherwise the original item would retain the stale amount from the
+    // moved payment.
+    const newBudgetItemId = updated.budgetItemId;
+    const originalBudgetItemId = existing.budgetItemId;
+
+    const newAgg = await db.payment.aggregate({
+      where: { budgetItemId: newBudgetItemId },
       _sum: { amount: true },
     });
     await db.budgetItem.update({
-      where: { id: budgetItemId },
-      data: { actualCost: agg._sum.amount ?? 0 },
+      where: { id: newBudgetItemId },
+      data: { actualCost: newAgg._sum.amount ?? 0 },
     });
+
+    if (
+      originalBudgetItemId &&
+      originalBudgetItemId !== newBudgetItemId
+    ) {
+      const originalAgg = await db.payment.aggregate({
+        where: { budgetItemId: originalBudgetItemId },
+        _sum: { amount: true },
+      });
+      await db.budgetItem.update({
+        where: { id: originalBudgetItemId },
+        data: { actualCost: originalAgg._sum.amount ?? 0 },
+      });
+    }
 
     return NextResponse.json(updated);
   } catch (error) {

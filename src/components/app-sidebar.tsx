@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 // ===== AppSidebar — MD3 NavigationRail / NavigationDrawer =====
 //
@@ -51,16 +52,17 @@ export function AppSidebar() {
   const importState = useImportState();
   const exportCsv = useExportCsv(selectedProjectId ?? "");
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const isMobile = useIsMobile();
 
   const handleNavClick = useCallback(
     (tabId: typeof activeTab) => {
       setActiveTab(tabId);
       // Close sidebar on mobile after navigation (MD3 drawer pattern)
-      if (typeof window !== "undefined" && window.innerWidth < 768) {
+      if (isMobile) {
         setSidebarOpen(false);
       }
     },
-    [setActiveTab, setSidebarOpen],
+    [setActiveTab, setSidebarOpen, isMobile],
   );
 
   const handleExport = async () => {
@@ -241,6 +243,14 @@ function NavButton({
   return (
     <button
       onClick={onClick}
+      onMouseEnter={() => {
+        // Eagerly prefetch the tab's data on hover so the switch
+        // feels instant when the user finally clicks. The actual
+        // prefetch logic lives in <ProjectDetail />.
+        window.dispatchEvent(
+          new CustomEvent("stavba:prefetch-tab", { detail: tab.id }),
+        );
+      }}
       aria-current={isActive ? "page" : undefined}
       className={cn(
         "group relative flex w-full items-center gap-3 rounded-full px-4 py-2.5 text-sm font-medium transition-all duration-150",

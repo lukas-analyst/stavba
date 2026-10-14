@@ -70,3 +70,39 @@ export function validateEmail(email: string): string | null {
 export function normalizeEmail(email: string): string {
   return email.trim().toLowerCase();
 }
+
+/**
+ * Validate a display name.
+ * - Max 120 characters (matches DB constraint in /api/users/[id] PATCH)
+ * - No HTML tags (basic XSS prevention — React escapes by default,
+ *   but defense-in-depth)
+ * - No control characters
+ *
+ * Returns null if valid, or a Czech error message if invalid.
+ */
+export function validateName(name: string): string | null {
+  const trimmed = name.trim();
+  if (trimmed.length === 0) return null; // name is optional
+  if (trimmed.length > 120) {
+    return "Jméno je příliš dlouhé (max 120 znaků).";
+  }
+  // Reject HTML tags (basic check)
+  if (/<[^>]+>/.test(trimmed)) {
+    return "Jméno nesmí obsahovat HTML tagy.";
+  }
+  // Reject control characters
+  if (/[\x00-\x1f\x7f]/.test(trimmed)) {
+    return "Jméno obsahuje neplatné znaky.";
+  }
+  return null;
+}
+
+/**
+ * Validate a token format (64 hex characters).
+ * Used for emailVerifyToken and passwordResetToken.
+ *
+ * Returns true if valid, false otherwise.
+ */
+export function isValidTokenFormat(token: string): boolean {
+  return /^[a-f0-9]{64}$/.test(token);
+}

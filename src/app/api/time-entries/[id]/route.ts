@@ -64,16 +64,36 @@ export async function PATCH(
       updated as unknown as Record<string, unknown>,
     );
 
-    // Recompute affected budget item actualHours
-    const budgetItemId = existing.budgetItemId;
-    const agg = await db.timeEntry.aggregate({
-      where: { budgetItemId },
+    // Recompute affected budget item actualHours.
+    // B25: If the time entry was moved from one BudgetItem to another,
+    // both the new AND the original item need to have actualHours
+    // recalculated — otherwise the original item would retain the stale
+    // hours from the moved entry.
+    const newBudgetItemId = updated.budgetItemId;
+    const originalBudgetItemId = existing.budgetItemId;
+
+    const newAgg = await db.timeEntry.aggregate({
+      where: { budgetItemId: newBudgetItemId },
       _sum: { hours: true },
     });
     await db.budgetItem.update({
-      where: { id: budgetItemId },
-      data: { actualHours: agg._sum.hours ?? 0 },
+      where: { id: newBudgetItemId },
+      data: { actualHours: newAgg._sum.hours ?? 0 },
     });
+
+    if (
+      originalBudgetItemId &&
+      originalBudgetItemId !== newBudgetItemId
+    ) {
+      const originalAgg = await db.timeEntry.aggregate({
+        where: { budgetItemId: originalBudgetItemId },
+        _sum: { hours: true },
+      });
+      await db.budgetItem.update({
+        where: { id: originalBudgetItemId },
+        data: { actualHours: originalAgg._sum.hours ?? 0 },
+      });
+    }
 
     return NextResponse.json(updated);
   } catch (error) {

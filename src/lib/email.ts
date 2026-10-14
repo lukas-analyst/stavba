@@ -104,20 +104,49 @@ const VERIFICATION_TOKEN_EXPIRY_HOURS = 24;
 /**
  * Generate a verification token, store it on the user, and send the
  * verification e-mail.
+ *
+ * If the user already has a valid (non-expired) verification token, we
+ * KEEP the old token and send it again (instead of generating a new one).
+ * This prevents the UX issue where the user opens the first e-mail, then
+ * requests a resend, and the first e-mail's link becomes invalid.
+ *
+ * Only generate a new token if:
+ *   - No token exists yet, OR
+ *   - The existing token has expired (clear it + generate new)
  */
 export async function sendVerificationEmail(userEmail: string, userName: string | null): Promise<void> {
-  const { generateToken } = await import("@/lib/auth-helpers");
-  const token = generateToken();
-  const expiry = new Date(Date.now() + VERIFICATION_TOKEN_EXPIRY_HOURS * 60 * 60 * 1000);
-
-  // Store token + expiry on the user record
-  await db.user.update({
+  // Check if user already has a valid token
+  const existingUser = await db.user.findUnique({
     where: { email: userEmail },
-    data: {
-      emailVerifyToken: token,
-      emailVerifyExpiry: expiry,
-    },
+    select: { emailVerifyToken: true, emailVerifyExpiry: true },
   });
+
+  let token: string;
+  const now = new Date();
+  const expiry = new Date(now.getTime() + VERIFICATION_TOKEN_EXPIRY_HOURS * 60 * 60 * 1000);
+
+  if (
+    existingUser?.emailVerifyToken &&
+    existingUser.emailVerifyExpiry &&
+    existingUser.emailVerifyExpiry > now
+  ) {
+    // Existing token is still valid — reuse it (don't invalidate the
+    // first e-mail the user might have already opened)
+    token = existingUser.emailVerifyToken;
+  } else {
+    // No token, or expired — generate a new one
+    const { generateToken } = await import("@/lib/auth-helpers");
+    token = generateToken();
+
+    // Store token + expiry on the user record
+    await db.user.update({
+      where: { email: userEmail },
+      data: {
+        emailVerifyToken: token,
+        emailVerifyExpiry: expiry,
+      },
+    });
+  }
 
   const verifyUrl = `${process.env.NEXTAUTH_URL}/auth/verify-email?token=${token}`;
 
@@ -197,31 +226,64 @@ export async function sendPasswordResetEmail(userEmail: string): Promise<boolean
 // =====================================================================
 
 /**
- * Verify a verification token. Returns the user if valid + not expired.
- * Clears the token on success.
+ * Verify a verification token atomically.
+ *
+ * Uses `updateMany` with a conditional WHERE clause to prevent TOCTOU
+ * race conditions: only updates if the token matches AND is not expired.
+ * If `count === 0`, the token was either invalid, already used, or expired.
+ *
+ * Also distinguishes between "invalid/expired" and "already verified":
+ * if the user already has `emailVerified` set, returns `already` so the
+ * UI can show "Již ověřeno" instead of "Neplatný odkaz".
  */
-export async function verifyEmailToken(token: string): Promise<{ success: true; email: string } | { success: false; reason: "invalid" | "expired" }> {
-  const user = await db.user.findFirst({
+export async function verifyEmailToken(token: string): Promise<
+  | { success: true; email: string }
+  | { success: false; reason: "invalid" | "expired" | "already" }
+> {
+  // First, check if this token belongs to an already-verified user
+  // (e.g., user clicked the link twice). This is a separate query but
+  // avoids the "Neplatný odkaz" UX when the verification already succeeded.
+  const userWithToken = await db.user.findUnique({
     where: { emailVerifyToken: token },
-    select: { id: true, email: true, emailVerifyExpiry: true },
+    select: { id: true, email: true, emailVerifyExpiry: true, emailVerified: true },
   });
 
-  if (!user) {
+  if (!userWithToken) {
+    // Token not found — could be invalid OR already used (token cleared
+    // after successful verification). Check if there's a user with this
+    // e-mail who is already verified. We can't know the e-mail from the
+    // token alone, so just return "invalid".
     return { success: false, reason: "invalid" };
   }
 
-  if (!user.emailVerifyExpiry || user.emailVerifyExpiry < new Date()) {
+  // Token exists — check if user is already verified (double-click case)
+  if (userWithToken.emailVerified) {
+    // Already verified — clear the token and return "already"
+    await db.user.update({
+      where: { id: userWithToken.id },
+      data: { emailVerifyToken: null, emailVerifyExpiry: null },
+    });
+    return { success: false, reason: "already" };
+  }
+
+  // Check expiry
+  if (!userWithToken.emailVerifyExpiry || userWithToken.emailVerifyExpiry < new Date()) {
     // Token expired — clear it
     await db.user.update({
-      where: { id: user.id },
+      where: { id: userWithToken.id },
       data: { emailVerifyToken: null, emailVerifyExpiry: null },
     });
     return { success: false, reason: "expired" };
   }
 
-  // Valid — mark e-mail as verified + clear token
-  await db.user.update({
-    where: { id: user.id },
+  // Atomic conditional update: only verify if token still matches
+  // (prevents race condition if another request verifies concurrently)
+  const result = await db.user.updateMany({
+    where: {
+      id: userWithToken.id,
+      emailVerifyToken: token,
+      emailVerifyExpiry: { gt: new Date() },
+    },
     data: {
       emailVerified: new Date(),
       emailVerifyToken: null,
@@ -229,16 +291,27 @@ export async function verifyEmailToken(token: string): Promise<{ success: true; 
     },
   });
 
-  return { success: true, email: user.email };
+  if (result.count === 0) {
+    // Another request verified this token between our check and update
+    return { success: false, reason: "already" };
+  }
+
+  return { success: true, email: userWithToken.email };
 }
 
 /**
- * Verify a password-reset token. Returns the user if valid + not expired.
- * Does NOT clear the token — that happens only when the password is
- * actually changed (in the reset-password endpoint).
+ * Verify a password-reset token.
+ *
+ * Does NOT clear the token (that happens atomically in the reset-password
+ * endpoint when the password is actually changed). This function is only
+ * for checking validity (e.g., for the reset-password page to show the form
+ * vs. an error).
  */
-export async function verifyResetToken(token: string): Promise<{ success: true; userId: string; email: string } | { success: false; reason: "invalid" | "expired" }> {
-  const user = await db.user.findFirst({
+export async function verifyResetToken(token: string): Promise<
+  | { success: true; userId: string; email: string }
+  | { success: false; reason: "invalid" | "expired" }
+> {
+  const user = await db.user.findUnique({
     where: { passwordResetToken: token },
     select: { id: true, email: true, passwordResetExpiry: true },
   });

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -19,10 +19,46 @@ export default function ResetPasswordPage() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  // Token invalidity can come from two sources:
-  //   1. No token in the URL (initial load)
-  //   2. Server returns "expired" on form submit
-  const [tokenInvalid, setTokenInvalid] = useState(!token);
+  // Token validity states:
+  //   "checking" — validating token on mount
+  //   "valid" — token is valid, show form
+  //   "invalid" — token is invalid or expired
+  //   "missing" — no token in URL
+  type TokenState = "checking" | "valid" | "invalid" | "missing";
+  const [tokenState, setTokenState] = useState<TokenState>(
+    token ? "checking" : "missing",
+  );
+
+  // Validate token on mount — call a GET endpoint to check token validity
+  // before showing the form. This prevents the user from filling out the
+  // form only to discover the token is invalid on submit.
+  useEffect(() => {
+    if (!token) return; // tokenState already initialized to "missing"
+
+    let cancelled = false;
+
+    const validateToken = async () => {
+      try {
+        const res = await fetch(
+          `/api/auth/verify-token?type=reset&token=${encodeURIComponent(token)}`,
+        );
+        if (cancelled) return;
+        if (res.ok) {
+          const data = await res.json();
+          setTokenState(data.valid ? "valid" : "invalid");
+        } else {
+          setTokenState("invalid");
+        }
+      } catch {
+        if (!cancelled) setTokenState("invalid");
+      }
+    };
+
+    validateToken();
+    return () => {
+      cancelled = true;
+    };
+  }, [token]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,9 +89,9 @@ export default function ResetPasswordPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        if (data.error?.includes("vypršel")) {
+        if (data.error?.includes("vypršel") || data.error?.includes("použit")) {
           setError(data.error);
-          setTokenInvalid(true);
+          setTokenState("invalid");
         } else {
           setError(data.error || "Reset hesla selhal.");
         }
@@ -73,8 +109,31 @@ export default function ResetPasswordPage() {
     }
   };
 
+  // === Checking token state ===
+  if (tokenState === "checking") {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-slate-50 to-slate-100 px-4 py-12 dark:from-slate-950 dark:to-slate-900">
+        <div className="w-full max-w-sm">
+          <div className="mb-8 text-center">
+            <Link href="/" className="inline-flex items-center gap-2">
+              <span className="text-2xl font-bold tracking-tight">
+                Stavba<span className="text-green-600">.</span>
+              </span>
+            </Link>
+          </div>
+          <div className="rounded-2xl border bg-card p-6 shadow-sm sm:p-8">
+            <div className="flex flex-col items-center text-center">
+              <Loader2 className="mb-4 h-8 w-8 animate-spin text-muted-foreground" />
+              <p className="text-sm text-muted-foreground">Ověřuji odkaz…</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // === Invalid / missing token state ===
-  if (tokenInvalid) {
+  if (tokenState === "invalid" || tokenState === "missing") {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-slate-50 to-slate-100 px-4 py-12 dark:from-slate-950 dark:to-slate-900">
         <div className="w-full max-w-sm">

@@ -50,12 +50,14 @@ model User {
   /// set here — this is the "account claiming" flow.
   password      String?
   /// Random token sent in the verification email. Null after verification
-  /// or when no verification is pending.
-  emailVerifyToken     String?
+  /// or when no verification is pending. Unique to enable atomic lookups
+  /// (verifyEmailToken uses updateMany with conditional where clause).
+  emailVerifyToken     String?  @unique
   /// Expiry of the email verification token (typically 24h).
   emailVerifyExpiry    DateTime?
   /// Random token sent in the password-reset email. Null when not pending.
-  passwordResetToken   String?
+  /// Unique to enable atomic lookups.
+  passwordResetToken   String?  @unique
   /// Expiry of the password-reset token (typically 1h).
   passwordResetExpiry  DateTime?
   /// Token version for JWT invalidation. Incremented on password reset,
@@ -422,8 +424,10 @@ model AuditLog {
   /// "BudgetItem", "Payment", "TimeEntry", "Contact", "Project",
   /// "Note", "ProjectMember", "ContactPerson", "BudgetItemLink"
   entityType  String
-  /// ID of the entity that was changed (not a FK — entity may have been deleted)
-  entityId    String
+  /// ID of the entity that was changed (not a FK — entity may have been
+  /// deleted). Nullable for entity-less audit entries such as project-level
+  /// exports (B27) — there is no specific entity being mutated.
+  entityId    String?
   /// Human-readable label for the entity (e.g. "Architektonický koncept")
   /// — stored at creation time so it's available even if the entity is later deleted.
   entityLabel String?

@@ -4,6 +4,7 @@ import {
   hashPassword,
   validatePassword,
   validateEmail,
+  validateName,
   normalizeEmail,
 } from "@/lib/auth-helpers";
 import { sendVerificationEmail } from "@/lib/email";
@@ -60,6 +61,14 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: emailError }, { status: 400 });
     }
 
+    // Validate name if provided (optional field)
+    if (name !== undefined && name !== null && name.trim()) {
+      const nameError = validateName(name);
+      if (nameError) {
+        return NextResponse.json({ error: nameError }, { status: 400 });
+      }
+    }
+
     const passwordError = validatePassword(password);
     if (passwordError) {
       return NextResponse.json({ error: passwordError }, { status: 400 });
@@ -98,17 +107,61 @@ export async function POST(request: Request) {
     // --- Hash the password ---
     const passwordHash = await hashPassword(password);
 
-    if (existing) {
-      // Scenario 2: account claiming
-      // SECURITY (S7): Only allow claiming if the existing user has NO
-      // linked OAuth account. If they have a Google Account, they are a
-      // real Google user — not a ghost user — and must NOT be claimable
-      // via password registration. This prevents account takeover.
-      const hasOAuthAccount = existing.accounts.length > 0;
-      if (hasOAuthAccount) {
-        // This e-mail is already registered via Google — reject
-        // registration. Don't reveal which provider — same message as
-        // "already exists" to avoid enumeration.
+    try {
+      if (existing) {
+        // Scenario 2: account claiming
+        // SECURITY (S7): Only allow claiming if the existing user has NO
+        // linked OAuth account. If they have a Google Account, they are a
+        // real Google user — not a ghost user — and must NOT be claimable
+        // via password registration. This prevents account takeover.
+        const hasOAuthAccount = existing.accounts.length > 0;
+        if (hasOAuthAccount) {
+          return NextResponse.json(
+            {
+              error: "Účet s tímto e-mailem již existuje. Přihlaste se nebo si resetujte heslo.",
+            },
+            { status: 409 },
+          );
+        }
+
+        // Safe to claim — this is a genuine ghost user.
+        // Use updateMany with conditional where clause to prevent race
+        // condition: only update if password is still null (another
+        // concurrent request might have claimed it already).
+        const result = await db.user.updateMany({
+          where: { id: existing.id, password: null },
+          data: {
+            password: passwordHash,
+            tokenVersion: { increment: 1 },
+            ...(existing.name ? {} : { name: name?.trim() || null }),
+          },
+        });
+
+        if (result.count === 0) {
+          // Another request claimed this account between our check and
+          // update — treat as already registered.
+          return NextResponse.json(
+            {
+              error: "Účet s tímto e-mailem již existuje. Přihlaste se nebo si resetujte heslo.",
+            },
+            { status: 409 },
+          );
+        }
+      } else {
+        // Scenario 1: new user — use create with catch for P2002
+        // (race condition: another request created the same e-mail)
+        await db.user.create({
+          data: {
+            email: normalizedEmail,
+            name: name?.trim() || null,
+            password: passwordHash,
+          },
+        });
+      }
+    } catch (error: unknown) {
+      // Prisma P2002 = unique constraint violation (concurrent registration)
+      const code = (error as { code?: string })?.code;
+      if (code === "P2002") {
         return NextResponse.json(
           {
             error: "Účet s tímto e-mailem již existuje. Přihlaste se nebo si resetujte heslo.",
@@ -116,28 +169,7 @@ export async function POST(request: Request) {
           { status: 409 },
         );
       }
-
-      // Safe to claim — this is a genuine ghost user (created by the app
-      // before auth, no OAuth link). Set their password + increment
-      // tokenVersion to invalidate any stale sessions.
-      await db.user.update({
-        where: { id: existing.id },
-        data: {
-          password: passwordHash,
-          tokenVersion: { increment: 1 },
-          // Only update name if the existing user doesn't have one
-          ...(existing.name ? {} : { name: name?.trim() || null }),
-        },
-      });
-    } else {
-      // Scenario 1: new user
-      await db.user.create({
-        data: {
-          email: normalizedEmail,
-          name: name?.trim() || null,
-          password: passwordHash,
-        },
-      });
+      throw error; // re-throw to be caught by outer catch
     }
 
     // --- Send verification e-mail (async, non-blocking) ---

@@ -262,9 +262,15 @@ export async function logChanges(
           entityLabel: label,
           action: "update",
           field: key,
-          // Store HUMAN-READABLE values (translated)
-          oldValue: translateValue(key, oldVal) || null,
-          newValue: translateValue(key, newVal) || null,
+          // B28: Store RAW values (not translated). The comparison above
+          // (oldStr !== newStr) is also on raw values — using raw values
+          // for storage keeps the two consistent. Translation to a
+          // human-readable Czech string happens in the UI layer
+          // (audit-log-dialog.tsx via `translateValue`) so the DB keeps
+          // lossless originals and the UI can be updated without
+          // re-migrating old audit rows.
+          oldValue: oldStr || null,
+          newValue: newStr || null,
         });
       }
     }

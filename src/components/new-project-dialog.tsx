@@ -154,35 +154,94 @@ export function NewProjectDialog({ open, onOpenChange }: Props) {
       }
       const newProject = await res.json();
 
-      // Copy budget items from source project
+      // Copy budget items from source project. We need to preserve the
+      // parent/child hierarchy (parentId), so we:
+      //   1. Fetch all source items.
+      //   2. Create top-level items first (parentId === null), tracking
+      //      old → new id mapping as we go.
+      //   3. Create children with parentId remapped using the map.
+      // We use Promise.allSettled (instead of Promise.all) so that a
+      // single failed creation does not reject the whole batch and
+      // silently swallow the rest. We then report how many items were
+      // copied vs. how many failed.
       const budgetRes = await fetch(`/api/projects/${copyFromId}/budget`);
+      let copiedCount = 0;
+      let failedCount = 0;
+
       if (budgetRes.ok) {
-        const items = await budgetRes.json();
-        // Send all items in a single batch (via Promise.all for parallel creation)
-        await Promise.all(
-          items.map((item: Record<string, unknown>) =>
+        const items: Array<Record<string, unknown>> = await budgetRes.json();
+        const idMap = new Map<string, string>();
+
+        const buildBody = (item: Record<string, unknown>, parentId: string | null) => ({
+          category: item.category,
+          subcategory: item.subcategory,
+          element: item.element,
+          phase: item.phase,
+          required: item.required,
+          completed: false,
+          rejected: false,
+          note: item.note,
+          planCost: item.planCost,
+          flexibilityPercent: item.flexibilityPercent,
+          planDays: item.planDays,
+          parentId,
+        });
+
+        // Phase 1 — top-level items (parentId is null/undefined).
+        const topLevel = items.filter((i) => !i.parentId);
+        const topLevelResults = await Promise.allSettled(
+          topLevel.map((item) =>
             fetch(`/api/projects/${newProject.id}/budget`, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                category: item.category,
-                subcategory: item.subcategory,
-                element: item.element,
-                phase: item.phase,
-                required: item.required,
-                completed: false,
-                rejected: false,
-                note: item.note,
-                planCost: item.planCost,
-                flexibilityPercent: item.flexibilityPercent,
-                planDays: item.planDays,
-              }),
+              body: JSON.stringify(buildBody(item, null)),
+            }).then(async (r) => {
+              if (!r.ok) throw new Error(`HTTP ${r.status}`);
+              const created = await r.json();
+              idMap.set(item.id as string, created.id);
+              return created;
             }),
           ),
         );
+
+        // Phase 2 — child items, with parentId remapped old → new.
+        const children = items.filter((i) => !!i.parentId);
+        const childResults = await Promise.allSettled(
+          children.map((item) => {
+            const newParentId = idMap.get(item.parentId as string) ?? null;
+            return fetch(`/api/projects/${newProject.id}/budget`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(buildBody(item, newParentId)),
+            }).then((r) => {
+              if (!r.ok) throw new Error(`HTTP ${r.status}`);
+              return r.json();
+            });
+          }),
+        );
+
+        const allResults = [...topLevelResults, ...childResults];
+        for (const r of allResults) {
+          if (r.status === "fulfilled") copiedCount++;
+          else failedCount++;
+        }
       }
 
-      toast.success(`Projekt vytvořen (zkopírováno z "${source.name}")`);
+      // Report outcome — show a partial-failure toast if some items
+      // couldn't be copied, otherwise a clean success toast.
+      if (failedCount > 0 && copiedCount > 0) {
+        toast.warning(
+          `Projekt vytvořen z "${source.name}" — zkopírováno ${copiedCount} položek, ${failedCount} se nepodařilo zkopírovat.`,
+        );
+      } else if (failedCount > 0 && copiedCount === 0) {
+        toast.error(
+          `Projekt vytvořen, ale nepodařilo se zkopírovat žádné položky rozpočtu (${failedCount} selhání).`,
+        );
+      } else {
+        toast.success(
+          `Projekt vytvořen (zkopírováno ${copiedCount} položek z "${source.name}")`,
+        );
+      }
       qc.invalidateQueries({ queryKey: ["projects"] });
       reset();
       handleClose(false);
