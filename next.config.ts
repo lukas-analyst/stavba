@@ -10,8 +10,13 @@ const nextConfig: NextConfig = {
   },
   // Disable strict mode in production for better performance
   reactStrictMode: false,
-  // Allow dev server to be reached from preview-chat origins
-  allowedDevOrigins: ["preview-chat-*.space-z.ai"],
+  // Allow dev server to be reached from preview-chat origins + external IPs
+  // (the Preview Panel accesses the app through the external IP, not localhost)
+  allowedDevOrigins: [
+    "preview-chat-*.space-z.ai",
+    "21.0.19.29",
+    "21.0.12.150",
+  ],
   // Enable experimental optimizations
   experimental: {
     // Optimize package imports — tree-shakes barrel exports so only

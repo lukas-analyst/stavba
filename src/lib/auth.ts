@@ -159,6 +159,14 @@ export const authOptions: NextAuthOptions = {
     verifyRequest: "/auth/verify-pending",
   },
 
+  // trustHost: Required in NextAuth v4.24+ when the app is accessed
+  // from a host that doesn't match NEXTAUTH_URL. In our case, the
+  // Preview Panel accesses the app through a different hostname/IP
+  // than localhost, so without this, NextAuth throws a Configuration
+  // error and redirects to /api/auth/error?error=Configuration.
+  // This is safe because we set NEXTAUTH_SECRET (JWTs are still signed).
+  trustHost: true,
+
   // Secret used to sign JWTs — must be set in .env
   secret: process.env.NEXTAUTH_SECRET,
 };

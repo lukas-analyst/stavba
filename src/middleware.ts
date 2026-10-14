@@ -29,14 +29,14 @@ export default withAuth(
     const isAuthPage = pathname.startsWith("/auth");
     const isAuthApi = pathname.startsWith("/api/auth");
 
-    // Public auth APIs and pages — let them through
+    // Public auth APIs — let them through (NextAuth handles these)
     if (isAuthApi) {
       return NextResponse.next();
     }
 
-    // If on an auth page (login, register, etc.) and already logged in + verified
-    // → redirect to home
+    // Auth pages (login, register, etc.)
     if (isAuthPage) {
+      // If already logged in + verified → redirect to home
       if (token && token.emailVerified) {
         return NextResponse.redirect(new URL("/", req.url));
       }
@@ -44,8 +44,8 @@ export default withAuth(
       return NextResponse.next();
     }
 
-    // For all other pages — the withAuth `authorized` callback already
-    // handles the redirect to /auth/login if not authenticated.
+    // For all other pages — the `authorized` callback already handles
+    // the redirect to /auth/login if not authenticated.
     // Here we add the e-mail verification check.
     if (token && !token.emailVerified) {
       // Allow access to the verify-pending page itself
@@ -78,6 +78,12 @@ export default withAuth(
         return !!token;
       },
     },
+    // Tell withAuth to redirect directly to /auth/login (not the
+    // default /api/auth/signin). This avoids an extra redirect hop
+    // that was causing a redirect loop in some browser/cookie states.
+    pages: {
+      signIn: "/auth/login",
+    },
   },
 );
 
@@ -85,8 +91,6 @@ export const config = {
   // Match all paths except:
   //   - _next/static, _next/image (Next.js internals)
   //   - favicon.ico and image files
-  //   - /api/auth/* (handled by NextAuth directly — but our matcher
-  //     still includes them so the authorized callback can short-circuit)
   matcher: [
     "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
   ],
