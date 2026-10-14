@@ -20,16 +20,17 @@ import {
   AlertTriangle,
   CalendarClock,
   Package,
-  ListChecks,
   Receipt,
   Timer,
-  ArrowRight,
   CheckCircle2,
   Activity,
   Target,
   Filter,
   X,
-  Sparkles,
+  Users2,
+  CalendarDays,
+  ListChecks,
+  Coins,
 } from "lucide-react";
 import {
   formatCzk,
@@ -43,11 +44,6 @@ import {
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/lib/store";
 import {
-  PhaseChart,
-  CategoryChart,
-  SpendingTrendChart,
-} from "@/components/charts/lazy-charts";
-import {
   Bar,
   BarChart,
   CartesianGrid,
@@ -59,18 +55,40 @@ import {
   Cell,
   Pie,
   PieChart,
+  Area,
+  AreaChart,
+  ComposedChart,
+  Line,
 } from "recharts";
 
 // =====================================================================
-// DashboardTestTab — enhanced dashboard with:
-//   - Hero KPI section (large prominent cards)
-//   - Interactive cross-filtering (click phase/category → filter all views)
-//   - Enhanced charts (plan vs actual bar, category pie, spending trend)
-//   - Phase progress table with interactive rows
-//   - Recent activity feed
-//   - Alerts with severity-based styling
-// All MD3-compliant (semantic tokens, type-* utility classes, surface layers).
+// DashboardTestTab — enhanced dashboard v2 with:
+//   - Hero KPI section with dynamic colors (green=done, red=over, etc.)
+//   - Cross-filtering that actually works across all charts/tables
+//   - "Plán" section: timeline items sorted by start date (active/next week/
+//     next month/next 3 months/later/unscheduled) + second list by end date
+//   - "Poslední aktivita" split into Payments + Time entries
+//   - Cashflow projection section
+//   - "Práce dle kontaktu" section
+//   - Dynamic chart colors (red when over budget, green when all done)
+//   - Fixed spending trend chart
+// All MD3-compliant.
 // =====================================================================
+
+type TimelineItem = {
+  id: string;
+  category: string;
+  subcategory: string | null;
+  phase: string;
+  dateFrom: string | null;
+  dateTo: string | null;
+  planCost: number | null;
+  actualCost: number;
+  planDays: number | null;
+  required: boolean;
+  completed: boolean;
+  rejected: boolean;
+};
 
 export function DashboardTestTab({ projectId }: { projectId: string }) {
   const { data, isLoading } = useDashboard(projectId);
@@ -79,9 +97,9 @@ export function DashboardTestTab({ projectId }: { projectId: string }) {
   const setBudgetFilter = useAppStore((s) => s.setBudgetFilter);
 
   // === Cross-filtering state ===
-  // When user clicks a phase or category, all charts/tables filter to it.
   const [selectedPhase, setSelectedPhase] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [selectedContact, setSelectedContact] = useState<string | null>(null);
 
   const goToBudget = (filter: Parameters<typeof setBudgetFilter>[0]) => {
     setBudgetFilter(filter);
@@ -90,18 +108,97 @@ export function DashboardTestTab({ projectId }: { projectId: string }) {
 
   const togglePhase = (phase: string) => {
     setSelectedPhase((prev) => (prev === phase ? null : phase));
-    setSelectedCategory(null);
+    // Don't clear category — let user combine filters
   };
 
   const toggleCategory = (category: string) => {
     setSelectedCategory((prev) => (prev === category ? null : category));
-    setSelectedPhase(null);
+  };
+
+  const toggleContact = (contactId: string) => {
+    setSelectedContact((prev) => (prev === contactId ? null : contactId));
   };
 
   const clearFilters = () => {
     setSelectedPhase(null);
     setSelectedCategory(null);
+    setSelectedContact(null);
   };
+
+  // === "Plán" section — compute buckets before early return ===
+  const timeline = data?.timeline ?? [];
+  const planItems = useMemo(() => {
+    const now = new Date();
+    const nextWeek = new Date(now);
+    nextWeek.setDate(now.getDate() + 7);
+    const nextMonth = new Date(now);
+    nextMonth.setMonth(now.getMonth() + 1);
+    const next3Months = new Date(now);
+    next3Months.setMonth(now.getMonth() + 3);
+
+    const active = timeline.filter((t) => !t.rejected);
+
+    const buckets = {
+      activeNow: [] as TimelineItem[],
+      nextWeek: [] as TimelineItem[],
+      nextMonth: [] as TimelineItem[],
+      next3Months: [] as TimelineItem[],
+      later: [] as TimelineItem[],
+      unscheduled: [] as TimelineItem[],
+    };
+
+    for (const item of active) {
+      if (!item.dateFrom) {
+        buckets.unscheduled.push(item);
+        continue;
+      }
+      if (item.completed) continue;
+      const start = new Date(item.dateFrom);
+      if (start <= now) {
+        buckets.activeNow.push(item);
+      } else if (start <= nextWeek) {
+        buckets.nextWeek.push(item);
+      } else if (start <= nextMonth) {
+        buckets.nextMonth.push(item);
+      } else if (start <= next3Months) {
+        buckets.next3Months.push(item);
+      } else {
+        buckets.later.push(item);
+      }
+    }
+
+    const sortByDate = (a: TimelineItem, b: TimelineItem) => {
+      const aDate = a.dateFrom ? new Date(a.dateFrom).getTime() : Infinity;
+      const bDate = b.dateFrom ? new Date(b.dateFrom).getTime() : Infinity;
+      return aDate - bDate;
+    };
+
+    buckets.activeNow.sort(sortByDate);
+    buckets.nextWeek.sort(sortByDate);
+    buckets.nextMonth.sort(sortByDate);
+    buckets.next3Months.sort(sortByDate);
+    buckets.later.sort(sortByDate);
+    buckets.unscheduled.sort((a, b) =>
+      (a.subcategory || a.category).localeCompare(b.subcategory || b.category),
+    );
+
+    return buckets;
+  }, [timeline]);
+
+  // === Second list: items sorted by end date ===
+  const itemsByEndDate = useMemo(() => {
+    return timeline
+      .filter((t) => !t.rejected && !t.completed && t.dateTo)
+      .sort((a, b) => {
+        const aDate = a.dateTo ? new Date(a.dateTo).getTime() : Infinity;
+        const bDate = b.dateTo ? new Date(b.dateTo).getTime() : Infinity;
+        if (aDate === bDate) {
+          return (a.subcategory || a.category).localeCompare(b.subcategory || b.category);
+        }
+        return aDate - bDate;
+      })
+      .slice(0, 15);
+  }, [timeline]);
 
   if (isLoading || !data) {
     return <DashboardTestSkeleton />;
@@ -109,48 +206,46 @@ export function DashboardTestTab({ projectId }: { projectId: string }) {
 
   const { project, totals, byPhase, byCategory, byContact, alerts, recent } = data;
   const burnRate = totals.burnRate;
-  const burnColor =
-    burnRate > 100 ? "text-danger" : burnRate > 80 ? "text-warning" : "text-success";
 
-  const totalAlerts =
-    alerts.inProgress.length +
-    alerts.upcoming.length +
-    alerts.overdue.length +
-    alerts.overBudget.length +
-    alerts.unscheduled.length;
+  const hasFilters = selectedPhase || selectedCategory || selectedContact;
 
-  const hasFilters = selectedPhase || selectedCategory;
+  // === Compute dynamic colors based on burn rate ===
+  // Returns: "success" | "warning" | "danger"
+  const getBurnAccent = (rate: number): AccentColor => {
+    if (rate > 100) return "danger";
+    if (rate > 80) return "warning";
+    return "success";
+  };
+
+  const burnAccent = getBurnAccent(burnRate);
 
   // === Filtered data (cross-filtering) ===
+  // Phase table filters by selectedPhase
   const filteredByPhase = selectedPhase
     ? byPhase.filter((p) => p.phase === selectedPhase)
     : byPhase;
 
-  const filteredByCategory = selectedCategory
-    ? byCategory.filter((c) => c.category === selectedCategory)
-    : byCategory;
-
-  // Pie chart data
-  const pieData = (selectedCategory
-    ? filteredByCategory
-    : byCategory
-  )
-    .filter((c) => c.plan > 0)
-    .map((c) => ({ name: c.category, value: c.plan }));
+  // Pie chart data — filter by selected category (single highlight)
+  const pieData = byCategory
+    .filter((c) => c.plan > 0 || c.actual > 0)
+    .map((c) => ({
+      name: c.category,
+      value: c.plan,
+      actual: c.actual,
+    }));
 
   // Bar chart data: plan vs actual by phase
-  const phaseData = (selectedPhase ? filteredByPhase : byPhase)
+  const phaseData = byPhase
     .map((p) => ({
       phase: p.phase,
       Plán: p.plan,
       Skutečnost: p.actual,
+      completedCount: p.completedCount,
+      count: p.count,
     }))
-    .sort((a, b) => {
-      const order = PHASE_ORDER;
-      return order.indexOf(a.phase) - order.indexOf(b.phase);
-    });
+    .sort((a, b) => PHASE_ORDER.indexOf(a.phase) - PHASE_ORDER.indexOf(b.phase));
 
-  // Category chart data (for interactive bar)
+  // Category bar chart data (plan vs actual)
   const categoryBarData = byCategory
     .filter((c) => c.plan > 0 || c.actual > 0)
     .map((c) => ({
@@ -158,9 +253,14 @@ export function DashboardTestTab({ projectId }: { projectId: string }) {
       fullName: c.category,
       Plán: c.plan,
       Skutečnost: c.actual,
+      hours: c.hours,
+      count: c.count,
     }))
     .sort((a, b) => b.Plán - a.Plán)
     .slice(0, 8);
+
+  // Contact data for "Práce dle kontaktu"
+  const contactData = byContact.filter((c) => c.plan > 0 || c.actual > 0 || c.count > 0);
 
   // Status info
   const statusInfo = STATUS_LABELS[project.status] ?? STATUS_LABELS.active;
@@ -183,7 +283,7 @@ export function DashboardTestTab({ projectId }: { projectId: string }) {
               className="gap-1.5 rounded-full"
             >
               <X className="h-3.5 w-3.5" />
-              Zrušit filtr{selectedPhase ? `: ${selectedPhase}` : selectedCategory ? `: ${selectedCategory}` : ""}
+              Zrušit filtry
             </Button>
           )}
         </div>
@@ -195,15 +295,16 @@ export function DashboardTestTab({ projectId }: { projectId: string }) {
         )}
       </div>
 
-      {/* === Hero KPI Cards (large, prominent) === */}
+      {/* === Hero KPI Cards === */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
         <HeroKpiCard
           icon={Wallet}
           label="Čerpání rozpočtu"
           value={`${burnRate.toFixed(0)}%`}
           subValue={`${formatCzk(totals.actualTotal)} / ${formatCzk(totals.planTotal)}`}
-          accent={burnRate > 100 ? "danger" : burnRate > 80 ? "warning" : "success"}
+          accent={burnAccent}
           progress={burnRate}
+          completed={totals.itemCount > 0 && totals.completedCount === totals.itemCount}
         />
         <HeroKpiCard
           icon={Wallet}
@@ -221,8 +322,9 @@ export function DashboardTestTab({ projectId }: { projectId: string }) {
               ? `${((totals.completedCount / totals.itemCount) * 100).toFixed(0)}% dokončeno`
               : "Žádné položky"
           }
-          accent="info"
+          accent={totals.itemCount > 0 && totals.completedCount === totals.itemCount ? "success" : "info"}
           progress={totals.itemCount > 0 ? (totals.completedCount / totals.itemCount) * 100 : 0}
+          completed={totals.itemCount > 0 && totals.completedCount === totals.itemCount}
         />
         <HeroKpiCard
           icon={Clock}
@@ -233,27 +335,116 @@ export function DashboardTestTab({ projectId }: { projectId: string }) {
         />
       </div>
 
-      {/* === Charts row === */}
+      {/* === Cashflow Projection === */}
+      <Card className={cn(
+        "border-l-4",
+        totals.projectedOverrun > 0 ? "border-l-danger" : "border-l-success",
+      )}>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Coins className="h-5 w-5 text-primary" />
+            Cashflow projekce
+          </CardTitle>
+          <CardDescription>
+            Odhadovaný konečný rozpočet na základě aktuálního čerpání
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+            <div className="space-y-1">
+              <p className="text-xs font-medium uppercase tracking-wide text-on-surface-variant">
+                Odhad konečného
+              </p>
+              <p className={cn(
+                "text-xl font-bold tabular-nums",
+                totals.projectedOverrun > 0 ? "text-danger" : "text-success",
+              )}>
+                {formatCzk(totals.projectedFinal)}
+              </p>
+            </div>
+            <div className="space-y-1">
+              <p className="text-xs font-medium uppercase tracking-wide text-on-surface-variant">
+                Překročení
+              </p>
+              <p className={cn(
+                "text-xl font-bold tabular-nums",
+                totals.projectedOverrun > 0 ? "text-danger" : "text-success",
+              )}>
+                {totals.projectedOverrun > 0 ? "+" : ""}
+                {formatCzk(totals.projectedOverrun)}
+              </p>
+            </div>
+            <div className="space-y-1">
+              <p className="text-xs font-medium uppercase tracking-wide text-on-surface-variant">
+                % plánu
+              </p>
+              <p className={cn(
+                "text-xl font-bold tabular-nums",
+                totals.projectedOverrun > 0 ? "text-danger" : "text-success",
+              )}>
+                {totals.planTotal > 0
+                  ? ((totals.projectedFinal / totals.planTotal) * 100).toFixed(0)
+                  : 0}{" "}
+                %
+              </p>
+            </div>
+            <div className="space-y-1">
+              <p className="text-xs font-medium uppercase tracking-wide text-on-surface-variant">
+                Zbývá (odhad)
+              </p>
+              <p className="text-xl font-bold tabular-nums">
+                {formatCzk(totals.projectedFinal - totals.actualTotal)}
+              </p>
+            </div>
+          </div>
+          {/* Progress bar: actual vs projected */}
+          <div className="mt-4 space-y-1">
+            <div className="flex justify-between text-xs text-on-surface-variant">
+              <span>Čerpáno: {formatCzk(totals.actualTotal)}</span>
+              <span>Odhad: {formatCzk(totals.projectedFinal)}</span>
+            </div>
+            <div className="flex h-3 w-full overflow-hidden rounded-full bg-muted">
+              <div
+                className={cn(
+                  "h-full",
+                  totals.projectedOverrun > 0 ? "bg-danger" : "bg-success",
+                )}
+                style={{
+                  width: `${Math.min((totals.actualTotal / Math.max(totals.projectedFinal, 1)) * 100, 100)}%`,
+                }}
+              />
+              <div
+                className={cn(
+                  "h-full",
+                  totals.projectedOverrun > 0 ? "bg-danger/40" : "bg-success/40",
+                )}
+                style={{
+                  width: `${Math.min(((totals.projectedFinal - totals.actualTotal) / Math.max(totals.projectedFinal, 1)) * 100, 100)}%`,
+                }}
+              />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* === Charts row 1: Phase + Category === */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         {/* Phase chart — interactive (click bars to filter) */}
-        <Card className="lg:col-span-1">
+        <Card>
           <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle className="flex items-center gap-2">
-                  <Activity className="h-5 w-5 text-primary" />
-                  Plán vs Skutečnost dle fáze
-                </CardTitle>
-                <CardDescription className="mt-1">
-                  Klikněte na fázi pro filtrování
-                  {selectedPhase && (
-                    <Badge variant="secondary" className="ml-2 gap-1">
-                      {selectedPhase}
-                    </Badge>
-                  )}
-                </CardDescription>
-              </div>
-            </div>
+            <CardTitle className="flex items-center gap-2">
+              <Activity className="h-5 w-5 text-primary" />
+              Plán vs Skutečnost dle fáze
+            </CardTitle>
+            <CardDescription>
+              Klikněte na fázi pro filtrování tabulky
+              {selectedPhase && (
+                <Badge variant="secondary" className="ml-2 gap-1">
+                  {selectedPhase}
+                  <X className="h-3 w-3 cursor-pointer" onClick={() => setSelectedPhase(null)} />
+                </Badge>
+              )}
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="h-72">
@@ -285,7 +476,7 @@ export function DashboardTestTab({ projectId }: { projectId: string }) {
                     radius={[4, 4, 0, 0]}
                     onClick={(data: { phase?: string }) => data.phase && togglePhase(data.phase)}
                     cursor="pointer"
-                    opacity={selectedPhase && selectedPhase !== phaseData[0]?.phase ? 0.4 : 1}
+                    opacity={selectedPhase && selectedPhase !== phaseData.find(d => d.phase === selectedPhase)?.phase ? 0.4 : 1}
                   />
                   <Bar
                     dataKey="Skutečnost"
@@ -300,18 +491,19 @@ export function DashboardTestTab({ projectId }: { projectId: string }) {
           </CardContent>
         </Card>
 
-        {/* Category chart — interactive (click slices to filter) */}
-        <Card className="lg:col-span-1">
+        {/* Category chart — interactive */}
+        <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Target className="h-5 w-5 text-primary" />
               Rozpočet dle kategorie
             </CardTitle>
-            <CardDescription className="mt-1">
+            <CardDescription>
               Klikněte na kategorii pro filtrování
               {selectedCategory && (
                 <Badge variant="secondary" className="ml-2 gap-1">
                   {selectedCategory}
+                  <X className="h-3 w-3 cursor-pointer" onClick={() => setSelectedCategory(null)} />
                 </Badge>
               )}
             </CardDescription>
@@ -319,28 +511,29 @@ export function DashboardTestTab({ projectId }: { projectId: string }) {
           <CardContent>
             <div className="h-72">
               <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={pieData}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    outerRadius={90}
-                    innerRadius={45}
-                    dataKey="value"
-                    onClick={(data: { name?: string }) => data.name && toggleCategory(data.name)}
-                    cursor="pointer"
-                  >
-                    {pieData.map((entry, idx) => (
-                      <Cell
-                        key={`cell-${idx}`}
-                        fill={CATEGORY_COLORS[idx % CATEGORY_COLORS.length]}
-                        opacity={selectedCategory && selectedCategory !== entry.name ? 0.3 : 1}
-                      />
-                    ))}
-                  </Pie>
+                <BarChart
+                  data={categoryBarData}
+                  layout="vertical"
+                  margin={{ top: 5, right: 10, left: 0, bottom: 5 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" horizontal={false} />
+                  <XAxis
+                    type="number"
+                    tick={{ fontSize: 10 }}
+                    tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`}
+                  />
+                  <YAxis
+                    type="category"
+                    dataKey="category"
+                    tick={{ fontSize: 10 }}
+                    width={100}
+                  />
                   <Tooltip
                     formatter={(v: number) => formatCzk(v)}
+                    labelFormatter={(_, payload) => {
+                      const item = payload?.[0]?.payload as { fullName?: string } | undefined;
+                      return item?.fullName ?? "";
+                    }}
                     contentStyle={{
                       backgroundColor: "var(--popover)",
                       border: "1px solid var(--border)",
@@ -348,30 +541,113 @@ export function DashboardTestTab({ projectId }: { projectId: string }) {
                       fontSize: "12px",
                     }}
                   />
-                  <Legend
-                    wrapperStyle={{ fontSize: 11 }}
-                    formatter={(value) => value.length > 20 ? value.slice(0, 18) + "…" : value}
+                  <Legend wrapperStyle={{ fontSize: 12 }} />
+                  <Bar
+                    dataKey="Plán"
+                    fill="var(--info)"
+                    radius={[0, 4, 4, 0]}
+                    onClick={(data: { fullName?: string }) => data.fullName && toggleCategory(data.fullName)}
+                    cursor="pointer"
+                    opacity={selectedCategory && selectedCategory !== categoryBarData.find(d => d.fullName === selectedCategory)?.fullName ? 0.4 : 1}
                   />
-                </PieChart>
+                  <Bar
+                    dataKey="Skutečnost"
+                    fill="var(--warning)"
+                    radius={[0, 4, 4, 0]}
+                    onClick={(data: { fullName?: string }) => data.fullName && toggleCategory(data.fullName)}
+                    cursor="pointer"
+                  />
+                </BarChart>
               </ResponsiveContainer>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* === Spending Trend (full width) === */}
+      {/* === Spending Trend (fixed) === */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <TrendingUp className="h-5 w-5 text-primary" />
             Trend čerpání rozpočtu
           </CardTitle>
-          <CardDescription>Vývoj plánovaných a skutečných nákladů v čase</CardDescription>
+          <CardDescription>
+            Měsíční výdaje a odpracované hodiny v čase
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="h-72">
-            {trend && trend.length > 0 ? (
-              <SpendingTrendChart data={trend} />
+            {trend && trend.months && trend.months.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <ComposedChart data={trend.months} margin={{ top: 10, right: 10, left: 0, bottom: 5 }}>
+                  <defs>
+                    <linearGradient id="spendGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="var(--warning)" stopOpacity={0.4} />
+                      <stop offset="95%" stopColor="var(--warning)" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
+                  <XAxis
+                    dataKey="label"
+                    tick={{ fontSize: 10 }}
+                    interval={0}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <YAxis
+                    yAxisId="spend"
+                    orientation="right"
+                    tick={{ fontSize: 10, fill: "var(--warning)" }}
+                    tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`}
+                    axisLine={false}
+                    tickLine={false}
+                    width={36}
+                  />
+                  <YAxis
+                    yAxisId="hours"
+                    orientation="left"
+                    tick={{ fontSize: 10, fill: "var(--time)" }}
+                    tickFormatter={(v) => `${v.toFixed(0)}`}
+                    axisLine={false}
+                    tickLine={false}
+                    width={32}
+                    allowDecimals={false}
+                  />
+                  <Tooltip
+                    formatter={(v: number, name: string) => {
+                      if (name === "Výdaje") return [formatCzk(v), "Výdaje"];
+                      return [formatNumber(v, " h"), "Hodiny"];
+                    }}
+                    contentStyle={{
+                      backgroundColor: "var(--popover)",
+                      border: "1px solid var(--border)",
+                      borderRadius: "8px",
+                      fontSize: "12px",
+                    }}
+                    labelStyle={{ fontSize: 11, fontWeight: 600 }}
+                  />
+                  <Legend wrapperStyle={{ fontSize: 12 }} />
+                  <Area
+                    yAxisId="spend"
+                    type="monotone"
+                    dataKey="spend"
+                    name="Výdaje"
+                    stroke="var(--warning)"
+                    strokeWidth={2}
+                    fill="url(#spendGradient)"
+                  />
+                  <Line
+                    yAxisId="hours"
+                    type="monotone"
+                    dataKey="hours"
+                    name="Hodiny"
+                    stroke="var(--time)"
+                    strokeWidth={2}
+                    dot={{ r: 2, fill: "var(--time)" }}
+                    activeDot={{ r: 4 }}
+                  />
+                </ComposedChart>
+              </ResponsiveContainer>
             ) : (
               <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
                 Zatím nejsou k dispozici data o trendu čerpání.
@@ -381,15 +657,21 @@ export function DashboardTestTab({ projectId }: { projectId: string }) {
         </CardContent>
       </Card>
 
-      {/* === Interactive Phase Table === */}
+      {/* === Interactive Phase Table (filtered by selectedPhase) === */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Filter className="h-5 w-5 text-primary" />
-            Fáze projektu — interaktivní tabulka
+            Fáze projektu
+            {selectedPhase && (
+              <Badge variant="secondary" className="gap-1">
+                Filtrováno: {selectedPhase}
+                <X className="h-3 w-3 cursor-pointer" onClick={() => setSelectedPhase(null)} />
+              </Badge>
+            )}
           </CardTitle>
           <CardDescription>
-            Klikněte na řádek pro filtrování grafů a kategorií
+            Klikněte na řádek pro filtrování grafů
           </CardDescription>
         </CardHeader>
         <CardContent className="p-0">
@@ -407,10 +689,11 @@ export function DashboardTestTab({ projectId }: { projectId: string }) {
                 </tr>
               </thead>
               <tbody>
-                {byPhase.map((p) => {
+                {(selectedPhase ? filteredByPhase : byPhase).map((p) => {
                   const burn = p.plan > 0 ? (p.actual / p.plan) * 100 : 0;
                   const burnCls = burn > 100 ? "text-danger" : burn > 80 ? "text-warning" : "text-success";
                   const isSelected = selectedPhase === p.phase;
+                  const allDone = p.count > 0 && p.completedCount === p.count;
                   return (
                     <tr
                       key={p.phase}
@@ -425,24 +708,27 @@ export function DashboardTestTab({ projectId }: { projectId: string }) {
                           <span className={cn("h-2.5 w-2.5 rounded-full", PHASE_DOT_COLORS[p.phase] ?? "bg-muted-foreground")} />
                           <span className="font-medium">{p.phase}</span>
                           {isSelected && <X className="h-3 w-3 text-muted-foreground" />}
+                          {allDone && <CheckCircle2 className="h-4 w-4 text-success" />}
                         </div>
                       </td>
                       <td className="px-4 py-3 text-right tabular-nums">
                         {p.completedCount}/{p.count}
                       </td>
                       <td className="px-4 py-3 text-right tabular-nums">{formatCzk(p.plan)}</td>
-                      <td className="px-4 py-3 text-right tabular-nums">{formatCzk(p.actual)}</td>
+                      <td className={cn("px-4 py-3 text-right font-semibold tabular-nums", burn > 100 && "text-danger")}>
+                        {formatCzk(p.actual)}
+                      </td>
                       <td className="px-4 py-3 text-right tabular-nums">{formatNumber(p.hours, " h")}</td>
                       <td className={cn("px-4 py-3 text-right font-semibold tabular-nums", burnCls)}>
                         {burn.toFixed(0)}%
                       </td>
                       <td className="px-4 py-3 text-center">
-                        {p.inProgress ? (
+                        {allDone ? (
+                          <Badge variant="secondary" className="bg-success-soft text-success-strong">Hotovo</Badge>
+                        ) : p.inProgress ? (
                           <Badge variant="secondary" className="bg-info-soft text-info-strong">Probíhá</Badge>
                         ) : p.startingSoon ? (
                           <Badge variant="secondary" className="bg-warning-soft text-warning-strong">Brzy</Badge>
-                        ) : p.completedCount === p.count && p.count > 0 ? (
-                          <Badge variant="secondary" className="bg-success-soft text-success-strong">Hotovo</Badge>
                         ) : (
                           <Badge variant="secondary" className="bg-muted text-muted-foreground">Čeká</Badge>
                         )}
@@ -456,157 +742,287 @@ export function DashboardTestTab({ projectId }: { projectId: string }) {
         </CardContent>
       </Card>
 
-      {/* === Alerts + Recent Activity === */}
+      {/* === Plán section — timeline items sorted by start date === */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        {/* Alerts */}
+        {/* Left: Plan by start date */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5 text-warning" />
-              Upozornění
-              {totalAlerts > 0 && (
-                <Badge variant="secondary" className="bg-warning-soft text-warning-strong">
-                  {totalAlerts}
-                </Badge>
-              )}
+              <CalendarDays className="h-5 w-5 text-primary" />
+              Plán — podle začátku
             </CardTitle>
-            <CardDescription>Položky vyžadující pozornost</CardDescription>
+            <CardDescription>
+              Položky seřazené dle data zahájení
+            </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-2 max-h-96 overflow-y-auto">
-            {totalAlerts === 0 ? (
-              <div className="flex flex-col items-center gap-2 py-8 text-center">
-                <CheckCircle2 className="h-10 w-10 text-success" />
-                <p className="text-sm text-muted-foreground">Vše v pořádku, žádná upozornění.</p>
-              </div>
-            ) : (
-              <>
-                {alerts.overdue.length > 0 && (
-                  <AlertGroup
-                    title="Po termínu"
-                    items={alerts.overdue}
-                    severity="danger"
-                    onNavigate={goToBudget}
-                  />
-                )}
-                {alerts.overBudget.length > 0 && (
-                  <AlertGroup
-                    title="Přes rozpočet"
-                    items={alerts.overBudget}
-                    severity="danger"
-                    onNavigate={goToBudget}
-                  />
-                )}
-                {alerts.inProgress.length > 0 && (
-                  <AlertGroup
-                    title="Probíhající"
-                    items={alerts.inProgress}
-                    severity="info"
-                    onNavigate={goToBudget}
-                  />
-                )}
-                {alerts.upcoming.length > 0 && (
-                  <AlertGroup
-                    title="Brzy začíná"
-                    items={alerts.upcoming}
-                    severity="warning"
-                    onNavigate={goToBudget}
-                  />
-                )}
-                {alerts.unscheduled.length > 0 && (
-                  <AlertGroup
-                    title="Neplánováno"
-                    items={alerts.unscheduled}
-                    severity="muted"
-                    onNavigate={goToBudget}
-                  />
-                )}
-              </>
-            )}
+          <CardContent className="space-y-3 max-h-[600px] overflow-y-auto">
+            <PlanBucket
+              title="Aktivní nyní"
+              items={planItems.activeNow}
+              accent="info"
+              onNavigate={goToBudget}
+            />
+            <PlanBucket
+              title="Příští týden"
+              items={planItems.nextWeek}
+              accent="warning"
+              onNavigate={goToBudget}
+            />
+            <PlanBucket
+              title="Příští měsíc"
+              items={planItems.nextMonth}
+              accent="success"
+              onNavigate={goToBudget}
+            />
+            <PlanBucket
+              title="Příští 3 měsíce"
+              items={planItems.next3Months}
+              accent="primary"
+              onNavigate={goToBudget}
+            />
+            <PlanBucket
+              title="Později"
+              items={planItems.later}
+              accent="muted"
+              onNavigate={goToBudget}
+            />
+            <PlanBucket
+              title="Nenaplánováno"
+              items={planItems.unscheduled}
+              accent="muted"
+              onNavigate={goToBudget}
+            />
           </CardContent>
         </Card>
 
-        {/* Recent Activity */}
+        {/* Right: Plan by end date */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Receipt className="h-5 w-5 text-primary" />
-              Poslední aktivita
+              <CalendarClock className="h-5 w-5 text-primary" />
+              Plán — podle konce
             </CardTitle>
-            <CardDescription>Nejnovější platby a časové záznamy</CardDescription>
+            <CardDescription>
+              Nejbližší termíny dokončení
+            </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-2 max-h-96 overflow-y-auto">
-            {recent.payments.length === 0 && recent.timeEntries.length === 0 ? (
+          <CardContent className="space-y-2 max-h-[600px] overflow-y-auto">
+            {itemsByEndDate.length === 0 ? (
               <div className="flex flex-col items-center gap-2 py-8 text-center">
-                <Activity className="h-10 w-10 text-muted-foreground" />
-                <p className="text-sm text-muted-foreground">Zatím žádná aktivita.</p>
+                <CheckCircle2 className="h-10 w-10 text-success" />
+                <p className="text-sm text-muted-foreground">
+                  Žádné blížící se termíny.
+                </p>
               </div>
             ) : (
-              <>
-                {recent.payments.slice(0, 5).map((payment) => (
-                  <div
-                    key={payment.id}
-                    className="flex items-center justify-between rounded-lg bg-surface-container-low p-3"
+              itemsByEndDate.map((item) => {
+                const endDate = item.dateTo ? new Date(item.dateTo) : null;
+                const now = new Date();
+                const isOverdue = endDate && endDate < now;
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => goToBudget({ type: "category", value: item.category })}
+                    className={cn(
+                      "flex w-full items-center gap-3 rounded-lg border p-3 text-left transition-colors hover:bg-surface-container-high",
+                      isOverdue ? "border-danger/30 bg-danger/5" : "border-border bg-surface-container-low",
+                    )}
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-9 w-9 items-center justify-center rounded-full bg-warning/10">
-                        <Receipt className="h-4 w-4 text-warning" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium">{payment.vendor || payment.description || "Platba"}</p>
-                        <p className="text-xs text-muted-foreground">{formatDate(payment.date)}</p>
-                      </div>
+                    <span className={cn("h-2 w-2 shrink-0 rounded-full", PHASE_DOT_COLORS[item.phase] ?? "bg-muted-foreground")} />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">
+                        {item.subcategory || item.category}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {item.phase}
+                        {item.planCost && ` · ${formatCzk(item.planCost)}`}
+                      </p>
                     </div>
-                    <span className="font-semibold tabular-nums">{formatCzk(payment.amount)}</span>
-                  </div>
-                ))}
-                {recent.timeEntries.slice(0, 5).map((entry) => (
-                  <div
-                    key={entry.id}
-                    className="flex items-center justify-between rounded-lg bg-surface-container-low p-3"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-9 w-9 items-center justify-center rounded-full bg-time/10">
-                        <Clock className="h-4 w-4 text-time" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium">{entry.workerName || "Práce"}</p>
-                        <p className="text-xs text-muted-foreground">{formatDate(entry.date)}</p>
-                      </div>
+                    <div className="text-right">
+                      <p className={cn(
+                        "text-xs font-semibold tabular-nums",
+                        isOverdue ? "text-danger" : "text-on-surface-variant",
+                      )}>
+                        {endDate ? formatDate(endDate.toISOString()) : "—"}
+                      </p>
+                      {isOverdue && (
+                        <p className="text-[10px] text-danger">po termínu</p>
+                      )}
                     </div>
-                    <span className="font-semibold tabular-nums">{formatNumber(entry.hours, " h")}</span>
-                  </div>
-                ))}
-              </>
+                  </button>
+                );
+              })
             )}
           </CardContent>
         </Card>
       </div>
 
-      {/* === Quick actions footer === */}
-      <div className="flex flex-wrap gap-2">
-        <Button onClick={() => setActiveTab("budget")} variant="outline" className="gap-2">
-          <Package className="h-4 w-4" />
-          Rozpočet
-        </Button>
-        <Button onClick={() => setActiveTab("payments")} variant="outline" className="gap-2">
-          <Receipt className="h-4 w-4" />
-          Platby
-        </Button>
-        <Button onClick={() => setActiveTab("time")} variant="outline" className="gap-2">
-          <Clock className="h-4 w-4" />
-          Čas
-        </Button>
-        <Button onClick={() => setActiveTab("timeline")} variant="outline" className="gap-2">
-          <CalendarClock className="h-4 w-4" />
-          Časová osa
-        </Button>
+      {/* === Práce dle kontaktu === */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Users2 className="h-5 w-5 text-primary" />
+            Práce dle kontaktu
+          </CardTitle>
+          <CardDescription>
+            Rozpočet a odpracované hodiny dle přiřazených kontaktů
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {contactData.length === 0 ? (
+            <div className="flex flex-col items-center gap-2 py-8 text-center">
+              <Users2 className="h-10 w-10 text-muted-foreground" />
+              <p className="text-sm text-muted-foreground">
+                Žádné kontakty s přiřazenými položkami.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {contactData.map((c) => {
+                const burn = c.plan > 0 ? (c.actual / c.plan) * 100 : 0;
+                const burnAccent = getBurnAccent(burn);
+                return (
+                  <div
+                    key={c.contactId}
+                    className={cn(
+                      "flex items-center gap-3 rounded-lg border p-3 transition-colors hover:bg-surface-container-high",
+                      selectedContact === c.contactId && "bg-primary/5 border-primary/30",
+                    )}
+                    onClick={() => toggleContact(c.contactId)}
+                    role="button"
+                    tabIndex={0}
+                  >
+                    <div className={cn(
+                      "flex h-10 w-10 shrink-0 items-center justify-center rounded-full",
+                      ACCENT_BG[burnAccent],
+                    )}>
+                      <Users2 className={cn("h-5 w-5", ACCENT_TEXT[burnAccent])} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{c.name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {c.role || "Bez role"} · {c.count} položek
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-semibold tabular-nums">
+                        {formatCzk(c.actual)}
+                      </p>
+                      <p className="text-xs text-muted-foreground tabular-nums">
+                        z {formatCzk(c.plan)}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className={cn(
+                        "text-sm font-bold tabular-nums",
+                        ACCENT_TEXT[burnAccent],
+                      )}>
+                        {burn.toFixed(0)}%
+                      </p>
+                      {burn > 100 && (
+                        <p className="text-[10px] text-danger">přes rozpočet</p>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* === Poslední aktivita — split into Payments + Time === */}
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        {/* Payments */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Receipt className="h-5 w-5 text-warning" />
+              Poslední platby
+            </CardTitle>
+            <CardDescription>Nejnovější finanční transakce</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-2 max-h-96 overflow-y-auto">
+            {recent.payments.length === 0 ? (
+              <div className="flex flex-col items-center gap-2 py-8 text-center">
+                <Receipt className="h-10 w-10 text-muted-foreground" />
+                <p className="text-sm text-muted-foreground">Zatím žádné platby.</p>
+              </div>
+            ) : (
+              recent.payments.slice(0, 8).map((payment) => (
+                <div
+                  key={payment.id}
+                  className="flex items-center justify-between rounded-lg bg-surface-container-low p-3"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-warning/10">
+                      <Receipt className="h-4 w-4 text-warning" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium">
+                        {payment.vendor || payment.description || "Platba"}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {formatDate(payment.date)}
+                        {payment.budgetItem?.subcategory && ` · ${payment.budgetItem.subcategory}`}
+                      </p>
+                    </div>
+                  </div>
+                  <span className="font-semibold tabular-nums">{formatCzk(payment.amount)}</span>
+                </div>
+              ))
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Time entries */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Clock className="h-5 w-5 text-time" />
+              Poslední časové záznamy
+            </CardTitle>
+            <CardDescription>Nejnovější odpracované hodiny</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-2 max-h-96 overflow-y-auto">
+            {recent.timeEntries.length === 0 ? (
+              <div className="flex flex-col items-center gap-2 py-8 text-center">
+                <Clock className="h-10 w-10 text-muted-foreground" />
+                <p className="text-sm text-muted-foreground">Zatím žádné časové záznamy.</p>
+              </div>
+            ) : (
+              recent.timeEntries.slice(0, 8).map((entry) => (
+                <div
+                  key={entry.id}
+                  className="flex items-center justify-between rounded-lg bg-surface-container-low p-3"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-time/10">
+                      <Clock className="h-4 w-4 text-time" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium">
+                        {entry.workerName || "Práce"}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {formatDate(entry.date)}
+                        {entry.budgetItem?.subcategory && ` · ${entry.budgetItem.subcategory}`}
+                      </p>
+                    </div>
+                  </div>
+                  <span className="font-semibold tabular-nums">{formatNumber(entry.hours, " h")}</span>
+                </div>
+              ))
+            )}
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
 }
 
 // =====================================================================
-// HeroKpiCard — large prominent KPI card with progress bar
+// HeroKpiCard — large prominent KPI card with progress bar + dynamic colors
 // =====================================================================
 
 type AccentColor = "primary" | "success" | "warning" | "danger" | "info" | "time";
@@ -645,6 +1061,7 @@ function HeroKpiCard({
   subValue,
   accent,
   progress,
+  completed,
 }: {
   icon: React.ComponentType<{ className?: string }>;
   label: string;
@@ -652,9 +1069,10 @@ function HeroKpiCard({
   subValue?: string;
   accent: AccentColor;
   progress?: number;
+  completed?: boolean;
 }) {
   return (
-    <Card className="relative overflow-hidden">
+    <Card className={cn("relative overflow-hidden", completed && "border-success/30")}>
       <CardContent className="p-4">
         <div className="flex items-start justify-between">
           <div className="space-y-1">
@@ -678,82 +1096,64 @@ function HeroKpiCard({
             />
           </div>
         )}
+        {completed && (
+          <div className="mt-2 flex items-center gap-1 text-xs text-success">
+            <CheckCircle2 className="h-3.5 w-3.5" />
+            Vše hotovo
+          </div>
+        )}
       </CardContent>
     </Card>
   );
 }
 
 // =====================================================================
-// AlertGroup — grouped alerts with severity-based styling
+// PlanBucket — a time-bucketed group of timeline items
 // =====================================================================
 
-function AlertGroup({
+function PlanBucket({
   title,
   items,
-  severity,
+  accent,
   onNavigate,
 }: {
   title: string;
-  items: Array<{
-    id: string;
-    category: string;
-    subcategory: string | null;
-    phase: string;
-    planCost: number | null;
-    actualCost: number;
-    dateFrom: string | null;
-    dateTo: string | null;
-    completed: boolean;
-    rejected: boolean;
-    required: boolean;
-  }>;
-  severity: "danger" | "warning" | "info" | "muted";
+  items: TimelineItem[];
+  accent: AccentColor | "muted";
   onNavigate: (filter: Parameters<ReturnType<typeof useAppStore.getState>["setBudgetFilter"]>[0]) => void;
 }) {
-  const severityStyles = {
-    danger: "bg-danger/5 border-danger/20",
-    warning: "bg-warning/5 border-warning/20",
-    info: "bg-info/5 border-info/20",
-    muted: "bg-muted/30 border-border",
-  };
-  const severityDot = {
-    danger: "bg-danger",
-    warning: "bg-warning",
-    info: "bg-info",
-    muted: "bg-muted-foreground",
-  };
+  if (items.length === 0) return null;
+
+  const accentBg = accent === "muted" ? "bg-muted/50" : ACCENT_BG[accent as AccentColor];
+  const accentText = accent === "muted" ? "text-muted-foreground" : ACCENT_TEXT[accent as AccentColor];
 
   return (
-    <div className={cn("rounded-lg border p-3", severityStyles[severity])}>
-      <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-on-surface-variant">
-        {title} ({items.length})
-      </p>
-      <div className="space-y-1.5">
-        {items.slice(0, 5).map((item) => (
+    <div className={cn("rounded-lg border p-2", accent === "muted" ? "border-border bg-muted/20" : "border-border")}>
+      <div className="flex items-center gap-2 px-2 py-1">
+        <span className={cn("h-2 w-2 rounded-full", accent === "muted" ? "bg-muted-foreground" : ACCENT_BAR[accent as AccentColor])} />
+        <p className="text-xs font-semibold uppercase tracking-wide text-on-surface-variant">
+          {title}
+        </p>
+        <Badge variant="secondary" className="ml-auto text-[10px]">
+          {items.length}
+        </Badge>
+      </div>
+      <div className="mt-1 space-y-0.5">
+        {items.map((item) => (
           <button
             key={item.id}
-            onClick={() =>
-              onNavigate({ type: "category", value: item.category })
-            }
+            onClick={() => onNavigate({ type: "category", value: item.category })}
             className="flex w-full items-center gap-2 rounded-md p-1.5 text-left text-sm transition-colors hover:bg-surface-container-high"
           >
-            <span className={cn("h-2 w-2 shrink-0 rounded-full", severityDot[severity])} />
+            <span className={cn("h-1.5 w-1.5 shrink-0 rounded-full", PHASE_DOT_COLORS[item.phase] ?? "bg-muted-foreground")} />
             <span className="flex-1 truncate">
               <span className="font-medium">{item.subcategory || item.category}</span>
-              <span className="ml-1.5 text-xs text-muted-foreground">{item.phase}</span>
             </span>
-            {item.planCost && item.actualCost > item.planCost && (
-              <span className="text-xs font-semibold text-danger tabular-nums">
-                +{formatCzk(item.actualCost - item.planCost)}
-              </span>
-            )}
+            <span className="text-xs text-muted-foreground tabular-nums">
+              {item.dateFrom ? formatDate(item.dateFrom) : "—"}
+            </span>
           </button>
         ))}
-        {items.length > 5 && (
-          <p className="pt-1 text-xs text-muted-foreground">
-            + {items.length - 5} dalších…
-          </p>
-        )}
       </div>
     </div>
   );
@@ -775,27 +1175,12 @@ function DashboardTestSkeleton() {
           <Skeleton key={i} className="h-28" />
         ))}
       </div>
+      <Skeleton className="h-32" />
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Skeleton className="h-80" />
         <Skeleton className="h-80" />
       </div>
       <Skeleton className="h-80" />
-      <Skeleton className="h-64" />
     </div>
   );
 }
-
-// =====================================================================
-// Category pie chart colors (MD3-aligned palette)
-// =====================================================================
-
-const CATEGORY_COLORS = [
-  "var(--primary)",
-  "var(--info)",
-  "var(--success)",
-  "var(--warning)",
-  "var(--danger)",
-  "var(--time)",
-  "var(--secondary)",
-  "var(--muted-foreground)",
-];
