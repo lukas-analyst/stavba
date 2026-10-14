@@ -254,6 +254,7 @@ function NavButton({
       aria-current={isActive ? "page" : undefined}
       className={cn(
         "group relative flex w-full items-center gap-3 rounded-full px-4 py-2.5 text-sm font-medium transition-all duration-150",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
         isActive
           ? // Active: MD3 primary-container tonal pill — most prominent highlight.
             // primary-container is a soft tint of the primary color, clearly

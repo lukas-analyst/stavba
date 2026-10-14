@@ -447,6 +447,7 @@ export function PaymentsTab({ projectId }: { projectId: string }) {
         projectId={projectId}
         budgetItems={budgetItems ?? []}
         contacts={contacts ?? []}
+        payments={payments ?? []}
         createPayment={createPayment}
         updateBudgetItem={updateBudgetItem}
       />
@@ -459,6 +460,7 @@ export function PaymentsTab({ projectId }: { projectId: string }) {
         projectId={projectId}
         budgetItems={budgetItems ?? []}
         contacts={contacts ?? []}
+        payments={payments ?? []}
         createPayment={createPayment}
         updatePayment={updatePayment}
         updateBudgetItem={updateBudgetItem}
@@ -666,6 +668,12 @@ interface PaymentDialogProps {
   projectId: string;
   budgetItems: { id: string; category: string; subcategory: string | null; completed?: boolean }[];
   contacts: { id: string; name: string; type: string }[];
+  /**
+   * All payments in the project. Used to populate the "Připojit k faktuře"
+   * Select in edit mode — lists installment-parent payments (invoiceTotal != null)
+   * that the currently edited payment can be linked to as an installment.
+   */
+  payments?: Payment[];
   createPayment: ReturnType<typeof useCreatePayment>;
   updatePayment?: ReturnType<typeof useUpdatePayment>;
   updateBudgetItem: ReturnType<typeof useUpdateBudgetItem>;
@@ -699,6 +707,7 @@ function PaymentDialogInner({
   projectId,
   budgetItems,
   contacts,
+  payments,
   createPayment,
   updatePayment,
   updateBudgetItem,
@@ -731,6 +740,13 @@ function PaymentDialogInner({
   const [invoiceTotal, setInvoiceTotal] = useState("");
   const [markCompleted, setMarkCompleted] = useState(false);
 
+  // U22: In edit mode, allow linking this payment to an existing
+  // invoice-parent as an installment. `installmentParentId` is "" when
+  // the payment is standalone, otherwise it's the parent payment's id.
+  const [installmentParentId, setInstallmentParentId] = useState<string>(
+    payment?.installmentOf ?? "",
+  );
+
   // Inline validation errors
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -748,7 +764,30 @@ function PaymentDialogInner({
     setInvoiceTotal("");
     setVatRate("");
     setMarkCompleted(false);
+    setInstallmentParentId("");
   }
+
+  // U22: Parent candidates = installment-parent payments (invoiceTotal != null)
+  // in the project, excluding the currently edited payment (cannot be its
+  // own parent) and excluding payments that already have children pointing
+  // to them (those are themselves parents and shouldn't be re-linked).
+  // Also excludes payments that are themselves children (installmentOf set).
+  const parentCandidates = useMemo(() => {
+    if (!isEdit || !payment) return [];
+    const hasChildren = (payments ?? []).some(
+      (p) => p.installmentOf === payment.id,
+    );
+    // Don't show the Select if this payment is itself a parent (has
+    // invoiceTotal OR has children) — turning a parent into a child would
+    // orphan its existing children.
+    if (payment.invoiceTotal != null || hasChildren) return [];
+    return (payments ?? []).filter(
+      (p) =>
+        p.id !== payment.id &&
+        p.installmentOf == null &&
+        p.invoiceTotal != null,
+    );
+  }, [payments, payment, isEdit]);
 
   const handleSubmit = async () => {
     const newErrors: Record<string, string> = {};
@@ -779,6 +818,14 @@ function PaymentDialogInner({
           // Preserve invoiceTotal if this is an installment parent
           ...(payment.invoiceTotal != null ? { invoiceTotal: payment.invoiceTotal } : {}),
         };
+        // U22: Only include `installmentOf` when the parent-candidate Select
+        // is shown (i.e., this payment is a "leaf" that can be linked to a
+        // parent). Send null to detach from current parent, or the parent id
+        // to (re-)link. When the Select isn't shown, leave the field
+        // untouched by simply not including it in the payload.
+        if (parentCandidates.length > 0 || isInstallment) {
+          payload.installmentOf = installmentParentId || null;
+        }
         await updatePayment.mutateAsync({ id: payment.id, data: payload });
         if (markCompleted) {
           try {
@@ -1030,6 +1077,51 @@ function PaymentDialogInner({
               <CircleDollarSign className="mr-1 inline h-3.5 w-3.5" />
               Platba ve splátkách (faktura s více platbami)
             </Label>
+          </div>
+        )}
+
+        {/* U22: Připojit k faktuře — Select shown only in edit mode when
+            this payment is a "leaf" (no invoiceTotal, no children).
+            Lets the user link this payment to an existing installment-parent
+            invoice as an additional installment (or detach it). */}
+        {isEdit && (parentCandidates.length > 0 || isInstallment) && (
+          <div className="space-y-2">
+            <Label htmlFor="installmentOf">
+              <CircleDollarSign className="mr-1 inline h-3.5 w-3.5" />
+              Připojit k faktuře (jako splátka)
+            </Label>
+            <Select
+              value={installmentParentId || "none"}
+              onValueChange={(v) => setInstallmentParentId(v === "none" ? "" : v)}
+            >
+              <SelectTrigger id="installmentOf">
+                <SelectValue placeholder="Samostatná platba (bez faktury)" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">
+                  Samostatná platba (bez faktury)
+                </SelectItem>
+                {parentCandidates.map((p) => {
+                  const label = [
+                    p.vendor,
+                    p.invoiceNumber,
+                    p.description,
+                    formatCzk(p.invoiceTotal ?? p.amount),
+                  ]
+                    .filter(Boolean)
+                    .join(" · ");
+                  return (
+                    <SelectItem key={p.id} value={p.id}>
+                      {label || `Faktura ${p.id.slice(0, 6)}`}
+                    </SelectItem>
+                  );
+                })}
+              </SelectContent>
+            </Select>
+            <p className="text-[11px] text-muted-foreground">
+              Tato platba se zobrazí jako další splátka vybrané faktury.
+              Změnou se aktualizuje součet plátby faktury.
+            </p>
           </div>
         )}
 

@@ -1405,7 +1405,7 @@ const BudgetRow = memo(function BudgetRow({
               "absolute inset-y-0 left-0 w-1",
               item.rejected
                 ? "bg-danger"
-                : PHASE_BG_COLORS[item.phase] ?? "bg-zinc-300",
+                : PHASE_BG_COLORS[item.phase] ?? "bg-muted-foreground/50",
             )}
           />
           <div className="relative flex items-center gap-1">
@@ -1477,7 +1477,7 @@ const BudgetRow = memo(function BudgetRow({
                     ? `Možná dotace: ${formatCzk(item.subsidyAmount)}`
                     : "Možná dotace (částka nezadána)"
                 }
-                className="type-label-sm h-4 gap-0.5 px-1 text-teal-700 dark:text-teal-300"
+                className="type-label-sm h-4 gap-0.5 px-1 text-subsidy-strong dark:text-subsidy"
               >
                 <HandCoins className="h-2.5 w-2.5" />
                 Dotace
@@ -1709,7 +1709,7 @@ const BudgetRow = memo(function BudgetRow({
               <DropdownMenuItem
                 onClick={() => update("subsidyEligible", !item.subsidyEligible)}
               >
-                <HandCoins className="mr-2 h-3.5 w-3.5 text-teal-500" />
+                <HandCoins className="mr-2 h-3.5 w-3.5 text-subsidy" />
                 {item.subsidyEligible ? "Zrušit dotaci" : "Označit jako dotovatelné"}
               </DropdownMenuItem>
               <DropdownMenuItem

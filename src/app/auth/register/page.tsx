@@ -62,13 +62,13 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-slate-50 to-slate-100 px-4 py-12 dark:from-slate-950 dark:to-slate-900">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-background px-4 py-12">
       <div className="w-full max-w-sm">
         {/* Logo */}
         <div className="mb-8 text-center">
           <Link href="/" className="inline-flex items-center gap-2">
             <span className="text-2xl font-bold tracking-tight">
-              Stavba<span className="text-green-600">.</span>
+              Stavba<span className="text-primary">.</span>
             </span>
           </Link>
           <p className="mt-2 text-sm text-muted-foreground">
@@ -84,7 +84,11 @@ export default function RegisterPage() {
           </p>
 
           {error && (
-            <div className="mb-4 flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800 dark:border-red-900 dark:bg-red-950 dark:text-red-200">
+            <div
+              id="error-form"
+              role="alert"
+              className="mb-4 flex items-start gap-2 rounded-lg border border-destructive/20 bg-destructive/10 p-3 text-sm text-destructive"
+            >
               <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
               <span>{error}</span>
             </div>
@@ -119,7 +123,8 @@ export default function RegisterPage() {
                   onChange={(e) => setEmail(e.target.value)}
                   required
                   autoComplete="email"
-                  autoFocus
+                  aria-invalid={!!error}
+                  aria-describedby={error ? "error-form" : undefined}
                   className="pl-9"
                 />
               </div>
@@ -137,6 +142,8 @@ export default function RegisterPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   autoComplete="new-password"
+                  aria-invalid={!!error}
+                  aria-describedby={error ? "error-form" : undefined}
                   className="pl-9"
                 />
               </div>
@@ -154,6 +161,8 @@ export default function RegisterPage() {
                   onChange={(e) => setPasswordConfirm(e.target.value)}
                   required
                   autoComplete="new-password"
+                  aria-invalid={!!error}
+                  aria-describedby={error ? "error-form" : undefined}
                   className="pl-9"
                 />
               </div>
@@ -162,6 +171,7 @@ export default function RegisterPage() {
             <Button
               type="submit"
               disabled={loading}
+              aria-busy={loading}
               className="w-full"
               size="lg"
             >

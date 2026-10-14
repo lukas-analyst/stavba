@@ -22,6 +22,7 @@ import {
 import { useProjects } from "@/lib/api";
 import { useAppStore } from "@/lib/store";
 import { useScrollState } from "@/hooks/use-scroll-state";
+import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -193,10 +194,15 @@ export function TopBar() {
     signOut({ callbackUrl: "/auth/login" });
   }, []);
 
-  // Filtered project list
+  // Debounce the search input so the filter only re-runs 200ms after
+  // typing stops — avoids re-filtering the whole project list on every
+  // keystroke (which can jank on slower devices / large lists).
+  const debouncedSearch = useDebouncedValue(search, 200);
+
+  // Filtered project list (uses debounced value)
   const filtered = projects?.filter((p) => {
-    if (!search.trim()) return true;
-    const q = search.toLowerCase();
+    if (!debouncedSearch.trim()) return true;
+    const q = debouncedSearch.toLowerCase();
     return (
       p.name.toLowerCase().includes(q) ||
       (p.address ?? "").toLowerCase().includes(q)
@@ -422,7 +428,7 @@ export function TopBar() {
               title={displayUser?.name ?? displayUser?.email ?? "Účet"}
             >
               {displayUser?.image ? (
-                <Avatar className="h-8 w-8 sm:h-6 sm:w-6">
+                <Avatar className="h-9 w-9 sm:h-7 sm:w-7">
                   <AvatarImage src={displayUser.image} alt={displayUser.name ?? displayUser.email} />
                   <AvatarFallback className="bg-secondary-container type-label-sm font-bold text-secondary-container-foreground">
                     <User className="h-6 w-6 sm:h-5 sm:w-5" />
@@ -562,8 +568,8 @@ function ProjectDropdownItem({
           className={cn(
             "h-3.5 w-3.5 transition-colors",
             project.starred
-              ? "fill-amber-400 text-amber-400"
-              : "text-muted-foreground/40 hover:text-amber-400",
+              ? "fill-warning text-warning"
+              : "text-muted-foreground/40 hover:text-warning",
           )}
         />
       </span>

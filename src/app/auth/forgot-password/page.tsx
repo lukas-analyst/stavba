@@ -41,13 +41,13 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-slate-50 to-slate-100 px-4 py-12 dark:from-slate-950 dark:to-slate-900">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-background px-4 py-12">
       <div className="w-full max-w-sm">
         {/* Logo */}
         <div className="mb-8 text-center">
           <Link href="/" className="inline-flex items-center gap-2">
             <span className="text-2xl font-bold tracking-tight">
-              Stavba<span className="text-green-600">.</span>
+              Stavba<span className="text-primary">.</span>
             </span>
           </Link>
         </div>
@@ -56,8 +56,8 @@ export default function ForgotPasswordPage() {
         <div className="rounded-2xl border bg-card p-6 shadow-sm sm:p-8">
           {sent ? (
             <div className="flex flex-col items-center text-center">
-              <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-50 dark:bg-green-950">
-                <CheckCircle2 className="h-8 w-8 text-green-600" />
+              <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-success/10">
+                <CheckCircle2 className="h-8 w-8 text-success" />
               </div>
               <h1 className="mb-2 text-xl font-semibold">Zkontrolujte svůj e-mail</h1>
               <p className="mb-6 text-sm text-muted-foreground">
@@ -76,7 +76,11 @@ export default function ForgotPasswordPage() {
               </p>
 
               {error && (
-                <div className="mb-4 flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800 dark:border-red-900 dark:bg-red-950 dark:text-red-200">
+                <div
+                  id="error-form"
+                  role="alert"
+                  className="mb-4 flex items-start gap-2 rounded-lg border border-destructive/20 bg-destructive/10 p-3 text-sm text-destructive"
+                >
                   <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
                   <span>{error}</span>
                 </div>
@@ -95,7 +99,8 @@ export default function ForgotPasswordPage() {
                       onChange={(e) => setEmail(e.target.value)}
                       required
                       autoComplete="email"
-                      autoFocus
+                      aria-invalid={!!error}
+                      aria-describedby={error ? "error-form" : undefined}
                       className="pl-9"
                     />
                   </div>
@@ -104,6 +109,7 @@ export default function ForgotPasswordPage() {
                 <Button
                   type="submit"
                   disabled={loading}
+                  aria-busy={loading}
                   className="w-full"
                   size="lg"
                 >

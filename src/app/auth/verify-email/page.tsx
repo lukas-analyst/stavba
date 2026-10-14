@@ -10,13 +10,13 @@ export default function VerifyEmailPage() {
   const status = searchParams.get("status");
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-slate-50 to-slate-100 px-4 py-12 dark:from-slate-950 dark:to-slate-900">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-background px-4 py-12">
       <div className="w-full max-w-sm">
         {/* Logo */}
         <div className="mb-8 text-center">
           <Link href="/" className="inline-flex items-center gap-2">
             <span className="text-2xl font-bold tracking-tight">
-              Stavba<span className="text-green-600">.</span>
+              Stavba<span className="text-primary">.</span>
             </span>
           </Link>
         </div>
@@ -25,8 +25,8 @@ export default function VerifyEmailPage() {
         <div className="rounded-2xl border bg-card p-6 shadow-sm sm:p-8">
           {status === "valid" && (
             <div className="flex flex-col items-center text-center">
-              <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-50 dark:bg-green-950">
-                <CheckCircle2 className="h-8 w-8 text-green-600" />
+              <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-success/10">
+                <CheckCircle2 className="h-8 w-8 text-success" />
               </div>
               <h1 className="mb-2 text-xl font-semibold">E-mail ověřen!</h1>
               <p className="mb-6 text-sm text-muted-foreground">
@@ -41,8 +41,8 @@ export default function VerifyEmailPage() {
 
           {status === "already" && (
             <div className="flex flex-col items-center text-center">
-              <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-blue-50 dark:bg-blue-950">
-                <CheckCircle2 className="h-8 w-8 text-blue-600" />
+              <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-info/10">
+                <CheckCircle2 className="h-8 w-8 text-info" />
               </div>
               <h1 className="mb-2 text-xl font-semibold">E-mail je již ověřen</h1>
               <p className="mb-6 text-sm text-muted-foreground">
@@ -57,8 +57,8 @@ export default function VerifyEmailPage() {
 
           {status === "expired" && (
             <div className="flex flex-col items-center text-center">
-              <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-amber-50 dark:bg-amber-950">
-                <AlertTriangle className="h-8 w-8 text-amber-600" />
+              <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-warning/10">
+                <AlertTriangle className="h-8 w-8 text-warning" />
               </div>
               <h1 className="mb-2 text-xl font-semibold">Odkaz vypršel</h1>
               <p className="mb-6 text-sm text-muted-foreground">
@@ -73,8 +73,8 @@ export default function VerifyEmailPage() {
 
           {(status === "invalid" || status === "missing") && (
             <div className="flex flex-col items-center text-center">
-              <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-red-50 dark:bg-red-950">
-                <XCircle className="h-8 w-8 text-red-600" />
+              <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10">
+                <XCircle className="h-8 w-8 text-destructive" />
               </div>
               <h1 className="mb-2 text-xl font-semibold">Neplatný odkaz</h1>
               <p className="mb-6 text-sm text-muted-foreground">
@@ -89,8 +89,8 @@ export default function VerifyEmailPage() {
 
           {status === "error" && (
             <div className="flex flex-col items-center text-center">
-              <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-red-50 dark:bg-red-950">
-                <AlertTriangle className="h-8 w-8 text-red-600" />
+              <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10">
+                <AlertTriangle className="h-8 w-8 text-destructive" />
               </div>
               <h1 className="mb-2 text-xl font-semibold">Chyba při ověřování</h1>
               <p className="mb-6 text-sm text-muted-foreground">

@@ -140,7 +140,13 @@ function AuditLogEntry({ log }: { log: AuditLog }) {
             </>
           )}
           <span className="ml-auto text-muted-foreground">
-            {formatDate(log.createdAt)}
+            {formatDate(log.createdAt, {
+              day: "2-digit",
+              month: "2-digit",
+              year: "numeric",
+              hour: "2-digit",
+              minute: "2-digit",
+            })}
           </span>
         </div>
         {log.action === "update" && log.oldValue !== null && log.newValue !== null && (

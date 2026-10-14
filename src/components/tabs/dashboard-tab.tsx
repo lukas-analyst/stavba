@@ -83,7 +83,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
     <div id="dashboard-root" className="space-y-6">
       {/* KPI cards */}
       <div id="kpi-cards" className={cn("grid grid-cols-2 gap-2 sm:gap-3 md:grid-cols-3 lg:grid-cols-6 lg:gap-4")}>
-        <Card id="kpi-plan" className="rounded-2xl border-success/40 bg-gradient-to-br from-success-soft to-white shadow-sm dark:border-success/30 dark:from-success-soft dark:to-card hover-lift">
+        <Card id="kpi-plan" className="rounded-xl border-success/40 bg-gradient-to-br from-success-soft to-card shadow-sm dark:border-success/30 dark:from-success-soft dark:to-card hover-lift">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="type-overline text-on-surface-variant">
               Plán rozpočtu
@@ -100,7 +100,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
           </CardContent>
         </Card>
 
-        <Card id="kpi-burn" className="rounded-2xl border-warning/40 bg-gradient-to-br from-warning-soft to-white shadow-sm dark:border-warning-strong/40 dark:from-warning-soft dark:to-card hover-lift cursor-pointer" onClick={() => setActiveTab("payments")}>
+        <Card id="kpi-burn" className="rounded-xl border-warning/40 bg-gradient-to-br from-warning-soft to-card shadow-sm dark:border-warning-strong/40 dark:from-warning-soft dark:to-card hover-lift cursor-pointer" onClick={() => setActiveTab("payments")}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="type-overline text-on-surface-variant">
               Čerpání
@@ -133,7 +133,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
           </CardContent>
         </Card>
 
-        <Card id="kpi-remaining" className={cn("rounded-2xl shadow-sm hover-lift cursor-pointer", totals.remaining >= 0 ? "border-info/40 bg-gradient-to-br from-info-soft to-white dark:border-info-strong/40 dark:from-info-soft dark:to-card" : "border-danger/40 bg-gradient-to-br from-danger-soft to-white dark:border-danger-strong/40 dark:from-danger-soft dark:to-card")} onClick={() => goToBudget({ type: "active" })}>
+        <Card id="kpi-remaining" className={cn("rounded-xl shadow-sm hover-lift cursor-pointer", totals.remaining >= 0 ? "border-info/40 bg-gradient-to-br from-info-soft to-card dark:border-info-strong/40 dark:from-info-soft dark:to-card" : "border-danger/40 bg-gradient-to-br from-danger-soft to-card dark:border-danger-strong/40 dark:from-danger-soft dark:to-card")} onClick={() => goToBudget({ type: "active" })}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="type-overline text-on-surface-variant">
               Zbývá v rozpočtu
@@ -156,7 +156,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
           </CardContent>
         </Card>
 
-        <Card id="kpi-hours" className="rounded-2xl border-time/40 bg-gradient-to-br from-time-soft to-white shadow-sm dark:border-time/30 dark:from-time-soft dark:to-card hover-lift cursor-pointer" onClick={() => setActiveTab("time")}>
+        <Card id="kpi-hours" className="rounded-xl border-time/40 bg-gradient-to-br from-time-soft to-card shadow-sm dark:border-time/30 dark:from-time-soft dark:to-card hover-lift cursor-pointer" onClick={() => setActiveTab("time")}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="type-overline text-on-surface-variant">
               Odpracováno
@@ -173,7 +173,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
           </CardContent>
         </Card>
 
-        <Card id="kpi-saved" className="rounded-2xl border-success/50 bg-gradient-to-br from-success-soft to-white shadow-sm dark:border-success-strong/40 dark:from-success-soft dark:to-card hover-lift cursor-pointer" onClick={() => goToBudget({ type: "saved" })}>
+        <Card id="kpi-saved" className="rounded-xl border-success/50 bg-gradient-to-br from-success-soft to-card shadow-sm dark:border-success-strong/40 dark:from-success-soft dark:to-card hover-lift cursor-pointer" onClick={() => goToBudget({ type: "saved" })}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="type-overline text-on-surface-variant">
               Ušetřeno
@@ -192,7 +192,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
           </CardContent>
         </Card>
 
-        <Card id="kpi-completed" className="rounded-2xl border-subsidy/40 bg-gradient-to-br from-subsidy-soft to-white shadow-sm dark:border-subsidy-strong/40 dark:from-subsidy-soft dark:to-card hover-lift cursor-pointer" onClick={() => goToBudget({ type: "completion", value: "done" })}>
+        <Card id="kpi-completed" className="rounded-xl border-subsidy/40 bg-gradient-to-br from-subsidy-soft to-card shadow-sm dark:border-subsidy-strong/40 dark:from-subsidy-soft dark:to-card hover-lift cursor-pointer" onClick={() => goToBudget({ type: "completion", value: "done" })}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="type-overline text-on-surface-variant">
               Hotovo
@@ -407,13 +407,13 @@ export function DashboardTab({ projectId }: { projectId: string }) {
               const burn = p.plan > 0 ? (p.actual / p.plan) * 100 : 0;
               const timeBurn = p.plannedHours > 0 ? (p.hours / p.plannedHours) * 100 : 0;
               const phaseColor = PHASE_COLORS[p.phase] ?? "";
-              const dotColor = PHASE_DOT_COLORS[p.phase] ?? "bg-zinc-400";
+              const dotColor = PHASE_DOT_COLORS[p.phase] ?? "bg-muted-foreground";
               const hasOverrun = p.costOverrun > 0 || p.timeOverrun > 0;
               return (
                 <div
                   key={p.phase}
                   className={cn(
-                    "rounded-lg border bg-card p-3 transition-shadow hover:shadow-sm",
+                    "rounded-xl border bg-card p-3 transition-shadow hover:shadow-sm",
                     p.actual > p.worstCase && "border-danger/50 dark:border-danger-strong",
                   )}
                 >

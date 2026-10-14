@@ -208,13 +208,13 @@ export default function ProfilePage() {
   const displayEmail = profile?.email ?? sessionUser?.email ?? "";
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-slate-50 to-slate-100 px-4 py-12 dark:from-slate-950 dark:to-slate-900">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-background px-4 py-12">
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="mb-8 text-center">
           <Link href="/" className="inline-flex items-center gap-2">
             <span className="text-2xl font-bold tracking-tight">
-              Stavba<span className="text-green-600">.</span>
+              Stavba<span className="text-primary">.</span>
             </span>
           </Link>
           <p className="mt-2 text-sm text-muted-foreground">

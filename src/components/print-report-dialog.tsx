@@ -27,6 +27,7 @@ import {
 import { cn } from "@/lib/utils";
 import { Download, FileText, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 type Props = {
   open: boolean;
@@ -53,10 +54,22 @@ export function PrintReportDialog({
   const { data, isLoading } = useDashboard(projectId);
   const { data: budgetItems } = useBudgetItems(projectId);
   const { data: payments } = usePayments(projectId);
+  const isMobile = useIsMobile();
 
   const handleDownloadPdf = () => {
     if (!data) {
       toast.error("Data reportu nejsou načtena.");
+      return;
+    }
+    // U18: window.print() does not work reliably on mobile browsers
+    // (most mobile browsers either block it or produce a poor-quality PDF
+    // without the "Save as PDF" option). Redirect mobile users to the
+    // desktop version of the app instead of attempting the print flow.
+    if (isMobile) {
+      toast.info(
+        "Pro export PDF otevřete aplikaci v desktopovém prohlížeči.",
+        { duration: 6000 },
+      );
       return;
     }
     document.body.classList.add("printing");
@@ -91,6 +104,15 @@ export function PrintReportDialog({
           <DialogDescription>
             Náhled reportu pro export do PDF. Klikněte „Stáhnout PDF" — v dialogu
             tisku prohlížeče zvolte cíl <strong>„Uložit jako PDF"</strong>.
+            {isMobile && (
+              <>
+                {" "}
+                <span className="text-warning">
+                  Na mobilním prohlížeči nelze PDF exportovat přímo — otevřete
+                  aplikaci v desktopovém prohlížeči.
+                </span>
+              </>
+            )}
           </DialogDescription>
         </DialogHeader>
 
@@ -111,8 +133,13 @@ export function PrintReportDialog({
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Zavřít
           </Button>
-          <Button onClick={handleDownloadPdf} disabled={!isDataReady}>
-            <Download className="mr-2 h-4 w-4" /> Stáhnout PDF
+          <Button
+            onClick={handleDownloadPdf}
+            disabled={!isDataReady}
+            aria-busy={isLoading}
+          >
+            <Download className="mr-2 h-4 w-4" />
+            {isMobile ? "Exportovat v desktopu" : "Stáhnout PDF"}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -95,13 +95,13 @@ export default function VerifyPendingPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-slate-50 to-slate-100 px-4 py-12 dark:from-slate-950 dark:to-slate-900">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-background px-4 py-12">
       <div className="w-full max-w-sm">
         {/* Logo */}
         <div className="mb-8 text-center">
           <Link href="/" className="inline-flex items-center gap-2">
             <span className="text-2xl font-bold tracking-tight">
-              Stavba<span className="text-green-600">.</span>
+              Stavba<span className="text-primary">.</span>
             </span>
           </Link>
         </div>
@@ -109,8 +109,8 @@ export default function VerifyPendingPage() {
         {/* Card */}
         <div className="rounded-2xl border bg-card p-6 shadow-sm sm:p-8">
           <div className="mb-6 flex flex-col items-center text-center">
-            <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-amber-50 dark:bg-amber-950">
-              <MailCheck className="h-8 w-8 text-amber-600" />
+            <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-warning/10">
+              <MailCheck className="h-8 w-8 text-warning" />
             </div>
             <h1 className="mb-2 text-xl font-semibold">Ověřte svůj e-mail</h1>
             <p className="text-sm text-muted-foreground">
@@ -143,6 +143,7 @@ export default function VerifyPendingPage() {
               type="submit"
               variant="outline"
               disabled={sending || !email}
+              aria-busy={sending}
               className="w-full"
             >
               {sending ? (
@@ -166,6 +167,7 @@ export default function VerifyPendingPage() {
               className="w-full text-muted-foreground"
               onClick={checkVerification}
               disabled={checking}
+              aria-busy={checking}
             >
               {checking ? (
                 <>
@@ -187,6 +189,14 @@ export default function VerifyPendingPage() {
             >
               <LogOut className="mr-2 h-4 w-4" />
               Odhlásit se
+            </Button>
+            <Button asChild variant="ghost" size="sm" className="w-full">
+              <Link
+                href="/auth/login"
+                className="text-muted-foreground hover:text-foreground"
+              >
+                Zpět na přihlášení
+              </Link>
             </Button>
           </div>
         </div>
