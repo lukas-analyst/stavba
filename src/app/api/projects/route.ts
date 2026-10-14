@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { db, dbRead } from "@/lib/db";
-import { getDefaultOwnerId } from "@/lib/default-owner";
+import { requireUser } from "@/lib/require-user";
 
 // GET /api/projects - list all projects
 // Performance: instead of N+1 queries (one per project to fetch budget items
@@ -9,7 +9,12 @@ import { getDefaultOwnerId } from "@/lib/default-owner";
 // Uses `dbRead` (read replica if configured, falls back to primary).
 export async function GET() {
   try {
+    // Require authentication — only show projects owned by the logged-in user
+    const { user, response } = await requireUser();
+    if (response) return response;
+
     const projects = await dbRead.project.findMany({
+      where: { ownerId: user.id },
       orderBy: [{ starred: "desc" }, { createdAt: "desc" }],
       select: {
         id: true,
@@ -109,9 +114,10 @@ export async function POST(request: Request) {
       slug = `${baseSlug}-${suffix++}`;
     }
 
-    // Get the default owner (until auth is implemented, all projects
-    // are owned by the hardcoded default user)
-    const ownerId = await getDefaultOwnerId();
+    // Require authentication — projects are owned by the logged-in user
+    const { user, response } = await requireUser();
+    if (response) return response;
+    const ownerId = user.id;
 
     const project = await db.project.create({
       data: {

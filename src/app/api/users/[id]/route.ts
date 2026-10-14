@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { getDefaultOwnerId } from "@/lib/default-owner";
+import { requireUser } from "@/lib/require-user";
 
 // =====================================================================
 // /api/users/[id] — single-user mutations
@@ -65,10 +65,11 @@ export async function PATCH(request: Request, { params }: RouteContext) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    // Until auth is implemented, only allow editing the default owner.
-    // This prevents a stray caller from renaming arbitrary users.
-    const defaultOwnerId = await getDefaultOwnerId();
-    if (id !== defaultOwnerId) {
+    // Only allow editing your own profile (session user).
+    // This replaces the old "default owner" check.
+    const { user, response: authResponse } = await requireUser();
+    if (authResponse) return authResponse;
+    if (id !== user.id) {
       return NextResponse.json(
         { error: "Úprava cizího profilu není povolena" },
         { status: 403 },

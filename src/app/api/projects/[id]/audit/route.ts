@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { db, dbRead, Prisma } from "@/lib/db";
+import { requireUser } from "@/lib/require-user";
 
 // GET /api/projects/[id]/audit
 // Returns audit log entries with server-side filtering, sorting, pagination.
@@ -134,7 +135,10 @@ export async function POST(
       return NextResponse.json({ error: "entityType and action are required" }, { status: 400 });
     }
 
-    const userId = await getDefaultOwnerId();
+    // Attribute audit entry to the authenticated user
+    const { user, response: authResponse } = await requireUser();
+    if (authResponse) return authResponse;
+    const userId = user.id;
 
     const entry = await db.auditLog.create({
       data: {

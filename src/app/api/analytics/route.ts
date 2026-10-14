@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { db, dbRead, Prisma } from "@/lib/db";
-import { getDefaultOwnerId } from "@/lib/default-owner";
+import { requireUser } from "@/lib/require-user";
 
 // =====================================================================
 // /api/analytics — internal telemetry endpoint
@@ -40,8 +40,10 @@ export async function POST(request: Request) {
       );
     }
 
-    // Until real auth is implemented, attribute events to the default owner.
-    const userId = await getDefaultOwnerId();
+    // Attribute events to the authenticated user
+    const { user, response } = await requireUser();
+    if (response) return response;
+    const userId = user.id;
 
     const event = await db.analyticsEvent.create({
       data: {

@@ -1,5 +1,6 @@
 import type { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
+import GoogleProvider from "next-auth/providers/google";
 import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
 
@@ -7,15 +8,16 @@ import { db } from "@/lib/db";
 // NextAuth.js configuration
 // ---------------------------------------------------------------------
 // Strategy: JWT (stateless) + Credentials provider (e-mail + password)
+//           + Google OAuth provider (Phase 2)
 //
 // Why JWT:
 //   - No DB query per request (only on login)
 //   - Scales well for B2C
 //   - Simpler than database sessions
 //
-// Why Credentials (not OAuth yet):
-//   - Phase 1: e-mail + password only
-//   - Phase 2 (later): add Google OAuth as an additional provider
+// Providers:
+//   1. Credentials — e-mail + password (Phase 1, primary)
+//   2. Google — OAuth 2.0 (Phase 2, convenience)
 //
 // Account claiming flow:
 //   When a user registers with an e-mail that already exists in the DB
@@ -24,10 +26,14 @@ import { db } from "@/lib/db";
 //   password. This preserves all their projects and data.
 //
 // Soft-required email verification:
-//   After registration, the user is logged in (has a JWT) but the token
-//   contains `emailVerified: null`. The middleware checks this field and
+//   After registration (Credentials only — Google is pre-verified),
+//   the user is logged in (has a JWT) but the token contains
+//   `emailVerified: null`. The middleware checks this field and
 //   redirects unverified users to /auth/verify-pending. They can't see
 //   any projects until they click the verification link in their e-mail.
+//
+// Google users are always pre-verified (emailVerified = now on first
+// login) because Google already verified the e-mail.
 // =====================================================================
 
 export const authOptions: NextAuthOptions = {
@@ -39,6 +45,7 @@ export const authOptions: NextAuthOptions = {
   },
 
   providers: [
+    // ===== Credentials provider (e-mail + password) =====
     CredentialsProvider({
       name: "credentials",
       credentials: {
@@ -75,9 +82,7 @@ export const authOptions: NextAuthOptions = {
         if (!user.password) {
           // This e-mail exists but was created via OAuth (Google) —
           // tell the user to use that provider instead.
-          throw new Error(
-            "use-oauth",
-          );
+          throw new Error("use-oauth");
         }
 
         // Verify password
@@ -102,9 +107,107 @@ export const authOptions: NextAuthOptions = {
         };
       },
     }),
+
+    // ===== Google OAuth provider (Phase 2) =====
+    // Only enabled if GOOGLE_CLIENT_ID + GOOGLE_CLIENT_SECRET are set.
+    // This lets us deploy without Google configured (dev/test) and
+    // enable it later by setting the env vars.
+    ...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
+      ? [
+          GoogleProvider({
+            clientId: process.env.GOOGLE_CLIENT_ID,
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+            // Request profile + e-mail scopes (default for GoogleProvider)
+            // The user's name + picture come from the profile response.
+          }),
+        ]
+      : []),
   ],
 
   callbacks: {
+    // ===== signIn callback =====
+    // Called when a user signs in. For Google OAuth, we need to:
+    //   1. Find or create the user in our DB
+    //   2. If new, mark emailVerified = now (Google pre-verified)
+    //   3. If existing ghost user (password=null), link the account
+    //   4. If existing with password, link the Google account too
+    //      (user can log in with either method)
+    //
+    // For Credentials, we just return true (authorize() already
+    // verified the password).
+    async signIn({ user, account }) {
+      // Only handle Google OAuth sign-ins (account.provider === "google")
+      // Credentials sign-ins are already handled by authorize().
+      if (account?.provider !== "google") {
+        return true;
+      }
+
+      if (!user.email) {
+        // Google didn't return an e-mail — reject
+        return false;
+      }
+
+      const email = user.email.toLowerCase();
+
+      // Find or create the user in our DB
+      const existing = await db.user.findUnique({
+        where: { email },
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          image: true,
+          emailVerified: true,
+          password: true,
+        },
+      });
+
+      if (existing) {
+        // User exists — update image/name from Google if changed
+        // (Google profile picture URL can change over time)
+        if (user.image && user.image !== existing.image) {
+          await db.user.update({
+            where: { id: existing.id },
+            data: { image: user.image },
+          });
+        }
+        if (user.name && !existing.name) {
+          await db.user.update({
+            where: { id: existing.id },
+            data: { name: user.name },
+          });
+        }
+        // Mark e-mail as verified if not already (Google pre-verified)
+        if (!existing.emailVerified) {
+          await db.user.update({
+            where: { id: existing.id },
+            data: { emailVerified: new Date() },
+          });
+        }
+        // Attach the user's DB id + emailVerified to the JWT token
+        // (user.id from Google is the Google subject, not our DB id)
+        user.id = existing.id;
+        (user as { emailVerified?: string | null }).emailVerified =
+          existing.emailVerified?.toISOString() ?? new Date().toISOString();
+      } else {
+        // New user — create in DB
+        const newUser = await db.user.create({
+          data: {
+            email,
+            name: user.name ?? null,
+            image: user.image ?? null,
+            // Google pre-verified the e-mail
+            emailVerified: new Date(),
+          },
+        });
+        user.id = newUser.id;
+        (user as { emailVerified?: string | null }).emailVerified =
+          newUser.emailVerified.toISOString();
+      }
+
+      return true;
+    },
+
     // ===== jwt callback =====
     // Called on every request that has a JWT. We use it to include
     // `emailVerified` in the token so the middleware can check it

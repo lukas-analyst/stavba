@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { getDefaultOwnerId } from "@/lib/default-owner";
+import { requireUser } from "@/lib/require-user";
 import { getTemplate } from "@/lib/project-templates";
 
 // POST /api/projects/from-template
@@ -46,8 +46,10 @@ export async function POST(request: Request) {
       slug = `${baseSlug}-${suffix++}`;
     }
 
-    // Get the default owner (until auth is implemented)
-    const ownerId = await getDefaultOwnerId();
+    // Require authentication — projects are owned by the logged-in user
+    const { user, response } = await requireUser();
+    if (response) return response;
+    const ownerId = user.id;
 
     // Create the project
     const project = await db.project.create({
