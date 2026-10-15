@@ -14,10 +14,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useCreateProjectFromTemplate, useProjects } from "@/lib/api";
-import { PROJECT_TEMPLATES } from "@/lib/project-templates";
+import { PROJECT_TEMPLATES, getTemplate, type TemplateItem } from "@/lib/project-templates";
 import { toast } from "sonner";
-import { Loader2, Building, Home, Palette, Plus, Copy, FileText } from "lucide-react";
+import { Loader2, Building, Home, Palette, Plus, Copy, FileText, Bath, Warehouse } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
 import { useQueryClient } from "@tanstack/react-query";
 
 type Props = {
@@ -30,7 +31,22 @@ const TEMPLATE_ICONS: Record<string, React.ComponentType<{ className?: string }>
   new_build: Home,
   interior: Palette,
   extension: Plus,
+  apartment_2plus1: Home,
+  bathroom: Bath,
+  roof: Warehouse,
 };
+
+// Czech pluralization for "položka".
+// 1 → položka, 2-4 → položky, 0/5+ → položek
+// (with exception for 11-14 which use "položek")
+function pluralizeItems(count: number): string {
+  if (count === 1) return "položka";
+  const lastTwo = count % 100;
+  if (lastTwo >= 11 && lastTwo <= 14) return "položek";
+  const last = count % 10;
+  if (last >= 2 && last <= 4) return "položky";
+  return "položek";
+}
 
 type Mode = "blank" | "template" | "copy";
 
@@ -55,6 +71,37 @@ export function NewProjectDialog({ open, onOpenChange }: Props) {
     [templateType],
   );
   const needsScope = selectedTemplate?.askScope;
+
+  // Scope-filtered template for the preview — this is exactly what will be
+  // created on the server (POST /api/projects/from-template calls
+  // getTemplate with the same args).
+  const previewTemplate = useMemo(
+    () => (templateType ? getTemplate(templateType, scope || undefined) : null),
+    [templateType, scope],
+  );
+
+  // Group preview items by category → { category, count, sum }.
+  // Order is preserved (first-occurrence) so it matches the template flow.
+  const categoryGroups = useMemo(() => {
+    if (!previewTemplate) return [] as { category: string; count: number; sum: number }[];
+    const groups = new Map<string, { count: number; sum: number }>();
+    for (const item of previewTemplate.items as TemplateItem[]) {
+      const g = groups.get(item.category) ?? { count: 0, sum: 0 };
+      g.count += 1;
+      g.sum += item.planCost || 0;
+      groups.set(item.category, g);
+    }
+    return Array.from(groups.entries()).map(([category, { count, sum }]) => ({
+      category,
+      count,
+      sum,
+    }));
+  }, [previewTemplate]);
+
+  const totalPlanSum = useMemo(
+    () => previewTemplate?.items.reduce((s, i) => s + (i.planCost || 0), 0) ?? 0,
+    [previewTemplate],
+  );
 
   const reset = () => {
     setMode(null);
@@ -432,26 +479,30 @@ export function NewProjectDialog({ open, onOpenChange }: Props) {
                   </div>
                 )}
 
-                {/* Template preview */}
-                {templateType && selectedTemplate && (!needsScope || scope) && (
+                {/* Template preview — grouped by category */}
+                {templateType && selectedTemplate && (!needsScope || scope) && previewTemplate && (
                   <div className="rounded-lg border bg-muted/20 p-3">
                     <div className="mb-2 flex items-center justify-between">
                       <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                        Náhled položek ({selectedTemplate.items.length})
+                        Náhled podle kategorií
                       </span>
                     </div>
-                    <div className="max-h-40 space-y-1 overflow-y-auto scrollbar-thin">
-                      {selectedTemplate.items.map((item, i) => (
-                        <div key={i} className="flex items-center gap-2 text-[11px]">
-                          <span className="truncate font-medium">{item.subcategory}</span>
-                          <span className="text-muted-foreground">— {item.phase}</span>
-                          {item.planCost && (
-                            <span className="ml-auto font-medium tabular-nums">
-                              {item.planCost.toLocaleString("cs-CZ")} Kč
-                            </span>
-                          )}
+                    <div className="space-y-1">
+                      {categoryGroups.map(({ category, count, sum }) => (
+                        <div key={category} className="flex items-center gap-2 text-[11px]">
+                          <Badge variant="secondary" className="font-medium">{category}</Badge>
+                          <span className="text-muted-foreground">
+                            {count} {pluralizeItems(count)}
+                          </span>
+                          <span className="ml-auto font-medium tabular-nums">
+                            {sum.toLocaleString("cs-CZ")} Kč
+                          </span>
                         </div>
                       ))}
+                    </div>
+                    <div className="mt-2 border-t pt-2 text-[11px] font-semibold">
+                      Celkem: {previewTemplate.items.length} {pluralizeItems(previewTemplate.items.length)}, {" "}
+                      {totalPlanSum.toLocaleString("cs-CZ")} Kč
                     </div>
                   </div>
                 )}

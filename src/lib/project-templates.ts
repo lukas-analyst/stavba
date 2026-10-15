@@ -184,6 +184,104 @@ export const PROJECT_TEMPLATES: ProjectTemplate[] = [
       { category: "Zabydlování", subcategory: "Fasáda", phase: ZABYDLOVANI, planCost: 60000, flexibilityPercent: 20, planDays: 7, note: "Zateplení a sjednocení s existujícím objektem" },
     ],
   },
+  {
+    type: "apartment_2plus1",
+    label: "Rekonstrukce bytu 2+1",
+    description: "Kompletní rekonstrukce bytu 2+1 (~70 m²) — demolice, rozvody, koupelna, kuchyně, podlahy, malování.",
+    items: [
+      // Příprava
+      { category: "Projekt a příprava", subcategory: "Projekt rekonstrukce", phase: PRIPRAVA, required: true, planCost: 25000, flexibilityPercent: 25, planDays: 21, note: "Projekt a ohlášení stavebního úřadu (pokud je potřeba)" },
+
+      // Demolice
+      { category: "Demolice", subcategory: "Demolice - podlahy, omítky, příčky", phase: DEMOLICE, required: true, planCost: 35000, flexibilityPercent: 30, planDays: 5, note: "Odstranění stávajících podlah, omítek a příček" },
+      { category: "Demolice", subcategory: "Kontejner a odvoz suti", phase: DEMOLICE, required: true, planCost: 12000, flexibilityPercent: 20, planDays: 3 },
+
+      // Hrubá stavba
+      { category: "Hrubá stavba", subcategory: "Vnitřní omítky - materiál", phase: HRUBA_STAVBA, planCost: 25000, flexibilityPercent: 20, planDays: 3 },
+      { category: "Hrubá stavba", subcategory: "Vnitřní omítky - práce", phase: HRUBA_STAVBA, required: true, planCost: 45000, flexibilityPercent: 15, planDays: 10 },
+      { category: "Hrubá stavba", subcategory: "Sádrokarton příčky - materiál", phase: HRUBA_STAVBA, planCost: 20000, flexibilityPercent: 20, planDays: 2 },
+      { category: "Hrubá stavba", subcategory: "Sádrokarton příčky - práce", phase: HRUBA_STAVBA, planCost: 30000, flexibilityPercent: 15, planDays: 7 },
+
+      // Rozvody a sítě
+      { category: "Rozvody a sítě", subcategory: "Elektroinstalace", phase: HRUBA_STAVBA, required: true, planCost: 90000, flexibilityPercent: 20, planDays: 10, note: "Rozvody, zásuvky, vypínače, jističové skříně" },
+      { category: "Rozvody a sítě", subcategory: "Rozvody vody a odpadu", phase: HRUBA_STAVBA, required: true, planCost: 45000, flexibilityPercent: 25, planDays: 5 },
+      { category: "Rozvody a sítě", subcategory: "Vytápění - úprava radiátorů", phase: HRUBA_STAVBA, planCost: 35000, flexibilityPercent: 30, planDays: 5, note: "Výměna radiátorů a úprava rozvodů" },
+
+      // Koupelna
+      { category: "Koupelna", subcategory: "Obklady a dlažba - materiál i práce", phase: ZABYDLOVANI, planCost: 40000, flexibilityPercent: 20, planDays: 5 },
+      { category: "Koupelna", subcategory: "Vana/sprcha, WC, umyvadlo", phase: ZABYDLOVANI, required: true, planCost: 40000, flexibilityPercent: 25, planDays: 3 },
+      { category: "Koupelna", subcategory: "Práce - montáž", phase: ZABYDLOVANI, planCost: 30000, flexibilityPercent: 20, planDays: 7 },
+
+      // Kuchyně
+      { category: "Kuchyně", subcategory: "Kuchyňská linka - dodávka", phase: ZABYDLOVANI, required: true, planCost: 100000, flexibilityPercent: 25, planDays: 21, note: "Včetně montáže" },
+      { category: "Kuchyně", subcategory: "Spotřebiče", phase: ZABYDLOVANI, planCost: 55000, flexibilityPercent: 30, planDays: 7, note: "Sporák, digestoř, lednice, myčka" },
+      { category: "Kuchyně", subcategory: "Instalace a připojení", phase: ZABYDLOVANI, planCost: 15000, flexibilityPercent: 20, planDays: 3 },
+
+      // Podlahy
+      { category: "Podlahy", subcategory: "Laminát - materiál i práce", phase: ZABYDLOVANI, required: true, planCost: 50000, flexibilityPercent: 20, planDays: 5 },
+      { category: "Podlahy", subcategory: "Dlažba (koupelna, kuchyň)", phase: ZABYDLOVANI, planCost: 25000, flexibilityPercent: 20, planDays: 4 },
+
+      // Malování
+      { category: "Malování", subcategory: "Stěny a stropy", phase: ZABYDLOVANI, required: true, planCost: 40000, flexibilityPercent: 15, planDays: 7 },
+
+      // Do budoucna
+      { category: "Do budoucna", subcategory: "Drobné opravy a rezerva", phase: DO_BUDOUCNA, planCost: 30000, flexibilityPercent: 100, planDays: 5, note: "Rezerva na nenadálé práce" },
+    ],
+  },
+  {
+    type: "bathroom",
+    label: "Rekonstrukce koupelny",
+    description: "Kompletní rekonstrukce koupelny (~5 m²) — demolice, rozvody, obklady, vybavení, elektro.",
+    items: [
+      // Příprava
+      { category: "Příprava", subcategory: "Projekt koupelny", phase: PRIPRAVA, required: true, planCost: 8000, flexibilityPercent: 30, planDays: 5, note: "Návrh, zaměření, výběr materiálů" },
+
+      // Demolice
+      { category: "Demolice", subcategory: "Demolice staré koupelny", phase: DEMOLICE, required: true, planCost: 8000, flexibilityPercent: 30, planDays: 2, note: "Odstranění obkladů, dlažby, starého vybavení" },
+      { category: "Demolice", subcategory: "Odvoz suti a kontejner", phase: DEMOLICE, required: true, planCost: 4000, flexibilityPercent: 20, planDays: 1 },
+
+      // Voda a odpad
+      { category: "Voda a odpad", subcategory: "Rozvody vody", phase: HRUBA_STAVBA, required: true, planCost: 12000, flexibilityPercent: 25, planDays: 3, note: "Teplá a studená voda, včetně přípojek" },
+      { category: "Voda a odpad", subcategory: "Odpadní potrubí", phase: HRUBA_STAVBA, required: true, planCost: 10000, flexibilityPercent: 20, planDays: 2 },
+
+      // Obklady
+      { category: "Obklady", subcategory: "Obklad a dlažba - materiál", phase: HRUBA_STAVBA, required: true, planCost: 15000, flexibilityPercent: 20, planDays: 2, note: "Obklad stěn, dlažba na podlaze" },
+      { category: "Obklady", subcategory: "Obklad a dlažba - práce", phase: HRUBA_STAVBA, required: true, planCost: 20000, flexibilityPercent: 15, planDays: 5 },
+
+      // Elektro
+      { category: "Elektro", subcategory: "Elektroinstalace koupelny", phase: HRUBA_STAVBA, required: true, planCost: 10000, flexibilityPercent: 25, planDays: 2, note: "Zásuvky a osvětlení IP54" },
+
+      // Vybavení
+      { category: "Vybavení", subcategory: "Vana/sprcha, WC, umyvadlo", phase: ZABYDLOVANI, required: true, planCost: 26000, flexibilityPercent: 30, planDays: 1, note: "Sanitární keramika a baterie" },
+      { category: "Vybavení", subcategory: "Montáž vybavení - práce", phase: ZABYDLOVANI, planCost: 8000, flexibilityPercent: 20, planDays: 2 },
+    ],
+  },
+  {
+    type: "roof",
+    label: "Rekonstrukce střechy",
+    description: "Kompletní výměna střechy — demolice, krov, izolace, krytina, klempíř.",
+    items: [
+      // Příprava
+      { category: "Příprava", subcategory: "Průzkum a projekt střechy", phase: PRIPRAVA, required: true, planCost: 20000, flexibilityPercent: 20, planDays: 14, note: "Včetně statického posudku krovu" },
+
+      // Demolice staré střechy
+      { category: "Demolice staré střechy", subcategory: "Demolice staré krytiny a odvoz", phase: DEMOLICE, required: true, planCost: 30000, flexibilityPercent: 30, planDays: 4, note: "Odstranění tašek, latí, folií, kontejner" },
+
+      // Krov
+      { category: "Krov", subcategory: "Oprava a výměna krovu", phase: HRUBA_STAVBA, required: true, planCost: 60000, flexibilityPercent: 25, planDays: 10, note: "Výměna poškozených trámů, impregnace" },
+
+      // Izolace
+      { category: "Izolace", subcategory: "Hydroizolace - folie a parozábrana", phase: HRUBA_STAVBA, required: true, planCost: 25000, flexibilityPercent: 20, planDays: 3, note: "Podkrovní a parotěsné fólie" },
+      { category: "Izolace", subcategory: "Tepelná izolace", phase: HRUBA_STAVBA, planCost: 30000, flexibilityPercent: 30, planDays: 4, note: "Minerální vlna mezi krokve" },
+
+      // Krytina
+      { category: "Krytina", subcategory: "Krytina - materiál (tašky)", phase: ZABYDLOVANI, required: true, planCost: 80000, flexibilityPercent: 15, planDays: 5, note: "Betónové tašky, hřebeny, doplňky" },
+      { category: "Krytina", subcategory: "Krytina - práce", phase: ZABYDLOVANI, required: true, planCost: 35000, flexibilityPercent: 15, planDays: 5 },
+
+      // Klempíř
+      { category: "Klempíř", subcategory: "Klempířské prvky - materiál a práce", phase: ZABYDLOVANI, required: true, planCost: 25000, flexibilityPercent: 20, planDays: 3, note: "Římsy, svody, háky" },
+    ],
+  },
 ];
 
 export function getTemplate(type: string, scope?: string): ProjectTemplate | null {

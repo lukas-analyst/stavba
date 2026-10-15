@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, type ReactNode } from "react";
 import {
   usePayments,
   useBudgetItems,
@@ -50,6 +50,12 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
   Plus,
   Trash2,
   Pencil,
@@ -59,6 +65,10 @@ import {
   Layers,
   CircleDollarSign,
   ArrowUpDown,
+  Eye,
+  AlertTriangle,
+  CornerDownRight,
+  ChevronRight,
 } from "lucide-react";
 import { formatCzk, formatDate, PAYMENT_TYPES, paymentTypeLabel } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -149,6 +159,17 @@ export function PaymentsTab({ projectId }: { projectId: string }) {
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [sortBy, setSortBy] = useState<SortKey>("date-desc");
 
+  // "Přidat splátku" flow: when user clicks the button on an invoice card or
+  // the in-dialog "Přidat splátku k této faktuře" action, we open PaymentDialog
+  // in create mode with this parent's fields pre-filled and `installmentOf`
+  // forced to the parent's id.
+  const [installmentPrefillParent, setInstallmentPrefillParent] = useState<Payment | null>(null);
+
+  // "Zobrazit" highlight: when user clicks "Zobrazit" on an invoice card, we
+  // highlight all rows belonging to that invoice in the table and scroll to
+  // the parent row.
+  const [highlightInvoiceId, setHighlightInvoiceId] = useState<string | null>(null);
+
   // Listen for FAB "add payment" trigger (mobile contextual FAB)
   useEffect(() => {
     const handler = (e: Event) => {
@@ -217,82 +238,60 @@ export function PaymentsTab({ projectId }: { projectId: string }) {
     .slice()
     .sort((a, b) => sortPayments(a.parent, b.parent, sortBy));
 
-  // Build a single flat list of all payment rows (standalone + installment
-  // parents + installment children) so they can be rendered in ONE unified
-  // table. Each row carries optional installment metadata for display.
-  type RowMeta = {
-    isInstallmentParent: boolean;
-    isInstallmentChild: boolean;
-    installmentNumber: number; // 1 for parent, 2+ for children
-    totalInstallments: number; // 1 + children count
-    invoiceTotal: number | null;
-    paidTotal: number; // sum of parent + all children
-    remaining: number;
-    percent: number;
-    parentId?: string; // for children — to keep parent reference
-  };
-  const allRows: { payment: Payment; meta: RowMeta }[] = [];
+  // Build a list of "render blocks" so parent+children stay grouped together
+  // (children must visually follow their parent with a vertical connector).
+  // Standalone payments are single-row blocks. Sorting applies to the block's
+  // "anchor" payment (the standalone payment itself, or the group parent).
+  type RenderBlock =
+    | { kind: "standalone"; payment: Payment }
+    | {
+        kind: "group";
+        parent: Payment;
+        children: Payment[];
+        invoiceTotal: number;
+        paidTotal: number;
+        remaining: number;
+        percent: number;
+      };
 
-  // Standalone payments (no installment metadata)
+  const renderBlocks: RenderBlock[] = [];
   for (const p of filteredStandalone) {
-    allRows.push({
-      payment: p,
-      meta: {
-        isInstallmentParent: false,
-        isInstallmentChild: false,
-        installmentNumber: 0,
-        totalInstallments: 0,
-        invoiceTotal: null,
-        paidTotal: p.amount,
-        remaining: 0,
-        percent: 100,
-      },
-    });
+    renderBlocks.push({ kind: "standalone", payment: p });
   }
-
-  // Installment groups: parent (as row 1) + each child (row 2, 3, ...)
   for (const g of filteredGroups) {
-    const children = g.installments;
     const invoiceTotal = g.parent.invoiceTotal ?? g.parent.amount;
-    const paidTotal = g.parent.amount + children.reduce((s, i) => s + i.amount, 0);
+    const paidTotal = g.parent.amount + g.installments.reduce((s, i) => s + i.amount, 0);
     const remaining = invoiceTotal - paidTotal;
     const percent = invoiceTotal > 0 ? (paidTotal / invoiceTotal) * 100 : 0;
-    allRows.push({
-      payment: g.parent,
-      meta: {
-        isInstallmentParent: true,
-        isInstallmentChild: false,
-        installmentNumber: 1,
-        totalInstallments: 1 + children.length,
-        invoiceTotal,
-        paidTotal,
-        remaining,
-        percent,
-      },
-    });
-    children.forEach((c, i) => {
-      allRows.push({
-        payment: c,
-        meta: {
-          isInstallmentParent: false,
-          isInstallmentChild: true,
-          installmentNumber: i + 2,
-          totalInstallments: 1 + children.length,
-          invoiceTotal,
-          paidTotal,
-          remaining,
-          percent,
-          parentId: g.parent.id,
-        },
-      });
+    renderBlocks.push({
+      kind: "group",
+      parent: g.parent,
+      children: g.installments,
+      invoiceTotal,
+      paidTotal,
+      remaining,
+      percent,
     });
   }
 
-  // Sort the flat list by the user's chosen sort key (parent/child ordering
-  // is preserved by stable sort within same date).
-  allRows.sort((a, b) => sortPayments(a.payment, b.payment, sortBy));
+  // Sort blocks by the user's chosen sort key (anchored on standalone payment
+  // or group parent — children stay attached to their parent).
+  renderBlocks.sort((a, b) =>
+    sortPayments(
+      a.kind === "standalone" ? a.payment : a.parent,
+      b.kind === "standalone" ? b.payment : b.parent,
+      sortBy,
+    ),
+  );
 
-  const totalAmount = allRows.reduce((s, r) => s + r.payment.amount, 0);
+  const totalAmount = renderBlocks.reduce(
+    (s, b) =>
+      s +
+      (b.kind === "standalone"
+        ? b.payment.amount
+        : b.parent.amount + b.children.reduce((s2, c) => s2 + c.amount, 0)),
+    0,
+  );
 
   return (
     <div id="payments-root" className="space-y-4">
@@ -400,6 +399,27 @@ export function PaymentsTab({ projectId }: { projectId: string }) {
         />
       ) : (
         <div className="space-y-3">
+          {/* ===== Invoices overview (installment groups) ===== */}
+          {/* Compact cards above the table — one per installment-parent invoice */}
+          {filteredGroups.length > 0 && (
+            <InvoicesOverview
+              groups={filteredGroups}
+              onAddInstallment={(parent) => setInstallmentPrefillParent(parent)}
+              onShow={(parentId) => {
+                setHighlightInvoiceId(parentId);
+                // Defer scroll until after React commits the (possible) state-driven className change.
+                requestAnimationFrame(() => {
+                  const el = document.getElementById(`invoice-row-${parentId}`);
+                  if (el) {
+                    el.scrollIntoView({ behavior: "smooth", block: "center" });
+                  }
+                });
+                // Auto-clear the highlight after a few seconds so it doesn't linger.
+                window.setTimeout(() => setHighlightInvoiceId(null), 4000);
+              }}
+            />
+          )}
+
           {/* Unified payments table — standalone + installment invoices merged */}
           <div className="overflow-hidden rounded-lg border border-outline-variant bg-card">
             <Table>
@@ -416,25 +436,102 @@ export function PaymentsTab({ projectId }: { projectId: string }) {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {allRows.map(({ payment, meta }) => (
-                  <PaymentRow
-                    key={payment.id}
-                    payment={payment}
-                    meta={meta}
-                    projectId={projectId}
-                    onEdit={() => setEditPayment(payment)}
-                    updatePayment={updatePayment}
-                    onDelete={async () => {
-                      try {
-                        await deletePayment.mutateAsync(payment.id);
-                        trackEvent("delete_payment", { amount: payment.amount });
-                        toast.success("Platba smazána");
-                      } catch {
-                        toast.error("Nepodařilo se smazat");
-                      }
-                    }}
-                  />
-                ))}
+                {renderBlocks.flatMap((block): ReactNode[] => {
+                  if (block.kind === "standalone") {
+                    const p = block.payment;
+                    return [
+                      <PaymentRow
+                        key={p.id}
+                        payment={p}
+                        projectId={projectId}
+                        onEdit={() => setEditPayment(p)}
+                        updatePayment={updatePayment}
+                        onDelete={async () => {
+                          try {
+                            await deletePayment.mutateAsync(p.id);
+                            trackEvent("delete_payment", { amount: p.amount });
+                            toast.success("Platba smazána");
+                          } catch {
+                            toast.error("Nepodařilo se smazat");
+                          }
+                        }}
+                      />,
+                    ];
+                  }
+                  const { parent, children, invoiceTotal, paidTotal, remaining, percent } = block;
+                  const rows: ReactNode[] = [];
+                  rows.push(
+                    <PaymentRow
+                      key={parent.id}
+                      payment={parent}
+                      meta={{
+                        isInstallmentParent: true,
+                        isInstallmentChild: false,
+                        installmentNumber: 1,
+                        totalInstallments: 1 + children.length,
+                        invoiceTotal,
+                        paidTotal,
+                        remaining,
+                        percent,
+                      }}
+                      highlighted={highlightInvoiceId === parent.id}
+                      rowId={`invoice-row-${parent.id}`}
+                      projectId={projectId}
+                      onEdit={() => setEditPayment(parent)}
+                      updatePayment={updatePayment}
+                      onDelete={async () => {
+                        try {
+                          await deletePayment.mutateAsync(parent.id);
+                          trackEvent("delete_payment", { amount: parent.amount });
+                          toast.success("Platba smazána");
+                        } catch {
+                          toast.error("Nepodařilo se smazat");
+                        }
+                      }}
+                    />,
+                  );
+                  children.forEach((c, i) => {
+                    rows.push(
+                      <PaymentRow
+                        key={c.id}
+                        payment={c}
+                        meta={{
+                          isInstallmentParent: false,
+                          isInstallmentChild: true,
+                          installmentNumber: i + 2,
+                          totalInstallments: 1 + children.length,
+                          invoiceTotal,
+                          paidTotal,
+                          remaining,
+                          percent,
+                          parentId: parent.id,
+                        }}
+                        highlighted={highlightInvoiceId === parent.id}
+                        projectId={projectId}
+                        onEdit={() => setEditPayment(c)}
+                        updatePayment={updatePayment}
+                        onDelete={async () => {
+                          try {
+                            await deletePayment.mutateAsync(c.id);
+                            trackEvent("delete_payment", { amount: c.amount });
+                            toast.success("Platba smazána");
+                          } catch {
+                            toast.error("Nepodařilo se smazat");
+                          }
+                        }}
+                      />,
+                    );
+                  });
+                  // "Add installment" row — small inline button at the end of the group.
+                  rows.push(
+                    <AddInstallmentRow
+                      key={`add-${parent.id}`}
+                      parent={parent}
+                      onAdd={() => setInstallmentPrefillParent(parent)}
+                    />,
+                  );
+                  return rows;
+                })}
               </TableBody>
             </Table>
           </div>
@@ -442,14 +539,40 @@ export function PaymentsTab({ projectId }: { projectId: string }) {
       )}
 
       <PaymentDialog
-        open={addOpen}
-        onOpenChange={setAddOpen}
+        open={addOpen && !installmentPrefillParent}
+        onOpenChange={(o) => {
+          setAddOpen(o);
+          if (!o) setInstallmentPrefillParent(null);
+        }}
         projectId={projectId}
         budgetItems={budgetItems ?? []}
         contacts={contacts ?? []}
         payments={payments ?? []}
         createPayment={createPayment}
         updateBudgetItem={updateBudgetItem}
+        onAddInstallmentToExisting={(parent) => {
+          // Switch from create-flow to "add installment to existing invoice"
+          // flow. Make sure to clear `addOpen` so the create dialog stays
+          // closed after the prefill dialog is dismissed.
+          setAddOpen(false);
+          setInstallmentPrefillParent(parent);
+        }}
+      />
+
+      {/* "Add installment" prefill flow — opens PaymentDialog in create mode
+          with parent's fields pre-filled and `installmentOf` forced. */}
+      <PaymentDialog
+        open={!!installmentPrefillParent}
+        onOpenChange={(o) => {
+          if (!o) setInstallmentPrefillParent(null);
+        }}
+        projectId={projectId}
+        budgetItems={budgetItems ?? []}
+        contacts={contacts ?? []}
+        payments={payments ?? []}
+        createPayment={createPayment}
+        updateBudgetItem={updateBudgetItem}
+        prefillParent={installmentPrefillParent}
       />
 
       <PaymentDialog
@@ -488,6 +611,8 @@ type RowMeta = {
 function PaymentRow({
   payment,
   meta,
+  highlighted,
+  rowId,
   projectId,
   onEdit,
   onDelete,
@@ -495,6 +620,8 @@ function PaymentRow({
 }: {
   payment: Payment;
   meta?: RowMeta;
+  highlighted?: boolean;
+  rowId?: string;
   projectId: string;
   onEdit: () => void;
   onDelete: () => void;
@@ -515,30 +642,53 @@ function PaymentRow({
     trackEvent("edit_payment", { field, amount: payment.amount });
   };
 
+  // Children get an indentation + a vertical connector border (border-l)
+  // applied to every cell so the connector spans the full row height.
+  const childIndent = isChild ? "border-l-2 border-outline-variant" : "";
+  const rowBg = cn(
+    isParent && "bg-surface-container-low",
+    highlighted && "bg-warning-soft/60 ring-2 ring-inset ring-warning/50",
+  );
+
   return (
     <TableRow
-      className="group cursor-pointer hover:bg-muted/30 cv-row"
+      id={rowId}
+      className={cn(
+        "group cursor-pointer hover:bg-muted/30 cv-row",
+        isParent && "bg-surface-container-low",
+        highlighted && "bg-warning-soft/60 ring-2 ring-inset ring-warning/50",
+      )}
       onClick={() => onEdit()}
       title="Klikněte pro úpravu platby"
     >
-      <TableCell className="w-16">
-        {hasInstallment && (
-          <Badge
-            variant="outline"
-            className="gap-0.5 type-label-sm text-warning-strong dark:text-warning/80"
-            title={
-              meta?.invoiceTotal != null
-                ? `Faktura ve splátkách: ${formatCzk(meta.invoiceTotal)} — zaplaceno ${formatCzk(meta.paidTotal)} (${meta.percent.toFixed(0)} %), zbývá ${formatCzk(meta.remaining)}`
-                : "Faktura ve splátkách"
-            }
+      <TableCell className={cn("w-16", childIndent, rowBg)}>
+        {isParent ? (
+          <div className="flex items-center gap-1">
+            <Receipt className="h-4 w-4 shrink-0 text-on-surface-variant" />
+            <Badge
+              variant="outline"
+              className="gap-0.5 type-label-sm text-warning-strong dark:text-warning/80"
+              title={
+                meta?.invoiceTotal != null
+                  ? `Faktura ve splátkách: ${formatCzk(meta.invoiceTotal)} — zaplaceno ${formatCzk(meta.paidTotal)} (${meta.percent.toFixed(0)} %), zbývá ${formatCzk(meta.remaining)}`
+                  : "Faktura ve splátkách"
+              }
+            >
+              <span className="tabular-nums">1 / {totalInstallments}</span>
+            </Badge>
+          </div>
+        ) : isChild ? (
+          <span
+            className="inline-flex items-center gap-0.5 type-label-sm text-on-surface-variant tabular-nums"
+            title={`${installmentNumber}. splátka z ${totalInstallments}`}
           >
-            <Layers className="h-2.5 w-2.5" />
-            {isParent ? "1. splátka" : `${installmentNumber}. splátka`}
-            <span className="ml-0.5 tabular-nums">/ {totalInstallments}</span>
-          </Badge>
-        )}
+            <CornerDownRight className="h-3 w-3" />
+            {installmentNumber}. splátka
+            <span className="text-on-surface-variant/70">/ {totalInstallments}</span>
+          </span>
+        ) : null}
       </TableCell>
-      <TableCell className="whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
+      <TableCell className={cn("whitespace-nowrap", childIndent, rowBg)} onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center gap-1.5">
           {hasInstallment && (
             <span
@@ -558,7 +708,7 @@ function PaymentRow({
           />
         </div>
       </TableCell>
-      <TableCell>
+      <TableCell className={cn(childIndent, rowBg)}>
         <div className="flex flex-col">
           <span className="type-body font-medium">
             {payment.budgetItem?.subcategory || payment.budgetItem?.category}
@@ -568,7 +718,7 @@ function PaymentRow({
           </span>
         </div>
       </TableCell>
-      <TableCell>
+      <TableCell className={cn(childIndent, rowBg)}>
         <div className="flex flex-col">
           <span className="type-body">{payment.description || (isParent ? "1. splátka" : "—")}</span>
           {payment.vendor && (
@@ -579,7 +729,7 @@ function PaymentRow({
           )}
         </div>
       </TableCell>
-      <TableCell onClick={(e) => e.stopPropagation()}>
+      <TableCell className={cn(childIndent, rowBg)} onClick={(e) => e.stopPropagation()}>
         <Select value={payment.type} onValueChange={(v) => update("type", v)}>
           <SelectTrigger className="h-7 w-auto border-0 px-1 type-label-sm shadow-none hover:bg-surface-container-high gap-1">
             <Badge variant="outline" className="type-label-sm">
@@ -595,10 +745,10 @@ function PaymentRow({
           </SelectContent>
         </Select>
       </TableCell>
-      <TableCell className="type-label text-on-surface-variant">
+      <TableCell className={cn("type-label text-on-surface-variant", childIndent, rowBg)}>
         {payment.contact?.name || "—"}
       </TableCell>
-      <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
+      <TableCell className={cn("text-right", childIndent, rowBg)} onClick={(e) => e.stopPropagation()}>
         <div className="flex flex-col items-end">
           <InlineNumber
             value={payment.amount}
@@ -618,7 +768,7 @@ function PaymentRow({
           )}
         </div>
       </TableCell>
-      <TableCell onClick={(e) => e.stopPropagation()}>
+      <TableCell className={cn(childIndent, rowBg)} onClick={(e) => e.stopPropagation()}>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100">
@@ -661,6 +811,162 @@ function PaymentRow({
   );
 }
 
+// ===== "Add installment" inline row (rendered at the end of an installment group) =====
+function AddInstallmentRow({
+  parent,
+  onAdd,
+}: {
+  parent: Payment;
+  onAdd: () => void;
+}) {
+  return (
+    <TableRow className="group hover:bg-muted/30">
+      <TableCell colSpan={8} className="border-l-2 border-outline-variant py-1 pl-4">
+        <button
+          type="button"
+          onClick={onAdd}
+          className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 type-label-sm text-on-surface-variant transition-colors hover:bg-surface-container-high hover:text-on-surface"
+          title={`Přidat další splátku k faktuře ${parent.vendor ?? parent.invoiceNumber ?? parent.id.slice(0, 6)}`}
+        >
+          <Plus className="h-3.5 w-3.5" />
+          Přidat splátku
+        </button>
+      </TableCell>
+    </TableRow>
+  );
+}
+
+// ===== Invoices overview (compact cards above the table) =====
+function InvoicesOverview({
+  groups,
+  onAddInstallment,
+  onShow,
+}: {
+  groups: { parent: Payment; installments: Payment[] }[];
+  onAddInstallment: (parent: Payment) => void;
+  onShow: (parentId: string) => void;
+}) {
+  // Compute totals per group once.
+  const cards = groups.map((g) => {
+    const invoiceTotal = g.parent.invoiceTotal ?? g.parent.amount;
+    const paidTotal = g.parent.amount + g.installments.reduce((s, i) => s + i.amount, 0);
+    const remaining = invoiceTotal - paidTotal;
+    const percent = invoiceTotal > 0 ? (paidTotal / invoiceTotal) * 100 : 0;
+    const installmentCount = 1 + g.installments.length;
+    const title =
+      g.parent.vendor ||
+      g.parent.invoiceNumber ||
+      g.parent.description ||
+      g.parent.budgetItem?.subcategory ||
+      g.parent.budgetItem?.category ||
+      "Faktura";
+    return {
+      parent: g.parent,
+      invoiceTotal,
+      paidTotal,
+      remaining,
+      percent,
+      installmentCount,
+      title,
+    };
+  });
+
+  return (
+    <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+      {cards.map((c) => {
+        // MD3-style progress bar: green at 100%, amber when >50%, red when overpaid (>100%).
+        const progressColor =
+          c.percent >= 100
+            ? "bg-success"
+            : c.percent > 100
+              ? "bg-danger"
+              : c.percent > 50
+                ? "bg-warning"
+                : "bg-info";
+        const remainingTone =
+          c.remaining < 0
+            ? "text-danger"
+            : c.remaining === 0
+              ? "text-success"
+              : "text-on-surface-variant";
+        return (
+          <Card key={c.parent.id} className="gap-3 rounded-lg p-3 shadow-sm">
+            <CardHeader className="gap-1 px-0 pb-0">
+              <div className="flex items-start justify-between gap-2">
+                <CardTitle className="flex items-center gap-1.5 text-sm font-semibold leading-tight">
+                  <Receipt className="h-3.5 w-3.5 shrink-0 text-on-surface-variant" />
+                  <span className="truncate">{c.title}</span>
+                </CardTitle>
+                <Badge variant="outline" className="shrink-0 type-label-sm">
+                  {c.installmentCount}× splátka
+                </Badge>
+              </div>
+              {c.parent.budgetItem && (
+                <p className="type-label text-on-surface-variant">
+                  {c.parent.budgetItem.category}
+                  {c.parent.budgetItem.subcategory ? ` · ${c.parent.budgetItem.subcategory}` : ""}
+                </p>
+              )}
+            </CardHeader>
+            <CardContent className="space-y-2 px-0 pb-0">
+              {/* Amounts row */}
+              <div className="grid grid-cols-3 gap-2 text-center">
+                <div>
+                  <div className="type-label text-on-surface-variant">Faktura</div>
+                  <div className="type-body font-semibold tabular-nums">{formatCzk(c.invoiceTotal)}</div>
+                </div>
+                <div>
+                  <div className="type-label text-on-surface-variant">Zaplaceno</div>
+                  <div className="type-body font-semibold tabular-nums text-success">{formatCzk(c.paidTotal)}</div>
+                </div>
+                <div>
+                  <div className="type-label text-on-surface-variant">Zbývá</div>
+                  <div className={cn("type-body font-semibold tabular-nums", remainingTone)}>
+                    {formatCzk(c.remaining)}
+                  </div>
+                </div>
+              </div>
+              {/* MD3 progress bar */}
+              <div className="relative h-2 w-full overflow-hidden rounded-full bg-surface-container-high">
+                <div
+                  className={cn("h-full transition-all", progressColor)}
+                  style={{ width: `${Math.min(100, c.percent)}%` }}
+                />
+              </div>
+              <div className="flex items-center justify-between type-label text-on-surface-variant">
+                <span className="tabular-nums">{c.percent.toFixed(0)} %</span>
+                {c.parent.invoiceNumber && (
+                  <span className="truncate">č. {c.parent.invoiceNumber}</span>
+                )}
+              </div>
+              {/* Actions */}
+              <div className="flex items-center gap-1.5 pt-1">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-7 flex-1"
+                  onClick={() => onShow(c.parent.id)}
+                  title="Zobrazit splátky v tabulce"
+                >
+                  <Eye className="mr-1 h-3.5 w-3.5" /> Zobrazit
+                </Button>
+                <Button
+                  size="sm"
+                  className="h-7 flex-1"
+                  onClick={() => onAddInstallment(c.parent)}
+                  title="Přidat další splátku k této faktuře"
+                >
+                  <Plus className="mr-1 h-3.5 w-3.5" /> Přidat splátku
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        );
+      })}
+    </div>
+  );
+}
+
 // ===== Payment dialog (create + edit) =====
 interface PaymentDialogProps {
   open: boolean;
@@ -679,6 +985,19 @@ interface PaymentDialogProps {
   updateBudgetItem: ReturnType<typeof useUpdateBudgetItem>;
   payment?: Payment | null;
   onClose?: () => void;
+  /**
+   * When set, dialog opens in "add installment" mode — a create flow that
+   * pre-fills the parent's budgetItem/contact/vendor/invoiceNumber and forces
+   * `installmentOf = prefillParent.id` on submit. The "isInvoice" toggle is
+   * hidden and the user can't pick a different invoiceTotal.
+   */
+  prefillParent?: Payment | null;
+  /**
+   * Called when the user clicks "Přidat splátku k této faktuře" after picking
+   * a budget item that already has an invoice. The parent component switches
+   * to "add installment" mode using the discovered parent.
+   */
+  onAddInstallmentToExisting?: (parent: Payment) => void;
 }
 
 // Wrapper component: handles Dialog open state and remounts inner form via `key`
@@ -691,11 +1010,11 @@ interface PaymentDialogProps {
 // the same key "new", so React could in some reconciliations preserve
 // stale state from the previous session.
 function PaymentDialog(props: PaymentDialogProps) {
-  const { open, payment } = props;
+  const { open, payment, prefillParent } = props;
   if (!open) return null;
   return (
     <PaymentDialogInner
-      key={`${payment?.id ?? "new"}-${open}`}
+      key={`${payment?.id ?? "new"}-${!!prefillParent}-${open}`}
       {...props}
     />
   );
@@ -713,8 +1032,11 @@ function PaymentDialogInner({
   updateBudgetItem,
   payment,
   onClose,
+  prefillParent,
+  onAddInstallmentToExisting,
 }: PaymentDialogProps) {
   const isEdit = !!payment;
+  const isAddingInstallment = !!prefillParent && !isEdit;
   const { trackEvent } = useAnalytics(projectId);
   const isInstallment = !!payment?.installmentOf;
   const today = new Date().toISOString().substring(0, 10);
@@ -724,14 +1046,24 @@ function PaymentDialogInner({
   const [lastContactId, setLastContactId] = useLastValue("contactId", "", projectId);
   const [lastVendor, setLastVendor] = useLastValue("vendor", "", projectId);
 
-  const [budgetItemId, setBudgetItemId] = useState(payment?.budgetItemId ?? "");
-  const [contactId, setContactId] = useState(payment?.contactId ?? lastContactId);
+  const [budgetItemId, setBudgetItemId] = useState(
+    payment?.budgetItemId ?? prefillParent?.budgetItemId ?? "",
+  );
+  const [contactId, setContactId] = useState(
+    payment?.contactId ?? prefillParent?.contactId ?? lastContactId,
+  );
   const [amount, setAmount] = useState(payment ? String(payment.amount ?? "") : "");
   const [date, setDate] = useState(toDateStr(payment?.date) || today);
-  const [type, setType] = useState(payment?.type ?? lastType);
-  const [vendor, setVendor] = useState(payment?.vendor ?? lastVendor);
-  const [invoiceNumber, setInvoiceNumber] = useState(payment?.invoiceNumber ?? "");
-  const [description, setDescription] = useState(payment?.description ?? "");
+  const [type, setType] = useState(payment?.type ?? prefillParent?.type ?? lastType);
+  const [vendor, setVendor] = useState(
+    payment?.vendor ?? prefillParent?.vendor ?? lastVendor,
+  );
+  const [invoiceNumber, setInvoiceNumber] = useState(
+    payment?.invoiceNumber ?? prefillParent?.invoiceNumber ?? "",
+  );
+  const [description, setDescription] = useState(
+    payment?.description ?? (isAddingInstallment ? "Další splátka" : ""),
+  );
   const [vatRate, setVatRate] = useState(
     payment?.vatRate !== null && payment?.vatRate !== undefined ? String(payment.vatRate) : "",
   );
@@ -747,10 +1079,16 @@ function PaymentDialogInner({
     payment?.installmentOf ?? "",
   );
 
+  // "Convert parent → regular payment" confirmation dialog (edit-mode only).
+  const [showConvertConfirm, setShowConvertConfirm] = useState(false);
+  const [isConverting, setIsConverting] = useState(false);
+
   // Inline validation errors
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const isPending = isEdit ? (updatePayment?.isPending ?? false) : createPayment.isPending;
+  const isPending = isEdit
+    ? (updatePayment?.isPending ?? false) || isConverting
+    : createPayment.isPending;
 
   function resetForm() {
     setBudgetItemId("");
@@ -788,6 +1126,58 @@ function PaymentDialogInner({
         p.invoiceTotal != null,
     );
   }, [payments, payment, isEdit]);
+
+  // Existing invoice for the selected budget item (create-mode only).
+  // Used to show the info badge "Tato položka už má fakturu: …" + the
+  // "Přidat splátku k této faktuře" action.
+  const existingInvoiceForBudgetItem = useMemo(() => {
+    if (isEdit || isAddingInstallment || !budgetItemId) return null;
+    return (payments ?? []).find(
+      (p) =>
+        p.budgetItemId === budgetItemId &&
+        p.invoiceTotal != null &&
+        p.installmentOf == null,
+    ) ?? null;
+  }, [payments, budgetItemId, isEdit, isAddingInstallment]);
+
+  // Children of the edited payment (for the "convert to regular payment" flow).
+  const childPayments = useMemo(() => {
+    if (!isEdit || !payment) return [];
+    return (payments ?? []).filter((p) => p.installmentOf === payment.id);
+  }, [payments, payment, isEdit]);
+
+  // Handle "Convert parent → regular payment" — PATCH parent with
+  // invoiceTotal: null and PATCH each child with installmentOf: null.
+  const handleConvertToRegular = async () => {
+    if (!payment || !updatePayment) return;
+    setIsConverting(true);
+    try {
+      // 1. Convert parent: clear invoiceTotal.
+      await updatePayment.mutateAsync({
+        id: payment.id,
+        data: { invoiceTotal: null },
+      });
+      // 2. Detach all children.
+      for (const c of childPayments) {
+        await updatePayment.mutateAsync({
+          id: c.id,
+          data: { installmentOf: null },
+        });
+      }
+      toast.success(
+        childPayments.length > 0
+          ? `Faktura převedena na běžnou platbu, ${childPayments.length} splátek odpojeno`
+          : "Faktura převedena na běžnou platbu",
+      );
+      setShowConvertConfirm(false);
+      onOpenChange(false);
+      onClose?.();
+    } catch {
+      toast.error("Nepodařilo se převést fakturu na běžnou platbu");
+    } finally {
+      setIsConverting(false);
+    }
+  };
 
   const handleSubmit = async () => {
     const newErrors: Record<string, string> = {};
@@ -882,9 +1272,20 @@ function PaymentDialogInner({
           vendor,
           invoiceNumber,
           description,
+          // Add-installment flow: link to parent.
+          ...(isAddingInstallment && prefillParent
+            ? { installmentOf: prefillParent.id }
+            : {}),
         });
-        trackEvent("add_payment", { amount: amt, type, invoice: false });
-        if (markCompleted) {
+        trackEvent("add_payment", {
+          amount: amt,
+          type,
+          invoice: false,
+          installment: isAddingInstallment,
+        });
+        if (isAddingInstallment) {
+          toast.success("Splátka přidána k faktuře");
+        } else if (markCompleted) {
           try {
             await updateBudgetItem.mutateAsync({ id: budgetItemId, data: { completed: true } });
             toast.success("Platba přidána, položka označena jako hotová");
@@ -916,9 +1317,11 @@ function PaymentDialogInner({
     ? isInstallment
       ? "Upravit splátku"
       : "Upravit platbu"
-    : isInvoice
-      ? "Vytvořit fakturu"
-      : "Přidat platbu";
+    : isAddingInstallment
+      ? "Přidat splátku"
+      : isInvoice
+        ? "Vytvořit fakturu"
+        : "Přidat platbu";
 
   return (
     <AddDialogShell
@@ -961,6 +1364,135 @@ function PaymentDialogInner({
           <p className="text-xs text-destructive mt-1">{errors.budgetItemId}</p>
         )}
       </div>
+
+      {/* "Add installment" prefill banner — shown when the dialog was opened
+          via "Přidat splátku" from an invoice card or the in-dialog action.
+          Tells the user that this new payment will be added as a new
+          installment of the parent invoice. */}
+      {isAddingInstallment && prefillParent && (
+        <div className="flex flex-wrap items-center gap-2 rounded-md border border-warning/40 bg-warning-soft/40 p-2.5 dark:border-warning-strong/40 dark:bg-warning-soft/30">
+          <Layers className="h-4 w-4 shrink-0 text-warning-strong dark:text-warning" />
+          <div className="flex-1 text-xs leading-tight">
+            <div className="font-semibold text-warning-strong dark:text-warning">
+              Nová splátka k faktuře
+            </div>
+            <div className="text-on-surface-variant">
+              {prefillParent.vendor || prefillParent.invoiceNumber || "Faktura"}
+              {prefillParent.invoiceTotal != null
+                ? ` · ${formatCzk(prefillParent.invoiceTotal)} celkem`
+                : ""}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Existing-invoice info badge — when user picks a budget item that
+          already has an installment-parent invoice, offer to add a new
+          installment to that invoice instead of creating a new payment. */}
+      {existingInvoiceForBudgetItem && !isAddingInstallment && (
+        <div className="flex flex-wrap items-center gap-2 rounded-md border border-info/30 bg-info-soft/40 p-2.5 dark:border-info/40 dark:bg-info-soft/20">
+          <CircleDollarSign className="h-4 w-4 shrink-0 text-info" />
+          <div className="flex-1 text-xs leading-tight">
+            <div className="font-medium">
+              Tato položka už má fakturu:{" "}
+              <span className="text-foreground">
+                {existingInvoiceForBudgetItem.vendor ||
+                  existingInvoiceForBudgetItem.invoiceNumber ||
+                  "Faktura"}
+              </span>
+            </div>
+            {(() => {
+              const inv = existingInvoiceForBudgetItem.invoiceTotal ?? existingInvoiceForBudgetItem.amount;
+              const children = (payments ?? []).filter(
+                (p) => p.installmentOf === existingInvoiceForBudgetItem.id,
+              );
+              const paid =
+                existingInvoiceForBudgetItem.amount +
+                children.reduce((s, c) => s + c.amount, 0);
+              const percent = inv > 0 ? (paid / inv) * 100 : 0;
+              return (
+                <div className="text-on-surface-variant tabular-nums">
+                  {formatCzk(paid)} / {formatCzk(inv)} ({percent.toFixed(0)} %)
+                </div>
+              );
+            })()}
+          </div>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            className="h-7"
+            onClick={() => {
+              if (onAddInstallmentToExisting) {
+                onAddInstallmentToExisting(existingInvoiceForBudgetItem);
+              }
+            }}
+          >
+            <Plus className="mr-1 h-3.5 w-3.5" /> Přidat splátku k této faktuře
+          </Button>
+        </div>
+      )}
+
+      {/* "Convert parent → regular payment" action (edit mode only, when this
+          payment is an installment-parent with invoiceTotal set). */}
+      {isEdit && payment?.invoiceTotal != null && (
+        <>
+          <div className="flex flex-wrap items-center gap-2 rounded-md border border-danger/40 bg-danger-soft/30 p-2.5 dark:border-danger-strong/40 dark:bg-danger-soft/20">
+            <AlertTriangle className="h-4 w-4 shrink-0 text-danger-strong dark:text-danger" />
+            <div className="flex-1 text-xs leading-tight">
+              <div className="font-medium text-danger-strong dark:text-danger">
+                Toto je faktura ve splátkách
+              </div>
+              <div className="text-on-surface-variant">
+                Faktura celkem {formatCzk(payment.invoiceTotal)}. Můžete ji
+                převést zpět na běžnou platbu — splátky zůstanou jako
+                samostatné platby.
+              </div>
+            </div>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              className="h-7 border-danger/40 text-danger hover:bg-danger-soft/60 dark:border-danger/40 dark:text-danger"
+              onClick={() => setShowConvertConfirm(true)}
+              disabled={isConverting}
+            >
+              <ChevronRight className="mr-1 h-3.5 w-3.5" /> Převést na běžnou platbu
+            </Button>
+          </div>
+          <Dialog open={showConvertConfirm} onOpenChange={setShowConvertConfirm}>
+            <DialogContent className="max-w-md">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <AlertTriangle className="h-4 w-4 text-danger" />
+                  Převést fakturu na běžnou platbu?
+                </DialogTitle>
+                <DialogDescription>
+                  Tímto se faktura převede na běžnou platbu. Všechny splátky
+                  ({childPayments.length}) zůstanou jako samostatné platby.
+                  Pokračovat?
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter>
+                <Button
+                  variant="outline"
+                  onClick={() => setShowConvertConfirm(false)}
+                  disabled={isConverting}
+                >
+                  Zrušit
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={handleConvertToRegular}
+                  disabled={isConverting}
+                >
+                  {isConverting ? "Převádím…" : "Převést na běžnou platbu"}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </>
+      )}
 
       {/* Částka / Faktura celkem / 1. splátka + Datum */}
       {isInvoice && !isEdit ? (
@@ -1065,8 +1597,10 @@ function PaymentDialogInner({
 
       {/* ===== DETAILY (volitelné) ===== */}
       <CollapsibleSection title="Detaily (volitelné)">
-        {/* Installment toggle - only in create mode (not editing existing payments) */}
-        {!isEdit && (
+        {/* Installment toggle - only in create mode (not editing existing
+            payments) and not when prefilling an installment (that flow
+            doesn't allow creating a NEW invoice — it links to an existing one). */}
+        {!isEdit && !isAddingInstallment && (
           <div className="flex items-center gap-2 rounded-md border bg-muted/30 p-2">
             <Checkbox
               id="isInvoice"
