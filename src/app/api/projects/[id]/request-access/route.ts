@@ -4,7 +4,7 @@ import { logChanges } from "@/lib/audit";
 import { requireUser } from "@/lib/authz";
 
 // =====================================================================
-// POST /api/projects/[slug]/request-access
+// POST /api/projects/[id]/request-access
 // ---------------------------------------------------------------------
 // Self-service "request access" button on the public project page
 // (`/p/[slug]`). When an authenticated visitor clicks the button, this
@@ -28,19 +28,26 @@ import { requireUser } from "@/lib/authz";
 
 export async function POST(
   _request: Request,
-  { params }: { params: Promise<{ slug: string }> },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const { user, response } = await requireUser();
   if (response || !user) return response!;
 
   try {
-    const { slug } = await params;
+    const { id: slugOrId } = await params;
 
-    // Look up the project by slug — only public projects can be self-joined.
-    const project = await db.project.findUnique({
-      where: { slug },
+    // Look up the project by slug first, then by ID as fallback.
+    // Only public projects can be self-joined.
+    let project = await db.project.findUnique({
+      where: { slug: slugOrId },
       select: { id: true, ownerId: true, isPublic: true, name: true },
     });
+    if (!project) {
+      project = await db.project.findUnique({
+        where: { id: slugOrId },
+        select: { id: true, ownerId: true, isPublic: true, name: true },
+      });
+    }
 
     // Same 404 whether missing or private — don't leak existence.
     if (!project || !project.isPublic) {
