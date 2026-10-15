@@ -196,6 +196,10 @@ model Project {
   owner         User      @relation(fields: [ownerId], references: [id], onDelete: Restrict)
   /// Whether the project is starred/favorited by the owner (for sidebar sorting)
   starred       Boolean   @default(false)
+  /// Whether the project is publicly viewable (read-only) by anyone
+  /// with the project URL, without authentication. If false, the URL
+  /// redirects to login. Owner can toggle this in Project Management.
+  isPublic      Boolean   @default(false)
   /// Project status: "active" (in progress), "planning" (not started yet),
   /// "completed" (finished), "paused" (on hold)
   status        String    @default("active")

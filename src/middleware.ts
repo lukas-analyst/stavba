@@ -24,10 +24,24 @@ import { getToken } from "next-auth/jwt";
 //   - /auth/*          (login, register, forgot-password, reset-password,
 //                       verify-email, verify-pending)
 //   - /api/auth/*      (NextAuth endpoints + our register/verify/reset)
+//   - /api/projects/[slug]/public  (public read-only project view — B25)
+//   - /p/*             (public project pages — read-only, no auth)
+//   - /invite/*        (invitation accept page — the page itself redirects
+//                       to /auth/login if not authenticated; middleware
+//                       lets through so the page can do that)
 //
 // Authenticated paths:
 //   - /auth/profile    (account settings — requires verified e-mail)
 // =====================================================================
+
+// Match /api/projects/<slug>/public — public read-only project endpoint.
+// We don't allow ANY other /api/projects/* path to bypass auth.
+function isPublicProjectApi(pathname: string): boolean {
+  // /api/projects/<slug>/public
+  //   segments: ["", "api", "projects", "<slug>", "public"]
+  // We use a regex to keep this strict — only this exact shape passes.
+  return /^\/api\/projects\/[^/]+\/public\/?$/.test(pathname);
+}
 
 export async function middleware(req: NextRequest) {
   const { pathname, search } = req.nextUrl;
@@ -36,6 +50,27 @@ export async function middleware(req: NextRequest) {
 
   // Public auth APIs — always let through (NextAuth handles these)
   if (isAuthApi) {
+    return NextResponse.next();
+  }
+
+  // Public project view API — no auth required (B25: shared project view).
+  if (isPublicProjectApi(pathname)) {
+    return NextResponse.next();
+  }
+
+  // Public project page — anyone can view a public project.
+  // The page itself fetches /api/projects/[slug]/public which returns 404
+  // if the project isn't public, then the page redirects to /auth/login.
+  // We must let these through here so unauthenticated users can see
+  // public projects without first being bounced to /auth/login.
+  if (pathname.startsWith("/p/")) {
+    return NextResponse.next();
+  }
+
+  // Invitation accept page — handled client-side. The page itself
+  // redirects to /auth/login?callbackUrl=/invite/[token] if not
+  // authenticated, so we let it through here regardless of auth state.
+  if (pathname.startsWith("/invite/")) {
     return NextResponse.next();
   }
 

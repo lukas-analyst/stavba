@@ -5,6 +5,77 @@ import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
 
 // =====================================================================
+// Auto-accept pending invitations
+// ---------------------------------------------------------------------
+// After a successful sign-in (Credentials or Google), we look up any
+// pending ProjectInvitation rows whose `inviteeEmail` matches the just-
+// signed-in user's e-mail and whose `expiresAt` is still in the future.
+//
+// For each match:
+//   1. Create (idempotently) a ProjectMember row with the role from the
+//      invitation.
+//   2. Mark the invitation as accepted (`status="accepted"`,
+//      `acceptedAt=now`).
+//
+// This means: even if the invitee never clicks the link in the e-mail,
+// the first time they sign in with the matching e-mail they'll see the
+// shared project appear in their sidebar.
+//
+// Failures here MUST NOT block sign-in — the user can still log in,
+// they just won't have the project membership auto-applied. The
+// invitation row is still there for them to accept via the explicit
+// /api/invitations/[token]/accept endpoint.
+// =====================================================================
+
+async function autoAcceptPendingInvitations(
+  userEmail: string,
+  userId: string,
+): Promise<void> {
+  const normalized = userEmail.trim().toLowerCase();
+  if (!normalized) return;
+
+  const now = new Date();
+  const pendingInvitations = await db.projectInvitation.findMany({
+    where: {
+      inviteeEmail: normalized,
+      status: "pending",
+      expiresAt: { gt: now },
+    },
+  });
+
+  if (pendingInvitations.length === 0) return;
+
+  for (const invitation of pendingInvitations) {
+    const role = invitation.role === "editor" ? "editor" : "viewer";
+
+    // Idempotent membership upsert — if they're already a member (e.g.,
+    // from a previous accept), don't fail and don't downgrade their role.
+    await db.projectMember.upsert({
+      where: {
+        projectId_userId: {
+          projectId: invitation.projectId,
+          userId,
+        },
+      },
+      create: {
+        projectId: invitation.projectId,
+        userId,
+        role,
+      },
+      update: {},
+    });
+
+    await db.projectInvitation.update({
+      where: { id: invitation.id },
+      data: {
+        status: "accepted",
+        acceptedAt: now,
+      },
+    });
+  }
+}
+
+// =====================================================================
 // NextAuth.js configuration
 // ---------------------------------------------------------------------
 // Strategy: JWT (stateless) + Credentials provider (e-mail + password)
@@ -158,60 +229,114 @@ export const authOptions: NextAuthOptions = {
     // record (so we can distinguish Google-only users from ghost users,
     // which is critical for the account-claiming security check in the
     // register endpoint).
+    //
+    // For BOTH Credentials and Google: auto-accept any pending project
+    // invitations whose `inviteeEmail` matches the user's e-mail. This
+    // means even if the user never clicks the link in the invitation
+    // e-mail, the project shows up in their sidebar on first login.
     async signIn({ user, account }) {
-      // Only handle Google OAuth sign-ins
-      if (account?.provider !== "google") {
-        return true;
-      }
+      // Google OAuth sign-in: find or create the user + link Account.
+      if (account?.provider === "google") {
+        if (!user.email || !account.providerAccountId) {
+          return false;
+        }
 
-      if (!user.email || !account.providerAccountId) {
-        return false;
-      }
+        const email = user.email.toLowerCase();
+        const googleSub = account.providerAccountId;
 
-      const email = user.email.toLowerCase();
-      const googleSub = account.providerAccountId;
-
-      // Find or create the user in our DB
-      const existing = await db.user.findUnique({
-        where: { email },
-        select: {
-          id: true,
-          email: true,
-          name: true,
-          image: true,
-          emailVerified: true,
-          tokenVersion: true,
-          accounts: {
-            where: { provider: "google" },
-            select: { providerAccountId: true },
-            take: 1,
+        // Find or create the user in our DB
+        const existing = await db.user.findUnique({
+          where: { email },
+          select: {
+            id: true,
+            email: true,
+            name: true,
+            image: true,
+            emailVerified: true,
+            tokenVersion: true,
+            accounts: {
+              where: { provider: "google" },
+              select: { providerAccountId: true },
+              take: 1,
+            },
           },
-        },
-      });
+        });
 
-      if (existing) {
-        // User exists. Check if they already have a Google Account linked.
-        const existingGoogleAccount = existing.accounts[0];
+        if (existing) {
+          // User exists. Check if they already have a Google Account linked.
+          const existingGoogleAccount = existing.accounts[0];
 
-        if (existingGoogleAccount) {
-          // Already linked — verify it's the SAME Google account
-          // (prevent account takeover via creating a fake Google account
-          // with the victim's e-mail)
-          if (existingGoogleAccount.providerAccountId !== googleSub) {
-            // Different Google account for the same e-mail — reject
-            console.warn(
-              `[auth] Google sign-in rejected: e-mail ${email} is already linked to a different Google account.`,
-            );
-            return false;
+          if (existingGoogleAccount) {
+            // Already linked — verify it's the SAME Google account
+            // (prevent account takeover via creating a fake Google account
+            // with the victim's e-mail)
+            if (existingGoogleAccount.providerAccountId !== googleSub) {
+              // Different Google account for the same e-mail — reject
+              console.warn(
+                `[auth] Google sign-in rejected: e-mail ${email} is already linked to a different Google account.`,
+              );
+              return false;
+            }
+            // Same Google account — update token + profile if needed
+          } else {
+            // User exists (password-based or ghost) but no Google Account
+            // linked yet — link it now. This is safe because Google verified
+            // the e-mail.
+            await db.account.create({
+              data: {
+                userId: existing.id,
+                provider: "google",
+                providerAccountId: googleSub,
+                access_token: account.access_token ?? null,
+                refresh_token: account.refresh_token ?? null,
+                expires_at: account.expires_at ?? null,
+                token_type: account.token_type ?? null,
+                scope: account.scope ?? null,
+                id_token: account.id_token ?? null,
+              },
+            });
           }
-          // Same Google account — update token + profile if needed
+
+          // Update image/name from Google if changed
+          if (user.image && user.image !== existing.image) {
+            await db.user.update({
+              where: { id: existing.id },
+              data: { image: user.image },
+            });
+          }
+          if (user.name && !existing.name) {
+            await db.user.update({
+              where: { id: existing.id },
+              data: { name: user.name },
+            });
+          }
+          // Mark e-mail as verified if not already (Google pre-verified)
+          if (!existing.emailVerified) {
+            await db.user.update({
+              where: { id: existing.id },
+              data: { emailVerified: new Date() },
+            });
+          }
+
+          // Attach DB id + emailVerified + tokenVersion to JWT
+          user.id = existing.id;
+          (user as { emailVerified?: string | null }).emailVerified =
+            existing.emailVerified?.toISOString() ?? new Date().toISOString();
+          (user as { tokenVersion?: number }).tokenVersion = existing.tokenVersion;
         } else {
-          // User exists (password-based or ghost) but no Google Account
-          // linked yet — link it now. This is safe because Google verified
-          // the e-mail.
+          // New user — create in DB + create Account record
+          const newUser = await db.user.create({
+            data: {
+              email,
+              name: user.name ?? null,
+              image: user.image ?? null,
+              emailVerified: new Date(),
+            },
+          });
+          // Create the Google Account link
           await db.account.create({
             data: {
-              userId: existing.id,
+              userId: newUser.id,
               provider: "google",
               providerAccountId: googleSub,
               access_token: account.access_token ?? null,
@@ -222,62 +347,23 @@ export const authOptions: NextAuthOptions = {
               id_token: account.id_token ?? null,
             },
           });
+          user.id = newUser.id;
+          (user as { emailVerified?: string | null }).emailVerified =
+            newUser.emailVerified?.toISOString() ?? new Date().toISOString();
+          (user as { tokenVersion?: number }).tokenVersion = newUser.tokenVersion;
         }
+      }
 
-        // Update image/name from Google if changed
-        if (user.image && user.image !== existing.image) {
-          await db.user.update({
-            where: { id: existing.id },
-            data: { image: user.image },
-          });
+      // ===== Auto-accept pending invitations (Credentials + Google) =====
+      // Run for BOTH providers — once the user's DB id + e-mail are known,
+      // sweep up any pending invitations addressed to them. Failures are
+      // logged but never block sign-in.
+      if (user.id && user.email) {
+        try {
+          await autoAcceptPendingInvitations(user.email, user.id);
+        } catch (err) {
+          console.error("[auth] autoAcceptPendingInvitations failed:", err);
         }
-        if (user.name && !existing.name) {
-          await db.user.update({
-            where: { id: existing.id },
-            data: { name: user.name },
-          });
-        }
-        // Mark e-mail as verified if not already (Google pre-verified)
-        if (!existing.emailVerified) {
-          await db.user.update({
-            where: { id: existing.id },
-            data: { emailVerified: new Date() },
-          });
-        }
-
-        // Attach DB id + emailVerified + tokenVersion to JWT
-        user.id = existing.id;
-        (user as { emailVerified?: string | null }).emailVerified =
-          existing.emailVerified?.toISOString() ?? new Date().toISOString();
-        (user as { tokenVersion?: number }).tokenVersion = existing.tokenVersion;
-      } else {
-        // New user — create in DB + create Account record
-        const newUser = await db.user.create({
-          data: {
-            email,
-            name: user.name ?? null,
-            image: user.image ?? null,
-            emailVerified: new Date(),
-          },
-        });
-        // Create the Google Account link
-        await db.account.create({
-          data: {
-            userId: newUser.id,
-            provider: "google",
-            providerAccountId: googleSub,
-            access_token: account.access_token ?? null,
-            refresh_token: account.refresh_token ?? null,
-            expires_at: account.expires_at ?? null,
-            token_type: account.token_type ?? null,
-            scope: account.scope ?? null,
-            id_token: account.id_token ?? null,
-          },
-        });
-        user.id = newUser.id;
-        (user as { emailVerified?: string | null }).emailVerified =
-          newUser.emailVerified?.toISOString() ?? new Date().toISOString();
-        (user as { tokenVersion?: number }).tokenVersion = newUser.tokenVersion;
       }
 
       return true;

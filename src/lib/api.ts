@@ -34,6 +34,7 @@ export type Project = {
   address: string | null;
   description: string | null;
   starred: boolean;
+  isPublic: boolean;
   status: string;
   currency: string;
   totalBudget: number;

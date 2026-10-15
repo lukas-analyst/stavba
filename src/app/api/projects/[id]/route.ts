@@ -22,6 +22,7 @@ export async function GET(
         address: true,
         description: true,
         starred: true,
+        isPublic: true,
         status: true,
         currency: true,
         totalBudget: true,
@@ -54,7 +55,7 @@ export async function PATCH(
     const access = await requireProjectAccess(id, "owner");
     if (!access.ok) return access.response;
     const body = await request.json();
-    const { name, address, description, starred, status, currency, startDate, endDate, notes, ownerId } = body;
+    const { name, address, description, starred, status, currency, startDate, endDate, notes, ownerId, isPublic } = body;
 
     const existing = await db.project.findUnique({ where: { id } });
     if (!existing) {
@@ -92,6 +93,7 @@ export async function PATCH(
         endDate: endDate !== undefined ? (endDate ? new Date(endDate) : null) : undefined,
         notes: notes !== undefined ? (typeof notes === "string" ? notes : null) : undefined,
         ownerId: ownerId !== undefined ? ownerId : undefined,
+        isPublic: isPublic !== undefined ? Boolean(isPublic) : undefined,
       },
     });
 

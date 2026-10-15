@@ -26,7 +26,7 @@ type BrevoEmailParams = {
  * Send a transactional e-mail via the Brevo HTTP API.
  * Returns true on success, throws on failure.
  */
-async function sendEmail({ to, subject, htmlContent }: BrevoEmailParams): Promise<boolean> {
+export async function sendEmail({ to, subject, htmlContent }: BrevoEmailParams): Promise<boolean> {
   const apiKey = process.env.BREVO_API_KEY;
   const fromEmail = process.env.EMAIL_FROM;
   const fromName = process.env.EMAIL_FROM_NAME ?? "Stavba";
@@ -64,7 +64,7 @@ async function sendEmail({ to, subject, htmlContent }: BrevoEmailParams): Promis
 // E-mail templates
 // =====================================================================
 
-function emailShell(innerHtml: string, title: string): string {
+export function emailShell(innerHtml: string, title: string): string {
   return `<!DOCTYPE html>
 <html lang="cs">
 <head>

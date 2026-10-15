@@ -15,6 +15,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Switch } from "@/components/ui/switch";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import {
   Select,
@@ -60,6 +61,8 @@ import {
   Search,
   QrCode as QrCodeIcon,
   Link2,
+  Lock,
+  Mail,
 } from "lucide-react";
 import {
   useProjects,
@@ -164,7 +167,14 @@ export function ProjectManagementTab({ projectId }: { projectId: string }) {
       <ProjectInfoCard project={project} updateProject={updateProject} />
 
       {/* ===== Sharing & Permissions ===== */}
-      <SharingSection projectId={projectId} projectSlug={project.slug} projectName={project.name} />
+      <SharingSection
+        projectId={projectId}
+        projectSlug={project.slug}
+        projectName={project.name}
+        isPublic={project.isPublic}
+        isOwner={isOwner}
+        currentUserId={currentUser?.id ?? null}
+      />
 
       {/* ===== Enhanced Audit Log ===== */}
       <Card className="bg-card shadow-sm">
@@ -414,14 +424,62 @@ type MembersResponse = {
   members: Member[];
 };
 
+// Invitation row returned by GET /api/projects/[id]/invitations.
+// Pending invitations can be revoked by the owner; accepted/rejected/
+// expired/revoked ones are kept for history.
+type InvitationRow = {
+  id: string;
+  inviteeEmail: string;
+  role: string;
+  status: "pending" | "accepted" | "rejected" | "revoked" | "expired";
+  expiresAt: string;
+  acceptedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+  invitedBy: { id: string; name: string | null; email: string };
+};
+
+// Status → human-readable label + badge color (MD3 sémantic tokens).
+const INVITATION_STATUS_META: Record<
+  InvitationRow["status"],
+  { label: string; className: string }
+> = {
+  pending: {
+    label: "Čeká",
+    className: "bg-warning-soft text-warning-strong",
+  },
+  accepted: {
+    label: "Přijato",
+    className: "bg-success-soft text-success-strong",
+  },
+  rejected: {
+    label: "Odmítnuto",
+    className: "bg-muted text-muted-foreground",
+  },
+  revoked: {
+    label: "Zrušeno",
+    className: "bg-muted text-muted-foreground",
+  },
+  expired: {
+    label: "Vypršelo",
+    className: "bg-danger-soft text-danger-strong",
+  },
+};
+
 function SharingSection({
   projectId,
   projectSlug,
   projectName,
+  isPublic,
+  isOwner,
+  currentUserId,
 }: {
   projectId: string;
   projectSlug: string;
   projectName: string;
+  isPublic: boolean;
+  isOwner: boolean;
+  currentUserId: string | null;
 }) {
   const [data, setData] = useState<MembersResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -431,24 +489,60 @@ function SharingSection({
   const [removingIds, setRemovingIds] = useState<Set<string>>(new Set());
   const [allUsers, setAllUsers] = useState<{ id: string; name: string | null; email: string }[]>([]);
   const [lastToastEmail, setLastToastEmail] = useState<string>("");
+  // Pending invitations list (ProjectInvitation rows that haven't been
+  // accepted/rejected yet). Fetched separately from members.
+  const [invitations, setInvitations] = useState<InvitationRow[]>([]);
+  const [invitationsLoading, setInvitationsLoading] = useState(true);
+  const [revokingIds, setRevokingIds] = useState<Set<string>>(new Set());
   const qc = useQueryClient();
   // SharingSection has its own analytics scope (its own projectId) so we
   // instantiate useAnalytics here to fire `project_share` telemetry events.
   const { trackEvent } = useAnalytics(projectId);
+  // Re-use the parent ProjectManagementTab's updateProject mutation so the
+  // isPublic toggle optimistically updates the project cache (sidebar,
+  // project list, etc.) the same way the inline-edit ProjectInfoCard does.
+  const updateProject = useUpdateProject(projectId);
 
-  // Copy a shareable link (project URL with ?project=<slug>) to the clipboard.
-  // The link opens the project as a viewer (Čtenář). The user can then paste it
-  // anywhere (email, chat) — anyone clicking it gets prompted to sign in /
-  // request access (handled by the project share-link + invitation flow).
+  // Copy the public shareable link (`/p/<slug>`) to the clipboard.
+  // Anyone with this link can view a public project read-only. If the
+  // project is private, the link still resolves but the page redirects
+  // to /auth/login — warn the user about that case.
   const handleShare = async () => {
     try {
-      const url = `${window.location.origin}/?project=${projectSlug}`;
+      const url = `${window.location.origin}/p/${projectSlug}`;
       await navigator.clipboard.writeText(url);
-      toast.success("Odkaz na projekt zkopírován do schránky (s právy Čtenář)");
-      trackEvent("project_share", { action: "copy_link", role: "viewer" });
+      if (isPublic) {
+        toast.success("Odkaz na projekt zkopírován do schránky");
+      } else {
+        toast.warning(
+          "Projekt není veřejný — odkaz přesměruje na přihlášení",
+        );
+      }
+      trackEvent("project_share", { action: "copy_link", role: "viewer", isPublic });
     } catch {
       toast.error("Nepodařilo se zkopírovat odkaz");
     }
+  };
+
+  // Toggle project public visibility. Uses optimistic update via
+  // useUpdateProject mutation (which invalidates projects list, etc.).
+  const handleTogglePublic = (next: boolean) => {
+    updateProject.mutate(
+      { isPublic: next },
+      {
+        onSuccess: () => {
+          toast.success(
+            next
+              ? "Projekt je nyní veřejný — kdokoliv s odkazem ho může vidět"
+              : "Projekt je nyní soukromý",
+          );
+          trackEvent("project_share", { action: "toggle_public", isPublic: next });
+        },
+        onError: () => {
+          toast.error("Nepodařilo se změnit viditelnost projektu");
+        },
+      },
+    );
   };
 
   const fetchMembers = useCallback(async () => {
@@ -465,14 +559,31 @@ function SharingSection({
     }
   }, [projectId]);
 
-  // Fetch members + all users on mount
+  // Fetch pending invitations for the project (separate endpoint —
+  // invitations for users who haven't yet accepted / registered).
+  const fetchInvitations = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/projects/${projectId}/invitations`);
+      if (res.ok) {
+        const json = await res.json();
+        setInvitations(json.invitations ?? []);
+      }
+    } catch {
+      // ignore
+    } finally {
+      setInvitationsLoading(false);
+    }
+  }, [projectId]);
+
+  // Fetch members + all users + invitations on mount
   useEffect(() => {
     fetchMembers();
+    fetchInvitations();
     fetch("/api/users")
       .then((r) => (r.ok ? r.json() : []))
       .then((users) => setAllUsers(users))
       .catch(() => setAllUsers([]));
-  }, [fetchMembers]);
+  }, [fetchMembers, fetchInvitations]);
 
   // Detect typed email matches (existing member or owner)
   const typedEmail = addEmail.trim().toLowerCase();
@@ -504,29 +615,82 @@ function SharingSection({
     }
     setAdding(true);
     try {
-      const res = await fetch(`/api/projects/${projectId}/members`, {
+      // Always create a ProjectInvitation (the dedicated /invitations
+      // endpoint sends the e-mail and creates a 24h-expiry invitation
+      // even if the invitee is already a registered user — for a
+      // registered user the invitation is auto-accepted on their next
+      // sign-in, or they can accept via the /invite/[token] page).
+      const res = await fetch(`/api/projects/${projectId}/invitations`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: addEmail.trim(), role: addRole }),
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        throw new Error(err.error || "Nepodařilo se přidat člena");
+        throw new Error(err.error || "Nepodařilo se odeslat pozvánku");
       }
-      // Telemetry: project_share — add
+      // Telemetry: project_share — invite
       trackEvent("project_share", {
-        action: "add",
+        action: "invite",
         email: addEmail.trim(),
         role: addRole,
       });
-      toast.success(`Přidán člen: ${addEmail.trim()}`);
+      toast.success(`Pozvánka odeslána na ${addEmail.trim()}`);
       setAddEmail("");
       setLastToastEmail("");
-      fetchMembers();
+      // Refresh the invitations list so the new pending row appears.
+      fetchInvitations();
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Nepodařilo se přidat člena");
+      toast.error(e instanceof Error ? e.message : "Nepodařilo se odeslat pozvánku");
     } finally {
       setAdding(false);
+    }
+  };
+
+  // Revoke a pending invitation. Owner-only action — the API endpoint
+  // enforces ownership, so we don't need to check isOwner here.
+  const handleRevokeInvitation = async (invitationId: string, email: string) => {
+    setRevokingIds((prev) => {
+      const next = new Set(prev);
+      next.add(invitationId);
+      return next;
+    });
+    // Optimistically remove from local state after brief delay
+    const removeTimer = setTimeout(() => {
+      setInvitations((cur) => cur.filter((inv) => inv.id !== invitationId));
+    }, 220);
+    try {
+      const res = await fetch(
+        `/api/projects/${projectId}/invitations/${invitationId}`,
+        { method: "DELETE" },
+      );
+      if (!res.ok) throw new Error("Failed");
+      clearTimeout(removeTimer);
+      setInvitations((cur) => cur.filter((inv) => inv.id !== invitationId));
+      trackEvent("project_share", {
+        action: "revoke_invitation",
+        email,
+      });
+      toast.success(`Pozvánka pro ${email} zrušena`);
+    } catch {
+      clearTimeout(removeTimer);
+      // Restore the invitation at its original position
+      const restore = invitations.find((inv) => inv.id === invitationId);
+      if (restore) {
+        setInvitations((cur) => {
+          if (cur.some((inv) => inv.id === invitationId)) return cur;
+          return [...cur, restore];
+        });
+      } else {
+        fetchInvitations();
+      }
+      toast.error("Nepodařilo se zrušit pozvánku");
+    } finally {
+      setRevokingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(invitationId);
+        return next;
+      });
     }
   };
 
@@ -640,6 +804,8 @@ function SharingSection({
 
   const owner = data?.owner;
   const members = data?.members ?? [];
+  const pendingInvitations = invitations.filter((inv) => inv.status === "pending");
+  const pastInvitations = invitations.filter((inv) => inv.status !== "pending");
 
   return (
     <Card className="bg-card shadow-sm">
@@ -650,15 +816,15 @@ function SharingSection({
               <Shield className="h-4 w-4 text-primary" />
               Sdílení a přístupová práva
             </CardTitle>
-            <CardDescription className="mt-1">Správa správce a členů projektu</CardDescription>
+            <CardDescription className="mt-1">Správa veřejnosti, správce, členů a pozvánek projektu</CardDescription>
           </div>
           <Button
             variant="outline"
             size="sm"
             className="shrink-0 rounded-full gap-1.5"
             onClick={handleShare}
-            title="Sdílet projekt s právy Čtenář"
-            aria-label="Sdílet projekt s právy Čtenář"
+            title="Zkopírovat odkaz na veřejný pohled"
+            aria-label="Zkopírovat odkaz na veřejný pohled"
           >
             <Share2 className="h-3.5 w-3.5" />
             Sdílet
@@ -666,7 +832,29 @@ function SharingSection({
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* Owner */}
+        {/* ===== Public project toggle ===== */}
+        <div className="flex items-center justify-between gap-3 rounded-lg border border-outline-variant bg-surface-container-low p-3">
+          <div className="min-w-0">
+            <p className="type-body font-medium">Veřejný projekt</p>
+            <p className="type-label text-on-surface-variant">
+              Kdokoliv s odkazem může vidět projekt (pouze pro čtení)
+            </p>
+          </div>
+          <Switch
+            checked={isPublic}
+            onCheckedChange={handleTogglePublic}
+            disabled={!isOwner || updateProject.isPending}
+            aria-label="Přepnout veřejnost projektu"
+          />
+        </div>
+        <div className="flex items-start gap-1.5 type-label-sm text-on-surface-variant">
+          <Info className="mt-0.5 h-3 w-3 shrink-0" />
+          <span>
+            Veřejný projekt: Kdokoliv s odkazem může vidět projekt (pouze pro čtení). Vypněte pro soukromí.
+          </span>
+        </div>
+
+        {/* ===== Owner ===== */}
         {owner && (
           <div className="flex items-center gap-3 rounded-lg border border-primary/30 bg-primary/5 p-3">
             <Avatar className="h-10 w-10 shrink-0 border border-primary/30">
@@ -684,8 +872,8 @@ function SharingSection({
               </div>
               <div className="type-label text-on-surface-variant truncate">{owner.email}</div>
             </div>
-            {/* Change owner dropdown */}
-            {allUsers.length > 0 && (
+            {/* Change owner dropdown — owner only */}
+            {isOwner && allUsers.length > 0 && (
               <Select onValueChange={handleChangeOwner}>
                 <SelectTrigger className="h-8 w-auto rounded-full type-label-sm">
                   <span className="flex items-center gap-1"><ArrowRight className="h-3 w-3" /> Předat</span>
@@ -704,12 +892,20 @@ function SharingSection({
           </div>
         )}
 
-        {/* Members list */}
+        {/* ===== Members list ===== */}
         {members.length > 0 ? (
           <div className="space-y-1.5">
             {members.map((m) => {
               const isRemoving = removingIds.has(m.id);
               const isMatched = matchedMember?.id === m.id;
+              // Owner can change roles + remove any member.
+              // A non-owner can only remove THEMSELF (self-leave) —
+              // backend enforces this; here we just hide the role Select
+              // for non-owners and disable the remove button for non-owner
+              // users who aren't looking at their own row.
+              const canManage = isOwner;
+              const isSelf = currentUserId === m.user.id;
+              const canRemove = isOwner || isSelf;
               return (
                 <div
                   key={m.id}
@@ -733,32 +929,42 @@ function SharingSection({
                     <div className="type-body font-medium truncate">{m.user.name || m.user.email}</div>
                     <div className="type-label text-on-surface-variant truncate">{m.user.email}</div>
                   </div>
-                  {/* Role selector */}
-                  <Select value={m.role} onValueChange={(v) => handleRoleChange(m.id, v)}>
-                    <SelectTrigger className="h-7 w-auto rounded-full type-label-sm gap-1">
+                  {/* Role selector — owner only */}
+                  {canManage ? (
+                    <Select value={m.role} onValueChange={(v) => handleRoleChange(m.id, v)}>
+                      <SelectTrigger className="h-7 w-auto rounded-full type-label-sm gap-1">
+                        {m.role === "editor" ? <Edit3 className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+                        {m.role === "editor" ? "Editor" : "Čtenář"}
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="viewer"><Eye className="mr-1.5 inline h-3 w-3" /> Čtenář (pouze čtení)</SelectItem>
+                        <SelectItem value="editor"><Edit3 className="mr-1.5 inline h-3 w-3" /> Editor (úpravy)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <Badge variant="secondary" className="type-label-sm gap-1">
                       {m.role === "editor" ? <Edit3 className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
                       {m.role === "editor" ? "Editor" : "Čtenář"}
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="viewer"><Eye className="mr-1.5 inline h-3 w-3" /> Čtenář (pouze čtení)</SelectItem>
-                      <SelectItem value="editor"><Edit3 className="mr-1.5 inline h-3 w-3" /> Editor (úpravy)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  {/* Remove */}
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-7 w-7 shrink-0 rounded-full state-layer-on-surface text-muted-foreground hover:text-danger"
-                    onClick={() => handleRemove(m.id, m.user.name || m.user.email)}
-                    disabled={isRemoving}
-                    aria-label="Odebrat člena"
-                  >
-                    {isRemoving ? (
-                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                    ) : (
-                      <X className="h-3.5 w-3.5" />
-                    )}
-                  </Button>
+                    </Badge>
+                  )}
+                  {/* Remove — owner (anyone) or self (self-leave) */}
+                  {canRemove && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7 shrink-0 rounded-full state-layer-on-surface text-muted-foreground hover:text-danger"
+                      onClick={() => handleRemove(m.id, m.user.name || m.user.email)}
+                      disabled={isRemoving}
+                      aria-label={isSelf && !isOwner ? "Opustit projekt" : "Odebrat člena"}
+                      title={isSelf && !isOwner ? "Opustit projekt" : "Odebrat člena"}
+                    >
+                      {isRemoving ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <X className="h-3.5 w-3.5" />
+                      )}
+                    </Button>
+                  )}
                 </div>
               );
             })}
@@ -767,16 +973,112 @@ function SharingSection({
           <p className="type-label text-on-surface-variant">Zatím nebyli přidáni žádní členové.</p>
         )}
 
-        {/* Add member */}
+        {/* ===== Pending invitations list ===== */}
+        {(pendingInvitations.length > 0 || invitationsLoading) && (
+          <div className="space-y-1.5">
+            <div className="flex items-center gap-1.5 type-label text-on-surface-variant">
+              <Mail className="h-3.5 w-3.5" /> Čekající pozvánky
+            </div>
+            {invitationsLoading ? (
+              <Skeleton className="h-12" />
+            ) : (
+              pendingInvitations.map((inv) => {
+                const isRevoking = revokingIds.has(inv.id);
+                const roleLabel = inv.role === "editor" ? "Editor" : "Čtenář";
+                const isExpired = new Date(inv.expiresAt) < new Date();
+                const statusMeta = isExpired
+                  ? INVITATION_STATUS_META.expired
+                  : INVITATION_STATUS_META[inv.status] ?? INVITATION_STATUS_META.pending;
+                return (
+                  <div
+                    key={inv.id}
+                    className={cn(
+                      "flex items-center gap-3 rounded-lg border bg-surface-container-low p-2.5 transition-all",
+                      isRevoking && "opacity-50",
+                      "border-outline-variant",
+                    )}
+                  >
+                    <Avatar className="h-8 w-8 shrink-0">
+                      <AvatarFallback className="bg-secondary-container type-label-sm font-bold text-secondary-container-foreground">
+                        <Mail className="h-4 w-4" />
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="min-w-0 flex-1">
+                      <div className="type-body font-medium truncate">{inv.inviteeEmail}</div>
+                      <div className="type-label text-on-surface-variant truncate">
+                        Role: {roleLabel} · Platnost do: {formatDate(inv.expiresAt, { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })}
+                      </div>
+                    </div>
+                    <Badge variant="secondary" className={cn("type-label-sm", statusMeta.className)}>
+                      {statusMeta.label}
+                    </Badge>
+                    {isOwner && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 shrink-0 rounded-full state-layer-on-surface text-muted-foreground hover:text-danger"
+                        onClick={() => handleRevokeInvitation(inv.id, inv.inviteeEmail)}
+                        disabled={isRevoking}
+                        aria-label="Zrušit pozvánku"
+                        title="Zrušit pozvánku"
+                      >
+                        {isRevoking ? (
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        ) : (
+                          <X className="h-3.5 w-3.5" />
+                        )}
+                      </Button>
+                    )}
+                  </div>
+                );
+              })
+            )}
+          </div>
+        )}
+
+        {/* ===== Past invitations (collapsed history) ===== */}
+        {pastInvitations.length > 0 && (
+          <details className="rounded-lg border border-outline-variant bg-surface-container-low p-3">
+            <summary className="cursor-pointer type-label text-on-surface-variant select-none">
+              Historie pozvánek ({pastInvitations.length})
+            </summary>
+            <div className="mt-2 space-y-1.5">
+              {pastInvitations.map((inv) => {
+                const roleLabel = inv.role === "editor" ? "Editor" : "Čtenář";
+                const statusMeta =
+                  INVITATION_STATUS_META[inv.status] ?? INVITATION_STATUS_META.pending;
+                return (
+                  <div
+                    key={inv.id}
+                    className="flex items-center gap-3 rounded-md border border-outline-variant bg-card p-2 text-sm"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate font-medium">{inv.inviteeEmail}</div>
+                      <div className="type-label text-on-surface-variant truncate">
+                        Role: {roleLabel} · Vytvořeno: {formatDate(inv.createdAt)}
+                      </div>
+                    </div>
+                    <Badge variant="secondary" className={cn("type-label-sm", statusMeta.className)}>
+                      {statusMeta.label}
+                    </Badge>
+                  </div>
+                );
+              })}
+            </div>
+          </details>
+        )}
+
+        {/* ===== Invite form (Pozvat e-mailem) ===== */}
         <div className="rounded-lg border border-dashed border-outline-variant p-3">
           <div className="mb-2 flex items-center gap-1.5 type-label text-on-surface-variant">
-            <UserPlus className="h-3.5 w-3.5" /> Přidat člena
+            <UserPlus className="h-3.5 w-3.5" /> Pozvat e-mailem
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <Input
               value={addEmail}
               onChange={(e) => setAddEmail(e.target.value)}
-              placeholder="email@uzivatel.cz"
+              placeholder="e-mail@example.com"
+              type="email"
               list="users-datalist"
               className={cn(
                 "h-8 flex-1 min-w-[200px] type-body",
@@ -802,9 +1104,9 @@ function SharingSection({
                 <SelectItem value="editor"><Edit3 className="mr-1.5 inline h-3 w-3" /> Editor</SelectItem>
               </SelectContent>
             </Select>
-            <Button size="sm" className="rounded-full gap-1.5" onClick={handleAdd} disabled={!addEmail.trim() || adding}>
+            <Button size="sm" className="rounded-full gap-1.5" onClick={handleAdd} disabled={!addEmail.trim() || adding || !isOwner}>
               {adding ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <UserPlus className="h-3.5 w-3.5" />}
-              Přidat
+              Pozvat e-mailem
             </Button>
           </div>
           {/* Hints */}
@@ -815,23 +1117,40 @@ function SharingSection({
           )}
           {isNewUserHint && !isExistingMember && (
             <div className="mt-2 flex items-center gap-1.5 type-label-sm text-info">
-              <Info className="h-3 w-3" /> Nový uživatel bude vytvořen při přidání
+              <Info className="h-3 w-3" /> Nový uživatel — pozvánka mu přijde na e-mail, po registraci získá přístup
+            </div>
+          )}
+          {!isOwner && (
+            <div className="mt-2 flex items-center gap-1.5 type-label-sm text-muted-foreground">
+              <Lock className="h-3 w-3" /> Pozvat nové uživatele může pouze správce projektu
             </div>
           )}
         </div>
+        <div className="flex items-start gap-1.5 type-label-sm text-on-surface-variant">
+          <Info className="mt-0.5 h-3 w-3 shrink-0" />
+          <span>
+            Pozvat e-mailem: Pozvaný uživatel získá přístup po přihlášení nebo registraci s daným e-mailem. Platnost pozvánky: 24 hodin.
+          </span>
+        </div>
 
-        {/* QR code — share via scan */}
+        {/* ===== QR code — share via scan ===== */}
         <div className="rounded-lg border border-outline-variant bg-surface-container-low p-4">
           <div className="mb-3 flex items-center gap-2">
             <QrCodeIcon className="h-4 w-4 text-primary" />
             <span className="type-body font-medium">QR kód projektu</span>
           </div>
           <p className="mb-3 type-label text-on-surface-variant">
-            Naskenujte QR kód pro rychlý přístup k projektu.
+            Naskenujte QR kód pro otevření projektu na mobilu.
           </p>
           <div className="flex flex-col items-center gap-3">
             <QrCode projectSlug={projectSlug} projectName={projectName} />
           </div>
+        </div>
+        <div className="flex items-start gap-1.5 type-label-sm text-on-surface-variant">
+          <Info className="mt-0.5 h-3 w-3 shrink-0" />
+          <span>
+            QR kód: Naskenujte pro otevření projektu na mobilu. Odkazuje na veřejný pohled projektu.
+          </span>
         </div>
       </CardContent>
     </Card>
@@ -1567,12 +1886,13 @@ function DeleteProjectButton({ projectId, projectName }: { projectId: string; pr
 }
 
 // ============================================================
-// QrCode — shareable QR code for the project URL
+// QrCode — shareable QR code for the project's public URL
 // ------------------------------------------------------------
 // Generates a QR code as a data URL using the `qrcode` library.
-// The QR encodes `${origin}/?project=${projectSlug}` so scanning it
-// opens the project directly. Provides "Kopírovat odkaz" (copy URL)
-// and "Stáhnout PNG" (download QR as PNG) action buttons.
+// The QR encodes `${origin}/p/${projectSlug}` so scanning it opens
+// the public read-only project view (or redirects to /auth/login
+// if the project isn't public). Provides "Kopírovat odkaz" (copy
+// URL) and "Stáhnout PNG" (download QR as PNG) action buttons.
 // ============================================================
 function QrCode({ projectSlug, projectName }: { projectSlug: string; projectName: string }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -1589,7 +1909,7 @@ function QrCode({ projectSlug, projectName }: { projectSlug: string; projectName
   useEffect(() => {
     if (typeof window === "undefined") return;
     const origin = window.location.origin;
-    const url = `${origin}/?project=${projectSlug}`;
+    const url = `${origin}/p/${projectSlug}`;
     if (!canvasRef.current) {
       // Still set the URL so the "Kopírovat odkaz" button works.
       Promise.resolve().then(() => setShareUrl(url));

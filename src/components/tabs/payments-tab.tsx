@@ -67,7 +67,6 @@ import {
   ArrowUpDown,
   Eye,
   AlertTriangle,
-  CornerDownRight,
   ChevronRight,
 } from "lucide-react";
 import { formatCzk, formatDate, PAYMENT_TYPES, paymentTypeLabel } from "@/lib/format";
@@ -642,11 +641,11 @@ function PaymentRow({
     trackEvent("edit_payment", { field, amount: payment.amount });
   };
 
-  // Children get an indentation + a vertical connector border (border-l)
-  // applied to every cell so the connector spans the full row height.
-  const childIndent = isChild ? "border-l-2 border-outline-variant" : "";
+  // Child rows use a gentle green tint (`bg-success/5`) to visually group
+  // installment children with their parent — no vertical connector border.
+  const childIndent = "";
   const rowBg = cn(
-    isParent && "bg-surface-container-low",
+    isChild && "bg-success/5",
     highlighted && "bg-warning-soft/60 ring-2 ring-inset ring-warning/50",
   );
 
@@ -655,7 +654,7 @@ function PaymentRow({
       id={rowId}
       className={cn(
         "group cursor-pointer hover:bg-muted/30 cv-row",
-        isParent && "bg-surface-container-low",
+        isChild && "bg-success/5",
         highlighted && "bg-warning-soft/60 ring-2 ring-inset ring-warning/50",
       )}
       onClick={() => onEdit()}
@@ -663,26 +662,22 @@ function PaymentRow({
     >
       <TableCell className={cn("w-16", childIndent, rowBg)}>
         {isParent ? (
-          <div className="flex items-center gap-1">
-            <Receipt className="h-4 w-4 shrink-0 text-on-surface-variant" />
-            <Badge
-              variant="outline"
-              className="gap-0.5 type-label-sm text-warning-strong dark:text-warning/80"
-              title={
-                meta?.invoiceTotal != null
-                  ? `Faktura ve splátkách: ${formatCzk(meta.invoiceTotal)} — zaplaceno ${formatCzk(meta.paidTotal)} (${meta.percent.toFixed(0)} %), zbývá ${formatCzk(meta.remaining)}`
-                  : "Faktura ve splátkách"
-              }
-            >
-              <span className="tabular-nums">1 / {totalInstallments}</span>
-            </Badge>
-          </div>
+          <Badge
+            variant="outline"
+            className="gap-0.5 type-label-sm text-warning-strong dark:text-warning/80"
+            title={
+              meta?.invoiceTotal != null
+                ? `Faktura ve splátkách: ${formatCzk(meta.invoiceTotal)} — zaplaceno ${formatCzk(meta.paidTotal)} (${meta.percent.toFixed(0)} %), zbývá ${formatCzk(meta.remaining)}`
+                : "Faktura ve splátkách"
+            }
+          >
+            <span className="tabular-nums">1 / {totalInstallments}</span>
+          </Badge>
         ) : isChild ? (
           <span
             className="inline-flex items-center gap-0.5 type-label-sm text-on-surface-variant tabular-nums"
             title={`${installmentNumber}. splátka z ${totalInstallments}`}
           >
-            <CornerDownRight className="h-3 w-3" />
             {installmentNumber}. splátka
             <span className="text-on-surface-variant/70">/ {totalInstallments}</span>
           </span>
@@ -820,15 +815,15 @@ function AddInstallmentRow({
   onAdd: () => void;
 }) {
   return (
-    <TableRow className="group hover:bg-muted/30">
-      <TableCell colSpan={8} className="border-l-2 border-outline-variant py-1 pl-4">
+    <TableRow className="group hover:bg-muted/20">
+      <TableCell colSpan={8} className="py-0.5 pl-2">
         <button
           type="button"
           onClick={onAdd}
-          className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 type-label-sm text-on-surface-variant transition-colors hover:bg-surface-container-high hover:text-on-surface"
+          className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 type-label-sm text-on-surface-variant/80 transition-colors hover:bg-surface-container-high hover:text-on-surface"
           title={`Přidat další splátku k faktuře ${parent.vendor ?? parent.invoiceNumber ?? parent.id.slice(0, 6)}`}
         >
-          <Plus className="h-3.5 w-3.5" />
+          <Plus className="h-3 w-3" />
           Přidat splátku
         </button>
       </TableCell>
@@ -846,30 +841,36 @@ function InvoicesOverview({
   onAddInstallment: (parent: Payment) => void;
   onShow: (parentId: string) => void;
 }) {
-  // Compute totals per group once.
-  const cards = groups.map((g) => {
-    const invoiceTotal = g.parent.invoiceTotal ?? g.parent.amount;
-    const paidTotal = g.parent.amount + g.installments.reduce((s, i) => s + i.amount, 0);
-    const remaining = invoiceTotal - paidTotal;
-    const percent = invoiceTotal > 0 ? (paidTotal / invoiceTotal) * 100 : 0;
-    const installmentCount = 1 + g.installments.length;
-    const title =
-      g.parent.vendor ||
-      g.parent.invoiceNumber ||
-      g.parent.description ||
-      g.parent.budgetItem?.subcategory ||
-      g.parent.budgetItem?.category ||
-      "Faktura";
-    return {
-      parent: g.parent,
-      invoiceTotal,
-      paidTotal,
-      remaining,
-      percent,
-      installmentCount,
-      title,
-    };
-  });
+  // Compute totals per group once — hide cards for invoices that are
+  // already 100% paid (no remaining amount to track).
+  const cards = groups
+    .map((g) => {
+      const invoiceTotal = g.parent.invoiceTotal ?? g.parent.amount;
+      const paidTotal = g.parent.amount + g.installments.reduce((s, i) => s + i.amount, 0);
+      const remaining = invoiceTotal - paidTotal;
+      const percent = invoiceTotal > 0 ? (paidTotal / invoiceTotal) * 100 : 0;
+      const installmentCount = 1 + g.installments.length;
+      const title =
+        g.parent.vendor ||
+        g.parent.invoiceNumber ||
+        g.parent.description ||
+        g.parent.budgetItem?.subcategory ||
+        g.parent.budgetItem?.category ||
+        "Faktura";
+      return {
+        parent: g.parent,
+        invoiceTotal,
+        paidTotal,
+        remaining,
+        percent,
+        installmentCount,
+        title,
+      };
+    })
+    .filter((c) => c.percent < 100);
+
+  // If every invoice is fully paid, the overview section would just be noise — hide it entirely.
+  if (cards.length === 0) return null;
 
   return (
     <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
