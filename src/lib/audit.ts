@@ -82,8 +82,31 @@ export async function logChanges(
       if (key === "updatedAt" || key === "createdAt") continue;
       const oldVal = oldData[key];
       const newVal = newData[key];
-      const oldStr = oldVal instanceof Date ? oldVal.toISOString() : oldVal === null || oldVal === undefined ? "" : String(oldVal);
-      const newStr = newVal instanceof Date ? newVal.toISOString() : newVal === null || newVal === undefined ? "" : String(newVal);
+      // Convert values to storable strings. Objects (e.g. Prisma relations
+      // like `contact: { id, name }`) would produce "[object Object]" via
+      // String() — instead, extract a readable value or JSON-stringify.
+      const toStr = (v: unknown): string => {
+        if (v instanceof Date) return v.toISOString();
+        if (v === null || v === undefined) return "";
+        if (typeof v === "object") {
+          // Try common name fields for relation objects
+          const obj = v as Record<string, unknown>;
+          if (typeof obj.name === "string") return obj.name;
+          if (typeof obj.subcategory === "string") return obj.subcategory;
+          if (typeof obj.email === "string") return obj.email;
+          if (typeof obj.id === "string") return `ID: ${obj.id.slice(-8)}`;
+          // Fallback: JSON stringify (truncated)
+          try {
+            const json = JSON.stringify(obj);
+            return json.length > 80 ? json.slice(0, 77) + "…" : json;
+          } catch {
+            return "[objekt]";
+          }
+        }
+        return String(v);
+      };
+      const oldStr = toStr(oldVal);
+      const newStr = toStr(newVal);
       if (oldStr !== newStr) {
         entries.push({
           projectId,

@@ -9,13 +9,26 @@ import { requireUser } from "@/lib/require-user";
 // Uses `dbRead` (read replica if configured, falls back to primary).
 export async function GET() {
   try {
-    // Require authentication — only show projects owned by the logged-in user
+    // Require authentication — show projects owned by the logged-in user
+    // OR where the user is a member (shared projects)
     const { user, response } = await requireUser();
     if (response) return response;
     if (!user) return NextResponse.json({ error: "Nejste přihlášen." }, { status: 401 });
 
+    // Find project IDs where the user is a member
+    const memberships = await dbRead.projectMember.findMany({
+      where: { userId: user.id },
+      select: { projectId: true },
+    });
+    const memberProjectIds = memberships.map((m) => m.projectId);
+
     const projects = await dbRead.project.findMany({
-      where: { ownerId: user.id },
+      where: {
+        OR: [
+          { ownerId: user.id },
+          { id: { in: memberProjectIds } },
+        ],
+      },
       orderBy: [{ starred: "desc" }, { createdAt: "desc" }],
       select: {
         id: true,
