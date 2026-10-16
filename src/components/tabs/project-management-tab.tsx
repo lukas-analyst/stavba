@@ -122,7 +122,7 @@ export function ProjectManagementTab({ projectId }: { projectId: string }) {
 
   if (projectsLoading || !project) {
     return (
-      <div className="space-y-4">
+      <div className="space-y-6">
         <Skeleton className="h-32" />
         <Skeleton className="h-48" />
         <Skeleton className="h-48" />
@@ -212,7 +212,7 @@ export function ProjectManagementTab({ projectId }: { projectId: string }) {
       </Card>
 
       {/* ===== Danger Zone ===== */}
-      <Card className="border-danger/30 bg-danger-soft/10">
+      <Card className="border-danger/20 bg-surface-container-low">
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 type-title-lg text-danger">
             <AlertTriangle className="h-4 w-4" />
@@ -223,7 +223,7 @@ export function ProjectManagementTab({ projectId }: { projectId: string }) {
           {/* Duplicate — available to every role that can see this tab
               (editor / owner / admin). Creates a fresh project owned by
               the current user, copying the budget items. */}
-          <div className="flex items-center justify-between gap-3 rounded-lg border border-outline-variant bg-card p-3">
+          <div className="flex items-center justify-between gap-3 rounded-lg border border-outline-variant bg-surface-container-low p-3">
             <div className="flex items-center gap-2">
               <Copy className="h-4 w-4 text-info" />
               <div>
@@ -241,7 +241,7 @@ export function ProjectManagementTab({ projectId }: { projectId: string }) {
               are intentionally shown a muted "owner-only" hint instead of
               a button so they understand why the action is unavailable. */}
           {canDeleteProject ? (
-            <div className="flex items-center justify-between gap-3 rounded-lg border border-danger/30 bg-danger-soft/20 p-3">
+            <div className="flex items-center justify-between gap-3 rounded-lg border border-danger/30 bg-danger-soft/10 p-3">
               <div className="flex items-center gap-2">
                 <Trash2 className="h-4 w-4 text-danger" />
                 <div>
@@ -252,12 +252,12 @@ export function ProjectManagementTab({ projectId }: { projectId: string }) {
               <DeleteProjectButton projectId={projectId} projectName={project.name} />
             </div>
           ) : (
-            <div className="flex items-center justify-between gap-3 rounded-lg border border-outline-variant bg-surface-container-low p-3 opacity-60">
+            <div className="flex items-center justify-between gap-3 rounded-lg border border-outline-variant bg-muted/30 p-3">
               <div className="flex items-center gap-2">
                 <Trash2 className="h-4 w-4 text-muted-foreground" />
                 <div>
                   <div className="type-body font-medium">Smazat projekt</div>
-                  <div className="type-label text-on-surface-variant">
+                  <div className="text-xs text-muted-foreground">
                     {isAdmin
                       ? "Smazat projekt může pouze jeho správce"
                       : "Pouze správce projektu může smazat projekt"}
@@ -391,9 +391,9 @@ function ProjectInfoCard({
         <CardContent className="pt-0">
           <div className="flex flex-wrap gap-4 type-label text-on-surface-variant">
             {project.address && (<span className="flex items-center gap-1"><MapPin className="h-3 w-3" /> {project.address}</span>)}
-            {project.startDate && (<span className="flex items-center gap-1"><Calendar className="h-3 w-3" /> {formatDate(project.startDate)}{project.endDate && ` — ${formatDate(project.endDate)}`}</span>)}
+            {project.startDate && (<span className="flex items-center gap-1 tabular-nums"><Calendar className="h-3 w-3" /> {formatDate(project.startDate)}{project.endDate && ` — ${formatDate(project.endDate)}`}</span>)}
             <span className="flex items-center gap-1"><Building2 className="h-3 w-3" /> {project.currency}</span>
-            <span className="type-label-sm text-on-surface-variant/60">Vytvořeno: {formatDate(project.createdAt)}</span>
+            <span className="type-label-sm text-on-surface-variant/60 tabular-nums">Vytvořeno: {formatDate(project.createdAt)}</span>
           </div>
           <div className="mt-3 flex items-center gap-1.5 type-label-sm text-muted-foreground">
             <Lock className="h-3 w-3" /> Úpravu informací o projektu může provést pouze správce projektu
@@ -479,9 +479,9 @@ function ProjectInfoCard({
         <CardContent className="pt-0">
           <div className="flex flex-wrap gap-4 type-label text-on-surface-variant">
             {project.address && (<span className="flex items-center gap-1"><MapPin className="h-3 w-3" /> {project.address}</span>)}
-            {project.startDate && (<span className="flex items-center gap-1"><Calendar className="h-3 w-3" /> {formatDate(project.startDate)}{project.endDate && ` — ${formatDate(project.endDate)}`}</span>)}
+            {project.startDate && (<span className="flex items-center gap-1 tabular-nums"><Calendar className="h-3 w-3" /> {formatDate(project.startDate)}{project.endDate && ` — ${formatDate(project.endDate)}`}</span>)}
             <span className="flex items-center gap-1"><Building2 className="h-3 w-3" /> {project.currency}</span>
-            <span className="type-label-sm text-on-surface-variant/60">Vytvořeno: {formatDate(project.createdAt)}</span>
+            <span className="type-label-sm text-on-surface-variant/60 tabular-nums">Vytvořeno: {formatDate(project.createdAt)}</span>
           </div>
         </CardContent>
       )}
@@ -947,7 +947,7 @@ function SharingSection({
       </CardHeader>
       <CardContent className="space-y-4">
         {/* ===== Public project toggle ===== */}
-        <div className="flex items-center justify-between gap-3 rounded-lg border border-outline-variant bg-surface-container-low p-3">
+        <div className="flex items-center justify-between gap-3 rounded-lg border border-outline-variant bg-surface-container-low p-6">
           <div className="min-w-0">
             <p className="type-body font-medium">Veřejný projekt</p>
             <p className="type-label text-on-surface-variant">
@@ -968,8 +968,8 @@ function SharingSection({
             <Lock className="h-3 w-3" /> Pouze správce může měnit veřejnost projektu
           </div>
         )}
-        <div className="flex items-start gap-1.5 type-label-sm text-on-surface-variant">
-          <Info className="mt-0.5 h-3 w-3 shrink-0" />
+        <div className="flex items-start gap-2 rounded-lg bg-info/5 p-2.5 text-xs text-on-surface-variant">
+          <Info className="h-3.5 w-3.5 shrink-0 mt-0.5 text-info" />
           <span>
             Veřejný projekt: Kdokoliv s odkazem může vidět projekt (pouze pro čtení). Vypněte pro soukromí.
           </span>
@@ -977,7 +977,7 @@ function SharingSection({
 
         {/* ===== Owner ===== */}
         {owner && (
-          <div className="flex items-center gap-3 rounded-lg border border-primary/30 bg-primary/5 p-3">
+          <div className="flex items-center gap-3 rounded-lg border border-primary/30 bg-surface-container-low p-3">
             <Avatar className="h-10 w-10 shrink-0 border border-primary/30">
               {owner.image ? (
                 <AvatarImage src={owner.image} alt={owner.name || owner.email} />
@@ -989,7 +989,7 @@ function SharingSection({
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-1.5">
                 <span className="type-body font-semibold">{owner.name || owner.email}</span>
-                <Badge variant="secondary" className="type-label-sm">Správce</Badge>
+                <Badge variant="secondary" className={cn("type-label-sm", "bg-success-soft text-success-strong dark:bg-success-soft dark:text-success-strong")}>Správce</Badge>
               </div>
               <div className="type-label text-on-surface-variant truncate">{owner.email}</div>
             </div>
@@ -1032,14 +1032,14 @@ function SharingSection({
                 <div
                   key={m.id}
                   className={cn(
-                    "flex items-center gap-3 rounded-lg border bg-surface-container-low p-2.5 transition-all",
+                    "flex items-center gap-3 rounded-lg border bg-surface-container-low p-3 transition-all",
                     isMatched
                       ? "border-warning ring-2 ring-warning/30"
                       : "border-outline-variant",
                     isRemoving && "opacity-50",
                   )}
                 >
-                  <Avatar className="h-8 w-8 shrink-0">
+                  <Avatar className="h-10 w-10 shrink-0">
                     {m.user.image ? (
                       <AvatarImage src={m.user.image} alt={m.user.name || m.user.email} />
                     ) : null}
@@ -1064,7 +1064,7 @@ function SharingSection({
                       </SelectContent>
                     </Select>
                   ) : (
-                    <Badge variant="secondary" className="type-label-sm gap-1">
+                    <Badge variant="secondary" className={cn("type-label-sm gap-1", m.role === "editor" ? "bg-info-soft text-info-strong dark:bg-info-soft dark:text-info-strong" : "bg-muted text-muted-foreground dark:bg-muted dark:text-muted-foreground")}>
                       {m.role === "editor" ? <Edit3 className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
                       {m.role === "editor" ? "Editor" : "Čtenář"}
                     </Badge>
@@ -1115,12 +1115,12 @@ function SharingSection({
                   <div
                     key={inv.id}
                     className={cn(
-                      "flex items-center gap-3 rounded-lg border bg-surface-container-low p-2.5 transition-all",
+                      "flex items-center gap-3 rounded-lg border bg-surface-container-low p-3 transition-all",
                       isRevoking && "opacity-50",
                       "border-outline-variant",
                     )}
                   >
-                    <Avatar className="h-8 w-8 shrink-0">
+                    <Avatar className="h-10 w-10 shrink-0">
                       <AvatarFallback className="bg-secondary-container type-label-sm font-bold text-secondary-container-foreground">
                         <Mail className="h-4 w-4" />
                       </AvatarFallback>
@@ -1172,7 +1172,7 @@ function SharingSection({
                 return (
                   <div
                     key={inv.id}
-                    className="flex items-center gap-3 rounded-md border border-outline-variant bg-card p-2 text-sm"
+                    className="flex items-center gap-3 rounded-lg border border-outline-variant bg-surface-container-low p-2.5 text-sm"
                   >
                     <div className="min-w-0 flex-1">
                       <div className="truncate font-medium">{inv.inviteeEmail}</div>
@@ -1257,8 +1257,8 @@ function SharingSection({
             </div>
           )}
         </div>
-        <div className="flex items-start gap-1.5 type-label-sm text-on-surface-variant">
-          <Info className="mt-0.5 h-3 w-3 shrink-0" />
+        <div className="flex items-start gap-2 rounded-lg bg-info/5 p-2.5 text-xs text-on-surface-variant">
+          <Info className="h-3.5 w-3.5 shrink-0 mt-0.5 text-info" />
           <span>
             Pozvat e-mailem: Pozvaný uživatel získá přístup po přihlášení nebo registraci s daným e-mailem. Platnost pozvánky: 24 hodin.
           </span>
@@ -1277,8 +1277,8 @@ function SharingSection({
             <QrCode projectSlug={projectSlug} projectName={projectName} />
           </div>
         </div>
-        <div className="flex items-start gap-1.5 type-label-sm text-on-surface-variant">
-          <Info className="mt-0.5 h-3 w-3 shrink-0" />
+        <div className="flex items-start gap-2 rounded-lg bg-info/5 p-2.5 text-xs text-on-surface-variant">
+          <Info className="h-3.5 w-3.5 shrink-0 mt-0.5 text-info" />
           <span>
             QR kód: Naskenujte pro otevření projektu na mobilu. Odkazuje na veřejný pohled projektu.
           </span>
@@ -1685,7 +1685,9 @@ function EnhancedAuditLog({ projectId }: { projectId: string }) {
   };
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
+      {/* ===== Filter section — grouped card ===== */}
+      <div className="rounded-lg border border-outline-variant bg-surface-container-low p-3 space-y-3">
       {/* Row 1: Polling indicator + search input */}
       <div className="flex flex-wrap items-center gap-2">
         {polling && (
@@ -1809,6 +1811,7 @@ function EnhancedAuditLog({ projectId }: { projectId: string }) {
           </Select>
         </div>
       </div>
+      </div>
 
       {/* Entries */}
       {loading ? (
@@ -1825,7 +1828,7 @@ function EnhancedAuditLog({ projectId }: { projectId: string }) {
         <div className="overflow-x-auto rounded-lg border border-outline-variant">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-outline-variant bg-surface-container-high">
+              <tr className="border-b border-outline-variant bg-surface-container-low">
                 <th className="type-overline text-on-surface-variant px-3 py-2 text-left">Úkon</th>
                 <th className="type-overline text-on-surface-variant px-3 py-2 text-left">Detail změny</th>
                 <th className="type-overline text-on-surface-variant px-3 py-2 text-left">Autor</th>
@@ -1854,7 +1857,7 @@ function EnhancedAuditLog({ projectId }: { projectId: string }) {
                 // C6: deep-link target tab (if any)
                 const entityTab = ENTITY_TAB_MAP[entry.entityType];
                 return (
-                  <tr key={entry.id} className="border-b border-outline-variant last:border-0 hover:bg-surface-container-high/60">
+                  <tr key={entry.id} className="border-b border-outline-variant last:border-0 hover:bg-surface-container-high">
                     {/* Úkon — action + entity type badge */}
                     <td className="px-3 py-2 align-top">
                       <div className="flex flex-col gap-0.5">
