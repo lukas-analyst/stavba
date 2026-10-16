@@ -558,7 +558,7 @@ export function TelemetryTab({ projectId: _projectId }: { projectId: string }) {
                   <span>0</span>
                 </div>
                 {/* Grid + bars */}
-                <div className="relative flex flex-1 items-end gap-0.5">
+                <div className="relative flex h-full flex-1 items-end gap-0.5">
                   {/* Horizontal grid lines */}
                   <div className="absolute inset-0 flex flex-col justify-between pointer-events-none">
                     {[0, 1, 2, 3, 4].map((i) => (
@@ -886,7 +886,7 @@ export function TelemetryTab({ projectId: _projectId }: { projectId: string }) {
                   <span>0</span>
                 </div>
                 {/* Grid + bars */}
-                <div className="relative flex flex-1 items-end gap-1">
+                <div className="relative flex h-full flex-1 items-end gap-1">
                   {/* Horizontal grid lines */}
                   <div className="absolute inset-0 flex flex-col justify-between pointer-events-none">
                     {[0, 1, 2, 3, 4].map((i) => (
