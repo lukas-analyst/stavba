@@ -36,6 +36,8 @@ const MAX_SESSION_SECONDS = 15 * 60;
  */
 export function useAnalytics(projectId?: string) {
   const pathname = usePathname();
+  // Normalize pathname — remove duplicate slashes and ensure single leading /
+  const normalizedPath = pathname ? pathname.replace(/\/+/g, "/") : "/";
 
   const trackEvent = useCallback(
     (
@@ -45,9 +47,12 @@ export function useAnalytics(projectId?: string) {
       pageUrl?: string,
     ) => {
       if (typeof window === "undefined") return;
+      // Normalize pageUrl — remove duplicate slashes
+      const rawUrl = pageUrl ?? normalizedPath ?? window.location.pathname;
+      const cleanUrl = rawUrl.replace(/\/+/g, "/");
       const payload = JSON.stringify({
         eventType,
-        pageUrl: pageUrl ?? pathname ?? window.location.pathname,
+        pageUrl: cleanUrl,
         // Cap timeSpent at MAX_SESSION_SECONDS to avoid unrealistic values
         // from users who leave the tab open and walk away.
         timeSpent: timeSpent !== undefined ? Math.min(timeSpent, MAX_SESSION_SECONDS) : undefined,
@@ -69,7 +74,7 @@ export function useAnalytics(projectId?: string) {
         // ignore
       }
     },
-    [pathname, projectId],
+    [normalizedPath, projectId],
   );
 
   return { trackEvent };

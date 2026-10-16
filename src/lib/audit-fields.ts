@@ -51,6 +51,15 @@ export const FIELD_LABELS: Record<string, string> = {
   sortOrder: "Pořadí",
   text: "Text",
   author: "Autor",
+  // Project metadata (Task ID: project-metadata)
+  fullAddress: "Přesná adresa",
+  studyUrl: "Architektonická studie",
+  documentationUrl: "Projektová dokumentace",
+  heatLoss: "Tepelná ztráta (W/K)",
+  energyRating: "Energetický štítek",
+  floorArea: "Zastavěná plocha (m²)",
+  floors: "Počet podlaží",
+  propertyNote: "Poznámka k nemovitosti",
 };
 
 /** Translate raw field value to human-readable string. Pure function. */

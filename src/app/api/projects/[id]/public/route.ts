@@ -53,6 +53,14 @@ export async function GET(
         startDate: true,
         endDate: true,
         isPublic: true,
+        fullAddress: true,
+        studyUrl: true,
+        documentationUrl: true,
+        heatLoss: true,
+        energyRating: true,
+        floorArea: true,
+        floors: true,
+        propertyNote: true,
       },
     });
 
@@ -72,6 +80,14 @@ export async function GET(
           startDate: true,
           endDate: true,
           isPublic: true,
+          fullAddress: true,
+          studyUrl: true,
+          documentationUrl: true,
+          heatLoss: true,
+          energyRating: true,
+          floorArea: true,
+          floors: true,
+          propertyNote: true,
         },
       });
       if (byId) {
@@ -109,6 +125,14 @@ async function handlePublicProject(project: {
   startDate: Date | null;
   endDate: Date | null;
   isPublic: boolean;
+  fullAddress: string | null;
+  studyUrl: string | null;
+  documentationUrl: string | null;
+  heatLoss: number | null;
+  energyRating: string | null;
+  floorArea: number | null;
+  floors: number | null;
+  propertyNote: string | null;
 }) {
   // Check if project is public
   if (!project.isPublic) {
@@ -140,6 +164,14 @@ async function handlePublicProject(project: {
       totalBudget: project.totalBudget,
       startDate: project.startDate ? project.startDate.toISOString() : null,
       endDate: project.endDate ? project.endDate.toISOString() : null,
+      fullAddress: project.fullAddress,
+      studyUrl: project.studyUrl,
+      documentationUrl: project.documentationUrl,
+      heatLoss: project.heatLoss,
+      energyRating: project.energyRating,
+      floorArea: project.floorArea,
+      floors: project.floors,
+      propertyNote: project.propertyNote,
     },
     totals: dashboard.totals,
     byPhase: dashboard.byPhase,

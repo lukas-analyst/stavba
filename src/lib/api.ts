@@ -43,6 +43,15 @@ export type Project = {
   endDate: string | null;
   categoryOrder: string | null;
   notes: string | null;
+  // Volitelná metadata o nemovitosti (Task ID: project-metadata)
+  fullAddress: string | null;
+  studyUrl: string | null;
+  documentationUrl: string | null;
+  heatLoss: number | null;
+  energyRating: string | null;
+  floorArea: number | null;
+  floors: number | null;
+  propertyNote: string | null;
   createdAt: string;
   updatedAt: string;
   _count?: { budgetItems: number; contacts: number };

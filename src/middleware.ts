@@ -9,7 +9,8 @@ import { getToken } from "next-auth/jwt";
 //   1. Redirects unauthenticated users to /auth/login
 //   2. Redirects authenticated-but-unverified users to /auth/verify-pending
 //   3. Redirects authenticated+verified users away from /auth/* pages
-//      (EXCEPT /auth/profile — that page is for authenticated users)
+//      (EXCEPT /auth/profile and /auth/settings — those pages are for
+//       authenticated users)
 //
 // We use `getToken` from `next-auth/jwt` directly instead of `withAuth`
 // because `withAuth` can cause redirect loops on Vercel Edge Runtime
@@ -32,6 +33,7 @@ import { getToken } from "next-auth/jwt";
 //
 // Authenticated paths:
 //   - /auth/profile    (account settings — requires verified e-mail)
+//   - /auth/settings   (unified settings: hidden projects, profile, about)
 // =====================================================================
 
 // Match /api/projects/<slug>/public — public read-only project endpoint.
@@ -82,10 +84,13 @@ export async function middleware(req: NextRequest) {
     secret: process.env.NEXTAUTH_SECRET,
   });
 
-  // /auth/profile is a special auth page — it requires authentication
-  // + verification, unlike the other /auth/* pages. Treat it like a
-  // normal authenticated route (handled below).
-  const isProfilePage = pathname === "/auth/profile" || pathname.startsWith("/auth/profile/");
+  // /auth/profile and /auth/settings are special auth pages — they require
+  // authentication + verification, unlike the other /auth/* pages. Treat
+  // them like normal authenticated routes (handled below).
+  const isProfilePage =
+    pathname === "/auth/profile" ||
+    pathname.startsWith("/auth/profile/") ||
+    pathname === "/auth/settings";
   const isAuthPage = pathname.startsWith("/auth") && !isProfilePage;
 
   // Auth pages (login, register, forgot-password, etc.)

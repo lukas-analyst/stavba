@@ -222,6 +222,22 @@ model Project {
   categoryOrder String?
   /// Legacy free-form markdown notes for the project (use Note[] instead)
   notes         String?
+  /// Přesná adresa nemovitosti (číslo popisné, ulice, město, PSČ)
+  fullAddress      String?
+  /// Odkaz na architektonickou studii (URL)
+  studyUrl         String?
+  /// Odkaz na projektovou dokumentaci (URL)
+  documentationUrl String?
+  /// Tepelná ztráta domu (W/K) — pro energetické hodnocení
+  heatLoss         Float?
+  /// Energetický štítek (A-G, volný text)
+  energyRating     String?
+  /// Zastavěná plocha (m²)
+  floorArea        Float?
+  /// Počet podlaží
+  floors           Int?
+  /// Poznámka k nemovitosti (volný text)
+  propertyNote     String?
   /// When this project was created
   createdAt     DateTime  @default(now())
   /// When this project was last updated

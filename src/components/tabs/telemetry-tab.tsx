@@ -541,13 +541,29 @@ export function TelemetryTab({ projectId: _projectId }: { projectId: string }) {
                 Žádná data.
               </p>
             ) : (
-              <div className="flex h-48 items-end gap-0.5">
-                {dayRows.map(([day, count]) => {
+              <div className="flex h-48 gap-2">
+                {/* Y-axis labels */}
+                <div className="flex flex-col justify-between py-0 text-right type-label-sm text-on-surface-variant tabular-nums" style={{ width: "2rem" }}>
+                  <span>{maxDayCount}</span>
+                  <span>{Math.ceil(maxDayCount * 0.75)}</span>
+                  <span>{Math.ceil(maxDayCount * 0.5)}</span>
+                  <span>{Math.ceil(maxDayCount * 0.25)}</span>
+                  <span>0</span>
+                </div>
+                {/* Grid + bars */}
+                <div className="relative flex flex-1 items-end gap-0.5">
+                  {/* Horizontal grid lines */}
+                  <div className="absolute inset-0 flex flex-col justify-between pointer-events-none">
+                    {[0, 1, 2, 3, 4].map((i) => (
+                      <div key={i} className="border-t border-outline-variant/30" />
+                    ))}
+                  </div>
+                  {dayRows.map(([day, count]) => {
                   const pct = (count / maxDayCount) * 100;
                   return (
                     <div
                       key={day}
-                      className="group relative flex flex-1 flex-col items-center justify-end"
+                      className="group relative flex flex-1 flex-col items-center justify-end z-10"
                       title={`${formatDayKey(day)}: ${count}`}
                     >
                       <div
@@ -564,6 +580,7 @@ export function TelemetryTab({ projectId: _projectId }: { projectId: string }) {
                     </div>
                   );
                 })}
+                </div>
               </div>
             )}
             <div className="mt-2 flex items-center justify-between type-label-sm text-on-surface-variant">
@@ -852,13 +869,29 @@ export function TelemetryTab({ projectId: _projectId }: { projectId: string }) {
             </p>
           ) : (
             <>
-              <div className="flex h-40 items-end gap-1">
-                {hourEntries.map(({ hour, count }) => {
+              <div className="flex h-40 gap-2">
+                {/* Y-axis labels */}
+                <div className="flex flex-col justify-between py-0 text-right type-label-sm text-on-surface-variant tabular-nums" style={{ width: "2rem" }}>
+                  <span>{maxHourCount}</span>
+                  <span>{Math.ceil(maxHourCount * 0.75)}</span>
+                  <span>{Math.ceil(maxHourCount * 0.5)}</span>
+                  <span>{Math.ceil(maxHourCount * 0.25)}</span>
+                  <span>0</span>
+                </div>
+                {/* Grid + bars */}
+                <div className="relative flex flex-1 items-end gap-1">
+                  {/* Horizontal grid lines */}
+                  <div className="absolute inset-0 flex flex-col justify-between pointer-events-none">
+                    {[0, 1, 2, 3, 4].map((i) => (
+                      <div key={i} className="border-t border-outline-variant/30" />
+                    ))}
+                  </div>
+                  {hourEntries.map(({ hour, count }) => {
                   const pct = (count / maxHourCount) * 100;
                   return (
                     <div
                       key={hour}
-                      className="group relative flex flex-1 flex-col items-center justify-end"
+                      className="group relative flex flex-1 flex-col items-center justify-end z-10"
                       title={`${hour}:00 — ${count} událostí`}
                     >
                       <div
@@ -879,6 +912,7 @@ export function TelemetryTab({ projectId: _projectId }: { projectId: string }) {
                     </div>
                   );
                 })}
+                </div>
               </div>
               <div className="mt-2 flex items-center justify-between type-label-sm text-on-surface-variant tabular-nums">
                 <span>0</span>

@@ -17,10 +17,10 @@ import {
   Sun,
   Moon,
   LogOut,
-  SlidersHorizontal,
 } from "lucide-react";
 import { useProjects } from "@/lib/api";
 import { useAppStore } from "@/lib/store";
+import { useHiddenProjectsSync } from "@/hooks/use-hidden-projects";
 import { useScrollState } from "@/hooks/use-scroll-state";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { Button } from "@/components/ui/button";
@@ -71,6 +71,13 @@ export function TopBar() {
   const selectedProjectId = useAppStore((s) => s.selectedProjectId);
   const setSelectedProjectId = useAppStore((s) => s.setSelectedProjectId);
   const setActiveTab = useAppStore((s) => s.setActiveTab);
+  // Hidden projects — projects that the user has chosen to hide from the
+  // TopBar project dropdown (and the sidebar's project list). They are
+  // still accessible via direct URL/project slug — this is UX declutter,
+  // not a security boundary. State is hydrated + persisted to
+  // localStorage by the hook.
+  const hiddenProjectIds = useAppStore((s) => s.hiddenProjectIds);
+  useHiddenProjectsSync();
   const { data: projects } = useProjects();
   const qc = useQueryClient();
   const isScrolled = useScrollState();
@@ -118,10 +125,6 @@ export function TopBar() {
   // only renders after a user click (inside a Radix portal), so we can
   // read `theme` directly without a mounted-guard.
   const isDark = theme === "dark";
-
-  // Admin flag from the session JWT. The "Preference" (admin tab) entry in
-  // the account dropdown is gated on this — non-admins never see it.
-  const isAdmin = (session?.user as { isAdmin?: boolean } | undefined)?.isAdmin === true;
 
   const [projectOpen, setProjectOpen] = useState(false);
   const [search, setSearch] = useState("");
@@ -203,8 +206,15 @@ export function TopBar() {
   // keystroke (which can jank on slower devices / large lists).
   const debouncedSearch = useDebouncedValue(search, 200);
 
-  // Filtered project list (uses debounced value)
+  // Filtered project list (uses debounced value).
+  // Hidden projects are excluded from the dropdown — they can still be
+  // accessed via direct URL/project slug, but they won't clutter the
+  // picker. The currently-selected project is also excluded from the
+  // dropdown list when hidden (it's still rendered in the trigger
+  // button at the top of the bar).
+  const hiddenSet = hiddenProjectIds;
   const filtered = projects?.filter((p) => {
+    if (hiddenSet.includes(p.id)) return false;
     if (!debouncedSearch.trim()) return true;
     const q = debouncedSearch.toLowerCase();
     return (
@@ -422,7 +432,7 @@ export function TopBar() {
           </button>
         )}
 
-        {/* Account dropdown — avatar with initials + Preference + Odhlásit + theme toggle
+        {/* Account dropdown — avatar with initials + Nastavení + Profil + Odhlásit + theme toggle
             ml-auto on mobile ensures the avatar is in the right corner even
             when the budget chip is not rendered (no project selected). */}
         <DropdownMenu>
@@ -477,16 +487,17 @@ export function TopBar() {
 
             <DropdownMenuSeparator className="bg-outline-variant" />
 
-            {/* Preference — open the Admin tab (admins only). */}
-            {isAdmin && (
-              <DropdownMenuItem
-                onSelect={() => setActiveTab("admin")}
-                className="cursor-pointer gap-2.5 rounded-none px-3 py-2.5 type-body hover:bg-surface-container-high"
-              >
-                <SlidersHorizontal className="h-4 w-4 text-primary" />
-                Preference
-              </DropdownMenuItem>
-            )}
+            {/* Nastavení — opens the unified settings page (hidden projects,
+                profile, about). Available to all authenticated users —
+                admin-specific actions (admin tab) are still reachable via
+                the sidebar's "Nastavení" dropdown → "Admin" entry. */}
+            <DropdownMenuItem
+              onSelect={() => router.push("/auth/settings")}
+              className="cursor-pointer gap-2.5 rounded-none px-3 py-2.5 type-body hover:bg-surface-container-high"
+            >
+              <Settings className="h-4 w-4 text-primary" />
+              Nastavení
+            </DropdownMenuItem>
 
             {/* Profil — profile page (name, password, sessions) */}
             <DropdownMenuItem
