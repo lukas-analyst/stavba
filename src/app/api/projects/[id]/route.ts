@@ -172,6 +172,16 @@ export async function DELETE(
       return NextResponse.json({ error: "Project not found" }, { status: 404 });
     }
 
+    // SECURITY: Admins have owner-level access to VIEW/EDIT all projects,
+    // but they CANNOT DELETE projects they don't own. Only the actual
+    // project owner (project.ownerId === user.id) can delete.
+    if (existing.ownerId !== access.user.id) {
+      return NextResponse.json(
+        { error: "Pouze správce projektu může smazat projekt." },
+        { status: 403 },
+      );
+    }
+
     // Log deletion before deleting (entity is gone after delete)
     await logChanges(
       id,
