@@ -35,6 +35,7 @@ export type Project = {
   description: string | null;
   starred: boolean;
   isPublic: boolean;
+  ownerId: string;
   status: string;
   currency: string;
   totalBudget: number;
@@ -54,6 +55,27 @@ export type Project = {
     daysPlanned: number;
     itemCount: number;
   };
+};
+
+// Project member — returned by GET /api/projects/[id]/members.
+// Used by the sidebar + project-management tab to compute the current
+// user's role within the selected project (viewer / editor / owner).
+export type ProjectMember = {
+  id: string;
+  role: string;
+  createdAt: string;
+  updatedAt: string;
+  user: {
+    id: string;
+    name: string | null;
+    email: string;
+    image: string | null;
+  };
+};
+
+export type ProjectMembersResponse = {
+  owner: { id: string; name: string | null; email: string; image: string | null };
+  members: ProjectMember[];
 };
 
 export type BudgetItem = {
@@ -187,6 +209,26 @@ export function useProjects() {
   });
 }
 
+// Fetch members + owner of a single project.
+//
+// Used by the sidebar (`AppSidebar`) and the project-management tab to
+// compute the current user's role within the selected project so the UI
+// can show / hide role-gated affordances (Telemetry tab, delete-project
+// button, etc.). Cached for 30s — members rarely change while the user
+// is actively navigating.
+export function useProjectMembers(projectId: string | null) {
+  return useQuery<ProjectMembersResponse>({
+    queryKey: ["members", projectId],
+    staleTime: 30 * 1000,
+    queryFn: async () => {
+      const res = await fetch(`/api/projects/${projectId}/members`);
+      if (!res.ok) throw new Error("Failed to load members");
+      return res.json();
+    },
+    enabled: !!projectId,
+  });
+}
+
 export function useCreateProject() {
   const qc = useQueryClient();
   return useMutation({
@@ -196,7 +238,10 @@ export function useCreateProject() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
-      if (!res.ok) throw new Error("Failed to create project");
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || "Failed to create project");
+      }
       return res.json();
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["projects"] }),
@@ -220,7 +265,10 @@ export function useCreateProjectFromTemplate() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
-      if (!res.ok) throw new Error("Failed to create project from template");
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || "Failed to create project from template");
+      }
       return res.json();
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["projects"] }),
@@ -259,7 +307,10 @@ export function useUpdateProject(id: string) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
-      if (!res.ok) throw new Error("Failed to update project");
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || "Failed to update project");
+      }
       return res.json();
     },
   });
@@ -270,7 +321,10 @@ export function useDeleteProject() {
   return useMutation({
     mutationFn: async (id: string) => {
       const res = await fetch(`/api/projects/${id}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("Failed to delete project");
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || "Failed to delete project");
+      }
       return res.json();
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["projects"] }),
@@ -300,7 +354,10 @@ export function useCreateBudgetItem(projectId: string) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
-      if (!res.ok) throw new Error("Failed to create budget item");
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || "Failed to create budget item");
+      }
       return res.json();
     },
     onSuccess: () => {
@@ -342,7 +399,10 @@ export function useUpdateBudgetItem(projectId: string) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
-      if (!res.ok) throw new Error("Failed to update budget item");
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || "Failed to update budget item");
+      }
       return res.json();
     },
   });
@@ -353,7 +413,10 @@ export function useDeleteBudgetItem(projectId: string) {
   return useMutation({
     mutationFn: async (id: string) => {
       const res = await fetch(`/api/budget-items/${id}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("Failed to delete budget item");
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || "Failed to delete budget item");
+      }
       return res.json();
     },
     onSuccess: () => {
@@ -369,7 +432,10 @@ export function useDuplicateBudgetItem(projectId: string) {
   return useMutation({
     mutationFn: async (id: string) => {
       const res = await fetch(`/api/budget-items/${id}/duplicate`, { method: "POST" });
-      if (!res.ok) throw new Error("Failed to duplicate budget item");
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || "Failed to duplicate budget item");
+      }
       return res.json();
     },
     onSuccess: () => {
@@ -459,7 +525,10 @@ export function useReorder(projectId: string) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
-      if (!res.ok) throw new Error("Failed to reorder");
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || "Failed to reorder");
+      }
       return res.json();
     },
   });
@@ -470,7 +539,10 @@ export function useExportState() {
   return useMutation({
     mutationFn: async () => {
       const res = await fetch("/api/export");
-      if (!res.ok) throw new Error("Failed to export");
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || "Failed to export");
+      }
       const blob = await res.blob();
       // Try to get filename from Content-Disposition
       const cd = res.headers.get("content-disposition") || "";
@@ -519,7 +591,10 @@ export function useExportCsv(projectId: string) {
   return useMutation({
     mutationFn: async (type: "budget" | "payments" | "time" | "contacts") => {
       const res = await fetch(`/api/projects/${projectId}/export-csv?type=${type}`);
-      if (!res.ok) throw new Error("Failed to export CSV");
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || "Failed to export CSV");
+      }
       const blob = await res.blob();
       const cd = res.headers.get("content-disposition") || "";
       const match = cd.match(/filename="?([^"]+)"?/);
@@ -562,7 +637,10 @@ export function useCreatePayment(projectId: string) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
-      if (!res.ok) throw new Error("Failed to create payment");
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || "Failed to create payment");
+      }
       return res.json();
     },
     onSuccess: () => {
@@ -606,7 +684,10 @@ export function useUpdatePayment(projectId: string) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
-      if (!res.ok) throw new Error("Failed to update payment");
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || "Failed to update payment");
+      }
       return res.json();
     },
   });
@@ -617,7 +698,10 @@ export function useDeletePayment(projectId: string) {
   return useMutation({
     mutationFn: async (id: string) => {
       const res = await fetch(`/api/payments/${id}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("Failed to delete payment");
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || "Failed to delete payment");
+      }
       return res.json();
     },
     onSuccess: () => {
@@ -652,7 +736,10 @@ export function useCreateTimeEntry(projectId: string) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
-      if (!res.ok) throw new Error("Failed to create time entry");
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || "Failed to create time entry");
+      }
       return res.json();
     },
     onSuccess: () => {
@@ -696,7 +783,10 @@ export function useUpdateTimeEntry(projectId: string) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
-      if (!res.ok) throw new Error("Failed to update time entry");
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || "Failed to update time entry");
+      }
       return res.json();
     },
   });
@@ -707,7 +797,10 @@ export function useDeleteTimeEntry(projectId: string) {
   return useMutation({
     mutationFn: async (id: string) => {
       const res = await fetch(`/api/time-entries/${id}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("Failed to delete time entry");
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || "Failed to delete time entry");
+      }
       return res.json();
     },
     onSuccess: () => {
@@ -742,7 +835,10 @@ export function useCreateContact(projectId: string) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
-      if (!res.ok) throw new Error("Failed to create contact");
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || "Failed to create contact");
+      }
       return res.json();
     },
     onSuccess: () => {
@@ -763,7 +859,10 @@ export function useUpdateContact(projectId: string) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
-      if (!res.ok) throw new Error("Failed to update contact");
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || "Failed to update contact");
+      }
       return res.json();
     },
     onSuccess: () => {
@@ -780,7 +879,10 @@ export function useDeleteContact(projectId: string) {
   return useMutation({
     mutationFn: async (id: string) => {
       const res = await fetch(`/api/contacts/${id}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("Failed to delete contact");
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || "Failed to delete contact");
+      }
       return res.json();
     },
     onSuccess: () => {
@@ -805,7 +907,10 @@ export function useCreateContactPerson(projectId: string, contactId: string) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
-      if (!res.ok) throw new Error("Failed to create person");
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || "Failed to create person");
+      }
       return res.json();
     },
     onSuccess: () => {
@@ -824,7 +929,10 @@ export function useUpdateContactPerson(projectId: string, contactId: string) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
-      if (!res.ok) throw new Error("Failed to update person");
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || "Failed to update person");
+      }
       return res.json();
     },
     onSuccess: () => {
@@ -839,7 +947,10 @@ export function useDeleteContactPerson(projectId: string, contactId: string) {
   return useMutation({
     mutationFn: async (personId: string) => {
       const res = await fetch(`/api/contacts/${contactId}/persons/${personId}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("Failed to delete person");
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || "Failed to delete person");
+      }
       return res.json();
     },
     onSuccess: () => {
@@ -994,7 +1105,10 @@ export function useCreateSnapshot(projectId: string) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ label }),
       });
-      if (!res.ok) throw new Error("Failed to create snapshot");
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || "Failed to create snapshot");
+      }
       return res.json();
     },
     onSuccess: () => {
@@ -1009,7 +1123,10 @@ export function useDeleteSnapshot(projectId: string) {
   return useMutation({
     mutationFn: async (id: string) => {
       const res = await fetch(`/api/snapshots/${id}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("Failed to delete snapshot");
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || "Failed to delete snapshot");
+      }
       return res.json();
     },
     onSuccess: () => {
@@ -1055,7 +1172,10 @@ export function useCreateComment(budgetItemId: string) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
-      if (!res.ok) throw new Error("Failed to create comment");
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || "Failed to create comment");
+      }
       return res.json();
     },
     onSuccess: () => {
@@ -1072,7 +1192,10 @@ export function useDeleteComment(budgetItemId: string) {
   return useMutation({
     mutationFn: async (id: string) => {
       const res = await fetch(`/api/comments/${id}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("Failed to delete comment");
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || "Failed to delete comment");
+      }
       return res.json();
     },
     onSuccess: () => {
@@ -1114,7 +1237,10 @@ export function useCreateNote(projectId: string) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
-      if (!res.ok) throw new Error("Failed to create note");
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || "Failed to create note");
+      }
       return res.json();
     },
     onMutate: async (data) => {
@@ -1171,7 +1297,10 @@ export function useUpdateNote(projectId: string) {
           ...(data.author !== undefined ? { author: data.author } : {}),
         }),
       });
-      if (!res.ok) throw new Error("Failed to update note");
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || "Failed to update note");
+      }
       return res.json();
     },
     onMutate: async (data) => {
@@ -1226,7 +1355,10 @@ export function useDeleteNote(projectId: string) {
     },
     mutationFn: async (id: string) => {
       const res = await fetch(`/api/notes/${id}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("Failed to delete note");
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || "Failed to delete note");
+      }
       return res.json();
     },
   });

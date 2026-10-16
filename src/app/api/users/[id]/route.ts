@@ -5,19 +5,24 @@ import { requireUser } from "@/lib/require-user";
 // =====================================================================
 // /api/users/[id] — single-user mutations
 // ---------------------------------------------------------------------
-// Until Google Auth is implemented, the "current user" is the default
-// owner (email "hanzliklukas2@gmail.com"). This endpoint allows the
-// admin UI to update the current user's `name`. After auth lands, this
-// should be guarded by an `isAdmin` check (or limited to the session
-// user's own record).
-//
 // PATCH /api/users/[id]
-//   Body: { name: string }
-//   Returns: 200 { id, name, email, image, createdAt } on success
+//   Body: { name?: string, isAdmin?: boolean }
+//   - `name`     — editable by the user themselves OR by an admin.
+//   - `isAdmin`  — ONLY editable by an existing admin. Non-admins who
+//                  try to set this field receive 403. This is the only
+//                  way to promote/demote admins (besides direct DB access).
+//
+//   Admins can also edit any other user's `name` (not just their own).
+//   Non-admins can only edit their own profile.
+//
+//   Returns: 200 { id, name, email, image, isAdmin, createdAt }
 //
 // GET /api/users/[id]
 //   Returns: 200 { id, name, email, image, createdAt } — used when the
 //   client needs to fetch a single user (e.g. for the avatar dropdown).
+//   Note: `isAdmin` is intentionally NOT returned here to avoid leaking
+//   admin status to arbitrary clients. Use /api/users/profile for the
+//   current user's own isAdmin flag.
 // =====================================================================
 
 type RouteContext = { params: Promise<{ id: string }> };
@@ -47,11 +52,63 @@ export async function PATCH(request: Request, { params }: RouteContext) {
       return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
     }
 
-    const { name } = body as { name?: string };
+    const { name, isAdmin } = body as {
+      name?: string;
+      isAdmin?: boolean;
+    };
 
-    if (typeof name !== "string" || !name.trim()) {
+    // Build the update payload. `name` and `isAdmin` are both optional,
+    // but at least one must be provided so we don't no-op silently.
+    const data: { name?: string; isAdmin?: boolean } = {};
+
+    if (typeof name === "string") {
+      if (!name.trim()) {
+        return NextResponse.json(
+          { error: "name must be a non-empty string" },
+          { status: 400 },
+        );
+      }
+      data.name = name.trim().slice(0, 120);
+    }
+
+    // ===== Admin-gated field: isAdmin =====
+    // Only an existing admin can set `isAdmin` (promote or demote).
+    // We fetch the requester's isAdmin flag fresh from DB (not from the
+    // JWT) so a just-demoted admin can't sneak in one last change using
+    // a stale token. The requester must also be authenticated.
+    if (isAdmin !== undefined) {
+      const { user: requester, response: authResponse } = await requireUser();
+      if (authResponse) return authResponse;
+      if (!requester) {
+        return NextResponse.json(
+          { error: "Nejste přihlášen." },
+          { status: 401 },
+        );
+      }
+      const requesterUser = await db.user.findUnique({
+        where: { id: requester.id },
+        select: { isAdmin: true },
+      });
+      if (!requesterUser?.isAdmin) {
+        return NextResponse.json(
+          { error: "Pouze administrátor může měnit admin práva." },
+          { status: 403 },
+        );
+      }
+      // Optional safety: prevent self-demotion so the instance never
+      // ends up with zero admins. Uncomment if you want this guard.
+      // if (id === requester.id && isAdmin === false) {
+      //   return NextResponse.json(
+      //     { error: "Nemůžete odebrat admin práva sám sobě." },
+      //     { status: 400 },
+      //   );
+      // }
+      data.isAdmin = Boolean(isAdmin);
+    }
+
+    if (Object.keys(data).length === 0) {
       return NextResponse.json(
-        { error: "name is required and must be a non-empty string" },
+        { error: "No updatable fields provided (name, isAdmin)" },
         { status: 400 },
       );
     }
@@ -65,22 +122,38 @@ export async function PATCH(request: Request, { params }: RouteContext) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    // Only allow editing your own profile (session user).
-    // This replaces the old "default owner" check.
-    const { user, response: authResponse } = await requireUser();
-    if (authResponse) return authResponse;
-    if (!user) return NextResponse.json({ error: "Nejste přihlášen." }, { status: 401 });
-    if (id !== user.id) {
-      return NextResponse.json(
-        { error: "Úprava cizího profilu není povolena" },
-        { status: 403 },
-      );
+    // Authorization for the `name` field:
+    //   - Admins can edit ANY user's name.
+    //   - Non-admins can only edit their own profile.
+    // (The `isAdmin` field was already authorized above.)
+    if (data.name !== undefined) {
+      const { user: requester, response: authResponse } = await requireUser();
+      if (authResponse) return authResponse;
+      if (!requester) {
+        return NextResponse.json(
+          { error: "Nejste přihlášen." },
+          { status: 401 },
+        );
+      }
+      if (id !== requester.id && !requester.isAdmin) {
+        return NextResponse.json(
+          { error: "Úprava cizího profilu není povolena" },
+          { status: 403 },
+        );
+      }
     }
 
     const updated = await db.user.update({
       where: { id },
-      data: { name: name.trim().slice(0, 120) },
-      select: { id: true, name: true, email: true, image: true, createdAt: true },
+      data,
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        image: true,
+        isAdmin: true,
+        createdAt: true,
+      },
     });
 
     return NextResponse.json(updated);

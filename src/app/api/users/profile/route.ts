@@ -12,8 +12,12 @@ import { requireUser } from "@/lib/require-user";
 // but requireUser() is a defense-in-depth).
 //
 // Returns:
-//   { id, name, email, image, createdAt }
+//   { id, name, email, image, isAdmin, createdAt }
 //   401 if no session
+//
+// `isAdmin` is the DB source of truth (not the JWT-stale value) so the
+// client UI (admin tab visibility, etc.) reflects promotions/demotions
+// immediately.
 // =====================================================================
 export async function GET() {
   try {
@@ -28,6 +32,7 @@ export async function GET() {
         name: true,
         email: true,
         image: true,
+        isAdmin: true,
         createdAt: true,
       },
     });

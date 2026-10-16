@@ -68,6 +68,10 @@ model User {
   /// This enables "Odhlásit všude" (revoke all sessions) without DB
   /// sessions (which would be needed for pure stateless JWT).
   tokenVersion   Int       @default(0)
+  /// Hidden admin flag — can only be set by existing admins via API
+  /// or direct DB access. Admins can see ALL projects + telemetry
+  /// without being a member. Cannot delete projects they don't own.
+  isAdmin       Boolean   @default(false)
   /// When this user first signed in
   createdAt     DateTime  @default(now())
   /// When this user's record was last updated

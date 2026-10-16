@@ -119,6 +119,10 @@ export function TopBar() {
   // read `theme` directly without a mounted-guard.
   const isDark = theme === "dark";
 
+  // Admin flag from the session JWT. The "Preference" (admin tab) entry in
+  // the account dropdown is gated on this — non-admins never see it.
+  const isAdmin = (session?.user as { isAdmin?: boolean } | undefined)?.isAdmin === true;
+
   const [projectOpen, setProjectOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [addOpen, setAddOpen] = useState(false);
@@ -473,14 +477,16 @@ export function TopBar() {
 
             <DropdownMenuSeparator className="bg-outline-variant" />
 
-            {/* Preference — open the Admin tab */}
-            <DropdownMenuItem
-              onSelect={() => setActiveTab("admin")}
-              className="cursor-pointer gap-2.5 rounded-none px-3 py-2.5 type-body hover:bg-surface-container-high"
-            >
-              <SlidersHorizontal className="h-4 w-4 text-primary" />
-              Preference
-            </DropdownMenuItem>
+            {/* Preference — open the Admin tab (admins only). */}
+            {isAdmin && (
+              <DropdownMenuItem
+                onSelect={() => setActiveTab("admin")}
+                className="cursor-pointer gap-2.5 rounded-none px-3 py-2.5 type-body hover:bg-surface-container-high"
+              >
+                <SlidersHorizontal className="h-4 w-4 text-primary" />
+                Preference
+              </DropdownMenuItem>
+            )}
 
             {/* Profil — profile page (name, password, sessions) */}
             <DropdownMenuItem

@@ -1727,8 +1727,8 @@ const BudgetRow = memo(function BudgetRow({
                   try {
                     await duplicateItem.mutateAsync(item.id);
                     toast.success("Položka duplikována");
-                  } catch {
-                    toast.error("Nepodařilo se duplikovat");
+                  } catch (err) {
+                    toast.error(err instanceof Error ? err.message : "Nepodařilo se duplikovat");
                   }
                 }}
               >
@@ -1764,8 +1764,8 @@ const BudgetRow = memo(function BudgetRow({
                     await deleteItem.mutateAsync(item.id);
                     toast.success("Položka smazána");
                     setConfirmDelete(false);
-                  } catch {
-                    toast.error("Nepodařilo se smazat");
+                  } catch (err) {
+                    toast.error(err instanceof Error ? err.message : "Nepodařilo se smazat");
                   }
                 }}
               >

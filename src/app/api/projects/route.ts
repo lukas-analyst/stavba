@@ -15,40 +15,72 @@ export async function GET() {
     if (response) return response;
     if (!user) return NextResponse.json({ error: "Nejste přihlášen." }, { status: 401 });
 
-    // Find project IDs where the user is a member
-    const memberships = await dbRead.projectMember.findMany({
-      where: { userId: user.id },
-      select: { projectId: true },
-    });
-    const memberProjectIds = memberships.map((m) => m.projectId);
+    // If user.isAdmin, return ALL projects (admin bypass — no ownerId
+    // filter and no membership lookup). Useful for the admin UI / super-
+    // user view of the whole instance.
+    let projects;
+    if (user.isAdmin) {
+      projects = await dbRead.project.findMany({
+        orderBy: [{ starred: "desc" }, { createdAt: "desc" }],
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+          address: true,
+          description: true,
+          starred: true,
+          isPublic: true,
+          ownerId: true,
+          status: true,
+          currency: true,
+          totalBudget: true,
+          startDate: true,
+          endDate: true,
+          categoryOrder: true,
+          notes: true,
+          createdAt: true,
+          updatedAt: true,
+          _count: { select: { budgetItems: true, contacts: true } },
+        },
+      });
+    } else {
+      // Find project IDs where the user is a member
+      const memberships = await dbRead.projectMember.findMany({
+        where: { userId: user.id },
+        select: { projectId: true },
+      });
+      const memberProjectIds = memberships.map((m) => m.projectId);
 
-    const projects = await dbRead.project.findMany({
-      where: {
-        OR: [
-          { ownerId: user.id },
-          { id: { in: memberProjectIds } },
-        ],
-      },
-      orderBy: [{ starred: "desc" }, { createdAt: "desc" }],
-      select: {
-        id: true,
-        name: true,
-        slug: true,
-        address: true,
-        description: true,
-        starred: true,
-        status: true,
-        currency: true,
-        totalBudget: true,
-        startDate: true,
-        endDate: true,
-        categoryOrder: true,
-        notes: true,
-        createdAt: true,
-        updatedAt: true,
-        _count: { select: { budgetItems: true, contacts: true } },
-      },
-    });
+      projects = await dbRead.project.findMany({
+        where: {
+          OR: [
+            { ownerId: user.id },
+            { id: { in: memberProjectIds } },
+          ],
+        },
+        orderBy: [{ starred: "desc" }, { createdAt: "desc" }],
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+          address: true,
+          description: true,
+          starred: true,
+          isPublic: true,
+          ownerId: true,
+          status: true,
+          currency: true,
+          totalBudget: true,
+          startDate: true,
+          endDate: true,
+          categoryOrder: true,
+          notes: true,
+          createdAt: true,
+          updatedAt: true,
+          _count: { select: { budgetItems: true, contacts: true } },
+        },
+      });
+    }
 
     if (projects.length === 0) {
       return NextResponse.json([]);

@@ -89,8 +89,8 @@ export function NotesTab({ projectId }: { projectId: string }) {
       });
       trackEvent("add_note", { author: authorName });
       setText("");
-    } catch {
-      toast.error("Nepodařilo se přidat poznámku");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Nepodařilo se přidat poznámku");
     }
   };
 
@@ -99,8 +99,8 @@ export function NotesTab({ projectId }: { projectId: string }) {
     try {
       await deleteNote.mutateAsync(id);
       toast.success("Poznámka smazána");
-    } catch {
-      toast.error("Nepodařilo se smazat poznámku");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Nepodařilo se smazat poznámku");
     } finally {
       setPendingDeleteId(null);
     }
@@ -119,8 +119,8 @@ export function NotesTab({ projectId }: { projectId: string }) {
       trackEvent("edit_note", { author: note?.author ?? "Anonym" });
       toast.success("Poznámka upravena");
       return true;
-    } catch {
-      toast.error("Nepodařilo se upravit poznámku");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Nepodařilo se upravit poznámku");
       return false;
     } finally {
       setPendingSaveId(null);

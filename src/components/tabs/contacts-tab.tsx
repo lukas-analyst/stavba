@@ -446,8 +446,8 @@ function ContactCard({
                   await deleteContact.mutateAsync(contact.id);
                   toast.success("Kontakt smazán");
                   setConfirm(false);
-                } catch {
-                  toast.error("Nepodařilo se smazat");
+                } catch (err) {
+                  toast.error(err instanceof Error ? err.message : "Nepodařilo se smazat");
                 }
               }}
             >
@@ -528,8 +528,8 @@ function ContactPersonsSection({
       toast.success("Osoba přidána");
       setNewPerson({ firstName: "", lastName: "", phone: "", email: "", role: "" });
       setShowAddForm(false);
-    } catch {
-      toast.error("Nepodařilo se přidat osobu");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Nepodařilo se přidat osobu");
     }
   };
 
@@ -537,8 +537,8 @@ function ContactPersonsSection({
     try {
       await deletePerson.mutateAsync(personId);
       toast.success(`Osoba "${name}" smazána`);
-    } catch {
-      toast.error("Nepodařilo se smazat osobu");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Nepodařilo se smazat osobu");
     }
   };
 
@@ -1061,8 +1061,8 @@ function ContactForm({
         toast.success("Kontakt přidán");
       }
       onOpenChange(false);
-    } catch {
-      toast.error("Nepodařilo se uložit kontakt");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Nepodařilo se uložit kontakt");
     }
   };
 

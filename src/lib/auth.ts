@@ -155,6 +155,7 @@ export const authOptions: NextAuthOptions = {
             password: true,
             emailVerified: true,
             tokenVersion: true,
+            isAdmin: true,
             accounts: {
               where: { provider: "google" },
               select: { provider: true },
@@ -196,6 +197,7 @@ export const authOptions: NextAuthOptions = {
           image: user.image,
           emailVerified: user.emailVerified?.toISOString() ?? null,
           tokenVersion: user.tokenVersion,
+          isAdmin: user.isAdmin,
         } as unknown as {
           id: string;
           email: string;
@@ -203,6 +205,7 @@ export const authOptions: NextAuthOptions = {
           image: string | null;
           emailVerified: string | null;
           tokenVersion: number;
+          isAdmin: boolean;
         };
       },
     }),
@@ -254,6 +257,7 @@ export const authOptions: NextAuthOptions = {
             image: true,
             emailVerified: true,
             tokenVersion: true,
+            isAdmin: true,
             accounts: {
               where: { provider: "google" },
               select: { providerAccountId: true },
@@ -318,11 +322,12 @@ export const authOptions: NextAuthOptions = {
             });
           }
 
-          // Attach DB id + emailVerified + tokenVersion to JWT
+          // Attach DB id + emailVerified + tokenVersion + isAdmin to JWT
           user.id = existing.id;
           (user as { emailVerified?: string | null }).emailVerified =
             existing.emailVerified?.toISOString() ?? new Date().toISOString();
           (user as { tokenVersion?: number }).tokenVersion = existing.tokenVersion;
+          (user as { isAdmin?: boolean }).isAdmin = existing.isAdmin;
         } else {
           // New user — create in DB + create Account record
           const newUser = await db.user.create({
@@ -351,6 +356,7 @@ export const authOptions: NextAuthOptions = {
           (user as { emailVerified?: string | null }).emailVerified =
             newUser.emailVerified?.toISOString() ?? new Date().toISOString();
           (user as { tokenVersion?: number }).tokenVersion = newUser.tokenVersion;
+          (user as { isAdmin?: boolean }).isAdmin = newUser.isAdmin;
         }
       }
 
@@ -371,9 +377,12 @@ export const authOptions: NextAuthOptions = {
 
     // ===== jwt callback =====
     // Called on every request that has a JWT. We use it to:
-    //   1. Include `emailVerified` + `tokenVersion` in the token
+    //   1. Include `emailVerified` + `tokenVersion` + `isAdmin` in the token
     //   2. Periodically re-check DB for emailVerified + tokenVersion
     //      (enables "log out everywhere" via tokenVersion increment)
+    //   3. Periodically refresh `isAdmin` so admin promotions/demotions
+    //      take effect without forcing re-login (defense-in-depth: API
+    //      routes also fetch isAdmin fresh via `requireUser()`).
     //
     // To avoid a DB query on EVERY request, we check only when:
     //   - emailVerified is null (user might have verified in another tab)
@@ -384,6 +393,7 @@ export const authOptions: NextAuthOptions = {
         token.id = user.id;
         token.emailVerified = (user as { emailVerified?: string | null }).emailVerified ?? null;
         token.tokenVersion = (user as { tokenVersion?: number }).tokenVersion ?? 0;
+        token.isAdmin = (user as { isAdmin?: boolean }).isAdmin ?? false;
         token.lastChecked = Date.now();
       }
 
@@ -396,7 +406,7 @@ export const authOptions: NextAuthOptions = {
       if (needsCheck && token.email) {
         const dbUser = await db.user.findUnique({
           where: { email: token.email },
-          select: { emailVerified: true, tokenVersion: true },
+          select: { emailVerified: true, tokenVersion: true, isAdmin: true },
         });
 
         if (dbUser) {
@@ -404,6 +414,8 @@ export const authOptions: NextAuthOptions = {
           if (dbUser.emailVerified) {
             token.emailVerified = dbUser.emailVerified.toISOString();
           }
+          // Refresh isAdmin so promotions/demotions propagate within 60s
+          token.isAdmin = dbUser.isAdmin;
           // tokenVersion check for "log out everywhere" (S10/F9).
           // If the token's version doesn't match the DB, the session
           // was revoked (password reset, "log out everywhere", etc.).
@@ -438,12 +450,17 @@ export const authOptions: NextAuthOptions = {
 
     // ===== session callback =====
     // Called whenever the client reads the session (useSession, getSession).
-    // We expose `id` and `emailVerified` from the token to the client.
+    // We expose `id`, `emailVerified`, and `isAdmin` from the token to the
+    // client. NOTE: client-side `session.user.isAdmin` is for UI hints only
+    // (e.g., showing the admin tab) — API routes always re-fetch from DB
+    // via `requireUser()` because the JWT can be up to 60s stale.
     async session({ session, token }) {
       if (session.user) {
         (session.user as { id?: string }).id = token.id as string;
         (session.user as { emailVerified?: string | null }).emailVerified =
           (token.emailVerified as string | null) ?? null;
+        (session.user as { isAdmin?: boolean }).isAdmin =
+          (token.isAdmin as boolean | undefined) ?? false;
       }
       return session;
     },

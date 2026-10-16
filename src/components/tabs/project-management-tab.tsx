@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
-import { useQueryClient, useQuery } from "@tanstack/react-query";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import { useSession } from "next-auth/react";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   Card,
   CardContent,
@@ -68,7 +69,9 @@ import {
   useProjects,
   useUpdateProject,
   useBudgetItems,
+  useProjectMembers,
 } from "@/lib/api";
+import { computeUserRole, type ProjectRole } from "@/lib/roles";
 import { formatDate, STATUS_LABELS } from "@/lib/format";
 import { getFieldValue } from "@/lib/audit-fields";
 import { cn } from "@/lib/utils";
@@ -86,29 +89,36 @@ export function ProjectManagementTab({ projectId }: { projectId: string }) {
   const { data: budgetItems } = useBudgetItems(projectId);
   const updateProject = useUpdateProject(projectId);
 
-  // Fetch current user + project members to determine if user is owner (Správce)
-  const { data: currentUser } = useQuery({
-    queryKey: ["user-profile"],
-    queryFn: async () => {
-      const res = await fetch("/api/users/profile");
-      if (!res.ok) return null;
-      return res.json();
-    },
-    staleTime: 60_000,
-  });
-  const { data: membersData } = useQuery({
-    queryKey: ["members", projectId],
-    queryFn: async () => {
-      const res = await fetch(`/api/projects/${projectId}/members`);
-      if (!res.ok) return null;
-      return res.json();
-    },
-    staleTime: 30_000,
-  });
+  // Role-based UI: fetch the current user (session) + project members so we
+  // can resolve the user's role within this project. Admins/owners get the
+  // full edit affordances; editors get a read-only info card + limited
+  // member-adding (only viewer/editor roles); viewers never reach this tab
+  // (the sidebar filters it out via `minRole: "editor"`).
+  const { data: session } = useSession();
+  const { data: membersData } = useProjectMembers(projectId);
 
-  const isOwner = currentUser?.id && membersData?.owner?.id === currentUser.id;
+  const project = useMemo(
+    () => projects?.find((p) => p.id === projectId),
+    [projects, projectId],
+  );
 
-  const project = projects?.find((p) => p.id === projectId);
+  const userRole = useMemo<ProjectRole>(
+    () =>
+      computeUserRole({
+        session,
+        projectId,
+        project,
+        members: membersData?.members,
+      }),
+    [session, projectId, project, membersData],
+  );
+
+  // Convenience booleans derived from `userRole`. Used to gate specific UI
+  // affordances without spreading role comparisons across every JSX branch.
+  const isOwner = userRole === "owner";
+  const isAdmin = userRole === "admin";
+  const canEditProject = isOwner || isAdmin;
+  const canDeleteProject = isOwner; // admins see everything EXCEPT delete
 
   if (projectsLoading || !project) {
     return (
@@ -134,7 +144,10 @@ export function ProjectManagementTab({ projectId }: { projectId: string }) {
           endDate: project.endDate,
         }),
       });
-      if (!res.ok) throw new Error("Failed to duplicate project");
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || "Failed to duplicate project");
+      }
       const newProject = await res.json();
       if (budgetItems && budgetItems.length > 0) {
         await Promise.all(
@@ -156,15 +169,21 @@ export function ProjectManagementTab({ projectId }: { projectId: string }) {
         );
       }
       toast.success(`Projekt duplikován jako "${newProject.name}"`);
-    } catch {
-      toast.error("Nepodařilo se duplikovat projekt");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Nepodařilo se duplikovat projekt");
     }
   };
 
   return (
     <div id="management-root" className="space-y-6">
-      {/* ===== Project Info Card (inline editable) ===== */}
-      <ProjectInfoCard project={project} updateProject={updateProject} />
+      {/* ===== Project Info Card — inline editable for owner/admin,
+          read-only display for editors ===== */}
+      <ProjectInfoCard
+        project={project}
+        updateProject={updateProject}
+        readOnly={!canEditProject}
+        userRole={userRole}
+      />
 
       {/* ===== Sharing & Permissions ===== */}
       <SharingSection
@@ -173,7 +192,9 @@ export function ProjectManagementTab({ projectId }: { projectId: string }) {
         projectName={project.name}
         isPublic={project.isPublic}
         isOwner={isOwner}
-        currentUserId={currentUser?.id ?? null}
+        isAdmin={isAdmin}
+        userRole={userRole}
+        currentUserId={(session?.user as { id?: string } | undefined)?.id ?? null}
       />
 
       {/* ===== Enhanced Audit Log ===== */}
@@ -199,6 +220,9 @@ export function ProjectManagementTab({ projectId }: { projectId: string }) {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
+          {/* Duplicate — available to every role that can see this tab
+              (editor / owner / admin). Creates a fresh project owned by
+              the current user, copying the budget items. */}
           <div className="flex items-center justify-between gap-3 rounded-lg border border-outline-variant bg-card p-3">
             <div className="flex items-center gap-2">
               <Copy className="h-4 w-4 text-info" />
@@ -211,7 +235,12 @@ export function ProjectManagementTab({ projectId }: { projectId: string }) {
               <Copy className="h-3.5 w-3.5" /> Duplikovat
             </Button>
           </div>
-          {isOwner ? (
+          {/* Delete — owner only. Admins see everything but can't delete
+              projects they don't own (defense-in-depth: API also enforces
+              this via comparison of `project.ownerId === user.id`). Editors
+              are intentionally shown a muted "owner-only" hint instead of
+              a button so they understand why the action is unavailable. */}
+          {canDeleteProject ? (
             <div className="flex items-center justify-between gap-3 rounded-lg border border-danger/30 bg-danger-soft/20 p-3">
               <div className="flex items-center gap-2">
                 <Trash2 className="h-4 w-4 text-danger" />
@@ -228,7 +257,11 @@ export function ProjectManagementTab({ projectId }: { projectId: string }) {
                 <Trash2 className="h-4 w-4 text-muted-foreground" />
                 <div>
                   <div className="type-body font-medium">Smazat projekt</div>
-                  <div className="type-label text-on-surface-variant">Pouze správce projektu může smazat projekt</div>
+                  <div className="type-label text-on-surface-variant">
+                    {isAdmin
+                      ? "Smazat projekt může pouze jeho správce"
+                      : "Pouze správce projektu může smazat projekt"}
+                  </div>
                 </div>
               </div>
               <Trash2 className="h-3.5 w-3.5 text-muted-foreground" aria-hidden />
@@ -242,13 +275,24 @@ export function ProjectManagementTab({ projectId }: { projectId: string }) {
 
 // ============================================================
 // ProjectInfoCard — inline editable project info
+// ------------------------------------------------------------
+// `readOnly=true` (editors) renders a fully text-only display:
+//   - no inline edit toggle
+//   - no inputs for name / description / address / status / dates
+//   - metadata badges (address, dates, currency) still shown
+// This matches the role spec: editors can SEE the project info but
+// cannot modify it — they only get read-only access to the basic info.
 // ============================================================
 function ProjectInfoCard({
   project,
   updateProject,
+  readOnly = false,
+  userRole,
 }: {
   project: NonNullable<ReturnType<typeof useProjects>["data"]>[number];
   updateProject: ReturnType<typeof useUpdateProject>;
+  readOnly?: boolean;
+  userRole: ProjectRole;
 }) {
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(project.name);
@@ -297,8 +341,8 @@ function ProjectInfoCard({
       });
       toast.success("Projekt upraven");
       setEditing(false);
-    } catch {
-      toast.error("Nepodařilo se upravit projekt");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Nepodařilo se upravit projekt");
     }
   };
 
@@ -313,6 +357,51 @@ function ProjectInfoCard({
   };
 
   const statusInfo = STATUS_LABELS[project.status] ?? STATUS_LABELS.active;
+
+  // Read-only mode (editor): no edit toggle, no inputs — pure text display.
+  // The role badge (Editor badge) makes it obvious why edit affordances
+  // are hidden.
+  if (readOnly) {
+    return (
+      <Card className="bg-card shadow-sm">
+        <CardHeader className="pb-3">
+          <div className="flex items-start justify-between gap-2">
+            <div className="min-w-0 flex-1">
+              <CardTitle className="flex flex-wrap items-center gap-2 type-headline">
+                {project.name}
+                <Badge variant="outline" className={cn("type-label-sm", statusInfo.color)}>{statusInfo.label}</Badge>
+                <Badge variant="secondary" className="type-label-sm gap-1">
+                  {userRole === "editor" ? (
+                    <>
+                      <Edit3 className="h-3 w-3" /> Editor
+                    </>
+                  ) : (
+                    <>
+                      <Eye className="h-3 w-3" /> {userRole === "admin" ? "Admin" : "Čtenář"}
+                    </>
+                  )}
+                </Badge>
+              </CardTitle>
+              {project.description && (
+                <CardDescription className="mt-1 type-body">{project.description}</CardDescription>
+              )}
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="pt-0">
+          <div className="flex flex-wrap gap-4 type-label text-on-surface-variant">
+            {project.address && (<span className="flex items-center gap-1"><MapPin className="h-3 w-3" /> {project.address}</span>)}
+            {project.startDate && (<span className="flex items-center gap-1"><Calendar className="h-3 w-3" /> {formatDate(project.startDate)}{project.endDate && ` — ${formatDate(project.endDate)}`}</span>)}
+            <span className="flex items-center gap-1"><Building2 className="h-3 w-3" /> {project.currency}</span>
+            <span className="type-label-sm text-on-surface-variant/60">Vytvořeno: {formatDate(project.createdAt)}</span>
+          </div>
+          <div className="mt-3 flex items-center gap-1.5 type-label-sm text-muted-foreground">
+            <Lock className="h-3 w-3" /> Úpravu informací o projektu může provést pouze správce projektu
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className="bg-card shadow-sm">
@@ -472,6 +561,8 @@ function SharingSection({
   projectName,
   isPublic,
   isOwner,
+  isAdmin,
+  userRole,
   currentUserId,
 }: {
   projectId: string;
@@ -479,8 +570,18 @@ function SharingSection({
   projectName: string;
   isPublic: boolean;
   isOwner: boolean;
+  isAdmin: boolean;
+  userRole: ProjectRole;
   currentUserId: string | null;
 }) {
+  // `canManage` covers everything an owner can do EXCEPT delete (delete is
+  // gated separately in the parent component, owner-only). Editors get a
+  // narrower set of permissions: they can invite new members (as viewer /
+  // editor only — no owner option) and share the link, but cannot toggle
+  // public visibility, change the project owner, revoke invitations, or
+  // change existing members' roles.
+  const canManage = isOwner || isAdmin;
+  const canInvite = canManage || userRole === "editor";
   const [data, setData] = useState<MembersResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [addEmail, setAddEmail] = useState("");
@@ -519,8 +620,8 @@ function SharingSection({
         );
       }
       trackEvent("project_share", { action: "copy_link", role: "viewer", isPublic });
-    } catch {
-      toast.error("Nepodařilo se zkopírovat odkaz");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Nepodařilo se zkopírovat odkaz");
     }
   };
 
@@ -538,8 +639,8 @@ function SharingSection({
           );
           trackEvent("project_share", { action: "toggle_public", isPublic: next });
         },
-        onError: () => {
-          toast.error("Nepodařilo se změnit viditelnost projektu");
+        onError: (err: unknown) => {
+          toast.error(err instanceof Error ? err.message : "Nepodařilo se změnit viditelnost projektu");
         },
       },
     );
@@ -664,7 +765,10 @@ function SharingSection({
         `/api/projects/${projectId}/invitations/${invitationId}`,
         { method: "DELETE" },
       );
-      if (!res.ok) throw new Error("Failed");
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || "Failed");
+      }
       clearTimeout(removeTimer);
       setInvitations((cur) => cur.filter((inv) => inv.id !== invitationId));
       trackEvent("project_share", {
@@ -672,7 +776,7 @@ function SharingSection({
         email,
       });
       toast.success(`Pozvánka pro ${email} zrušena`);
-    } catch {
+    } catch (err) {
       clearTimeout(removeTimer);
       // Restore the invitation at its original position
       const restore = invitations.find((inv) => inv.id === invitationId);
@@ -684,7 +788,7 @@ function SharingSection({
       } else {
         fetchInvitations();
       }
-      toast.error("Nepodařilo se zrušit pozvánku");
+      toast.error(err instanceof Error ? err.message : "Nepodařilo se zrušit pozvánku");
     } finally {
       setRevokingIds((prev) => {
         const next = new Set(prev);
@@ -712,7 +816,10 @@ function SharingSection({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ role }),
       });
-      if (!res.ok) throw new Error("Failed");
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || "Failed");
+      }
       // Telemetry: project_share — role_change
       trackEvent("project_share", {
         action: "role_change",
@@ -721,8 +828,8 @@ function SharingSection({
         newRole: role,
       });
       toast.success("Role upravena");
-    } catch {
-      toast.error("Nepodařilo se upravit roli");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Nepodařilo se upravit roli");
       setData(prev); // restore previous state
     }
   };
@@ -747,7 +854,10 @@ function SharingSection({
       const res = await fetch(`/api/projects/${projectId}/members/${memberId}`, {
         method: "DELETE",
       });
-      if (!res.ok) throw new Error("Failed");
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || "Failed");
+      }
       clearTimeout(removeTimer);
       // Ensure removed from state immediately on success
       setData((cur) =>
@@ -764,7 +874,7 @@ function SharingSection({
         email: memberEmail ?? null,
       });
       toast.success(`Člen "${name}" odebrán`);
-    } catch {
+    } catch (err) {
       clearTimeout(removeTimer);
       setRemovingIds((prev) => {
         const next = new Set(prev);
@@ -781,22 +891,26 @@ function SharingSection({
       } else {
         fetchMembers();
       }
-      toast.error("Nepodařilo se odebrat člena — člen byl obnoven");
+      toast.error(err instanceof Error ? err.message : "Nepodařilo se odebrat člena — člen byl obnoven");
     }
   };
 
   const handleChangeOwner = async (newOwnerId: string) => {
     try {
-      await fetch(`/api/projects/${projectId}`, {
+      const res = await fetch(`/api/projects/${projectId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ownerId: newOwnerId }),
       });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || "Failed to change owner");
+      }
       toast.success("Správce změněn");
       qc.invalidateQueries({ queryKey: ["projects"] });
       fetchMembers();
-    } catch {
-      toast.error("Nepodařilo se změnit správce");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Nepodařilo se změnit správce");
     }
   };
 
@@ -843,10 +957,17 @@ function SharingSection({
           <Switch
             checked={isPublic}
             onCheckedChange={handleTogglePublic}
-            disabled={!isOwner || updateProject.isPending}
+            disabled={!canManage || updateProject.isPending}
             aria-label="Přepnout veřejnost projektu"
           />
         </div>
+        {/* Editors see a "Pouze správce" hint explaining why the Switch
+            is disabled. Owners / admins don't need this. */}
+        {!canManage && (
+          <div className="-mt-2 flex items-center gap-1.5 type-label-sm text-muted-foreground">
+            <Lock className="h-3 w-3" /> Pouze správce může měnit veřejnost projektu
+          </div>
+        )}
         <div className="flex items-start gap-1.5 type-label-sm text-on-surface-variant">
           <Info className="mt-0.5 h-3 w-3 shrink-0" />
           <span>
@@ -872,8 +993,10 @@ function SharingSection({
               </div>
               <div className="type-label text-on-surface-variant truncate">{owner.email}</div>
             </div>
-            {/* Change owner dropdown — owner only */}
-            {isOwner && allUsers.length > 0 && (
+            {/* Change owner dropdown — owner / admin only. Editors
+                cannot transfer ownership (the API also rejects this —
+                `requireProjectAccess(id, "owner")` in the PATCH handler). */}
+            {canManage && allUsers.length > 0 && (
               <Select onValueChange={handleChangeOwner}>
                 <SelectTrigger className="h-8 w-auto rounded-full type-label-sm">
                   <span className="flex items-center gap-1"><ArrowRight className="h-3 w-3" /> Předat</span>
@@ -898,14 +1021,13 @@ function SharingSection({
             {members.map((m) => {
               const isRemoving = removingIds.has(m.id);
               const isMatched = matchedMember?.id === m.id;
-              // Owner can change roles + remove any member.
-              // A non-owner can only remove THEMSELF (self-leave) —
-              // backend enforces this; here we just hide the role Select
-              // for non-owners and disable the remove button for non-owner
-              // users who aren't looking at their own row.
-              const canManage = isOwner;
+              // Owner / admin can change roles + remove any member.
+              // Editors cannot change roles (the role Select is hidden for
+              // them) — the API also rejects PATCH calls from non-owners.
+              // A non-managing user can only remove THEMSELF (self-leave).
+              const canManageMember = canManage;
               const isSelf = currentUserId === m.user.id;
-              const canRemove = isOwner || isSelf;
+              const canRemove = canManage || isSelf;
               return (
                 <div
                   key={m.id}
@@ -929,8 +1051,8 @@ function SharingSection({
                     <div className="type-body font-medium truncate">{m.user.name || m.user.email}</div>
                     <div className="type-label text-on-surface-variant truncate">{m.user.email}</div>
                   </div>
-                  {/* Role selector — owner only */}
-                  {canManage ? (
+                  {/* Role selector — owner / admin only */}
+                  {canManageMember ? (
                     <Select value={m.role} onValueChange={(v) => handleRoleChange(m.id, v)}>
                       <SelectTrigger className="h-7 w-auto rounded-full type-label-sm gap-1">
                         {m.role === "editor" ? <Edit3 className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
@@ -947,7 +1069,7 @@ function SharingSection({
                       {m.role === "editor" ? "Editor" : "Čtenář"}
                     </Badge>
                   )}
-                  {/* Remove — owner (anyone) or self (self-leave) */}
+                  {/* Remove — owner / admin (anyone) or self (self-leave) */}
                   {canRemove && (
                     <Button
                       variant="ghost"
@@ -955,8 +1077,8 @@ function SharingSection({
                       className="h-7 w-7 shrink-0 rounded-full state-layer-on-surface text-muted-foreground hover:text-danger"
                       onClick={() => handleRemove(m.id, m.user.name || m.user.email)}
                       disabled={isRemoving}
-                      aria-label={isSelf && !isOwner ? "Opustit projekt" : "Odebrat člena"}
-                      title={isSelf && !isOwner ? "Opustit projekt" : "Odebrat člena"}
+                      aria-label={isSelf && !canManage ? "Opustit projekt" : "Odebrat člena"}
+                      title={isSelf && !canManage ? "Opustit projekt" : "Odebrat člena"}
                     >
                       {isRemoving ? (
                         <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -1012,7 +1134,7 @@ function SharingSection({
                     <Badge variant="secondary" className={cn("type-label-sm", statusMeta.className)}>
                       {statusMeta.label}
                     </Badge>
-                    {isOwner && (
+                    {canManage && (
                       <Button
                         variant="ghost"
                         size="icon"
@@ -1104,7 +1226,7 @@ function SharingSection({
                 <SelectItem value="editor"><Edit3 className="mr-1.5 inline h-3 w-3" /> Editor</SelectItem>
               </SelectContent>
             </Select>
-            <Button size="sm" className="rounded-full gap-1.5" onClick={handleAdd} disabled={!addEmail.trim() || adding || !isOwner}>
+            <Button size="sm" className="rounded-full gap-1.5" onClick={handleAdd} disabled={!addEmail.trim() || adding || !canInvite}>
               {adding ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <UserPlus className="h-3.5 w-3.5" />}
               Pozvat e-mailem
             </Button>
@@ -1120,7 +1242,16 @@ function SharingSection({
               <Info className="h-3 w-3" /> Nový uživatel — pozvánka mu přijde na e-mail, po registraci získá přístup
             </div>
           )}
-          {!isOwner && (
+          {/* Editors can invite but only as viewer/editor — surface this
+              so the role Select makes sense. Viewers see the standard
+              "owner-only" lock hint (they never reach this tab through the
+              sidebar, but the gate also covers direct deep-links). */}
+          {userRole === "editor" && (
+            <div className="mt-2 flex items-center gap-1.5 type-label-sm text-info">
+              <Info className="h-3 w-3" /> Jako editor můžete přidávat pouze Čtenáře nebo Editory
+            </div>
+          )}
+          {!canInvite && (
             <div className="mt-2 flex items-center gap-1.5 type-label-sm text-muted-foreground">
               <Lock className="h-3 w-3" /> Pozvat nové uživatele může pouze správce projektu
             </div>
@@ -1849,11 +1980,14 @@ function DeleteProjectButton({ projectId, projectName }: { projectId: string; pr
     setDeleting(true);
     try {
       const res = await fetch(`/api/projects/${projectId}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("Failed to delete project");
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || "Failed to delete project");
+      }
       toast.success("Projekt smazán");
       window.location.href = "/";
-    } catch {
-      toast.error("Nepodařilo se smazat projekt");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Nepodařilo se smazat projekt");
       setDeleting(false);
     }
   };

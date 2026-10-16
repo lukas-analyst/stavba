@@ -450,8 +450,8 @@ export function PaymentsTab({ projectId }: { projectId: string }) {
                             await deletePayment.mutateAsync(p.id);
                             trackEvent("delete_payment", { amount: p.amount });
                             toast.success("Platba smazána");
-                          } catch {
-                            toast.error("Nepodařilo se smazat");
+                          } catch (err) {
+                            toast.error(err instanceof Error ? err.message : "Nepodařilo se smazat");
                           }
                         }}
                       />,
@@ -483,8 +483,8 @@ export function PaymentsTab({ projectId }: { projectId: string }) {
                           await deletePayment.mutateAsync(parent.id);
                           trackEvent("delete_payment", { amount: parent.amount });
                           toast.success("Platba smazána");
-                        } catch {
-                          toast.error("Nepodařilo se smazat");
+                        } catch (err) {
+                          toast.error(err instanceof Error ? err.message : "Nepodařilo se smazat");
                         }
                       }}
                     />,
@@ -514,8 +514,8 @@ export function PaymentsTab({ projectId }: { projectId: string }) {
                             await deletePayment.mutateAsync(c.id);
                             trackEvent("delete_payment", { amount: c.amount });
                             toast.success("Platba smazána");
-                          } catch {
-                            toast.error("Nepodařilo se smazat");
+                          } catch (err) {
+                            toast.error(err instanceof Error ? err.message : "Nepodařilo se smazat");
                           }
                         }}
                       />,
@@ -1173,8 +1173,8 @@ function PaymentDialogInner({
       setShowConvertConfirm(false);
       onOpenChange(false);
       onClose?.();
-    } catch {
-      toast.error("Nepodařilo se převést fakturu na běžnou platbu");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Nepodařilo se převést fakturu na běžnou platbu");
     } finally {
       setIsConverting(false);
     }
@@ -1305,8 +1305,8 @@ function PaymentDialogInner({
       resetForm();
       onOpenChange(false);
       onClose?.();
-    } catch {
-      toast.error(isEdit ? "Nepodařilo se upravit platbu" : "Nepodařilo se přidat platbu");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : (isEdit ? "Nepodařilo se upravit platbu" : "Nepodařilo se přidat platbu"));
     }
   };
 

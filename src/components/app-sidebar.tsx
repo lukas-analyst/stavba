@@ -1,6 +1,7 @@
 "use client";
 
-import { useRef, useCallback } from "react";
+import { useRef, useCallback, useMemo } from "react";
+import { useSession } from "next-auth/react";
 import {
   Settings,
   Download,
@@ -9,11 +10,11 @@ import {
   Pencil,
   Printer,
   History,
-  BarChart3,
 } from "lucide-react";
 import { NAV_ITEMS, NAV_SECTIONS, type NavItem, type NavSection } from "@/lib/navigation";
 import { useAppStore } from "@/lib/store";
-import { useExportState, useImportState, useExportCsv } from "@/lib/api";
+import { useExportState, useImportState, useExportCsv, useProjects, useProjectMembers } from "@/lib/api";
+import { computeUserRole, roleClears } from "@/lib/roles";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -47,6 +48,31 @@ export function AppSidebar() {
   const setActiveTab = useAppStore((s) => s.setActiveTab);
   const selectedProjectId = useAppStore((s) => s.selectedProjectId);
   const setSidebarOpen = useAppStore((s) => s.setSidebarOpen);
+
+  // Role-based UI: fetch the current user (session), the projects list
+  // (for the selected project's `ownerId`) and the project's members.
+  // The computed `userRole` drives which nav items are visible.
+  const { data: session } = useSession();
+  const { data: projects } = useProjects();
+  const { data: membersData } = useProjectMembers(selectedProjectId);
+
+  const selectedProject = useMemo(
+    () => projects?.find((p) => p.id === selectedProjectId),
+    [projects, selectedProjectId],
+  );
+
+  const userRole = useMemo(
+    () =>
+      computeUserRole({
+        session,
+        projectId: selectedProjectId,
+        project: selectedProject,
+        members: membersData?.members,
+      }),
+    [session, selectedProjectId, selectedProject, membersData],
+  );
+
+  const isAdmin = (session?.user as { isAdmin?: boolean } | undefined)?.isAdmin === true;
 
   const exportState = useExportState();
   const importState = useImportState();
@@ -95,10 +121,18 @@ export function AppSidebar() {
     }
   };
 
-  // Group items by section for rendering
+  // Group items by section for rendering — filter out items whose
+  // `minRole` is above the user's current role in the selected project.
+  // `userRole` falls back to "viewer" when no project is selected, so
+  // restricted items (management, telemetry) stay hidden until a project
+  // is picked.
+  const visibleItems = useMemo(
+    () => NAV_ITEMS.filter((item) => roleClears(userRole, item.minRole)),
+    [userRole],
+  );
   const itemsBySection = NAV_SECTIONS.map((section) => ({
     section,
-    items: NAV_ITEMS.filter((t) => t.section === section.id),
+    items: visibleItems.filter((t) => t.section === section.id),
   })).filter((g) => g.items.length > 0);
 
   return (
@@ -158,10 +192,9 @@ export function AppSidebar() {
               <History className="mr-2 h-3.5 w-3.5" />
               Historie změn
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => handleNavClick("telemetry")}>
-              <BarChart3 className="mr-2 h-3.5 w-3.5" />
-              Telemetrie
-            </DropdownMenuItem>
+            {/* Telemetry moved into the main NAV_ITEMS list — shown only
+                to project owners + global admins via `minRole: "owner"`.
+                No longer duplicated in this dropdown. */}
 
             <DropdownMenuSeparator />
 
@@ -210,6 +243,18 @@ export function AppSidebar() {
               <FileSpreadsheet className="mr-2 h-3.5 w-3.5" />
               CSV — Kontakty
             </DropdownMenuItem>
+            {/* Admin tab — global admins only.
+                Surfaced here (in addition to the TopBar account dropdown)
+                because the sidebar is where users go to switch tabs. */}
+            {isAdmin && (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => handleNavClick("admin")}>
+                  <Settings className="mr-2 h-3.5 w-3.5" />
+                  Admin
+                </DropdownMenuItem>
+              </>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
       </div>

@@ -331,8 +331,8 @@ export function TimeTab({ projectId }: { projectId: string }) {
                     try {
                       await deleteTimeEntry.mutateAsync(t.id);
                       toast.success("Záznam smazán");
-                    } catch {
-                      toast.error("Nepodařilo se smazat");
+                    } catch (err) {
+                      toast.error(err instanceof Error ? err.message : "Nepodařilo se smazat");
                     }
                   }}
                 />
@@ -674,8 +674,8 @@ function TimeDialogInner({
       }
       onOpenChange(false);
       onClose?.();
-    } catch {
-      toast.error(isEdit ? "Nepodařilo se upravit záznam" : "Nepodařilo se zaznamenat čas");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : (isEdit ? "Nepodařilo se upravit záznam" : "Nepodařilo se zaznamenat čas"));
     }
   };
 
