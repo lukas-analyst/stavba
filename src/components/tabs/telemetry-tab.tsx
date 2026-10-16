@@ -184,10 +184,11 @@ function formatDayKey(key: string): string {
 // Map a page URL (here: a tab ID string) to a human-readable label
 function formatPageLabel(url: string | null): string {
   if (!url) return "—";
-  // Strip leading slash for cleaner display
-  const cleaned = url.startsWith("/") ? url.slice(1) : url;
+  // Normalize: remove duplicate slashes, strip leading /
+  const cleaned = url.replace(/\/+/g, "/").replace(/^\/+/, "");
   const labels: Record<string, string> = {
     dashboard: "Přehled",
+    "dashboard-test": "Přehled",
     budget: "Rozpočet",
     payments: "Platby",
     time: "Čas",
@@ -196,8 +197,9 @@ function formatPageLabel(url: string | null): string {
     notes: "Poznámky",
     management: "Správa projektu",
     telemetry: "Telemetrie",
+    admin: "Administrace",
   };
-  return labels[cleaned] ?? url;
+  return labels[cleaned] ?? cleaned;
 }
 
 // Look up the project name from the projects list (provided by API).
@@ -363,7 +365,12 @@ export function TelemetryTab({ projectId: _projectId }: { projectId: string }) {
   }
 
   const summary = data?.summary;
-  const entries = data?.entries ?? [];
+  // Filter out page_view events from the entries list — they are
+  // high-volume and clutter the "Recent events" table. Users can still
+  // see them by explicitly selecting "Zobrazení stránky" in the type filter.
+  const entries = (data?.entries ?? []).filter(
+    (e) => typeFilter || e.eventType !== "page_view",
+  );
   const total = data?.total ?? 0;
   const totalPages = data?.totalPages ?? 1;
   const projects = data?.projects ?? [];

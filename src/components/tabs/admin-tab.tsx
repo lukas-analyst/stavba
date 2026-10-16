@@ -232,9 +232,11 @@ function formatTimeSpent(seconds: number): string {
 
 function formatPageLabel(url: string | null): string {
   if (!url) return "—";
-  const cleaned = url.startsWith("/") ? url.slice(1) : url;
+  // Normalize: remove duplicate slashes, strip leading /
+  const cleaned = url.replace(/\/+/g, "/").replace(/^\/+/, "");
   const labels: Record<string, string> = {
     dashboard: "Přehled",
+    "dashboard-test": "Přehled",
     budget: "Rozpočet",
     payments: "Platby",
     time: "Čas",
@@ -245,7 +247,7 @@ function formatPageLabel(url: string | null): string {
     telemetry: "Telemetrie",
     admin: "Administrace",
   };
-  return labels[cleaned] ?? url;
+  return labels[cleaned] ?? cleaned;
 }
 
 function formatRelativeTime(iso: string | null): string {
@@ -861,7 +863,9 @@ function StatsSection({ currentUser }: { currentUser: CurrentUser }) {
 
   const summary = data?.summary;
   const eventTypeRows = summary
-    ? Object.entries(summary.eventsByType).sort((a, b) => b[1] - a[1])
+    ? Object.entries(summary.eventsByType)
+        .filter(([type]) => type !== "page_view") // exclude page_view from chart
+        .sort((a, b) => b[1] - a[1])
     : [];
   const maxEventCount = eventTypeRows.length > 0 ? eventTypeRows[0][1] : 1;
 
