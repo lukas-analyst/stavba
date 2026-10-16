@@ -70,6 +70,31 @@ export async function PATCH(
       return NextResponse.json({ error: "Project not found" }, { status: 404 });
     }
 
+    // If name is being changed, regenerate the slug
+    let newSlug: string | undefined;
+    if (name !== undefined && name.trim() && name.trim() !== existing.name) {
+      const baseSlug = name.trim()
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '') // remove diacritics
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '')
+        .replace(/-{2,}/g, '-');
+      const slug = baseSlug || `projekt-${Date.now().toString(36)}`;
+      // Ensure uniqueness — exclude the current project from the check
+      let finalSlug = slug;
+      let suffix = 1;
+      while (true) {
+        const conflict = await dbRead.project.findFirst({
+          where: { slug: finalSlug, NOT: { id } },
+          select: { id: true },
+        });
+        if (!conflict) break;
+        finalSlug = `${slug}-${suffix++}`;
+      }
+      newSlug = finalSlug;
+    }
+
     // If changing owner, validate the new owner exists and is a user
     if (ownerId !== undefined && ownerId !== existing.ownerId) {
       const newOwner = await db.user.findUnique({ where: { id: ownerId } });
@@ -92,6 +117,8 @@ export async function PATCH(
       where: { id },
       data: {
         name: name !== undefined ? name.trim() : undefined,
+        // Update slug only if name changed and we generated a new one
+        ...(newSlug ? { slug: newSlug } : {}),
         address: address !== undefined ? (address?.trim() || null) : undefined,
         description: description !== undefined ? (description?.trim() || null) : undefined,
         starred: starred !== undefined ? Boolean(starred) : undefined,

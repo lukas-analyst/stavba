@@ -320,7 +320,18 @@ export function useUpdateProject(id: string) {
         const err = await res.json().catch(() => ({}));
         throw new Error(err.error || "Failed to update project");
       }
-      return res.json();
+      const updated = await res.json();
+      // If slug changed (name was updated), update the browser URL
+      // to reflect the new slug — no page reload needed.
+      if (updated.slug && typeof window !== "undefined") {
+        const url = new URL(window.location.href);
+        const currentProjectParam = url.searchParams.get("project");
+        if (currentProjectParam && currentProjectParam !== updated.slug) {
+          url.searchParams.set("project", updated.slug);
+          window.history.replaceState({}, "", url.toString());
+        }
+      }
+      return updated;
     },
   });
 }
