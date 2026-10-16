@@ -91,7 +91,15 @@ export async function middleware(req: NextRequest) {
   // Auth pages (login, register, forgot-password, etc.)
   if (isAuthPage) {
     // If already logged in + verified → redirect to home
-    if (token && (token as { emailVerified?: string | null }).emailVerified) {
+    // Check both emailVerified AND email/id to handle the case where
+    // the JWT callback returned an empty token {} (tokenVersion mismatch)
+    // — in that case, token exists but has no email, so we treat the
+    // user as logged out and let them see the login page.
+    if (
+      token &&
+      (token as { email?: string }).email &&
+      (token as { emailVerified?: string | null }).emailVerified
+    ) {
       return NextResponse.redirect(new URL("/", req.url));
     }
     // Allow access to auth pages for unauthenticated or unverified users
@@ -99,7 +107,9 @@ export async function middleware(req: NextRequest) {
   }
 
   // For all other pages — require authentication
-  if (!token) {
+  // token might be {} (empty object from tokenVersion mismatch) — treat
+  // it the same as null (not authenticated)
+  if (!token || !(token as { email?: string }).email) {
     // Redirect to login with callback URL
     const loginUrl = new URL("/auth/login", req.url);
     loginUrl.searchParams.set("callbackUrl", `${pathname}${search}`);

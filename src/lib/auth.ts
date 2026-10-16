@@ -418,9 +418,15 @@ export const authOptions: NextAuthOptions = {
             token.tokenVersion = dbUser.tokenVersion;
           } else if (dbUser.tokenVersion !== tokenVersion) {
             // Token version mismatch — password was reset or "log out
-            // everywhere" was triggered. Return empty token to force
-            // re-authentication.
-            return { ...token, id: undefined, email: undefined } as typeof token;
+            // everywhere" was triggered. Return a completely empty token
+            // (NOT just id/email = undefined) so that:
+            //   1. getToken() in middleware returns a token with NO
+            //      emailVerified → middleware treats user as logged out
+            //      → redirects to login (not a loop)
+            //   2. Session callback returns {} (empty session)
+            //   3. The old JWT cookie is overwritten with this empty token
+            //      on the next response, effectively logging the user out
+            return {} as typeof token;
           }
         }
 
