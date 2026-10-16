@@ -94,7 +94,7 @@ export default function RootLayout({
       >
         <Providers>{children}</Providers>
         <Toaster />
-        <SonnerToaster position="bottom-right" richColors />
+        <SonnerToaster position="top-center" richColors />
       </body>
     </html>
   );

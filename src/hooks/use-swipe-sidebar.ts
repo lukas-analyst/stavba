@@ -134,6 +134,18 @@ export function useSwipeToOpenSidebar() {
       const touch = e.touches[0];
       // Start tracking if touch is in left 30% of screen
       if (touch.clientX <= edgeThreshold) {
+        // Don't track if the touch started inside a scrollable table
+        // (user is likely trying to horizontally scroll the table, not
+        // open the sidebar). Check if the touch target is inside an
+        // element with overflow-x-auto or a <table>.
+        const target = e.target as HTMLElement | null;
+        if (target) {
+          const isInsideTable = target.closest("table, .overflow-x-auto, [data-swipe-ignore]");
+          if (isInsideTable) {
+            return; // don't track — let the table handle the gesture
+          }
+        }
+
         trackingRef.current = true;
         startXRef.current = touch.clientX;
         startYRef.current = touch.clientY;

@@ -35,6 +35,7 @@ export function InlineNumber({
         autoFocus
         value={draft}
         onChange={(e) => setDraft(e.target.value)}
+        onClick={(e) => e.stopPropagation()}
         onBlur={() => {
           setEditing(false);
           const n = draft.trim() === "" ? null : Number(draft.replace(",", "."));
@@ -53,7 +54,8 @@ export function InlineNumber({
   }
   return (
     <button
-      onClick={() => {
+      onClick={(e) => {
+        e.stopPropagation();
         setDraft(value?.toString() ?? "");
         setEditing(true);
       }}
@@ -98,9 +100,12 @@ export function InlineDate({
         autoFocus
         value={draft}
         onChange={(e) => setDraft(e.target.value)}
+        onClick={(e) => e.stopPropagation()}
         onBlur={() => {
           setEditing(false);
-          if (draft !== (value ? value.substring(0, 10) : "")) {
+          // Compare as YYYY-MM-DD — value from DB might be ISO (2026-03-01T00:00:00.000Z)
+          const currentNormalized = value ? value.substring(0, 10) : "";
+          if (draft !== currentNormalized) {
             onCommit(draft || null);
           }
         }}
@@ -110,6 +115,7 @@ export function InlineDate({
             setDraft(value ? value.substring(0, 10) : "");
             setEditing(false);
           }
+          e.stopPropagation();
         }}
         className="h-7 w-36 type-body"
       />
@@ -117,7 +123,8 @@ export function InlineDate({
   }
   return (
     <button
-      onClick={() => {
+      onClick={(e) => {
+        e.stopPropagation();
         setDraft(value ? value.substring(0, 10) : "");
         setEditing(true);
       }}
