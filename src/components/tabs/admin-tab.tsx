@@ -93,7 +93,7 @@ import { toast } from "sonner";
 // =====================================================================
 
 // ===== Types =====
-type CurrentUser = {
+export type CurrentUser = {
   id: string;
   name: string | null;
   email: string;
@@ -830,7 +830,7 @@ function ProjectsSection({
 // =====================================================================
 // Section 3: Stats — KPIs + bar chart + top pages
 // =====================================================================
-function StatsSection({ currentUser }: { currentUser: CurrentUser }) {
+export function StatsSection({ currentUser }: { currentUser: CurrentUser }) {
   const [selectedProjectId, setSelectedProjectId] = useState<string>("all");
 
   // Fetch projects for the dropdown
