@@ -295,15 +295,6 @@ export function PaymentsTab({ projectId }: { projectId: string }) {
   return (
     <div id="payments-root" className="space-y-4">
       <div id="payments-toolbar" className="flex flex-wrap items-center gap-2">
-        <div id="payments-search" className="relative">
-          <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Hledat platbu…"
-            className="h-9 w-56 pl-8"
-          />
-        </div>
         <Select value={typeFilter} onValueChange={setTypeFilter}>
           <SelectTrigger className="h-9 w-44">
             <SelectValue />
@@ -349,9 +340,6 @@ export function PaymentsTab({ projectId }: { projectId: string }) {
               </div>
             ) : null;
           })()}
-          <Button size="sm" onClick={() => setAddOpen(true)}>
-            <Plus className="mr-1 h-4 w-4" /> Přidat platbu
-          </Button>
         </div>
       </div>
 

@@ -629,31 +629,9 @@ function BudgetTab({ projectId, dragEndHandlerRef }: { projectId: string; dragEn
           `stavba:fab-add` custom event — having both would be redundant
           and crowd the narrow mobile viewport. */}
       <div id="budget-toolbar" className="space-y-3">
-        {/* Row 1: Search + (desktop only) Add button
-            Mobile: flex-col → Search full-width, then Status Select below
-            Desktop: flex-row → Search + Segmented + Add on one line */}
+        {/* Row 1: Segmented + filters (search removed — use TopBar global search)
+            Add button removed — use FAB on mobile, or FAB on desktop too */}
         <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
-          {/* MD3 Search bar — with clear (×) button */}
-          <div id="budget-search" className="relative flex-1 min-w-0 sm:min-w-[200px] sm:max-w-xs">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-on-surface-variant" />
-            <Input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Hledat položku…"
-              className="h-9 rounded-full border-outline-variant bg-surface-container-low pl-9 pr-9"
-            />
-            {search && (
-              <button
-                type="button"
-                onClick={() => setSearch("")}
-                aria-label="Vymazat hledání"
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-foreground state-layer-on-surface rounded-full p-0.5"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            )}
-          </div>
-
           {/* MD3 Segmented Button — completion status
               Hidden on mobile (< sm) and replaced by the compact
               <Select> dropdown below (mobile-only) to save horizontal
@@ -692,16 +670,6 @@ function BudgetTab({ projectId, dragEndHandlerRef }: { projectId: string; dragEn
             </Select>
           </div>
 
-          {/* Add button — desktop/tablet only (hidden on mobile).
-              On mobile the ContextualFab (bottom-right +) triggers the
-              same "add-item" action via the `stavba:fab-add` event. */}
-          <Button
-            size="sm"
-            onClick={() => setAddOpen(true)}
-            className="ml-auto hidden h-9 gap-1.5 rounded-full sm:inline-flex"
-          >
-            <Plus className="h-4 w-4" /> Přidat položku
-          </Button>
         </div>
 
         {/* Row 2: Phase filter chips (multi-select) */}

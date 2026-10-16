@@ -129,11 +129,6 @@ export function ContactsTab({ projectId }: { projectId: string }) {
           <Users className="h-4 w-4" />
           {contacts?.length ?? 0} kontaktů v projektu
         </div>
-        <div className="flex items-center gap-2">
-          <Button size="sm" className="rounded-full" onClick={() => setAddOpen(true)}>
-            <Plus className="mr-1 h-4 w-4" /> Přidat kontakt
-          </Button>
-        </div>
       </div>
 
       {isLoading ? (

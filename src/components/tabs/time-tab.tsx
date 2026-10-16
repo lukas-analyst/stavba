@@ -196,15 +196,6 @@ export function TimeTab({ projectId }: { projectId: string }) {
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
-        <div className="relative">
-          <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Hledat záznam…"
-            className="h-9 w-56 pl-8"
-          />
-        </div>
         <Select value={typeFilter} onValueChange={setTypeFilter}>
           <SelectTrigger className="h-9 w-44">
             <SelectValue />
@@ -251,9 +242,6 @@ export function TimeTab({ projectId }: { projectId: string }) {
               {formatNumber(totalHours, " h")}
             </div>
           </div>
-          <Button size="sm" onClick={() => setAddOpen(true)}>
-            <Plus className="mr-1 h-4 w-4" /> Zaznamenat čas
-          </Button>
         </div>
       </div>
 
