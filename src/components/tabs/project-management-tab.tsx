@@ -214,13 +214,13 @@ export function ProjectManagementTab({ projectId }: { projectId: string }) {
       />
 
       {/* ===== Enhanced Audit Log ===== */}
-      <Card className="bg-card shadow-sm">
+      <Card className="bg-surface-container-low shadow-sm">
         <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 type-title-lg">
+          <CardTitle className="flex items-center gap-2 text-lg font-semibold">
             <History className="h-4 w-4 text-primary" />
             Audit log — nedávné změny
           </CardTitle>
-          <CardDescription>Přehled nedávných akcí v projektu</CardDescription>
+          <CardDescription className="text-sm text-on-surface-variant">Přehled nedávných akcí v projektu</CardDescription>
         </CardHeader>
         <CardContent>
           <EnhancedAuditLog projectId={projectId} />
@@ -228,9 +228,9 @@ export function ProjectManagementTab({ projectId }: { projectId: string }) {
       </Card>
 
       {/* ===== Danger Zone ===== */}
-      <Card className="border-danger/20 bg-surface-container-low">
+      <Card className="border-danger/20 bg-surface-container-low shadow-sm">
         <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 type-title-lg text-danger">
+          <CardTitle className="flex items-center gap-2 text-lg font-semibold text-danger">
             <AlertTriangle className="h-4 w-4" />
             Správa projektu
           </CardTitle>
@@ -379,14 +379,14 @@ function ProjectInfoCard({
   // are hidden.
   if (readOnly) {
     return (
-      <Card className="bg-card shadow-sm">
+      <Card className="bg-surface-container-low shadow-sm">
         <CardHeader className="pb-3">
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0 flex-1">
-              <CardTitle className="flex flex-wrap items-center gap-2 type-headline">
+              <CardTitle className="flex flex-wrap items-center gap-2 text-lg font-semibold">
                 {project.name}
-                <Badge variant="outline" className={cn("type-label-sm", statusInfo.color)}>{statusInfo.label}</Badge>
-                <Badge variant="secondary" className="type-label-sm gap-1">
+                <Badge variant="outline" className={cn("text-xs", statusInfo.color)}>{statusInfo.label}</Badge>
+                <Badge variant="secondary" className="text-xs gap-1">
                   {userRole === "editor" ? (
                     <>
                       <Edit3 className="h-3 w-3" /> Editor
@@ -399,19 +399,19 @@ function ProjectInfoCard({
                 </Badge>
               </CardTitle>
               {project.description && (
-                <CardDescription className="mt-1 type-body">{project.description}</CardDescription>
+                <CardDescription className="mt-1 text-sm text-on-surface-variant">{project.description}</CardDescription>
               )}
             </div>
           </div>
         </CardHeader>
         <CardContent className="pt-0">
-          <div className="flex flex-wrap gap-4 type-label text-on-surface-variant">
+          <div className="flex flex-wrap gap-4 text-xs text-on-surface-variant">
             {project.address && (<span className="flex items-center gap-1"><MapPin className="h-3 w-3" /> {project.address}</span>)}
             {project.startDate && (<span className="flex items-center gap-1 tabular-nums"><Calendar className="h-3 w-3" /> {formatDate(project.startDate)}{project.endDate && ` — ${formatDate(project.endDate)}`}</span>)}
             <span className="flex items-center gap-1"><Building2 className="h-3 w-3" /> {project.currency}</span>
-            <span className="type-label-sm text-on-surface-variant/60 tabular-nums">Vytvořeno: {formatDate(project.createdAt)}</span>
+            <span className="text-xs text-on-surface-variant/60 tabular-nums">Vytvořeno: {formatDate(project.createdAt)}</span>
           </div>
-          <div className="mt-3 flex items-center gap-1.5 type-label-sm text-muted-foreground">
+          <div className="mt-3 flex items-center gap-1.5 text-xs text-muted-foreground">
             <Lock className="h-3 w-3" /> Úpravu informací o projektu může provést pouze správce projektu
           </div>
         </CardContent>
@@ -420,22 +420,22 @@ function ProjectInfoCard({
   }
 
   return (
-    <Card className="bg-card shadow-sm">
+    <Card className="bg-surface-container-low shadow-sm">
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div className="min-w-0 flex-1">
-            <CardTitle className="flex items-center gap-2 type-headline">
+            <CardTitle className="flex items-center gap-2 text-lg font-semibold">
               {editing ? (
                 <Input value={name} onChange={(e) => setName(e.target.value)} className="h-8 max-w-md text-lg font-bold" autoFocus />
               ) : (
                 <>
                   {project.name}
-                  <Badge variant="outline" className={cn("type-label-sm", statusInfo.color)}>{statusInfo.label}</Badge>
+                  <Badge variant="outline" className={cn("text-xs", statusInfo.color)}>{statusInfo.label}</Badge>
                 </>
               )}
             </CardTitle>
             {!editing && project.description && (
-              <CardDescription className="mt-1 type-body">{project.description}</CardDescription>
+              <CardDescription className="mt-1 text-sm text-on-surface-variant">{project.description}</CardDescription>
             )}
           </div>
           {editing ? (
@@ -459,13 +459,13 @@ function ProjectInfoCard({
         <CardContent className="space-y-3">
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="space-y-1">
-              <Label htmlFor="mgmt-address" className="type-label-sm">Adresa</Label>
-              <Input id="mgmt-address" value={address} onChange={(e) => setAddress(e.target.value)} placeholder="např. Praha - Troja" className="h-9" />
+              <Label htmlFor="mgmt-address" className="text-xs font-medium text-on-surface-variant">Adresa</Label>
+              <Input id="mgmt-address" value={address} onChange={(e) => setAddress(e.target.value)} placeholder="např. Praha - Troja" className="h-9 rounded-md border-outline-variant bg-surface-container-low" />
             </div>
             <div className="space-y-1">
-              <Label htmlFor="mgmt-status" className="type-label-sm">Stav</Label>
+              <Label htmlFor="mgmt-status" className="text-xs font-medium text-on-surface-variant">Stav</Label>
               <Select value={status} onValueChange={setStatus}>
-                <SelectTrigger id="mgmt-status" className="h-9"><SelectValue /></SelectTrigger>
+                <SelectTrigger id="mgmt-status" className="h-9 rounded-md border-outline-variant bg-surface-container-low"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="planning">Plánování</SelectItem>
                   <SelectItem value="active">Aktivní</SelectItem>
@@ -477,27 +477,27 @@ function ProjectInfoCard({
           </div>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="space-y-1">
-              <Label htmlFor="mgmt-start" className="type-label-sm">Datum zahájení</Label>
-              <Input id="mgmt-start" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="h-9" />
+              <Label htmlFor="mgmt-start" className="text-xs font-medium text-on-surface-variant">Datum zahájení</Label>
+              <Input id="mgmt-start" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="h-9 rounded-md border-outline-variant bg-surface-container-low" />
             </div>
             <div className="space-y-1">
-              <Label htmlFor="mgmt-end" className="type-label-sm">Datum dokončení</Label>
-              <Input id="mgmt-end" type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="h-9" />
+              <Label htmlFor="mgmt-end" className="text-xs font-medium text-on-surface-variant">Datum dokončení</Label>
+              <Input id="mgmt-end" type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="h-9 rounded-md border-outline-variant bg-surface-container-low" />
             </div>
           </div>
           <div className="space-y-1">
-            <Label htmlFor="mgmt-desc" className="type-label-sm">Popis</Label>
-            <Textarea id="mgmt-desc" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Krátký popis projektu…" rows={2} className="resize-y" />
+            <Label htmlFor="mgmt-desc" className="text-xs font-medium text-on-surface-variant">Popis</Label>
+            <Textarea id="mgmt-desc" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Krátký popis projektu…" rows={2} className="resize-y rounded-md border-outline-variant bg-surface-container-low" />
           </div>
         </CardContent>
       )}
       {!editing && (
         <CardContent className="pt-0">
-          <div className="flex flex-wrap gap-4 type-label text-on-surface-variant">
+          <div className="flex flex-wrap gap-4 text-xs text-on-surface-variant">
             {project.address && (<span className="flex items-center gap-1"><MapPin className="h-3 w-3" /> {project.address}</span>)}
             {project.startDate && (<span className="flex items-center gap-1 tabular-nums"><Calendar className="h-3 w-3" /> {formatDate(project.startDate)}{project.endDate && ` — ${formatDate(project.endDate)}`}</span>)}
             <span className="flex items-center gap-1"><Building2 className="h-3 w-3" /> {project.currency}</span>
-            <span className="type-label-sm text-on-surface-variant/60 tabular-nums">Vytvořeno: {formatDate(project.createdAt)}</span>
+            <span className="text-xs text-on-surface-variant/60 tabular-nums">Vytvořeno: {formatDate(project.createdAt)}</span>
           </div>
         </CardContent>
       )}
@@ -659,15 +659,15 @@ function PropertyMetadataCard({
     : "bg-muted text-muted-foreground";
 
   return (
-    <Card className="bg-surface-container-low">
+    <Card className="bg-surface-container-low shadow-sm">
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0 flex-1">
-            <CardTitle className="flex items-center gap-2 type-title-lg">
+            <CardTitle className="flex items-center gap-2 text-lg font-semibold">
               <Building2 className="h-4 w-4 text-primary" />
               Informace o nemovitosti
             </CardTitle>
-            <CardDescription className="mt-1 type-body text-on-surface-variant">
+            <CardDescription className="mt-1 text-sm text-on-surface-variant">
               Přesná adresa, energetické hodnocení a projektová dokumentace
             </CardDescription>
           </div>
@@ -700,10 +700,10 @@ function PropertyMetadataCard({
               <Button
                 variant="outline"
                 size="sm"
-                className="shrink-0 rounded-full gap-1.5"
+                className="shrink-0 rounded-md gap-1.5"
                 onClick={() => setEditing(true)}
               >
-                <Pencil className="h-3.5 w-3.5" /> Upravit
+                <Pencil className="h-4 w-4" /> Upravit
               </Button>
             ))}
         </div>
@@ -712,7 +712,7 @@ function PropertyMetadataCard({
         {editing && canEdit ? (
           <>
             <div className="space-y-1">
-              <Label htmlFor="mgmt-fulladdress" className="type-label-sm">
+              <Label htmlFor="mgmt-fulladdress" className="text-xs font-medium text-on-surface-variant">
                 Přesná adresa
               </Label>
               <Input
@@ -720,12 +720,12 @@ function PropertyMetadataCard({
                 value={fullAddress}
                 onChange={(e) => setFullAddress(e.target.value)}
                 placeholder="např. Pražská 12, 110 00 Praha 1"
-                className="h-9"
+                className="h-9 rounded-md border-outline-variant bg-surface-container-low"
               />
             </div>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div className="space-y-1">
-                <Label htmlFor="mgmt-floorarea" className="type-label-sm">
+                <Label htmlFor="mgmt-floorarea" className="text-xs font-medium text-on-surface-variant">
                   Zastavěná plocha (m²)
                 </Label>
                 <Input
@@ -737,11 +737,11 @@ function PropertyMetadataCard({
                   value={floorArea}
                   onChange={(e) => setFloorArea(e.target.value)}
                   placeholder="např. 120"
-                  className="h-9"
+                  className="h-9 rounded-md border-outline-variant bg-surface-container-low"
                 />
               </div>
               <div className="space-y-1">
-                <Label htmlFor="mgmt-floors" className="type-label-sm">
+                <Label htmlFor="mgmt-floors" className="text-xs font-medium text-on-surface-variant">
                   Počet podlaží
                 </Label>
                 <Input
@@ -753,13 +753,13 @@ function PropertyMetadataCard({
                   value={floors}
                   onChange={(e) => setFloors(e.target.value)}
                   placeholder="např. 2"
-                  className="h-9"
+                  className="h-9 rounded-md border-outline-variant bg-surface-container-low"
                 />
               </div>
             </div>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div className="space-y-1">
-                <Label htmlFor="mgmt-heatloss" className="type-label-sm">
+                <Label htmlFor="mgmt-heatloss" className="text-xs font-medium text-on-surface-variant">
                   Tepelná ztráta (W/K)
                 </Label>
                 <Input
@@ -771,15 +771,15 @@ function PropertyMetadataCard({
                   value={heatLoss}
                   onChange={(e) => setHeatLoss(e.target.value)}
                   placeholder="např. 85"
-                  className="h-9"
+                  className="h-9 rounded-md border-outline-variant bg-surface-container-low"
                 />
               </div>
               <div className="space-y-1">
-                <Label htmlFor="mgmt-energy" className="type-label-sm">
+                <Label htmlFor="mgmt-energy" className="text-xs font-medium text-on-surface-variant">
                   Energetický štítek
                 </Label>
                 <Select value={energyRating} onValueChange={setEnergyRating}>
-                  <SelectTrigger id="mgmt-energy" className="h-9">
+                  <SelectTrigger id="mgmt-energy" className="h-9 rounded-md border-outline-variant bg-surface-container-low">
                     <SelectValue placeholder="—" />
                   </SelectTrigger>
                   <SelectContent>
@@ -795,7 +795,7 @@ function PropertyMetadataCard({
               </div>
             </div>
             <div className="space-y-1">
-              <Label htmlFor="mgmt-studyurl" className="type-label-sm">
+              <Label htmlFor="mgmt-studyurl" className="text-xs font-medium text-on-surface-variant">
                 Odkaz na architektonickou studii
               </Label>
               <div className="relative">
@@ -805,7 +805,7 @@ function PropertyMetadataCard({
                   value={studyUrl}
                   onChange={(e) => setStudyUrl(e.target.value)}
                   placeholder="https://…"
-                  className={cn("h-9 pr-9", !studyUrlValid && "border-danger")}
+                  className={cn("h-9 rounded-md border-outline-variant bg-surface-container-low pr-9", !studyUrlValid && "border-danger")}
                 />
                 <ExternalLink className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
               </div>
@@ -816,7 +816,7 @@ function PropertyMetadataCard({
               )}
             </div>
             <div className="space-y-1">
-              <Label htmlFor="mgmt-docurl" className="type-label-sm">
+              <Label htmlFor="mgmt-docurl" className="text-xs font-medium text-on-surface-variant">
                 Odkaz na projektovou dokumentaci
               </Label>
               <div className="relative">
@@ -826,7 +826,7 @@ function PropertyMetadataCard({
                   value={documentationUrl}
                   onChange={(e) => setDocumentationUrl(e.target.value)}
                   placeholder="https://…"
-                  className={cn("h-9 pr-9", !docUrlValid && "border-danger")}
+                  className={cn("h-9 rounded-md border-outline-variant bg-surface-container-low pr-9", !docUrlValid && "border-danger")}
                 />
                 <ExternalLink className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
               </div>
@@ -837,7 +837,7 @@ function PropertyMetadataCard({
               )}
             </div>
             <div className="space-y-1">
-              <Label htmlFor="mgmt-propnote" className="type-label-sm">
+              <Label htmlFor="mgmt-propnote" className="text-xs font-medium text-on-surface-variant">
                 Poznámka
               </Label>
               <Textarea
@@ -846,7 +846,7 @@ function PropertyMetadataCard({
                 onChange={(e) => setPropertyNote(e.target.value)}
                 rows={3}
                 placeholder="Volná poznámka k nemovitosti…"
-                className="resize-y"
+                className="resize-y rounded-md border-outline-variant bg-surface-container-low"
               />
             </div>
           </>
@@ -878,20 +878,20 @@ function PropertyMetadataCard({
               value={project.heatLoss != null ? `${project.heatLoss} W/K` : null}
             />
             {/* Energetický štítek — badge A–G s MD3 soft barvou. */}
-            <div className="space-y-0.5">
-              <dt className="flex items-center gap-1 type-label-sm text-on-surface-variant">
+            <div className="space-y-2">
+              <dt className="flex items-center gap-1 text-xs font-medium text-on-surface-variant">
                 <Gauge className="h-3 w-3" /> Energetický štítek
               </dt>
               <dd>
                 {project.energyRating ? (
                   <Badge
                     variant="secondary"
-                    className={cn("type-label-sm", energyBadgeClass)}
+                    className={cn("text-xs font-semibold", energyBadgeClass)}
                   >
                     {project.energyRating}
                   </Badge>
                 ) : (
-                  <span className="type-body text-muted-foreground">—</span>
+                  <span className="text-sm text-muted-foreground">—</span>
                 )}
               </dd>
             </div>
@@ -907,11 +907,11 @@ function PropertyMetadataCard({
               value={project.documentationUrl}
               href={project.documentationUrl}
             />
-            <div className="sm:col-span-2 space-y-0.5">
-              <dt className="flex items-center gap-1 type-label-sm text-on-surface-variant">
+            <div className="sm:col-span-2 space-y-2">
+              <dt className="flex items-center gap-1 text-xs font-medium text-on-surface-variant">
                 <StickyNote className="h-3 w-3" /> Poznámka
               </dt>
-              <dd className="type-body whitespace-pre-wrap">
+              <dd className="text-sm whitespace-pre-wrap">
                 {project.propertyNote || (
                   <span className="text-muted-foreground">—</span>
                 )}
@@ -920,7 +920,7 @@ function PropertyMetadataCard({
           </dl>
         )}
         {!canEdit && (
-          <div className="mt-2 flex items-center gap-1.5 type-label-sm text-muted-foreground">
+          <div className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
             <Lock className="h-3 w-3" /> Úpravu informací o nemovitosti může
             provést pouze správce projektu
           </div>
@@ -945,11 +945,11 @@ function PropertyMetadataItem({
   href?: string | null;
 }) {
   return (
-    <div className="space-y-0.5">
-      <dt className="flex items-center gap-1 type-label-sm text-on-surface-variant">
+    <div className="space-y-2">
+      <dt className="flex items-center gap-1 text-xs font-medium text-on-surface-variant">
         <Icon className="h-3 w-3" /> {label}
       </dt>
-      <dd className="type-body">
+      <dd className="text-sm font-medium">
         {value ? (
           href && isValidUrl(href) ? (
             <a
@@ -959,7 +959,7 @@ function PropertyMetadataItem({
               className="inline-flex items-center gap-1 text-primary hover:underline"
             >
               <span className="truncate">{value}</span>
-              <ExternalLink className="h-3 w-3 shrink-0" />
+              <ExternalLink className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
             </a>
           ) : (
             <span className="whitespace-pre-wrap break-words">{value}</span>
@@ -1405,15 +1405,15 @@ function SharingSection({
   const pastInvitations = invitations.filter((inv) => inv.status !== "pending");
 
   return (
-    <Card className="bg-card shadow-sm">
+    <Card className="bg-surface-container-low shadow-sm">
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
-            <CardTitle className="flex items-center gap-2 type-title-lg">
+            <CardTitle className="flex items-center gap-2 text-lg font-semibold">
               <Shield className="h-4 w-4 text-primary" />
               Sdílení a přístupová práva
             </CardTitle>
-            <CardDescription className="mt-1">Správa veřejnosti, správce, členů a pozvánek projektu</CardDescription>
+            <CardDescription className="mt-1 text-sm text-on-surface-variant">Správa veřejnosti, správce, členů a pozvánek projektu</CardDescription>
           </div>
           <Button
             variant="outline"
@@ -1447,7 +1447,7 @@ function SharingSection({
         {/* Editors see a "Pouze správce" hint explaining why the Switch
             is disabled. Owners / admins don't need this. */}
         {!canManage && (
-          <div className="-mt-2 flex items-center gap-1.5 type-label-sm text-muted-foreground">
+          <div className="-mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
             <Lock className="h-3 w-3" /> Pouze správce může měnit veřejnost projektu
           </div>
         )}
@@ -1716,12 +1716,12 @@ function SharingSection({
           </div>
           {/* Hints */}
           {isExistingMember && (
-            <div className="mt-2 flex items-center gap-1.5 type-label-sm text-warning">
+            <div className="mt-2 flex items-center gap-1.5 text-xs text-warning">
               <AlertTriangle className="h-3 w-3" /> Tento uživatel je již členem projektu
             </div>
           )}
           {isNewUserHint && !isExistingMember && (
-            <div className="mt-2 flex items-center gap-1.5 type-label-sm text-info">
+            <div className="mt-2 flex items-center gap-1.5 text-xs text-info">
               <Info className="h-3 w-3" /> Nový uživatel — pozvánka mu přijde na e-mail, po registraci získá přístup
             </div>
           )}
@@ -1730,12 +1730,12 @@ function SharingSection({
               "owner-only" lock hint (they never reach this tab through the
               sidebar, but the gate also covers direct deep-links). */}
           {userRole === "editor" && (
-            <div className="mt-2 flex items-center gap-1.5 type-label-sm text-info">
+            <div className="mt-2 flex items-center gap-1.5 text-xs text-info">
               <Info className="h-3 w-3" /> Jako editor můžete přidávat pouze Čtenáře nebo Editory
             </div>
           )}
           {!canInvite && (
-            <div className="mt-2 flex items-center gap-1.5 type-label-sm text-muted-foreground">
+            <div className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
               <Lock className="h-3 w-3" /> Pozvat nové uživatele může pouze správce projektu
             </div>
           )}
@@ -1804,11 +1804,14 @@ const ACTION_LABELS: Record<string, string> = {
   export: "Exportováno",
 };
 
+// MD3 soft color tokens per action — `bg-*-soft text-*-strong` ensures the
+// audit-log action badge stays consistent with other MD3 badges (energy
+// rating, invitation status) across the codebase.
 const ACTION_COLORS: Record<string, string> = {
-  create: "text-success",
-  update: "text-info",
-  delete: "text-danger",
-  export: "text-info",
+  create: "bg-success-soft text-success-strong",
+  update: "bg-info-soft text-info-strong",
+  delete: "bg-danger-soft text-danger-strong",
+  export: "bg-info-soft text-info-strong",
 };
 
 const ENTITY_LABELS: Record<string, string> = {
@@ -2174,7 +2177,7 @@ function EnhancedAuditLog({ projectId }: { projectId: string }) {
       {/* Row 1: Polling indicator + search input */}
       <div className="flex flex-wrap items-center gap-2">
         {polling && (
-          <span className="flex items-center gap-1 type-label-sm text-on-surface-variant">
+          <span className="flex items-center gap-1 text-xs text-on-surface-variant">
             <Loader2 className="h-3 w-3 animate-spin" />
             Načítání...
           </span>
@@ -2187,7 +2190,7 @@ function EnhancedAuditLog({ projectId }: { projectId: string }) {
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
             placeholder="Hledat v audit logu…"
-            className="h-8 pl-8 pr-8 type-label-sm"
+            className="h-9 rounded-md pl-8 pr-8 text-xs"
             aria-label="Hledat v audit logu"
           />
           {searchInput && (
@@ -2206,9 +2209,9 @@ function EnhancedAuditLog({ projectId }: { projectId: string }) {
       {/* Row 2: Filter dropdowns + date range + page size + sort */}
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-7">
         <div className="space-y-1">
-          <Label className="type-label-sm text-on-surface-variant">Akce</Label>
+          <Label className="text-xs font-medium text-on-surface-variant">Akce</Label>
           <Select value={actionFilter} onValueChange={handleActionFilterChange}>
-            <SelectTrigger className="h-8 type-label-sm"><SelectValue /></SelectTrigger>
+            <SelectTrigger className="h-9 rounded-md text-xs"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Vše</SelectItem>
               <SelectItem value="create">Vytvořeno</SelectItem>
@@ -2219,9 +2222,9 @@ function EnhancedAuditLog({ projectId }: { projectId: string }) {
           </Select>
         </div>
         <div className="space-y-1">
-          <Label className="type-label-sm text-on-surface-variant">Entita</Label>
+          <Label className="text-xs font-medium text-on-surface-variant">Entita</Label>
           <Select value={entityFilter} onValueChange={handleEntityFilterChange}>
-            <SelectTrigger className="h-8 type-label-sm"><SelectValue /></SelectTrigger>
+            <SelectTrigger className="h-9 rounded-md text-xs"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Vše</SelectItem>
               <SelectItem value="BudgetItem">Položka rozpočtu</SelectItem>
@@ -2237,9 +2240,9 @@ function EnhancedAuditLog({ projectId }: { projectId: string }) {
         </div>
         {/* B7: User filter — populated from the `users` array in the API response */}
         <div className="space-y-1">
-          <Label className="type-label-sm text-on-surface-variant">Autor</Label>
+          <Label className="text-xs font-medium text-on-surface-variant">Autor</Label>
           <Select value={userFilter} onValueChange={handleUserFilterChange}>
-            <SelectTrigger className="h-8 type-label-sm"><SelectValue /></SelectTrigger>
+            <SelectTrigger className="h-9 rounded-md text-xs"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Vše</SelectItem>
               {users.map((u) => (
@@ -2252,30 +2255,30 @@ function EnhancedAuditLog({ projectId }: { projectId: string }) {
         </div>
         {/* B2: Date range — Od */}
         <div className="space-y-1">
-          <Label className="type-label-sm text-on-surface-variant">Od</Label>
+          <Label className="text-xs font-medium text-on-surface-variant">Od</Label>
           <Input
             type="date"
             value={fromDate}
             onChange={(e) => handleFromDateChange(e.target.value)}
-            className="h-8 type-label-sm"
+            className="h-9 rounded-md text-xs"
             aria-label="Filtr od data"
           />
         </div>
         {/* B2: Date range — Do */}
         <div className="space-y-1">
-          <Label className="type-label-sm text-on-surface-variant">Do</Label>
+          <Label className="text-xs font-medium text-on-surface-variant">Do</Label>
           <Input
             type="date"
             value={toDate}
             onChange={(e) => handleToDateChange(e.target.value)}
-            className="h-8 type-label-sm"
+            className="h-9 rounded-md text-xs"
             aria-label="Filtr do data"
           />
         </div>
         <div className="space-y-1">
-          <Label className="type-label-sm text-on-surface-variant">Řazení</Label>
+          <Label className="text-xs font-medium text-on-surface-variant">Řazení</Label>
           <Select value={sortBy} onValueChange={handleSortChange}>
-            <SelectTrigger className="h-8 type-label-sm"><SelectValue /></SelectTrigger>
+            <SelectTrigger className="h-9 rounded-md text-xs"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="desc">Nejnovější</SelectItem>
               <SelectItem value="asc">Nejstarší</SelectItem>
@@ -2283,9 +2286,9 @@ function EnhancedAuditLog({ projectId }: { projectId: string }) {
           </Select>
         </div>
         <div className="space-y-1">
-          <Label className="type-label-sm text-on-surface-variant">Na stránku</Label>
+          <Label className="text-xs font-medium text-on-surface-variant">Na stránku</Label>
           <Select value={String(pageSize)} onValueChange={handlePageSizeChange}>
-            <SelectTrigger className="h-8 type-label-sm"><SelectValue /></SelectTrigger>
+            <SelectTrigger className="h-9 rounded-md text-xs"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="10">10</SelectItem>
               <SelectItem value="50">50</SelectItem>
@@ -2304,7 +2307,7 @@ function EnhancedAuditLog({ projectId }: { projectId: string }) {
           <Skeleton className="h-12" />
         </div>
       ) : entries.length === 0 ? (
-        <p className="py-6 text-center type-label text-on-surface-variant">
+        <p className="py-6 text-center text-sm text-on-surface-variant">
           Žádné záznamy pro vybrané filtry.
         </p>
       ) : (
@@ -2312,11 +2315,11 @@ function EnhancedAuditLog({ projectId }: { projectId: string }) {
           <table className="w-full">
             <thead>
               <tr className="border-b border-outline-variant bg-surface-container-low">
-                <th className="type-overline text-on-surface-variant px-3 py-2 text-left">Úkon</th>
-                <th className="type-overline text-on-surface-variant px-3 py-2 text-left">Detail změny</th>
-                <th className="type-overline text-on-surface-variant px-3 py-2 text-left">Autor</th>
-                <th className="type-overline text-on-surface-variant px-3 py-2 text-left whitespace-nowrap">Datum</th>
-                <th className="type-overline text-on-surface-variant px-3 py-2 text-left whitespace-nowrap">Čas</th>
+                <th className="text-xs font-medium text-on-surface-variant uppercase tracking-wide px-3 py-2 text-left">Úkon</th>
+                <th className="text-xs font-medium text-on-surface-variant uppercase tracking-wide px-3 py-2 text-left">Detail změny</th>
+                <th className="text-xs font-medium text-on-surface-variant uppercase tracking-wide px-3 py-2 text-left">Autor</th>
+                <th className="text-xs font-medium text-on-surface-variant uppercase tracking-wide px-3 py-2 text-left whitespace-nowrap">Datum</th>
+                <th className="text-xs font-medium text-on-surface-variant uppercase tracking-wide px-3 py-2 text-left whitespace-nowrap">Čas</th>
               </tr>
             </thead>
             <tbody>
@@ -2340,60 +2343,63 @@ function EnhancedAuditLog({ projectId }: { projectId: string }) {
                 // C6: deep-link target tab (if any)
                 const entityTab = ENTITY_TAB_MAP[entry.entityType];
                 return (
-                  <tr key={entry.id} className="border-b border-outline-variant last:border-0 hover:bg-surface-container-high">
-                    {/* Úkon — action + entity type badge */}
+                  <tr key={entry.id} className="border-b border-outline-variant last:border-0 text-sm hover:bg-surface-container-high">
+                    {/* Úkon — action badge + entity type label */}
                     <td className="px-3 py-2 align-top">
-                      <div className="flex flex-col gap-0.5">
-                        <span className={cn("type-label-sm font-semibold", ACTION_COLORS[entry.action] ?? "text-muted-foreground")}>
+                      <div className="flex flex-col gap-1">
+                        <Badge
+                          variant="secondary"
+                          className={cn("text-xs font-semibold w-fit", ACTION_COLORS[entry.action] ?? "bg-muted text-muted-foreground")}
+                        >
                           {ACTION_LABELS[entry.action] ?? entry.action}
-                        </span>
-                        <span className="type-label text-on-surface-variant">
+                        </Badge>
+                        <span className="text-xs text-on-surface-variant">
                           {ENTITY_LABELS[entry.entityType] ?? entry.entityType}
                         </span>
                       </div>
                     </td>
                     {/* Detail změny — human-readable description */}
                     <td className="px-3 py-2 align-top">
-                      <div className="flex flex-col gap-0.5">
+                      <div className="flex flex-col gap-1">
                         {/* C6: Entity label — clickable deep-link when there's a tab mapping */}
                         {entry.entityLabel && (
                           entityTab ? (
                             <button
                               type="button"
                               onClick={() => setActiveTab(entityTab)}
-                              className="type-body text-left font-medium text-primary hover:underline"
+                              className="text-sm text-left font-medium text-primary hover:underline"
                               title={`Přejít na záložku ${ENTITY_LABELS[entry.entityType] ?? entry.entityType}`}
                             >
                               {entry.entityLabel}
                             </button>
                           ) : (
-                            <span className="type-body font-medium">{entry.entityLabel}</span>
+                            <span className="text-sm font-medium">{entry.entityLabel}</span>
                           )
                         )}
                         {/* B4: Diff viewer for update entries with both old & new values */}
                         {hasDiff && entry.field ? (
                           <div className="flex flex-wrap items-center gap-1.5">
-                            <span className="type-label-sm text-on-surface-variant/70">
+                            <span className="text-xs text-on-surface-variant/70">
                               {FIELD_LABELS_UI[entry.field] ?? entry.field}:
                             </span>
-                            <span className="type-label text-danger/70 line-through">
+                            <span className="text-sm text-danger/70 line-through">
                               {/* B28: DB stores raw values; translate via getFieldValue. */}
                               {getFieldValue(entry.field, entry.oldValue)}
                             </span>
                             <ArrowRight className="h-3 w-3 text-on-surface-variant/40" />
-                            <span className="type-label text-success/80">
+                            <span className="text-sm text-success/80">
                               {getFieldValue(entry.field, entry.newValue)}
                             </span>
                           </div>
                         ) : (
-                          <span className="type-label text-on-surface-variant">{description}</span>
+                          <span className="text-sm text-on-surface-variant">{description}</span>
                         )}
                       </div>
                     </td>
                     {/* Autor — avatar + name */}
                     <td className="px-3 py-2 align-top">
                       <div className="flex items-center gap-1.5">
-                        <Avatar className="h-6 w-6 shrink-0">
+                        <Avatar className="h-7 w-7 shrink-0">
                           {entry.user?.image ? (
                             <AvatarImage src={entry.user.image} alt={authorName} />
                           ) : null}
@@ -2401,13 +2407,13 @@ function EnhancedAuditLog({ projectId }: { projectId: string }) {
                             {authorInitials}
                           </AvatarFallback>
                         </Avatar>
-                        <span className="type-label text-on-surface-variant truncate">{authorName}</span>
+                        <span className="text-sm font-medium truncate">{authorName}</span>
                       </div>
                     </td>
                     {/* Datum */}
-                    <td className="px-3 py-2 align-top type-label text-on-surface-variant tabular-nums whitespace-nowrap">{date}</td>
+                    <td className="px-3 py-2 align-top text-xs text-on-surface-variant tabular-nums whitespace-nowrap">{date}</td>
                     {/* Čas */}
-                    <td className="px-3 py-2 align-top type-label text-on-surface-variant tabular-nums whitespace-nowrap">{time}</td>
+                    <td className="px-3 py-2 align-top text-xs text-on-surface-variant tabular-nums whitespace-nowrap">{time}</td>
                   </tr>
                 );
               })}
@@ -2419,26 +2425,26 @@ function EnhancedAuditLog({ projectId }: { projectId: string }) {
       {/* Pagination */}
       {!loading && total > 0 && (
         <div className="flex flex-wrap items-center justify-between gap-2 border-t border-outline-variant pt-3">
-          <div className="type-label-sm text-on-surface-variant tabular-nums">
+          <div className="text-xs text-on-surface-variant tabular-nums">
             Zobrazeno {(page - 1) * pageSize + 1}–{Math.min(page * pageSize, total)} z {total}
           </div>
           <div className="flex items-center gap-1">
             <Button
               variant="outline"
               size="sm"
-              className="rounded-full gap-1.5"
+              className="rounded-md gap-1.5"
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page <= 1}
             >
               <ChevronLeft className="h-3.5 w-3.5" /> Předchozí
             </Button>
-            <span className="type-label-sm tabular-nums px-2">
+            <span className="text-xs tabular-nums px-2">
               {page} / {totalPages}
             </span>
             <Button
               variant="outline"
               size="sm"
-              className="rounded-full gap-1.5"
+              className="rounded-md gap-1.5"
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={page >= totalPages}
             >

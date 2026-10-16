@@ -13,7 +13,7 @@ import {
   Star,
   Plus,
   Check,
-  Settings,
+  Shield,
   Sun,
   Moon,
   LogOut,
@@ -88,6 +88,8 @@ export function TopBar() {
   // Falls back to the /api/users/profile endpoint (which itself falls
   // back to the default owner if no session — for backwards compat).
   const { data: session } = useSession();
+  const isAdmin =
+    (session?.user as { isAdmin?: boolean } | undefined)?.isAdmin === true;
   const currentUser = session?.user
     ? {
         id: (session.user as { id?: string }).id ?? "",
@@ -325,21 +327,9 @@ export function TopBar() {
                 )}
               </div>
 
-              {/* Manage current project + Add project */}
+              {/* Add project — users access project management via the
+                  sidebar's "Správa projektu" nav item (role-gated). */}
               <div className="border-t p-2 space-y-1.5">
-                {selectedProjectId && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="w-full justify-start gap-1.5 rounded-full"
-                    onClick={() => {
-                      setActiveTab("management");
-                      setProjectOpen(false);
-                    }}
-                  >
-                    <Settings className="h-4 w-4" /> Spravovat projekt
-                  </Button>
-                )}
                 <Button
                   variant="outline"
                   size="sm"
@@ -432,9 +422,11 @@ export function TopBar() {
           </button>
         )}
 
-        {/* Account dropdown — avatar with initials + Nastavení + Profil + Odhlásit + theme toggle
-            ml-auto on mobile ensures the avatar is in the right corner even
-            when the budget chip is not rendered (no project selected). */}
+        {/* Account dropdown — avatar with initials + Profil + Admin (if admin) +
+            Odhlásit + theme toggle. Nastavení lives in the sidebar footer
+            (button → /auth/settings). ml-auto on mobile ensures the avatar is
+            in the right corner even when the budget chip is not rendered
+            (no project selected). */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
@@ -487,19 +479,9 @@ export function TopBar() {
 
             <DropdownMenuSeparator className="bg-outline-variant" />
 
-            {/* Nastavení — opens the unified settings page (hidden projects,
-                profile, about). Available to all authenticated users —
-                admin-specific actions (admin tab) are still reachable via
-                the sidebar's "Nastavení" dropdown → "Admin" entry. */}
-            <DropdownMenuItem
-              onSelect={() => router.push("/auth/settings")}
-              className="cursor-pointer gap-2.5 rounded-none px-3 py-2.5 type-body hover:bg-surface-container-high"
-            >
-              <Settings className="h-4 w-4 text-primary" />
-              Nastavení
-            </DropdownMenuItem>
-
-            {/* Profil — profile page (name, password, sessions) */}
+            {/* Profil — profile page (name, password, sessions, sign-out).
+                Available to all authenticated users — this is where the
+                user manages their own account. */}
             <DropdownMenuItem
               onSelect={() => router.push("/auth/profile")}
               className="cursor-pointer gap-2.5 rounded-none px-3 py-2.5 type-body hover:bg-surface-container-high"
@@ -507,6 +489,20 @@ export function TopBar() {
               <User className="h-4 w-4 text-primary" />
               Profil
             </DropdownMenuItem>
+
+            {/* Admin — global admins only. Switches to the admin tab
+                (single-page-app pattern; there's no /auth/admin route).
+                Surfaced here in addition to the sidebar so admins have
+                quick access from anywhere. */}
+            {isAdmin && (
+              <DropdownMenuItem
+                onSelect={() => setActiveTab("admin")}
+                className="cursor-pointer gap-2.5 rounded-none px-3 py-2.5 type-body hover:bg-surface-container-high"
+              >
+                <Shield className="h-4 w-4 text-primary" />
+                Admin
+              </DropdownMenuItem>
+            )}
 
             {/* Odhlásit — functional sign-out via NextAuth */}
             <DropdownMenuItem

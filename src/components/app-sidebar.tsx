@@ -1,31 +1,15 @@
 "use client";
 
-import { useRef, useCallback, useMemo } from "react";
+import { useCallback, useMemo } from "react";
+import Link from "next/link";
 import { useSession } from "next-auth/react";
-import {
-  Settings,
-  Download,
-  Upload,
-  FileSpreadsheet,
-  Pencil,
-  Printer,
-  History,
-} from "lucide-react";
-import { NAV_ITEMS, NAV_SECTIONS, type NavItem, type NavSection } from "@/lib/navigation";
+import { Settings } from "lucide-react";
+import { NAV_ITEMS, NAV_SECTIONS, type NavItem } from "@/lib/navigation";
 import { useAppStore } from "@/lib/store";
-import { useExportState, useImportState, useExportCsv, useProjects, useProjectMembers } from "@/lib/api";
+import { useProjects, useProjectMembers } from "@/lib/api";
 import { computeUserRole, roleClears } from "@/lib/roles";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuSeparator,
-  DropdownMenuLabel,
-} from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
-import { toast } from "sonner";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 // ===== AppSidebar — MD3 NavigationRail / NavigationDrawer =====
@@ -36,13 +20,19 @@ import { useIsMobile } from "@/hooks/use-mobile";
 //   - Active item: pill-shaped indicator (rounded-full)
 //     with surface-container-high tonal fill + primary text/icon
 //   - Inactive items: on-surface-variant text, hover state layer
-//   - Settings dropdown pinned to bottom
+//   - Settings button pinned to bottom (navigates to /auth/settings)
 //
 // Responsive:
 //   - Desktop (md+): permanent rail, full labels visible
 //   - Mobile: drawer (overlay), closes on navigation
 //
 // (FAB-in-rail intentionally omitted per design decision.)
+//
+// NOTE: Project-level actions (Upravit projekt, Report PDF, Historie změn,
+// Export/Import JSON, CSV exports) used to live in the "Nastavení" dropdown
+// at the bottom of this sidebar. As of task `settings-rework`, that dropdown
+// was replaced with a simple navigation button to /auth/settings. Those
+// project actions are still available via the Správa projektu tab.
 export function AppSidebar() {
   const activeTab = useAppStore((s) => s.activeTab);
   const setActiveTab = useAppStore((s) => s.setActiveTab);
@@ -72,12 +62,6 @@ export function AppSidebar() {
     [session, selectedProjectId, selectedProject, membersData],
   );
 
-  const isAdmin = (session?.user as { isAdmin?: boolean } | undefined)?.isAdmin === true;
-
-  const exportState = useExportState();
-  const importState = useImportState();
-  const exportCsv = useExportCsv(selectedProjectId ?? "");
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const isMobile = useIsMobile();
 
   const handleNavClick = useCallback(
@@ -90,36 +74,6 @@ export function AppSidebar() {
     },
     [setActiveTab, setSidebarOpen, isMobile],
   );
-
-  const handleExport = async () => {
-    try {
-      await exportState.mutateAsync();
-      toast.success("Stav exportován");
-    } catch {
-      toast.error("Export selhal");
-    }
-  };
-
-  const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    try {
-      await importState.mutateAsync(file);
-      toast.success("Stav importován");
-    } catch {
-      toast.error("Import selhal");
-    }
-    e.target.value = "";
-  };
-
-  const handleCsv = async (type: "budget" | "payments" | "time" | "contacts") => {
-    try {
-      await exportCsv.mutateAsync(type);
-      toast.success(`${type === "budget" ? "Rozpočet" : type === "payments" ? "Platby" : type === "time" ? "Čas" : "Kontakty"} exportován do CSV`);
-    } catch {
-      toast.error("CSV export selhal");
-    }
-  };
 
   // Group items by section for rendering — filter out items whose
   // `minRole` is above the user's current role in the selected project.
@@ -163,110 +117,23 @@ export function AppSidebar() {
         ))}
       </div>
 
-      {/* Settings dropdown — pinned to bottom (MD3 footer pattern) */}
+      {/* Settings — pinned to bottom (MD3 footer pattern).
+          Simple navigation button to /auth/settings. Project-level actions
+          (Export/Import/CSV/Edit/Report/Audit) were previously in a dropdown
+          here; they are now reachable via the Správa projektu tab. Admin
+          access lives in the TopBar avatar dropdown (gated by isAdmin). */}
       <div className="border-t border-outline-variant p-2">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="ghost"
-              className="w-full justify-start gap-2.5 px-3 text-sm font-medium state-layer-on-surface rounded-full"
-              disabled={!selectedProjectId}
-            >
-              <Settings className="h-4 w-4 shrink-0" />
-              Nastavení
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent side="top" align="start" className="w-56">
-            <DropdownMenuLabel className="text-xs text-muted-foreground">
-              Projekt
-            </DropdownMenuLabel>
-            <DropdownMenuItem onClick={() => window.dispatchEvent(new CustomEvent("stavba:open-edit"))}>
-              <Pencil className="mr-2 h-3.5 w-3.5" />
-              Upravit projekt
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => window.dispatchEvent(new CustomEvent("stavba:open-report"))}>
-              <Printer className="mr-2 h-3.5 w-3.5" />
-              Report (PDF)
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => window.dispatchEvent(new CustomEvent("stavba:open-audit"))}>
-              <History className="mr-2 h-3.5 w-3.5" />
-              Historie změn
-            </DropdownMenuItem>
-            {/* Telemetry moved into the main NAV_ITEMS list — shown only
-                to project owners + global admins via `minRole: "owner"`.
-                No longer duplicated in this dropdown. */}
-
-            <DropdownMenuSeparator />
-
-            <DropdownMenuLabel className="text-xs text-muted-foreground">
-              Data
-            </DropdownMenuLabel>
-            <DropdownMenuItem
-              disabled={exportState.isPending}
-              onClick={handleExport}
-            >
-              <Download className="mr-2 h-3.5 w-3.5" />
-              Export stavu (JSON)
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              disabled={importState.isPending}
-              onClick={() => fileInputRef.current?.click()}
-            >
-              <Upload className="mr-2 h-3.5 w-3.5" />
-              Import stavu (JSON)
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              disabled={exportCsv.isPending || !selectedProjectId}
-              onClick={() => handleCsv("budget")}
-            >
-              <FileSpreadsheet className="mr-2 h-3.5 w-3.5" />
-              CSV — Rozpočet
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              disabled={exportCsv.isPending || !selectedProjectId}
-              onClick={() => handleCsv("payments")}
-            >
-              <FileSpreadsheet className="mr-2 h-3.5 w-3.5" />
-              CSV — Platby
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              disabled={exportCsv.isPending || !selectedProjectId}
-              onClick={() => handleCsv("time")}
-            >
-              <FileSpreadsheet className="mr-2 h-3.5 w-3.5" />
-              CSV — Čas
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              disabled={exportCsv.isPending || !selectedProjectId}
-              onClick={() => handleCsv("contacts")}
-            >
-              <FileSpreadsheet className="mr-2 h-3.5 w-3.5" />
-              CSV — Kontakty
-            </DropdownMenuItem>
-            {/* Admin tab — global admins only.
-                Surfaced here (in addition to the TopBar account dropdown)
-                because the sidebar is where users go to switch tabs. */}
-            {isAdmin && (
-              <>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => handleNavClick("admin")}>
-                  <Settings className="mr-2 h-3.5 w-3.5" />
-                  Admin
-                </DropdownMenuItem>
-              </>
-            )}
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <Button
+          asChild
+          variant="ghost"
+          className="w-full justify-start gap-2.5 px-3 text-sm font-medium state-layer-on-surface rounded-full"
+        >
+          <Link href="/auth/settings">
+            <Settings className="h-4 w-4 shrink-0" />
+            Nastavení
+          </Link>
+        </Button>
       </div>
-
-      {/* Hidden file input for JSON import */}
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="application/json,.json"
-        className="hidden"
-        onChange={handleImport}
-      />
     </nav>
   );
 }
