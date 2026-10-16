@@ -77,6 +77,9 @@ import {
   useUpdateProject,
   useBudgetItems,
   useProjectMembers,
+  useExportState,
+  useImportState,
+  useExportCsv,
 } from "@/lib/api";
 import { computeUserRole, type ProjectRole } from "@/lib/roles";
 import { formatDate, STATUS_LABELS } from "@/lib/format";
@@ -127,6 +130,16 @@ export function ProjectManagementTab({ projectId }: { projectId: string }) {
   const canEditProject = isOwner || isAdmin;
   const canDeleteProject = isOwner; // admins see everything EXCEPT delete
 
+  // Export / Import hooks — drive the "Data a exporty" card.
+  // - useExportState() downloads the whole project state as JSON
+  // - useImportState(file) restores it (owner/admin only)
+  // - useExportCsv(projectId) downloads a per-section CSV (budget /
+  //   payments / time / contacts). All three are react-query mutations
+  //   already wired in `src/lib/api.ts`.
+  const exportState = useExportState();
+  const importState = useImportState();
+  const exportCsv = useExportCsv(projectId);
+
   if (projectsLoading || !project) {
     return (
       <div className="space-y-6">
@@ -136,6 +149,50 @@ export function ProjectManagementTab({ projectId }: { projectId: string }) {
       </div>
     );
   }
+
+  // === "Data a exporty" handlers ===
+  // Trigger downloads via the mutation hooks. The mutation itself resolves
+  // the blob + filename and triggers a browser download (see
+  // `useExportState` / `useExportCsv` in `src/lib/api.ts`).
+  const handleExport = async () => {
+    try {
+      await exportState.mutateAsync();
+      toast.success("Stav exportován");
+    } catch {
+      toast.error("Export selhal");
+    }
+  };
+
+  const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      await importState.mutateAsync(file);
+      toast.success("Stav importován");
+    } catch {
+      toast.error("Import selhal");
+    }
+    // Reset the input value so the same file can be selected again.
+    e.target.value = "";
+  };
+
+  const handleCsv = async (type: "budget" | "payments" | "time" | "contacts") => {
+    try {
+      await exportCsv.mutateAsync(type);
+      toast.success(`${type} exportován do CSV`);
+    } catch {
+      toast.error("CSV export selhal");
+    }
+  };
+
+  // === Dialog openers ===
+  // These are dispatch-only — the dialogs themselves are mounted in
+  // `ProjectDetail` (`src/components/project-detail.tsx`), which listens
+  // for `stavba:open-*` window events. We re-dispatch from here so the
+  // buttons live next to the rest of the project management actions.
+  const openEdit = () => window.dispatchEvent(new Event("stavba:open-edit"));
+  const openReport = () => window.dispatchEvent(new Event("stavba:open-report"));
+  const openAudit = () => window.dispatchEvent(new Event("stavba:open-audit"));
 
   const handleDuplicate = async () => {
     try {
@@ -212,6 +269,165 @@ export function ProjectManagementTab({ projectId }: { projectId: string }) {
         userRole={userRole}
         currentUserId={(session?.user as { id?: string } | undefined)?.id ?? null}
       />
+
+      {/* ===== Data a exporty =====
+          Centralizované akce pro správu dat projektu — úprava projektu,
+          report PDF, audit log, plus JSON/CSV exporty a (owner/admin)
+          import JSON zpět do aplikace.
+          - Akce "Upravit projekt" / "Report PDF" / "Historie změn"
+            dispatchují window event, který naslouchá `ProjectDetail`
+            (tam jsou namontované `ProjectDialog`, `PrintReportDialog`,
+            `AuditLogDialog`).
+          - Import JSON je omezen na owner/admin (matches the API
+            endpoint `POST /api/import`, který vyžaduje admin session). */}
+      <Card className="bg-surface-container-low shadow-sm">
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-lg font-semibold">
+            <Download className="h-4 w-4 text-primary" />
+            Data a exporty
+          </CardTitle>
+          <CardDescription className="text-sm text-on-surface-variant">
+            Úprava projektu, reporty a exporty dat do různých formátů
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* === Projektové akce ===
+              Tři hlavní akce dostupné z dřívějšího Settings menu v
+              sidebaru — nyní sdružené tady pro lepší dostupnost. */}
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2"
+              onClick={openEdit}
+              disabled={!canEditProject}
+            >
+              <Pencil className="h-3.5 w-3.5" />
+              Upravit projekt
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2"
+              onClick={openReport}
+            >
+              <FileText className="h-3.5 w-3.5" />
+              Report PDF
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2"
+              onClick={openAudit}
+            >
+              <History className="h-3.5 w-3.5" />
+              Historie změn
+            </Button>
+          </div>
+
+          {/* === Export dat ===
+              JSON: kompletní stav aplikace (všechny projekty + data).
+              CSV: per-section, aktuální projekt (budget / payments / time /
+              contacts). Import JSON je owner/admin-only. */}
+          <div className="space-y-2">
+            <div className="type-label text-on-surface-variant">Export dat</div>
+            <div className="flex flex-wrap items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2"
+                onClick={handleExport}
+                disabled={exportState.isPending}
+              >
+                {exportState.isPending ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <Download className="h-3.5 w-3.5" />
+                )}
+                Export JSON
+              </Button>
+              {/* Import JSON — owner / admin only.
+                  API (`POST /api/import`) requires admin session; we
+                  mirror that gate on the client to avoid surfacing a
+                  button that always 403s. */}
+              {canEditProject && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-2"
+                  disabled={importState.isPending}
+                  onClick={() => document.getElementById("import-json-input")?.click()}
+                >
+                  {importState.isPending ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <Download className="h-3.5 w-3.5 rotate-180" />
+                  )}
+                  Import JSON (owner only)
+                </Button>
+              )}
+              {/* Skrytý file input — klik na tlačítko nad otevře
+                  nativní dialog výběru souboru. */}
+              <input
+                id="import-json-input"
+                type="file"
+                accept="application/json,.json"
+                className="hidden"
+                onChange={handleImport}
+              />
+            </div>
+          </div>
+
+          {/* === CSV exporty per-section === */}
+          <div className="space-y-2">
+            <div className="type-label text-on-surface-variant">
+              CSV exporty (aktuální projekt)
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2"
+                onClick={() => handleCsv("budget")}
+                disabled={exportCsv.isPending}
+              >
+                <FileText className="h-3.5 w-3.5" />
+                Rozpočet CSV
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2"
+                onClick={() => handleCsv("payments")}
+                disabled={exportCsv.isPending}
+              >
+                <FileText className="h-3.5 w-3.5" />
+                Platby CSV
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2"
+                onClick={() => handleCsv("time")}
+                disabled={exportCsv.isPending}
+              >
+                <FileText className="h-3.5 w-3.5" />
+                Čas CSV
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2"
+                onClick={() => handleCsv("contacts")}
+                disabled={exportCsv.isPending}
+              >
+                <FileText className="h-3.5 w-3.5" />
+                Kontakty CSV
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* ===== Enhanced Audit Log ===== */}
       <Card className="bg-surface-container-low shadow-sm">
@@ -1071,6 +1287,14 @@ function SharingSection({
   const [addRole, setAddRole] = useState("viewer");
   const [adding, setAdding] = useState(false);
   const [removingIds, setRemovingIds] = useState<Set<string>>(new Set());
+  // Confirmation dialog state for member removal. Set when the user clicks
+  // the "Odebrat člena" / "Opustit projekt" button — the actual removal
+  // (optimistic update + DELETE call + rollback) only fires after the user
+  // confirms in the AlertDialog rendered at the bottom of the section.
+  const [confirmRemove, setConfirmRemove] = useState<{
+    memberId: string;
+    name: string;
+  } | null>(null);
   const [allUsers, setAllUsers] = useState<{ id: string; name: string | null; email: string }[]>([]);
   const [lastToastEmail, setLastToastEmail] = useState<string>("");
   // Pending invitations list (ProjectInvitation rows that haven't been
@@ -1317,7 +1541,25 @@ function SharingSection({
     }
   };
 
-  const handleRemove = async (memberId: string, name: string) => {
+  // Open the confirmation dialog. The actual removal happens in
+  // `confirmRemoveMember` after the user confirms. We deliberately
+  // separate the trigger from the action so the AlertDialog can show
+  // the member's name (and the user has a chance to cancel before any
+  // network / state mutation).
+  const handleRemove = (memberId: string, name: string) => {
+    setConfirmRemove({ memberId, name });
+  };
+
+  // Perform the actual member removal — called from the AlertDialog's
+  // "Odebrat člena" action button. Reuses the original optimistic-update
+  // logic (brief loading state on the row → optimistic remove → API
+  // DELETE → confirm / rollback on error).
+  const confirmRemoveMember = async () => {
+    if (!confirmRemove) return;
+    const { memberId, name } = confirmRemove;
+    // Close the dialog immediately so the user sees feedback on the row.
+    setConfirmRemove(null);
+
     const memberToRestore = data?.members.find((m) => m.id === memberId);
     const memberEmail = memberToRestore?.user.email;
     // Brief loading state on the specific row
@@ -1405,6 +1647,7 @@ function SharingSection({
   const pastInvitations = invitations.filter((inv) => inv.status !== "pending");
 
   return (
+    <>
     <Card className="bg-surface-container-low shadow-sm">
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between gap-2">
@@ -1768,6 +2011,34 @@ function SharingSection({
         </div>
       </CardContent>
     </Card>
+
+    {/* ===== Confirmation dialog for member removal =====
+        Triggered from the row "Odebrat člena" / "Opustit projekt"
+        button via `setConfirmRemove({ memberId, name })`. The actual
+        removal is performed in `confirmRemoveMember` (called from
+        AlertDialogAction). Cancel just clears the state. */}
+    <AlertDialog
+      open={!!confirmRemove}
+      onOpenChange={(open) => !open && setConfirmRemove(null)}
+    >
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Opravdu odebrat člena?</AlertDialogTitle>
+          <AlertDialogDescription>
+            Opravdu chcete odebrat uživatele „{confirmRemove?.name}" z tohoto
+            projektu? Ztratí přístup ke všem datům projektu. Tuto akci lze
+            vrátit přidáním člena zpět.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Zrušit</AlertDialogCancel>
+          <AlertDialogAction onClick={confirmRemoveMember}>
+            Odebrat člena
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  </>
   );
 }
 
