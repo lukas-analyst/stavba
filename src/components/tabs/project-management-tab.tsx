@@ -128,7 +128,10 @@ export function ProjectManagementTab({ projectId }: { projectId: string }) {
   const isOwner = userRole === "owner";
   const isAdmin = userRole === "admin";
   const canEditProject = isOwner || isAdmin;
-  const canDeleteProject = isOwner; // admins see everything EXCEPT delete
+  // Admin can delete their OWN projects (they are the owner), but not
+  // projects they only have admin access to. The API also enforces this
+  // via `project.ownerId === user.id` check.
+  const canDeleteProject = isOwner || (isAdmin && project?.ownerId === (session?.user as { id?: string })?.id);
 
   // Export / Import hooks — drive the "Data a exporty" card.
   // - useExportState() downloads the whole project state as JSON

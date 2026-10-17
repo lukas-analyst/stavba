@@ -573,13 +573,13 @@ export function TelemetryTab({ projectId: _projectId }: { projectId: string }) {
                   return (
                     <div
                       key={day}
-                      className="group relative flex flex-1 flex-col items-center justify-end z-10"
+                      className="group relative flex flex-1 h-full items-end justify-center z-10"
                       title={`${formatDayKey(day)}: ${count}`}
                     >
                       <div
                         className="w-full rounded-t-sm bg-info/70 transition-colors hover:bg-info"
                         style={{
-                          height: `${Math.max(pct, count > 0 ? 4 : 0)}%`,
+                          height: `${pct}%`,
                           minHeight: count > 0 ? "3px" : "0",
                         }}
                       />
@@ -901,7 +901,7 @@ export function TelemetryTab({ projectId: _projectId }: { projectId: string }) {
                   return (
                     <div
                       key={hour}
-                      className="group relative flex flex-1 flex-col items-center justify-end z-10"
+                      className="group relative flex flex-1 h-full items-end justify-center z-10"
                       title={`${hour}:00 — ${count} událostí`}
                     >
                       <div
@@ -912,7 +912,7 @@ export function TelemetryTab({ projectId: _projectId }: { projectId: string }) {
                             : "bg-surface-container-high",
                         )}
                         style={{
-                          height: `${Math.max(pct, count > 0 ? 4 : 1)}%`,
+                          height: `${pct}%`,
                           minHeight: count > 0 ? "3px" : "1px",
                         }}
                       />
