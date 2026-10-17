@@ -5,7 +5,7 @@
 // Generator: prisma-client-js
 //
 // DESIGN PRINCIPLES:
-//   1. Multi-user ready: User, Account, Session models for NextAuth.
+//   1. Multi-user ready: User, Account models for NextAuth.
 //      Project ownership + sharing via ProjectMember (M:N).
 //   2. Audit trail: AuditLog records who (userId) changed what.
 //   3. Soft references: Some columns store IDs without FK constraints
@@ -89,9 +89,6 @@ model User {
   // Relations — NextAuth OAuth accounts (one user can have multiple providers)
   accounts Account[]
 
-  // Relations — DB-based sessions (NextAuth)
-  sessions Session[]
-
   // Relations — activity records (who did what)
   auditLogs AuditLog[]
   notes     Note[]
@@ -99,9 +96,6 @@ model User {
 
   // Relations — invitations sent by this user
   sentInvitations ProjectInvitation[]
-
-  // Relations — share links created by this user
-  createdShareLinks ProjectShareLink[]
 
   @@map("users")
 }
@@ -143,38 +137,8 @@ model Account {
 /// DB-based session (NextAuth). Used when the session strategy is
 /// "database" instead of "jwt". One user can have multiple sessions
 /// (one per device/browser).
-model Session {
-  id           String   @id @default(cuid())
-  /// FK to User — the session owner
-  sessionToken String   @unique
-  /// FK to User — the session owner
-  userId       String
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  /// When this session expires
-  expires      DateTime
-  /// When this session was created
-  createdAt    DateTime @default(now())
-  /// When this session was last updated
-  updatedAt    DateTime @updatedAt
-
-  @@index([userId])
-  @@map("sessions")
-}
-
 /// Email verification token (NextAuth). Used for email magic link
 /// authentication. One-time use, expires after 24 hours.
-model VerificationToken {
-  /// Token identifier (sent to user via email)
-  identifier String
-  /// The verification token itself (hashed)
-  token      String   @unique
-  /// When this token expires
-  expires    DateTime
-
-  @@unique([identifier, token])
-  @@map("verification_tokens")
-}
-
 // =====================================================================
 // ===== PROJECTS & SHARING =====
 // =====================================================================
@@ -251,7 +215,6 @@ model Project {
   noteEntries Note[]
   members     ProjectMember[]
   invitations ProjectInvitation[]
-  shareLinks  ProjectShareLink[]
 
   @@index([ownerId])
   @@index([status])
@@ -332,41 +295,6 @@ model ProjectInvitation {
 /// Public share link for a project. Allows sharing a project with anyone
 /// who has the link (no login required). The link has an expiration date
 /// and can be revoked at any time by the owner.
-model ProjectShareLink {
-  id          String    @id @default(cuid())
-  /// FK to Project — the project being shared publicly
-  projectId   String
-  project     Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  /// FK to User — who created this share link
-  createdBy   String
-  creator     User      @relation(fields: [createdBy], references: [id], onDelete: Cascade)
-  /// Access level granted by this link:
-  /// "viewer" — read-only access to the project
-  /// "editor" — can edit budget, payments, time, contacts
-  accessLevel String    @default("viewer")
-  /// Unique, hard-to-guess token used in the share URL
-  /// Example: "https://stavba.app/share/xyz789abc..."
-  token       String    @unique
-  /// Whether this share link is active (owner can deactivate without deleting)
-  isActive    Boolean   @default(true)
-  /// When this share link expires (null = never expires)
-  expiresAt   DateTime?
-  /// Optional note from the creator (e.g., "Pro dodavatele - platnost 30 dní")
-  note        String?
-  /// When this share link was last used (for analytics)
-  lastUsedAt  DateTime?
-  /// When this share link was created
-  createdAt   DateTime  @default(now())
-  /// When this share link was last updated
-  updatedAt   DateTime  @updatedAt
-
-  @@index([projectId])
-  @@index([token])
-  @@index([isActive])
-  @@index([expiresAt])
-  @@map("project_share_links")
-}
-
 // =====================================================================
 // ===== PROJECT CONTENT (budget, payments, time, contacts) =====
 // =====================================================================

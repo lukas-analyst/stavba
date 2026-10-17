@@ -2,18 +2,48 @@ import { NextResponse } from "next/server";
 import { dbRead } from "@/lib/db";
 import { requireVerifiedUser } from "@/lib/authz";
 
-// GET /api/users — list users that the authenticated user shares a project
-// with (for project sharing dropdowns).
+// GET /api/users — list users visible to the authenticated user.
 //
-// SECURITY: Returns only users who are members of projects that the
-// authenticated user is also a member of (or owns). This prevents leaking
-// the entire user base (including e-mail addresses) to any authenticated
-// user. Returns minimal fields: id, name, email. Ordered by name.
+// Two behaviours depending on the requester's role:
+//
+//   1. ADMIN requesters (isAdmin === true) — receive ALL users in the
+//      instance, including the `isAdmin` flag. This powers the
+//      "Správa uživatelů" section in the admin tab.
+//
+//   2. Non-admin requesters — receive only users that share a project
+//      with them (for project sharing dropdowns). SECURITY: this prevents
+//      leaking the entire user base (including e-mail addresses) to any
+//      authenticated user. Returns minimal fields: id, name, email.
+//      Ordered by name.
+//
+// Returns: 200 Array<{
+//   id: string;
+//   name: string | null;
+//   email: string;
+//   isAdmin?: boolean;   // only present for admin requesters
+// }>
 export async function GET() {
   const { user, response } = await requireVerifiedUser();
   if (response || !user) return response!;
 
   try {
+    // ===== Admin bypass — return ALL users with isAdmin flag =====
+    if (user.isAdmin) {
+      const allUsers = await dbRead.user.findMany({
+        where: { id: { not: user.id } },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          image: true,
+          isAdmin: true,
+          createdAt: true,
+        },
+        orderBy: { createdAt: "desc" },
+      });
+      return NextResponse.json(allUsers);
+    }
+
     // 1) Find projects the current user can see (owned + member of).
     const [owned, memberships] = await Promise.all([
       dbRead.project.findMany({

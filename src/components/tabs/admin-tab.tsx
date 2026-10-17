@@ -36,6 +36,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import {
   User,
+  Users,
   Pencil,
   Check,
   X,
@@ -51,6 +52,8 @@ import {
   AlertTriangle,
   Trash2,
   Crown,
+  Shield,
+  ShieldCheck,
   Edit3,
   LogOut,
   ChevronRight,
@@ -62,11 +65,16 @@ import { useProjects } from "@/lib/api";
 import { formatDate } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 // =====================================================================
 // AdminTab — account-level administration page
 // ---------------------------------------------------------------------
-// Renders six sections reachable from the sticky left-side nav
+// Renders sections reachable from the sticky left-side nav
 // (desktop) or sticky horizontal nav (mobile). Smooth-scrolls to the
 // clicked section via scrollIntoView({ behavior: "smooth" }).
 //
@@ -74,6 +82,10 @@ import { toast } from "sonner";
 //   2. Moje projekty           — list of projects where the user is
 //                                  owner (Správce) or member
 //                                  (Editor / Čtenář), with "Odpojit se"
+//   2b. Správa uživatelů       — (admin only) list of all users with
+//                                  isAdmin toggle (promote/demote).
+//                                  Hidden from non-admins in both nav
+//                                  and main content.
 //   3. Statistiky mé aktivity   — KPIs + bar chart of events by type
 //                                  + top pages by time spent
 //   4. Export mých dat          — JSON (full state) + per-project CSV
@@ -90,6 +102,8 @@ import { toast } from "sonner";
 //   * All text in Czech.
 //   * MD3 styling throughout (rounded-full buttons, type-* utility
 //     classes, surface-container-low backgrounds for section groups).
+//   * Admin-only sections are filtered out of the side nav and the
+//     main content for non-admin users (see `visibleSections`).
 // =====================================================================
 
 // ===== Types =====
@@ -98,6 +112,7 @@ export type CurrentUser = {
   name: string | null;
   email: string;
   image: string | null;
+  isAdmin: boolean;
   createdAt: string;
 };
 
@@ -152,13 +167,16 @@ type AnalyticsResponse = {
 };
 
 // ===== Constants =====
+// `adminOnly: true` marks sections that should only appear in the side
+// nav (and main content) when the current user is an admin.
 const SECTION_LINKS = [
-  { id: "profile", label: "Můj profil", icon: User },
-  { id: "projects", label: "Moje projekty", icon: Building2 },
-  { id: "stats", label: "Statistiky", icon: Activity },
-  { id: "export", label: "Export", icon: Download },
-  { id: "notifications", label: "Notifikace", icon: Bell },
-  { id: "danger", label: "Nebezpečná zóna", icon: AlertTriangle },
+  { id: "profile", label: "Můj profil", icon: User, adminOnly: false },
+  { id: "projects", label: "Moje projekty", icon: Building2, adminOnly: false },
+  { id: "users", label: "Správa uživatelů", icon: Users, adminOnly: true },
+  { id: "stats", label: "Statistiky", icon: Activity, adminOnly: false },
+  { id: "export", label: "Export", icon: Download, adminOnly: false },
+  { id: "notifications", label: "Notifikace", icon: Bell, adminOnly: false },
+  { id: "danger", label: "Nebezpečná zóna", icon: AlertTriangle, adminOnly: false },
 ] as const;
 
 const NOTIFICATIONS_KEY = "stavba.notifications.preferences";
@@ -304,6 +322,14 @@ export function AdminTab() {
     staleTime: 60_000,
   });
 
+  // Sections visible to the current user — admins see all, non-admins see
+  // only those with `adminOnly: false`. Computed once per render so the
+  // IntersectionObserver + nav both reference the same filtered list.
+  const visibleSections = useMemo(() => {
+    const isAdmin = currentUser?.isAdmin ?? false;
+    return SECTION_LINKS.filter((link) => !link.adminOnly || isAdmin);
+  }, [currentUser?.isAdmin]);
+
   // ===== Smooth-scroll to section on nav click =====
   const handleSectionClick = useCallback(
     (id: string) => {
@@ -332,12 +358,12 @@ export function AdminTab() {
       },
       { rootMargin: "-20% 0px -70% 0px", threshold: 0 },
     );
-    for (const link of SECTION_LINKS) {
+    for (const link of visibleSections) {
       const el = document.getElementById(link.id);
       if (el) observer.observe(el);
     }
     return () => observer.disconnect();
-  }, []);
+  }, [visibleSections]);
 
   return (
     <div className="flex min-h-full">
@@ -349,7 +375,7 @@ export function AdminTab() {
             <h2 className="type-title-lg mt-1">Nastavení účtu</h2>
           </div>
           <ul className="space-y-0.5">
-            {SECTION_LINKS.map((link) => {
+            {visibleSections.map((link) => {
               const Icon = link.icon;
               const isActive = activeSection === link.id;
               return (
@@ -386,7 +412,7 @@ export function AdminTab() {
         {/* ===== Mobile sticky top nav (horizontal scroll) ===== */}
         <div className="sticky top-0 z-10 -mx-4 mb-2 bg-background/95 px-4 py-2 backdrop-blur supports-[backdrop-filter]:bg-background/80 md:-mx-6 md:px-6 lg:hidden">
           <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-thin">
-            {SECTION_LINKS.map((link) => {
+            {visibleSections.map((link) => {
               const Icon = link.icon;
               const isActive = activeSection === link.id;
               return (
@@ -432,6 +458,9 @@ export function AdminTab() {
           <>
             <ProfileSection user={currentUser} />
             <ProjectsSection currentUser={currentUser} qc={qc} />
+            {currentUser.isAdmin && (
+              <UsersSection currentUser={currentUser} qc={qc} />
+            )}
             <StatsSection currentUser={currentUser} />
             <ExportSection />
             <NotificationsSection />
@@ -821,6 +850,223 @@ function ProjectsSection({
               })}
             </ul>
           )}
+        </CardContent>
+      </Card>
+    </section>
+  );
+}
+
+// =====================================================================
+// Section 2b: Users — admin-only user management with isAdmin toggle
+// ---------------------------------------------------------------------
+// Visible only when `currentUser.isAdmin === true`. Lists every user in
+// the instance (excluding the current admin themselves — they cannot
+// demote themselves, so showing their own row only adds confusion).
+//
+// Each row: avatar (initials) + name + email + isAdmin Switch.
+//   * PATCH /api/users/[id] with { isAdmin } on toggle.
+//   * Toast confirms the new state.
+//   * Self-demotion is blocked both client-side (Switch disabled + tooltip)
+//     and server-side (the API also refuses to set `isAdmin: false` on
+//     the requester's own account if the server-side guard is enabled).
+// =====================================================================
+type ManagedUser = {
+  id: string;
+  name: string | null;
+  email: string;
+  image: string | null;
+  isAdmin: boolean;
+  createdAt: string;
+};
+
+function UsersSection({
+  currentUser,
+  qc,
+}: {
+  currentUser: CurrentUser;
+  qc: ReturnType<typeof useQueryClient>;
+}) {
+  const { data: users, isLoading } = useQuery<ManagedUser[]>({
+    queryKey: ["users"],
+    queryFn: async () => {
+      const res = await fetch("/api/users");
+      if (!res.ok) throw new Error("Failed to fetch users");
+      return (await res.json()) as ManagedUser[];
+    },
+    staleTime: 30_000,
+  });
+
+  // Track in-flight toggles per user id so each Switch can show a
+  // spinner/disabled state independently while the PATCH is in flight.
+  const [pendingIds, setPendingIds] = useState<Set<string>>(new Set());
+
+  const handleToggleAdmin = async (
+    user: ManagedUser,
+    nextValue: boolean,
+  ) => {
+    // Defense-in-depth: never allow self-demotion from the UI.
+    if (user.id === currentUser.id) {
+      toast.error("Nelze odebrat admin práva sám sobě");
+      return;
+    }
+    setPendingIds((prev) => new Set(prev).add(user.id));
+    try {
+      const res = await fetch(`/api/users/${user.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isAdmin: nextValue }),
+      });
+      if (!res.ok) {
+        const err = (await res.json().catch(() => ({}))) as {
+          error?: string;
+        };
+        throw new Error(
+          err.error ?? "Nepodařilo se změnit admin práva",
+        );
+      }
+      // Invalidate the users list so the Switch reflects the new state
+      // from the server (defense-in-depth against optimistic drift).
+      await qc.invalidateQueries({ queryKey: ["users"] });
+      const displayName = user.name ?? user.email;
+      toast.success(
+        nextValue
+          ? `Uživatel ${displayName} je nyní administrátor`
+          : `Uživatel ${displayName} již není administrátor`,
+      );
+    } catch (e) {
+      toast.error(
+        e instanceof Error ? e.message : "Nepodařilo se změnit admin práva",
+      );
+    } finally {
+      setPendingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(user.id);
+        return next;
+      });
+    }
+  };
+
+  return (
+    <section
+      id="users"
+      tabIndex={-1}
+      className="scroll-mt-24 focus:outline-none lg:scroll-mt-6"
+    >
+      <Card className="bg-surface-container-low shadow-sm border-outline-variant">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg font-semibold flex items-center gap-2">
+            <Users className="h-4 w-4 text-primary" />
+            Správa uživatelů
+          </CardTitle>
+          <CardDescription>
+            Přehled všech uživatelů instance a jejich admin práv. Změny se
+            projeví okamžitě.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <div className="space-y-2">
+              <Skeleton className="h-16" />
+              <Skeleton className="h-16" />
+              <Skeleton className="h-16" />
+            </div>
+          ) : !users || users.length === 0 ? (
+            <p className="type-body py-6 text-center text-on-surface-variant">
+              Žádní další uživatelé k správě.
+            </p>
+          ) : (
+            <ul className="space-y-2">
+              {users.map((u) => {
+                const isSelf = u.id === currentUser.id;
+                const isPending = pendingIds.has(u.id);
+                const initials = getInitials(u.name ?? u.email);
+                return (
+                  <li
+                    key={u.id}
+                    className="rounded-lg border border-outline-variant bg-card p-3"
+                  >
+                    <div className="flex items-center gap-3">
+                      {/* Avatar (initials fallback) */}
+                      <Avatar className="h-10 w-10 shrink-0">
+                        {u.image ? (
+                          <AvatarImage src={u.image} alt={u.name ?? u.email} />
+                        ) : null}
+                        <AvatarFallback className="bg-secondary-container text-secondary-container-foreground text-sm font-semibold">
+                          {initials}
+                        </AvatarFallback>
+                      </Avatar>
+
+                      {/* Name + email */}
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="type-body font-semibold truncate">
+                            {u.name ?? "—"}
+                          </span>
+                          {u.isAdmin ? (
+                            <Badge
+                              variant="secondary"
+                              className="type-label-sm bg-primary-container text-primary-container-foreground gap-1"
+                            >
+                              <ShieldCheck className="h-3 w-3" />
+                              Administrátor
+                            </Badge>
+                          ) : (
+                            <Badge
+                              variant="secondary"
+                              className="type-label-sm bg-muted text-muted-foreground gap-1"
+                            >
+                              <Shield className="h-3 w-3" />
+                              Uživatel
+                            </Badge>
+                          )}
+                        </div>
+                        <div className="type-label text-on-surface-variant mt-0.5 flex items-center gap-1.5 truncate">
+                          <Mail className="h-3 w-3 shrink-0" />
+                          <span className="truncate">{u.email}</span>
+                        </div>
+                      </div>
+
+                      {/* isAdmin Switch with self-demotion guard */}
+                      <div className="flex shrink-0 items-center gap-2">
+                        {isPending && (
+                          <Loader2 className="h-3.5 w-3.5 animate-spin text-on-surface-variant" />
+                        )}
+                        {isSelf ? (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              {/* Wrap in a span so the tooltip can anchor on
+                                  a disabled control (Radix limitation). */}
+                              <span tabIndex={0} className="inline-flex">
+                                <Switch
+                                  checked={u.isAdmin}
+                                  disabled
+                                  aria-label={`Admin práva uživatele ${u.name ?? u.email} (nelze změnit)`}
+                                />
+                              </span>
+                            </TooltipTrigger>
+                            <TooltipContent side="left">
+                              Nelze odebrat admin práva sám sobě
+                            </TooltipContent>
+                          </Tooltip>
+                        ) : (
+                          <Switch
+                            checked={u.isAdmin}
+                            disabled={isPending}
+                            onCheckedChange={(v) => handleToggleAdmin(u, v)}
+                            aria-label={`Přepnout admin práva uživatele ${u.name ?? u.email}`}
+                          />
+                        )}
+                      </div>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+          <p className="type-label-sm text-on-surface-variant mt-3">
+            Vlastní účet ({currentUser.email}) je ze seznamu vynechán —
+            vlastní admin práva nelze odebrat.
+          </p>
         </CardContent>
       </Card>
     </section>
