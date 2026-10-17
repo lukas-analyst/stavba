@@ -220,9 +220,13 @@ function BudgetItemForm({
     if (value === "__none__") return;
     const ref = topLevelItems.find((i) => i.id === value);
     if (!ref) return;
-    if (ref.dateTo) {
+    // Only auto-fill Datum od if it's not already set — don't overwrite
+    // an existing date the user may have entered manually.
+    if (ref.dateTo && !dateFrom) {
       setDateFrom(ref.dateTo.substring(0, 10));
       toast.success(`Datum od nastaveno podle „${ref.subcategory || ref.category}"`);
+    } else if (ref.dateTo && dateFrom) {
+      toast.info(`Datum od již bylo vyplněno — nebylo změněno.`);
     } else {
       toast.info(`„${ref.subcategory || ref.category}" nemá Datum do — Datum od nebylo změněno.`);
     }

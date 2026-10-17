@@ -26,6 +26,7 @@ const VALID_TABS: ReadonlySet<TabId> = new Set<TabId>([
   "notes",
   "management",
   "telemetry",
+  "settings",
   "admin",
 ]);
 
@@ -33,6 +34,14 @@ const VALID_TABS: ReadonlySet<TabId> = new Set<TabId>([
 // when no project is selected. We lazy-load it separately at the page
 // level so the no-project branch doesn't have to go through EmptyState.
 const AdminTab = dynamic(() => import("@/components/tabs/admin-tab").then((m) => m.AdminTab), {
+  ssr: false,
+  loading: () => (
+    <div className="flex h-full items-center justify-center">
+      <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+    </div>
+  ),
+});
+const SettingsTab = dynamic(() => import("@/components/tabs/settings-tab").then((m) => m.SettingsTab), {
   ssr: false,
   loading: () => (
     <div className="flex h-full items-center justify-center">
@@ -254,6 +263,8 @@ function HomeContent() {
             // render AdminTab directly (rather than via ProjectDetail) so
             // account-level actions stay decoupled from project state.
             <AdminTab />
+          ) : activeTab === "settings" ? (
+            <SettingsTab />
           ) : selectedProject ? (
             <ProjectDetail project={selectedProject} />
           ) : (

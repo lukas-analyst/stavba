@@ -12,6 +12,7 @@ export type TabId =
   | "notes"
   | "management"
   | "telemetry"
+  | "settings"
   | "admin";
 
 export type BudgetFilter =

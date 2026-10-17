@@ -170,10 +170,8 @@ type AnalyticsResponse = {
 // `adminOnly: true` marks sections that should only appear in the side
 // nav (and main content) when the current user is an admin.
 const SECTION_LINKS = [
-  { id: "profile", label: "Můj profil", icon: User, adminOnly: false },
   { id: "projects", label: "Moje projekty", icon: Building2, adminOnly: false },
   { id: "users", label: "Správa uživatelů", icon: Users, adminOnly: true },
-  { id: "stats", label: "Statistiky", icon: Activity, adminOnly: false },
   { id: "export", label: "Export", icon: Download, adminOnly: false },
   { id: "notifications", label: "Notifikace", icon: Bell, adminOnly: false },
   { id: "danger", label: "Nebezpečná zóna", icon: AlertTriangle, adminOnly: false },
@@ -309,7 +307,7 @@ const ROLE_BADGES: Record<string, string> = {
 // =====================================================================
 export function AdminTab() {
   const qc = useQueryClient();
-  const [activeSection, setActiveSection] = useState<string>("profile");
+  const [activeSection, setActiveSection] = useState<string>("projects");
 
   // Fetch current user profile
   const { data: currentUser, isLoading: userLoading } = useQuery({
@@ -456,12 +454,10 @@ export function AdminTab() {
           </div>
         ) : (
           <>
-            <ProfileSection user={currentUser} />
             <ProjectsSection currentUser={currentUser} qc={qc} />
             {currentUser.isAdmin && (
               <UsersSection currentUser={currentUser} qc={qc} />
             )}
-            <StatsSection currentUser={currentUser} />
             <ExportSection />
             <NotificationsSection />
             <DangerSection currentUser={currentUser} qc={qc} />

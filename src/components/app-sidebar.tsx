@@ -118,20 +118,16 @@ export function AppSidebar() {
       </div>
 
       {/* Settings — pinned to bottom (MD3 footer pattern).
-          Simple navigation button to /auth/settings. Project-level actions
-          (Export/Import/CSV/Edit/Report/Audit) were previously in a dropdown
-          here; they are now reachable via the Správa projektu tab. Admin
-          access lives in the TopBar avatar dropdown (gated by isAdmin). */}
+          Now renders as an in-app tab (not external page) so the user
+          keeps the TopBar + Sidebar layout. */}
       <div className="border-t border-outline-variant p-2">
         <Button
-          asChild
           variant="ghost"
+          onClick={() => useAppStore.getState().setActiveTab("settings")}
           className="w-full justify-start gap-2.5 px-3 text-sm font-medium state-layer-on-surface rounded-full"
         >
-          <Link href="/auth/settings">
-            <Settings className="h-4 w-4 shrink-0" />
-            Nastavení
-          </Link>
+          <Settings className="h-4 w-4 shrink-0" />
+          Nastavení
         </Button>
       </div>
     </nav>
