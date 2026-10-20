@@ -1661,7 +1661,9 @@ const BudgetRow = memo(function BudgetRow({
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-7 w-7 opacity-0 group-hover:opacity-100"
+                className="h-7 w-7 text-muted-foreground opacity-60 transition-opacity hover:opacity-100 group-hover:opacity-100 focus-visible:opacity-100"
+                title="Více akcí"
+                aria-label="Více akcí"
               >
                 <MoreHorizontal className="h-4 w-4" />
               </Button>
