@@ -27,6 +27,90 @@ export async function PATCH(
     const numOrUndef = (v: unknown) =>
       v === undefined ? undefined : v === null || v === "" ? null : Number(v);
 
+    // ───────────────────────────────────────────────────────────────
+    // Re-parenting: moving a task (or sub-item) under a different parent.
+    // We must validate several things BEFORE building updateData:
+    //   1. New parent must be in the SAME project (cross-project moves
+    //      would orphan payments/time entries aggregation logic).
+    //   2. New parent must not be the item itself (no self-loop).
+    //   3. New parent must not be one of the item's descendants — that
+    //      would create a cycle in BudgetItemHierarchy and crash any
+    //      recursive query. We walk DOWN from the item through its
+    //      children to collect all descendant IDs and reject if the
+    //      proposed new parentId is among them.
+    //   4. When moving to a new parent, inherit the parent's `category`
+    //      so the item appears in the correct category group, and bump
+    //      `sortOrder` to the end of the new parent's children list.
+    // ───────────────────────────────────────────────────────────────
+    const parentChanged =
+      body.parentId !== undefined &&
+      (body.parentId || null) !== (existing.parentId || null);
+
+    if (parentChanged) {
+      const newParentId = body.parentId || null;
+
+      if (newParentId === id) {
+        return NextResponse.json(
+          { error: "Položku nelze přesunout pod ni samotnou." },
+          { status: 400 },
+        );
+      }
+
+      if (newParentId) {
+        // (1) Same-project check + fetch new parent's category
+        const newParent = await db.budgetItem.findUnique({
+          where: { id: newParentId },
+          select: { projectId: true, category: true },
+        });
+        if (!newParent) {
+          return NextResponse.json(
+            { error: "Cílová položka neexistuje." },
+            { status: 404 },
+          );
+        }
+        if (newParent.projectId !== existing.projectId) {
+          return NextResponse.json(
+            { error: "Nelze přesunout úkol do jiného projektu." },
+            { status: 400 },
+          );
+        }
+
+        // (3) Cycle detection — collect ALL descendants of `id`
+        //     (breadth-first walk). If newParentId is among them, reject.
+        const descendants = new Set<string>();
+        const queue: string[] = [id];
+        while (queue.length > 0) {
+          const currentId = queue.shift()!;
+          const kids = await db.budgetItem.findMany({
+            where: { parentId: currentId },
+            select: { id: true },
+          });
+          for (const k of kids) {
+            if (!descendants.has(k.id)) {
+              descendants.add(k.id);
+              queue.push(k.id);
+            }
+          }
+        }
+        if (descendants.has(newParentId)) {
+          return NextResponse.json(
+            { error: "Nelze přesunout položku pod jejího vlastního potomka (cyklus)." },
+            { status: 400 },
+          );
+        }
+
+        // (4) Inherit category + append to end of new parent's children
+        body.category = newParent.category;
+        const maxSort = await db.budgetItem.aggregate({
+          where: { parentId: newParentId },
+          _max: { sortOrder: true },
+        });
+        body.sortOrder = (maxSort._max.sortOrder ?? -1) + 1;
+      }
+      // If newParentId is null (move to top-level), we leave the existing
+      // category/sortOrder alone — the user can re-categorize manually.
+    }
+
     // Build the update data
     const updateData: Record<string, unknown> = {};
     if (body.category !== undefined) updateData.category = String(body.category).trim();

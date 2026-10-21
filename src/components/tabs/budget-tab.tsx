@@ -72,6 +72,8 @@ import {
   Link as LinkIcon,
   ExternalLink,
   User,
+  ArrowRightLeft,
+  CornerUpRight,
 } from "lucide-react";
 import {
   formatCzk,
@@ -1266,12 +1268,25 @@ const BudgetRow = memo(function BudgetRow({
   const deleteItem = useDeleteBudgetItem(projectId);
   const duplicateItem = useDuplicateBudgetItem(projectId);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [moveOpen, setMoveOpen] = useState(false);
   const dragCtx = useRowDragListeners();
   const { trackEvent } = useAnalytics(projectId);
+  // Fetch the full budget item list so the MoveItemDialog can show all
+  // candidate parents. react-query dedupes identical queries so this is
+  // free (the parent component already fetched the same data).
+  const { data: allItems } = useBudgetItems(projectId);
 
   const update = (field: keyof BudgetItem, value: unknown) => {
     updateItem.mutate({ id: item.id, data: { [field]: value } });
     trackEvent("edit_budget_item", { field });
+  };
+
+  const handleMove = async (newParentId: string | null) => {
+    await updateItem.mutateAsync({
+      id: item.id,
+      data: { parentId: newParentId || null },
+    });
+    trackEvent("move_budget_item", { toTopLevel: newParentId === null });
   };
 
   const displayPlanCost = childCount > 0 ? rolled.planCost : item.planCost;
@@ -1692,6 +1707,10 @@ const BudgetRow = memo(function BudgetRow({
               >
                 {item.rejected ? "Zrušit zavržení" : "Zavrhnout"}
               </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setMoveOpen(true)}>
+                <ArrowRightLeft className="mr-2 h-3.5 w-3.5 text-primary" />
+                Přesunout pod jinou položku…
+              </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={async () => {
                   try {
@@ -1747,6 +1766,17 @@ const BudgetRow = memo(function BudgetRow({
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        {allItems && (
+          <MoveItemDialog
+            open={moveOpen}
+            onOpenChange={setMoveOpen}
+            item={item}
+            projectId={projectId}
+            allItems={allItems}
+            onMove={handleMove}
+          />
+        )}
       </TableCell>
     </TableRow>
   );
@@ -1947,5 +1977,187 @@ function InlineTextarea({
       rows={3}
       className="text-xs"
     />
+  );
+}
+
+// =====================================================================
+// MoveItemDialog — re-parent a budget item (task) to a different parent.
+//
+// Lets the user move a child task under a different top-level item, or
+// promote it to a top-level item (parentId = null). Excludes the item
+// itself and all its descendants (so you can't create a cycle), and
+// only shows top-level items as candidates (you can't nest under
+// another task — the UI only supports 2 levels for now).
+// =====================================================================
+function MoveItemDialog({
+  open,
+  onOpenChange,
+  item,
+  projectId,
+  allItems,
+  onMove,
+}: {
+  open: boolean;
+  onOpenChange: (o: boolean) => void;
+  item: BudgetItem;
+  projectId: string;
+  allItems: BudgetItem[];
+  onMove: (newParentId: string | null) => Promise<void>;
+}) {
+  // Collect descendants of `item` so we can exclude them from the target
+  // list (cycle prevention). We only need direct children here because
+  // candidates are top-level items — a descendant of `item` can only be
+  // a top-level item if `item` itself is top-level AND the descendant was
+  // promoted. To be safe, walk the full subtree.
+  const descendantIds = useMemo(() => {
+    const ids = new Set<string>();
+    const queue: string[] = [item.id];
+    while (queue.length > 0) {
+      const current = queue.shift()!;
+      for (const it of allItems) {
+        if (it.parentId === current && !ids.has(it.id)) {
+          ids.add(it.id);
+          queue.push(it.id);
+        }
+      }
+    }
+    return ids;
+  }, [item.id, allItems]);
+
+  // Candidate targets: top-level items (parentId == null) in the same
+  // project, excluding self and descendants. Grouped by category for
+  // easier scanning when there are many items.
+  const candidates = useMemo(() => {
+    return allItems
+      .filter(
+        (it) =>
+          it.id !== item.id &&
+          !it.parentId &&
+          !descendantIds.has(it.id) &&
+          it.projectId === projectId,
+      )
+      .sort((a, b) => {
+        // Group by category, then by sortOrder
+        if (a.category !== b.category) {
+          return a.category.localeCompare(b.category, "cs");
+        }
+        return (a.sortOrder ?? 0) - (b.sortOrder ?? 0);
+      });
+  }, [allItems, item.id, descendantIds, projectId]);
+
+  const [selectedParentId, setSelectedParentId] = useState<string | null>(
+    item.parentId ?? null,
+  );
+
+  // Reset selection when dialog opens
+  useEffect(() => {
+    if (open) setSelectedParentId(item.parentId ?? null);
+  }, [open, item.parentId]);
+
+  const [moving, setMoving] = useState(false);
+
+  const currentParent = allItems.find((it) => it.id === item.parentId);
+
+  const handleConfirm = async () => {
+    if ((selectedParentId ?? null) === (item.parentId ?? null)) {
+      onOpenChange(false);
+      return;
+    }
+    setMoving(true);
+    try {
+      await onMove(selectedParentId);
+      toast.success(
+        selectedParentId
+          ? "Úkol přesunut pod novou položku"
+          : "Úkol přesunut na nejvyšší úroveň",
+      );
+      onOpenChange(false);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Přesun se nezdařil");
+    } finally {
+      setMoving(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <ArrowRightLeft className="h-4 w-4 text-primary" />
+            Přesunout úkol
+          </DialogTitle>
+          <DialogDescription>
+            Přesunout <strong>{item.subcategory || item.category}</strong> pod
+            jinou položku. Kategorie se zdědí z nového rodiče.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-3 py-2">
+          {currentParent && (
+            <div className="rounded-md border border-muted bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
+              Aktuální rodič:{" "}
+              <span className="font-medium text-foreground">
+                {currentParent.subcategory || currentParent.category}
+              </span>
+            </div>
+          )}
+
+          {candidates.length === 0 ? (
+            <p className="rounded-md border border-dashed border-muted px-3 py-4 text-center text-sm text-muted-foreground">
+              V projektu nejsou žádné další položky, pod které by šlo úkol
+              přesunout.
+            </p>
+          ) : (
+            <Select
+              value={selectedParentId ?? "__top__"}
+              onValueChange={(v) =>
+                setSelectedParentId(v === "__top__" ? null : v)
+              }
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Vyberte cílovou položku" />
+              </SelectTrigger>
+              <SelectContent className="max-h-72">
+                <SelectItem value="__top__">
+                  <span className="flex items-center gap-2">
+                    <CornerUpRight className="h-3.5 w-3.5 text-muted-foreground" />
+                    Na nejvyšší úroveň (bez rodiče)
+                  </span>
+                </SelectItem>
+                {candidates.map((c) => (
+                  <SelectItem key={c.id} value={c.id}>
+                    <span className="flex items-center gap-2">
+                      <span className="text-muted-foreground">{c.category}</span>
+                      <span className="text-muted-foreground/50">›</span>
+                      <span className="font-medium">
+                        {c.subcategory || "(bez názvu)"}
+                      </span>
+                    </span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Zrušit
+          </Button>
+          <Button
+            onClick={handleConfirm}
+            disabled={
+              moving ||
+              candidates.length === 0 ||
+              (selectedParentId ?? null) === (item.parentId ?? null)
+            }
+          >
+            {moving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Přesunout
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
