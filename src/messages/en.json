@@ -34,7 +34,8 @@
       "timeline": "Timeline",
       "notes": "Notes",
       "management": "Project management",
-      "telemetry": "Telemetry"
+      "telemetry": "Telemetry",
+      "admin": "Administration"
     }
   },
   "phases": {
@@ -77,7 +78,7 @@
   "roles": {
     "viewer": "Viewer",
     "editor": "Editor",
-    "owner": "Owner",
+    "owner": "Manager",
     "admin": "Admin"
   },
   "LanguageSwitcher": {
@@ -301,5 +302,1488 @@
   },
   "sidebar": {
     "settings": "Settings"
+  },
+  "analytics": {
+    "eventTypes": {
+      "page_view": "Page view",
+      "add_payment": "Add payment",
+      "add_time_entry": "Add time",
+      "edit_time_entry": "Edit time",
+      "edit_payment": "Edit payment",
+      "delete_payment": "Delete payment",
+      "add_contact": "Add contact",
+      "add_note": "Add note",
+      "edit_note": "Edit note",
+      "add_budget_item": "Add item",
+      "edit_budget_item": "Edit item",
+      "download_data": "Download data",
+      "login": "Sign in",
+      "logout": "Sign out",
+      "project_share": "Project share"
+    }
+  },
+  "relativeTime": {
+    "justNow": "just now",
+    "minute": "{n, plural, one {a minute ago} other {{n} minutes ago}}",
+    "hour": "{n, plural, one {an hour ago} other {{n} hours ago}}",
+    "yesterday": "yesterday",
+    "days": "{n, plural, one {a day ago} other {{n} days ago}}"
+  },
+  "tabs": {
+    "admin": {
+      "nav": {
+        "label": "Administration",
+        "title": "Account settings"
+      },
+      "subtitle": "Profile, projects, stats and preferences.",
+      "section": {
+        "projects": "My projects",
+        "users": "User management",
+        "export": "Export",
+        "notifications": "Notifications",
+        "danger": "Danger zone"
+      },
+      "profile": {
+        "title": "My profile",
+        "description": "Display name and email that other users see when sharing projects.",
+        "button": {
+          "edit": "Edit",
+          "save": "Save"
+        },
+        "field": {
+          "displayName": "Display name"
+        },
+        "placeholder": {
+          "name": "e.g. John Smith"
+        },
+        "hint": {
+          "nameChange": "The change will apply to all projects where you are a member."
+        },
+        "label": {
+          "accountCreated": "Account created: {date}"
+        },
+        "toasts": {
+          "emptyName": "Name cannot be empty",
+          "saved": "Profile saved",
+          "saveError": "Failed to update profile"
+        }
+      },
+      "projects": {
+        "title": "My projects",
+        "description": "Projects where you are the manager or a member. You can only leave projects you don't manage.",
+        "button": {
+          "leave": "Leave",
+          "leaveConfirm": "Leave"
+        },
+        "leave": {
+          "confirmTitle": "Leave project \"{name}\"?",
+          "confirmBody": "You will lose access to all project data. This action is irreversible.",
+          "cancel": "Cancel"
+        },
+        "badge": {
+          "cannotLeave": "Cannot leave"
+        },
+        "empty": "You are not a member of any project yet.",
+        "toasts": {
+          "left": "Left project \"{name}\"",
+          "leaveError": "Failed to leave project"
+        }
+      },
+      "users": {
+        "title": "User management",
+        "description": "Overview of all instance users and their admin rights. Changes take effect immediately.",
+        "badge": {
+          "admin": "Administrator",
+          "user": "User"
+        },
+        "aria": {
+          "adminToggleSelf": "Admin rights of user {name} (cannot change)",
+          "adminToggleOther": "Toggle admin rights of user {name}"
+        },
+        "tooltip": {
+          "noSelfDemote": "Cannot remove your own admin rights"
+        },
+        "hint": {
+          "selfExcluded": "Your own account ({email}) is excluded from the list — you cannot remove your own admin rights."
+        },
+        "empty": "No other users to manage.",
+        "toasts": {
+          "cannotDemoteSelf": "Cannot remove your own admin rights",
+          "promoted": "User {name} is now an administrator",
+          "demoted": "User {name} is no longer an administrator",
+          "toggleError": "Failed to change admin rights"
+        }
+      },
+      "stats": {
+        "title": "My activity stats",
+        "description": "Overview of your in-app actions over all time.",
+        "filter": {
+          "allProjects": "All projects"
+        },
+        "button": {
+          "refresh": "Refresh"
+        },
+        "kpi": {
+          "totalActions": "Total actions",
+          "pageViews": "Page views",
+          "totalTime": "Total time on pages",
+          "lastActive": "Last activity"
+        },
+        "chart": {
+          "byType": {
+            "title": "Events by type",
+            "empty": "No activity has been recorded yet."
+          }
+        },
+        "topPages": {
+          "title": "My most active pages",
+          "empty": "No page time data.",
+          "column": {
+            "page": "Page",
+            "views": "Views",
+            "totalTime": "Total time"
+          }
+        }
+      },
+      "export": {
+        "title": "Export my data",
+        "description": "Download all app data in JSON or CSV format for backup and analysis.",
+        "button": {
+          "json": "Download all data (JSON)",
+          "csv": "Download CSV all projects"
+        },
+        "hint": "JSON contains the complete state of all projects (budget, payments, time, contacts). CSV downloads 4 files per project (budget, payments, time, contacts).",
+        "toasts": {
+          "jsonSuccess": "Data exported",
+          "jsonError": "Export failed",
+          "csvNoProjects": "No projects available for export",
+          "csvSuccess": "Data exported ({count, plural, one {# file} other {# files}})",
+          "csvAllFailed": "CSV export failed",
+          "csvPartialSuccess": "Exported {success} files, {failed} failed"
+        }
+      },
+      "notifications": {
+        "title": "Notification preferences",
+        "description": "Until Google Auth is active, we store preferences locally in your browser.",
+        "toggle": {
+          "onMemberAssigned": {
+            "label": "Email on member assignment",
+            "description": "Notification when someone adds you as a project member."
+          },
+          "onItemDelayed": {
+            "label": "Email on item delay",
+            "description": "Notification when a budget item goes past its planned deadline."
+          },
+          "onOwnerChanged": {
+            "label": "Email on owner change",
+            "description": "Notification when someone changes the manager of a project you are a member of."
+          }
+        },
+        "toasts": {
+          "saved": "Preference saved",
+          "saveError": "Failed to save preference"
+        }
+      },
+      "danger": {
+        "title": "Danger zone",
+        "description": "Actions in this section are irreversible. They require explicit confirmation in a dialog.",
+        "deleteNotes": {
+          "title": "Delete all my notes",
+          "description": "Permanently deletes all notes you have created across all projects.",
+          "button": "Delete",
+          "confirmTitle": "Delete all my notes?",
+          "confirmBody": "This action is irreversible. All notes you have created will be permanently deleted from all projects.",
+          "confirmButton": "Delete all notes",
+          "toasts": {
+            "none": "No notes to delete",
+            "success": "Deleted {count, plural, one {# note} other {# notes}}",
+            "partial": "Deleted {deleted}, {failed} failed",
+            "error": "Failed to delete notes"
+          }
+        },
+        "leaveAll": {
+          "title": "Leave all projects",
+          "description": "Removes you from all projects where you are a member (not the manager). You will lose access to all data of those projects.",
+          "button": "Leave all",
+          "confirmTitle": "Leave all projects?",
+          "confirmBody": "You will lose access to all data of projects where you are a member. Projects you manage will remain untouched. This action is irreversible.",
+          "confirmButton": "Leave all",
+          "toasts": {
+            "none": "You are not a member of any project (that you can leave)",
+            "success": "Left {count, plural, one {# project} other {# projects}}",
+            "partial": "Left {left}, {failed} failed",
+            "error": "Failed to leave projects"
+          }
+        }
+      }
+    },
+    "budget": {
+      "completion": {
+        "all": "All",
+        "active": "Active",
+        "done": "Done",
+        "rejected": "Rejected"
+      },
+      "filter": {
+        "phase": "Phase:"
+      },
+      "empty": {
+        "title": "No items match the filter",
+        "description": "Try changing the phase, status or search filter. Or clear the filter to see all items.",
+        "categoryRow": "No items in this category."
+      },
+      "column": {
+        "item": "Item",
+        "phase": "Phase",
+        "plan": "Plan (CZK)",
+        "days": "Days",
+        "dateFrom": "Date from",
+        "dateTo": "Date to",
+        "actual": "Actual (CZK)",
+        "hours": "Hrs",
+        "status": "Status"
+      },
+      "category": {
+        "aria": {
+          "drag": "Drag category"
+        },
+        "addItem": {
+          "aria": "Add item",
+          "title": "Add item to category \"{name}\""
+        },
+        "totals": "{actual} / {plan}"
+      },
+      "row": {
+        "aria": {
+          "drag": "Drag task",
+          "expand": "Expand",
+          "collapse": "Collapse"
+        },
+        "childCount": "{count, plural, one {# task} other {# tasks}}",
+        "addTask": "Add task",
+        "required": {
+          "title": "Required (necessary to complete the project)",
+          "aria": "Required",
+          "ariaRequired": "Remove required",
+          "ariaOptional": "Mark as required",
+          "titleRequired": "Required — click to mark as optional",
+          "titleOptional": "Optional — click to mark as required (necessary to complete the project)"
+        },
+        "placeholder": {
+          "noName": "(untitled)"
+        },
+        "badge": {
+          "rejected": "Rejected",
+          "done": "Done",
+          "subsidy": "Subsidy",
+          "subsidyTitleWithAmount": "Possible subsidy: {amount}",
+          "subsidyTitleNoAmount": "Possible subsidy (no amount set)",
+          "addTaskTitle": "Add task under this item",
+          "addTaskAria": "Add task"
+        },
+        "paymentsCount": "{count, plural, one {# payment} other {# payments}}",
+        "timeCount": "{count, plural, one {# time} other {# times}}",
+        "tooltip": {
+          "planTotal": "Total: own {own} + tasks {children}",
+          "actualTotal": "Total: own {own} + tasks {children}"
+        },
+        "completed": {
+          "ariaDone": "Mark as not done",
+          "ariaTodo": "Mark as done",
+          "titleDone": "Mark as not done",
+          "titleTodo": "Mark as done"
+        },
+        "rejected": {
+          "ariaRejected": "Cancel rejection",
+          "ariaNotRejected": "Reject",
+          "titleRejected": "Cancel rejection",
+          "titleNotRejected": "Reject item"
+        },
+        "actions": {
+          "ariaMore": "More actions",
+          "titleMore": "More actions"
+        },
+        "menu": {
+          "editDetail": "Edit details",
+          "markRequired": "Mark as required",
+          "markOptional": "Mark as optional",
+          "subsidyAdd": "Mark as subsidy-eligible",
+          "subsidyRemove": "Remove subsidy",
+          "markDone": "Mark as done",
+          "markNotDone": "Mark as not done",
+          "reject": "Reject",
+          "unreject": "Cancel rejection",
+          "move": "Move under another item…",
+          "duplicate": "Duplicate",
+          "delete": "Delete"
+        },
+        "delete": {
+          "title": "Delete item?",
+          "body": "Really delete **{name}**? Related payments and time entries will also be deleted.",
+          "cancel": "Cancel",
+          "confirm": "Delete"
+        },
+        "toasts": {
+          "duplicateSuccess": "Item duplicated",
+          "duplicateError": "Failed to duplicate",
+          "deleteSuccess": "Item deleted",
+          "deleteError": "Failed to delete"
+        }
+      },
+      "detail": {
+        "label": {
+          "note": "Note",
+          "contact": "Contact",
+          "links": "Links",
+          "linksFromTasks": "From tasks"
+        },
+        "placeholder": {
+          "note": "Additional info, unit prices, process…",
+          "noName": "(untitled)"
+        },
+        "contact": {
+          "unassigned": "Not assigned — click on the item to edit"
+        }
+      },
+      "moveDialog": {
+        "title": "Move task",
+        "description": "Move **{name}** under another item. The category will be inherited from the new parent.",
+        "currentParent": "Current parent: {name}",
+        "empty": "There are no other items in the project that the task can be moved under.",
+        "placeholder": {
+          "select": "Select target item",
+          "noName": "(untitled)"
+        },
+        "topLevel": "Top level (no parent)",
+        "cancel": "Cancel",
+        "confirm": "Move",
+        "toasts": {
+          "movedToParent": "Task moved under new item",
+          "movedToTop": "Task moved to top level",
+          "error": "Move failed"
+        }
+      }
+    },
+    "management": {
+      "button": {
+        "editProject": "Edit project",
+        "reportPdf": "PDF report",
+        "auditHistory": "Change history"
+      },
+      "data": {
+        "title": "Data and exports",
+        "description": "Project editing, reports and data exports in various formats",
+        "export": {
+          "label": "Data export",
+          "json": "Export JSON",
+          "import": "Import JSON (owner only)"
+        },
+        "csv": {
+          "label": "CSV exports (current project)",
+          "budget": "Budget CSV",
+          "payments": "Payments CSV",
+          "time": "Time CSV",
+          "contacts": "Contacts CSV"
+        },
+        "toasts": {
+          "exportSuccess": "State exported",
+          "exportError": "Export failed",
+          "importSuccess": "State imported",
+          "importError": "Import failed",
+          "csvSuccess": "{type} exported to CSV",
+          "csvError": "CSV export failed"
+        }
+      },
+      "audit": {
+        "title": "Audit log — recent changes",
+        "description": "Overview of recent actions in the project"
+      },
+      "danger": {
+        "title": "Project management",
+        "duplicate": {
+          "title": "Duplicate project",
+          "description": "Creates a copy with budget (without payments and time)",
+          "button": "Duplicate",
+          "suffix": " (copy)"
+        },
+        "delete": {
+          "title": "Delete project",
+          "description": "Permanently deletes all data",
+          "adminOnlyHint": "Only the project manager can delete it",
+          "editorHint": "Only the project manager can delete the project"
+        },
+        "toasts": {
+          "duplicateSuccess": "Project duplicated as \"{name}\"",
+          "duplicateError": "Failed to duplicate project"
+        }
+      },
+      "info": {
+        "roleBadge": {
+          "editor": "Editor",
+          "admin": "Admin",
+          "viewer": "Viewer"
+        },
+        "lockHint": "Only the project manager can edit project information",
+        "label": {
+          "address": "Address",
+          "status": "Status",
+          "startDate": "Start date",
+          "endDate": "Completion date",
+          "description": "Description"
+        },
+        "placeholder": {
+          "address": "e.g. Prague - Troja",
+          "description": "Short project description…"
+        },
+        "created": "Created: {date}",
+        "button": {
+          "save": "Save",
+          "edit": "Edit"
+        },
+        "toasts": {
+          "saveSuccess": "Project updated",
+          "saveError": "Failed to update project"
+        }
+      },
+      "property": {
+        "title": "Property information",
+        "description": "Exact address, energy rating and project documentation",
+        "button": {
+          "edit": "Edit",
+          "save": "Save"
+        },
+        "label": {
+          "fullAddress": "Exact address",
+          "floorArea": "Built-up area (m²)",
+          "floors": "Number of floors",
+          "heatLoss": "Heat loss (W/K)",
+          "energyRating": "Energy rating",
+          "studyUrl": "Architectural study link",
+          "documentationUrl": "Project documentation link",
+          "note": "Note"
+        },
+        "placeholder": {
+          "fullAddress": "e.g. 12 Pražská, 110 00 Prague 1",
+          "floorArea": "e.g. 120",
+          "floors": "e.g. 2",
+          "heatLoss": "e.g. 85",
+          "note": "Free-form note about the property…"
+        },
+        "error": {
+          "url": "Enter a valid URL (http:// or https://)."
+        },
+        "lockHint": "Only the project manager can edit property information",
+        "readOnly": {
+          "fullAddress": "Exact address",
+          "floorArea": "Built-up area",
+          "floorAreaValue": "{value} m²",
+          "floors": "Number of floors",
+          "heatLoss": "Heat loss",
+          "heatLossValue": "{value} W/K",
+          "energyRating": "Energy rating",
+          "studyUrl": "Architectural study",
+          "documentationUrl": "Project documentation",
+          "note": "Note"
+        },
+        "toasts": {
+          "urlError": "Links must be valid URLs (http:// or https://).",
+          "saveSuccess": "Property information saved",
+          "saveError": "Failed to save property information"
+        }
+      },
+      "sharing": {
+        "title": "Sharing and access rights",
+        "description": "Manage project visibility, manager, members and invitations",
+        "button": {
+          "share": "Share",
+          "shareTitle": "Copy public view link",
+          "transferOwnership": "Transfer"
+        },
+        "toggle": {
+          "publicProject": {
+            "label": "Public project",
+            "description": "Anyone with the link can view the project (read-only)"
+          }
+        },
+        "aria": {
+          "publicToggle": "Toggle project visibility",
+          "removeMember": "Remove member",
+          "leaveProject": "Leave project",
+          "revokeInvitation": "Revoke invitation"
+        },
+        "lockHint": "Only the manager can change project visibility",
+        "publicInfo": "Public project: Anyone with the link can view the project (read-only). Turn off for privacy.",
+        "badge": {
+          "owner": "Manager"
+        },
+        "role": {
+          "viewer": "Viewer",
+          "editor": "Editor"
+        },
+        "roleSelect": {
+          "viewer": "Viewer (read-only)",
+          "editor": "Editor (edits)"
+        },
+        "empty": {
+          "members": "No members have been added yet."
+        },
+        "pending": {
+          "title": "Pending invitations",
+          "role": "Role: {role} · Valid until: {date}"
+        },
+        "invitationHistory": {
+          "title": "Invitation history ({count})",
+          "role": "Role: {role} · Created: {date}"
+        },
+        "invitationStatus": {
+          "pending": "Pending",
+          "accepted": "Accepted",
+          "rejected": "Rejected",
+          "revoked": "Revoked",
+          "expired": "Expired"
+        },
+        "inviteForm": {
+          "title": "Invite by email",
+          "placeholderEmail": "email@example.com",
+          "button": "Invite by email",
+          "hint": {
+            "existingMember": "This user is already a project member",
+            "newUser": "New user — they'll receive an email invitation and gain access after registration",
+            "editor": "As an editor you can only add Viewers or Editors",
+            "noInvite": "Only the project manager can invite new users"
+          },
+          "info": "Invite by email: The invited user will gain access after signing in or registering with the given email. Invitation is valid for 24 hours."
+        },
+        "qr": {
+          "title": "Project QR code",
+          "description": "Scan the QR code to open the project on mobile.",
+          "info": "QR code: Scan to open the project on mobile. It points to the public project view.",
+          "aria": "QR code for project {name}",
+          "button": {
+            "copyLink": "Copy link",
+            "copyLinkCopied": "Copied",
+            "downloadPng": "Download PNG"
+          },
+          "toasts": {
+            "copySuccess": "Link copied to clipboard",
+            "copyError": "Copy failed — copy the link manually",
+            "qrNotReady": "QR code has not been generated yet",
+            "downloadSuccess": "QR code downloaded as PNG",
+            "generateError": "Failed to generate QR code"
+          }
+        },
+        "confirmRemove": {
+          "title": "Really remove member?",
+          "body": "Really remove user \"{name}\" from this project? They will lose access to all project data. This can be undone by adding the member back.",
+          "cancel": "Cancel",
+          "confirm": "Remove member"
+        },
+        "toasts": {
+          "shareLinkCopied": "Project link copied to clipboard",
+          "shareLinkPrivate": "Project is not public — the link redirects to sign in",
+          "shareLinkError": "Failed to copy link",
+          "madePublic": "Project is now public — anyone with the link can view it",
+          "madePrivate": "Project is now private",
+          "publicToggleError": "Failed to change project visibility",
+          "alreadyMember": "This user is already a project member",
+          "inviteSent": "Invitation sent to {email}",
+          "inviteError": "Failed to send invitation",
+          "inviteRevoked": "Invitation for {email} revoked",
+          "inviteRevokeError": "Failed to revoke invitation",
+          "roleChanged": "Role updated",
+          "roleChangeError": "Failed to update role",
+          "memberRemoved": "Member \"{name}\" removed",
+          "memberRemoveError": "Failed to remove member — member was restored",
+          "ownerChanged": "Manager changed",
+          "ownerChangeError": "Failed to change manager"
+        }
+      },
+      "auditLog": {
+        "search": {
+          "placeholder": "Search audit log…",
+          "aria": "Search audit log",
+          "clearAria": "Clear search"
+        },
+        "polling": "Loading...",
+        "filter": {
+          "action": "Action",
+          "entity": "Entity",
+          "user": "Author",
+          "from": "From",
+          "to": "To",
+          "sort": "Sort",
+          "pageSize": "Per page",
+          "fromAria": "From date filter",
+          "toAria": "To date filter",
+          "all": "All"
+        },
+        "action": {
+          "create": "Created",
+          "update": "Edited",
+          "delete": "Deleted",
+          "export": "Exported"
+        },
+        "sort": {
+          "desc": "Newest",
+          "asc": "Oldest"
+        },
+        "empty": "No records for the selected filters.",
+        "column": {
+          "action": "Action",
+          "detail": "Change detail",
+          "author": "Author",
+          "date": "Date",
+          "time": "Time"
+        },
+        "author": {
+          "unknown": "Unknown"
+        },
+        "pagination": {
+          "summary": "Showing {from}–{to} of {total}",
+          "prev": "Previous",
+          "next": "Next",
+          "pageOf": "{page} / {totalPages}"
+        },
+        "tooltip": {
+          "goToTab": "Go to {name} tab"
+        },
+        "actions": {
+          "create": "Created",
+          "update": "Edited",
+          "delete": "Deleted",
+          "export": "Exported"
+        },
+        "entities": {
+          "BudgetItem": "Budget item",
+          "Payment": "Payment",
+          "TimeEntry": "Time",
+          "Contact": "Contact",
+          "Project": "Project",
+          "Note": "Note",
+          "ContactPerson": "Contact person",
+          "ProjectMember": "Member",
+          "Export": "Export"
+        },
+        "fields": {
+          "required": "Required",
+          "completed": "Done",
+          "rejected": "Rejection",
+          "starred": "Favorite",
+          "status": "Status",
+          "role": "Role",
+          "phase": "Phase",
+          "category": "Category",
+          "subcategory": "Name",
+          "planCost": "Plan (CZK)",
+          "actualCost": "Actual (CZK)",
+          "planDays": "Plan (days)",
+          "flexibilityPercent": "Flexibility (%)",
+          "dateFrom": "Date from",
+          "dateTo": "Date to",
+          "note": "Note",
+          "name": "Name",
+          "email": "Email",
+          "phone": "Phone",
+          "address": "Address",
+          "description": "Description",
+          "currency": "Currency",
+          "ownerId": "Owner",
+          "contactId": "Contact",
+          "workerName": "Worker",
+          "workerType": "Worker type",
+          "workerCount": "Worker count",
+          "hours": "Hours",
+          "amount": "Amount",
+          "type": "Type",
+          "vendor": "Company",
+          "invoiceNumber": "Invoice number",
+          "vatRate": "VAT rate",
+          "vatAmount": "VAT amount",
+          "website": "Website",
+          "company": "Company",
+          "ico": "Reg. No.",
+          "dic": "VAT ID",
+          "rating": "Rating",
+          "sortOrder": "Order",
+          "text": "Text",
+          "author": "Author",
+          "userEmail": "Member email"
+        },
+        "describe": {
+          "memberAdded": "Added member ({role}): {email}",
+          "memberRemoved": "Removed member ({role}): {email}",
+          "created": "Created: {name}",
+          "deleted": "Deleted: {name}",
+          "fieldRemoved": "{field}: removed ({value})"
+        }
+      },
+      "deleteProject": {
+        "button": "Delete",
+        "confirmTitle": "Delete project \"{name}\"?",
+        "confirmBody": "This action is irreversible. All data will be permanently deleted. To confirm, type the project name:",
+        "confirmButton": "Delete project",
+        "cancel": "Cancel",
+        "toasts": {
+          "nameMismatch": "Project name does not match",
+          "success": "Project deleted",
+          "error": "Failed to delete project"
+        }
+      }
+    },
+    "notes": {
+      "title": {
+        "new": "New note"
+      },
+      "field": {
+        "author": "Author name",
+        "text": "Note text"
+      },
+      "placeholder": {
+        "author": "e.g. Paul",
+        "text": "Write a project note here — decisions, ideas, tasks, messages… (Ctrl+Enter = add)"
+      },
+      "count": "{count, plural, one {# note} other {# notes}}",
+      "anonymousAuthor": "Anonymous",
+      "empty": {
+        "title": "No notes yet",
+        "description": "Write your first note in the field above. Notes are for quick snippets, links, and reminders."
+      },
+      "badge": {
+        "editing": "editing"
+      },
+      "hint": {
+        "editShortcuts": "Enter = save · Shift+Enter = new line · Esc = cancel"
+      },
+      "clickToEdit": "Click to edit",
+      "aria": {
+        "edit": "Edit note",
+        "save": "Save changes",
+        "cancel": "Cancel edit",
+        "delete": "Delete note"
+      },
+      "toasts": {
+        "createError": "Failed to add note",
+        "deleteSuccess": "Note deleted",
+        "deleteError": "Failed to delete note",
+        "updateEmptyError": "Note text cannot be empty",
+        "updateSuccess": "Note updated",
+        "updateError": "Failed to update note"
+      }
+    },
+    "timeline": {
+      "empty": {
+        "title": "No items with dates",
+        "description": "Assign from/to dates in the budget table and items will appear on the timeline.",
+        "upcoming": "No upcoming deadlines",
+        "overdue": "No overdue items",
+        "unscheduled": "All scheduled"
+      },
+      "label": {
+        "range": "{start} — {end}",
+        "count": "{count, plural, one {# item} other {# items}}",
+        "zoom": "Zoom:"
+      },
+      "zoom": {
+        "days": "Days",
+        "months": "Months",
+        "quarters": "Quarters",
+        "years": "Years"
+      },
+      "legend": {
+        "today": "Today",
+        "doubleClickHint": "Double-click = edit dates"
+      },
+      "title": {
+        "gantt": "Construction schedule",
+        "upcoming": "Upcoming",
+        "overdue": "Overdue",
+        "unscheduled": "To schedule"
+      },
+      "columnHeader": {
+        "item": "Item"
+      },
+      "suffix": {
+        "completed": " · Done"
+      },
+      "dialog": {
+        "title": "Edit dates",
+        "description": "Set the exact start and end dates.",
+        "label": {
+          "dateFrom": "Date from",
+          "dateTo": "Date to"
+        }
+      }
+    },
+    "time": {
+      "sort": {
+        "date": "Date (newest)",
+        "worker": "Worker (A→Z)",
+        "hours": "Hours (descending)",
+        "workerType": "Worker type"
+      },
+      "stats": {
+        "entries": "{count, plural, one {# entry} other {# entries}}",
+        "empty": "No time entries yet"
+      },
+      "filter": {
+        "allTypes": "All types",
+        "allCategories": "All categories"
+      },
+      "total": {
+        "label": "Total ({count})"
+      },
+      "column": {
+        "date": "Date",
+        "budgetItem": "Budget item",
+        "description": "Description",
+        "type": "Type",
+        "contact": "Contact",
+        "hours": "Hours"
+      },
+      "toasts": {
+        "deleteSuccess": "Entry deleted",
+        "deleteError": "Failed to delete",
+        "createSuccess": "Time logged",
+        "createSuccessWithItem": "Time logged, item marked as completed",
+        "createSuccessItemFail": "Time logged (failed to mark item as completed)",
+        "updateSuccess": "Entry updated",
+        "updateSuccessWithItem": "Entry updated, item marked as completed",
+        "updateSuccessItemFail": "Entry updated (failed to mark item as completed)",
+        "updateError": "Failed to update entry",
+        "createError": "Failed to log time"
+      },
+      "aria": {
+        "rowClick": "Click to edit entry",
+        "workersCount": "{count, plural, one {# worker} other {# workers}}"
+      },
+      "dialog": {
+        "delete": {
+          "title": "Delete time entry?",
+          "body": "Really delete entry <strong>{workerName}</strong> · {hours}?"
+        }
+      },
+      "form": {
+        "titlePlaceholder": "Worker…",
+        "descriptionPlaceholder": "Work description…",
+        "submitLabel": {
+          "edit": "Update entry",
+          "create": "Log time"
+        },
+        "label": {
+          "budgetItem": "Budget item *",
+          "hours": "Hours *",
+          "workerCount": "Number of workers",
+          "dateFrom": "Date from *",
+          "workerType": "Worker type",
+          "dateTo": "Date to (multi-day)",
+          "contact": "Contact (optional)"
+        },
+        "placeholder": {
+          "budgetItem": "Select item…",
+          "hours": "8",
+          "workerCount": "1",
+          "dateTo": "(optional)",
+          "contact": "No contact"
+        },
+        "search": {
+          "budgetItem": "Search item…",
+          "contact": "Search contact…"
+        },
+        "empty": {
+          "budgetItem": "No items found",
+          "contact": "No contacts found"
+        },
+        "error": {
+          "budgetItem": "Select a budget item",
+          "workerName": "Enter worker name",
+          "hours": "Enter a valid number of hours"
+        },
+        "hint": {
+          "hoursPerDay": "≈ {hours} h/day × {days} days",
+          "personHours": "Total {total} person-hours",
+          "daySpan": "Work spans {days, plural, one {# day} other {# days}}"
+        },
+        "section": {
+          "details": "Details (optional)"
+        },
+        "markCompleted": {
+          "label": "Mark budget item as completed",
+          "alreadyCompleted": "Item is already marked as completed.",
+          "hint": "After saving the entry, a PATCH request will be sent to the budget item with completed: true. Links the time entry to item completion."
+        }
+      },
+      "empty": {
+        "title": {
+          "noRecords": "No time entries yet",
+          "noMatch": "No entries match the filter"
+        },
+        "description": {
+          "noRecords": "Log time spent working — company, craftsman, or DIY. Supports multi-day entries.",
+          "noMatch": "Try changing the filter or search."
+        },
+        "button": {
+          "firstRecord": "Log first time"
+        }
+      }
+    },
+    "dashboard": {
+      "button": { "clearFilters": "Clear filters" },
+      "kpi": {
+        "burn": {
+          "label": "Budget burn",
+          "subValue": "{actual} / {plan}"
+        },
+        "remaining": {
+          "label": "Budget left",
+          "subValue": "of {planTotal}"
+        },
+        "completedItems": {
+          "label": "Items done",
+          "subValue": {
+            "done": "{percent} % done",
+            "empty": "No items"
+          }
+        },
+        "hours": {
+          "label": "Hours logged",
+          "subValue": "Plan: {days, plural, one {# day} other {# days}}"
+        },
+        "completed": { "allDone": "All done" }
+      },
+      "plan": {
+        "byStart": {
+          "title": "Plan — by start",
+          "description": "Items sorted by start date"
+        },
+        "byEnd": {
+          "title": "Plan — by end",
+          "description": "Nearest completion deadlines"
+        },
+        "bucket": {
+          "activeNow": "Active now",
+          "nextWeek": "Next week",
+          "nextMonth": "Next month",
+          "next3Months": "Next 3 months",
+          "later": "Later",
+          "unscheduled": "Unscheduled"
+        },
+        "empty": { "upcoming": "No upcoming deadlines." },
+        "tag": { "overdue": "overdue" }
+      },
+      "cashflow": {
+        "title": "Cashflow projection",
+        "description": "Estimated final budget based on current burn",
+        "projectedFinal": "Projected final",
+        "overrun": "Overrun",
+        "percentOfPlan": "% of plan",
+        "remainingEstimate": "Left (estimate)",
+        "spent": "Spent: {actual}",
+        "estimate": "Estimate: {projected}"
+      },
+      "chart": {
+        "phase": {
+          "title": "Plan vs Actual by phase",
+          "description": "Click a bar to filter the table"
+        },
+        "category": {
+          "title": "Budget by category",
+          "description": "Click a bar to filter"
+        },
+        "trend": {
+          "title": "Budget burn trend",
+          "description": "Monthly spend and logged hours over time",
+          "empty": "No trend data yet."
+        },
+        "series": {
+          "plan": "Plan",
+          "actual": "Actual",
+          "spend": "Spend",
+          "hours": "Hours"
+        }
+      },
+      "contacts": {
+        "title": "Work by contact",
+        "description": "Budget and logged hours per assigned contact",
+        "empty": "No contacts with assigned items.",
+        "noRole": "No role",
+        "itemsCount": "{count, plural, one {# item} other {# items}}",
+        "ofPlan": "of {plan}",
+        "overBudget": "over budget"
+      },
+      "phases": {
+        "title": "Project phases",
+        "filteredBy": "Filtered: {phase}",
+        "description": "Click a row to filter the charts",
+        "column": {
+          "phase": "Phase",
+          "items": "Items",
+          "plan": "Plan",
+          "actual": "Actual",
+          "hours": "Hours",
+          "burn": "Burn",
+          "status": "Status"
+        },
+        "status": {
+          "done": "Done",
+          "inProgress": "In progress",
+          "startingSoon": "Soon",
+          "waiting": "Waiting"
+        }
+      },
+      "recent": {
+        "payments": {
+          "title": "Recent payments",
+          "description": "Latest financial transactions",
+          "empty": "No payments yet.",
+          "fallback": "Payment"
+        },
+        "time": {
+          "title": "Recent time entries",
+          "description": "Latest logged hours",
+          "empty": "No time entries yet.",
+          "fallback": "Work"
+        }
+      }
+    },
+    "contacts": {
+      "header": {
+        "count": "{count, plural, one {# contact in project} other {# contacts in project}}"
+      },
+      "empty": {
+        "title": "No contacts yet",
+        "description": "Add companies, craftsmen, suppliers and architects. You can assign payments and time entries to them.",
+        "button": { "first": "Add first contact" }
+      },
+      "menu": { "edit": "Edit", "delete": "Delete" },
+      "delete": {
+        "title": "Delete contact?",
+        "body": "Do you really want to delete contact <strong>{name}</strong>?",
+        "cancel": "Cancel",
+        "confirm": "Delete"
+      },
+      "stat": {
+        "paid": "Paid",
+        "hours": "Hours",
+        "payments": "Payments",
+        "times": "Time"
+      },
+      "persons": {
+        "title": "Contact persons",
+        "button": { "add": "Add", "addPerson": "Add person" },
+        "field": {
+          "firstName": "First name *",
+          "lastName": "Last name *",
+          "phone": "Phone",
+          "email": "Email",
+          "role": "Role / position"
+        },
+        "placeholder": {
+          "firstName": "John",
+          "lastName": "Doe",
+          "phone": "+1 555 123 456",
+          "email": "john@company.com",
+          "role": "Manager, Accountant, ..."
+        },
+        "empty": "No contact persons. Click “Add” to add one.",
+        "aria": { "delete": "Delete {firstName} {lastName}" },
+        "title": { "delete": "Delete person" }
+      },
+      "toasts": {
+        "deleteSuccess": "Contact deleted",
+        "deleteError": "Failed to delete",
+        "personAddError": "First and last name are required",
+        "personAddSuccess": "Person added",
+        "personAddErrorFallback": "Failed to add person",
+        "personDeleteSuccess": "Person “{name}” deleted",
+        "personDeleteError": "Failed to delete person",
+        "updateError": "Name is required",
+        "updateSuccess": "Contact updated",
+        "createSuccess": "Contact added",
+        "saveErrorFallback": "Failed to save contact"
+      },
+      "detail": {
+        "button": { "edit": "Edit", "close": "Close" },
+        "section": {
+          "contact": "Contact",
+          "summary": "Time and money summary"
+        },
+        "field": {
+          "company": "Company",
+          "ico": "Reg. No.",
+          "dic": "Tax ID",
+          "phone": "Phone",
+          "email": "Email",
+          "web": "Web",
+          "lastActivity": "Last activity"
+        },
+        "stat": {
+          "totalPaid": "Total paid",
+          "totalHours": "Total hours",
+          "paymentCount": "Payment count",
+          "timeEntryCount": "Time entries"
+        }
+      },
+      "form": {
+        "placeholder": { "title": "Name / Title…" },
+        "submitLabel": {
+          "edit": "Update contact",
+          "create": "Add contact"
+        },
+        "ares": {
+          "label": "Load from ARES registry",
+          "hint": "Look up a company by reg. no. or name and prefill fields.",
+          "addressPrefix": "Address (ARES): {address}"
+        },
+        "field": {
+          "type": "Type",
+          "role": "Role / Trade",
+          "company": "Company (optional)",
+          "ico": "Reg. No.",
+          "dic": "Tax ID",
+          "phone": "Phone",
+          "email": "Email",
+          "web": "Web",
+          "rating": "Rating",
+          "notes": "Notes"
+        },
+        "placeholder": {
+          "role": "e.g. Mason, Electrician",
+          "company": "e.g. ACME Ltd.",
+          "ico": "e.g. 12345678",
+          "dic": "e.g. CZ12345678",
+          "phone": "+420 …",
+          "email": "email@domain.com",
+          "web": "e.g. www.company.com",
+          "notes": "Experience, references, working method…"
+        },
+        "section": { "details": "Details (optional)" },
+        "rating": { "clear": "Clear" }
+      }
+    },
+    "telemetry": {
+      "title": "Telemetry",
+      "description": "Internal analytics of user actions.",
+      "button": {
+        "refresh": "Refresh",
+        "retry": "Try again"
+      },
+      "error": { "loadFailed": "Failed to load telemetry data." },
+      "kpi": {
+        "totalEvents": "Total events",
+        "totalPageViews": "Total page views",
+        "totalTimeSpent": "Total time on pages",
+        "uniqueUsers": "Unique users"
+      },
+      "chart": {
+        "byType": {
+          "title": "Events by type",
+          "description": "Count of each event type"
+        },
+        "byDay": {
+          "title": "Activity by day",
+          "description": "Last 30 days"
+        },
+        "byHour": {
+          "title": "Today's hourly activity",
+          "description": "Event count per hour today"
+        }
+      },
+      "empty": {
+        "byType": "No data.",
+        "byHour": "No activity recorded today yet."
+      },
+      "topPages": {
+        "title": "Top pages",
+        "description": "View count and average time spent on each page",
+        "empty": "No page view data.",
+        "column": {
+          "page": "Page",
+          "views": "Views",
+          "avgTime": "Avg time"
+        }
+      },
+      "timeOverview": {
+        "title": "Time overview",
+        "description": "Summary statistics of time spent in the app",
+        "totalOnPages": "Total time on pages",
+        "totalOnPagesHint": "view count: {count}",
+        "avgPerPage": "Average time per page",
+        "avgPerPageHint": "average across all page_view events",
+        "longest": "Longest visit",
+        "longestHint": "maximum timeSpent of a single session"
+      },
+      "timeByPage": {
+        "title": "Visit duration",
+        "description": "Total time spent on each page",
+        "total": "Total: {time}",
+        "rowSuffix": "{views}× · avg {avgTime}",
+        "empty": "No time-on-page data."
+      },
+      "topUsers": {
+        "title": "User activity",
+        "description": "Most active users by action count",
+        "empty": "No user activity data.",
+        "column": {
+          "user": "User",
+          "eventCount": "Action count",
+          "lastActive": "Last activity"
+        },
+        "crown": { "title": "Most active" }
+      },
+      "recent": {
+        "title": "Recent events",
+        "description": "Last {shown} of {total} total events",
+        "empty": "No events for the selected filter.",
+        "column": {
+          "date": "Date",
+          "time": "Time",
+          "user": "User",
+          "eventType": "Event type",
+          "page": "Page",
+          "project": "Project"
+        },
+        "unknownUser": "Unknown",
+        "unknownProject": "Project {id}",
+        "tooltipHour": "{hour}:00 — {count, plural, one {# event} other {# events}}",
+        "tooltipDay": "{day}: {count}"
+      },
+      "filter": {
+        "label": "Filters:",
+        "type": "Type",
+        "all": "All",
+        "user": "User",
+        "allUsers": "All users",
+        "page": "Page",
+        "allPages": "All pages",
+        "project": "Project",
+        "allProjects": "All projects",
+        "button": { "reset": "Clear filters" }
+      },
+      "pagination": {
+        "summary": "Showing {from}–{to} of {total}",
+        "prev": "Previous",
+        "next": "Next",
+        "pageOf": "{page} / {totalPages}"
+      },
+      "relativeTime": {
+        "justNow": "just now",
+        "minute": "{n, plural, one {a minute ago} other {{n} minutes ago}}",
+        "hour": "{n, plural, one {an hour ago} other {{n} hours ago}}",
+        "day": "{n, plural, one {yesterday} other {{n} days ago}}",
+        "yesterday": "yesterday"
+      }
+    },
+    "payments": {
+      "sort": {
+        "dateDesc": "Date (newest)",
+        "dateAsc": "Date (oldest)",
+        "amountDesc": "Amount (desc)",
+        "amountAsc": "Amount (asc)",
+        "type": "Type",
+        "contact": "Contact (A→Z)",
+        "vendor": "Vendor (A→Z)"
+      },
+      "filter": { "allTypes": "All types" },
+      "toolbar": {
+        "sum": "Sum ({count})",
+        "vatIncluded": "incl. VAT"
+      },
+      "empty": {
+        "title": {
+          "noRecords": "No payments yet",
+          "noMatch": "No payments match the filter"
+        },
+        "description": {
+          "noRecords": "Start logging payments — receipts, invoices or wage payouts. You can split them into installments too.",
+          "noMatch": "Try changing the filter or search."
+        },
+        "button": { "first": "Add first payment" }
+      },
+      "column": {
+        "date": "Date",
+        "budgetItem": "Budget item",
+        "description": "Description",
+        "type": "Type",
+        "contact": "Contact",
+        "amount": "Amount"
+      },
+      "row": {
+        "aria": { "clickToEdit": "Click to edit payment" },
+        "installment": {
+          "title": "Installment invoice: {invoiceTotal} — paid {paidTotal} ({percent} %), remaining {remaining}",
+          "fallbackTitle": "Installment invoice",
+          "label": "Installment {n}",
+          "labelWithTotal": "Installment {n} / {total}",
+          "titleShort": "Installment {n} of {total}"
+        },
+        "firstInstallment": "1st installment",
+        "vatRateSuffix": "incl. VAT {rate}%",
+        "ofInvoiceTotal": "of {invoiceTotal}",
+        "menu": { "edit": "Edit", "delete": "Delete" },
+        "delete": {
+          "title": "Delete payment?",
+          "body": "Do you really want to delete payment <strong>{amount}</strong>?",
+          "cancel": "Cancel",
+          "confirm": "Delete"
+        },
+        "addInstallment": "Add installment",
+        "addInstallmentTitle": "Add another installment to invoice {vendor}"
+      },
+      "invoices": {
+        "badge": {
+          "installmentCount": "{count, plural, one {# installment} other {# installments}}"
+        },
+        "label": {
+          "invoice": "Invoice",
+          "paid": "Paid",
+          "remaining": "Remaining",
+          "percent": "{percent} %",
+          "invoiceNumber": "no. {number}"
+        },
+        "button": {
+          "show": "Show",
+          "showTitle": "Show installments in the table",
+          "addInstallment": "Add installment",
+          "addInstallmentTitle": "Add another installment to this invoice"
+        },
+        "fallbackTitle": "Invoice"
+      },
+      "dialog": {
+        "titlePlaceholder": "What was bought / paid…",
+        "submitLabel": {
+          "edit": {
+            "installment": "Edit installment",
+            "payment": "Edit payment"
+          },
+          "create": {
+            "installment": "Add installment",
+            "invoice": "Create invoice",
+            "payment": "Add payment"
+          }
+        },
+        "label": {
+          "budgetItem": "Budget item *",
+          "invoiceTotal": "Invoice total (Kč) *",
+          "firstInstallment": "1st installment (Kč) *",
+          "amount": "Amount (Kč) *",
+          "date": "Date *",
+          "invoiceDate": "Invoice date *",
+          "type": "Type",
+          "contact": "Contact (optional)",
+          "vendor": "Vendor / Store",
+          "invoiceNumber": "Invoice/receipt no.",
+          "vatRate": "VAT rate (%)",
+          "vatCalculation": "VAT calculation"
+        },
+        "placeholder": {
+          "budgetItem": "Select item…",
+          "invoiceTotal": "150000",
+          "firstInstallment": "50000",
+          "amount": "25000",
+          "contact": "No contact",
+          "vendor": "e.g. Hornbach",
+          "invoiceNumber": "2024-001"
+        },
+        "search": {
+          "budgetItem": "Search item…",
+          "contact": "Search contact…"
+        },
+        "empty": {
+          "budgetItem": "No items found",
+          "contact": "No contacts found"
+        },
+        "error": {
+          "budgetItem": "Select a budget item",
+          "invoiceTotal": "Enter a valid invoice total",
+          "amount": "Enter a valid amount"
+        },
+        "prefill": {
+          "title": "New installment for invoice",
+          "subtitle": "{vendor} · {amount} total",
+          "fallback": "Invoice"
+        },
+        "existingInvoice": {
+          "title": "This item already has an invoice: {vendor}",
+          "subtitle": "{paid} / {invoiceTotal} ({percent} %)",
+          "fallback": "Invoice",
+          "button": "Add installment to this invoice"
+        },
+        "parentWarning": {
+          "title": "This is an installment invoice",
+          "body": "Invoice total {invoiceTotal}. You can convert it back to a regular payment — installments will remain as standalone payments.",
+          "button": "Convert to regular payment"
+        },
+        "convertDialog": {
+          "title": "Convert invoice to regular payment?",
+          "body": "This converts the invoice into a regular payment. All installments ({count}) will remain as standalone payments. Continue?",
+          "cancel": "Cancel",
+          "confirm": "Convert to regular payment",
+          "confirming": "Converting…"
+        },
+        "section": { "details": "Details (optional)" },
+        "isInvoice": { "label": "Installment payment (invoice with multiple payments)" },
+        "installmentOf": {
+          "label": "Link to invoice (as installment)",
+          "placeholder": "Standalone payment (no invoice)",
+          "noneLabel": "Standalone payment (no invoice)",
+          "hint": "This payment will appear as the next installment of the selected invoice. Changing it updates the invoice's payment total."
+        },
+        "vatRate": {
+          "placeholder": "No VAT",
+          "none": "No VAT",
+          "21": "21 % (standard)",
+          "12": "12 % (reduced 1)",
+          "10": "10 % (reduced 2)",
+          "0": "0 %"
+        },
+        "vatCalc": {
+          "label": { "vat": "VAT:", "base": "Base:" },
+          "empty": "Enter amount and VAT rate"
+        },
+        "markCompleted": {
+          "label": "Mark item as done",
+          "alreadyCompleted": "Item is already marked as done.",
+          "hint": "Item will be marked as completed"
+        }
+      },
+      "toasts": {
+        "deleteSuccess": "Payment deleted",
+        "deleteError": "Failed to delete",
+        "updateSuccess": "Payment updated",
+        "updateSuccessWithItem": "Payment updated, item marked as done",
+        "updateSuccessItemFail": "Payment updated (failed to mark item as done)",
+        "invoiceCreateSuccess": "Invoice with installments created",
+        "invoiceCreateSuccessWithItem": "Invoice created, item marked as done",
+        "invoiceCreateSuccessItemFail": "Invoice created (failed to mark item as done)",
+        "paymentCreateSuccess": "Payment added",
+        "paymentCreateSuccessWithItem": "Payment added, item marked as done",
+        "paymentCreateSuccessItemFail": "Payment added (failed to mark item as done)",
+        "installmentAdded": "Installment added to invoice",
+        "convertSuccess": "Invoice converted to regular payment",
+        "convertSuccessWithChildren": "Invoice converted to regular payment, {count, plural, one {# installment detached} other {# installments detached}}",
+        "convertError": "Failed to convert invoice to regular payment",
+        "updateError": "Failed to update payment",
+        "createError": "Failed to add payment"
+      }
+    }
+  },
+  "analytics": {
+    "eventTypes": {
+      "page_view": "Page view",
+      "add_payment": "Add payment",
+      "add_time_entry": "Add time entry",
+      "edit_time_entry": "Edit time entry",
+      "edit_payment": "Edit payment",
+      "delete_payment": "Delete payment",
+      "add_contact": "Add contact",
+      "add_note": "Add note",
+      "edit_note": "Edit note",
+      "add_budget_item": "Add budget item",
+      "edit_budget_item": "Edit budget item",
+      "download_data": "Download data",
+      "login": "Sign in",
+      "logout": "Sign out",
+      "project_share": "Share project"
+    }
   }
 }

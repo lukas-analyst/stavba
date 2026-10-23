@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { useTranslations } from "next-intl";
 import { useDashboard, useSpendingTrend } from "@/lib/api";
 import {
   Card,
@@ -38,9 +39,11 @@ import {
   formatDate,
   PHASE_COLORS,
   PHASE_DOT_COLORS,
-  STATUS_LABELS,
+  STATUS_COLORS,
   PHASE_ORDER,
 } from "@/lib/format";
+import { useLocale } from "next-intl";
+import type { Locale } from "@/i18n/config";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/lib/store";
 import {
@@ -98,6 +101,10 @@ export function DashboardTab({ projectId }: { projectId: string }) {
   const { data: trend } = useSpendingTrend(projectId);
   const setActiveTab = useAppStore((s) => s.setActiveTab);
   const setBudgetFilter = useAppStore((s) => s.setBudgetFilter);
+  const t = useTranslations("tabs.dashboard");
+  const tStatuses = useTranslations("statuses");
+  const tPhases = useTranslations("phases");
+  const locale = useLocale() as Locale;
 
   // === Cross-filtering state ===
   const [selectedPhase, setSelectedPhase] = useState<string | null>(null);
@@ -241,8 +248,8 @@ export function DashboardTab({ projectId }: { projectId: string }) {
   const phaseData = byPhase
     .map((p) => ({
       phase: p.phase,
-      Plán: p.plan,
-      Skutečnost: p.actual,
+      plan: p.plan,
+      actual: p.actual,
       completedCount: p.completedCount,
       count: p.count,
     }))
@@ -254,19 +261,19 @@ export function DashboardTab({ projectId }: { projectId: string }) {
     .map((c) => ({
       category: c.category.length > 18 ? c.category.slice(0, 16) + "…" : c.category,
       fullName: c.category,
-      Plán: c.plan,
-      Skutečnost: c.actual,
+      plan: c.plan,
+      actual: c.actual,
       hours: c.hours,
       count: c.count,
     }))
-    .sort((a, b) => b.Plán - a.Plán)
+    .sort((a, b) => b.plan - a.plan)
     .slice(0, 8);
 
   // Contact data for "Práce dle kontaktu"
   const contactData = byContact.filter((c) => c.plan > 0 || c.actual > 0 || c.count > 0);
 
-  // Status info
-  const statusInfo = STATUS_LABELS[project.status] ?? STATUS_LABELS.active;
+  // Status info (label is localized via t; colors/dot stay locale-independent)
+  const statusColors = STATUS_COLORS[project.status as keyof typeof STATUS_COLORS] ?? STATUS_COLORS.active;
 
   return (
     <div className="space-y-6">
@@ -274,9 +281,9 @@ export function DashboardTab({ projectId }: { projectId: string }) {
       <div className="space-y-3">
         <div className="flex flex-wrap items-center gap-3">
           <h1 className="text-2xl font-bold tracking-tight">{project.name}</h1>
-          <Badge variant="secondary" className={cn("gap-1.5", statusInfo.color)}>
-            <span className={cn("h-2 w-2 rounded-full", statusInfo.dot)} />
-            {statusInfo.label}
+          <Badge variant="secondary" className={cn("gap-1.5", statusColors.color)}>
+            <span className={cn("h-2 w-2 rounded-full", statusColors.dot)} />
+            {tStatuses(project.status)}
           </Badge>
           {hasFilters && (
             <Button
@@ -286,7 +293,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
               className="gap-1.5 rounded-full"
             >
               <X className="h-3.5 w-3.5" />
-              Zrušit filtry
+              {t("button.clearFilters")}
             </Button>
           )}
         </div>
@@ -302,28 +309,28 @@ export function DashboardTab({ projectId }: { projectId: string }) {
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
         <HeroKpiCard
           icon={Wallet}
-          label="Čerpání rozpočtu"
+          label={t("kpi.burn.label")}
           value={`${burnRate.toFixed(0)}%`}
-          subValue={`${formatCzk(totals.actualTotal)} / ${formatCzk(totals.planTotal)}`}
+          subValue={t("kpi.burn.subValue", { actual: formatCzk(totals.actualTotal, locale), plan: formatCzk(totals.planTotal, locale) })}
           accent={burnAccent}
           progress={burnRate}
           completed={totals.itemCount > 0 && totals.completedCount === totals.itemCount}
         />
         <HeroKpiCard
           icon={Wallet}
-          label="Zbývá rozpočtu"
-          value={formatCzk(totals.remaining)}
-          subValue={`z ${formatCzk(totals.planTotal)}`}
+          label={t("kpi.remaining.label")}
+          value={formatCzk(totals.remaining, locale)}
+          subValue={t("kpi.remaining.subValue", { planTotal: formatCzk(totals.planTotal, locale) })}
           accent="primary"
         />
         <HeroKpiCard
           icon={Activity}
-          label="Hotovo položek"
+          label={t("kpi.completedItems.label")}
           value={`${totals.completedCount}/${totals.itemCount}`}
           subValue={
             totals.itemCount > 0
-              ? `${((totals.completedCount / totals.itemCount) * 100).toFixed(0)}% dokončeno`
-              : "Žádné položky"
+              ? t("kpi.completedItems.subValue.done", { percent: ((totals.completedCount / totals.itemCount) * 100).toFixed(0) })
+              : t("kpi.completedItems.subValue.empty")
           }
           accent={totals.itemCount > 0 && totals.completedCount === totals.itemCount ? "success" : "info"}
           progress={totals.itemCount > 0 ? (totals.completedCount / totals.itemCount) * 100 : 0}
@@ -331,9 +338,9 @@ export function DashboardTab({ projectId }: { projectId: string }) {
         />
         <HeroKpiCard
           icon={Clock}
-          label="Odpracováno hodin"
-          value={formatNumber(totals.hoursTotal, " h")}
-          subValue={`Plán: ${formatNumber(totals.daysPlanned, " dní")}`}
+          label={t("kpi.hours.label")}
+          value={formatNumber(totals.hoursTotal, " h", locale)}
+          subValue={t("kpi.hours.subValue", { days: totals.daysPlanned ?? 0 })}
           accent="time"
         />
       </div>
@@ -345,45 +352,45 @@ export function DashboardTab({ projectId }: { projectId: string }) {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <CalendarDays className="h-5 w-5 text-primary" />
-              Plán — podle začátku
+              {t("plan.byStart.title")}
             </CardTitle>
             <CardDescription>
-              Položky seřazené dle data zahájení
+              {t("plan.byStart.description")}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3 max-h-[600px] overflow-y-auto">
             <PlanBucket
-              title="Aktivní nyní"
+              title={t("plan.bucket.activeNow")}
               items={planItems.activeNow}
               accent="info"
               onNavigate={goToBudget}
             />
             <PlanBucket
-              title="Příští týden"
+              title={t("plan.bucket.nextWeek")}
               items={planItems.nextWeek}
               accent="warning"
               onNavigate={goToBudget}
             />
             <PlanBucket
-              title="Příští měsíc"
+              title={t("plan.bucket.nextMonth")}
               items={planItems.nextMonth}
               accent="success"
               onNavigate={goToBudget}
             />
             <PlanBucket
-              title="Příští 3 měsíce"
+              title={t("plan.bucket.next3Months")}
               items={planItems.next3Months}
               accent="primary"
               onNavigate={goToBudget}
             />
             <PlanBucket
-              title="Později"
+              title={t("plan.bucket.later")}
               items={planItems.later}
               accent="muted"
               onNavigate={goToBudget}
             />
             <PlanBucket
-              title="Nenaplánováno"
+              title={t("plan.bucket.unscheduled")}
               items={planItems.unscheduled}
               accent="muted"
               onNavigate={goToBudget}
@@ -396,10 +403,10 @@ export function DashboardTab({ projectId }: { projectId: string }) {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <CalendarClock className="h-5 w-5 text-primary" />
-              Plán — podle konce
+              {t("plan.byEnd.title")}
             </CardTitle>
             <CardDescription>
-              Nejbližší termíny dokončení
+              {t("plan.byEnd.description")}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-2 max-h-[600px] overflow-y-auto">
@@ -407,7 +414,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
               <div className="flex flex-col items-center gap-2 py-8 text-center">
                 <CheckCircle2 className="h-10 w-10 text-success" />
                 <p className="text-sm text-muted-foreground">
-                  Žádné blížící se termíny.
+                  {t("plan.empty.upcoming")}
                 </p>
               </div>
             ) : (
@@ -436,9 +443,9 @@ export function DashboardTab({ projectId }: { projectId: string }) {
                       </p>
                       <p className="text-xs text-muted-foreground">
                         {isTask && item.parentSubcategory
-                          ? `${item.parentSubcategory} · ${item.phase}`
-                          : `${item.phase}`}
-                        {item.planCost && ` · ${formatCzk(item.planCost)}`}
+                          ? `${item.parentSubcategory} · ${tPhases(item.phase)}`
+                          : tPhases(item.phase)}
+                        {item.planCost && ` · ${formatCzk(item.planCost, locale)}`}
                       </p>
                     </div>
                     <div className="text-right">
@@ -446,10 +453,10 @@ export function DashboardTab({ projectId }: { projectId: string }) {
                         "text-xs font-semibold tabular-nums",
                         isOverdue ? "text-danger" : "text-on-surface-variant",
                       )}>
-                        {endDate ? formatDate(endDate.toISOString()) : "—"}
+                        {endDate ? formatDate(endDate.toISOString(), undefined, locale) : "—"}
                       </p>
                       {isOverdue && (
-                        <p className="text-[10px] text-danger">po termínu</p>
+                        <p className="text-[10px] text-danger">{t("plan.tag.overdue")}</p>
                       )}
                     </div>
                   </button>
@@ -468,40 +475,40 @@ export function DashboardTab({ projectId }: { projectId: string }) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Coins className="h-5 w-5 text-primary" />
-            Cashflow projekce
+            {t("cashflow.title")}
           </CardTitle>
           <CardDescription>
-            Odhadovaný konečný rozpočet na základě aktuálního čerpání
+            {t("cashflow.description")}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
             <div className="space-y-1">
               <p className="text-xs font-medium uppercase tracking-wide text-on-surface-variant">
-                Odhad konečného
+                {t("cashflow.projectedFinal")}
               </p>
               <p className={cn(
                 "text-xl font-bold tabular-nums",
                 totals.projectedOverrun > 0 ? "text-danger" : "text-success",
               )}>
-                {formatCzk(totals.projectedFinal)}
+                {formatCzk(totals.projectedFinal, locale)}
               </p>
             </div>
             <div className="space-y-1">
               <p className="text-xs font-medium uppercase tracking-wide text-on-surface-variant">
-                Překročení
+                {t("cashflow.overrun")}
               </p>
               <p className={cn(
                 "text-xl font-bold tabular-nums",
                 totals.projectedOverrun > 0 ? "text-danger" : "text-success",
               )}>
                 {totals.projectedOverrun > 0 ? "+" : ""}
-                {formatCzk(totals.projectedOverrun)}
+                {formatCzk(totals.projectedOverrun, locale)}
               </p>
             </div>
             <div className="space-y-1">
               <p className="text-xs font-medium uppercase tracking-wide text-on-surface-variant">
-                % plánu
+                {t("cashflow.percentOfPlan")}
               </p>
               <p className={cn(
                 "text-xl font-bold tabular-nums",
@@ -515,18 +522,18 @@ export function DashboardTab({ projectId }: { projectId: string }) {
             </div>
             <div className="space-y-1">
               <p className="text-xs font-medium uppercase tracking-wide text-on-surface-variant">
-                Zbývá (odhad)
+                {t("cashflow.remainingEstimate")}
               </p>
               <p className="text-xl font-bold tabular-nums">
-                {formatCzk(totals.projectedFinal - totals.actualTotal)}
+                {formatCzk(totals.projectedFinal - totals.actualTotal, locale)}
               </p>
             </div>
           </div>
           {/* Progress bar: actual vs projected */}
           <div className="mt-4 space-y-1">
             <div className="flex justify-between text-xs text-on-surface-variant">
-              <span>Čerpáno: {formatCzk(totals.actualTotal)}</span>
-              <span>Odhad: {formatCzk(totals.projectedFinal)}</span>
+              <span>{t("cashflow.spent", { actual: formatCzk(totals.actualTotal, locale) })}</span>
+              <span>{t("cashflow.estimate", { projected: formatCzk(totals.projectedFinal, locale) })}</span>
             </div>
             <div className="flex h-3 w-full overflow-hidden rounded-full bg-muted">
               <div
@@ -559,13 +566,13 @@ export function DashboardTab({ projectId }: { projectId: string }) {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Activity className="h-5 w-5 text-primary" />
-              Plán vs Skutečnost dle fáze
+              {t("chart.phase.title")}
             </CardTitle>
             <CardDescription>
-              Klikněte na fázi pro filtrování tabulky
+              {t("chart.phase.description")}
               {selectedPhase && (
                 <Badge variant="secondary" className="ml-2 gap-1">
-                  {selectedPhase}
+                  {tPhases(selectedPhase)}
                   <X className="h-3 w-3 cursor-pointer" onClick={() => setSelectedPhase(null)} />
                 </Badge>
               )}
@@ -583,10 +590,11 @@ export function DashboardTab({ projectId }: { projectId: string }) {
                     angle={-15}
                     textAnchor="end"
                     height={60}
+                    tickFormatter={(v: string) => tPhases(v)}
                   />
                   <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
                   <Tooltip
-                    formatter={(v: number) => formatCzk(v)}
+                    formatter={(v: number) => formatCzk(v, locale)}
                     contentStyle={{
                       backgroundColor: "var(--popover)",
                       border: "1px solid var(--border)",
@@ -594,9 +602,10 @@ export function DashboardTab({ projectId }: { projectId: string }) {
                       fontSize: "12px",
                     }}
                   />
-                  <Legend wrapperStyle={{ fontSize: 12 }} />
+                  <Legend wrapperStyle={{ fontSize: 12 }} formatter={(value) => value === "plan" ? t("chart.series.plan") : t("chart.series.actual")} />
                   <Bar
-                    dataKey="Plán"
+                    dataKey="plan"
+                    name="plan"
                     fill="var(--info)"
                     radius={[4, 4, 0, 0]}
                     onClick={(data: { phase?: string }) => data.phase && togglePhase(data.phase)}
@@ -604,7 +613,8 @@ export function DashboardTab({ projectId }: { projectId: string }) {
                     opacity={selectedPhase && selectedPhase !== phaseData.find(d => d.phase === selectedPhase)?.phase ? 0.4 : 1}
                   />
                   <Bar
-                    dataKey="Skutečnost"
+                    dataKey="actual"
+                    name="actual"
                     fill="var(--warning)"
                     radius={[4, 4, 0, 0]}
                     onClick={(data: { phase?: string }) => data.phase && togglePhase(data.phase)}
@@ -621,10 +631,10 @@ export function DashboardTab({ projectId }: { projectId: string }) {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Target className="h-5 w-5 text-primary" />
-              Rozpočet dle kategorie
+              {t("chart.category.title")}
             </CardTitle>
             <CardDescription>
-              Klikněte na kategorii pro filtrování
+              {t("chart.category.description")}
               {selectedCategory && (
                 <Badge variant="secondary" className="ml-2 gap-1">
                   {selectedCategory}
@@ -654,7 +664,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
                     width={100}
                   />
                   <Tooltip
-                    formatter={(v: number) => formatCzk(v)}
+                    formatter={(v: number) => formatCzk(v, locale)}
                     labelFormatter={(_, payload) => {
                       const item = payload?.[0]?.payload as { fullName?: string } | undefined;
                       return item?.fullName ?? "";
@@ -666,9 +676,10 @@ export function DashboardTab({ projectId }: { projectId: string }) {
                       fontSize: "12px",
                     }}
                   />
-                  <Legend wrapperStyle={{ fontSize: 12 }} />
+                  <Legend wrapperStyle={{ fontSize: 12 }} formatter={(value) => value === "plan" ? t("chart.series.plan") : t("chart.series.actual")} />
                   <Bar
-                    dataKey="Plán"
+                    dataKey="plan"
+                    name="plan"
                     fill="var(--info)"
                     radius={[0, 4, 4, 0]}
                     onClick={(data: { fullName?: string }) => data.fullName && toggleCategory(data.fullName)}
@@ -676,7 +687,8 @@ export function DashboardTab({ projectId }: { projectId: string }) {
                     opacity={selectedCategory && selectedCategory !== categoryBarData.find(d => d.fullName === selectedCategory)?.fullName ? 0.4 : 1}
                   />
                   <Bar
-                    dataKey="Skutečnost"
+                    dataKey="actual"
+                    name="actual"
                     fill="var(--warning)"
                     radius={[0, 4, 4, 0]}
                     onClick={(data: { fullName?: string }) => data.fullName && toggleCategory(data.fullName)}
@@ -694,10 +706,10 @@ export function DashboardTab({ projectId }: { projectId: string }) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <TrendingUp className="h-5 w-5 text-primary" />
-            Trend čerpání rozpočtu
+            {t("chart.trend.title")}
           </CardTitle>
           <CardDescription>
-            Měsíční výdaje a odpracované hodiny v čase
+            {t("chart.trend.description")}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -740,8 +752,8 @@ export function DashboardTab({ projectId }: { projectId: string }) {
                   />
                   <Tooltip
                     formatter={(v: number, name: string) => {
-                      if (name === "Výdaje") return [formatCzk(v), "Výdaje"];
-                      return [formatNumber(v, " h"), "Hodiny"];
+                      if (name === "spend") return [formatCzk(v, locale), t("chart.series.spend")];
+                      return [formatNumber(v, " h", locale), t("chart.series.hours")];
                     }}
                     contentStyle={{
                       backgroundColor: "var(--popover)",
@@ -751,12 +763,12 @@ export function DashboardTab({ projectId }: { projectId: string }) {
                     }}
                     labelStyle={{ fontSize: 11, fontWeight: 600 }}
                   />
-                  <Legend wrapperStyle={{ fontSize: 12 }} />
+                  <Legend wrapperStyle={{ fontSize: 12 }} formatter={(value) => value === "spend" ? t("chart.series.spend") : t("chart.series.hours")} />
                   <Area
                     yAxisId="spend"
                     type="monotone"
                     dataKey="spend"
-                    name="Výdaje"
+                    name="spend"
                     stroke="var(--warning)"
                     strokeWidth={2}
                     fill="url(#spendGradient)"
@@ -765,7 +777,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
                     yAxisId="hours"
                     type="monotone"
                     dataKey="hours"
-                    name="Hodiny"
+                    name="hours"
                     stroke="var(--time)"
                     strokeWidth={2}
                     dot={{ r: 2, fill: "var(--time)" }}
@@ -775,7 +787,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
               </ResponsiveContainer>
             ) : (
               <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
-                Zatím nejsou k dispozici data o trendu čerpání.
+                {t("chart.trend.empty")}
               </div>
             )}
           </div>
@@ -787,10 +799,10 @@ export function DashboardTab({ projectId }: { projectId: string }) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Users2 className="h-5 w-5 text-primary" />
-            Práce dle kontaktu
+            {t("contacts.title")}
           </CardTitle>
           <CardDescription>
-            Rozpočet a odpracované hodiny dle přiřazených kontaktů
+            {t("contacts.description")}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -798,7 +810,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
             <div className="flex flex-col items-center gap-2 py-8 text-center">
               <Users2 className="h-10 w-10 text-muted-foreground" />
               <p className="text-sm text-muted-foreground">
-                Žádné kontakty s přiřazenými položkami.
+                {t("contacts.empty")}
               </p>
             </div>
           ) : (
@@ -826,15 +838,15 @@ export function DashboardTab({ projectId }: { projectId: string }) {
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium truncate">{c.name}</p>
                       <p className="text-xs text-muted-foreground">
-                        {c.role || "Bez role"} · {c.count} položek
+                        {c.role || t("contacts.noRole")} · {t("contacts.itemsCount", { count: c.count })}
                       </p>
                     </div>
                     <div className="text-right">
                       <p className="text-sm font-semibold tabular-nums">
-                        {formatCzk(c.actual)}
+                        {formatCzk(c.actual, locale)}
                       </p>
                       <p className="text-xs text-muted-foreground tabular-nums">
-                        z {formatCzk(c.plan)}
+                        {t("contacts.ofPlan", { plan: formatCzk(c.plan, locale) })}
                       </p>
                     </div>
                     <div className="text-right">
@@ -845,7 +857,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
                         {burn.toFixed(0)}%
                       </p>
                       {burn > 100 && (
-                        <p className="text-[10px] text-danger">přes rozpočet</p>
+                        <p className="text-[10px] text-danger">{t("contacts.overBudget")}</p>
                       )}
                     </div>
                   </div>
@@ -861,16 +873,16 @@ export function DashboardTab({ projectId }: { projectId: string }) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Filter className="h-5 w-5 text-primary" />
-            Fáze projektu
+            {t("phases.title")}
             {selectedPhase && (
               <Badge variant="secondary" className="gap-1">
-                Filtrováno: {selectedPhase}
+                {t("phases.filteredBy", { phase: selectedPhase })}
                 <X className="h-3 w-3 cursor-pointer" onClick={() => setSelectedPhase(null)} />
               </Badge>
             )}
           </CardTitle>
           <CardDescription>
-            Klikněte na řádek pro filtrování grafů
+            {t("phases.description")}
           </CardDescription>
         </CardHeader>
         <CardContent className="p-0">
@@ -878,13 +890,13 @@ export function DashboardTab({ projectId }: { projectId: string }) {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b bg-surface-container-low">
-                  <th className="px-4 py-3 text-left font-medium text-on-surface-variant">Fáze</th>
-                  <th className="px-4 py-3 text-right font-medium text-on-surface-variant">Položky</th>
-                  <th className="px-4 py-3 text-right font-medium text-on-surface-variant">Plán</th>
-                  <th className="px-4 py-3 text-right font-medium text-on-surface-variant">Skutečnost</th>
-                  <th className="px-4 py-3 text-right font-medium text-on-surface-variant">Hodiny</th>
-                  <th className="px-4 py-3 text-right font-medium text-on-surface-variant">Čerpání</th>
-                  <th className="px-4 py-3 text-center font-medium text-on-surface-variant">Stav</th>
+                  <th className="px-4 py-3 text-left font-medium text-on-surface-variant">{t("phases.column.phase")}</th>
+                  <th className="px-4 py-3 text-right font-medium text-on-surface-variant">{t("phases.column.items")}</th>
+                  <th className="px-4 py-3 text-right font-medium text-on-surface-variant">{t("phases.column.plan")}</th>
+                  <th className="px-4 py-3 text-right font-medium text-on-surface-variant">{t("phases.column.actual")}</th>
+                  <th className="px-4 py-3 text-right font-medium text-on-surface-variant">{t("phases.column.hours")}</th>
+                  <th className="px-4 py-3 text-right font-medium text-on-surface-variant">{t("phases.column.burn")}</th>
+                  <th className="px-4 py-3 text-center font-medium text-on-surface-variant">{t("phases.column.status")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -905,7 +917,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2">
                           <span className={cn("h-2.5 w-2.5 rounded-full", PHASE_DOT_COLORS[p.phase] ?? "bg-muted-foreground")} />
-                          <span className="font-medium">{p.phase}</span>
+                          <span className="font-medium">{tPhases(p.phase)}</span>
                           {isSelected && <X className="h-3 w-3 text-muted-foreground" />}
                           {allDone && <CheckCircle2 className="h-4 w-4 text-success" />}
                         </div>
@@ -913,23 +925,23 @@ export function DashboardTab({ projectId }: { projectId: string }) {
                       <td className="px-4 py-3 text-right tabular-nums">
                         {p.completedCount}/{p.count}
                       </td>
-                      <td className="px-4 py-3 text-right tabular-nums">{formatCzk(p.plan)}</td>
+                      <td className="px-4 py-3 text-right tabular-nums">{formatCzk(p.plan, locale)}</td>
                       <td className={cn("px-4 py-3 text-right font-semibold tabular-nums", burn > 100 && "text-danger")}>
-                        {formatCzk(p.actual)}
+                        {formatCzk(p.actual, locale)}
                       </td>
-                      <td className="px-4 py-3 text-right tabular-nums">{formatNumber(p.hours, " h")}</td>
+                      <td className="px-4 py-3 text-right tabular-nums">{formatNumber(p.hours, " h", locale)}</td>
                       <td className={cn("px-4 py-3 text-right font-semibold tabular-nums", burnCls)}>
                         {burn.toFixed(0)}%
                       </td>
                       <td className="px-4 py-3 text-center">
                         {allDone ? (
-                          <Badge variant="secondary" className="bg-success-soft text-success-strong">Hotovo</Badge>
+                          <Badge variant="secondary" className="bg-success-soft text-success-strong">{t("phases.status.done")}</Badge>
                         ) : p.inProgress ? (
-                          <Badge variant="secondary" className="bg-info-soft text-info-strong">Probíhá</Badge>
+                          <Badge variant="secondary" className="bg-info-soft text-info-strong">{t("phases.status.inProgress")}</Badge>
                         ) : p.startingSoon ? (
-                          <Badge variant="secondary" className="bg-warning-soft text-warning-strong">Brzy</Badge>
+                          <Badge variant="secondary" className="bg-warning-soft text-warning-strong">{t("phases.status.startingSoon")}</Badge>
                         ) : (
-                          <Badge variant="secondary" className="bg-muted text-muted-foreground">Čeká</Badge>
+                          <Badge variant="secondary" className="bg-muted text-muted-foreground">{t("phases.status.waiting")}</Badge>
                         )}
                       </td>
                     </tr>
@@ -948,15 +960,15 @@ export function DashboardTab({ projectId }: { projectId: string }) {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Receipt className="h-5 w-5 text-warning" />
-              Poslední platby
+              {t("recent.payments.title")}
             </CardTitle>
-            <CardDescription>Nejnovější finanční transakce</CardDescription>
+            <CardDescription>{t("recent.payments.description")}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-2 max-h-96 overflow-y-auto">
             {recent.payments.length === 0 ? (
               <div className="flex flex-col items-center gap-2 py-8 text-center">
                 <Receipt className="h-10 w-10 text-muted-foreground" />
-                <p className="text-sm text-muted-foreground">Zatím žádné platby.</p>
+                <p className="text-sm text-muted-foreground">{t("recent.payments.empty")}</p>
               </div>
             ) : (
               recent.payments.slice(0, 8).map((payment) => (
@@ -970,15 +982,15 @@ export function DashboardTab({ projectId }: { projectId: string }) {
                     </div>
                     <div>
                       <p className="text-sm font-medium">
-                        {payment.vendor || payment.description || "Platba"}
+                        {payment.vendor || payment.description || t("recent.payments.fallback")}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        {formatDate(payment.date)}
+                        {formatDate(payment.date, undefined, locale)}
                         {payment.budgetItem?.subcategory && ` · ${payment.budgetItem.subcategory}`}
                       </p>
                     </div>
                   </div>
-                  <span className="font-semibold tabular-nums">{formatCzk(payment.amount)}</span>
+                  <span className="font-semibold tabular-nums">{formatCzk(payment.amount, locale)}</span>
                 </div>
               ))
             )}
@@ -990,15 +1002,15 @@ export function DashboardTab({ projectId }: { projectId: string }) {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Clock className="h-5 w-5 text-time" />
-              Poslední časové záznamy
+              {t("recent.time.title")}
             </CardTitle>
-            <CardDescription>Nejnovější odpracované hodiny</CardDescription>
+            <CardDescription>{t("recent.time.description")}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-2 max-h-96 overflow-y-auto">
             {recent.timeEntries.length === 0 ? (
               <div className="flex flex-col items-center gap-2 py-8 text-center">
                 <Clock className="h-10 w-10 text-muted-foreground" />
-                <p className="text-sm text-muted-foreground">Zatím žádné časové záznamy.</p>
+                <p className="text-sm text-muted-foreground">{t("recent.time.empty")}</p>
               </div>
             ) : (
               recent.timeEntries.slice(0, 8).map((entry) => (
@@ -1012,15 +1024,15 @@ export function DashboardTab({ projectId }: { projectId: string }) {
                     </div>
                     <div>
                       <p className="text-sm font-medium">
-                        {entry.workerName || "Práce"}
+                        {entry.workerName || t("recent.time.fallback")}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        {formatDate(entry.date)}
+                        {formatDate(entry.date, undefined, locale)}
                         {entry.budgetItem?.subcategory && ` · ${entry.budgetItem.subcategory}`}
                       </p>
                     </div>
                   </div>
-                  <span className="font-semibold tabular-nums">{formatNumber(entry.hours, " h")}</span>
+                  <span className="font-semibold tabular-nums">{formatNumber(entry.hours, " h", locale)}</span>
                 </div>
               ))
             )}
@@ -1081,6 +1093,7 @@ function HeroKpiCard({
   progress?: number;
   completed?: boolean;
 }) {
+  const t = useTranslations("tabs.dashboard");
   return (
     <Card className={cn("relative overflow-hidden", completed && "border-success/30")}>
       <CardContent className="p-4">
@@ -1109,7 +1122,7 @@ function HeroKpiCard({
         {completed && (
           <div className="mt-2 flex items-center gap-1 text-xs text-success">
             <CheckCircle2 className="h-3.5 w-3.5" />
-            Vše hotovo
+            {t("kpi.completed.allDone")}
           </div>
         )}
       </CardContent>
@@ -1132,6 +1145,7 @@ function PlanBucket({
   accent: AccentColor | "muted";
   onNavigate: (filter: Parameters<ReturnType<typeof useAppStore.getState>["setBudgetFilter"]>[0]) => void;
 }) {
+  const locale = useLocale() as Locale;
   if (items.length === 0) return null;
 
   const accentBg = accent === "muted" ? "bg-muted/50" : ACCENT_BG[accent as AccentColor];
@@ -1171,7 +1185,7 @@ function PlanBucket({
                 )}
               </span>
               <span className="text-xs text-muted-foreground tabular-nums">
-                {item.dateFrom ? formatDate(item.dateFrom) : "—"}
+                {item.dateFrom ? formatDate(item.dateFrom, undefined, locale) : "—"}
               </span>
             </button>
           );

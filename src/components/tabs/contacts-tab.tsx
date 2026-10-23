@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useTranslations, useLocale } from "next-intl";
 import {
   useContacts,
   useCreateContact,
@@ -82,11 +83,11 @@ import {
 import { AresSearch, type AresCompany } from "@/components/ares-search";
 import {
   CONTACT_TYPES,
-  contactTypeLabel,
   formatCzk,
   formatNumber,
   formatDate,
 } from "@/lib/format";
+import type { Locale } from "@/i18n/config";
 import { cn } from "@/lib/utils";
 import { getPhoneInfo } from "@/lib/phone";
 import { toast } from "sonner";
@@ -101,6 +102,7 @@ export function ContactsTab({ projectId }: { projectId: string }) {
   const [addOpen, setAddOpen] = useState(false);
   const [editContact, setEditContact] = useState<Contact | null>(null);
   const [detailContact, setDetailContact] = useState<Contact | null>(null);
+  const t = useTranslations("tabs.contacts");
 
   // Listen for FAB "add contact" trigger (mobile contextual FAB)
   useEffect(() => {
@@ -127,7 +129,7 @@ export function ContactsTab({ projectId }: { projectId: string }) {
       <div id="contacts-header" className="flex items-center justify-between">
         <div className="flex items-center gap-2 type-body text-on-surface-variant">
           <Users className="h-4 w-4" />
-          {contacts?.length ?? 0} kontaktů v projektu
+          {t("header.count", { count: contacts?.length ?? 0 })}
         </div>
       </div>
 
@@ -140,11 +142,11 @@ export function ContactsTab({ projectId }: { projectId: string }) {
       ) : contacts?.length === 0 ? (
         <EmptyStateBox
           icon={Users}
-          title="Zatím žádné kontakty"
-          description="Přidejte firmy, řemeslníky, dodavatele a architekty. Můžete jim přiřazovat platby a časové záznamy."
+          title={t("empty.title")}
+          description={t("empty.description")}
           action={
             <Button size="sm" onClick={() => setAddOpen(true)}>
-              <Plus className="mr-1 h-4 w-4" /> Přidat první kontakt
+              <Plus className="mr-1 h-4 w-4" /> {t("empty.button.first")}
             </Button>
           }
         />
@@ -232,7 +234,12 @@ function ContactCard({
 }) {
   const deleteContact = useDeleteContact(projectId);
   const [confirm, setConfirm] = useState(false);
-  const t = contactTypeLabel(contact.type);
+  const t = useTranslations("tabs.contacts");
+  const tContactTypes = useTranslations("contactTypes");
+  const locale = useLocale() as Locale;
+  const contactTypeInfo = CONTACT_TYPES.find((c) => c.value === contact.type);
+  const contactTypeEmoji = contactTypeInfo?.emoji ?? "•";
+  const contactTypeLabelStr = tContactTypes(contact.type);
 
   const hasStats =
     stat && (stat.totalPaid > 0 || stat.totalHours > 0 || stat.paymentCount > 0 || stat.timeEntryCount > 0);
@@ -253,12 +260,12 @@ function ContactCard({
                 "bg-secondary-container text-secondary-container-foreground",
               )}
             >
-              {t.emoji}
+              {contactTypeEmoji}
             </div>
             <div className="min-w-0">
               <h3 className="type-title truncate">{contact.name}</h3>
               <Badge variant="outline" className="mt-0.5 text-[10px]">
-                {t.label}
+                {contactTypeLabelStr}
               </Badge>
             </div>
           </div>
@@ -280,7 +287,7 @@ function ContactCard({
                   onEdit();
                 }}
               >
-                <Pencil className="mr-2 h-3.5 w-3.5" /> Upravit
+                <Pencil className="mr-2 h-3.5 w-3.5" /> {t("menu.edit")}
               </DropdownMenuItem>
               <DropdownMenuItem
                 className="text-destructive focus:text-destructive"
@@ -289,7 +296,7 @@ function ContactCard({
                   setConfirm(true);
                 }}
               >
-                <Trash2 className="mr-2 h-3.5 w-3.5" /> Smazat
+                <Trash2 className="mr-2 h-3.5 w-3.5" /> {t("menu.delete")}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -309,12 +316,12 @@ function ContactCard({
           <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] text-on-surface-variant">
             {contact.ico && (
               <span className="tabular-nums">
-                IČO: <span className="font-medium text-foreground/80">{contact.ico}</span>
+                {t("detail.field.ico")}: <span className="font-medium text-foreground/80">{contact.ico}</span>
               </span>
             )}
             {contact.dic && (
               <span className="tabular-nums">
-                DIČ: <span className="font-medium text-foreground/80">{contact.dic}</span>
+                {t("detail.field.dic")}: <span className="font-medium text-foreground/80">{contact.dic}</span>
               </span>
             )}
           </div>
@@ -371,25 +378,25 @@ function ContactCard({
             <div className="grid grid-cols-2 gap-2 border-t border-outline-variant pt-2">
               <StatPill
                 icon={<Wallet className="h-3 w-3" />}
-                label="Zaplaceno"
-                value={stat!.totalPaid > 0 ? formatCzk(stat!.totalPaid) : "—"}
+                label={t("stat.paid")}
+                value={stat!.totalPaid > 0 ? formatCzk(stat!.totalPaid, locale) : "—"}
                 tone="amber"
               />
               <StatPill
                 icon={<Clock3 className="h-3 w-3" />}
-                label="Hodiny"
-                value={stat!.totalHours > 0 ? formatNumber(stat!.totalHours, " h") : "—"}
+                label={t("stat.hours")}
+                value={stat!.totalHours > 0 ? formatNumber(stat!.totalHours, " h", locale) : "—"}
                 tone="violet"
               />
               <StatPill
                 icon={<PackageCheck className="h-3 w-3" />}
-                label="Plateb"
+                label={t("stat.payments")}
                 value={stat!.paymentCount > 0 ? String(stat!.paymentCount) : "—"}
                 tone="amber"
               />
               <StatPill
                 icon={<Clock3 className="h-3 w-3" />}
-                label="Časů"
+                label={t("stat.times")}
                 value={stat!.timeEntryCount > 0 ? String(stat!.timeEntryCount) : "—"}
                 tone="violet"
               />
@@ -418,14 +425,17 @@ function ContactCard({
       <Dialog open={confirm} onOpenChange={setConfirm}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle>Smazat kontakt?</DialogTitle>
+            <DialogTitle>{t("delete.title")}</DialogTitle>
             <DialogDescription>
-              Opravdu chcete smazat kontakt <strong>{contact.name}</strong>?
+              {t.rich("delete.body", {
+                name: contact.name,
+                strong: (chunks) => <strong>{chunks}</strong>,
+              })}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setConfirm(false)}>
-              Zrušit
+              {t("delete.cancel")}
             </Button>
             <Button
               variant="destructive"
@@ -439,15 +449,15 @@ function ContactCard({
                   // contact reference.
                   onDelete?.(contact.id);
                   await deleteContact.mutateAsync(contact.id);
-                  toast.success("Kontakt smazán");
+                  toast.success(t("toasts.deleteSuccess"));
                   setConfirm(false);
                 } catch (err) {
-                  toast.error(err instanceof Error ? err.message : "Nepodařilo se smazat");
+                  toast.error(err instanceof Error ? err.message : t("toasts.deleteError"));
                 }
               }}
             >
               {deleteContact.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Smazat
+              {t("delete.confirm")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -497,6 +507,8 @@ function ContactPersonsSection({
 }) {
   const createPerson = useCreateContactPerson(projectId, contactId);
   const deletePerson = useDeleteContactPerson(projectId, contactId);
+  const t = useTranslations("tabs.contacts");
+  const tCommon = useTranslations("common");
 
   const [showAddForm, setShowAddForm] = useState(false);
   const [newPerson, setNewPerson] = useState({
@@ -509,7 +521,7 @@ function ContactPersonsSection({
 
   const handleAdd = async () => {
     if (!newPerson.firstName.trim() || !newPerson.lastName.trim()) {
-      toast.error("Jméno a příjmení jsou povinné");
+      toast.error(t("toasts.personAddError"));
       return;
     }
     try {
@@ -520,20 +532,20 @@ function ContactPersonsSection({
         email: newPerson.email.trim() || undefined,
         role: newPerson.role.trim() || undefined,
       });
-      toast.success("Osoba přidána");
+      toast.success(t("toasts.personAddSuccess"));
       setNewPerson({ firstName: "", lastName: "", phone: "", email: "", role: "" });
       setShowAddForm(false);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Nepodařilo se přidat osobu");
+      toast.error(err instanceof Error ? err.message : t("toasts.personAddErrorFallback"));
     }
   };
 
   const handleDelete = async (personId: string, name: string) => {
     try {
       await deletePerson.mutateAsync(personId);
-      toast.success(`Osoba "${name}" smazána`);
+      toast.success(t("toasts.personDeleteSuccess", { name }));
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Nepodařilo se smazat osobu");
+      toast.error(err instanceof Error ? err.message : t("toasts.personDeleteError"));
     }
   };
 
@@ -541,7 +553,7 @@ function ContactPersonsSection({
     <section className="space-y-2">
       <div className="flex items-center justify-between">
         <h4 className="type-overline text-on-surface-variant">
-          Kontaktní osoby
+          {t("persons.title")}
           {persons.length > 0 && (
             <span className="ml-1.5 rounded bg-surface-container-high px-1.5 py-0.5 text-[9px] tabular-nums text-on-surface">
               {persons.length}
@@ -554,7 +566,7 @@ function ContactPersonsSection({
           className="h-7 gap-1 rounded-full px-2 text-xs"
           onClick={() => setShowAddForm(!showAddForm)}
         >
-          <Plus className="h-3 w-3" /> {showAddForm ? "Zrušit" : "Přidat"}
+          <Plus className="h-3 w-3" /> {showAddForm ? tCommon("cancel") : t("persons.button.add")}
         </Button>
       </div>
 
@@ -563,62 +575,62 @@ function ContactPersonsSection({
         <div className="space-y-2 rounded-lg border border-outline-variant bg-surface-container-low p-3">
           <div className="grid grid-cols-2 gap-2">
             <div className="space-y-1">
-              <Label htmlFor="person-firstName" className="type-label-sm">Jméno *</Label>
+              <Label htmlFor="person-firstName" className="type-label-sm">{t("persons.field.firstName")}</Label>
               <Input
                 id="person-firstName"
                 value={newPerson.firstName}
                 onChange={(e) => setNewPerson({ ...newPerson, firstName: e.target.value })}
-                placeholder="Pavel"
+                placeholder={t("persons.placeholder.firstName")}
                 className="h-8"
                 autoFocus
               />
             </div>
             <div className="space-y-1">
-              <Label htmlFor="person-lastName" className="type-label-sm">Příjmení *</Label>
+              <Label htmlFor="person-lastName" className="type-label-sm">{t("persons.field.lastName")}</Label>
               <Input
                 id="person-lastName"
                 value={newPerson.lastName}
                 onChange={(e) => setNewPerson({ ...newPerson, lastName: e.target.value })}
-                placeholder="Novák"
+                placeholder={t("persons.placeholder.lastName")}
                 className="h-8"
               />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-2">
             <div className="space-y-1">
-              <Label htmlFor="person-phone" className="type-label-sm">Telefon</Label>
+              <Label htmlFor="person-phone" className="type-label-sm">{t("persons.field.phone")}</Label>
               <Input
                 id="person-phone"
                 value={newPerson.phone}
                 onChange={(e) => setNewPerson({ ...newPerson, phone: e.target.value })}
-                placeholder="+420 777 123 456"
+                placeholder={t("persons.placeholder.phone")}
                 className="h-8"
               />
             </div>
             <div className="space-y-1">
-              <Label htmlFor="person-email" className="type-label-sm">E-mail</Label>
+              <Label htmlFor="person-email" className="type-label-sm">{t("persons.field.email")}</Label>
               <Input
                 id="person-email"
                 value={newPerson.email}
                 onChange={(e) => setNewPerson({ ...newPerson, email: e.target.value })}
-                placeholder="pavel@firma.cz"
+                placeholder={t("persons.placeholder.email")}
                 className="h-8"
               />
             </div>
           </div>
           <div className="space-y-1">
-            <Label htmlFor="person-role" className="type-label-sm">Role / pozice</Label>
+            <Label htmlFor="person-role" className="type-label-sm">{t("persons.field.role")}</Label>
             <Input
               id="person-role"
               value={newPerson.role}
               onChange={(e) => setNewPerson({ ...newPerson, role: e.target.value })}
-              placeholder="Vedoucí, Účetní, ..."
+              placeholder={t("persons.placeholder.role")}
               className="h-8"
             />
           </div>
           <div className="flex justify-end gap-2">
             <Button variant="ghost" size="sm" className="rounded-full" onClick={() => setShowAddForm(false)}>
-              Zrušit
+              {tCommon("cancel")}
             </Button>
             <Button
               size="sm"
@@ -627,7 +639,7 @@ function ContactPersonsSection({
               disabled={createPerson.isPending || !newPerson.firstName.trim() || !newPerson.lastName.trim()}
             >
               {createPerson.isPending && <Loader2 className="mr-1 h-3 w-3 animate-spin" />}
-              Přidat osobu
+              {t("persons.button.addPerson")}
             </Button>
           </div>
         </div>
@@ -685,8 +697,8 @@ function ContactPersonsSection({
                   className="h-7 w-7 shrink-0 rounded-full state-layer-on-surface opacity-0 group-hover:opacity-100"
                   onClick={() => handleDelete(p.id, `${p.firstName} ${p.lastName}`)}
                   disabled={deletePerson.isPending}
-                  aria-label={`Smazat ${p.firstName} ${p.lastName}`}
-                  title="Smazat osobu"
+                  aria-label={t("persons.aria.delete", { firstName: p.firstName, lastName: p.lastName })}
+                  title={t("persons.title.delete")}
                 >
                   <Trash2 className="h-3.5 w-3.5 text-muted-foreground hover:text-danger" />
                 </Button>
@@ -697,7 +709,7 @@ function ContactPersonsSection({
       ) : (
         !showAddForm && (
           <div className="rounded-lg border border-dashed border-outline-variant px-3 py-4 text-center type-label text-on-surface-variant">
-            Žádné kontaktní osoby. Klikněte „Přidat" pro přidání.
+            {t("persons.empty")}
           </div>
         )
       )}
@@ -720,8 +732,13 @@ function ContactDetailDialog({
   onOpenChange: (open: boolean) => void;
   onEdit: () => void;
 }) {
+  const t = useTranslations("tabs.contacts");
+  const tContactTypes = useTranslations("contactTypes");
+  const locale = useLocale() as Locale;
   if (!contact) return null;
-  const t = contactTypeLabel(contact.type);
+  const contactTypeInfo = CONTACT_TYPES.find((c) => c.value === contact.type);
+  const contactTypeEmoji = contactTypeInfo?.emoji ?? "•";
+  const contactTypeLabelStr = tContactTypes(contact.type);
   const lastActivity = stat?.lastActivity;
 
   return (
@@ -734,12 +751,12 @@ function ContactDetailDialog({
           <DialogHeader className="border-b px-6 py-4 pr-10">
             <div className="flex items-start gap-3">
               <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-muted text-xl">
-                {t.emoji}
+                {contactTypeEmoji}
               </div>
               <div className="min-w-0 flex-1">
                 <DialogTitle className="truncate text-lg">{contact.name}</DialogTitle>
                 <div className="mt-1 flex flex-wrap items-center gap-1.5">
-                  <Badge variant="outline" className="text-[10px]">{t.label}</Badge>
+                  <Badge variant="outline" className="text-[10px]">{contactTypeLabelStr}</Badge>
                   {contact.role && (
                     <span className="text-xs text-muted-foreground">{contact.role}</span>
                   )}
@@ -761,7 +778,7 @@ function ContactDetailDialog({
                 </div>
               </div>
               <Button variant="outline" size="sm" onClick={onEdit} className="shrink-0">
-                <Pencil className="mr-1.5 h-3.5 w-3.5" /> Upravit
+                <Pencil className="mr-1.5 h-3.5 w-3.5" /> {t("detail.button.edit")}
               </Button>
             </div>
           </DialogHeader>
@@ -771,30 +788,30 @@ function ContactDetailDialog({
               {/* Kontakt info */}
               <section className="space-y-2">
                 <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  Kontakt
+                  {t("detail.section.contact")}
                 </h4>
                 <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                   {contact.company && (
-                    <DetailRow icon={<Building2 className="h-3.5 w-3.5" />} label="Firma" value={contact.company} />
+                    <DetailRow icon={<Building2 className="h-3.5 w-3.5" />} label={t("detail.field.company")} value={contact.company} />
                   )}
                   {contact.ico && (
                     <DetailRow
                       icon={<Hash className="h-3.5 w-3.5" />}
-                      label="IČO"
+                      label={t("detail.field.ico")}
                       value={contact.ico}
                     />
                   )}
                   {contact.dic && (
                     <DetailRow
                       icon={<Hash className="h-3.5 w-3.5" />}
-                      label="DIČ"
+                      label={t("detail.field.dic")}
                       value={contact.dic}
                     />
                   )}
                   {contact.phone && (
                     <DetailRow
                       icon={<Phone className="h-3.5 w-3.5" />}
-                      label="Telefon"
+                      label={t("detail.field.phone")}
                       value={
                         <span className="tabular-nums">
                           {getPhoneInfo(contact.phone).formatted}
@@ -807,7 +824,7 @@ function ContactDetailDialog({
                   {contact.email && (
                     <DetailRow
                       icon={<Mail className="h-3.5 w-3.5" />}
-                      label="E-mail"
+                      label={t("detail.field.email")}
                       value={contact.email}
                       href={`mailto:${contact.email}`}
                     />
@@ -815,7 +832,7 @@ function ContactDetailDialog({
                   {contact.website && (
                     <DetailRow
                       icon={<Globe className="h-3.5 w-3.5" />}
-                      label="Web"
+                      label={t("detail.field.web")}
                       value={contact.website}
                       href={normalizeWebsite(contact.website) ?? "#"}
                       external
@@ -824,8 +841,8 @@ function ContactDetailDialog({
                   {lastActivity && (
                     <DetailRow
                       icon={<CalendarClock className="h-3.5 w-3.5" />}
-                      label="Poslední aktivita"
-                      value={formatDate(lastActivity)}
+                      label={t("detail.field.lastActivity")}
+                      value={formatDate(lastActivity, undefined, locale)}
                     />
                   )}
                 </div>
@@ -844,30 +861,30 @@ function ContactDetailDialog({
               {/* Souhrn času a financí */}
               <section className="space-y-2">
                 <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  Souhrn času a financí
+                  {t("detail.section.summary")}
                 </h4>
                 <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                   <DetailStat
                     icon={<Wallet className="h-4 w-4" />}
-                    label="Celkem zaplaceno"
-                    value={stat ? formatCzk(stat.totalPaid) : "—"}
+                    label={t("detail.stat.totalPaid")}
+                    value={stat ? formatCzk(stat.totalPaid, locale) : "—"}
                     tone="amber"
                   />
                   <DetailStat
                     icon={<Clock3 className="h-4 w-4" />}
-                    label="Celkem hodin"
-                    value={stat ? formatNumber(stat.totalHours, " h") : "—"}
+                    label={t("detail.stat.totalHours")}
+                    value={stat ? formatNumber(stat.totalHours, " h", locale) : "—"}
                     tone="violet"
                   />
                   <DetailStat
                     icon={<PackageCheck className="h-4 w-4" />}
-                    label="Počet plateb"
+                    label={t("detail.stat.paymentCount")}
                     value={stat ? String(stat.paymentCount) : "—"}
                     tone="amber"
                   />
                   <DetailStat
                     icon={<Clock3 className="h-4 w-4" />}
-                    label="Časových záznamů"
+                    label={t("detail.stat.timeEntryCount")}
                     value={stat ? String(stat.timeEntryCount) : "—"}
                     tone="violet"
                   />
@@ -878,7 +895,7 @@ function ContactDetailDialog({
 
           <DialogFooter className="border-t px-6 py-3">
             <Button variant="outline" onClick={() => onOpenChange(false)}>
-              Zavřít
+              {t("detail.button.close")}
             </Button>
           </DialogFooter>
         </div>
@@ -995,6 +1012,9 @@ function ContactForm({
 }) {
   const updateContact = useUpdateContact(projectId);
   const { trackEvent } = useAnalytics(projectId);
+  const t = useTranslations("tabs.contacts");
+  const tContactTypes = useTranslations("contactTypes");
+  const tCommon = useTranslations("common");
   const [name, setName] = useState(contact?.name ?? "");
   const [type, setType] = useState(contact?.type ?? "company");
   const [role, setRole] = useState(contact?.role ?? "");
@@ -1022,7 +1042,7 @@ function ContactForm({
     if (c.address) {
       setNotes((prev) => {
         const trimmedPrev = prev.trim();
-        const addrLine = `Adresa (ARES): ${c.address}`;
+        const addrLine = t("form.ares.addressPrefix", { address: c.address });
         return trimmedPrev ? `${trimmedPrev}\n${addrLine}` : addrLine;
       });
     }
@@ -1030,7 +1050,7 @@ function ContactForm({
 
   const handleSubmit = async () => {
     if (!name.trim()) {
-      toast.error("Jméno je povinné");
+      toast.error(t("toasts.updateError"));
       return;
     }
     try {
@@ -1049,19 +1069,19 @@ function ContactForm({
       };
       if (contact) {
         await updateContact.mutateAsync({ id: contact.id, data });
-        toast.success("Kontakt upraven");
+        toast.success(t("toasts.updateSuccess"));
       } else if (createContact) {
         await createContact.mutateAsync(data);
         trackEvent("add_contact", { name, type });
-        toast.success("Kontakt přidán");
+        toast.success(t("toasts.createSuccess"));
       }
       onOpenChange(false);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Nepodařilo se uložit kontakt");
+      toast.error(err instanceof Error ? err.message : t("toasts.saveErrorFallback"));
     }
   };
 
-  const submitLabel = contact ? "Upravit kontakt" : "Přidat kontakt";
+  const submitLabel = contact ? t("form.submitLabel.edit") : t("form.submitLabel.create");
 
   return (
     <AddDialogShell
@@ -1069,7 +1089,7 @@ function ContactForm({
       onOpenChange={onOpenChange}
       titleValue={name}
       onTitleChange={setName}
-      titlePlaceholder="Jméno / Název…"
+      titlePlaceholder={t("form.placeholder.title")}
       submitLabel={submitLabel}
       onSubmit={handleSubmit}
       isSubmitting={createContact?.isPending || updateContact.isPending}
@@ -1081,10 +1101,10 @@ function ContactForm({
           <div className="space-y-1.5 rounded-md border bg-muted/30 p-3">
             <Label className="flex items-center gap-1.5 text-xs">
               <Search className="h-3 w-3" />
-              Načíst z ARES registru
+              {t("form.ares.label")}
             </Label>
             <p className="text-[11px] text-muted-foreground">
-              Vyhledejte firmu podle IČO nebo názvu a predvyplňte pole.
+              {t("form.ares.hint")}
             </p>
             <AresSearch onSelect={handleAresSelect} />
           </div>
@@ -1092,63 +1112,63 @@ function ContactForm({
         {/* Typ + Role */}
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div className="space-y-2">
-            <Label htmlFor="type">Typ</Label>
+            <Label htmlFor="type">{t("form.field.type")}</Label>
             <Select value={type} onValueChange={setType}>
               <SelectTrigger id="type">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {CONTACT_TYPES.map((t) => (
-                  <SelectItem key={t.value} value={t.value}>
-                    {t.emoji} {t.label}
+                {CONTACT_TYPES.map((ct) => (
+                  <SelectItem key={ct.value} value={ct.value}>
+                    {ct.emoji} {tContactTypes(ct.value)}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="role">Role / Obor</Label>
+            <Label htmlFor="role">{t("form.field.role")}</Label>
             <Input
               id="role"
               value={role}
               onChange={(e) => setRole(e.target.value)}
-              placeholder="např. Zedník, Elektrikář"
+              placeholder={t("form.placeholder.role")}
             />
           </div>
         </div>
 
         {/* Detaily (volitelné) */}
-        <CollapsibleSection title="Detaily (volitelné)">
+        <CollapsibleSection title={t("form.section.details")}>
           {/* Firma */}
           <div className="space-y-2">
-            <Label htmlFor="company">Firma (volitelné)</Label>
+            <Label htmlFor="company">{t("form.field.company")}</Label>
             <Input
               id="company"
               value={company}
               onChange={(e) => setCompany(e.target.value)}
-              placeholder="např. Stavby s.r.o."
+              placeholder={t("form.placeholder.company")}
             />
           </div>
           {/* IČO + DIČ */}
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="ico">IČO</Label>
+              <Label htmlFor="ico">{t("form.field.ico")}</Label>
               <Input
                 id="ico"
                 value={ico}
                 onChange={(e) => setIco(e.target.value)}
-                placeholder="např. 12345678"
+                placeholder={t("form.placeholder.ico")}
                 inputMode="numeric"
                 autoComplete="off"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="dic">DIČ</Label>
+              <Label htmlFor="dic">{t("form.field.dic")}</Label>
               <Input
                 id="dic"
                 value={dic}
                 onChange={(e) => setDic(e.target.value)}
-                placeholder="např. CZ12345678"
+                placeholder={t("form.placeholder.dic")}
                 autoComplete="off"
               />
             </div>
@@ -1156,42 +1176,42 @@ function ContactForm({
           {/* Telefon + E-mail */}
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="phone">Telefon</Label>
+              <Label htmlFor="phone">{t("form.field.phone")}</Label>
               <Input
                 id="phone"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                placeholder="+420 …"
+                placeholder={t("form.placeholder.phone")}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="email">E-mail</Label>
+              <Label htmlFor="email">{t("form.field.email")}</Label>
               <Input
                 id="email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="email@domena.cz"
+                placeholder={t("form.placeholder.email")}
               />
             </div>
           </div>
           {/* Web */}
           <div className="space-y-2">
-            <Label htmlFor="website">Web</Label>
+            <Label htmlFor="website">{t("form.field.web")}</Label>
             <div className="relative">
               <Globe className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 id="website"
                 value={website}
                 onChange={(e) => setWebsite(e.target.value)}
-                placeholder="např. www.firma.cz"
+                placeholder={t("form.placeholder.web")}
                 className="pl-9"
               />
             </div>
           </div>
           {/* Hodnocení */}
           <div className="space-y-2">
-            <Label>Hodnocení</Label>
+            <Label>{t("form.field.rating")}</Label>
             <div className="flex gap-1">
               {[1, 2, 3, 4, 5].map((s) => (
                 <button
@@ -1218,19 +1238,19 @@ function ContactForm({
                   className="ml-2 h-6 text-xs"
                   onClick={() => setRating(null)}
                 >
-                  Zrušit
+                  {tCommon("cancel")}
                 </Button>
               )}
             </div>
           </div>
           {/* Poznámky */}
           <div className="space-y-2">
-            <Label htmlFor="notes">Poznámky</Label>
+            <Label htmlFor="notes">{t("form.field.notes")}</Label>
             <Textarea
               id="notes"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="Zkušenosti, reference, postup práce…"
+              placeholder={t("form.placeholder.notes")}
               rows={2}
             />
           </div>

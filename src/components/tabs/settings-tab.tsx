@@ -3,6 +3,7 @@
 import { Loader2, EyeOff, Info, Github, ExternalLink, Activity } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useQuery } from "@tanstack/react-query";
+import { useFormatter, useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
@@ -32,6 +33,8 @@ import {
 const GITHUB_URL = "https://github.com/lukas-hanzlik/stavba";
 
 export function SettingsTab() {
+  const t = useTranslations("auth.settings");
+  const format = useFormatter();
   const hiddenProjectIds = useAppStore((s) => s.hiddenProjectIds);
   const toggleProjectHidden = useAppStore((s) => s.toggleProjectHidden);
   useHiddenProjectsSync();
@@ -50,8 +53,10 @@ export function SettingsTab() {
     staleTime: 60_000,
   });
 
+  // Locale-aware commit date formatting — uses the active next-intl locale
+  // via `useFormatter()` (was previously hardcoded `cs-CZ`).
   const commitDateLabel = GIT_COMMIT_DATE
-    ? new Date(GIT_COMMIT_DATE).toLocaleString("cs-CZ", {
+    ? format.dateTime(new Date(GIT_COMMIT_DATE), {
         dateStyle: "medium",
         timeStyle: "short",
       })
@@ -64,11 +69,10 @@ export function SettingsTab() {
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-lg font-semibold">
             <EyeOff className="h-5 w-5 text-muted-foreground" />
-            Skryté projekty
+            {t("sections.hiddenProjects")}
           </CardTitle>
           <CardDescription>
-            Skryté projekty se nezobrazují v přepínači projektů v horní liště.
-            Stále jsou přístupné přes přímý odkaz.
+            {t("hiddenProjects.description")}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -110,8 +114,8 @@ export function SettingsTab() {
                       onCheckedChange={() => toggleProjectHidden(p.id)}
                       aria-label={
                         isHidden
-                          ? `Zobrazit projekt ${p.name}`
-                          : `Skrýt projekt ${p.name}`
+                          ? t("hiddenProjects.aria.show", { name: p.name })
+                          : t("hiddenProjects.aria.hide", { name: p.name })
                       }
                     />
                   </li>
@@ -120,12 +124,12 @@ export function SettingsTab() {
             </ul>
           ) : (
             <p className="rounded-lg border bg-card p-3 text-sm text-muted-foreground">
-              Zatím nemáte žádné projekty.
+              {t("hiddenProjects.empty")}
             </p>
           )}
 
           <p className="mt-3 text-xs text-muted-foreground">
-            Zapnutý přepínač = projekt je skrytý. Změny se ukládají automaticky.
+            {t("hiddenProjects.toggleHint")}
           </p>
         </CardContent>
       </Card>
@@ -136,10 +140,10 @@ export function SettingsTab() {
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-lg font-semibold">
               <Activity className="h-5 w-5 text-primary" />
-              Statistiky mé aktivity
+              {t("sections.activity")}
             </CardTitle>
             <CardDescription>
-              Přehled vašich akcí v aplikaci za celé období napříč všemi projekty.
+              {t("activity.description")}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -155,39 +159,41 @@ export function SettingsTab() {
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-lg font-semibold">
             <Info className="h-5 w-5 text-muted-foreground" />
-            O aplikaci
+            {t("sections.about")}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <p className="mb-4 text-sm text-muted-foreground">
-            Aplikace <strong className="text-foreground">Stavba</strong> slouží
-            ke komplexní správě rozpočtu, nákladů, času a materiálu pro stavby
-            a rekonstrukce.
+            {t.rich("about.body", {
+              brand: (chunks) => (
+                <strong className="text-foreground">{chunks}</strong>
+              ),
+            })}
           </p>
 
           <div className="space-y-1.5 rounded-lg border bg-card p-3 text-xs">
             <div className="flex justify-between gap-2">
-              <span className="text-muted-foreground">Verze</span>
+              <span className="text-muted-foreground">{t("about.version")}</span>
               <span className="font-mono font-medium">{APP_VERSION}</span>
             </div>
             <div className="flex justify-between gap-2">
-              <span className="text-muted-foreground">Commit</span>
+              <span className="text-muted-foreground">{t("about.commit")}</span>
               <span className="font-mono font-medium">{GIT_COMMIT_HASH}</span>
             </div>
             {commitDateLabel && (
               <div className="flex justify-between gap-2">
-                <span className="text-muted-foreground">Datum buildu</span>
+                <span className="text-muted-foreground">{t("about.buildDate")}</span>
                 <span className="tabular-nums">{commitDateLabel}</span>
               </div>
             )}
             {GIT_BRANCH && GIT_BRANCH !== "unknown" && (
               <div className="flex justify-between gap-2">
-                <span className="text-muted-foreground">Větev</span>
+                <span className="text-muted-foreground">{t("about.branch")}</span>
                 <span className="font-mono">{GIT_BRANCH}</span>
               </div>
             )}
             <div className="flex justify-between gap-2 border-t border-outline-variant pt-1.5 mt-1.5">
-              <span className="text-muted-foreground">Label</span>
+              <span className="text-muted-foreground">{t("about.label")}</span>
               <span className="font-mono text-muted-foreground">
                 {VERSION_LABEL}
               </span>
@@ -206,7 +212,7 @@ export function SettingsTab() {
               rel="noopener noreferrer"
             >
               <Github className="h-4 w-4" />
-              Zdrojový kód na GitHubu
+              {t("about.githubLink")}
               <ExternalLink className="ml-auto h-3.5 w-3.5 text-muted-foreground" />
             </a>
           </Button>

@@ -29,6 +29,7 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { EmptyStateBox } from "@/components/empty-state-box";
 import { useAnalytics } from "@/hooks/use-analytics";
+import { useTranslations } from "next-intl";
 
 // localStorage key for remembering the user's chosen author name across
 // sessions and across projects.
@@ -48,6 +49,8 @@ function readSavedAuthor(): string {
 }
 
 export function NotesTab({ projectId }: { projectId: string }) {
+  const t = useTranslations("tabs.notes");
+  const tc = useTranslations("common");
   const { data: notes, isLoading } = useNotes(projectId);
   const createNote = useCreateNote(projectId);
   const deleteNote = useDeleteNote(projectId);
@@ -82,7 +85,7 @@ export function NotesTab({ projectId }: { projectId: string }) {
     if (e) e.preventDefault();
     if (!text.trim()) return;
     try {
-      const authorName = author.trim() || "Anonym";
+      const authorName = author.trim() || t("anonymousAuthor");
       await createNote.mutateAsync({
         author: authorName,
         text: text.trim(),
@@ -90,7 +93,7 @@ export function NotesTab({ projectId }: { projectId: string }) {
       trackEvent("add_note", { author: authorName });
       setText("");
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Nepodařilo se přidat poznámku");
+      toast.error(err instanceof Error ? err.message : t("toasts.createError"));
     }
   };
 
@@ -98,9 +101,9 @@ export function NotesTab({ projectId }: { projectId: string }) {
     setPendingDeleteId(id);
     try {
       await deleteNote.mutateAsync(id);
-      toast.success("Poznámka smazána");
+      toast.success(t("toasts.deleteSuccess"));
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Nepodařilo se smazat poznámku");
+      toast.error(err instanceof Error ? err.message : t("toasts.deleteError"));
     } finally {
       setPendingDeleteId(null);
     }
@@ -109,18 +112,18 @@ export function NotesTab({ projectId }: { projectId: string }) {
   const handleUpdate = async (id: string, newText: string) => {
     const trimmed = newText.trim();
     if (!trimmed) {
-      toast.error("Text poznámky nemůže být prázdný");
+      toast.error(t("toasts.updateEmptyError"));
       return false;
     }
     setPendingSaveId(id);
     try {
       const note = notes?.find((n) => n.id === id);
       await updateNote.mutateAsync({ id, text: trimmed });
-      trackEvent("edit_note", { author: note?.author ?? "Anonym" });
-      toast.success("Poznámka upravena");
+      trackEvent("edit_note", { author: note?.author ?? t("anonymousAuthor") });
+      toast.success(t("toasts.updateSuccess"));
       return true;
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Nepodařilo se upravit poznámku");
+      toast.error(err instanceof Error ? err.message : t("toasts.updateError"));
       return false;
     } finally {
       setPendingSaveId(null);
@@ -145,32 +148,32 @@ export function NotesTab({ projectId }: { projectId: string }) {
       >
         <div className="flex items-center gap-2">
           <StickyNote className="h-4 w-4 text-primary" />
-          <h3 className="type-title">Nová poznámka</h3>
+          <h3 className="type-title">{t("title.new")}</h3>
         </div>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-[200px_1fr]">
           <div className="space-y-1">
             <label htmlFor="note-author" className="type-label text-on-surface-variant">
-              Jméno autora
+              {t("field.author")}
             </label>
             <Input
               id="note-author"
               value={author}
               onChange={(e) => persistAuthor(e.target.value)}
-              placeholder="např. Pavel"
+              placeholder={t("placeholder.author")}
               className="h-9 text-sm"
               maxLength={100}
             />
           </div>
           <div className="space-y-1">
             <label htmlFor="note-text" className="type-label text-on-surface-variant">
-              Text poznámky
+              {t("field.text")}
             </label>
             <Textarea
               id="note-text"
               value={text}
               onChange={(e) => setText(e.target.value)}
               onKeyDown={handleTextKeyDown}
-              placeholder="Sem napište poznámku k projektu — rozhodnutí, nápad, úkol, zprávu… (Ctrl+Enter = přidat)"
+              placeholder={t("placeholder.text")}
               rows={3}
               className="resize-y text-sm"
             />
@@ -178,7 +181,7 @@ export function NotesTab({ projectId }: { projectId: string }) {
         </div>
         <div className="flex items-center justify-between gap-2">
           <p className="type-label text-on-surface-variant">
-            {notes?.length ?? 0} {notes?.length === 1 ? "poznámka" : (notes?.length ?? 0) >= 2 && (notes?.length ?? 0) <= 4 ? "poznámky" : "poznámek"}
+            {t("count", { count: notes?.length ?? 0 })}
           </p>
           <Button
             type="submit"
@@ -190,7 +193,7 @@ export function NotesTab({ projectId }: { projectId: string }) {
             ) : (
               <Plus className="mr-1.5 h-4 w-4" />
             )}
-            Přidat
+            {tc("add")}
           </Button>
         </div>
       </form>
@@ -218,8 +221,8 @@ export function NotesTab({ projectId }: { projectId: string }) {
       ) : (
         <EmptyStateBox
           icon={StickyNote}
-          title="Zatím žádné poznámky"
-          description="Napište první poznámku do pole výše. Poznámky slouží pro rychlé úryvky, odkazy a připomínky."
+          title={t("empty.title")}
+          description={t("empty.description")}
         />
       )}
     </div>
@@ -239,6 +242,7 @@ function NoteCard({
   isDeleting: boolean;
   isSaving: boolean;
 }) {
+  const t = useTranslations("tabs.notes");
   const [isEditing, setIsEditing] = useState(false);
   // The draft is only used while editing. When not editing we render
   // `note.text` directly, so we never need to keep the draft in sync with
@@ -327,7 +331,7 @@ function NoteCard({
             </Badge>
             {isEditing && (
               <Badge variant="outline" className="type-label-sm font-normal text-info-strong">
-                úprava
+                {t("badge.editing")}
               </Badge>
             )}
           </div>
@@ -346,14 +350,14 @@ function NoteCard({
                 maxLength={5000}
               />
               <div className="flex items-center gap-1.5 type-label-sm text-on-surface-variant">
-                <span>Enter = uložit · Shift+Enter = nový řádek · Esc = zrušit</span>
+                <span>{t("hint.editShortcuts")}</span>
               </div>
             </div>
           ) : (
             <p
               className="mt-1.5 cursor-text whitespace-pre-wrap break-words type-body leading-relaxed text-foreground/90"
               onClick={startEdit}
-              title="Klikněte pro úpravu"
+              title={t("clickToEdit")}
             >
               {note.text}
             </p>
@@ -371,7 +375,7 @@ function NoteCard({
                 "h-7 w-7 text-on-surface-variant opacity-0 transition-opacity hover:bg-surface-container-high hover:text-info-strong group-hover:opacity-100",
               )}
               onClick={startEdit}
-              aria-label="Upravit poznámku"
+              aria-label={t("aria.edit")}
             >
               <Pencil className="h-3.5 w-3.5" />
             </Button>
@@ -390,7 +394,7 @@ function NoteCard({
                 // instead of discarding.
                 onMouseDown={(e) => e.preventDefault()}
                 onClick={commitEdit}
-                aria-label="Uložit úpravy"
+                aria-label={t("aria.save")}
                 disabled={isSaving || !draft.trim()}
               >
                 {isSaving ? (
@@ -406,7 +410,7 @@ function NoteCard({
                 className="h-7 w-7 text-on-surface-variant hover:bg-surface-container-high hover:text-foreground"
                 onMouseDown={(e) => e.preventDefault()}
                 onClick={cancelEdit}
-                aria-label="Zrušit úpravy"
+                aria-label={t("aria.cancel")}
                 disabled={isSaving}
               >
                 <X className="h-3.5 w-3.5" />
@@ -422,7 +426,7 @@ function NoteCard({
                 isDeleting && "opacity-100",
               )}
               onClick={onDelete}
-              aria-label="Smazat poznámku"
+              aria-label={t("aria.delete")}
               disabled={isDeleting}
             >
               {isDeleting ? (

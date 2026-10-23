@@ -34,7 +34,8 @@
       "timeline": "Časová osa",
       "notes": "Poznámky",
       "management": "Správa projektu",
-      "telemetry": "Telemetrie"
+      "telemetry": "Telemetrie",
+      "admin": "Administrace"
     }
   },
   "phases": {
@@ -75,10 +76,10 @@
     "family": "Rodina"
   },
   "roles": {
-    "viewer": "Pozorovatel",
+    "viewer": "Čtenář",
     "editor": "Editor",
-    "owner": "Majitel",
-    "admin": "Správce"
+    "owner": "Správce",
+    "admin": "Admin"
   },
   "LanguageSwitcher": {
     "language": "Jazyk",
@@ -301,5 +302,1488 @@
   },
   "sidebar": {
     "settings": "Nastavení"
+  },
+  "analytics": {
+    "eventTypes": {
+      "page_view": "Zobrazení stránky",
+      "add_payment": "Přidání platby",
+      "add_time_entry": "Přidání času",
+      "edit_time_entry": "Úprava času",
+      "edit_payment": "Úprava platby",
+      "delete_payment": "Smazání platby",
+      "add_contact": "Přidání kontaktu",
+      "add_note": "Přidání poznámky",
+      "edit_note": "Úprava poznámky",
+      "add_budget_item": "Přidání položky",
+      "edit_budget_item": "Úprava položky",
+      "download_data": "Stažení dat",
+      "login": "Přihlášení",
+      "logout": "Odhlášení",
+      "project_share": "Sdílení projektu"
+    }
+  },
+  "relativeTime": {
+    "justNow": "právě teď",
+    "minute": "před {n, plural, one {minutou} other {{n} minutami}}",
+    "hour": "před {n, plural, one {hodinou} other {{n} hodinami}}",
+    "yesterday": "včera",
+    "days": "před {n, plural, one {dnem} few {# dny} other {{n} dny}}"
+  },
+  "tabs": {
+    "admin": {
+      "nav": {
+        "label": "Administrace",
+        "title": "Nastavení účtu"
+      },
+      "subtitle": "Profil, projekty, statistiky a preference.",
+      "section": {
+        "projects": "Moje projekty",
+        "users": "Správa uživatelů",
+        "export": "Export",
+        "notifications": "Notifikace",
+        "danger": "Nebezpečná zóna"
+      },
+      "profile": {
+        "title": "Můj profil",
+        "description": "Zobrazované jméno a e-mail, které ostatní uživatelé vidí při sdílení projektů.",
+        "button": {
+          "edit": "Upravit",
+          "save": "Uložit"
+        },
+        "field": {
+          "displayName": "Zobrazované jméno"
+        },
+        "placeholder": {
+          "name": "např. Lukáš Hanzlík"
+        },
+        "hint": {
+          "nameChange": "Změna se projeví ve všech projektech, kde jste členem."
+        },
+        "label": {
+          "accountCreated": "Účet vytvořen: {date}"
+        },
+        "toasts": {
+          "emptyName": "Jméno nesmí být prázdné",
+          "saved": "Profil uložen",
+          "saveError": "Nepodařilo se upravit profil"
+        }
+      },
+      "projects": {
+        "title": "Moje projekty",
+        "description": "Projekty, kde jste správcem nebo členem. Odpojit se můžete jen z projektů, kde nejste správce.",
+        "button": {
+          "leave": "Odpojit se",
+          "leaveConfirm": "Odpojit se"
+        },
+        "leave": {
+          "confirmTitle": "Odpojit se od projektu „{name}\"?",
+          "confirmBody": "Ztratíte přístup ke všem datům projektu. Tato akce je nevratná.",
+          "cancel": "Zrušit"
+        },
+        "badge": {
+          "cannotLeave": "Nelze opustit"
+        },
+        "empty": "Zatím nejste členem žádného projektu.",
+        "toasts": {
+          "left": "Odpojeno od projektu „{name}\"",
+          "leaveError": "Nepodařilo se odpojit od projektu"
+        }
+      },
+      "users": {
+        "title": "Správa uživatelů",
+        "description": "Přehled všech uživatelů instance a jejich admin práv. Změny se projeví okamžitě.",
+        "badge": {
+          "admin": "Administrátor",
+          "user": "Uživatel"
+        },
+        "aria": {
+          "adminToggleSelf": "Admin práva uživatele {name} (nelze změnit)",
+          "adminToggleOther": "Přepnout admin práva uživatele {name}"
+        },
+        "tooltip": {
+          "noSelfDemote": "Nelze odebrat admin práva sám sobě"
+        },
+        "hint": {
+          "selfExcluded": "Vlastní účet ({email}) je ze seznamu vynechán — vlastní admin práva nelze odebrat."
+        },
+        "empty": "Žádní další uživatelé k správě.",
+        "toasts": {
+          "cannotDemoteSelf": "Nelze odebrat admin práva sám sobě",
+          "promoted": "Uživatel {name} je nyní administrátor",
+          "demoted": "Uživatel {name} již není administrátor",
+          "toggleError": "Nepodařilo se změnit admin práva"
+        }
+      },
+      "stats": {
+        "title": "Statistiky mé aktivity",
+        "description": "Přehled vašich akcí v aplikaci za celé období.",
+        "filter": {
+          "allProjects": "Všechny projekty"
+        },
+        "button": {
+          "refresh": "Obnovit"
+        },
+        "kpi": {
+          "totalActions": "Celkem akcí",
+          "pageViews": "Zobrazení stránek",
+          "totalTime": "Celkem čas na stránkách",
+          "lastActive": "Poslední aktivita"
+        },
+        "chart": {
+          "byType": {
+            "title": "Události podle typu",
+            "empty": "Zatím nebyla zaznamenána žádná aktivita."
+          }
+        },
+        "topPages": {
+          "title": "Moje nejaktivnější stránky",
+          "empty": "Žádná data o čase na stránkách.",
+          "column": {
+            "page": "Stránka",
+            "views": "Zobrazení",
+            "totalTime": "Celkem čas"
+          }
+        }
+      },
+      "export": {
+        "title": "Export mých dat",
+        "description": "Stáhněte si všechna data aplikace ve formátu JSON nebo CSV pro zálohování a analýzu.",
+        "button": {
+          "json": "Stáhnout všechna data (JSON)",
+          "csv": "Stáhnout CSV všechny projekty"
+        },
+        "hint": "JSON obsahuje kompletní stav všech projektů (rozpočet, platby, čas, kontakty). CSV stáhne pro každý projekt 4 soubory (rozpočet, platby, čas, kontakty).",
+        "toasts": {
+          "jsonSuccess": "Data exportována",
+          "jsonError": "Export selhal",
+          "csvNoProjects": "Nejsou k dispozici žádné projekty pro export",
+          "csvSuccess": "Data exportována ({count, plural, one {# soubor} few {# soubory} other {# souborů}})",
+          "csvAllFailed": "CSV export selhal",
+          "csvPartialSuccess": "Exportováno {success} souborů, {failed} selhalo"
+        }
+      },
+      "notifications": {
+        "title": "Notifikační preference",
+        "description": "Dokud není aktivní Google Auth, ukládáme preference lokálně ve vašem prohlížeči.",
+        "toggle": {
+          "onMemberAssigned": {
+            "label": "E-mail při přiřazení člena",
+            "description": "Upozornění, když vás někdo přidá jako člena projektu."
+          },
+          "onItemDelayed": {
+            "label": "E-mail při zpoždění položky",
+            "description": "Upozornění, když se položka rozpočtu dostane za plánovaný termín."
+          },
+          "onOwnerChanged": {
+            "label": "E-mail při změně vlastníka",
+            "description": "Upozornění, když někdo změní správce projektu, jehož jste členem."
+          }
+        },
+        "toasts": {
+          "saved": "Preference uložena",
+          "saveError": "Nepodařilo se uložit preferenci"
+        }
+      },
+      "danger": {
+        "title": "Nebezpečná zóna",
+        "description": "Akce v této sekci jsou nevratné. Vyžadují explicitní potvrzení v dialogu.",
+        "deleteNotes": {
+          "title": "Smazat všechny mé poznámky",
+          "description": "Trvale smaže všechny poznámky, které jste vytvořili napříč všemi projekty.",
+          "button": "Smazat",
+          "confirmTitle": "Smazat všechny mé poznámky?",
+          "confirmBody": "Tato akce je nevratná. Všechny poznámky, které jste vytvořili, budou trvale smazány ze všech projektů.",
+          "confirmButton": "Smazat všechny poznámky",
+          "toasts": {
+            "none": "Žádné poznámky ke smazání",
+            "success": "Smazáno {count, plural, one {# poznámka} few {# poznámky} other {# poznámek}}",
+            "partial": "Smazáno {deleted}, {failed} selhalo",
+            "error": "Nepodařilo se smazat poznámky"
+          }
+        },
+        "leaveAll": {
+          "title": "Odpojit se od všech projektů",
+          "description": "Odpojí vás ze všech projektů, kde jste členem (ne vlastníkem). Ztratíte přístup ke všem datům těchto projektů.",
+          "button": "Odpojit se od všech",
+          "confirmTitle": "Odpojit se od všech projektů?",
+          "confirmBody": "Ztratíte přístup ke všem datům projektů, kde jste členem. Projekty, které spravujete, zůstanou nedotčeny. Tato akce je nevratná.",
+          "confirmButton": "Odpojit se od všech",
+          "toasts": {
+            "none": "Nejste členem žádného projektu (kde můžete odejít)",
+            "success": "Odpojeno od {count, plural, one {# projektu} few {# projektů} other {# projektů}}",
+            "partial": "Odpojeno {left}, {failed} selhalo",
+            "error": "Nepodařilo se odpojit od projektů"
+          }
+        }
+      }
+    },
+    "budget": {
+      "completion": {
+        "all": "Vše",
+        "active": "Aktivní",
+        "done": "Hotovo",
+        "rejected": "Zavrženo"
+      },
+      "filter": {
+        "phase": "Fáze:"
+      },
+      "empty": {
+        "title": "Žádné položky neodpovídají filtru",
+        "description": "Zkuste změnit filtr fáze, stavu nebo hledaný výraz. Nebo vymažte filtr pro zobrazení všech položek.",
+        "categoryRow": "Žádné položky v této kategorii."
+      },
+      "column": {
+        "item": "Položka",
+        "phase": "Fáze",
+        "plan": "Plán (Kč)",
+        "days": "Dny",
+        "dateFrom": "Datum od",
+        "dateTo": "Datum do",
+        "actual": "Skut. (Kč)",
+        "hours": "Hod.",
+        "status": "Stav"
+      },
+      "category": {
+        "aria": {
+          "drag": "Přetáhnout kategorii"
+        },
+        "addItem": {
+          "aria": "Přidat položku",
+          "title": "Přidat položku do kategorie „{name}\""
+        },
+        "totals": "{actual} / {plan}"
+      },
+      "row": {
+        "aria": {
+          "drag": "Přetáhnout úkol",
+          "expand": "Rozbalit",
+          "collapse": "Sbalit"
+        },
+        "childCount": "{count, plural, one {# úkol} few {# úkoly} other {# úkolů}}",
+        "addTask": "Přidat úkol",
+        "required": {
+          "title": "Povinné (nutné pro dokončení projektu)",
+          "aria": "Nutné",
+          "ariaRequired": "Zrušit nutné",
+          "ariaOptional": "Označit jako nutné",
+          "titleRequired": "Povinné — kliknutím označíte jako nepovinné",
+          "titleOptional": "Nepovinné — kliknutím označíte jako povinné (nutné pro dokončení projektu)"
+        },
+        "placeholder": {
+          "noName": "(bez názvu)"
+        },
+        "badge": {
+          "rejected": "Zavrženo",
+          "done": "Hotovo",
+          "subsidy": "Dotace",
+          "subsidyTitleWithAmount": "Možná dotace: {amount}",
+          "subsidyTitleNoAmount": "Možná dotace (částka nezadána)",
+          "addTaskTitle": "Přidat úkol pod tuto položku",
+          "addTaskAria": "Přidat úkol"
+        },
+        "paymentsCount": "{count, plural, one {# platba} few {# platby} other {# plateb}}",
+        "timeCount": "{count, plural, one {# čas} few {# časy} other {# časů}}",
+        "tooltip": {
+          "planTotal": "Celkem: vlastní {own} + úkoly {children}",
+          "actualTotal": "Celkem: vlastní {own} + úkoly {children}"
+        },
+        "completed": {
+          "ariaDone": "Označit jako nedokončené",
+          "ariaTodo": "Označit jako hotové",
+          "titleDone": "Označit jako nedokončené",
+          "titleTodo": "Označit jako hotové"
+        },
+        "rejected": {
+          "ariaRejected": "Zrušit zavržení",
+          "ariaNotRejected": "Zavrhnout",
+          "titleRejected": "Zrušit zavržení",
+          "titleNotRejected": "Zavrhnout položku"
+        },
+        "actions": {
+          "ariaMore": "Více akcí",
+          "titleMore": "Více akcí"
+        },
+        "menu": {
+          "editDetail": "Upravit detail",
+          "markRequired": "Označit jako povinné",
+          "markOptional": "Označit jako nepovinné",
+          "subsidyAdd": "Označit jako dotovatelné",
+          "subsidyRemove": "Zrušit dotaci",
+          "markDone": "Označit jako hotové",
+          "markNotDone": "Označit jako nedokončené",
+          "reject": "Zavrhnout",
+          "unreject": "Zrušit zavržení",
+          "move": "Přesunout pod jinou položku…",
+          "duplicate": "Duplikovat",
+          "delete": "Smazat"
+        },
+        "delete": {
+          "title": "Smazat položku?",
+          "body": "Opravdu chcete smazat **{name}**? Smažou se i související platby a časové záznamy.",
+          "cancel": "Zrušit",
+          "confirm": "Smazat"
+        },
+        "toasts": {
+          "duplicateSuccess": "Položka duplikována",
+          "duplicateError": "Nepodařilo se duplikovat",
+          "deleteSuccess": "Položka smazána",
+          "deleteError": "Nepodařilo se smazat"
+        }
+      },
+      "detail": {
+        "label": {
+          "note": "Poznámka",
+          "contact": "Kontakt",
+          "links": "Odkazy",
+          "linksFromTasks": "Z úkolů"
+        },
+        "placeholder": {
+          "note": "Doplňující informace, jednotkové ceny, postup…",
+          "noName": "(bez názvu)"
+        },
+        "contact": {
+          "unassigned": "Není přiřazen — klikněte na položku pro úpravu"
+        }
+      },
+      "moveDialog": {
+        "title": "Přesunout úkol",
+        "description": "Přesunout **{name}** pod jinou položku. Kategorie se zdědí z nového rodiče.",
+        "currentParent": "Aktuální rodič: {name}",
+        "empty": "V projektu nejsou žádné další položky, pod které by šlo úkol přesunout.",
+        "placeholder": {
+          "select": "Vyberte cílovou položku",
+          "noName": "(bez názvu)"
+        },
+        "topLevel": "Na nejvyšší úroveň (bez rodiče)",
+        "cancel": "Zrušit",
+        "confirm": "Přesunout",
+        "toasts": {
+          "movedToParent": "Úkol přesunut pod novou položku",
+          "movedToTop": "Úkol přesunut na nejvyšší úroveň",
+          "error": "Přesun se nezdařil"
+        }
+      }
+    },
+    "management": {
+      "button": {
+        "editProject": "Upravit projekt",
+        "reportPdf": "Report PDF",
+        "auditHistory": "Historie změn"
+      },
+      "data": {
+        "title": "Data a exporty",
+        "description": "Úprava projektu, reporty a exporty dat do různých formátů",
+        "export": {
+          "label": "Export dat",
+          "json": "Export JSON",
+          "import": "Import JSON (owner only)"
+        },
+        "csv": {
+          "label": "CSV exporty (aktuální projekt)",
+          "budget": "Rozpočet CSV",
+          "payments": "Platby CSV",
+          "time": "Čas CSV",
+          "contacts": "Kontakty CSV"
+        },
+        "toasts": {
+          "exportSuccess": "Stav exportován",
+          "exportError": "Export selhal",
+          "importSuccess": "Stav importován",
+          "importError": "Import selhal",
+          "csvSuccess": "{type} exportován do CSV",
+          "csvError": "CSV export selhal"
+        }
+      },
+      "audit": {
+        "title": "Audit log — nedávné změny",
+        "description": "Přehled nedávných akcí v projektu"
+      },
+      "danger": {
+        "title": "Správa projektu",
+        "duplicate": {
+          "title": "Duplikovat projekt",
+          "description": "Vytvoří kopii s rozpočtem (bez plateb a času)",
+          "button": "Duplikovat",
+          "suffix": " (kopie)"
+        },
+        "delete": {
+          "title": "Smazat projekt",
+          "description": "Trvale smaže všechna data",
+          "adminOnlyHint": "Smazat projekt může pouze jeho správce",
+          "editorHint": "Pouze správce projektu může smazat projekt"
+        },
+        "toasts": {
+          "duplicateSuccess": "Projekt duplikován jako „{name}\"",
+          "duplicateError": "Nepodařilo se duplikovat projekt"
+        }
+      },
+      "info": {
+        "roleBadge": {
+          "editor": "Editor",
+          "admin": "Admin",
+          "viewer": "Čtenář"
+        },
+        "lockHint": "Úpravu informací o projektu může provést pouze správce projektu",
+        "label": {
+          "address": "Adresa",
+          "status": "Stav",
+          "startDate": "Datum zahájení",
+          "endDate": "Datum dokončení",
+          "description": "Popis"
+        },
+        "placeholder": {
+          "address": "např. Praha - Troja",
+          "description": "Krátký popis projektu…"
+        },
+        "created": "Vytvořeno: {date}",
+        "button": {
+          "save": "Uložit",
+          "edit": "Upravit"
+        },
+        "toasts": {
+          "saveSuccess": "Projekt upraven",
+          "saveError": "Nepodařilo se upravit projekt"
+        }
+      },
+      "property": {
+        "title": "Informace o nemovitosti",
+        "description": "Přesná adresa, energetické hodnocení a projektová dokumentace",
+        "button": {
+          "edit": "Upravit",
+          "save": "Uložit"
+        },
+        "label": {
+          "fullAddress": "Přesná adresa",
+          "floorArea": "Zastavěná plocha (m²)",
+          "floors": "Počet podlaží",
+          "heatLoss": "Tepelná ztráta (W/K)",
+          "energyRating": "Energetický štítek",
+          "studyUrl": "Odkaz na architektonickou studii",
+          "documentationUrl": "Odkaz na projektovou dokumentaci",
+          "note": "Poznámka"
+        },
+        "placeholder": {
+          "fullAddress": "např. Pražská 12, 110 00 Praha 1",
+          "floorArea": "např. 120",
+          "floors": "např. 2",
+          "heatLoss": "např. 85",
+          "note": "Volná poznámka k nemovitosti…"
+        },
+        "error": {
+          "url": "Zadejte platnou URL (http:// nebo https://)."
+        },
+        "lockHint": "Úpravu informací o nemovitosti může provést pouze správce projektu",
+        "readOnly": {
+          "fullAddress": "Přesná adresa",
+          "floorArea": "Zastavěná plocha",
+          "floorAreaValue": "{value} m²",
+          "floors": "Počet podlaží",
+          "heatLoss": "Tepelná ztráta",
+          "heatLossValue": "{value} W/K",
+          "energyRating": "Energetický štítek",
+          "studyUrl": "Architektonická studie",
+          "documentationUrl": "Projektová dokumentace",
+          "note": "Poznámka"
+        },
+        "toasts": {
+          "urlError": "Odkazy musí být platné URL (http:// nebo https://).",
+          "saveSuccess": "Informace o nemovitosti uloženy",
+          "saveError": "Nepodařilo se uložit informace o nemovitosti"
+        }
+      },
+      "sharing": {
+        "title": "Sdílení a přístupová práva",
+        "description": "Správa veřejnosti, správce, členů a pozvánek projektu",
+        "button": {
+          "share": "Sdílet",
+          "shareTitle": "Zkopírovat odkaz na veřejný pohled",
+          "transferOwnership": "Předat"
+        },
+        "toggle": {
+          "publicProject": {
+            "label": "Veřejný projekt",
+            "description": "Kdokoliv s odkazem může vidět projekt (pouze pro čtení)"
+          }
+        },
+        "aria": {
+          "publicToggle": "Přepnout veřejnost projektu",
+          "removeMember": "Odebrat člena",
+          "leaveProject": "Opustit projekt",
+          "revokeInvitation": "Zrušit pozvánku"
+        },
+        "lockHint": "Pouze správce může měnit veřejnost projektu",
+        "publicInfo": "Veřejný projekt: Kdokoliv s odkazem může vidět projekt (pouze pro čtení). Vypněte pro soukromí.",
+        "badge": {
+          "owner": "Správce"
+        },
+        "role": {
+          "viewer": "Čtenář",
+          "editor": "Editor"
+        },
+        "roleSelect": {
+          "viewer": "Čtenář (pouze čtení)",
+          "editor": "Editor (úpravy)"
+        },
+        "empty": {
+          "members": "Zatím nebyli přidáni žádní členové."
+        },
+        "pending": {
+          "title": "Čekající pozvánky",
+          "role": "Role: {role} · Platnost do: {date}"
+        },
+        "invitationHistory": {
+          "title": "Historie pozvánek ({count})",
+          "role": "Role: {role} · Vytvořeno: {date}"
+        },
+        "invitationStatus": {
+          "pending": "Čeká",
+          "accepted": "Přijato",
+          "rejected": "Odmítnuto",
+          "revoked": "Zrušeno",
+          "expired": "Vypršelo"
+        },
+        "inviteForm": {
+          "title": "Pozvat e-mailem",
+          "placeholderEmail": "e-mail@example.com",
+          "button": "Pozvat e-mailem",
+          "hint": {
+            "existingMember": "Tento uživatel je již členem projektu",
+            "newUser": "Nový uživatel — pozvánka mu přijde na e-mail, po registraci získá přístup",
+            "editor": "Jako editor můžete přidávat pouze Čtenáře nebo Editory",
+            "noInvite": "Pozvat nové uživatele může pouze správce projektu"
+          },
+          "info": "Pozvat e-mailem: Pozvaný uživatel získá přístup po přihlášení nebo registraci s daným e-mailem. Platnost pozvánky: 24 hodin."
+        },
+        "qr": {
+          "title": "QR kód projektu",
+          "description": "Naskenujte QR kód pro otevření projektu na mobilu.",
+          "info": "QR kód: Naskenujte pro otevření projektu na mobilu. Odkazuje na veřejný pohled projektu.",
+          "aria": "QR kód pro projekt {name}",
+          "button": {
+            "copyLink": "Kopírovat odkaz",
+            "copyLinkCopied": "Zkopírováno",
+            "downloadPng": "Stáhnout PNG"
+          },
+          "toasts": {
+            "copySuccess": "Odkaz zkopírován do schránky",
+            "copyError": "Kopírování selhalo — zkopírujte odkaz ručně",
+            "qrNotReady": "QR kód ještě není vygenerován",
+            "downloadSuccess": "QR kód stažen jako PNG",
+            "generateError": "Nepodařilo se vygenerovat QR kód"
+          }
+        },
+        "confirmRemove": {
+          "title": "Opravdu odebrat člena?",
+          "body": "Opravdu chcete odebrat uživatele „{name}\" z tohoto projektu? Ztratí přístup ke všem datům projektu. Tuto akci lze vrátit přidáním člena zpět.",
+          "cancel": "Zrušit",
+          "confirm": "Odebrat člena"
+        },
+        "toasts": {
+          "shareLinkCopied": "Odkaz na projekt zkopírován do schránky",
+          "shareLinkPrivate": "Projekt není veřejný — odkaz přesměruje na přihlášení",
+          "shareLinkError": "Nepodařilo se zkopírovat odkaz",
+          "madePublic": "Projekt je nyní veřejný — kdokoliv s odkazem ho může vidět",
+          "madePrivate": "Projekt je nyní soukromý",
+          "publicToggleError": "Nepodařilo se změnit viditelnost projektu",
+          "alreadyMember": "Tento uživatel je již členem projektu",
+          "inviteSent": "Pozvánka odeslána na {email}",
+          "inviteError": "Nepodařilo se odeslat pozvánku",
+          "inviteRevoked": "Pozvánka pro {email} zrušena",
+          "inviteRevokeError": "Nepodařilo se zrušit pozvánku",
+          "roleChanged": "Role upravena",
+          "roleChangeError": "Nepodařilo se upravit roli",
+          "memberRemoved": "Člen „{name}\" odebrán",
+          "memberRemoveError": "Nepodařilo se odebrat člena — člen byl obnoven",
+          "ownerChanged": "Správce změněn",
+          "ownerChangeError": "Nepodařilo se změnit správce"
+        }
+      },
+      "auditLog": {
+        "search": {
+          "placeholder": "Hledat v audit logu…",
+          "aria": "Hledat v audit logu",
+          "clearAria": "Vyčistit hledání"
+        },
+        "polling": "Načítání...",
+        "filter": {
+          "action": "Akce",
+          "entity": "Entita",
+          "user": "Autor",
+          "from": "Od",
+          "to": "Do",
+          "sort": "Řazení",
+          "pageSize": "Na stránku",
+          "fromAria": "Filtr od data",
+          "toAria": "Filtr do data",
+          "all": "Vše"
+        },
+        "action": {
+          "create": "Vytvořeno",
+          "update": "Upraveno",
+          "delete": "Smazáno",
+          "export": "Exportováno"
+        },
+        "sort": {
+          "desc": "Nejnovější",
+          "asc": "Nejstarší"
+        },
+        "empty": "Žádné záznamy pro vybrané filtry.",
+        "column": {
+          "action": "Úkon",
+          "detail": "Detail změny",
+          "author": "Autor",
+          "date": "Datum",
+          "time": "Čas"
+        },
+        "author": {
+          "unknown": "Neznámý"
+        },
+        "pagination": {
+          "summary": "Zobrazeno {from}–{to} z {total}",
+          "prev": "Předchozí",
+          "next": "Další",
+          "pageOf": "{page} / {totalPages}"
+        },
+        "tooltip": {
+          "goToTab": "Přejít na záložku {name}"
+        },
+        "actions": {
+          "create": "Vytvořeno",
+          "update": "Upraveno",
+          "delete": "Smazáno",
+          "export": "Exportováno"
+        },
+        "entities": {
+          "BudgetItem": "Položka rozpočtu",
+          "Payment": "Platba",
+          "TimeEntry": "Čas",
+          "Contact": "Kontakt",
+          "Project": "Projekt",
+          "Note": "Poznámka",
+          "ContactPerson": "Kontaktní osoba",
+          "ProjectMember": "Člen",
+          "Export": "Export"
+        },
+        "fields": {
+          "required": "Povinnost",
+          "completed": "Hotovo",
+          "rejected": "Zavržení",
+          "starred": "Oblíbený",
+          "status": "Stav",
+          "role": "Role",
+          "phase": "Fáze",
+          "category": "Kategorie",
+          "subcategory": "Název",
+          "planCost": "Plán (Kč)",
+          "actualCost": "Skutečnost (Kč)",
+          "planDays": "Plán (dní)",
+          "flexibilityPercent": "Vůle (%)",
+          "dateFrom": "Datum od",
+          "dateTo": "Datum do",
+          "note": "Poznámka",
+          "name": "Jméno",
+          "email": "E-mail",
+          "phone": "Telefon",
+          "address": "Adresa",
+          "description": "Popis",
+          "currency": "Měna",
+          "ownerId": "Vlastník",
+          "contactId": "Kontakt",
+          "workerName": "Pracovník",
+          "workerType": "Typ pracovníka",
+          "workerCount": "Počet pracovníků",
+          "hours": "Hodiny",
+          "amount": "Částka",
+          "type": "Typ",
+          "vendor": "Firma",
+          "invoiceNumber": "Číslo faktury",
+          "vatRate": "Sazba DPH",
+          "vatAmount": "Částka DPH",
+          "website": "Web",
+          "company": "Firma",
+          "ico": "IČO",
+          "dic": "DIČ",
+          "rating": "Hodnocení",
+          "sortOrder": "Pořadí",
+          "text": "Text",
+          "author": "Autor",
+          "userEmail": "E-mail člena"
+        },
+        "describe": {
+          "memberAdded": "Přidán člen ({role}): {email}",
+          "memberRemoved": "Odebrán člen ({role}): {email}",
+          "created": "Vytvořeno: {name}",
+          "deleted": "Smazáno: {name}",
+          "fieldRemoved": "{field}: odstraněno ({value})"
+        }
+      },
+      "deleteProject": {
+        "button": "Smazat",
+        "confirmTitle": "Smazat projekt „{name}\"?",
+        "confirmBody": "Tato akce je nevratná. Všechna data budou trvale smazána. Pro potvrzení napište název projektu:",
+        "confirmButton": "Smazat projekt",
+        "cancel": "Zrušit",
+        "toasts": {
+          "nameMismatch": "Název projektu se neshoduje",
+          "success": "Projekt smazán",
+          "error": "Nepodařilo se smazat projekt"
+        }
+      }
+    },
+    "notes": {
+      "title": {
+        "new": "Nová poznámka"
+      },
+      "field": {
+        "author": "Jméno autora",
+        "text": "Text poznámky"
+      },
+      "placeholder": {
+        "author": "např. Pavel",
+        "text": "Sem napište poznámku k projektu — rozhodnutí, nápad, úkol, zprávu… (Ctrl+Enter = přidat)"
+      },
+      "count": "{count, plural, one {# poznámka} few {# poznámky} many {# poznámek} other {# poznámek}}",
+      "anonymousAuthor": "Anonym",
+      "empty": {
+        "title": "Zatím žádné poznámky",
+        "description": "Napište první poznámku do pole výše. Poznámky slouží pro rychlé úryvky, odkazy a připomínky."
+      },
+      "badge": {
+        "editing": "úprava"
+      },
+      "hint": {
+        "editShortcuts": "Enter = uložit · Shift+Enter = nový řádek · Esc = zrušit"
+      },
+      "clickToEdit": "Klikněte pro úpravu",
+      "aria": {
+        "edit": "Upravit poznámku",
+        "save": "Uložit úpravy",
+        "cancel": "Zrušit úpravy",
+        "delete": "Smazat poznámku"
+      },
+      "toasts": {
+        "createError": "Nepodařilo se přidat poznámku",
+        "deleteSuccess": "Poznámka smazána",
+        "deleteError": "Nepodařilo se smazat poznámku",
+        "updateEmptyError": "Text poznámky nemůže být prázdný",
+        "updateSuccess": "Poznámka upravena",
+        "updateError": "Nepodařilo se upravit poznámku"
+      }
+    },
+    "timeline": {
+      "empty": {
+        "title": "Žádné položky s datem",
+        "description": "Přiřaďte datumy od/do v tabulce rozpočtu a položky se zde zobrazí na časové ose.",
+        "upcoming": "Žádné blížící se termíny",
+        "overdue": "Žádné zpožděné položky",
+        "unscheduled": "Vše naplánováno"
+      },
+      "label": {
+        "range": "{start} — {end}",
+        "count": "{count, plural, one {# položka} few {# položky} many {# položek} other {# položek}}",
+        "zoom": "Zoom:"
+      },
+      "zoom": {
+        "days": "Dny",
+        "months": "Měsíce",
+        "quarters": "Kvartály",
+        "years": "Roky"
+      },
+      "legend": {
+        "today": "Dnes",
+        "doubleClickHint": "Dvojklik = upravit datumy"
+      },
+      "title": {
+        "gantt": "Harmonogram stavby",
+        "upcoming": "Nejbližší akce",
+        "overdue": "Zpožděné",
+        "unscheduled": "K naplánování"
+      },
+      "columnHeader": {
+        "item": "Položka"
+      },
+      "suffix": {
+        "completed": " · Hotovo"
+      },
+      "dialog": {
+        "title": "Upravit termíny",
+        "description": "Nastavte přesné datum zahájení a dokončení.",
+        "label": {
+          "dateFrom": "Datum od",
+          "dateTo": "Datum do"
+        }
+      }
+    },
+    "time": {
+      "sort": {
+        "date": "Datum (nejnovější)",
+        "worker": "Pracovník (A→Z)",
+        "hours": "Hodiny (sestupně)",
+        "workerType": "Typ pracovníka"
+      },
+      "stats": {
+        "entries": "{count, plural, one {# záznam} few {# záznamy} many {# záznamů} other {# záznamů}}",
+        "empty": "Zatím žádné časové záznamy"
+      },
+      "filter": {
+        "allTypes": "Všechny typy",
+        "allCategories": "Všechny kategorie"
+      },
+      "total": {
+        "label": "Celkem ({count})"
+      },
+      "column": {
+        "date": "Datum",
+        "budgetItem": "Položka rozpočtu",
+        "description": "Popis",
+        "type": "Typ",
+        "contact": "Kontakt",
+        "hours": "Hodiny"
+      },
+      "toasts": {
+        "deleteSuccess": "Záznam smazán",
+        "deleteError": "Nepodařilo se smazat",
+        "createSuccess": "Čas zaznamenán",
+        "createSuccessWithItem": "Čas zaznamenán, položka označena jako hotová",
+        "createSuccessItemFail": "Čas zaznamenán (nepodařilo se označit položku jako hotovou)",
+        "updateSuccess": "Záznam upraven",
+        "updateSuccessWithItem": "Záznam upraven, položka označena jako hotová",
+        "updateSuccessItemFail": "Záznam upraven (nepodařilo se označit položku jako hotovou)",
+        "updateError": "Nepodařilo se upravit záznam",
+        "createError": "Nepodařilo se zaznamenat čas"
+      },
+      "aria": {
+        "rowClick": "Klikněte pro úpravu záznamu",
+        "workersCount": "{count, plural, one {# pracovník} few {# pracovníci} many {# pracovníků} other {# pracovníků}}"
+      },
+      "dialog": {
+        "delete": {
+          "title": "Smazat časový záznam?",
+          "body": "Opravdu chcete smazat záznam <strong>{workerName}</strong> · {hours}?"
+        }
+      },
+      "form": {
+        "titlePlaceholder": "Pracovník…",
+        "descriptionPlaceholder": "Popis práce…",
+        "submitLabel": {
+          "edit": "Upravit záznam",
+          "create": "Zaznamenat čas"
+        },
+        "label": {
+          "budgetItem": "Položka rozpočtu *",
+          "hours": "Hodiny *",
+          "workerCount": "Počet lidí",
+          "dateFrom": "Datum od *",
+          "workerType": "Typ pracovníka",
+          "dateTo": "Datum do (vícedenní)",
+          "contact": "Kontakt (volitelné)"
+        },
+        "placeholder": {
+          "budgetItem": "Vyberte položku…",
+          "hours": "8",
+          "workerCount": "1",
+          "dateTo": "(volitelné)",
+          "contact": "Bez kontaktu"
+        },
+        "search": {
+          "budgetItem": "Hledat položku…",
+          "contact": "Hledat kontakt…"
+        },
+        "empty": {
+          "budgetItem": "Žádné položky nenalezeny",
+          "contact": "Žádné kontakty nenalezeny"
+        },
+        "error": {
+          "budgetItem": "Vyberte položku rozpočtu",
+          "workerName": "Zadejte jméno pracovníka",
+          "hours": "Zadejte platný počet hodin"
+        },
+        "hint": {
+          "hoursPerDay": "≈ {hours} h/den × {days} dní",
+          "personHours": "Celkem {total} osobohodin",
+          "daySpan": "Práce trvá {days, plural, one {# den} few {# dny} many {# dní} other {# dní}}"
+        },
+        "section": {
+          "details": "Detaily (volitelné)"
+        },
+        "markCompleted": {
+          "label": "Označit položku rozpočtu jako hotovou",
+          "alreadyCompleted": "Položka je již označena jako hotová.",
+          "hint": "Po uložení záznamu se zavolá PATCH na budget item s completed: true. Propojí časový záznam s dokončením položky."
+        }
+      },
+      "empty": {
+        "title": {
+          "noRecords": "Zatím žádné časové záznamy",
+          "noMatch": "Žádné záznamy neodpovídají filtru"
+        },
+        "description": {
+          "noRecords": "Zaznamenávejte čas strávený prací - firma, řemeslník i svépomoc. Podporuje i vícedenní záznamy.",
+          "noMatch": "Zkuste změnit filtr nebo vyhledávání."
+        },
+        "button": {
+          "firstRecord": "Zaznamenat první čas"
+        }
+      }
+    },
+    "dashboard": {
+      "button": { "clearFilters": "Zrušit filtry" },
+      "kpi": {
+        "burn": {
+          "label": "Čerpání rozpočtu",
+          "subValue": "{actual} / {plan}"
+        },
+        "remaining": {
+          "label": "Zbývá rozpočtu",
+          "subValue": "z {planTotal}"
+        },
+        "completedItems": {
+          "label": "Hotovo položek",
+          "subValue": {
+            "done": "{percent} % dokončeno",
+            "empty": "Žádné položky"
+          }
+        },
+        "hours": {
+          "label": "Odpracováno hodin",
+          "subValue": "Plán: {days, plural, one {# den} few {# dny} many {# dní} other {# dní}}"
+        },
+        "completed": { "allDone": "Vše hotovo" }
+      },
+      "plan": {
+        "byStart": {
+          "title": "Plán — podle začátku",
+          "description": "Položky seřazené dle data zahájení"
+        },
+        "byEnd": {
+          "title": "Plán — podle konce",
+          "description": "Nejbližší termíny dokončení"
+        },
+        "bucket": {
+          "activeNow": "Aktivní nyní",
+          "nextWeek": "Příští týden",
+          "nextMonth": "Příští měsíc",
+          "next3Months": "Příští 3 měsíce",
+          "later": "Později",
+          "unscheduled": "Nenaplánováno"
+        },
+        "empty": { "upcoming": "Žádné blížící se termíny." },
+        "tag": { "overdue": "po termínu" }
+      },
+      "cashflow": {
+        "title": "Cashflow projekce",
+        "description": "Odhadovaný konečný rozpočet na základě aktuálního čerpání",
+        "projectedFinal": "Odhad konečného",
+        "overrun": "Překročení",
+        "percentOfPlan": "% plánu",
+        "remainingEstimate": "Zbývá (odhad)",
+        "spent": "Čerpáno: {actual}",
+        "estimate": "Odhad: {projected}"
+      },
+      "chart": {
+        "phase": {
+          "title": "Plán vs Skutečnost dle fáze",
+          "description": "Klikněte na fázi pro filtrování tabulky"
+        },
+        "category": {
+          "title": "Rozpočet dle kategorie",
+          "description": "Klikněte na kategorii pro filtrování"
+        },
+        "trend": {
+          "title": "Trend čerpání rozpočtu",
+          "description": "Měsíční výdaje a odpracované hodiny v čase",
+          "empty": "Zatím nejsou k dispozici data o trendu čerpání."
+        },
+        "series": {
+          "plan": "Plán",
+          "actual": "Skutečnost",
+          "spend": "Výdaje",
+          "hours": "Hodiny"
+        }
+      },
+      "contacts": {
+        "title": "Práce dle kontaktu",
+        "description": "Rozpočet a odpracované hodiny dle přiřazených kontaktů",
+        "empty": "Žádné kontakty s přiřazenými položkami.",
+        "noRole": "Bez role",
+        "itemsCount": "{count, plural, one {# položka} few {# položky} many {# položek} other {# položek}}",
+        "ofPlan": "z {plan}",
+        "overBudget": "přes rozpočet"
+      },
+      "phases": {
+        "title": "Fáze projektu",
+        "filteredBy": "Filtrováno: {phase}",
+        "description": "Klikněte na řádek pro filtrování grafů",
+        "column": {
+          "phase": "Fáze",
+          "items": "Položky",
+          "plan": "Plán",
+          "actual": "Skutečnost",
+          "hours": "Hodiny",
+          "burn": "Čerpání",
+          "status": "Stav"
+        },
+        "status": {
+          "done": "Hotovo",
+          "inProgress": "Probíhá",
+          "startingSoon": "Brzy",
+          "waiting": "Čeká"
+        }
+      },
+      "recent": {
+        "payments": {
+          "title": "Poslední platby",
+          "description": "Nejnovější finanční transakce",
+          "empty": "Zatím žádné platby.",
+          "fallback": "Platba"
+        },
+        "time": {
+          "title": "Poslední časové záznamy",
+          "description": "Nejnovější odpracované hodiny",
+          "empty": "Zatím žádné časové záznamy.",
+          "fallback": "Práce"
+        }
+      }
+    },
+    "contacts": {
+      "header": {
+        "count": "{count, plural, one {# kontakt v projektu} few {# kontakty v projektu} many {# kontaktů v projektu} other {# kontaktů v projektu}}"
+      },
+      "empty": {
+        "title": "Zatím žádné kontakty",
+        "description": "Přidejte firmy, řemeslníky, dodavatele a architekty. Můžete jim přiřazovat platby a časové záznamy.",
+        "button": { "first": "Přidat první kontakt" }
+      },
+      "menu": { "edit": "Upravit", "delete": "Smazat" },
+      "delete": {
+        "title": "Smazat kontakt?",
+        "body": "Opravdu chcete smazat kontakt <strong>{name}</strong>?",
+        "cancel": "Zrušit",
+        "confirm": "Smazat"
+      },
+      "stat": {
+        "paid": "Zaplaceno",
+        "hours": "Hodiny",
+        "payments": "Plateb",
+        "times": "Časů"
+      },
+      "persons": {
+        "title": "Kontaktní osoby",
+        "button": { "add": "Přidat", "addPerson": "Přidat osobu" },
+        "field": {
+          "firstName": "Jméno *",
+          "lastName": "Příjmení *",
+          "phone": "Telefon",
+          "email": "E-mail",
+          "role": "Role / pozice"
+        },
+        "placeholder": {
+          "firstName": "Pavel",
+          "lastName": "Novák",
+          "phone": "+420 777 123 456",
+          "email": "pavel@firma.cz",
+          "role": "Vedoucí, Účetní, ..."
+        },
+        "empty": "Žádné kontaktní osoby. Klikněte „Přidat“ pro přidání.",
+        "aria": { "delete": "Smazat {firstName} {lastName}" },
+        "title": { "delete": "Smazat osobu" }
+      },
+      "toasts": {
+        "deleteSuccess": "Kontakt smazán",
+        "deleteError": "Nepodařilo se smazat",
+        "personAddError": "Jméno a příjmení jsou povinné",
+        "personAddSuccess": "Osoba přidána",
+        "personAddErrorFallback": "Nepodařilo se přidat osobu",
+        "personDeleteSuccess": "Osoba „{name}“ smazána",
+        "personDeleteError": "Nepodařilo se smazat osobu",
+        "updateError": "Jméno je povinné",
+        "updateSuccess": "Kontakt upraven",
+        "createSuccess": "Kontakt přidán",
+        "saveErrorFallback": "Nepodařilo se uložit kontakt"
+      },
+      "detail": {
+        "button": { "edit": "Upravit", "close": "Zavřít" },
+        "section": {
+          "contact": "Kontakt",
+          "summary": "Souhrn času a financí"
+        },
+        "field": {
+          "company": "Firma",
+          "ico": "IČO",
+          "dic": "DIČ",
+          "phone": "Telefon",
+          "email": "E-mail",
+          "web": "Web",
+          "lastActivity": "Poslední aktivita"
+        },
+        "stat": {
+          "totalPaid": "Celkem zaplaceno",
+          "totalHours": "Celkem hodin",
+          "paymentCount": "Počet plateb",
+          "timeEntryCount": "Časových záznamů"
+        }
+      },
+      "form": {
+        "placeholder": { "title": "Jméno / Název…" },
+        "submitLabel": {
+          "edit": "Upravit kontakt",
+          "create": "Přidat kontakt"
+        },
+        "ares": {
+          "label": "Načíst z ARES registru",
+          "hint": "Vyhledejte firmu podle IČO nebo názvu a predvyplňte pole.",
+          "addressPrefix": "Adresa (ARES): {address}"
+        },
+        "field": {
+          "type": "Typ",
+          "role": "Role / Obor",
+          "company": "Firma (volitelné)",
+          "ico": "IČO",
+          "dic": "DIČ",
+          "phone": "Telefon",
+          "email": "E-mail",
+          "web": "Web",
+          "rating": "Hodnocení",
+          "notes": "Poznámky"
+        },
+        "placeholder": {
+          "role": "např. Zedník, Elektrikář",
+          "company": "např. Stavby s.r.o.",
+          "ico": "např. 12345678",
+          "dic": "např. CZ12345678",
+          "phone": "+420 …",
+          "email": "email@domena.cz",
+          "web": "např. www.firma.cz",
+          "notes": "Zkušenosti, reference, postup práce…"
+        },
+        "section": { "details": "Detaily (volitelné)" },
+        "rating": { "clear": "Zrušit" }
+      }
+    },
+    "telemetry": {
+      "title": "Telemetrie",
+      "description": "Interní analytika uživatelských akcí.",
+      "button": {
+        "refresh": "Obnovit",
+        "retry": "Zkusit znovu"
+      },
+      "error": { "loadFailed": "Nepodařilo se načíst telemetrická data." },
+      "kpi": {
+        "totalEvents": "Celkem událostí",
+        "totalPageViews": "Celkem zobrazení stránek",
+        "totalTimeSpent": "Celkem čas na stránkách",
+        "uniqueUsers": "Unikátní uživatelé"
+      },
+      "chart": {
+        "byType": {
+          "title": "Události podle typu",
+          "description": "Počet výskytů jednotlivých typů událostí"
+        },
+        "byDay": {
+          "title": "Aktivita podle dní",
+          "description": "Posledních 30 dní"
+        },
+        "byHour": {
+          "title": "Aktivita dnes podle hodin",
+          "description": "Počet událostí v jednotlivých hodinách dnešního dne"
+        }
+      },
+      "empty": {
+        "byType": "Žádná data.",
+        "byHour": "Dnes zatím nebyla zaznamenána žádná aktivita."
+      },
+      "topPages": {
+        "title": "Nejnavštěvovanější stránky",
+        "description": "Počet zobrazení a průměrný čas strávený na každé stránce",
+        "empty": "Žádná data o zobrazeních stránek.",
+        "column": {
+          "page": "Stránka",
+          "views": "Zobrazení",
+          "avgTime": "Prům. čas"
+        }
+      },
+      "timeOverview": {
+        "title": "Přehled času",
+        "description": "Souhrnné statistiky o čase stráveném v aplikaci",
+        "totalOnPages": "Celková doba na stránkách",
+        "totalOnPagesHint": "počet zobrazení: {count}",
+        "avgPerPage": "Průměrná doba na stránku",
+        "avgPerPageHint": "průměr přes všechny page_view události",
+        "longest": "Nejdelší návštěva",
+        "longestHint": "maximální timeSpent jedné session"
+      },
+      "timeByPage": {
+        "title": "Doba návštěvnosti",
+        "description": "Celkový čas strávený na jednotlivých stránkách",
+        "total": "Celkem: {time}",
+        "rowSuffix": "{views}× · prům. {avgTime}",
+        "empty": "Žádná data o čase na stránkách."
+      },
+      "topUsers": {
+        "title": "Aktivita uživatelů",
+        "description": "Nejaktivnější uživatelé podle počtu akcí",
+        "empty": "Žádná data o aktivitě uživatelů.",
+        "column": {
+          "user": "Uživatel",
+          "eventCount": "Počet akcí",
+          "lastActive": "Poslední aktivita"
+        },
+        "crown": { "title": "Nejaktivnější" }
+      },
+      "recent": {
+        "title": "Poslední události",
+        "description": "Posledních {shown} z celkem {total} událostí",
+        "empty": "Žádné události pro vybraný filtr.",
+        "column": {
+          "date": "Datum",
+          "time": "Čas",
+          "user": "Uživatel",
+          "eventType": "Typ události",
+          "page": "Stránka",
+          "project": "Projekt"
+        },
+        "unknownUser": "Neznámý",
+        "unknownProject": "Projekt {id}",
+        "tooltipHour": "{hour}:00 — {count, plural, one {# událost} few {# události} many {# událostí} other {# událostí}}",
+        "tooltipDay": "{day}: {count}"
+      },
+      "filter": {
+        "label": "Filtry:",
+        "type": "Typ",
+        "all": "Vše",
+        "user": "Uživatel",
+        "allUsers": "Všichni uživatelé",
+        "page": "Stránka",
+        "allPages": "Všechny stránky",
+        "project": "Projekt",
+        "allProjects": "Všechny projekty",
+        "button": { "reset": "Zrušit filtry" }
+      },
+      "pagination": {
+        "summary": "Zobrazeno {from}–{to} z {total}",
+        "prev": "Předchozí",
+        "next": "Další",
+        "pageOf": "{page} / {totalPages}"
+      },
+      "relativeTime": {
+        "justNow": "právě teď",
+        "minute": "před {n, plural, one {minutou} other {{n} minutami}}",
+        "hour": "před {n, plural, one {hodinou} other {{n} hodinami}}",
+        "day": "před {n, plural, one {dnem} other {{n} dny}}",
+        "yesterday": "včera"
+      }
+    },
+    "payments": {
+      "sort": {
+        "dateDesc": "Datum (nejnovější)",
+        "dateAsc": "Datum (nejstarší)",
+        "amountDesc": "Částka (sestupně)",
+        "amountAsc": "Částka (vzestupně)",
+        "type": "Typ",
+        "contact": "Kontakt (A→Z)",
+        "vendor": "Firma (A→Z)"
+      },
+      "filter": { "allTypes": "Všechny typy" },
+      "toolbar": {
+        "sum": "Součet ({count})",
+        "vatIncluded": "z toho DPH"
+      },
+      "empty": {
+        "title": {
+          "noRecords": "Zatím žádné platby",
+          "noMatch": "Žádné platby neodpovídají filtru"
+        },
+        "description": {
+          "noRecords": "Začněte evidovat platby - účtenky, faktury nebo výplaty za práci. Můžete je rozdělit i do splátek.",
+          "noMatch": "Zkuste změnit filtr nebo vyhledávání."
+        },
+        "button": { "first": "Přidat první platbu" }
+      },
+      "column": {
+        "date": "Datum",
+        "budgetItem": "Položka rozpočtu",
+        "description": "Popis",
+        "type": "Typ",
+        "contact": "Kontakt",
+        "amount": "Částka"
+      },
+      "row": {
+        "aria": { "clickToEdit": "Klikněte pro úpravu platby" },
+        "installment": {
+          "title": "Faktura ve splátkách: {invoiceTotal} — zaplaceno {paidTotal} ({percent} %), zbývá {remaining}",
+          "fallbackTitle": "Faktura ve splátkách",
+          "label": "{n}. splátka",
+          "labelWithTotal": "{n}. splátka / {total}",
+          "titleShort": "{n}. splátka z {total}"
+        },
+        "firstInstallment": "1. splátka",
+        "vatRateSuffix": "vč. DPH {rate}%",
+        "ofInvoiceTotal": "z {invoiceTotal}",
+        "menu": { "edit": "Upravit", "delete": "Smazat" },
+        "delete": {
+          "title": "Smazat platbu?",
+          "body": "Opravdu chcete smazat platbu <strong>{amount}</strong>?",
+          "cancel": "Zrušit",
+          "confirm": "Smazat"
+        },
+        "addInstallment": "Přidat splátku",
+        "addInstallmentTitle": "Přidat další splátku k faktuře {vendor}"
+      },
+      "invoices": {
+        "badge": {
+          "installmentCount": "{count, plural, one {# splátka} few {# splátky} many {# splátek} other {# splátek}}"
+        },
+        "label": {
+          "invoice": "Faktura",
+          "paid": "Zaplaceno",
+          "remaining": "Zbývá",
+          "percent": "{percent} %",
+          "invoiceNumber": "č. {number}"
+        },
+        "button": {
+          "show": "Zobrazit",
+          "showTitle": "Zobrazit splátky v tabulce",
+          "addInstallment": "Přidat splátku",
+          "addInstallmentTitle": "Přidat další splátku k této faktuře"
+        },
+        "fallbackTitle": "Faktura"
+      },
+      "dialog": {
+        "titlePlaceholder": "Co bylo zakoupeno / zaplaceno…",
+        "submitLabel": {
+          "edit": {
+            "installment": "Upravit splátku",
+            "payment": "Upravit platbu"
+          },
+          "create": {
+            "installment": "Přidat splátku",
+            "invoice": "Vytvořit fakturu",
+            "payment": "Přidat platbu"
+          }
+        },
+        "label": {
+          "budgetItem": "Položka rozpočtu *",
+          "invoiceTotal": "Faktura celkem (Kč) *",
+          "firstInstallment": "1. splátka (Kč) *",
+          "amount": "Částka (Kč) *",
+          "date": "Datum *",
+          "invoiceDate": "Datum faktury *",
+          "type": "Typ",
+          "contact": "Kontakt (volitelné)",
+          "vendor": "Firma / Obchod",
+          "invoiceNumber": "Číslo faktury/účtenky",
+          "vatRate": "DPH sazba (%)",
+          "vatCalculation": "Výpočet DPH"
+        },
+        "placeholder": {
+          "budgetItem": "Vyberte položku…",
+          "invoiceTotal": "150000",
+          "firstInstallment": "50000",
+          "amount": "25000",
+          "contact": "Bez kontaktu",
+          "vendor": "např. Hornbach",
+          "invoiceNumber": "2024-001"
+        },
+        "search": {
+          "budgetItem": "Hledat položku…",
+          "contact": "Hledat kontakt…"
+        },
+        "empty": {
+          "budgetItem": "Žádné položky nenalezeny",
+          "contact": "Žádné kontakty nenalezeny"
+        },
+        "error": {
+          "budgetItem": "Vyberte položku rozpočtu",
+          "invoiceTotal": "Zadejte platnou celkovou částku faktury",
+          "amount": "Zadejte platnou částku"
+        },
+        "prefill": {
+          "title": "Nová splátka k faktuře",
+          "subtitle": "{vendor} · {amount} celkem",
+          "fallback": "Faktura"
+        },
+        "existingInvoice": {
+          "title": "Tato položka už má fakturu: {vendor}",
+          "subtitle": "{paid} / {invoiceTotal} ({percent} %)",
+          "fallback": "Faktura",
+          "button": "Přidat splátku k této faktuře"
+        },
+        "parentWarning": {
+          "title": "Toto je faktura ve splátkách",
+          "body": "Faktura celkem {invoiceTotal}. Můžete ji převést zpět na běžnou platbu — splátky zůstanou jako samostatné platby.",
+          "button": "Převést na běžnou platbu"
+        },
+        "convertDialog": {
+          "title": "Převést fakturu na běžnou platbu?",
+          "body": "Tímto se faktura převede na běžnou platbu. Všechny splátky ({count}) zůstanou jako samostatné platby. Pokračovat?",
+          "cancel": "Zrušit",
+          "confirm": "Převést na běžnou platbu",
+          "confirming": "Převádím…"
+        },
+        "section": { "details": "Detaily (volitelné)" },
+        "isInvoice": { "label": "Platba ve splátkách (faktura s více platbami)" },
+        "installmentOf": {
+          "label": "Připojit k faktuře (jako splátka)",
+          "placeholder": "Samostatná platba (bez faktury)",
+          "noneLabel": "Samostatná platba (bez faktury)",
+          "hint": "Tato platba se zobrazí jako další splátka vybrané faktury. Změnou se aktualizuje součet plátby faktury."
+        },
+        "vatRate": {
+          "placeholder": "Bez DPH",
+          "none": "Bez DPH",
+          "21": "21 % (standardní)",
+          "12": "12 % (snížená 1)",
+          "10": "10 % (snížená 2)",
+          "0": "0 %"
+        },
+        "vatCalc": {
+          "label": { "vat": "DPH:", "base": "Základ:" },
+          "empty": "Zadejte částku a DPH sazbu"
+        },
+        "markCompleted": {
+          "label": "Označit položku jako hotovou",
+          "alreadyCompleted": "Položka je již označena jako hotová.",
+          "hint": "Položka bude označena jako dokončená"
+        }
+      },
+      "toasts": {
+        "deleteSuccess": "Platba smazána",
+        "deleteError": "Nepodařilo se smazat",
+        "updateSuccess": "Platba upravena",
+        "updateSuccessWithItem": "Platba upravena, položka označena jako hotová",
+        "updateSuccessItemFail": "Platba upravena (nepodařilo se označit položku jako hotovou)",
+        "invoiceCreateSuccess": "Faktura se splátkami vytvořena",
+        "invoiceCreateSuccessWithItem": "Faktura vytvořena, položka označena jako hotová",
+        "invoiceCreateSuccessItemFail": "Faktura vytvořena (nepodařilo se označit položku jako hotovou)",
+        "paymentCreateSuccess": "Platba přidána",
+        "paymentCreateSuccessWithItem": "Platba přidána, položka označena jako hotová",
+        "paymentCreateSuccessItemFail": "Platba přidána (nepodařilo se označit položku jako hotovou)",
+        "installmentAdded": "Splátka přidána k faktuře",
+        "convertSuccess": "Faktura převedena na běžnou platbu",
+        "convertSuccessWithChildren": "Faktura převedena na běžnou platbu, {count, plural, one {# splátka odpojena} few {# splátky odpojeny} many {# splátek odpojeno} other {# splátek odpojeno}}",
+        "convertError": "Nepodařilo se převést fakturu na běžnou platbu",
+        "updateError": "Nepodařilo se upravit platbu",
+        "createError": "Nepodařilo se přidat platbu"
+      }
+    }
+  },
+  "analytics": {
+    "eventTypes": {
+      "page_view": "Zobrazení stránky",
+      "add_payment": "Přidání platby",
+      "add_time_entry": "Přidání času",
+      "edit_time_entry": "Úprava času",
+      "edit_payment": "Úprava platby",
+      "delete_payment": "Smazání platby",
+      "add_contact": "Přidání kontaktu",
+      "add_note": "Přidání poznámky",
+      "edit_note": "Úprava poznámky",
+      "add_budget_item": "Přidání položky",
+      "edit_budget_item": "Úprava položky",
+      "download_data": "Stažení dat",
+      "login": "Přihlášení",
+      "logout": "Odhlášení",
+      "project_share": "Sdílení projektu"
+    }
   }
 }

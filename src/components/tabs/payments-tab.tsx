@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect, type ReactNode } from "react";
+import { useTranslations, useLocale } from "next-intl";
 import {
   usePayments,
   useBudgetItems,
@@ -69,7 +70,8 @@ import {
   AlertTriangle,
   ChevronRight,
 } from "lucide-react";
-import { formatCzk, formatDate, PAYMENT_TYPES, paymentTypeLabel } from "@/lib/format";
+import { formatCzk, formatDate, PAYMENT_TYPES, toBcp47 } from "@/lib/format";
+import type { Locale } from "@/i18n/config";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { EmptyStateBox } from "@/components/empty-state-box";
@@ -88,18 +90,30 @@ type SortKey =
   | "contact"
   | "vendor";
 
-const SORT_OPTIONS: { value: SortKey; label: string }[] = [
-  { value: "date-desc", label: "Datum (nejnovější)" },
-  { value: "date-asc", label: "Datum (nejstarší)" },
-  { value: "amount-desc", label: "Částka (sestupně)" },
-  { value: "amount-asc", label: "Částka (vzestupně)" },
-  { value: "type", label: "Typ" },
-  { value: "contact", label: "Kontakt (A→Z)" },
-  { value: "vendor", label: "Firma (A→Z)" },
+// Map SortKey (kebab-case) to translation key (camelCase) under `tabs.payments.sort.*`
+const SORT_LABEL_KEYS: Record<SortKey, string> = {
+  "date-desc": "dateDesc",
+  "date-asc": "dateAsc",
+  "amount-desc": "amountDesc",
+  "amount-asc": "amountAsc",
+  "type": "type",
+  "contact": "contact",
+  "vendor": "vendor",
+};
+
+const SORT_KEYS: SortKey[] = [
+  "date-desc",
+  "date-asc",
+  "amount-desc",
+  "amount-asc",
+  "type",
+  "contact",
+  "vendor",
 ];
 
-function sortPayments(a: Payment, b: Payment, key: SortKey): number {
+function sortPayments(a: Payment, b: Payment, key: SortKey, locale: Locale): number {
   const tieBreak = () => new Date(b.date).getTime() - new Date(a.date).getTime();
+  const loc = toBcp47(locale);
   switch (key) {
     case "date-asc":
       return new Date(a.date).getTime() - new Date(b.date).getTime();
@@ -108,19 +122,19 @@ function sortPayments(a: Payment, b: Payment, key: SortKey): number {
     case "amount-asc":
       return a.amount - b.amount;
     case "type": {
-      const cmp = a.type.localeCompare(b.type, "cs-CZ");
+      const cmp = a.type.localeCompare(b.type, loc);
       return cmp !== 0 ? cmp : tieBreak();
     }
     case "contact": {
       const ac = a.contact?.name ?? "~~~"; // nulls last
       const bc = b.contact?.name ?? "~~~";
-      const cmp = ac.localeCompare(bc, "cs-CZ");
+      const cmp = ac.localeCompare(bc, loc);
       return cmp !== 0 ? cmp : tieBreak();
     }
     case "vendor": {
       const av = a.vendor ?? "~~~";
       const bv = b.vendor ?? "~~~";
-      const cmp = av.localeCompare(bv, "cs-CZ");
+      const cmp = av.localeCompare(bv, loc);
       return cmp !== 0 ? cmp : tieBreak();
     }
     case "date-desc":
@@ -150,6 +164,10 @@ export function PaymentsTab({ projectId }: { projectId: string }) {
   const deletePayment = useDeletePayment(projectId);
   const updateBudgetItem = useUpdateBudgetItem(projectId);
   const { trackEvent } = useAnalytics(projectId);
+  const t = useTranslations("tabs.payments");
+  const tPaymentTypes = useTranslations("paymentTypes");
+  const tCommon = useTranslations("common");
+  const locale = useLocale() as Locale;
   const [addOpen, setAddOpen] = useState(false);
   const [editPayment, setEditPayment] = useState<Payment | null>(null);
   const [search, setSearch] = useState("");
@@ -231,11 +249,11 @@ export function PaymentsTab({ projectId }: { projectId: string }) {
   const filteredStandalone = standalone
     .filter(filterFn)
     .slice()
-    .sort((a, b) => sortPayments(a, b, sortBy));
+    .sort((a, b) => sortPayments(a, b, sortBy, locale));
   const filteredGroups = groups
     .filter((g) => filterFn(g.parent))
     .slice()
-    .sort((a, b) => sortPayments(a.parent, b.parent, sortBy));
+    .sort((a, b) => sortPayments(a.parent, b.parent, sortBy, locale));
 
   // Build a list of "render blocks" so parent+children stay grouped together
   // (children must visually follow their parent with a vertical connector).
@@ -280,6 +298,7 @@ export function PaymentsTab({ projectId }: { projectId: string }) {
       a.kind === "standalone" ? a.payment : a.parent,
       b.kind === "standalone" ? b.payment : b.parent,
       sortBy,
+      locale,
     ),
   );
 
@@ -300,10 +319,10 @@ export function PaymentsTab({ projectId }: { projectId: string }) {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Všechny typy</SelectItem>
-            {PAYMENT_TYPES.map((t) => (
-              <SelectItem key={t.value} value={t.value}>
-                {t.emoji} {t.label}
+            <SelectItem value="all">{t("filter.allTypes")}</SelectItem>
+            {PAYMENT_TYPES.map((pt) => (
+              <SelectItem key={pt.value} value={pt.value}>
+                {pt.emoji} {tPaymentTypes(pt.value)}
               </SelectItem>
             ))}
           </SelectContent>
@@ -314,9 +333,9 @@ export function PaymentsTab({ projectId }: { projectId: string }) {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            {SORT_OPTIONS.map((o) => (
-              <SelectItem key={o.value} value={o.value}>
-                {o.label}
+            {SORT_KEYS.map((k) => (
+              <SelectItem key={k} value={k}>
+                {t(`sort.${SORT_LABEL_KEYS[k]}`)}
               </SelectItem>
             ))}
           </SelectContent>
@@ -324,9 +343,9 @@ export function PaymentsTab({ projectId }: { projectId: string }) {
         <div className="ml-auto flex items-center gap-3 text-sm">
           <div className="text-right">
             <div className="text-xs text-muted-foreground">
-              Součet ({filteredStandalone.length + filteredGroups.length})
+              {t("toolbar.sum", { count: filteredStandalone.length + filteredGroups.length })}
             </div>
-            <div className="text-lg font-bold text-warning tabular-nums">{formatCzk(totalAmount)}</div>
+            <div className="text-lg font-bold text-warning tabular-nums">{formatCzk(totalAmount, locale)}</div>
           </div>
           {/* VAT summary */}
           {(() => {
@@ -335,8 +354,8 @@ export function PaymentsTab({ projectId }: { projectId: string }) {
             const hasVat = allPayments.some((p) => p.vatAmount !== null && p.vatAmount !== undefined);
             return hasVat ? (
               <div className="text-right">
-                <div className="text-xs text-muted-foreground">z toho DPH</div>
-                <div className="text-sm font-semibold text-info tabular-nums">{formatCzk(totalVat)}</div>
+                <div className="text-xs text-muted-foreground">{t("toolbar.vatIncluded")}</div>
+                <div className="text-sm font-semibold text-info tabular-nums">{formatCzk(totalVat, locale)}</div>
               </div>
             ) : null;
           })()}
@@ -370,16 +389,16 @@ export function PaymentsTab({ projectId }: { projectId: string }) {
       ) : filteredStandalone.length === 0 && filteredGroups.length === 0 ? (
         <EmptyStateBox
           icon={Receipt}
-          title={payments?.length === 0 ? "Zatím žádné platby" : "Žádné platby neodpovídají filtru"}
+          title={payments?.length === 0 ? t("empty.title.noRecords") : t("empty.title.noMatch")}
           description={
             payments?.length === 0
-              ? "Začněte evidovat platby - účtenky, faktury nebo výplaty za práci. Můžete je rozdělit i do splátek."
-              : "Zkuste změnit filtr nebo vyhledávání."
+              ? t("empty.description.noRecords")
+              : t("empty.description.noMatch")
           }
           action={
             payments?.length === 0 ? (
               <Button size="sm" onClick={() => setAddOpen(true)}>
-                <Plus className="mr-1 h-4 w-4" /> Přidat první platbu
+                <Plus className="mr-1 h-4 w-4" /> {t("empty.button.first")}
               </Button>
             ) : undefined
           }
@@ -413,12 +432,12 @@ export function PaymentsTab({ projectId }: { projectId: string }) {
               <TableHeader>
                 <TableRow className="sticky top-0 z-30 bg-surface-container-high">
                   <TableHead className="w-16"></TableHead>
-                  <TableHead className="w-28">Datum</TableHead>
-                  <TableHead className="min-w-[220px]">Položka rozpočtu</TableHead>
-                  <TableHead className="min-w-[160px]">Popis</TableHead>
-                  <TableHead className="w-32">Typ</TableHead>
-                  <TableHead>Kontakt</TableHead>
-                  <TableHead className="text-right">Částka</TableHead>
+                  <TableHead className="w-28">{t("column.date")}</TableHead>
+                  <TableHead className="min-w-[220px]">{t("column.budgetItem")}</TableHead>
+                  <TableHead className="min-w-[160px]">{t("column.description")}</TableHead>
+                  <TableHead className="w-32">{t("column.type")}</TableHead>
+                  <TableHead>{t("column.contact")}</TableHead>
+                  <TableHead className="text-right">{t("column.amount")}</TableHead>
                   <TableHead className="w-8"></TableHead>
                 </TableRow>
               </TableHeader>
@@ -437,9 +456,9 @@ export function PaymentsTab({ projectId }: { projectId: string }) {
                           try {
                             await deletePayment.mutateAsync(p.id);
                             trackEvent("delete_payment", { amount: p.amount });
-                            toast.success("Platba smazána");
+                            toast.success(t("toasts.deleteSuccess"));
                           } catch (err) {
-                            toast.error(err instanceof Error ? err.message : "Nepodařilo se smazat");
+                            toast.error(err instanceof Error ? err.message : t("toasts.deleteError"));
                           }
                         }}
                       />,
@@ -470,9 +489,9 @@ export function PaymentsTab({ projectId }: { projectId: string }) {
                         try {
                           await deletePayment.mutateAsync(parent.id);
                           trackEvent("delete_payment", { amount: parent.amount });
-                          toast.success("Platba smazána");
+                          toast.success(t("toasts.deleteSuccess"));
                         } catch (err) {
-                          toast.error(err instanceof Error ? err.message : "Nepodařilo se smazat");
+                          toast.error(err instanceof Error ? err.message : t("toasts.deleteError"));
                         }
                       }}
                     />,
@@ -501,9 +520,9 @@ export function PaymentsTab({ projectId }: { projectId: string }) {
                           try {
                             await deletePayment.mutateAsync(c.id);
                             trackEvent("delete_payment", { amount: c.amount });
-                            toast.success("Platba smazána");
+                            toast.success(t("toasts.deleteSuccess"));
                           } catch (err) {
-                            toast.error(err instanceof Error ? err.message : "Nepodařilo se smazat");
+                            toast.error(err instanceof Error ? err.message : t("toasts.deleteError"));
                           }
                         }}
                       />,
@@ -616,7 +635,12 @@ function PaymentRow({
 }) {
   const [confirm, setConfirm] = useState(false);
   const { trackEvent } = useAnalytics(projectId);
-  const t = paymentTypeLabel(payment.type);
+  const t = useTranslations("tabs.payments");
+  const tPaymentTypes = useTranslations("paymentTypes");
+  const locale = useLocale() as Locale;
+  const paymentTypeInfo = PAYMENT_TYPES.find((pt) => pt.value === payment.type);
+  const paymentTypeEmoji = paymentTypeInfo?.emoji ?? "•";
+  const paymentTypeLabelStr = tPaymentTypes(payment.type);
   const isParent = meta?.isInstallmentParent ?? false;
   const isChild = meta?.isInstallmentChild ?? false;
   const installmentNumber = meta?.installmentNumber ?? 0;
@@ -646,7 +670,7 @@ function PaymentRow({
         highlighted && "bg-warning-soft/60 ring-2 ring-inset ring-warning/50",
       )}
       onClick={() => onEdit()}
-      title="Klikněte pro úpravu platby"
+      title={t("row.aria.clickToEdit")}
     >
       <TableCell className={cn("w-16", childIndent, rowBg)}>
         {isParent ? (
@@ -655,8 +679,13 @@ function PaymentRow({
             className="gap-0.5 type-label-sm text-warning-strong dark:text-warning/80"
             title={
               meta?.invoiceTotal != null
-                ? `Faktura ve splátkách: ${formatCzk(meta.invoiceTotal)} — zaplaceno ${formatCzk(meta.paidTotal)} (${meta.percent.toFixed(0)} %), zbývá ${formatCzk(meta.remaining)}`
-                : "Faktura ve splátkách"
+                ? t("row.installment.title", {
+                    invoiceTotal: formatCzk(meta.invoiceTotal, locale),
+                    paidTotal: formatCzk(meta.paidTotal, locale),
+                    percent: meta.percent.toFixed(0),
+                    remaining: formatCzk(meta.remaining, locale),
+                  })
+                : t("row.installment.fallbackTitle")
             }
           >
             <span className="tabular-nums">1 / {totalInstallments}</span>
@@ -664,9 +693,9 @@ function PaymentRow({
         ) : isChild ? (
           <span
             className="inline-flex items-center gap-0.5 type-label-sm text-on-surface-variant tabular-nums"
-            title={`${installmentNumber}. splátka z ${totalInstallments}`}
+            title={t("row.installment.titleShort", { n: installmentNumber, total: totalInstallments })}
           >
-            {installmentNumber}. splátka
+            {t("row.installment.label", { n: installmentNumber })}
             <span className="text-on-surface-variant/70">/ {totalInstallments}</span>
           </span>
         ) : null}
@@ -703,7 +732,7 @@ function PaymentRow({
       </TableCell>
       <TableCell className={cn(childIndent, rowBg)}>
         <div className="flex flex-col">
-          <span className="type-body">{payment.description || (isParent ? "1. splátka" : "—")}</span>
+          <span className="type-body">{payment.description || (isParent ? t("row.firstInstallment") : "—")}</span>
           {payment.vendor && (
             <span className="type-label text-on-surface-variant">
               {payment.vendor}
@@ -716,13 +745,13 @@ function PaymentRow({
         <Select value={payment.type} onValueChange={(v) => update("type", v)}>
           <SelectTrigger className="h-7 w-auto border-0 px-1 type-label-sm shadow-none hover:bg-surface-container-high gap-1">
             <Badge variant="outline" className="type-label-sm">
-              {t.emoji} {t.label}
+              {paymentTypeEmoji} {paymentTypeLabelStr}
             </Badge>
           </SelectTrigger>
           <SelectContent>
             {PAYMENT_TYPES.map((pt) => (
               <SelectItem key={pt.value} value={pt.value}>
-                {pt.emoji} {pt.label}
+                {pt.emoji} {tPaymentTypes(pt.value)}
               </SelectItem>
             ))}
           </SelectContent>
@@ -741,12 +770,12 @@ function PaymentRow({
           />
           {isParent && meta?.invoiceTotal != null && (
             <span className="type-label text-on-surface-variant tabular-nums">
-              z {formatCzk(meta.invoiceTotal)}
+              {t("row.ofInvoiceTotal", { invoiceTotal: formatCzk(meta.invoiceTotal, locale) })}
             </span>
           )}
           {payment.vatRate !== null && payment.vatRate !== undefined && (
             <span className="type-label text-on-surface-variant tabular-nums">
-              vč. DPH {payment.vatRate}%
+              {t("row.vatRateSuffix", { rate: payment.vatRate })}
             </span>
           )}
         </div>
@@ -760,31 +789,33 @@ function PaymentRow({
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem onClick={onEdit}>
-              <Pencil className="mr-2 h-3.5 w-3.5" /> Upravit
+              <Pencil className="mr-2 h-3.5 w-3.5" /> {t("row.menu.edit")}
             </DropdownMenuItem>
             <DropdownMenuItem
               className="text-destructive focus:text-destructive"
               onClick={() => setConfirm(true)}
             >
-              <Trash2 className="mr-2 h-3.5 w-3.5" /> Smazat
+              <Trash2 className="mr-2 h-3.5 w-3.5" /> {t("row.menu.delete")}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
         <Dialog open={confirm} onOpenChange={setConfirm}>
           <DialogContent className="max-w-sm">
             <DialogHeader>
-              <DialogTitle>Smazat platbu?</DialogTitle>
+              <DialogTitle>{t("row.delete.title")}</DialogTitle>
               <DialogDescription>
-                Opravdu chcete smazat platbu{" "}
-                <strong>{formatCzk(payment.amount)}</strong>?
+                {t.rich("row.delete.body", {
+                  amount: formatCzk(payment.amount, locale),
+                  strong: (chunks) => <strong>{chunks}</strong>,
+                })}
               </DialogDescription>
             </DialogHeader>
             <DialogFooter>
               <Button variant="outline" onClick={() => setConfirm(false)}>
-                Zrušit
+                {t("row.delete.cancel")}
               </Button>
               <Button variant="destructive" onClick={() => { setConfirm(false); onDelete(); }}>
-                Smazat
+                {t("row.delete.confirm")}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -802,6 +833,7 @@ function AddInstallmentRow({
   parent: Payment;
   onAdd: () => void;
 }) {
+  const t = useTranslations("tabs.payments");
   return (
     <TableRow className="group hover:bg-muted/20">
       <TableCell colSpan={8} className="py-0.5 pl-2">
@@ -809,10 +841,10 @@ function AddInstallmentRow({
           type="button"
           onClick={onAdd}
           className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 type-label-sm text-on-surface-variant/80 transition-colors hover:bg-surface-container-high hover:text-on-surface"
-          title={`Přidat další splátku k faktuře ${parent.vendor ?? parent.invoiceNumber ?? parent.id.slice(0, 6)}`}
+          title={t("row.addInstallmentTitle", { vendor: parent.vendor ?? parent.invoiceNumber ?? parent.id.slice(0, 6) })}
         >
           <Plus className="h-3 w-3" />
-          Přidat splátku
+          {t("row.addInstallment")}
         </button>
       </TableCell>
     </TableRow>
@@ -829,6 +861,8 @@ function InvoicesOverview({
   onAddInstallment: (parent: Payment) => void;
   onShow: (parentId: string) => void;
 }) {
+  const t = useTranslations("tabs.payments");
+  const locale = useLocale() as Locale;
   // Compute totals per group once — hide cards for invoices that are
   // already 100% paid (no remaining amount to track).
   const cards = groups
@@ -844,7 +878,7 @@ function InvoicesOverview({
         g.parent.description ||
         g.parent.budgetItem?.subcategory ||
         g.parent.budgetItem?.category ||
-        "Faktura";
+        t("invoices.fallbackTitle");
       return {
         parent: g.parent,
         invoiceTotal,
@@ -887,7 +921,7 @@ function InvoicesOverview({
                   <span className="truncate">{c.title}</span>
                 </CardTitle>
                 <Badge variant="outline" className="shrink-0 type-label-sm">
-                  {c.installmentCount}× splátka
+                  {t("invoices.badge.installmentCount", { count: c.installmentCount })}
                 </Badge>
               </div>
               {c.parent.budgetItem && (
@@ -901,17 +935,17 @@ function InvoicesOverview({
               {/* Amounts row */}
               <div className="grid grid-cols-3 gap-2 text-center">
                 <div>
-                  <div className="type-label text-on-surface-variant">Faktura</div>
-                  <div className="type-body font-semibold tabular-nums">{formatCzk(c.invoiceTotal)}</div>
+                  <div className="type-label text-on-surface-variant">{t("invoices.label.invoice")}</div>
+                  <div className="type-body font-semibold tabular-nums">{formatCzk(c.invoiceTotal, locale)}</div>
                 </div>
                 <div>
-                  <div className="type-label text-on-surface-variant">Zaplaceno</div>
-                  <div className="type-body font-semibold tabular-nums text-success">{formatCzk(c.paidTotal)}</div>
+                  <div className="type-label text-on-surface-variant">{t("invoices.label.paid")}</div>
+                  <div className="type-body font-semibold tabular-nums text-success">{formatCzk(c.paidTotal, locale)}</div>
                 </div>
                 <div>
-                  <div className="type-label text-on-surface-variant">Zbývá</div>
+                  <div className="type-label text-on-surface-variant">{t("invoices.label.remaining")}</div>
                   <div className={cn("type-body font-semibold tabular-nums", remainingTone)}>
-                    {formatCzk(c.remaining)}
+                    {formatCzk(c.remaining, locale)}
                   </div>
                 </div>
               </div>
@@ -923,9 +957,9 @@ function InvoicesOverview({
                 />
               </div>
               <div className="flex items-center justify-between type-label text-on-surface-variant">
-                <span className="tabular-nums">{c.percent.toFixed(0)} %</span>
+                <span className="tabular-nums">{t("invoices.label.percent", { percent: c.percent.toFixed(0) })}</span>
                 {c.parent.invoiceNumber && (
-                  <span className="truncate">č. {c.parent.invoiceNumber}</span>
+                  <span className="truncate">{t("invoices.label.invoiceNumber", { number: c.parent.invoiceNumber })}</span>
                 )}
               </div>
               {/* Actions */}
@@ -935,17 +969,17 @@ function InvoicesOverview({
                   variant="outline"
                   className="h-7 flex-1"
                   onClick={() => onShow(c.parent.id)}
-                  title="Zobrazit splátky v tabulce"
+                  title={t("invoices.button.showTitle")}
                 >
-                  <Eye className="mr-1 h-3.5 w-3.5" /> Zobrazit
+                  <Eye className="mr-1 h-3.5 w-3.5" /> {t("invoices.button.show")}
                 </Button>
                 <Button
                   size="sm"
                   className="h-7 flex-1"
                   onClick={() => onAddInstallment(c.parent)}
-                  title="Přidat další splátku k této faktuře"
+                  title={t("invoices.button.addInstallmentTitle")}
                 >
-                  <Plus className="mr-1 h-3.5 w-3.5" /> Přidat splátku
+                  <Plus className="mr-1 h-3.5 w-3.5" /> {t("invoices.button.addInstallment")}
                 </Button>
               </div>
             </CardContent>
@@ -1027,6 +1061,9 @@ function PaymentDialogInner({
   const isEdit = !!payment;
   const isAddingInstallment = !!prefillParent && !isEdit;
   const { trackEvent } = useAnalytics(projectId);
+  const t = useTranslations("tabs.payments");
+  const tPaymentTypes = useTranslations("paymentTypes");
+  const locale = useLocale() as Locale;
   const isInstallment = !!payment?.installmentOf;
   const today = new Date().toISOString().substring(0, 10);
 
@@ -1051,7 +1088,7 @@ function PaymentDialogInner({
     payment?.invoiceNumber ?? prefillParent?.invoiceNumber ?? "",
   );
   const [description, setDescription] = useState(
-    payment?.description ?? (isAddingInstallment ? "Další splátka" : ""),
+    payment?.description ?? "",
   );
   const [vatRate, setVatRate] = useState(
     payment?.vatRate !== null && payment?.vatRate !== undefined ? String(payment.vatRate) : "",
@@ -1155,14 +1192,14 @@ function PaymentDialogInner({
       }
       toast.success(
         childPayments.length > 0
-          ? `Faktura převedena na běžnou platbu, ${childPayments.length} splátek odpojeno`
-          : "Faktura převedena na běžnou platbu",
+          ? t("toasts.convertSuccessWithChildren", { count: childPayments.length })
+          : t("toasts.convertSuccess"),
       );
       setShowConvertConfirm(false);
       onOpenChange(false);
       onClose?.();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Nepodařilo se převést fakturu na běžnou platbu");
+      toast.error(err instanceof Error ? err.message : t("toasts.convertError"));
     } finally {
       setIsConverting(false);
     }
@@ -1170,12 +1207,12 @@ function PaymentDialogInner({
 
   const handleSubmit = async () => {
     const newErrors: Record<string, string> = {};
-    if (!budgetItemId) newErrors.budgetItemId = "Vyberte položku rozpočtu";
+    if (!budgetItemId) newErrors.budgetItemId = t("dialog.error.budgetItem");
     if (isInvoice && (!invoiceTotal || isNaN(Number(invoiceTotal.replace(",", "."))))) {
-      newErrors.invoiceTotal = "Zadejte platnou celkovou částku faktury";
+      newErrors.invoiceTotal = t("dialog.error.invoiceTotal");
     }
     if (!isInvoice && (!amount || isNaN(Number(amount.replace(",", "."))))) {
-      newErrors.amount = "Zadejte platnou částku";
+      newErrors.amount = t("dialog.error.amount");
     }
     setErrors(newErrors);
     if (Object.keys(newErrors).length > 0) return;
@@ -1209,12 +1246,12 @@ function PaymentDialogInner({
         if (markCompleted) {
           try {
             await updateBudgetItem.mutateAsync({ id: budgetItemId, data: { completed: true } });
-            toast.success("Platba upravena, položka označena jako hotová");
+            toast.success(t("toasts.updateSuccessWithItem"));
           } catch {
-            toast.success("Platba upravena (nepodařilo se označit položku jako hotovou)");
+            toast.success(t("toasts.updateSuccessItemFail"));
           }
         } else {
-          toast.success("Platba upravena");
+          toast.success(t("toasts.updateSuccess"));
         }
         onOpenChange(false);
         onClose?.();
@@ -1237,18 +1274,18 @@ function PaymentDialogInner({
           type,
           vendor,
           invoiceNumber,
-          description: description || "1. splátka",
+          description: description || t("row.firstInstallment"),
         });
         trackEvent("add_payment", { amount: amt, type, invoice: true });
         if (markCompleted) {
           try {
             await updateBudgetItem.mutateAsync({ id: budgetItemId, data: { completed: true } });
-            toast.success("Faktura vytvořena, položka označena jako hotová");
+            toast.success(t("toasts.invoiceCreateSuccessWithItem"));
           } catch {
-            toast.success("Faktura vytvořena (nepodařilo se označit položku jako hotovou)");
+            toast.success(t("toasts.invoiceCreateSuccessItemFail"));
           }
         } else {
-          toast.success("Faktura se splátkami vytvořena");
+          toast.success(t("toasts.invoiceCreateSuccess"));
         }
       } else {
         await createPayment.mutateAsync({
@@ -1273,16 +1310,16 @@ function PaymentDialogInner({
           installment: isAddingInstallment,
         });
         if (isAddingInstallment) {
-          toast.success("Splátka přidána k faktuře");
+          toast.success(t("toasts.installmentAdded"));
         } else if (markCompleted) {
           try {
             await updateBudgetItem.mutateAsync({ id: budgetItemId, data: { completed: true } });
-            toast.success("Platba přidána, položka označena jako hotová");
+            toast.success(t("toasts.paymentCreateSuccessWithItem"));
           } catch {
-            toast.success("Platba přidána (nepodařilo se označit položku jako hotovou)");
+            toast.success(t("toasts.paymentCreateSuccessItemFail"));
           }
         } else {
-          toast.success("Platba přidána");
+          toast.success(t("toasts.paymentCreateSuccess"));
         }
       }
       // Save smart defaults (only on create — edit flow returns earlier above)
@@ -1294,7 +1331,7 @@ function PaymentDialogInner({
       onOpenChange(false);
       onClose?.();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : (isEdit ? "Nepodařilo se upravit platbu" : "Nepodařilo se přidat platbu"));
+      toast.error(err instanceof Error ? err.message : (isEdit ? t("toasts.updateError") : t("toasts.createError")));
     }
   };
 
@@ -1304,13 +1341,13 @@ function PaymentDialogInner({
 
   const submitLabel = isEdit
     ? isInstallment
-      ? "Upravit splátku"
-      : "Upravit platbu"
+      ? t("dialog.submitLabel.edit.installment")
+      : t("dialog.submitLabel.edit.payment")
     : isAddingInstallment
-      ? "Přidat splátku"
+      ? t("dialog.submitLabel.create.installment")
       : isInvoice
-        ? "Vytvořit fakturu"
-        : "Přidat platbu";
+        ? t("dialog.submitLabel.create.invoice")
+        : t("dialog.submitLabel.create.payment");
 
   return (
     <AddDialogShell
@@ -1318,7 +1355,7 @@ function PaymentDialogInner({
       onOpenChange={onOpenChange}
       titleValue={description}
       onTitleChange={setDescription}
-      titlePlaceholder="Co bylo zakoupeno / zaplaceno…"
+      titlePlaceholder={t("dialog.titlePlaceholder")}
       submitLabel={submitLabel}
       onSubmit={handleSubmit}
       isSubmitting={isPending}
@@ -1326,7 +1363,7 @@ function PaymentDialogInner({
     >
       {/* ===== ZÁKLAD ===== */}
       <div className="space-y-2">
-        <Label htmlFor="budgetItem">Položka rozpočtu *</Label>
+        <Label htmlFor="budgetItem">{t("dialog.label.budgetItem")}</Label>
         <SearchableSelect
           id="budgetItem"
           options={budgetItems.map((b) => ({
@@ -1344,9 +1381,9 @@ function PaymentDialogInner({
                 return n;
               });
           }}
-          placeholder="Vyberte položku…"
-          searchPlaceholder="Hledat položku…"
-          emptyText="Žádné položky nenalezeny"
+          placeholder={t("dialog.placeholder.budgetItem")}
+          searchPlaceholder={t("dialog.search.budgetItem")}
+          emptyText={t("dialog.empty.budgetItem")}
           className={cn(errors.budgetItemId && "border-destructive")}
         />
         {errors.budgetItemId && (
@@ -1363,13 +1400,13 @@ function PaymentDialogInner({
           <Layers className="h-4 w-4 shrink-0 text-warning-strong dark:text-warning" />
           <div className="flex-1 text-xs leading-tight">
             <div className="font-semibold text-warning-strong dark:text-warning">
-              Nová splátka k faktuře
+              {t("dialog.prefill.title")}
             </div>
             <div className="text-on-surface-variant">
-              {prefillParent.vendor || prefillParent.invoiceNumber || "Faktura"}
-              {prefillParent.invoiceTotal != null
-                ? ` · ${formatCzk(prefillParent.invoiceTotal)} celkem`
-                : ""}
+              {t("dialog.prefill.subtitle", {
+                vendor: prefillParent.vendor || prefillParent.invoiceNumber || t("dialog.prefill.fallback"),
+                amount: prefillParent.invoiceTotal != null ? formatCzk(prefillParent.invoiceTotal, locale) : "",
+              })}
             </div>
           </div>
         </div>
@@ -1383,12 +1420,12 @@ function PaymentDialogInner({
           <CircleDollarSign className="h-4 w-4 shrink-0 text-info" />
           <div className="flex-1 text-xs leading-tight">
             <div className="font-medium">
-              Tato položka už má fakturu:{" "}
-              <span className="text-foreground">
-                {existingInvoiceForBudgetItem.vendor ||
+              {t("dialog.existingInvoice.title", {
+                vendor:
+                  existingInvoiceForBudgetItem.vendor ||
                   existingInvoiceForBudgetItem.invoiceNumber ||
-                  "Faktura"}
-              </span>
+                  t("dialog.existingInvoice.fallback"),
+              })}
             </div>
             {(() => {
               const inv = existingInvoiceForBudgetItem.invoiceTotal ?? existingInvoiceForBudgetItem.amount;
@@ -1401,7 +1438,11 @@ function PaymentDialogInner({
               const percent = inv > 0 ? (paid / inv) * 100 : 0;
               return (
                 <div className="text-on-surface-variant tabular-nums">
-                  {formatCzk(paid)} / {formatCzk(inv)} ({percent.toFixed(0)} %)
+                  {t("dialog.existingInvoice.subtitle", {
+                    paid: formatCzk(paid, locale),
+                    invoiceTotal: formatCzk(inv, locale),
+                    percent: percent.toFixed(0),
+                  })}
                 </div>
               );
             })()}
@@ -1417,7 +1458,7 @@ function PaymentDialogInner({
               }
             }}
           >
-            <Plus className="mr-1 h-3.5 w-3.5" /> Přidat splátku k této faktuře
+            <Plus className="mr-1 h-3.5 w-3.5" /> {t("dialog.existingInvoice.button")}
           </Button>
         </div>
       )}
@@ -1430,12 +1471,12 @@ function PaymentDialogInner({
             <AlertTriangle className="h-4 w-4 shrink-0 text-danger-strong dark:text-danger" />
             <div className="flex-1 text-xs leading-tight">
               <div className="font-medium text-danger-strong dark:text-danger">
-                Toto je faktura ve splátkách
+                {t("dialog.parentWarning.title")}
               </div>
               <div className="text-on-surface-variant">
-                Faktura celkem {formatCzk(payment.invoiceTotal)}. Můžete ji
-                převést zpět na běžnou platbu — splátky zůstanou jako
-                samostatné platby.
+                {t("dialog.parentWarning.body", {
+                  invoiceTotal: formatCzk(payment.invoiceTotal, locale),
+                })}
               </div>
             </div>
             <Button
@@ -1446,7 +1487,7 @@ function PaymentDialogInner({
               onClick={() => setShowConvertConfirm(true)}
               disabled={isConverting}
             >
-              <ChevronRight className="mr-1 h-3.5 w-3.5" /> Převést na běžnou platbu
+              <ChevronRight className="mr-1 h-3.5 w-3.5" /> {t("dialog.parentWarning.button")}
             </Button>
           </div>
           <Dialog open={showConvertConfirm} onOpenChange={setShowConvertConfirm}>
@@ -1454,12 +1495,10 @@ function PaymentDialogInner({
               <DialogHeader>
                 <DialogTitle className="flex items-center gap-2">
                   <AlertTriangle className="h-4 w-4 text-danger" />
-                  Převést fakturu na běžnou platbu?
+                  {t("dialog.convertDialog.title")}
                 </DialogTitle>
                 <DialogDescription>
-                  Tímto se faktura převede na běžnou platbu. Všechny splátky
-                  ({childPayments.length}) zůstanou jako samostatné platby.
-                  Pokračovat?
+                  {t("dialog.convertDialog.body", { count: childPayments.length })}
                 </DialogDescription>
               </DialogHeader>
               <DialogFooter>
@@ -1468,14 +1507,14 @@ function PaymentDialogInner({
                   onClick={() => setShowConvertConfirm(false)}
                   disabled={isConverting}
                 >
-                  Zrušit
+                  {t("dialog.convertDialog.cancel")}
                 </Button>
                 <Button
                   variant="destructive"
                   onClick={handleConvertToRegular}
                   disabled={isConverting}
                 >
-                  {isConverting ? "Převádím…" : "Převést na běžnou platbu"}
+                  {isConverting ? t("dialog.convertDialog.confirming") : t("dialog.convertDialog.confirm")}
                 </Button>
               </DialogFooter>
             </DialogContent>
@@ -1483,11 +1522,11 @@ function PaymentDialogInner({
         </>
       )}
 
-      {/* Částka / Faktura celkem / 1. splátka + Datum */}
+      {/* Amount / Invoice total / 1st installment + Date */}
       {isInvoice && !isEdit ? (
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-2">
-            <Label htmlFor="invoiceTotal">Faktura celkem (Kč) *</Label>
+            <Label htmlFor="invoiceTotal">{t("dialog.label.invoiceTotal")}</Label>
             <Input
               id="invoiceTotal"
               value={invoiceTotal}
@@ -1500,7 +1539,7 @@ function PaymentDialogInner({
                     return n;
                   });
               }}
-              placeholder="150000"
+              placeholder={t("dialog.placeholder.invoiceTotal")}
               inputMode="decimal"
               className={cn(errors.invoiceTotal && "border-destructive")}
             />
@@ -1509,12 +1548,12 @@ function PaymentDialogInner({
             )}
           </div>
           <div className="space-y-2">
-            <Label htmlFor="amount">1. splátka (Kč) *</Label>
+            <Label htmlFor="amount">{t("dialog.label.firstInstallment")}</Label>
             <Input
               id="amount"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
-              placeholder="50000"
+              placeholder={t("dialog.placeholder.firstInstallment")}
               inputMode="decimal"
             />
           </div>
@@ -1522,7 +1561,7 @@ function PaymentDialogInner({
       ) : (
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-2">
-            <Label htmlFor="amount">Částka (Kč) *</Label>
+            <Label htmlFor="amount">{t("dialog.label.amount")}</Label>
             <Input
               id="amount"
               value={amount}
@@ -1535,7 +1574,7 @@ function PaymentDialogInner({
                     return n;
                   });
               }}
-              placeholder="25000"
+              placeholder={t("dialog.placeholder.amount")}
               inputMode="decimal"
               className={cn(errors.amount && "border-destructive")}
             />
@@ -1544,7 +1583,7 @@ function PaymentDialogInner({
             )}
           </div>
           <div className="space-y-2">
-            <Label htmlFor="date">Datum *</Label>
+            <Label htmlFor="date">{t("dialog.label.date")}</Label>
             <Input
               id="date"
               type="date"
@@ -1557,7 +1596,7 @@ function PaymentDialogInner({
 
       {isInvoice && !isEdit && (
         <div className="space-y-2">
-          <Label htmlFor="date">Datum faktury *</Label>
+          <Label htmlFor="date">{t("dialog.label.invoiceDate")}</Label>
           <Input
             id="date"
             type="date"
@@ -1567,25 +1606,25 @@ function PaymentDialogInner({
         </div>
       )}
 
-      {/* Typ */}
+      {/* Type */}
       <div className="space-y-2">
-        <Label htmlFor="type">Typ</Label>
+        <Label htmlFor="type">{t("dialog.label.type")}</Label>
         <Select value={type} onValueChange={setType}>
           <SelectTrigger id="type">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            {PAYMENT_TYPES.map((t) => (
-              <SelectItem key={t.value} value={t.value}>
-                {t.emoji} {t.label}
+            {PAYMENT_TYPES.map((pt) => (
+              <SelectItem key={pt.value} value={pt.value}>
+                {pt.emoji} {tPaymentTypes(pt.value)}
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
       </div>
 
-      {/* ===== DETAILY (volitelné) ===== */}
-      <CollapsibleSection title="Detaily (volitelné)">
+      {/* ===== DETAILS (optional) ===== */}
+      <CollapsibleSection title={t("dialog.section.details")}>
         {/* Installment toggle - only in create mode (not editing existing
             payments) and not when prefilling an installment (that flow
             doesn't allow creating a NEW invoice — it links to an existing one). */}
@@ -1598,7 +1637,7 @@ function PaymentDialogInner({
             />
             <Label htmlFor="isInvoice" className="cursor-pointer text-xs">
               <CircleDollarSign className="mr-1 inline h-3.5 w-3.5" />
-              Platba ve splátkách (faktura s více platbami)
+              {t("dialog.isInvoice.label")}
             </Label>
           </div>
         )}
@@ -1611,46 +1650,45 @@ function PaymentDialogInner({
           <div className="space-y-2">
             <Label htmlFor="installmentOf">
               <CircleDollarSign className="mr-1 inline h-3.5 w-3.5" />
-              Připojit k faktuře (jako splátka)
+              {t("dialog.installmentOf.label")}
             </Label>
             <Select
               value={installmentParentId || "none"}
               onValueChange={(v) => setInstallmentParentId(v === "none" ? "" : v)}
             >
               <SelectTrigger id="installmentOf">
-                <SelectValue placeholder="Samostatná platba (bez faktury)" />
+                <SelectValue placeholder={t("dialog.installmentOf.placeholder")} />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="none">
-                  Samostatná platba (bez faktury)
+                  {t("dialog.installmentOf.noneLabel")}
                 </SelectItem>
                 {parentCandidates.map((p) => {
                   const label = [
                     p.vendor,
                     p.invoiceNumber,
                     p.description,
-                    formatCzk(p.invoiceTotal ?? p.amount),
+                    formatCzk(p.invoiceTotal ?? p.amount, locale),
                   ]
                     .filter(Boolean)
                     .join(" · ");
                   return (
                     <SelectItem key={p.id} value={p.id}>
-                      {label || `Faktura ${p.id.slice(0, 6)}`}
+                      {label || t("invoices.fallbackTitle")}
                     </SelectItem>
                   );
                 })}
               </SelectContent>
             </Select>
             <p className="text-[11px] text-muted-foreground">
-              Tato platba se zobrazí jako další splátka vybrané faktury.
-              Změnou se aktualizuje součet plátby faktury.
+              {t("dialog.installmentOf.hint")}
             </p>
           </div>
         )}
 
-        {/* Kontakt (volitelné) */}
+        {/* Contact (optional) */}
         <div className="space-y-2">
-          <Label htmlFor="contact">Kontakt (volitelné)</Label>
+          <Label htmlFor="contact">{t("dialog.label.contact")}</Label>
           <SearchableSelect
             id="contact"
             options={contacts.map((c) => ({
@@ -1660,30 +1698,30 @@ function PaymentDialogInner({
             }))}
             value={contactId}
             onChange={setContactId}
-            placeholder="Bez kontaktu"
-            searchPlaceholder="Hledat kontakt…"
-            emptyText="Žádné kontakty nenalezeny"
+            placeholder={t("dialog.placeholder.contact")}
+            searchPlaceholder={t("dialog.search.contact")}
+            emptyText={t("dialog.empty.contact")}
           />
         </div>
 
-        {/* Firma / Obchod + Číslo faktury/účtenky */}
+        {/* Vendor / Store + Invoice/Receipt no. */}
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-2">
-            <Label htmlFor="vendor">Firma / Obchod</Label>
+            <Label htmlFor="vendor">{t("dialog.label.vendor")}</Label>
             <Input
               id="vendor"
               value={vendor}
               onChange={(e) => setVendor(e.target.value)}
-              placeholder="např. Hornbach"
+              placeholder={t("dialog.placeholder.vendor")}
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="invoiceNumber">Číslo faktury/účtenky</Label>
+            <Label htmlFor="invoiceNumber">{t("dialog.label.invoiceNumber")}</Label>
             <Input
               id="invoiceNumber"
               value={invoiceNumber}
               onChange={(e) => setInvoiceNumber(e.target.value)}
-              placeholder="2024-001"
+              placeholder={t("dialog.placeholder.invoiceNumber")}
             />
           </div>
         </div>
@@ -1692,50 +1730,52 @@ function PaymentDialogInner({
         {(!isInvoice || isEdit) && (
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
-              <Label htmlFor="vatRate">DPH sazba (%)</Label>
+              <Label htmlFor="vatRate">{t("dialog.label.vatRate")}</Label>
               <Select value={vatRate || "none"} onValueChange={(v) => setVatRate(v === "none" ? "" : v)}>
                 <SelectTrigger id="vatRate">
-                  <SelectValue placeholder="Bez DPH" />
+                  <SelectValue placeholder={t("dialog.vatRate.placeholder")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">Bez DPH</SelectItem>
-                  <SelectItem value="21">21 % (standardní)</SelectItem>
-                  <SelectItem value="12">12 % (snížená 1)</SelectItem>
-                  <SelectItem value="10">10 % (snížená 2)</SelectItem>
-                  <SelectItem value="0">0 %</SelectItem>
+                  <SelectItem value="none">{t("dialog.vatRate.none")}</SelectItem>
+                  <SelectItem value="21">{t("dialog.vatRate.21")}</SelectItem>
+                  <SelectItem value="12">{t("dialog.vatRate.12")}</SelectItem>
+                  <SelectItem value="10">{t("dialog.vatRate.10")}</SelectItem>
+                  <SelectItem value="0">{t("dialog.vatRate.0")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>Výpočet DPH</Label>
+              <Label>{t("dialog.label.vatCalculation")}</Label>
               <div className="flex h-9 items-center rounded-md border bg-muted/30 px-3 text-xs text-muted-foreground">
                 {vatRate && amount ? (
                   <>
-                    DPH:{" "}
+                    {t("dialog.vatCalc.label.vat")}{" "}
                     <strong className="ml-1 text-foreground tabular-nums">
                       {formatCzk(
                         (Number(amount.replace(",", ".")) * Number(vatRate)) /
                           (100 + Number(vatRate)),
+                        locale,
                       )}
                     </strong>
                     <span className="ml-2">
-                      (Základ:{" "}
+                      ({t("dialog.vatCalc.label.base")}{" "}
                       {formatCzk(
                         (Number(amount.replace(",", ".")) * 100) /
                           (100 + Number(vatRate)),
+                        locale,
                       )}
                       )
                     </span>
                   </>
                 ) : (
-                  <span>Zadejte částku a DPH sazbu</span>
+                  <span>{t("dialog.vatCalc.empty")}</span>
                 )}
               </div>
             </div>
           </div>
         )}
 
-        {/* Hotovo checkbox - propojí platbu s dokončením budget item */}
+        {/* Mark-completed checkbox - links payment to budget item completion */}
         <div className="flex flex-col gap-1 rounded-md border border-warning/30 bg-warning-soft/50 p-3 dark:border-warning-strong/60 dark:bg-warning-soft/40">
           <div className="flex items-start gap-2">
             <Checkbox
@@ -1745,13 +1785,13 @@ function PaymentDialogInner({
               className="mt-0.5"
             />
             <Label htmlFor="markCompleted" className="cursor-pointer text-sm font-medium leading-tight">
-              Označit položku jako hotovou
+              {t("dialog.markCompleted.label")}
             </Label>
           </div>
           <p className="ml-6 text-[11px] text-muted-foreground">
             {alreadyCompleted
-              ? "Položka je již označena jako hotová."
-              : "Položka bude označena jako dokončená"}
+              ? t("dialog.markCompleted.alreadyCompleted")
+              : t("dialog.markCompleted.hint")}
           </p>
         </div>
       </CollapsibleSection>

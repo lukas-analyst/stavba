@@ -22,6 +22,7 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import { formatDate, formatCzk, PHASE_COLORS } from "@/lib/format";
+import { useFormatter, useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { EmptyStateBox } from "@/components/empty-state-box";
 
@@ -39,6 +40,10 @@ const DAY_MS = 1000 * 60 * 60 * 24;
 
 export function TimelineTab({ projectId }: { projectId: string }) {
   const { data, isLoading } = useDashboard(projectId);
+  const t = useTranslations("tabs.timeline");
+  const tc = useTranslations("common");
+  const tPhases = useTranslations("phases");
+  const format = useFormatter();
   const [zoom, setZoom] = useState<ZoomLevel>("months");
   const [editingItem, setEditingItem] = useState<string | null>(null);
 
@@ -140,8 +145,9 @@ export function TimelineTab({ projectId }: { projectId: string }) {
         const day = new Date(d.getTime() + i * DAY_MS);
         if (day.getMonth() !== currentMonth) {
           if (currentMonth !== -1) {
+            const prevDay = new Date(d.getTime() + (i - 1) * DAY_MS);
             monthLabels.push({
-              label: `${MONTHS_LONG[new Date(d.getTime() + (i - 1) * DAY_MS).getMonth()]} ${new Date(d.getTime() + (i - 1) * DAY_MS).getFullYear()}`,
+              label: format.dateTime(prevDay, { month: "long", year: "numeric" }),
               width: monthGroupWidth,
             });
           }
@@ -150,16 +156,17 @@ export function TimelineTab({ projectId }: { projectId: string }) {
         } else {
           monthGroupWidth++;
         }
+        const dowLabel = format.dateTime(day, { weekday: "short" });
         cells.push({
           label: String(day.getDate()),
-          sub: ["Ne", "Po", "Út", "St", "Čt", "Pá", "So"][day.getDay()],
+          sub: dowLabel.charAt(0).toUpperCase() + dowLabel.slice(1),
           width: 1,
         });
       }
       if (monthGroupWidth > 0) {
         const last = new Date(d.getTime() + (totalUnits - 1) * DAY_MS);
         monthLabels.push({
-          label: `${MONTHS_LONG[last.getMonth()]} ${last.getFullYear()}`,
+          label: format.dateTime(last, { month: "long", year: "numeric" }),
           width: monthGroupWidth,
         });
       }
@@ -171,7 +178,7 @@ export function TimelineTab({ projectId }: { projectId: string }) {
       for (let i = 0; i < totalUnits; i++) {
         const d = new Date(rangeStart.getFullYear(), rangeStart.getMonth() + i, 1);
         groupCells.push({
-          label: `${MONTHS_SHORT[d.getMonth()]} ${String(d.getFullYear()).slice(-2)}`,
+          label: format.dateTime(d, { month: "short", year: "2-digit" }),
           width: 1,
         });
       }
@@ -187,10 +194,11 @@ export function TimelineTab({ projectId }: { projectId: string }) {
       }
     }
     return { dayCells: null, groupCells };
-  }, [rangeStart, totalUnits, zoom]);
+  }, [rangeStart, totalUnits, zoom, format]);
 
-  // Group items by phase
-  const phaseOrder = ["Příprava", "Demolice", "Hrubá stavba", "Zabydlování", "Do budoucna", "Neurčeno"];
+  // Group items by phase — uses English IDs (post Phase B migration).
+  // Import PHASE_ORDER from format.ts to keep this in sync.
+  const phaseOrder = ["preparation", "demolition", "shell", "finishing", "future", "unspecified"];
   const itemsByPhase = new Map<string, typeof items>();
   for (const it of items) {
     const arr = itemsByPhase.get(it.phase) ?? [];
@@ -229,8 +237,8 @@ export function TimelineTab({ projectId }: { projectId: string }) {
     return (
       <EmptyStateBox
         icon={CalendarRange}
-        title="Žádné položky s datem"
-        description="Přiřaďte datumy od/do v tabulce rozpočtu a položky se zde zobrazí na časové ose."
+        title={t("empty.title")}
+        description={t("empty.description")}
       />
     );
   }
@@ -242,41 +250,44 @@ export function TimelineTab({ projectId }: { projectId: string }) {
         <div className="flex items-center gap-2 type-body text-on-surface-variant">
           <CalendarRange className="h-4 w-4" />
           <span>
-            {formatDate(rangeStart)} — {formatDate(rangeEnd)}
+            {t("label.range", {
+              start: formatDate(rangeStart),
+              end: formatDate(rangeEnd),
+            })}
           </span>
           <Badge variant="secondary" className="type-label-sm">
-            {items.length} položek
+            {t("label.count", { count: items.length })}
           </Badge>
         </div>
         <div className="flex items-center gap-1">
-          <span className="mr-2 type-label text-on-surface-variant">Zoom:</span>
+          <span className="mr-2 type-label text-on-surface-variant">{t("label.zoom")}</span>
           <Button
             size="sm"
             variant={zoom === "days" ? "default" : "outline"}
             onClick={() => setZoom("days")}
           >
-            Dny
+            {t("zoom.days")}
           </Button>
           <Button
             size="sm"
             variant={zoom === "months" ? "default" : "outline"}
             onClick={() => setZoom("months")}
           >
-            Měsíce
+            {t("zoom.months")}
           </Button>
           <Button
             size="sm"
             variant={zoom === "quarters" ? "default" : "outline"}
             onClick={() => setZoom("quarters")}
           >
-            Kvartály
+            {t("zoom.quarters")}
           </Button>
           <Button
             size="sm"
             variant={zoom === "years" ? "default" : "outline"}
             onClick={() => setZoom("years")}
           >
-            Roky
+            {t("zoom.years")}
           </Button>
         </div>
       </div>
@@ -290,22 +301,22 @@ export function TimelineTab({ projectId }: { projectId: string }) {
               variant="outline"
               className={cn("type-label-sm", PHASE_COLORS[g.phase] ?? "")}
             >
-              {g.phase} ({g.items.length})
+              {tPhases(g.phase)} ({g.items.length})
             </Badge>
           ))}
         </div>
         <div className="flex items-center gap-3 type-label text-on-surface-variant">
           <span className="flex items-center gap-1">
-            <span className="inline-block h-2 w-2 rounded-full bg-danger" /> Dnes
+            <span className="inline-block h-2 w-2 rounded-full bg-danger" /> {t("legend.today")}
           </span>
-          <span>Dvojklik = upravit datumy</span>
+          <span>{t("legend.doubleClickHint")}</span>
         </div>
       </div>
 
       {/* Gantt */}
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="type-title-lg">Harmonogram stavby</CardTitle>
+          <CardTitle className="type-title-lg">{t("title.gantt")}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto" onScroll={(e) => setScrollLeft(e.currentTarget.scrollLeft)}>
@@ -313,7 +324,7 @@ export function TimelineTab({ projectId }: { projectId: string }) {
               {/* Header */}
               <div className="sticky top-0 z-20 flex border-b bg-surface-container-high backdrop-blur">
                 <div className="sticky left-0 z-30 w-64 shrink-0 border-r bg-surface-container-high px-3 py-2 type-label font-semibold">
-                  Položka
+                  {t("columnHeader.item")}
                 </div>
                 <div className="flex">
                   {/* Top row: month/year grouping */}
@@ -364,7 +375,7 @@ export function TimelineTab({ projectId }: { projectId: string }) {
                     style={{ left: `calc(16rem + ${todayOffset * unitW}px)` }}
                   >
                     <div className="absolute -top-0.5 left-1 whitespace-nowrap rounded bg-danger px-1 type-label-sm text-white">
-                      Dnes
+                      {t("legend.today")}
                     </div>
                   </div>
                 )}
@@ -374,7 +385,7 @@ export function TimelineTab({ projectId }: { projectId: string }) {
                     {/* Phase label row */}
                     <div className="flex border-b bg-surface-container-low">
                       <div className="sticky left-0 z-20 w-64 shrink-0 border-r bg-surface-container-low px-3 py-1 type-overline text-on-surface-variant">
-                        {group.phase}
+                        {tPhases(group.phase)}
                       </div>
                       <div className="flex-1" />
                     </div>
@@ -447,7 +458,7 @@ export function TimelineTab({ projectId }: { projectId: string }) {
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 type-title">
               <CalendarDays className="h-4 w-4 text-info" />
-              Nejbližší akce
+              {t("title.upcoming")}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-1 type-body">
@@ -456,14 +467,14 @@ export function TimelineTab({ projectId }: { projectId: string }) {
                 <span className="truncate">{it.subcategory || it.category}</span>
                 <span className="ml-2 font-medium text-info">{formatDate(it.dateFrom)}</span>
               </div>
-            )) ?? <p className="text-on-surface-variant">Žádné blížící se termíny</p>}
+            )) ?? <p className="text-on-surface-variant">{t("empty.upcoming")}</p>}
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 type-title">
               <CalendarRange className="h-4 w-4 text-danger" />
-              Zpožděné
+              {t("title.overdue")}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-1 type-body">
@@ -472,14 +483,14 @@ export function TimelineTab({ projectId }: { projectId: string }) {
                 <span className="truncate">{it.subcategory || it.category}</span>
                 <span className="ml-2 font-medium text-danger">{formatDate(it.dateTo)}</span>
               </div>
-            )) ?? <p className="text-on-surface-variant">Žádné zpožděné položky</p>}
+            )) ?? <p className="text-on-surface-variant">{t("empty.overdue")}</p>}
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 type-title">
               <CalendarRange className="h-4 w-4 text-warning" />
-              K naplánování
+              {t("title.unscheduled")}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-1 type-body">
@@ -488,7 +499,7 @@ export function TimelineTab({ projectId }: { projectId: string }) {
                 <span className="truncate">{it.subcategory || it.category}</span>
                 <span className="ml-2 font-medium text-warning">{formatCzk(it.planCost)}</span>
               </div>
-            )) ?? <p className="text-on-surface-variant">Vše naplánováno</p>}
+            )) ?? <p className="text-on-surface-variant">{t("empty.unscheduled")}</p>}
           </CardContent>
         </Card>
       </div>
@@ -506,11 +517,6 @@ export function TimelineTab({ projectId }: { projectId: string }) {
 }
 
 // ===== Gantt bar (double-click only — no drag/resize) =====
-const MONTHS_SHORT = ["Led", "Úno", "Bře", "Dub", "Kvě", "Čvn", "Čvc", "Srp", "Zář", "Říj", "Lis", "Pro"];
-const MONTHS_LONG = [
-  "Leden", "Únor", "Březen", "Duben", "Květen", "Červen",
-  "Červenec", "Srpen", "Září", "Říjen", "Listopad", "Prosinec",
-];
 
 function GanttBar({
   item,
@@ -539,6 +545,7 @@ function GanttBar({
   zoom: ZoomLevel;
   onDoubleClick: () => void;
 }) {
+  const t = useTranslations("tabs.timeline");
   const width = widthUnits * unitW;
   const left = startOffset * unitW;
   const barColor = PHASE_COLORS[item.phase] ?? "";
@@ -560,7 +567,7 @@ function GanttBar({
         e.stopPropagation();
         onDoubleClick();
       }}
-      title={`${item.subcategory || item.category}\n${formatDate(item.dateFrom)} — ${formatDate(item.dateTo)}\n${formatCzk(item.planCost)}${item.completed ? " · Hotovo" : ""}`}
+      title={`${item.subcategory || item.category}\n${formatDate(item.dateFrom)} — ${formatDate(item.dateTo)}\n${formatCzk(item.planCost)}${item.completed ? t("suffix.completed") : ""}`}
     >
       <span className="flex-1 truncate px-1.5 type-label-sm font-medium">
         {item.subcategory || item.category}
@@ -580,6 +587,8 @@ function DateEditDialog({
   projectId: string;
   onClose: () => void;
 }) {
+  const t = useTranslations("tabs.timeline");
+  const tc = useTranslations("common");
   // We need the item's current dates. Reuse the dashboard data via a lightweight fetch.
   const updateItem = useUpdateBudgetItem(projectId);
   const [dateFrom, setDateFrom] = useState("");
@@ -617,14 +626,14 @@ function DateEditDialog({
     <Dialog open={true} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="max-w-sm">
         <DialogHeader>
-          <DialogTitle>Upravit termíny</DialogTitle>
+          <DialogTitle>{t("dialog.title")}</DialogTitle>
           <DialogDescription>
-            Nastavte přesné datum zahájení a dokončení.
+            {t("dialog.description")}
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-3">
           <div className="space-y-2">
-            <Label htmlFor="gantt-dateFrom">Datum od</Label>
+            <Label htmlFor="gantt-dateFrom">{t("dialog.label.dateFrom")}</Label>
             <Input
               id="gantt-dateFrom"
               type="date"
@@ -633,7 +642,7 @@ function DateEditDialog({
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="gantt-dateTo">Datum do</Label>
+            <Label htmlFor="gantt-dateTo">{t("dialog.label.dateTo")}</Label>
             <Input
               id="gantt-dateTo"
               type="date"
@@ -644,9 +653,9 @@ function DateEditDialog({
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>Zrušit</Button>
+          <Button variant="outline" onClick={onClose}>{tc("cancel")}</Button>
           <Button onClick={handleSave} disabled={updateItem.isPending}>
-            Uložit
+            {tc("save")}
           </Button>
         </DialogFooter>
       </DialogContent>

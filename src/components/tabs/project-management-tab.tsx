@@ -88,6 +88,7 @@ import { cn } from "@/lib/utils";
 import { useAppStore, type TabId } from "@/lib/store";
 import { useAnalytics } from "@/hooks/use-analytics";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 import QRCode from "qrcode";
 
 // ============================================================
@@ -98,6 +99,8 @@ export function ProjectManagementTab({ projectId }: { projectId: string }) {
   const { data: projects, isLoading: projectsLoading } = useProjects();
   const { data: budgetItems } = useBudgetItems(projectId);
   const updateProject = useUpdateProject(projectId);
+  const t = useTranslations("tabs.management");
+  const tCommon = useTranslations("common");
 
   // Role-based UI: fetch the current user (session) + project members so we
   // can resolve the user's role within this project. Admins/owners get the
@@ -160,9 +163,9 @@ export function ProjectManagementTab({ projectId }: { projectId: string }) {
   const handleExport = async () => {
     try {
       await exportState.mutateAsync();
-      toast.success("Stav exportován");
+      toast.success(t("data.toasts.exportSuccess"));
     } catch {
-      toast.error("Export selhal");
+      toast.error(t("data.toasts.exportError"));
     }
   };
 
@@ -171,9 +174,9 @@ export function ProjectManagementTab({ projectId }: { projectId: string }) {
     if (!file) return;
     try {
       await importState.mutateAsync(file);
-      toast.success("Stav importován");
+      toast.success(t("data.toasts.importSuccess"));
     } catch {
-      toast.error("Import selhal");
+      toast.error(t("data.toasts.importError"));
     }
     // Reset the input value so the same file can be selected again.
     e.target.value = "";
@@ -182,9 +185,9 @@ export function ProjectManagementTab({ projectId }: { projectId: string }) {
   const handleCsv = async (type: "budget" | "payments" | "time" | "contacts") => {
     try {
       await exportCsv.mutateAsync(type);
-      toast.success(`${type} exportován do CSV`);
+      toast.success(t("data.toasts.csvSuccess", { type }));
     } catch {
-      toast.error("CSV export selhal");
+      toast.error(t("data.toasts.csvError"));
     }
   };
 
@@ -203,7 +206,7 @@ export function ProjectManagementTab({ projectId }: { projectId: string }) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          name: `${project.name} (kopie)`,
+          name: `${project.name}${t("danger.duplicate.suffix")}`,
           address: project.address,
           description: project.description,
           status: "planning",
@@ -235,9 +238,9 @@ export function ProjectManagementTab({ projectId }: { projectId: string }) {
           ),
         );
       }
-      toast.success(`Projekt duplikován jako "${newProject.name}"`);
+      toast.success(t("danger.toasts.duplicateSuccess", { name: newProject.name }));
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Nepodařilo se duplikovat projekt");
+      toast.error(err instanceof Error ? err.message : t("danger.toasts.duplicateError"));
     }
   };
 
@@ -287,10 +290,10 @@ export function ProjectManagementTab({ projectId }: { projectId: string }) {
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-lg font-semibold">
             <Download className="h-4 w-4 text-primary" />
-            Data a exporty
+            {t("data.title")}
           </CardTitle>
           <CardDescription className="text-sm text-on-surface-variant">
-            Úprava projektu, reporty a exporty dat do různých formátů
+            {t("data.description")}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -306,7 +309,7 @@ export function ProjectManagementTab({ projectId }: { projectId: string }) {
               disabled={!canEditProject}
             >
               <Pencil className="h-3.5 w-3.5" />
-              Upravit projekt
+              {t("button.editProject")}
             </Button>
             <Button
               variant="outline"
@@ -315,7 +318,7 @@ export function ProjectManagementTab({ projectId }: { projectId: string }) {
               onClick={openReport}
             >
               <FileText className="h-3.5 w-3.5" />
-              Report PDF
+              {t("button.reportPdf")}
             </Button>
             <Button
               variant="outline"
@@ -324,7 +327,7 @@ export function ProjectManagementTab({ projectId }: { projectId: string }) {
               onClick={openAudit}
             >
               <History className="h-3.5 w-3.5" />
-              Historie změn
+              {t("button.auditHistory")}
             </Button>
           </div>
 
@@ -333,7 +336,7 @@ export function ProjectManagementTab({ projectId }: { projectId: string }) {
               CSV: per-section, aktuální projekt (budget / payments / time /
               contacts). Import JSON je owner/admin-only. */}
           <div className="space-y-2">
-            <div className="type-label text-on-surface-variant">Export dat</div>
+            <div className="type-label text-on-surface-variant">{t("data.export.label")}</div>
             <div className="flex flex-wrap items-center gap-2">
               <Button
                 variant="outline"
@@ -347,7 +350,7 @@ export function ProjectManagementTab({ projectId }: { projectId: string }) {
                 ) : (
                   <Download className="h-3.5 w-3.5" />
                 )}
-                Export JSON
+                {t("data.export.json")}
               </Button>
               {/* Import JSON — owner / admin only.
                   API (`POST /api/import`) requires admin session; we
@@ -366,7 +369,7 @@ export function ProjectManagementTab({ projectId }: { projectId: string }) {
                   ) : (
                     <Download className="h-3.5 w-3.5 rotate-180" />
                   )}
-                  Import JSON (owner only)
+                  {t("data.export.import")}
                 </Button>
               )}
               {/* Skrytý file input — klik na tlačítko nad otevře
@@ -384,7 +387,7 @@ export function ProjectManagementTab({ projectId }: { projectId: string }) {
           {/* === CSV exporty per-section === */}
           <div className="space-y-2">
             <div className="type-label text-on-surface-variant">
-              CSV exporty (aktuální projekt)
+              {t("data.csv.label")}
             </div>
             <div className="flex flex-wrap items-center gap-2">
               <Button
@@ -395,7 +398,7 @@ export function ProjectManagementTab({ projectId }: { projectId: string }) {
                 disabled={exportCsv.isPending}
               >
                 <FileText className="h-3.5 w-3.5" />
-                Rozpočet CSV
+                {t("data.csv.budget")}
               </Button>
               <Button
                 variant="outline"
@@ -405,7 +408,7 @@ export function ProjectManagementTab({ projectId }: { projectId: string }) {
                 disabled={exportCsv.isPending}
               >
                 <FileText className="h-3.5 w-3.5" />
-                Platby CSV
+                {t("data.csv.payments")}
               </Button>
               <Button
                 variant="outline"
@@ -415,7 +418,7 @@ export function ProjectManagementTab({ projectId }: { projectId: string }) {
                 disabled={exportCsv.isPending}
               >
                 <FileText className="h-3.5 w-3.5" />
-                Čas CSV
+                {t("data.csv.time")}
               </Button>
               <Button
                 variant="outline"
@@ -425,7 +428,7 @@ export function ProjectManagementTab({ projectId }: { projectId: string }) {
                 disabled={exportCsv.isPending}
               >
                 <FileText className="h-3.5 w-3.5" />
-                Kontakty CSV
+                {t("data.csv.contacts")}
               </Button>
             </div>
           </div>
@@ -437,9 +440,9 @@ export function ProjectManagementTab({ projectId }: { projectId: string }) {
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-lg font-semibold">
             <History className="h-4 w-4 text-primary" />
-            Audit log — nedávné změny
+            {t("audit.title")}
           </CardTitle>
-          <CardDescription className="text-sm text-on-surface-variant">Přehled nedávných akcí v projektu</CardDescription>
+          <CardDescription className="text-sm text-on-surface-variant">{t("audit.description")}</CardDescription>
         </CardHeader>
         <CardContent>
           <EnhancedAuditLog projectId={projectId} />
@@ -451,7 +454,7 @@ export function ProjectManagementTab({ projectId }: { projectId: string }) {
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-lg font-semibold text-danger">
             <AlertTriangle className="h-4 w-4" />
-            Správa projektu
+            {t("danger.title")}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
@@ -462,12 +465,12 @@ export function ProjectManagementTab({ projectId }: { projectId: string }) {
             <div className="flex items-center gap-2">
               <Copy className="h-4 w-4 text-info" />
               <div>
-                <div className="type-body font-medium">Duplikovat projekt</div>
-                <div className="type-label text-on-surface-variant">Vytvoří kopii s rozpočtem (bez plateb a času)</div>
+                <div className="type-body font-medium">{t("danger.duplicate.title")}</div>
+                <div className="type-label text-on-surface-variant">{t("danger.duplicate.description")}</div>
               </div>
             </div>
             <Button variant="outline" size="sm" className="rounded-full gap-1.5" onClick={handleDuplicate}>
-              <Copy className="h-3.5 w-3.5" /> Duplikovat
+              <Copy className="h-3.5 w-3.5" /> {t("danger.duplicate.button")}
             </Button>
           </div>
           {/* Delete — owner only. Admins see everything but can't delete
@@ -480,8 +483,8 @@ export function ProjectManagementTab({ projectId }: { projectId: string }) {
               <div className="flex items-center gap-2">
                 <Trash2 className="h-4 w-4 text-danger" />
                 <div>
-                  <div className="type-body font-medium">Smazat projekt</div>
-                  <div className="type-label text-on-surface-variant">Trvale smaže všechna data</div>
+                  <div className="type-body font-medium">{t("danger.delete.title")}</div>
+                  <div className="type-label text-on-surface-variant">{t("danger.delete.description")}</div>
                 </div>
               </div>
               <DeleteProjectButton projectId={projectId} projectName={project.name} />
@@ -491,11 +494,11 @@ export function ProjectManagementTab({ projectId }: { projectId: string }) {
               <div className="flex items-center gap-2">
                 <Trash2 className="h-4 w-4 text-muted-foreground" />
                 <div>
-                  <div className="type-body font-medium">Smazat projekt</div>
+                  <div className="type-body font-medium">{t("danger.delete.title")}</div>
                   <div className="text-xs text-muted-foreground">
                     {isAdmin
-                      ? "Smazat projekt může pouze jeho správce"
-                      : "Pouze správce projektu může smazat projekt"}
+                      ? t("danger.delete.adminOnlyHint")
+                      : t("danger.delete.editorHint")}
                   </div>
                 </div>
               </div>
@@ -536,6 +539,9 @@ function ProjectInfoCard({
   const [status, setStatus] = useState(project.status);
   const [startDate, setStartDate] = useState(project.startDate ? project.startDate.substring(0, 10) : "");
   const [endDate, setEndDate] = useState(project.endDate ? project.endDate.substring(0, 10) : "");
+  const t = useTranslations("tabs.management.info");
+  const tStatuses = useTranslations("statuses");
+  const tCommon = useTranslations("common");
 
   // B26: Keep the local form state in sync with the React Query cache.
   // `useState(project.name)` initializes once on mount and would
@@ -574,10 +580,10 @@ function ProjectInfoCard({
         startDate: startDate || null,
         endDate: endDate || null,
       });
-      toast.success("Projekt upraven");
+      toast.success(t("toasts.saveSuccess"));
       setEditing(false);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Nepodařilo se upravit projekt");
+      toast.error(err instanceof Error ? err.message : t("toasts.saveError"));
     }
   };
 
@@ -592,6 +598,7 @@ function ProjectInfoCard({
   };
 
   const statusInfo = STATUS_LABELS[project.status] ?? STATUS_LABELS.active;
+  const statusLabel = tStatuses(project.status);
 
   // Read-only mode (editor): no edit toggle, no inputs — pure text display.
   // The role badge (Editor badge) makes it obvious why edit affordances
@@ -604,15 +611,15 @@ function ProjectInfoCard({
             <div className="min-w-0 flex-1">
               <CardTitle className="flex flex-wrap items-center gap-2 text-lg font-semibold">
                 {project.name}
-                <Badge variant="outline" className={cn("text-xs", statusInfo.color)}>{statusInfo.label}</Badge>
+                <Badge variant="outline" className={cn("text-xs", statusInfo.color)}>{statusLabel}</Badge>
                 <Badge variant="secondary" className="text-xs gap-1">
                   {userRole === "editor" ? (
                     <>
-                      <Edit3 className="h-3 w-3" /> Editor
+                      <Edit3 className="h-3 w-3" /> {t("roleBadge.editor")}
                     </>
                   ) : (
                     <>
-                      <Eye className="h-3 w-3" /> {userRole === "admin" ? "Admin" : "Čtenář"}
+                      <Eye className="h-3 w-3" /> {userRole === "admin" ? t("roleBadge.admin") : t("roleBadge.viewer")}
                     </>
                   )}
                 </Badge>
@@ -628,10 +635,10 @@ function ProjectInfoCard({
             {project.address && (<span className="flex items-center gap-1"><MapPin className="h-3 w-3" /> {project.address}</span>)}
             {project.startDate && (<span className="flex items-center gap-1 tabular-nums"><Calendar className="h-3 w-3" /> {formatDate(project.startDate)}{project.endDate && ` — ${formatDate(project.endDate)}`}</span>)}
             <span className="flex items-center gap-1"><Building2 className="h-3 w-3" /> {project.currency}</span>
-            <span className="text-xs text-on-surface-variant/60 tabular-nums">Vytvořeno: {formatDate(project.createdAt)}</span>
+            <span className="text-xs text-on-surface-variant/60 tabular-nums">{t("created", { date: formatDate(project.createdAt) })}</span>
           </div>
           <div className="mt-3 flex items-center gap-1.5 text-xs text-muted-foreground">
-            <Lock className="h-3 w-3" /> Úpravu informací o projektu může provést pouze správce projektu
+            <Lock className="h-3 w-3" /> {t("lockHint")}
           </div>
         </CardContent>
       </Card>
@@ -649,7 +656,7 @@ function ProjectInfoCard({
               ) : (
                 <>
                   {project.name}
-                  <Badge variant="outline" className={cn("text-xs", statusInfo.color)}>{statusInfo.label}</Badge>
+                  <Badge variant="outline" className={cn("text-xs", statusInfo.color)}>{statusLabel}</Badge>
                 </>
               )}
             </CardTitle>
@@ -661,7 +668,7 @@ function ProjectInfoCard({
             <div className="flex shrink-0 gap-1">
               <Button size="sm" className="rounded-full gap-1.5" onClick={handleSave} disabled={updateProject.isPending}>
                 {updateProject.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
-                Uložit
+                {tCommon("save")}
               </Button>
               <Button variant="outline" size="sm" className="rounded-full" onClick={handleCancel}>
                 <X className="h-3.5 w-3.5" />
@@ -669,7 +676,7 @@ function ProjectInfoCard({
             </div>
           ) : (
             <Button variant="outline" size="sm" className="shrink-0 rounded-full gap-1.5" onClick={() => setEditing(true)}>
-              <Pencil className="h-3.5 w-3.5" /> Upravit
+              <Pencil className="h-3.5 w-3.5" /> {tCommon("edit")}
             </Button>
           )}
         </div>
@@ -678,35 +685,35 @@ function ProjectInfoCard({
         <CardContent className="space-y-3">
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="space-y-1">
-              <Label htmlFor="mgmt-address" className="text-xs font-medium text-on-surface-variant">Adresa</Label>
-              <Input id="mgmt-address" value={address} onChange={(e) => setAddress(e.target.value)} placeholder="např. Praha - Troja" className="h-9 rounded-md border-outline-variant bg-surface-container-low" />
+              <Label htmlFor="mgmt-address" className="text-xs font-medium text-on-surface-variant">{t("label.address")}</Label>
+              <Input id="mgmt-address" value={address} onChange={(e) => setAddress(e.target.value)} placeholder={t("placeholder.address")} className="h-9 rounded-md border-outline-variant bg-surface-container-low" />
             </div>
             <div className="space-y-1">
-              <Label htmlFor="mgmt-status" className="text-xs font-medium text-on-surface-variant">Stav</Label>
+              <Label htmlFor="mgmt-status" className="text-xs font-medium text-on-surface-variant">{t("label.status")}</Label>
               <Select value={status} onValueChange={setStatus}>
                 <SelectTrigger id="mgmt-status" className="h-9 rounded-md border-outline-variant bg-surface-container-low"><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="planning">Plánování</SelectItem>
-                  <SelectItem value="active">Aktivní</SelectItem>
-                  <SelectItem value="paused">Pozastaveno</SelectItem>
-                  <SelectItem value="completed">Dokončeno</SelectItem>
+                  <SelectItem value="planning">{tStatuses("planning")}</SelectItem>
+                  <SelectItem value="active">{tStatuses("active")}</SelectItem>
+                  <SelectItem value="paused">{tStatuses("paused")}</SelectItem>
+                  <SelectItem value="completed">{tStatuses("completed")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="space-y-1">
-              <Label htmlFor="mgmt-start" className="text-xs font-medium text-on-surface-variant">Datum zahájení</Label>
+              <Label htmlFor="mgmt-start" className="text-xs font-medium text-on-surface-variant">{t("label.startDate")}</Label>
               <Input id="mgmt-start" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="h-9 rounded-md border-outline-variant bg-surface-container-low" />
             </div>
             <div className="space-y-1">
-              <Label htmlFor="mgmt-end" className="text-xs font-medium text-on-surface-variant">Datum dokončení</Label>
+              <Label htmlFor="mgmt-end" className="text-xs font-medium text-on-surface-variant">{t("label.endDate")}</Label>
               <Input id="mgmt-end" type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="h-9 rounded-md border-outline-variant bg-surface-container-low" />
             </div>
           </div>
           <div className="space-y-1">
-            <Label htmlFor="mgmt-desc" className="text-xs font-medium text-on-surface-variant">Popis</Label>
-            <Textarea id="mgmt-desc" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Krátký popis projektu…" rows={2} className="resize-y rounded-md border-outline-variant bg-surface-container-low" />
+            <Label htmlFor="mgmt-desc" className="text-xs font-medium text-on-surface-variant">{t("label.description")}</Label>
+            <Textarea id="mgmt-desc" value={description} onChange={(e) => setDescription(e.target.value)} placeholder={t("placeholder.description")} rows={2} className="resize-y rounded-md border-outline-variant bg-surface-container-low" />
           </div>
         </CardContent>
       )}
@@ -716,7 +723,7 @@ function ProjectInfoCard({
             {project.address && (<span className="flex items-center gap-1"><MapPin className="h-3 w-3" /> {project.address}</span>)}
             {project.startDate && (<span className="flex items-center gap-1 tabular-nums"><Calendar className="h-3 w-3" /> {formatDate(project.startDate)}{project.endDate && ` — ${formatDate(project.endDate)}`}</span>)}
             <span className="flex items-center gap-1"><Building2 className="h-3 w-3" /> {project.currency}</span>
-            <span className="text-xs text-on-surface-variant/60 tabular-nums">Vytvořeno: {formatDate(project.createdAt)}</span>
+            <span className="text-xs text-on-surface-variant/60 tabular-nums">{t("created", { date: formatDate(project.createdAt) })}</span>
           </div>
         </CardContent>
       )}
@@ -803,6 +810,8 @@ function PropertyMetadataCard({
     project.documentationUrl ?? "",
   );
   const [propertyNote, setPropertyNote] = useState(project.propertyNote ?? "");
+  const t = useTranslations("tabs.management.property");
+  const tCommon = useTranslations("common");
 
   // B26: drž local form state v synchronizaci s React Query cacheí. Viz
   // komentář v ProjectInfoCard výše — stejný pattern (uložení informací z
@@ -835,7 +844,7 @@ function PropertyMetadataCard({
 
   const handleSave = async () => {
     if (!studyUrlValid || !docUrlValid) {
-      toast.error("Odkazy musí být platné URL (http:// nebo https://).");
+      toast.error(t("toasts.urlError"));
       return;
     }
     try {
@@ -849,13 +858,13 @@ function PropertyMetadataCard({
         floors: floors === "" ? null : Number(floors),
         propertyNote: propertyNote.trim() || null,
       });
-      toast.success("Informace o nemovitosti uloženy");
+      toast.success(t("toasts.saveSuccess"));
       setEditing(false);
     } catch (err) {
       toast.error(
         err instanceof Error
           ? err.message
-          : "Nepodařilo se uložit informace o nemovitosti",
+          : t("toasts.saveError"),
       );
     }
   };
@@ -884,10 +893,10 @@ function PropertyMetadataCard({
           <div className="min-w-0 flex-1">
             <CardTitle className="flex items-center gap-2 text-lg font-semibold">
               <Building2 className="h-4 w-4 text-primary" />
-              Informace o nemovitosti
+              {t("title")}
             </CardTitle>
             <CardDescription className="mt-1 text-sm text-on-surface-variant">
-              Přesná adresa, energetické hodnocení a projektová dokumentace
+              {t("description")}
             </CardDescription>
           </div>
           {canEdit &&
@@ -904,7 +913,7 @@ function PropertyMetadataCard({
                   ) : (
                     <Check className="h-3.5 w-3.5" />
                   )}
-                  Uložit
+                  {tCommon("save")}
                 </Button>
                 <Button
                   variant="outline"
@@ -922,7 +931,7 @@ function PropertyMetadataCard({
                 className="shrink-0 rounded-md gap-1.5"
                 onClick={() => setEditing(true)}
               >
-                <Pencil className="h-4 w-4" /> Upravit
+                <Pencil className="h-4 w-4" /> {tCommon("edit")}
               </Button>
             ))}
         </div>
@@ -932,20 +941,20 @@ function PropertyMetadataCard({
           <>
             <div className="space-y-1">
               <Label htmlFor="mgmt-fulladdress" className="text-xs font-medium text-on-surface-variant">
-                Přesná adresa
+                {t("label.fullAddress")}
               </Label>
               <Input
                 id="mgmt-fulladdress"
                 value={fullAddress}
                 onChange={(e) => setFullAddress(e.target.value)}
-                placeholder="např. Pražská 12, 110 00 Praha 1"
+                placeholder={t("placeholder.fullAddress")}
                 className="h-9 rounded-md border-outline-variant bg-surface-container-low"
               />
             </div>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div className="space-y-1">
                 <Label htmlFor="mgmt-floorarea" className="text-xs font-medium text-on-surface-variant">
-                  Zastavěná plocha (m²)
+                  {t("label.floorArea")}
                 </Label>
                 <Input
                   id="mgmt-floorarea"
@@ -955,13 +964,13 @@ function PropertyMetadataCard({
                   step="0.1"
                   value={floorArea}
                   onChange={(e) => setFloorArea(e.target.value)}
-                  placeholder="např. 120"
+                  placeholder={t("placeholder.floorArea")}
                   className="h-9 rounded-md border-outline-variant bg-surface-container-low"
                 />
               </div>
               <div className="space-y-1">
                 <Label htmlFor="mgmt-floors" className="text-xs font-medium text-on-surface-variant">
-                  Počet podlaží
+                  {t("label.floors")}
                 </Label>
                 <Input
                   id="mgmt-floors"
@@ -971,7 +980,7 @@ function PropertyMetadataCard({
                   step="1"
                   value={floors}
                   onChange={(e) => setFloors(e.target.value)}
-                  placeholder="např. 2"
+                  placeholder={t("placeholder.floors")}
                   className="h-9 rounded-md border-outline-variant bg-surface-container-low"
                 />
               </div>
@@ -979,7 +988,7 @@ function PropertyMetadataCard({
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div className="space-y-1">
                 <Label htmlFor="mgmt-heatloss" className="text-xs font-medium text-on-surface-variant">
-                  Tepelná ztráta (W/K)
+                  {t("label.heatLoss")}
                 </Label>
                 <Input
                   id="mgmt-heatloss"
@@ -989,13 +998,13 @@ function PropertyMetadataCard({
                   step="0.1"
                   value={heatLoss}
                   onChange={(e) => setHeatLoss(e.target.value)}
-                  placeholder="např. 85"
+                  placeholder={t("placeholder.heatLoss")}
                   className="h-9 rounded-md border-outline-variant bg-surface-container-low"
                 />
               </div>
               <div className="space-y-1">
                 <Label htmlFor="mgmt-energy" className="text-xs font-medium text-on-surface-variant">
-                  Energetický štítek
+                  {t("label.energyRating")}
                 </Label>
                 <Select value={energyRating} onValueChange={setEnergyRating}>
                   <SelectTrigger id="mgmt-energy" className="h-9 rounded-md border-outline-variant bg-surface-container-low">
@@ -1015,7 +1024,7 @@ function PropertyMetadataCard({
             </div>
             <div className="space-y-1">
               <Label htmlFor="mgmt-studyurl" className="text-xs font-medium text-on-surface-variant">
-                Odkaz na architektonickou studii
+                {t("label.studyUrl")}
               </Label>
               <div className="relative">
                 <Input
@@ -1030,13 +1039,13 @@ function PropertyMetadataCard({
               </div>
               {!studyUrlValid && (
                 <p className="text-xs text-danger">
-                  Zadejte platnou URL (http:// nebo https://).
+                  {t("error.url")}
                 </p>
               )}
             </div>
             <div className="space-y-1">
               <Label htmlFor="mgmt-docurl" className="text-xs font-medium text-on-surface-variant">
-                Odkaz na projektovou dokumentaci
+                {t("label.documentationUrl")}
               </Label>
               <div className="relative">
                 <Input
@@ -1051,20 +1060,20 @@ function PropertyMetadataCard({
               </div>
               {!docUrlValid && (
                 <p className="text-xs text-danger">
-                  Zadejte platnou URL (http:// nebo https://).
+                  {t("error.url")}
                 </p>
               )}
             </div>
             <div className="space-y-1">
               <Label htmlFor="mgmt-propnote" className="text-xs font-medium text-on-surface-variant">
-                Poznámka
+                {t("label.note")}
               </Label>
               <Textarea
                 id="mgmt-propnote"
                 value={propertyNote}
                 onChange={(e) => setPropertyNote(e.target.value)}
                 rows={3}
-                placeholder="Volná poznámka k nemovitosti…"
+                placeholder={t("placeholder.note")}
                 className="resize-y rounded-md border-outline-variant bg-surface-container-low"
               />
             </div>
@@ -1076,30 +1085,36 @@ function PropertyMetadataCard({
           <dl className="grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-2">
             <PropertyMetadataItem
               icon={MapPin}
-              label="Přesná adresa"
+              label={t("readOnly.fullAddress")}
               value={project.fullAddress}
             />
             <PropertyMetadataItem
               icon={Ruler}
-              label="Zastavěná plocha"
+              label={t("readOnly.floorArea")}
               value={
-                project.floorArea != null ? `${project.floorArea} m²` : null
+                project.floorArea != null
+                  ? t("readOnly.floorAreaValue", { value: project.floorArea })
+                  : null
               }
             />
             <PropertyMetadataItem
               icon={Layers}
-              label="Počet podlaží"
+              label={t("readOnly.floors")}
               value={project.floors != null ? String(project.floors) : null}
             />
             <PropertyMetadataItem
               icon={Flame}
-              label="Tepelná ztráta"
-              value={project.heatLoss != null ? `${project.heatLoss} W/K` : null}
+              label={t("readOnly.heatLoss")}
+              value={
+                project.heatLoss != null
+                  ? t("readOnly.heatLossValue", { value: project.heatLoss })
+                  : null
+              }
             />
             {/* Energetický štítek — badge A–G s MD3 soft barvou. */}
             <div className="space-y-2">
               <dt className="flex items-center gap-1 text-xs font-medium text-on-surface-variant">
-                <Gauge className="h-3 w-3" /> Energetický štítek
+                <Gauge className="h-3 w-3" /> {t("readOnly.energyRating")}
               </dt>
               <dd>
                 {project.energyRating ? (
@@ -1116,19 +1131,19 @@ function PropertyMetadataCard({
             </div>
             <PropertyMetadataItem
               icon={FileText}
-              label="Architektonická studie"
+              label={t("readOnly.studyUrl")}
               value={project.studyUrl}
               href={project.studyUrl}
             />
             <PropertyMetadataItem
               icon={FileText}
-              label="Projektová dokumentace"
+              label={t("readOnly.documentationUrl")}
               value={project.documentationUrl}
               href={project.documentationUrl}
             />
             <div className="sm:col-span-2 space-y-2">
               <dt className="flex items-center gap-1 text-xs font-medium text-on-surface-variant">
-                <StickyNote className="h-3 w-3" /> Poznámka
+                <StickyNote className="h-3 w-3" /> {t("readOnly.note")}
               </dt>
               <dd className="text-sm whitespace-pre-wrap">
                 {project.propertyNote || (
@@ -1140,8 +1155,7 @@ function PropertyMetadataCard({
         )}
         {!canEdit && (
           <div className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
-            <Lock className="h-3 w-3" /> Úpravu informací o nemovitosti může
-            provést pouze správce projektu
+            <Lock className="h-3 w-3" /> {t("lockHint")}
           </div>
         )}
       </CardContent>
@@ -1230,29 +1244,25 @@ type InvitationRow = {
   invitedBy: { id: string; name: string | null; email: string };
 };
 
-// Status → human-readable label + badge color (MD3 sémantic tokens).
+// Status → badge color (MD3 sémantic tokens). Labels are now looked up via
+// `t("invitationStatus." + status)` at render time (locales: cs / en).
 const INVITATION_STATUS_META: Record<
   InvitationRow["status"],
-  { label: string; className: string }
+  { className: string }
 > = {
   pending: {
-    label: "Čeká",
     className: "bg-warning-soft text-warning-strong",
   },
   accepted: {
-    label: "Přijato",
     className: "bg-success-soft text-success-strong",
   },
   rejected: {
-    label: "Odmítnuto",
     className: "bg-muted text-muted-foreground",
   },
   revoked: {
-    label: "Zrušeno",
     className: "bg-muted text-muted-foreground",
   },
   expired: {
-    label: "Vypršelo",
     className: "bg-danger-soft text-danger-strong",
   },
 };
@@ -1284,6 +1294,8 @@ function SharingSection({
   // change existing members' roles.
   const canManage = isOwner || isAdmin;
   const canInvite = canManage || userRole === "editor";
+  const t = useTranslations("tabs.management.sharing");
+  const tCommon = useTranslations("common");
   const [data, setData] = useState<MembersResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [addEmail, setAddEmail] = useState("");
@@ -1323,15 +1335,13 @@ function SharingSection({
       const url = `${window.location.origin}/p/${projectSlug}`;
       await navigator.clipboard.writeText(url);
       if (isPublic) {
-        toast.success("Odkaz na projekt zkopírován do schránky");
+        toast.success(t("toasts.shareLinkCopied"));
       } else {
-        toast.warning(
-          "Projekt není veřejný — odkaz přesměruje na přihlášení",
-        );
+        toast.warning(t("toasts.shareLinkPrivate"));
       }
       trackEvent("project_share", { action: "copy_link", role: "viewer", isPublic });
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Nepodařilo se zkopírovat odkaz");
+      toast.error(err instanceof Error ? err.message : t("toasts.shareLinkError"));
     }
   };
 
@@ -1344,13 +1354,13 @@ function SharingSection({
         onSuccess: () => {
           toast.success(
             next
-              ? "Projekt je nyní veřejný — kdokoliv s odkazem ho může vidět"
-              : "Projekt je nyní soukromý",
+              ? t("toasts.madePublic")
+              : t("toasts.madePrivate"),
           );
           trackEvent("project_share", { action: "toggle_public", isPublic: next });
         },
         onError: (err: unknown) => {
-          toast.error(err instanceof Error ? err.message : "Nepodařilo se změnit viditelnost projektu");
+          toast.error(err instanceof Error ? err.message : t("toasts.publicToggleError"));
         },
       },
     );
@@ -1411,17 +1421,17 @@ function SharingSection({
   // Show toast once when email matches existing member
   useEffect(() => {
     if (isExistingMember && lastToastEmail !== typedEmail) {
-      toast.warning("Tento uživatel je již členem projektu");
+      toast.warning(t("toasts.alreadyMember"));
       setLastToastEmail(typedEmail);
     } else if (!isExistingMember && lastToastEmail && lastToastEmail !== typedEmail) {
       setLastToastEmail("");
     }
-  }, [isExistingMember, typedEmail, lastToastEmail]);
+  }, [isExistingMember, typedEmail, lastToastEmail, t]);
 
   const handleAdd = async () => {
     if (!addEmail.trim()) return;
     if (isExistingMember) {
-      toast.warning("Tento uživatel je již členem projektu");
+      toast.warning(t("toasts.alreadyMember"));
       return;
     }
     setAdding(true);
@@ -1438,7 +1448,7 @@ function SharingSection({
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        throw new Error(err.error || "Nepodařilo se odeslat pozvánku");
+        throw new Error(err.error || t("toasts.inviteError"));
       }
       // Telemetry: project_share — invite
       trackEvent("project_share", {
@@ -1446,13 +1456,13 @@ function SharingSection({
         email: addEmail.trim(),
         role: addRole,
       });
-      toast.success(`Pozvánka odeslána na ${addEmail.trim()}`);
+      toast.success(t("toasts.inviteSent", { email: addEmail.trim() }));
       setAddEmail("");
       setLastToastEmail("");
       // Refresh the invitations list so the new pending row appears.
       fetchInvitations();
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Nepodařilo se odeslat pozvánku");
+      toast.error(e instanceof Error ? e.message : t("toasts.inviteError"));
     } finally {
       setAdding(false);
     }
@@ -1485,7 +1495,7 @@ function SharingSection({
         action: "revoke_invitation",
         email,
       });
-      toast.success(`Pozvánka pro ${email} zrušena`);
+      toast.success(t("toasts.inviteRevoked", { email }));
     } catch (err) {
       clearTimeout(removeTimer);
       // Restore the invitation at its original position
@@ -1498,7 +1508,7 @@ function SharingSection({
       } else {
         fetchInvitations();
       }
-      toast.error(err instanceof Error ? err.message : "Nepodařilo se zrušit pozvánku");
+      toast.error(err instanceof Error ? err.message : t("toasts.inviteRevokeError"));
     } finally {
       setRevokingIds((prev) => {
         const next = new Set(prev);
@@ -1537,9 +1547,9 @@ function SharingSection({
         oldRole: oldRole ?? null,
         newRole: role,
       });
-      toast.success("Role upravena");
+      toast.success(t("toasts.roleChanged"));
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Nepodařilo se upravit roli");
+      toast.error(err instanceof Error ? err.message : t("toasts.roleChangeError"));
       setData(prev); // restore previous state
     }
   };
@@ -1601,7 +1611,7 @@ function SharingSection({
         action: "remove",
         email: memberEmail ?? null,
       });
-      toast.success(`Člen "${name}" odebrán`);
+      toast.success(t("toasts.memberRemoved", { name }));
     } catch (err) {
       clearTimeout(removeTimer);
       setRemovingIds((prev) => {
@@ -1619,7 +1629,7 @@ function SharingSection({
       } else {
         fetchMembers();
       }
-      toast.error(err instanceof Error ? err.message : "Nepodařilo se odebrat člena — člen byl obnoven");
+      toast.error(err instanceof Error ? err.message : t("toasts.memberRemoveError"));
     }
   };
 
@@ -1634,11 +1644,11 @@ function SharingSection({
         const err = await res.json().catch(() => ({}));
         throw new Error(err.error || "Failed to change owner");
       }
-      toast.success("Správce změněn");
+      toast.success(t("toasts.ownerChanged"));
       qc.invalidateQueries({ queryKey: ["projects"] });
       fetchMembers();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Nepodařilo se změnit správce");
+      toast.error(err instanceof Error ? err.message : t("toasts.ownerChangeError"));
     }
   };
 
@@ -1657,20 +1667,20 @@ function SharingSection({
           <div className="min-w-0">
             <CardTitle className="flex items-center gap-2 text-lg font-semibold">
               <Shield className="h-4 w-4 text-primary" />
-              Sdílení a přístupová práva
+              {t("title")}
             </CardTitle>
-            <CardDescription className="mt-1 text-sm text-on-surface-variant">Správa veřejnosti, správce, členů a pozvánek projektu</CardDescription>
+            <CardDescription className="mt-1 text-sm text-on-surface-variant">{t("description")}</CardDescription>
           </div>
           <Button
             variant="outline"
             size="sm"
             className="shrink-0 rounded-full gap-1.5"
             onClick={handleShare}
-            title="Zkopírovat odkaz na veřejný pohled"
-            aria-label="Zkopírovat odkaz na veřejný pohled"
+            title={t("button.shareTitle")}
+            aria-label={t("button.shareTitle")}
           >
             <Share2 className="h-3.5 w-3.5" />
-            Sdílet
+            {t("button.share")}
           </Button>
         </div>
       </CardHeader>
@@ -1678,29 +1688,29 @@ function SharingSection({
         {/* ===== Public project toggle ===== */}
         <div className="flex items-center justify-between gap-3 rounded-lg border border-outline-variant bg-surface-container-low p-6">
           <div className="min-w-0">
-            <p className="type-body font-medium">Veřejný projekt</p>
+            <p className="type-body font-medium">{t("toggle.publicProject.label")}</p>
             <p className="type-label text-on-surface-variant">
-              Kdokoliv s odkazem může vidět projekt (pouze pro čtení)
+              {t("toggle.publicProject.description")}
             </p>
           </div>
           <Switch
             checked={isPublic}
             onCheckedChange={handleTogglePublic}
             disabled={!canManage || updateProject.isPending}
-            aria-label="Přepnout veřejnost projektu"
+            aria-label={t("aria.publicToggle")}
           />
         </div>
         {/* Editors see a "Pouze správce" hint explaining why the Switch
             is disabled. Owners / admins don't need this. */}
         {!canManage && (
           <div className="-mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
-            <Lock className="h-3 w-3" /> Pouze správce může měnit veřejnost projektu
+            <Lock className="h-3 w-3" /> {t("lockHint")}
           </div>
         )}
         <div className="flex items-start gap-2 rounded-lg bg-info/5 p-2.5 text-xs text-on-surface-variant">
           <Info className="h-3.5 w-3.5 shrink-0 mt-0.5 text-info" />
           <span>
-            Veřejný projekt: Kdokoliv s odkazem může vidět projekt (pouze pro čtení). Vypněte pro soukromí.
+            {t("publicInfo")}
           </span>
         </div>
 
@@ -1718,7 +1728,7 @@ function SharingSection({
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-1.5">
                 <span className="type-body font-semibold">{owner.name || owner.email}</span>
-                <Badge variant="secondary" className={cn("type-label-sm", "bg-success-soft text-success-strong dark:bg-success-soft dark:text-success-strong")}>Správce</Badge>
+                <Badge variant="secondary" className={cn("type-label-sm", "bg-success-soft text-success-strong dark:bg-success-soft dark:text-success-strong")}>{t("badge.owner")}</Badge>
               </div>
               <div className="type-label text-on-surface-variant truncate">{owner.email}</div>
             </div>
@@ -1728,7 +1738,7 @@ function SharingSection({
             {canManage && allUsers.length > 0 && (
               <Select onValueChange={handleChangeOwner}>
                 <SelectTrigger className="h-8 w-auto rounded-full type-label-sm">
-                  <span className="flex items-center gap-1"><ArrowRight className="h-3 w-3" /> Předat</span>
+                  <span className="flex items-center gap-1"><ArrowRight className="h-3 w-3" /> {t("button.transferOwnership")}</span>
                 </SelectTrigger>
                 <SelectContent>
                   {allUsers
@@ -1785,17 +1795,17 @@ function SharingSection({
                     <Select value={m.role} onValueChange={(v) => handleRoleChange(m.id, v)}>
                       <SelectTrigger className="h-7 w-auto rounded-full type-label-sm gap-1">
                         {m.role === "editor" ? <Edit3 className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
-                        {m.role === "editor" ? "Editor" : "Čtenář"}
+                        {m.role === "editor" ? t("role.editor") : t("role.viewer")}
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="viewer"><Eye className="mr-1.5 inline h-3 w-3" /> Čtenář (pouze čtení)</SelectItem>
-                        <SelectItem value="editor"><Edit3 className="mr-1.5 inline h-3 w-3" /> Editor (úpravy)</SelectItem>
+                        <SelectItem value="viewer"><Eye className="mr-1.5 inline h-3 w-3" /> {t("roleSelect.viewer")}</SelectItem>
+                        <SelectItem value="editor"><Edit3 className="mr-1.5 inline h-3 w-3" /> {t("roleSelect.editor")}</SelectItem>
                       </SelectContent>
                     </Select>
                   ) : (
                     <Badge variant="secondary" className={cn("type-label-sm gap-1", m.role === "editor" ? "bg-info-soft text-info-strong dark:bg-info-soft dark:text-info-strong" : "bg-muted text-muted-foreground dark:bg-muted dark:text-muted-foreground")}>
                       {m.role === "editor" ? <Edit3 className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
-                      {m.role === "editor" ? "Editor" : "Čtenář"}
+                      {m.role === "editor" ? t("role.editor") : t("role.viewer")}
                     </Badge>
                   )}
                   {/* Remove — owner / admin (anyone) or self (self-leave) */}
@@ -1806,8 +1816,8 @@ function SharingSection({
                       className="h-7 w-7 shrink-0 rounded-full state-layer-on-surface text-muted-foreground hover:text-danger"
                       onClick={() => handleRemove(m.id, m.user.name || m.user.email)}
                       disabled={isRemoving}
-                      aria-label={isSelf && !canManage ? "Opustit projekt" : "Odebrat člena"}
-                      title={isSelf && !canManage ? "Opustit projekt" : "Odebrat člena"}
+                      aria-label={isSelf && !canManage ? t("aria.leaveProject") : t("aria.removeMember")}
+                      title={isSelf && !canManage ? t("aria.leaveProject") : t("aria.removeMember")}
                     >
                       {isRemoving ? (
                         <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -1821,25 +1831,25 @@ function SharingSection({
             })}
           </div>
         ) : (
-          <p className="type-label text-on-surface-variant">Zatím nebyli přidáni žádní členové.</p>
+          <p className="type-label text-on-surface-variant">{t("empty.members")}</p>
         )}
 
         {/* ===== Pending invitations list ===== */}
         {(pendingInvitations.length > 0 || invitationsLoading) && (
           <div className="space-y-1.5">
             <div className="flex items-center gap-1.5 type-label text-on-surface-variant">
-              <Mail className="h-3.5 w-3.5" /> Čekající pozvánky
+              <Mail className="h-3.5 w-3.5" /> {t("pending.title")}
             </div>
             {invitationsLoading ? (
               <Skeleton className="h-12" />
             ) : (
               pendingInvitations.map((inv) => {
                 const isRevoking = revokingIds.has(inv.id);
-                const roleLabel = inv.role === "editor" ? "Editor" : "Čtenář";
+                const roleLabel = inv.role === "editor" ? t("role.editor") : t("role.viewer");
                 const isExpired = new Date(inv.expiresAt) < new Date();
-                const statusMeta = isExpired
-                  ? INVITATION_STATUS_META.expired
-                  : INVITATION_STATUS_META[inv.status] ?? INVITATION_STATUS_META.pending;
+                const statusKey: InvitationRow["status"] = isExpired ? "expired" : inv.status;
+                const statusMeta = INVITATION_STATUS_META[statusKey] ?? INVITATION_STATUS_META.pending;
+                const statusLabel = t(`invitationStatus.${statusKey}`);
                 return (
                   <div
                     key={inv.id}
@@ -1857,11 +1867,11 @@ function SharingSection({
                     <div className="min-w-0 flex-1">
                       <div className="type-body font-medium truncate">{inv.inviteeEmail}</div>
                       <div className="type-label text-on-surface-variant truncate">
-                        Role: {roleLabel} · Platnost do: {formatDate(inv.expiresAt, { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })}
+                        {t("pending.role", { role: roleLabel, date: formatDate(inv.expiresAt, { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" }) })}
                       </div>
                     </div>
                     <Badge variant="secondary" className={cn("type-label-sm", statusMeta.className)}>
-                      {statusMeta.label}
+                      {statusLabel}
                     </Badge>
                     {canManage && (
                       <Button
@@ -1870,8 +1880,8 @@ function SharingSection({
                         className="h-7 w-7 shrink-0 rounded-full state-layer-on-surface text-muted-foreground hover:text-danger"
                         onClick={() => handleRevokeInvitation(inv.id, inv.inviteeEmail)}
                         disabled={isRevoking}
-                        aria-label="Zrušit pozvánku"
-                        title="Zrušit pozvánku"
+                        aria-label={t("aria.revokeInvitation")}
+                        title={t("aria.revokeInvitation")}
                       >
                         {isRevoking ? (
                           <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -1891,13 +1901,14 @@ function SharingSection({
         {pastInvitations.length > 0 && (
           <details className="rounded-lg border border-outline-variant bg-surface-container-low p-3">
             <summary className="cursor-pointer type-label text-on-surface-variant select-none">
-              Historie pozvánek ({pastInvitations.length})
+              {t("invitationHistory.title", { count: pastInvitations.length })}
             </summary>
             <div className="mt-2 space-y-1.5">
               {pastInvitations.map((inv) => {
-                const roleLabel = inv.role === "editor" ? "Editor" : "Čtenář";
+                const roleLabel = inv.role === "editor" ? t("role.editor") : t("role.viewer");
                 const statusMeta =
                   INVITATION_STATUS_META[inv.status] ?? INVITATION_STATUS_META.pending;
+                const statusLabel = t(`invitationStatus.${inv.status}`);
                 return (
                   <div
                     key={inv.id}
@@ -1906,11 +1917,11 @@ function SharingSection({
                     <div className="min-w-0 flex-1">
                       <div className="truncate font-medium">{inv.inviteeEmail}</div>
                       <div className="type-label text-on-surface-variant truncate">
-                        Role: {roleLabel} · Vytvořeno: {formatDate(inv.createdAt)}
+                        {t("invitationHistory.role", { role: roleLabel, date: formatDate(inv.createdAt) })}
                       </div>
                     </div>
                     <Badge variant="secondary" className={cn("type-label-sm", statusMeta.className)}>
-                      {statusMeta.label}
+                      {statusLabel}
                     </Badge>
                   </div>
                 );
@@ -1922,13 +1933,13 @@ function SharingSection({
         {/* ===== Invite form (Pozvat e-mailem) ===== */}
         <div className="rounded-lg border border-dashed border-outline-variant p-3">
           <div className="mb-2 flex items-center gap-1.5 type-label text-on-surface-variant">
-            <UserPlus className="h-3.5 w-3.5" /> Pozvat e-mailem
+            <UserPlus className="h-3.5 w-3.5" /> {t("inviteForm.title")}
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <Input
               value={addEmail}
               onChange={(e) => setAddEmail(e.target.value)}
-              placeholder="e-mail@example.com"
+              placeholder={t("inviteForm.placeholderEmail")}
               type="email"
               list="users-datalist"
               className={cn(
@@ -1948,27 +1959,27 @@ function SharingSection({
             <Select value={addRole} onValueChange={setAddRole}>
               <SelectTrigger className="h-8 w-auto rounded-full type-label-sm gap-1">
                 {addRole === "editor" ? <Edit3 className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
-                {addRole === "editor" ? "Editor" : "Čtenář"}
+                {addRole === "editor" ? t("role.editor") : t("role.viewer")}
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="viewer"><Eye className="mr-1.5 inline h-3 w-3" /> Čtenář</SelectItem>
-                <SelectItem value="editor"><Edit3 className="mr-1.5 inline h-3 w-3" /> Editor</SelectItem>
+                <SelectItem value="viewer"><Eye className="mr-1.5 inline h-3 w-3" /> {t("role.viewer")}</SelectItem>
+                <SelectItem value="editor"><Edit3 className="mr-1.5 inline h-3 w-3" /> {t("role.editor")}</SelectItem>
               </SelectContent>
             </Select>
             <Button size="sm" className="rounded-full gap-1.5" onClick={handleAdd} disabled={!addEmail.trim() || adding || !canInvite}>
               {adding ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <UserPlus className="h-3.5 w-3.5" />}
-              Pozvat e-mailem
+              {t("inviteForm.button")}
             </Button>
           </div>
           {/* Hints */}
           {isExistingMember && (
             <div className="mt-2 flex items-center gap-1.5 text-xs text-warning">
-              <AlertTriangle className="h-3 w-3" /> Tento uživatel je již členem projektu
+              <AlertTriangle className="h-3 w-3" /> {t("inviteForm.hint.existingMember")}
             </div>
           )}
           {isNewUserHint && !isExistingMember && (
             <div className="mt-2 flex items-center gap-1.5 text-xs text-info">
-              <Info className="h-3 w-3" /> Nový uživatel — pozvánka mu přijde na e-mail, po registraci získá přístup
+              <Info className="h-3 w-3" /> {t("inviteForm.hint.newUser")}
             </div>
           )}
           {/* Editors can invite but only as viewer/editor — surface this
@@ -1977,19 +1988,19 @@ function SharingSection({
               sidebar, but the gate also covers direct deep-links). */}
           {userRole === "editor" && (
             <div className="mt-2 flex items-center gap-1.5 text-xs text-info">
-              <Info className="h-3 w-3" /> Jako editor můžete přidávat pouze Čtenáře nebo Editory
+              <Info className="h-3 w-3" /> {t("inviteForm.hint.editor")}
             </div>
           )}
           {!canInvite && (
             <div className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
-              <Lock className="h-3 w-3" /> Pozvat nové uživatele může pouze správce projektu
+              <Lock className="h-3 w-3" /> {t("inviteForm.hint.noInvite")}
             </div>
           )}
         </div>
         <div className="flex items-start gap-2 rounded-lg bg-info/5 p-2.5 text-xs text-on-surface-variant">
           <Info className="h-3.5 w-3.5 shrink-0 mt-0.5 text-info" />
           <span>
-            Pozvat e-mailem: Pozvaný uživatel získá přístup po přihlášení nebo registraci s daným e-mailem. Platnost pozvánky: 24 hodin.
+            {t("inviteForm.info")}
           </span>
         </div>
 
@@ -1997,10 +2008,10 @@ function SharingSection({
         <div className="rounded-lg border border-outline-variant bg-surface-container-low p-4">
           <div className="mb-3 flex items-center gap-2">
             <QrCodeIcon className="h-4 w-4 text-primary" />
-            <span className="type-body font-medium">QR kód projektu</span>
+            <span className="type-body font-medium">{t("qr.title")}</span>
           </div>
           <p className="mb-3 type-label text-on-surface-variant">
-            Naskenujte QR kód pro otevření projektu na mobilu.
+            {t("qr.description")}
           </p>
           <div className="flex flex-col items-center gap-3">
             <QrCode projectSlug={projectSlug} projectName={projectName} />
@@ -2009,7 +2020,7 @@ function SharingSection({
         <div className="flex items-start gap-2 rounded-lg bg-info/5 p-2.5 text-xs text-on-surface-variant">
           <Info className="h-3.5 w-3.5 shrink-0 mt-0.5 text-info" />
           <span>
-            QR kód: Naskenujte pro otevření projektu na mobilu. Odkazuje na veřejný pohled projektu.
+            {t("qr.info")}
           </span>
         </div>
       </CardContent>
@@ -2026,17 +2037,15 @@ function SharingSection({
     >
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Opravdu odebrat člena?</AlertDialogTitle>
+          <AlertDialogTitle>{t("confirmRemove.title")}</AlertDialogTitle>
           <AlertDialogDescription>
-            Opravdu chcete odebrat uživatele „{confirmRemove?.name}" z tohoto
-            projektu? Ztratí přístup ke všem datům projektu. Tuto akci lze
-            vrátit přidáním člena zpět.
+            {t("confirmRemove.body", { name: confirmRemove?.name ?? "" })}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Zrušit</AlertDialogCancel>
+          <AlertDialogCancel>{t("confirmRemove.cancel")}</AlertDialogCancel>
           <AlertDialogAction onClick={confirmRemoveMember}>
-            Odebrat člena
+            {t("confirmRemove.confirm")}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
@@ -2071,11 +2080,12 @@ type AuditEntry = {
   user: { id: string; name: string | null; email: string; image: string | null } | null;
 };
 
-const ACTION_LABELS: Record<string, string> = {
-  create: "Vytvořeno",
-  update: "Upraveno",
-  delete: "Smazáno",
-  export: "Exportováno",
+// Action labels are now looked up via `t("auditLog.actions." + action)`.
+const ACTION_LABELS: Record<string, true> = {
+  create: true,
+  update: true,
+  delete: true,
+  export: true,
 };
 
 // MD3 soft color tokens per action — `bg-*-soft text-*-strong` ensures the
@@ -2088,21 +2098,34 @@ const ACTION_COLORS: Record<string, string> = {
   export: "bg-info-soft text-info-strong",
 };
 
-const ENTITY_LABELS: Record<string, string> = {
-  BudgetItem: "Položka rozpočtu",
-  Payment: "Platba",
-  TimeEntry: "Čas",
-  Contact: "Kontakt",
-  Project: "Projekt",
-  Note: "Poznámka",
-  ContactPerson: "Kontaktní osoba",
-  ProjectMember: "Člen",
-  Export: "Export",
+// Entity labels are now looked up via `t("auditLog.entities." + entityType)`.
+const ENTITY_LABELS: Record<string, true> = {
+  BudgetItem: true,
+  Payment: true,
+  TimeEntry: true,
+  Contact: true,
+  Project: true,
+  Note: true,
+  ContactPerson: true,
+  ProjectMember: true,
+  Export: true,
 };
 
-// Generate a human-readable description of what happened
-function describeChange(entry: AuditEntry): string {
-  const entityLabel = entry.entityLabel || ENTITY_LABELS[entry.entityType] || entry.entityType;
+// Generate a human-readable description of what happened.
+// `helpers` provides locale-aware lookups: the audit-log translator (scoped
+// to `tabs.management.auditLog.describe`), the role translator (scoped to
+// `roles`), plus helpers that translate field/entity labels (with a
+// graceful fallback to the raw key if not in the message bundle).
+function describeChange(
+  entry: AuditEntry,
+  helpers: {
+    tDescribe: (key: string, params?: Record<string, string | number>) => string;
+    tRoles: (key: string) => string;
+    fieldLabel: (field: string) => string;
+    entityLabel: (entityType: string) => string;
+  },
+): string {
+  const entityLabel = entry.entityLabel || helpers.entityLabel(entry.entityType);
 
   // Create — newValue contains a summary string like "Přidán člen (Čtenář): email@..."
   // But older entries may have raw JSON — try to parse and extract readable info
@@ -2125,10 +2148,11 @@ function describeChange(entry: AuditEntry): string {
         const role = parsed.role;
         const name = parsed.name ?? parsed.subcategory ?? parsed.workerName ?? parsed.author;
         if (email && role) {
-          const roleLabel = role === "editor" ? "Editor" : role === "owner" ? "Správce" : "Čtenář";
-          return `Přidán člen (${roleLabel}): ${email}`;
+          const roleKey = ["owner", "editor", "viewer", "admin"].includes(role) ? role : "viewer";
+          const roleLabel = helpers.tRoles(roleKey);
+          return helpers.tDescribe("memberAdded", { role: roleLabel, email });
         }
-        if (name) return `Vytvořeno: ${name}`;
+        if (name) return helpers.tDescribe("created", { name });
         // Generic: show first 3 fields
         const keys = Object.keys(parsed).filter((k) => k !== "userId" && k !== "id").slice(0, 3);
         return keys.map((k) => `${k}: ${parsed[k]}`).join(", ") || entityLabel;
@@ -2156,11 +2180,12 @@ function describeChange(entry: AuditEntry): string {
         const email = parsed.userEmail ?? parsed.email;
         const role = parsed.role;
         if (email && role) {
-          const roleLabel = role === "editor" ? "Editor" : role === "owner" ? "Správce" : "Čtenář";
-          return `Odebrán člen (${roleLabel}): ${email}`;
+          const roleKey = ["owner", "editor", "viewer", "admin"].includes(role) ? role : "viewer";
+          const roleLabel = helpers.tRoles(roleKey);
+          return helpers.tDescribe("memberRemoved", { role: roleLabel, email });
         }
         const name = parsed.name ?? parsed.subcategory ?? parsed.workerName ?? parsed.author;
-        if (name) return `Smazáno: ${name}`;
+        if (name) return helpers.tDescribe("deleted", { name });
       }
     } catch {
       // Not JSON
@@ -2170,7 +2195,7 @@ function describeChange(entry: AuditEntry): string {
 
   // Update — field-level change
   if (entry.action === "update" && entry.field) {
-    const fieldLabel = FIELD_LABELS_UI[entry.field] ?? entry.field;
+    const fieldLabel = helpers.fieldLabel(entry.field);
     // B28: DB stores raw values; translate to human-readable here.
     if (entry.oldValue && entry.newValue) {
       return `${fieldLabel}: ${getFieldValue(entry.field, entry.oldValue)} → ${getFieldValue(entry.field, entry.newValue)}`;
@@ -2183,58 +2208,64 @@ function describeChange(entry: AuditEntry): string {
       return `${fieldLabel}: ${getFieldValue(entry.field, entry.newValue)}`;
     }
     if (entry.oldValue) {
-      return `${fieldLabel}: odstraněno (${getFieldValue(entry.field, entry.oldValue)})`;
+      return helpers.tDescribe("fieldRemoved", {
+        field: fieldLabel,
+        value: getFieldValue(entry.field, entry.oldValue),
+      });
     }
   }
 
   return entityLabel;
 }
 
-// Human-readable field labels for UI display
-const FIELD_LABELS_UI: Record<string, string> = {
-  required: "Povinnost",
-  completed: "Hotovo",
-  rejected: "Zavržení",
-  starred: "Oblíbený",
-  status: "Stav",
-  role: "Role",
-  phase: "Fáze",
-  category: "Kategorie",
-  subcategory: "Název",
-  planCost: "Plán (Kč)",
-  actualCost: "Skutečnost (Kč)",
-  planDays: "Plán (dní)",
-  flexibilityPercent: "Vůle (%)",
-  dateFrom: "Datum od",
-  dateTo: "Datum do",
-  note: "Poznámka",
-  name: "Jméno",
-  email: "E-mail",
-  phone: "Telefon",
-  address: "Adresa",
-  description: "Popis",
-  currency: "Měna",
-  ownerId: "Vlastník",
-  contactId: "Kontakt",
-  workerName: "Pracovník",
-  workerType: "Typ pracovníka",
-  workerCount: "Počet pracovníků",
-  hours: "Hodiny",
-  amount: "Částka",
-  type: "Typ",
-  vendor: "Firma",
-  invoiceNumber: "Číslo faktury",
-  vatRate: "Sazba DPH",
-  vatAmount: "Částka DPH",
-  website: "Web",
-  company: "Firma",
-  ico: "IČO",
-  dic: "DIČ",
-  rating: "Hodnocení",
-  sortOrder: "Pořadí",
-  text: "Text",
-  author: "Autor",
-  userEmail: "E-mail člena",
+// Human-readable field labels are now looked up via
+// `t("auditLog.fields." + field)` at render time. This const is kept as a
+// known-field set so callers can fall back gracefully when a field is
+// missing from the message bundle (e.g. legacy DB fields).
+const FIELD_LABELS_UI: Record<string, true> = {
+  required: true,
+  completed: true,
+  rejected: true,
+  starred: true,
+  status: true,
+  role: true,
+  phase: true,
+  category: true,
+  subcategory: true,
+  planCost: true,
+  actualCost: true,
+  planDays: true,
+  flexibilityPercent: true,
+  dateFrom: true,
+  dateTo: true,
+  note: true,
+  name: true,
+  email: true,
+  phone: true,
+  address: true,
+  description: true,
+  currency: true,
+  ownerId: true,
+  contactId: true,
+  workerName: true,
+  workerType: true,
+  workerCount: true,
+  hours: true,
+  amount: true,
+  type: true,
+  vendor: true,
+  invoiceNumber: true,
+  vatRate: true,
+  vatAmount: true,
+  website: true,
+  company: true,
+  ico: true,
+  dic: true,
+  rating: true,
+  sortOrder: true,
+  text: true,
+  author: true,
+  userEmail: true,
 };
 
 function formatTimestamp(iso: string): { date: string; time: string } {
@@ -2263,6 +2294,32 @@ const ENTITY_TAB_MAP: Record<string, TabId> = {
 function EnhancedAuditLog({ projectId }: { projectId: string }) {
   // C6: deep-link to other tabs
   const setActiveTab = useAppStore((s) => s.setActiveTab);
+  const t = useTranslations("tabs.management.auditLog");
+  const tCommon = useTranslations("common");
+  const tRoles = useTranslations("roles");
+  // Helpers for describeChange + diff-viewer render — pass through the
+  // translator (scoped to `tabs.management.auditLog`) so labels are
+  // looked up from the message bundle. Falls back to the raw key when
+  // the entity/action/field isn't in the bundle (e.g. legacy DB rows).
+  const entityLabel = (entityType: string): string => {
+    if (ENTITY_LABELS[entityType]) return t(`entities.${entityType}`);
+    return entityType;
+  };
+  const actionLabel = (action: string): string => {
+    if (ACTION_LABELS[action]) return t(`actions.${action}`);
+    return action;
+  };
+  const fieldLabel = (field: string): string => {
+    if (FIELD_LABELS_UI[field]) return t(`fields.${field}`);
+    return field;
+  };
+  const describeHelpers = {
+    tDescribe: (key: string, params?: Record<string, string | number>) =>
+      t(`describe.${key}`, params),
+    tRoles,
+    fieldLabel,
+    entityLabel,
+  };
   // Server-side pagination state
   const [entries, setEntries] = useState<AuditEntry[]>([]);
   const [total, setTotal] = useState(0);
@@ -2453,7 +2510,7 @@ function EnhancedAuditLog({ projectId }: { projectId: string }) {
         {polling && (
           <span className="flex items-center gap-1 text-xs text-on-surface-variant">
             <Loader2 className="h-3 w-3 animate-spin" />
-            Načítání...
+            {t("polling")}
           </span>
         )}
         {/* B1: Full-text search input with debounce (300ms) */}
@@ -2463,16 +2520,16 @@ function EnhancedAuditLog({ projectId }: { projectId: string }) {
             type="text"
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
-            placeholder="Hledat v audit logu…"
+            placeholder={t("search.placeholder")}
             className="h-9 rounded-md pl-8 pr-8 text-xs"
-            aria-label="Hledat v audit logu"
+            aria-label={t("search.aria")}
           />
           {searchInput && (
             <button
               type="button"
               onClick={handleClearSearch}
               className="absolute right-1.5 top-1/2 -translate-y-1/2 rounded-full p-1 text-on-surface-variant/60 hover:bg-surface-container-high hover:text-on-surface"
-              aria-label="Vyčistit hledání"
+              aria-label={t("search.clearAria")}
             >
               <X className="h-3.5 w-3.5" />
             </button>
@@ -2483,42 +2540,42 @@ function EnhancedAuditLog({ projectId }: { projectId: string }) {
       {/* Row 2: Filter dropdowns + date range + page size + sort */}
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-7">
         <div className="space-y-1">
-          <Label className="text-xs font-medium text-on-surface-variant">Akce</Label>
+          <Label className="text-xs font-medium text-on-surface-variant">{t("filter.action")}</Label>
           <Select value={actionFilter} onValueChange={handleActionFilterChange}>
             <SelectTrigger className="h-9 rounded-md text-xs"><SelectValue /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Vše</SelectItem>
-              <SelectItem value="create">Vytvořeno</SelectItem>
-              <SelectItem value="update">Upraveno</SelectItem>
-              <SelectItem value="delete">Smazáno</SelectItem>
-              <SelectItem value="export">Exportováno</SelectItem>
+              <SelectItem value="all">{tCommon("all")}</SelectItem>
+              <SelectItem value="create">{t("action.create")}</SelectItem>
+              <SelectItem value="update">{t("action.update")}</SelectItem>
+              <SelectItem value="delete">{t("action.delete")}</SelectItem>
+              <SelectItem value="export">{t("action.export")}</SelectItem>
             </SelectContent>
           </Select>
         </div>
         <div className="space-y-1">
-          <Label className="text-xs font-medium text-on-surface-variant">Entita</Label>
+          <Label className="text-xs font-medium text-on-surface-variant">{t("filter.entity")}</Label>
           <Select value={entityFilter} onValueChange={handleEntityFilterChange}>
             <SelectTrigger className="h-9 rounded-md text-xs"><SelectValue /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Vše</SelectItem>
-              <SelectItem value="BudgetItem">Položka rozpočtu</SelectItem>
-              <SelectItem value="Payment">Platba</SelectItem>
-              <SelectItem value="TimeEntry">Čas</SelectItem>
-              <SelectItem value="Contact">Kontakt</SelectItem>
-              <SelectItem value="Project">Projekt</SelectItem>
-              <SelectItem value="ProjectMember">Člen</SelectItem>
-              <SelectItem value="Note">Poznámka</SelectItem>
-              <SelectItem value="Export">Export</SelectItem>
+              <SelectItem value="all">{tCommon("all")}</SelectItem>
+              <SelectItem value="BudgetItem">{t("entities.BudgetItem")}</SelectItem>
+              <SelectItem value="Payment">{t("entities.Payment")}</SelectItem>
+              <SelectItem value="TimeEntry">{t("entities.TimeEntry")}</SelectItem>
+              <SelectItem value="Contact">{t("entities.Contact")}</SelectItem>
+              <SelectItem value="Project">{t("entities.Project")}</SelectItem>
+              <SelectItem value="ProjectMember">{t("entities.ProjectMember")}</SelectItem>
+              <SelectItem value="Note">{t("entities.Note")}</SelectItem>
+              <SelectItem value="Export">{t("entities.Export")}</SelectItem>
             </SelectContent>
           </Select>
         </div>
         {/* B7: User filter — populated from the `users` array in the API response */}
         <div className="space-y-1">
-          <Label className="text-xs font-medium text-on-surface-variant">Autor</Label>
+          <Label className="text-xs font-medium text-on-surface-variant">{t("filter.user")}</Label>
           <Select value={userFilter} onValueChange={handleUserFilterChange}>
             <SelectTrigger className="h-9 rounded-md text-xs"><SelectValue /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Vše</SelectItem>
+              <SelectItem value="all">{tCommon("all")}</SelectItem>
               {users.map((u) => (
                 <SelectItem key={u.id} value={u.id}>
                   {u.name || u.email}
@@ -2529,38 +2586,38 @@ function EnhancedAuditLog({ projectId }: { projectId: string }) {
         </div>
         {/* B2: Date range — Od */}
         <div className="space-y-1">
-          <Label className="text-xs font-medium text-on-surface-variant">Od</Label>
+          <Label className="text-xs font-medium text-on-surface-variant">{t("filter.from")}</Label>
           <Input
             type="date"
             value={fromDate}
             onChange={(e) => handleFromDateChange(e.target.value)}
             className="h-9 rounded-md text-xs"
-            aria-label="Filtr od data"
+            aria-label={t("filter.fromAria")}
           />
         </div>
         {/* B2: Date range — Do */}
         <div className="space-y-1">
-          <Label className="text-xs font-medium text-on-surface-variant">Do</Label>
+          <Label className="text-xs font-medium text-on-surface-variant">{t("filter.to")}</Label>
           <Input
             type="date"
             value={toDate}
             onChange={(e) => handleToDateChange(e.target.value)}
             className="h-9 rounded-md text-xs"
-            aria-label="Filtr do data"
+            aria-label={t("filter.toAria")}
           />
         </div>
         <div className="space-y-1">
-          <Label className="text-xs font-medium text-on-surface-variant">Řazení</Label>
+          <Label className="text-xs font-medium text-on-surface-variant">{t("filter.sort")}</Label>
           <Select value={sortBy} onValueChange={handleSortChange}>
             <SelectTrigger className="h-9 rounded-md text-xs"><SelectValue /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="desc">Nejnovější</SelectItem>
-              <SelectItem value="asc">Nejstarší</SelectItem>
+              <SelectItem value="desc">{t("sort.desc")}</SelectItem>
+              <SelectItem value="asc">{t("sort.asc")}</SelectItem>
             </SelectContent>
           </Select>
         </div>
         <div className="space-y-1">
-          <Label className="text-xs font-medium text-on-surface-variant">Na stránku</Label>
+          <Label className="text-xs font-medium text-on-surface-variant">{t("filter.pageSize")}</Label>
           <Select value={String(pageSize)} onValueChange={handlePageSizeChange}>
             <SelectTrigger className="h-9 rounded-md text-xs"><SelectValue /></SelectTrigger>
             <SelectContent>
@@ -2582,23 +2639,23 @@ function EnhancedAuditLog({ projectId }: { projectId: string }) {
         </div>
       ) : entries.length === 0 ? (
         <p className="py-6 text-center text-sm text-on-surface-variant">
-          Žádné záznamy pro vybrané filtry.
+          {t("empty")}
         </p>
       ) : (
         <div className="overflow-x-auto rounded-lg border border-outline-variant">
           <table className="w-full">
             <thead>
               <tr className="border-b border-outline-variant bg-surface-container-low">
-                <th className="text-xs font-medium text-on-surface-variant uppercase tracking-wide px-3 py-2 text-left">Úkon</th>
-                <th className="text-xs font-medium text-on-surface-variant uppercase tracking-wide px-3 py-2 text-left">Detail změny</th>
-                <th className="text-xs font-medium text-on-surface-variant uppercase tracking-wide px-3 py-2 text-left">Autor</th>
-                <th className="text-xs font-medium text-on-surface-variant uppercase tracking-wide px-3 py-2 text-left whitespace-nowrap">Datum</th>
-                <th className="text-xs font-medium text-on-surface-variant uppercase tracking-wide px-3 py-2 text-left whitespace-nowrap">Čas</th>
+                <th className="text-xs font-medium text-on-surface-variant uppercase tracking-wide px-3 py-2 text-left">{t("column.action")}</th>
+                <th className="text-xs font-medium text-on-surface-variant uppercase tracking-wide px-3 py-2 text-left">{t("column.detail")}</th>
+                <th className="text-xs font-medium text-on-surface-variant uppercase tracking-wide px-3 py-2 text-left">{t("column.author")}</th>
+                <th className="text-xs font-medium text-on-surface-variant uppercase tracking-wide px-3 py-2 text-left whitespace-nowrap">{t("column.date")}</th>
+                <th className="text-xs font-medium text-on-surface-variant uppercase tracking-wide px-3 py-2 text-left whitespace-nowrap">{t("column.time")}</th>
               </tr>
             </thead>
             <tbody>
               {entries.map((entry) => {
-                const authorName = entry.user?.name || entry.user?.email || "Neznámý";
+                const authorName = entry.user?.name || entry.user?.email || t("author.unknown");
                 const authorInitials =
                   authorName
                     .split(/\s+/)
@@ -2606,7 +2663,7 @@ function EnhancedAuditLog({ projectId }: { projectId: string }) {
                     .map((s) => s[0]?.toUpperCase() ?? "")
                     .join("") || "?";
                 const { date, time } = formatTimestamp(entry.createdAt);
-                const description = describeChange(entry);
+                const description = describeChange(entry, describeHelpers);
                 // B4: diff-viewer branch — for update entries where
                 // both oldValue and newValue exist (with a field label).
                 const hasDiff =
@@ -2625,10 +2682,10 @@ function EnhancedAuditLog({ projectId }: { projectId: string }) {
                           variant="secondary"
                           className={cn("text-xs font-semibold w-fit", ACTION_COLORS[entry.action] ?? "bg-muted text-muted-foreground")}
                         >
-                          {ACTION_LABELS[entry.action] ?? entry.action}
+                          {actionLabel(entry.action)}
                         </Badge>
                         <span className="text-xs text-on-surface-variant">
-                          {ENTITY_LABELS[entry.entityType] ?? entry.entityType}
+                          {entityLabel(entry.entityType)}
                         </span>
                       </div>
                     </td>
@@ -2642,7 +2699,7 @@ function EnhancedAuditLog({ projectId }: { projectId: string }) {
                               type="button"
                               onClick={() => setActiveTab(entityTab)}
                               className="text-sm text-left font-medium text-primary hover:underline"
-                              title={`Přejít na záložku ${ENTITY_LABELS[entry.entityType] ?? entry.entityType}`}
+                              title={t("tooltip.goToTab", { name: entityLabel(entry.entityType) })}
                             >
                               {entry.entityLabel}
                             </button>
@@ -2654,7 +2711,7 @@ function EnhancedAuditLog({ projectId }: { projectId: string }) {
                         {hasDiff && entry.field ? (
                           <div className="flex flex-wrap items-center gap-1.5">
                             <span className="text-xs text-on-surface-variant/70">
-                              {FIELD_LABELS_UI[entry.field] ?? entry.field}:
+                              {fieldLabel(entry.field)}:
                             </span>
                             <span className="text-sm text-danger/70 line-through">
                               {/* B28: DB stores raw values; translate via getFieldValue. */}
@@ -2700,7 +2757,11 @@ function EnhancedAuditLog({ projectId }: { projectId: string }) {
       {!loading && total > 0 && (
         <div className="flex flex-wrap items-center justify-between gap-2 border-t border-outline-variant pt-3">
           <div className="text-xs text-on-surface-variant tabular-nums">
-            Zobrazeno {(page - 1) * pageSize + 1}–{Math.min(page * pageSize, total)} z {total}
+            {t("pagination.summary", {
+              from: (page - 1) * pageSize + 1,
+              to: Math.min(page * pageSize, total),
+              total,
+            })}
           </div>
           <div className="flex items-center gap-1">
             <Button
@@ -2710,10 +2771,10 @@ function EnhancedAuditLog({ projectId }: { projectId: string }) {
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page <= 1}
             >
-              <ChevronLeft className="h-3.5 w-3.5" /> Předchozí
+              <ChevronLeft className="h-3.5 w-3.5" /> {t("pagination.prev")}
             </Button>
             <span className="text-xs tabular-nums px-2">
-              {page} / {totalPages}
+              {t("pagination.pageOf", { page, totalPages })}
             </span>
             <Button
               variant="outline"
@@ -2722,7 +2783,7 @@ function EnhancedAuditLog({ projectId }: { projectId: string }) {
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={page >= totalPages}
             >
-              Další <ChevronRight className="h-3.5 w-3.5" />
+              {t("pagination.next")} <ChevronRight className="h-3.5 w-3.5" />
             </Button>
           </div>
         </div>
@@ -2737,10 +2798,11 @@ function EnhancedAuditLog({ projectId }: { projectId: string }) {
 function DeleteProjectButton({ projectId, projectName }: { projectId: string; projectName: string }) {
   const [confirmName, setConfirmName] = useState("");
   const [deleting, setDeleting] = useState(false);
+  const t = useTranslations("tabs.management.deleteProject");
 
   const handleDelete = async () => {
     if (confirmName !== projectName) {
-      toast.error("Název projektu se neshoduje");
+      toast.error(t("toasts.nameMismatch"));
       return;
     }
     setDeleting(true);
@@ -2748,12 +2810,12 @@ function DeleteProjectButton({ projectId, projectName }: { projectId: string; pr
       const res = await fetch(`/api/projects/${projectId}`, { method: "DELETE" });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        throw new Error(err.error || "Failed to delete project");
+        throw new Error(err.error || t("toasts.error"));
       }
-      toast.success("Projekt smazán");
+      toast.success(t("toasts.success"));
       window.location.href = "/";
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Nepodařilo se smazat projekt");
+      toast.error(err instanceof Error ? err.message : t("toasts.error"));
       setDeleting(false);
     }
   };
@@ -2762,22 +2824,22 @@ function DeleteProjectButton({ projectId, projectName }: { projectId: string; pr
     <AlertDialog>
       <AlertDialogTrigger asChild>
         <Button variant="destructive" size="sm" className="rounded-full gap-1.5">
-          <Trash2 className="h-3.5 w-3.5" /> Smazat
+          <Trash2 className="h-3.5 w-3.5" /> {t("button")}
         </Button>
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Smazat projekt „{projectName}"?</AlertDialogTitle>
+          <AlertDialogTitle>{t("confirmTitle", { name: projectName })}</AlertDialogTitle>
           <AlertDialogDescription>
-            Tato akce je nevratná. Všechna data budou trvale smazána. Pro potvrzení napište název projektu:
+            {t("confirmBody")}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <Input value={confirmName} onChange={(e) => setConfirmName(e.target.value)} placeholder={projectName} className="h-9" autoFocus />
         <AlertDialogFooter>
-          <AlertDialogCancel onClick={() => setConfirmName("")}>Zrušit</AlertDialogCancel>
+          <AlertDialogCancel onClick={() => setConfirmName("")}>{t("cancel")}</AlertDialogCancel>
           <AlertDialogAction onClick={handleDelete} disabled={confirmName !== projectName || deleting} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
             {deleting && <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />}
-            Smazat projekt
+            {t("confirmButton")}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
@@ -2799,6 +2861,7 @@ function QrCode({ projectSlug, projectName }: { projectSlug: string; projectName
   const [dataUrl, setDataUrl] = useState<string>("");
   const [shareUrl, setShareUrl] = useState<string>("");
   const [copied, setCopied] = useState(false);
+  const t = useTranslations("tabs.management.sharing.qr");
 
   // Generate QR code on mount / when projectSlug changes.
   // We compute the share URL inside the effect (not in render) because
@@ -2833,46 +2896,46 @@ function QrCode({ projectSlug, projectName }: { projectSlug: string; projectName
       })
       .catch((err: unknown) => {
         console.error("QR generation failed:", err);
-        toast.error("Nepodařilo se vygenerovat QR kód");
+        toast.error(t("toasts.generateError"));
       });
-  }, [projectSlug]);
+  }, [projectSlug, t]);
 
   const handleCopyLink = async () => {
     if (!shareUrl) return;
     try {
       await navigator.clipboard.writeText(shareUrl);
       setCopied(true);
-      toast.success("Odkaz zkopírován do schránky");
+      toast.success(t("toasts.copySuccess"));
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      toast.error("Kopírování selhalo — zkopírujte odkaz ručně");
+      toast.error(t("toasts.copyError"));
     }
   };
 
   const handleDownloadPng = () => {
     if (!dataUrl) {
-      toast.error("QR kód ještě není vygenerován");
+      toast.error(t("toasts.qrNotReady"));
       return;
     }
     const safeName = projectName
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/^-+|-+$/g, "")
-      .slice(0, 40) || "projekt";
+      .slice(0, 40) || "project";
     const link = document.createElement("a");
     link.href = dataUrl;
     link.download = `qr-${safeName}.png`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    toast.success("QR kód stažen jako PNG");
+    toast.success(t("toasts.downloadSuccess"));
   };
 
   return (
     <>
       {/* QR code canvas — fixed 200×200 with rounded border */}
       <div className="rounded-2xl border border-outline-variant bg-surface-container-low p-3 shadow-sm">
-        <canvas ref={canvasRef} className="block h-[200px] w-[200px]" aria-label={`QR kód pro projekt ${projectName}`} />
+        <canvas ref={canvasRef} className="block h-[200px] w-[200px]" aria-label={t("aria", { name: projectName })} />
       </div>
 
       {/* Display the share URL (truncated) */}
@@ -2894,7 +2957,7 @@ function QrCode({ projectSlug, projectName }: { projectSlug: string; projectName
           ) : (
             <Copy className="h-3.5 w-3.5" />
           )}
-          {copied ? "Zkopírováno" : "Kopírovat odkaz"}
+          {copied ? t("button.copyLinkCopied") : t("button.copyLink")}
         </Button>
         <Button
           variant="outline"
@@ -2904,7 +2967,7 @@ function QrCode({ projectSlug, projectName }: { projectSlug: string; projectName
           disabled={!dataUrl}
         >
           <Download className="h-3.5 w-3.5" />
-          Stáhnout PNG
+          {t("button.downloadPng")}
         </Button>
       </div>
     </>

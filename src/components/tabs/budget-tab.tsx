@@ -85,6 +85,7 @@ import {
 } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 import { BudgetItemDialog } from "@/components/budget-item-dialog";
 import { EmptyStateBox } from "@/components/empty-state-box";
 import { InlineNumber, InlineDate } from "@/components/ui/inline-editors";
@@ -253,15 +254,17 @@ function computeSaved(item: BudgetItem, children: BudgetItem[]): number | null {
 }
 
 const COMPLETION_OPTIONS = [
-  { id: "all", label: "Vše" },
-  { id: "todo", label: "Aktivní" },
-  { id: "done", label: "Hotovo" },
-  { id: "rejected", label: "Zavrženo" },
+  { id: "all", label: "all" },
+  { id: "todo", label: "active" },
+  { id: "done", label: "done" },
+  { id: "rejected", label: "rejected" },
 ] as const;
 
 type CompletionFilter = (typeof COMPLETION_OPTIONS)[number]["id"];
 
 function BudgetTab({ projectId, dragEndHandlerRef }: { projectId: string; dragEndHandlerRef: React.MutableRefObject<((event: DragEndEvent) => void) | null> }) {
+  const t = useTranslations("tabs.budget");
+  const tPhases = useTranslations("phases");
   const { data: items, isLoading } = useBudgetItems(projectId);
   const { data: projects } = useProjects();
   const project = projects?.find((p) => p.id === projectId);
@@ -676,7 +679,7 @@ function BudgetTab({ projectId, dragEndHandlerRef }: { projectId: string; dragEn
               onChange={(v) => setCompletionFilter(v as CompletionFilter)}
               options={COMPLETION_OPTIONS.map((opt) => ({
                 value: opt.id,
-                label: opt.label,
+                label: t(`completion.${opt.label}`),
               }))}
               size="md"
             />
@@ -697,7 +700,7 @@ function BudgetTab({ projectId, dragEndHandlerRef }: { projectId: string; dragEn
               <SelectContent>
                 {COMPLETION_OPTIONS.map((opt) => (
                   <SelectItem key={opt.id} value={opt.id}>
-                    {opt.label}
+                    {t(`completion.${opt.label}`)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -711,11 +714,11 @@ function BudgetTab({ projectId, dragEndHandlerRef }: { projectId: string; dragEn
           hasActiveFilters={phaseFilter.size > 0}
           onClear={() => setPhaseFilter(new Set())}
         >
-          <span className="mr-1 text-xs font-medium text-on-surface-variant">Fáze:</span>
+          <span className="mr-1 text-xs font-medium text-on-surface-variant">{t("filter.phase")}</span>
           {PHASES.map((phase) => (
             <FilterChip
               key={phase}
-              label={phase}
+              label={tPhases(phase)}
               selected={phaseFilter.has(phase)}
               onClick={() => {
                 const next = new Set(phaseFilter);
@@ -737,8 +740,8 @@ function BudgetTab({ projectId, dragEndHandlerRef }: { projectId: string; dragEn
           {grouped.length === 0 && (
             <EmptyStateBox
               icon={Filter}
-              title="Žádné položky neodpovídají filtru"
-              description="Zkuste změnit filtr fáze, stavu nebo hledaný výraz. Nebo vymažte filtr pro zobrazení všech položek."
+              title={t("empty.title")}
+              description={t("empty.description")}
             />
           )}
           {grouped.map(([category, catItems], groupIndex) => {
@@ -776,15 +779,15 @@ function BudgetTab({ projectId, dragEndHandlerRef }: { projectId: string; dragEn
                       <TableRow className="sticky top-0 z-30 bg-surface-container-high">
                         <TableHead className="w-8"></TableHead>
                         <TableHead className="w-12"></TableHead>
-                        <TableHead className="min-w-[200px]">Položka</TableHead>
-                        <TableHead className="w-28">Fáze</TableHead>
-                        <TableHead className="w-28 text-right">Plán (Kč)</TableHead>
-                        <TableHead className="w-20 text-right">Dny</TableHead>
-                        <TableHead className="w-28">Datum od</TableHead>
-                        <TableHead className="w-28">Datum do</TableHead>
-                        <TableHead className="w-28 text-right">Skut. (Kč)</TableHead>
-                        <TableHead className="w-20 text-right">Hod.</TableHead>
-                        <TableHead className="w-44 text-center">Stav</TableHead>
+                        <TableHead className="min-w-[200px]">{t("column.item")}</TableHead>
+                        <TableHead className="w-28">{t("column.phase")}</TableHead>
+                        <TableHead className="w-28 text-right">{t("column.plan")}</TableHead>
+                        <TableHead className="w-20 text-right">{t("column.days")}</TableHead>
+                        <TableHead className="w-28">{t("column.dateFrom")}</TableHead>
+                        <TableHead className="w-28">{t("column.dateTo")}</TableHead>
+                        <TableHead className="w-28 text-right">{t("column.actual")}</TableHead>
+                        <TableHead className="w-20 text-right">{t("column.hours")}</TableHead>
+                        <TableHead className="w-44 text-center">{t("column.status")}</TableHead>
                         <TableHead className="w-8"></TableHead>
                       </TableRow>
                     </TableHeader>
@@ -792,7 +795,7 @@ function BudgetTab({ projectId, dragEndHandlerRef }: { projectId: string; dragEn
                       {catItems.length === 0 && (
                         <TableRow>
                           <TableCell colSpan={12} className="py-8 text-center text-sm text-muted-foreground">
-                            Žádné položky v této kategorii.
+                            {t("empty.categoryRow")}
                           </TableCell>
                         </TableRow>
                       )}
@@ -962,6 +965,7 @@ function SortableCategoryCard({
   onAddItem?: () => void;
   children: React.ReactNode;
 }) {
+  const t = useTranslations("tabs.budget.category");
   const {
     attributes,
     listeners,
@@ -1001,7 +1005,7 @@ function SortableCategoryCard({
             <span
               {...listeners}
               className="flex h-5 w-5 cursor-grab items-center justify-center rounded text-muted-foreground/40 hover:bg-muted hover:text-foreground active:cursor-grabbing"
-              aria-label="Přetáhnout kategorii"
+              aria-label={t("aria.drag")}
               onClick={(e) => e.stopPropagation()}
             >
               <GripVertical className="h-4 w-4" />
@@ -1038,8 +1042,8 @@ function SortableCategoryCard({
                     onAddItem();
                   }
                 }}
-                title={`Přidat položku do kategorie „${categoryName}"`}
-                aria-label="Přidat položku"
+                title={t("addItem.title", { name: categoryName })}
+                aria-label={t("addItem.aria")}
                 className="inline-flex h-5 w-5 cursor-pointer items-center justify-center rounded-md text-success transition-colors hover:bg-success-soft hover:text-success-strong dark:text-success dark:hover:bg-success-soft"
               >
                 <Plus className="h-3.5 w-3.5" />
@@ -1378,6 +1382,9 @@ const BudgetRow = memo(function BudgetRow({
   const [moveOpen, setMoveOpen] = useState(false);
   const dragCtx = useRowDragListeners();
   const { trackEvent } = useAnalytics(projectId);
+  const t = useTranslations("tabs.budget.row");
+  const tPhases = useTranslations("phases");
+  const tCommon = useTranslations("common");
   // Fetch the full budget item list so the MoveItemDialog can show all
   // candidate parents. react-query dedupes identical queries so this is
   // free (the parent component already fetched the same data).
@@ -1444,7 +1451,7 @@ const BudgetRow = memo(function BudgetRow({
               "flex h-5 w-5 cursor-grab items-center justify-center rounded text-muted-foreground/30 hover:bg-muted hover:text-foreground active:cursor-grabbing",
               isChild && "ml-2 opacity-60",
             )}
-            aria-label="Přetáhnout úkol"
+            aria-label={t("aria.drag")}
             onClick={(e) => e.stopPropagation()}
           >
             <GripVertical className="h-3.5 w-3.5" />
@@ -1472,12 +1479,12 @@ const BudgetRow = memo(function BudgetRow({
               if (!el) return;
               // Set CSS variable from PHASE_BG_COLORS
               const colorMap: Record<string, string> = {
-                "Příprava": "#a78bfa",
-                "Demolice": "#f87171",
-                "Hrubá stavba": "#fbbf24",
-                "Zabydlování": "#34d399",
-                "Do budoucna": "#60a5fa",
-                "Neurčeno": "#a1a1aa",
+                "preparation": "#a78bfa",
+                "demolition": "#f87171",
+                "shell": "#fbbf24",
+                "finishing": "#34d399",
+                "future": "#60a5fa",
+                "unspecified": "#a1a1aa",
                 "rose": "#f43f5e",
               };
               const key = el.getAttribute("data-phase-color") ?? "";
@@ -1510,15 +1517,15 @@ const BudgetRow = memo(function BudgetRow({
                 onToggleExpand();
               }}
               className="flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
-              aria-label={isExpanded ? "Sbalit" : "Rozbalit"}
+              aria-label={isExpanded ? t("aria.collapse") : t("aria.expand")}
             >
               {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
               {childCount > 0 ? (
                 <span className="type-label">
-                  {childCount} {childCount === 1 ? "úkol" : childCount < 5 ? "úkoly" : "úkolů"}
+                  {t("childCount", { count: childCount })}
                 </span>
               ) : (
-                <span className="type-label text-muted-foreground/50">Přidat úkol</span>
+                <span className="type-label text-muted-foreground/50">{t("addTask")}</span>
               )}
             </button>
           </div>
@@ -1534,8 +1541,8 @@ const BudgetRow = memo(function BudgetRow({
           <div className="flex items-center gap-1.5">
             {item.required && (
               <span
-                title="Povinné (nutné pro dokončení projektu)"
-                aria-label="Nutné"
+                title={t("required.title")}
+                aria-label={t("required.aria")}
                 className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-warning-soft type-label-sm font-bold leading-none text-warning-strong dark:bg-warning-soft/40 dark:text-warning/70"
               >
                 !
@@ -1551,16 +1558,16 @@ const BudgetRow = memo(function BudgetRow({
                 childCount > 0 && "font-semibold",
               )}
             >
-              {item.subcategory || "(bez názvu)"}
+              {item.subcategory || t("placeholder.noName")}
             </span>
             {item.rejected && (
               <Badge variant="outline" className="type-label-sm h-4 px-1 text-danger dark:text-danger/60">
-                Zavrženo
+                {t("badge.rejected")}
               </Badge>
             )}
             {item.completed && !item.rejected && (
               <Badge variant="outline" className="type-label-sm h-4 px-1 text-success">
-                Hotovo
+                {t("badge.done")}
               </Badge>
             )}
             {item.subsidyEligible && (
@@ -1568,13 +1575,13 @@ const BudgetRow = memo(function BudgetRow({
                 variant="outline"
                 title={
                   item.subsidyAmount != null
-                    ? `Možná dotace: ${formatCzk(item.subsidyAmount)}`
-                    : "Možná dotace (částka nezadána)"
+                    ? t("badge.subsidyTitleWithAmount", { amount: formatCzk(item.subsidyAmount) })
+                    : t("badge.subsidyTitleNoAmount")
                 }
                 className="type-label-sm h-4 gap-0.5 px-1 text-subsidy-strong dark:text-subsidy"
               >
                 <HandCoins className="h-2.5 w-2.5" />
-                Dotace
+                {t("badge.subsidy")}
                 {item.subsidyAmount != null && item.subsidyAmount > 0 && (
                   <span className="ml-0.5 tabular-nums">
                     {formatCzk(item.subsidyAmount)}
@@ -1588,8 +1595,8 @@ const BudgetRow = memo(function BudgetRow({
                   e.stopPropagation();
                   onAddTask();
                 }}
-                title="Přidat úkol pod tuto položku"
-                aria-label="Přidat úkol"
+                title={t("badge.addTaskTitle")}
+                aria-label={t("badge.addTaskAria")}
                 className="inline-flex h-6 w-6 items-center justify-center rounded-md text-success transition-colors hover:bg-success-soft hover:text-success-strong dark:text-success dark:hover:bg-success-soft"
               >
                 <Plus className="h-4 w-4" />
@@ -1601,16 +1608,12 @@ const BudgetRow = memo(function BudgetRow({
               <div className="mt-0.5 flex flex-wrap gap-1">
                 {item._count.payments > 0 && (
                   <Badge variant="outline" className="h-4 px-1 type-label-sm text-success">
-                    {item._count.payments === 1
-                      ? "1 platba"
-                      : item._count.payments < 5
-                        ? `${item._count.payments} platby`
-                        : `${item._count.payments} plateb`}
+                    {t("paymentsCount", { count: item._count.payments })}
                   </Badge>
                 )}
                 {item._count.timeEntries > 0 && (
                   <Badge variant="outline" className="h-4 px-1 type-label-sm text-time">
-                    {item._count.timeEntries} časů
+                    {t("timeCount", { count: item._count.timeEntries })}
                   </Badge>
                 )}
               </div>
@@ -1629,13 +1632,13 @@ const BudgetRow = memo(function BudgetRow({
               variant="outline"
               className={cn("h-5 px-1.5 type-label-sm", PHASE_COLORS[item.phase] ?? "")}
             >
-              {item.phase}
+              {tPhases(item.phase)}
             </Badge>
           </SelectTrigger>
           <SelectContent>
             {PHASES.map((p) => (
               <SelectItem key={p} value={p}>
-                {p}
+                {tPhases(p)}
               </SelectItem>
             ))}
           </SelectContent>
@@ -1659,7 +1662,7 @@ const BudgetRow = memo(function BudgetRow({
                 "block w-full rounded px-1 py-0.5 text-right font-semibold tabular-nums",
                 "hover:bg-surface-container-high",
               )}
-              title={`Celkem: vlastní ${formatNumber(item.planCost ?? 0, "Kč")} + úkoly ${formatNumber(displayPlanCost - (item.planCost ?? 0), "Kč")}`}
+              title={t("tooltip.planTotal", { own: formatNumber(item.planCost ?? 0, "Kč"), children: formatNumber(displayPlanCost - (item.planCost ?? 0), "Kč") })}
             >
               {displayPlanCost > 0 ? formatNumber(displayPlanCost, " Kč") : (
                 <span className="text-muted-foreground/50">—</span>
@@ -1734,7 +1737,7 @@ const BudgetRow = memo(function BudgetRow({
                 "block w-full rounded px-1 py-0.5 text-right font-semibold tabular-nums",
                 overBudget && "text-danger",
               )}
-              title={`Celkem: vlastní ${formatNumber(item.actualCost ?? 0, "Kč")} + úkoly ${formatNumber(displayActualCost - (item.actualCost ?? 0), "Kč")}`}
+              title={t("tooltip.actualTotal", { own: formatNumber(item.actualCost ?? 0, "Kč"), children: formatNumber(displayActualCost - (item.actualCost ?? 0), "Kč") })}
             >
               {displayActualCost > 0 ? formatNumber(displayActualCost, " Kč") : (
                 <span className="text-muted-foreground/50">—</span>
@@ -1781,7 +1784,7 @@ const BudgetRow = memo(function BudgetRow({
             onClick={(e) => { e.stopPropagation(); update("required", !item.required); }}
             disabled={updateItem.isPending}
             aria-pressed={item.required}
-            aria-label={item.required ? "Zrušit nutné" : "Označit jako nutné"}
+            aria-label={item.required ? t("required.ariaRequired") : t("required.ariaOptional")}
             className={cn(
               "h-7 w-7 shrink-0 p-0",
               item.required
@@ -1790,8 +1793,8 @@ const BudgetRow = memo(function BudgetRow({
             )}
             title={
               item.required
-                ? "Povinné — kliknutím označíte jako nepovinné"
-                : "Nepovinné — kliknutím označíte jako povinné (nutné pro dokončení projektu)"
+                ? t("required.titleRequired")
+                : t("required.titleOptional")
             }
           >
             <AlertTriangle className="h-3.5 w-3.5" />
@@ -1809,8 +1812,8 @@ const BudgetRow = memo(function BudgetRow({
                 ? "border-success bg-success text-white hover:bg-success-strong hover:text-white dark:border-success/60 dark:bg-success/70 dark:hover:bg-success/80"
                 : "text-success hover:border-success/50 hover:bg-success-soft hover:text-success-strong dark:text-success/70 dark:hover:border-success/40 dark:hover:bg-success-soft/50",
             )}
-            title={item.completed ? "Označit jako nedokončené" : "Označit jako hotové"}
-            aria-label={item.completed ? "Označit jako nedokončené" : "Označit jako hotové"}
+            title={item.completed ? t("completed.titleDone") : t("completed.titleTodo")}
+            aria-label={item.completed ? t("completed.ariaDone") : t("completed.ariaTodo")}
           >
             <CheckCircle2 className="h-3.5 w-3.5" />
           </Button>
@@ -1827,8 +1830,8 @@ const BudgetRow = memo(function BudgetRow({
                 ? "border-danger bg-danger text-white hover:bg-danger-strong hover:text-white dark:border-danger/60 dark:bg-danger/70 dark:hover:bg-danger/80"
                 : "text-danger hover:border-danger/50 hover:bg-danger-soft hover:text-danger-strong dark:text-danger/70 dark:hover:border-danger/40 dark:hover:bg-danger-soft/50",
             )}
-            title={item.rejected ? "Zrušit zavržení" : "Zavrhnout položku"}
-            aria-label={item.rejected ? "Zrušit zavržení" : "Zavrhnout"}
+            title={item.rejected ? t("rejected.titleRejected") : t("rejected.titleNotRejected")}
+            aria-label={item.rejected ? t("rejected.ariaRejected") : t("rejected.ariaNotRejected")}
           >
             <X className="h-3.5 w-3.5" />
           </Button>
@@ -1844,57 +1847,57 @@ const BudgetRow = memo(function BudgetRow({
                 variant="ghost"
                 size="icon"
                 className="h-7 w-7 text-muted-foreground opacity-60 transition-opacity hover:opacity-100 group-hover:opacity-100 focus-visible:opacity-100"
-                title="Více akcí"
-                aria-label="Více akcí"
+                title={t("actions.titleMore")}
+                aria-label={t("actions.ariaMore")}
               >
                 <MoreHorizontal className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => onEdit(item)}>Upravit detail</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onEdit(item)}>{t("menu.editDetail")}</DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => update("required", !item.required)}
               >
                 <AlertTriangle className="mr-2 h-3.5 w-3.5 text-warning" />
-                {item.required ? "Označit jako nepovinné" : "Označit jako povinné"}
+                {item.required ? t("menu.markOptional") : t("menu.markRequired")}
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => update("subsidyEligible", !item.subsidyEligible)}
               >
                 <HandCoins className="mr-2 h-3.5 w-3.5 text-subsidy" />
-                {item.subsidyEligible ? "Zrušit dotaci" : "Označit jako dotovatelné"}
+                {item.subsidyEligible ? t("menu.subsidyRemove") : t("menu.subsidyAdd")}
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => update("completed", !item.completed)}
               >
-                {item.completed ? "Označit jako nedokončené" : "Označit jako hotové"}
+                {item.completed ? t("menu.markNotDone") : t("menu.markDone")}
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => update("rejected", !item.rejected)}
               >
-                {item.rejected ? "Zrušit zavržení" : "Zavrhnout"}
+                {item.rejected ? t("menu.unreject") : t("menu.reject")}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setMoveOpen(true)}>
                 <ArrowRightLeft className="mr-2 h-3.5 w-3.5 text-primary" />
-                Přesunout pod jinou položku…
+                {t("menu.move")}
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={async () => {
                   try {
                     await duplicateItem.mutateAsync(item.id);
-                    toast.success("Položka duplikována");
+                    toast.success(t("toasts.duplicateSuccess"));
                   } catch (err) {
-                    toast.error(err instanceof Error ? err.message : "Nepodařilo se duplikovat");
+                    toast.error(err instanceof Error ? err.message : t("toasts.duplicateError"));
                   }
                 }}
               >
-                <Copy className="mr-2 h-3.5 w-3.5" /> Duplikovat
+                <Copy className="mr-2 h-3.5 w-3.5" /> {t("menu.duplicate")}
               </DropdownMenuItem>
               <DropdownMenuItem
                 className="text-destructive focus:text-destructive"
                 onClick={() => setConfirmDelete(true)}
               >
-                <Trash2 className="mr-2 h-3.5 w-3.5" /> Smazat
+                <Trash2 className="mr-2 h-3.5 w-3.5" /> {tCommon("delete")}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -1902,15 +1905,17 @@ const BudgetRow = memo(function BudgetRow({
         <Dialog open={confirmDelete} onOpenChange={setConfirmDelete}>
           <DialogContent className="max-w-sm">
             <DialogHeader>
-              <DialogTitle>Smazat položku?</DialogTitle>
+              <DialogTitle>{t("delete.title")}</DialogTitle>
               <DialogDescription>
-                Opravdu chcete smazat <strong>{item.subcategory || item.category}</strong>?
-                Smažou se i související platby a časové záznamy.
+                {t.rich("delete.body", {
+                  name: item.subcategory || item.category,
+                  strong: (chunks) => <strong>{chunks}</strong>,
+                })}
               </DialogDescription>
             </DialogHeader>
             <DialogFooter>
               <Button variant="outline" onClick={() => setConfirmDelete(false)}>
-                Zrušit
+                {tCommon("cancel")}
               </Button>
               <Button
                 variant="destructive"
@@ -1918,17 +1923,17 @@ const BudgetRow = memo(function BudgetRow({
                 onClick={async () => {
                   try {
                     await deleteItem.mutateAsync(item.id);
-                    toast.success("Položka smazána");
+                    toast.success(t("toasts.deleteSuccess"));
                     setConfirmDelete(false);
                   } catch (err) {
-                    toast.error(err instanceof Error ? err.message : "Nepodařilo se smazat");
+                    toast.error(err instanceof Error ? err.message : t("toasts.deleteError"));
                   }
                 }}
               >
                 {deleteItem.isPending && (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 )}
-                Smazat
+                {tCommon("delete")}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -1961,6 +1966,7 @@ function DetailPanelRow({
 }) {
   const updateItem = useUpdateBudgetItem(projectId);
   const { trackEvent } = useAnalytics(projectId);
+  const t = useTranslations("tabs.budget.detail");
 
   const update = (field: keyof BudgetItem, value: unknown) => {
     updateItem.mutate({ id: item.id, data: { [field]: value } });
@@ -1982,12 +1988,12 @@ function DetailPanelRow({
           ref={(el) => {
             if (!el) return;
             const colorMap: Record<string, string> = {
-              "Příprava": "#a78bfa",
-              "Demolice": "#f87171",
-              "Hrubá stavba": "#fbbf24",
-              "Zabydlování": "#34d399",
-              "Do budoucna": "#60a5fa",
-              "Neurčeno": "#a1a1aa",
+              "preparation": "#a78bfa",
+              "demolition": "#f87171",
+              "shell": "#fbbf24",
+              "finishing": "#34d399",
+              "future": "#60a5fa",
+              "unspecified": "#a1a1aa",
               "rose": "#f43f5e",
             };
             const key = el.getAttribute("data-phase-color") ?? "";
@@ -1998,12 +2004,12 @@ function DetailPanelRow({
           {/* Poznámka */}
           <div className="space-y-2">
             <div className="type-label-sm font-semibold uppercase tracking-wide text-muted-foreground">
-              Poznámka
+              {t("label.note")}
             </div>
             <InlineTextarea
               value={item.note}
               onCommit={(v) => update("note", v)}
-              placeholder="Doplňující informace, jednotkové ceny, postup…"
+              placeholder={t("placeholder.note")}
             />
           </div>
 
@@ -2011,7 +2017,7 @@ function DetailPanelRow({
           <div className="space-y-2">
             <div className="flex items-center gap-1 type-label-sm font-semibold uppercase tracking-wide text-muted-foreground">
               <User className="h-3 w-3" />
-              Kontakt
+              {t("label.contact")}
             </div>
             {item.contact ? (
               <div className="flex items-center gap-1.5 text-xs">
@@ -2022,7 +2028,7 @@ function DetailPanelRow({
               </div>
             ) : (
               <span className="type-label text-muted-foreground/60">
-                Není přiřazen — klikněte na položku pro úpravu
+                {t("contact.unassigned")}
               </span>
             )}
           </div>
@@ -2031,7 +2037,7 @@ function DetailPanelRow({
           <div className="space-y-2">
             <div className="flex items-center gap-1 type-label-sm font-semibold uppercase tracking-wide text-muted-foreground">
               <LinkIcon className="h-3 w-3" />
-              Odkazy
+              {t("label.links")}
               {item.links && item.links.length > 0 && (
                 <span className="rounded bg-muted px-1.5 py-0.5 type-label-sm tabular-nums">
                   {item.links.length}
@@ -2061,14 +2067,14 @@ function DetailPanelRow({
               <div className="mt-2 space-y-1 border-t pt-2">
                 <div className="flex items-center gap-1 type-label-sm font-medium text-muted-foreground">
                   <ChevronRight className="h-3 w-3" />
-                  Z úkolů
+                  {t("label.linksFromTasks")}
                 </div>
                 {childItems
                   .filter((c) => c.links && c.links.length > 0)
                   .map((child) => (
                     <div key={child.id} className="space-y-0.5">
                       <div className="type-label-sm text-muted-foreground/70">
-                        └ {child.subcategory || "(bez názvu)"}
+                        └ {child.subcategory || t("placeholder.noName")}
                       </div>
                       <ul className="space-y-0.5 pl-3">
                         {child.links!.map((link) => (
@@ -2162,6 +2168,8 @@ function MoveItemDialog({
   allItems: BudgetItem[];
   onMove: (newParentId: string | null) => Promise<void>;
 }) {
+  const t = useTranslations("tabs.budget.moveDialog");
+  const tCommon = useTranslations("common");
   // Collect descendants of `item` so we can exclude them from the target
   // list (cycle prevention). We only need direct children here because
   // candidates are top-level items — a descendant of `item` can only be
@@ -2226,12 +2234,12 @@ function MoveItemDialog({
       await onMove(selectedParentId);
       toast.success(
         selectedParentId
-          ? "Úkol přesunut pod novou položku"
-          : "Úkol přesunut na nejvyšší úroveň",
+          ? t("toasts.movedToParent")
+          : t("toasts.movedToTop"),
       );
       onOpenChange(false);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Přesun se nezdařil");
+      toast.error(err instanceof Error ? err.message : t("toasts.error"));
     } finally {
       setMoving(false);
     }
@@ -2243,28 +2251,26 @@ function MoveItemDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <ArrowRightLeft className="h-4 w-4 text-primary" />
-            Přesunout úkol
+            {t("title")}
           </DialogTitle>
           <DialogDescription>
-            Přesunout <strong>{item.subcategory || item.category}</strong> pod
-            jinou položku. Kategorie se zdědí z nového rodiče.
+            {t.rich("description", {
+              name: item.subcategory || item.category,
+              strong: (chunks) => <strong>{chunks}</strong>,
+            })}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-3 py-2">
           {currentParent && (
             <div className="rounded-md border border-muted bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
-              Aktuální rodič:{" "}
-              <span className="font-medium text-foreground">
-                {currentParent.subcategory || currentParent.category}
-              </span>
+              {t("currentParent", { name: currentParent.subcategory || currentParent.category })}
             </div>
           )}
 
           {candidates.length === 0 ? (
             <p className="rounded-md border border-dashed border-muted px-3 py-4 text-center text-sm text-muted-foreground">
-              V projektu nejsou žádné další položky, pod které by šlo úkol
-              přesunout.
+              {t("empty")}
             </p>
           ) : (
             <Select
@@ -2274,13 +2280,13 @@ function MoveItemDialog({
               }
             >
               <SelectTrigger className="w-full">
-                <SelectValue placeholder="Vyberte cílovou položku" />
+                <SelectValue placeholder={t("placeholder.select")} />
               </SelectTrigger>
               <SelectContent className="max-h-72">
                 <SelectItem value="__top__">
                   <span className="flex items-center gap-2">
                     <CornerUpRight className="h-3.5 w-3.5 text-muted-foreground" />
-                    Na nejvyšší úroveň (bez rodiče)
+                    {t("topLevel")}
                   </span>
                 </SelectItem>
                 {candidates.map((c) => (
@@ -2289,7 +2295,7 @@ function MoveItemDialog({
                       <span className="text-muted-foreground">{c.category}</span>
                       <span className="text-muted-foreground/50">›</span>
                       <span className="font-medium">
-                        {c.subcategory || "(bez názvu)"}
+                        {c.subcategory || t("placeholder.noName")}
                       </span>
                     </span>
                   </SelectItem>
@@ -2301,7 +2307,7 @@ function MoveItemDialog({
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Zrušit
+            {tCommon("cancel")}
           </Button>
           <Button
             onClick={handleConfirm}
@@ -2312,7 +2318,7 @@ function MoveItemDialog({
             }
           >
             {moving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Přesunout
+            {t("confirm")}
           </Button>
         </DialogFooter>
       </DialogContent>

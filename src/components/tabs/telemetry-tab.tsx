@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import {
   Card,
   CardContent,
@@ -113,22 +114,24 @@ type AnalyticsResponse = {
 };
 
 // Human-readable Czech labels for common event types
-const EVENT_TYPE_LABELS: Record<string, string> = {
-  page_view: "Zobrazení stránky",
-  add_payment: "Přidání platby",
-  add_time_entry: "Přidání času",
-  edit_time_entry: "Úprava času",
-  edit_payment: "Úprava platby",
-  delete_payment: "Smazání platby",
-  add_contact: "Přidání kontaktu",
-  add_note: "Přidání poznámky",
-  edit_note: "Úprava poznámky",
-  add_budget_item: "Přidání položky",
-  edit_budget_item: "Úprava položky",
-  download_data: "Stažení dat",
-  login: "Přihlášení",
-  logout: "Odhlášení",
-  project_share: "Sdílení projektu",
+// DEPRECATED: use `tEventTypes(eventType)` from `analytics.eventTypes` namespace instead.
+// Kept here as a fallback only — never displayed when a translator is available.
+const EVENT_TYPE_LABELS_FALLBACK: Record<string, string> = {
+  page_view: "page_view",
+  add_payment: "add_payment",
+  add_time_entry: "add_time_entry",
+  edit_time_entry: "edit_time_entry",
+  edit_payment: "edit_payment",
+  delete_payment: "delete_payment",
+  add_contact: "add_contact",
+  add_note: "add_note",
+  edit_note: "edit_note",
+  add_budget_item: "add_budget_item",
+  edit_budget_item: "edit_budget_item",
+  download_data: "download_data",
+  login: "login",
+  logout: "logout",
+  project_share: "project_share",
 };
 
 // Map of event-type → tailwind text color (MD3 tonal palette)
@@ -181,25 +184,34 @@ function formatDayKey(key: string): string {
   return `${parts[2]}.${parts[1]}.`;
 }
 
-// Map a page URL (here: a tab ID string) to a human-readable label
-function formatPageLabel(url: string | null): string {
+// Map a page URL (here: a tab ID string) to a human-readable label.
+// Caller passes a translator rooted at `nav.items` — we look up the cleaned
+// URL as a key there. Falls back to the raw cleaned string if no match.
+const PAGE_LABEL_MAP: Record<string, string> = {
+  "dashboard-test": "dashboard",
+  dashboard: "dashboard",
+  budget: "budget",
+  payments: "payments",
+  time: "time",
+  contacts: "contacts",
+  timeline: "timeline",
+  notes: "notes",
+  management: "management",
+  telemetry: "telemetry",
+  admin: "admin",
+};
+function formatPageLabel(url: string | null, tNav: (key: string) => string): string {
   if (!url) return "—";
-  // Normalize: remove duplicate slashes, strip leading /
   const cleaned = url.replace(/\/+/g, "/").replace(/^\/+/, "");
-  const labels: Record<string, string> = {
-    dashboard: "Přehled",
-    "dashboard-test": "Přehled",
-    budget: "Rozpočet",
-    payments: "Platby",
-    time: "Čas",
-    contacts: "Kontakty",
-    timeline: "Časová osa",
-    notes: "Poznámky",
-    management: "Správa projektu",
-    telemetry: "Telemetrie",
-    admin: "Administrace",
-  };
-  return labels[cleaned] ?? cleaned;
+  const navKey = PAGE_LABEL_MAP[cleaned];
+  if (navKey) {
+    try {
+      return tNav(navKey);
+    } catch {
+      return cleaned;
+    }
+  }
+  return cleaned;
 }
 
 // Look up the project name from the projects list (provided by API).
@@ -207,6 +219,7 @@ function formatPageLabel(url: string | null): string {
 function lookupProjectName(
   metadata: string | null,
   projects: AnalyticsProject[],
+  tUnknownProject: (id: string) => string,
 ): { name: string; id: string | null } {
   if (!metadata) return { name: "—", id: null };
   try {
@@ -214,7 +227,7 @@ function lookupProjectName(
     if (parsed && typeof parsed === "object" && typeof parsed.projectId === "string") {
       const found = projects.find((p) => p.id === parsed.projectId);
       return {
-        name: found?.name ?? `Projekt ${parsed.projectId.slice(-8)}`,
+        name: found?.name ?? tUnknownProject(parsed.projectId.slice(-8)),
         id: parsed.projectId,
       };
     }
@@ -224,29 +237,22 @@ function lookupProjectName(
   }
 }
 
-// "před X min / hod" relative time formatter (cs-CZ)
-function formatRelativeTime(iso: string | null): string {
+// "před X min / hod" relative time formatter (locale-aware via translator).
+// Caller passes a translator rooted at `tabs.telemetry.relativeTime`.
+type RelativeTimeT = (key: string, values?: Record<string, string | number>) => string;
+function formatRelativeTime(iso: string | null, t: RelativeTimeT): string {
   if (!iso) return "—";
   const d = new Date(iso);
   if (isNaN(d.getTime())) return "—";
   const diffSec = Math.round((Date.now() - d.getTime()) / 1000);
-  if (diffSec < 60) return "právě teď";
+  if (diffSec < 60) return t("justNow");
   const diffMin = Math.round(diffSec / 60);
-  if (diffMin < 60) {
-    if (diffMin === 1) return "před minutou";
-    if (diffMin < 5) return `před ${diffMin} minutami`;
-    return `před ${diffMin} minutami`;
-  }
+  if (diffMin < 60) return t("minute", { n: diffMin });
   const diffHr = Math.round(diffMin / 60);
-  if (diffHr < 24) {
-    if (diffHr === 1) return "před hodinou";
-    if (diffHr < 5) return `před ${diffHr} hodinami`;
-    return `před ${diffHr} hodinami`;
-  }
+  if (diffHr < 24) return t("hour", { n: diffHr });
   const diffDay = Math.round(diffHr / 24);
-  if (diffDay === 1) return "včera";
-  if (diffDay < 5) return `před ${diffDay} dny`;
-  return `před ${diffDay} dny`;
+  if (diffDay === 1) return t("yesterday");
+  return t("day", { n: diffDay });
 }
 
 export function TelemetryTab({ projectId: _projectId }: { projectId: string }) {
@@ -259,6 +265,9 @@ export function TelemetryTab({ projectId: _projectId }: { projectId: string }) {
   const [userFilter, setUserFilter] = useState<string>("");
   const [pageFilter, setPageFilter] = useState<string>("");
   const [projectFilter, setProjectFilter] = useState<string>("");
+  const t = useTranslations("tabs.telemetry");
+  const tNav = useTranslations("nav.items");
+  const tEventTypes = useTranslations("analytics.eventTypes");
 
   const fetchData = useCallback(
     async (opts: {
@@ -298,13 +307,13 @@ export function TelemetryTab({ projectId: _projectId }: { projectId: string }) {
         const json: AnalyticsResponse = await res.json();
         setData(json);
       } catch {
-        setError("Nepodařilo se načíst telemetrická data.");
+        setError(t("error.loadFailed"));
       } finally {
         setLoading(false);
         setRefreshing(false);
       }
     },
-    [page, typeFilter, userFilter, pageFilter, projectFilter],
+    [page, typeFilter, userFilter, pageFilter, projectFilter, t],
   );
 
   // Initial fetch + refetch on filter/page change
@@ -357,7 +366,7 @@ export function TelemetryTab({ projectId: _projectId }: { projectId: string }) {
             className="rounded-full gap-1.5"
             onClick={() => void fetchData()}
           >
-            <RefreshCw className="h-3.5 w-3.5" /> Zkusit znovu
+            <RefreshCw className="h-3.5 w-3.5" /> {t("button.retry")}
           </Button>
         </CardContent>
       </Card>
@@ -427,10 +436,10 @@ export function TelemetryTab({ projectId: _projectId }: { projectId: string }) {
         <div>
           <h2 className="type-title-lg flex items-center gap-2">
             <BarChart3 className="h-5 w-5 text-primary" />
-            Telemetrie
+            {t("title")}
           </h2>
           <p className="type-body text-on-surface-variant">
-            Interní analytika uživatelských akcí.
+            {t("description")}
           </p>
         </div>
         <Button
@@ -445,7 +454,7 @@ export function TelemetryTab({ projectId: _projectId }: { projectId: string }) {
           ) : (
             <RefreshCw className="h-3.5 w-3.5" />
           )}
-          Obnovit
+          {t("button.refresh")}
         </Button>
       </div>
 
@@ -453,7 +462,7 @@ export function TelemetryTab({ projectId: _projectId }: { projectId: string }) {
       <div className="grid grid-cols-2 gap-2 sm:gap-3 md:grid-cols-4 lg:gap-4">
         <KpiCard
           id="kpi-events"
-          label="Celkem událostí"
+          label={t("kpi.totalEvents")}
           value={summary?.totalEvents ?? 0}
           icon={<Activity className="h-4 w-4 text-primary" />}
           iconBg="bg-primary-container"
@@ -461,7 +470,7 @@ export function TelemetryTab({ projectId: _projectId }: { projectId: string }) {
         />
         <KpiCard
           id="kpi-pageviews"
-          label="Celkem zobrazení stránek"
+          label={t("kpi.totalPageViews")}
           value={summary?.totalPageViews ?? 0}
           icon={<Eye className="h-4 w-4 text-info" />}
           iconBg="bg-info-soft"
@@ -469,7 +478,7 @@ export function TelemetryTab({ projectId: _projectId }: { projectId: string }) {
         />
         <KpiCard
           id="kpi-time"
-          label="Celkem čas na stránkách"
+          label={t("kpi.totalTimeSpent")}
           value={formatTimeSpent(summary?.totalTimeSpent ?? 0)}
           icon={<Timer className="h-4 w-4 text-warning" />}
           iconBg="bg-warning-soft"
@@ -477,7 +486,7 @@ export function TelemetryTab({ projectId: _projectId }: { projectId: string }) {
         />
         <KpiCard
           id="kpi-users"
-          label="Unikátní uživatelé"
+          label={t("kpi.uniqueUsers")}
           value={summary?.uniqueUsers ?? 0}
           icon={<Users className="h-4 w-4 text-success" />}
           iconBg="bg-success-soft"
@@ -492,23 +501,29 @@ export function TelemetryTab({ projectId: _projectId }: { projectId: string }) {
           <CardHeader className="pb-3">
             <CardTitle className="type-title-lg flex items-center gap-2">
               <Activity className="h-4 w-4 text-primary" />
-              Události podle typu
+              {t("chart.byType.title")}
             </CardTitle>
             <CardDescription>
-              Počet výskytů jednotlivých typů událostí
+              {t("chart.byType.description")}
             </CardDescription>
           </CardHeader>
           <CardContent>
             {eventTypeRows.length === 0 ? (
               <p className="type-body text-on-surface-variant py-6 text-center">
-                Žádná data.
+                {t("empty.byType")}
               </p>
             ) : (
               <div className="max-h-80 space-y-2 overflow-y-auto pr-1">
                 {eventTypeRows.map(([type, count]) => {
                   const pct = (count / maxEventCount) * 100;
                   const colorClass = EVENT_TYPE_COLORS[type] ?? "bg-primary";
-                  const label = EVENT_TYPE_LABELS[type] ?? type;
+                  const label = (() => {
+                    try {
+                      return tEventTypes(type);
+                    } catch {
+                      return EVENT_TYPE_LABELS_FALLBACK[type] ?? type;
+                    }
+                  })();
                   return (
                     <div key={type} className="space-y-1">
                       <div className="flex items-center justify-between gap-2">
@@ -541,14 +556,14 @@ export function TelemetryTab({ projectId: _projectId }: { projectId: string }) {
           <CardHeader className="pb-3">
             <CardTitle className="type-title-lg flex items-center gap-2">
               <BarChart3 className="h-4 w-4 text-info" />
-              Aktivita podle dní
+              {t("chart.byDay.title")}
             </CardTitle>
-            <CardDescription>Posledních 30 dní</CardDescription>
+            <CardDescription>{t("chart.byDay.description")}</CardDescription>
           </CardHeader>
           <CardContent>
             {dayRows.length === 0 ? (
               <p className="type-body text-on-surface-variant py-6 text-center">
-                Žádná data.
+                {t("empty.byType")}
               </p>
             ) : (
               <div className="flex h-48 gap-2">
@@ -606,16 +621,16 @@ export function TelemetryTab({ projectId: _projectId }: { projectId: string }) {
         <CardHeader className="pb-3">
           <CardTitle className="type-title-lg flex items-center gap-2">
             <Eye className="h-4 w-4 text-info" />
-            Nejnavštěvovanější stránky
+            {t("topPages.title")}
           </CardTitle>
           <CardDescription>
-            Počet zobrazení a průměrný čas strávený na každé stránce
+            {t("topPages.description")}
           </CardDescription>
         </CardHeader>
         <CardContent>
           {!summary || summary.topPages.length === 0 ? (
             <p className="type-body text-on-surface-variant py-6 text-center">
-              Žádná data o zobrazeních stránek.
+              {t("topPages.empty")}
             </p>
           ) : (
             <div className="overflow-x-auto rounded-lg border border-outline-variant">
@@ -623,13 +638,13 @@ export function TelemetryTab({ projectId: _projectId }: { projectId: string }) {
                 <thead>
                   <tr className="border-b border-outline-variant bg-surface-container-high">
                     <th className="type-overline text-on-surface-variant px-3 py-2 text-left">
-                      Stránka
+                      {t("topPages.column.page")}
                     </th>
                     <th className="type-overline text-on-surface-variant px-3 py-2 text-right whitespace-nowrap">
-                      Zobrazení
+                      {t("topPages.column.views")}
                     </th>
                     <th className="type-overline text-on-surface-variant px-3 py-2 text-right whitespace-nowrap">
-                      Prům. čas
+                      {t("topPages.column.avgTime")}
                     </th>
                   </tr>
                 </thead>
@@ -641,7 +656,7 @@ export function TelemetryTab({ projectId: _projectId }: { projectId: string }) {
                     >
                       <td className="px-3 py-2">
                         <span className="type-body font-medium">
-                          {formatPageLabel(p.pageUrl)}
+                          {formatPageLabel(p.pageUrl, tNav)}
                         </span>
                         <span className="type-label text-on-surface-variant ml-2">
                           {p.pageUrl}
@@ -667,34 +682,34 @@ export function TelemetryTab({ projectId: _projectId }: { projectId: string }) {
         <CardHeader className="pb-3">
           <CardTitle className="type-title-lg flex items-center gap-2">
             <Clock className="h-4 w-4 text-warning" />
-            Přehled času
+            {t("timeOverview.title")}
           </CardTitle>
           <CardDescription>
-            Souhrnné statistiky o čase stráveném v aplikaci
+            {t("timeOverview.description")}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             <TimeKpiCard
-              label="Celková doba na stránkách"
+              label={t("timeOverview.totalOnPages")}
               value={formatTimeSpent(summary?.totalTimeSpent ?? 0)}
-              hint={`počet zobrazení: ${summary?.totalPageViews ?? 0}`}
+              hint={t("timeOverview.totalOnPagesHint", { count: summary?.totalPageViews ?? 0 })}
               icon={<Clock className="h-4 w-4 text-warning" />}
               iconBg="bg-warning-soft"
               accent="border-warning/30"
             />
             <TimeKpiCard
-              label="Průměrná doba na stránku"
+              label={t("timeOverview.avgPerPage")}
               value={formatTimeSpent(summary?.avgTimePerPage ?? 0)}
-              hint="průměr přes všechny page_view události"
+              hint={t("timeOverview.avgPerPageHint")}
               icon={<Gauge className="h-4 w-4 text-info" />}
               iconBg="bg-info-soft"
               accent="border-info/30"
             />
             <TimeKpiCard
-              label="Nejdelší návštěva"
+              label={t("timeOverview.longest")}
               value={formatTimeSpent(summary?.longestSession ?? 0)}
-              hint="maximální timeSpent jedné session"
+              hint={t("timeOverview.longestHint")}
               icon={<Timer className="h-4 w-4 text-success" />}
               iconBg="bg-success-soft"
               accent="border-success/30"
@@ -708,13 +723,13 @@ export function TelemetryTab({ projectId: _projectId }: { projectId: string }) {
         <CardHeader className="pb-3">
           <CardTitle className="type-title-lg flex items-center gap-2">
             <Clock className="h-4 w-4 text-info" />
-            Doba návštěvnosti
+            {t("timeByPage.title")}
           </CardTitle>
           <CardDescription>
-            Celkový čas strávený na jednotlivých stránkách
+            {t("timeByPage.description")}
             {totalPagesTime > 0 && (
               <span className="ml-1 text-on-surface-variant">
-                · Celkem: <span className="font-medium text-on-surface">{formatTimeSpent(totalPagesTime)}</span>
+                · {t("timeByPage.total", { time: formatTimeSpent(totalPagesTime) })}
               </span>
             )}
           </CardDescription>
@@ -722,7 +737,7 @@ export function TelemetryTab({ projectId: _projectId }: { projectId: string }) {
         <CardContent>
           {timeByPageRows.length === 0 ? (
             <p className="type-body text-on-surface-variant py-6 text-center">
-              Žádná data o čase na stránkách.
+              {t("timeByPage.empty")}
             </p>
           ) : (
             <div className="max-h-96 space-y-3 overflow-y-auto pr-1">
@@ -732,7 +747,7 @@ export function TelemetryTab({ projectId: _projectId }: { projectId: string }) {
                   <div key={p.pageUrl} className="space-y-1">
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <span className="type-body font-medium">
-                        {formatPageLabel(p.pageUrl)}
+                        {formatPageLabel(p.pageUrl, tNav)}
                         <span className="type-label text-on-surface-variant ml-2">
                           {p.pageUrl}
                         </span>
@@ -742,7 +757,7 @@ export function TelemetryTab({ projectId: _projectId }: { projectId: string }) {
                           {formatTimeSpent(p.totalTime)}
                         </span>
                         {" · "}
-                        {p.views}× · prům. {formatTimeSpent(p.avgTime)}
+                        {t("timeByPage.rowSuffix", { views: p.views, avgTime: formatTimeSpent(p.avgTime) })}
                       </span>
                     </div>
                     <div className="h-2 w-full overflow-hidden rounded-full bg-surface-container-high">
@@ -764,16 +779,16 @@ export function TelemetryTab({ projectId: _projectId }: { projectId: string }) {
         <CardHeader className="pb-3">
           <CardTitle className="type-title-lg flex items-center gap-2">
             <Users className="h-4 w-4 text-success" />
-            Aktivita uživatelů
+            {t("topUsers.title")}
           </CardTitle>
           <CardDescription>
-            Nejaktivnější uživatelé podle počtu akcí
+            {t("topUsers.description")}
           </CardDescription>
         </CardHeader>
         <CardContent>
           {topUsersRows.length === 0 ? (
             <p className="type-body text-on-surface-variant py-6 text-center">
-              Žádná data o aktivitě uživatelů.
+              {t("topUsers.empty")}
             </p>
           ) : (
             <div className="overflow-x-auto rounded-lg border border-outline-variant">
@@ -781,13 +796,13 @@ export function TelemetryTab({ projectId: _projectId }: { projectId: string }) {
                 <thead>
                   <tr className="border-b border-outline-variant bg-surface-container-high">
                     <th className="type-overline text-on-surface-variant px-3 py-2 text-left">
-                      Uživatel
+                      {t("topUsers.column.user")}
                     </th>
                     <th className="type-overline text-on-surface-variant px-3 py-2 text-right whitespace-nowrap">
-                      Počet akcí
+                      {t("topUsers.column.eventCount")}
                     </th>
                     <th className="type-overline text-on-surface-variant px-3 py-2 text-right whitespace-nowrap">
-                      Poslední aktivita
+                      {t("topUsers.column.lastActive")}
                     </th>
                   </tr>
                 </thead>
@@ -809,7 +824,7 @@ export function TelemetryTab({ projectId: _projectId }: { projectId: string }) {
                         <td className="px-3 py-2">
                           <div className="flex items-center gap-2">
                             {idx === 0 ? (
-                              <span className="text-warning" title="Nejaktivnější">
+                              <span className="text-warning" title={t("topUsers.crown.title")}>
                                 <Crown className="h-3.5 w-3.5" />
                               </span>
                             ) : null}
@@ -848,7 +863,7 @@ export function TelemetryTab({ projectId: _projectId }: { projectId: string }) {
                         </td>
                         <td className="px-3 py-2 text-right">
                           <span className="type-label text-on-surface-variant tabular-nums">
-                            {formatRelativeTime(u.lastActive)}
+                            {formatRelativeTime(u.lastActive, t)}
                           </span>
                         </td>
                       </tr>
@@ -866,16 +881,16 @@ export function TelemetryTab({ projectId: _projectId }: { projectId: string }) {
         <CardHeader className="pb-3">
           <CardTitle className="type-title-lg flex items-center gap-2">
             <Clock className="h-4 w-4 text-warning" />
-            Aktivita dnes podle hodin
+            {t("chart.byHour.title")}
           </CardTitle>
           <CardDescription>
-            Počet událostí v jednotlivých hodinách dnešního dne
+            {t("chart.byHour.description")}
           </CardDescription>
         </CardHeader>
         <CardContent>
           {hourEntries.every((h) => h.count === 0) ? (
             <p className="type-body text-on-surface-variant py-6 text-center">
-              Dnes zatím nebyla zaznamenána žádná aktivita.
+              {t("empty.byHour")}
             </p>
           ) : (
             <>
@@ -902,7 +917,7 @@ export function TelemetryTab({ projectId: _projectId }: { projectId: string }) {
                     <div
                       key={hour}
                       className="group relative flex flex-1 h-full items-end justify-center z-10"
-                      title={`${hour}:00 — ${count} událostí`}
+                      title={t("recent.tooltipHour", { hour, count })}
                     >
                       <div
                         className={cn(
@@ -917,7 +932,7 @@ export function TelemetryTab({ projectId: _projectId }: { projectId: string }) {
                         }}
                       />
                       <div className="pointer-events-none absolute -top-7 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-surface-container-highest px-1.5 py-0.5 type-label-sm opacity-0 shadow-sm transition-opacity group-hover:opacity-100">
-                        {count > 0 ? `${hour}:00 — ${count}` : ""}
+                        {count > 0 ? t("recent.tooltipHour", { hour, count }) : ""}
                       </div>
                     </div>
                   );
@@ -943,10 +958,10 @@ export function TelemetryTab({ projectId: _projectId }: { projectId: string }) {
             <div>
               <CardTitle className="type-title-lg flex items-center gap-2">
                 <Activity className="h-4 w-4 text-primary" />
-                Poslední události
+                {t("recent.title")}
               </CardTitle>
               <CardDescription>
-                Posledních {Math.min(20, total)} z celkem {total} událostí
+                {t("recent.description", { shown: Math.min(20, total), total })}
               </CardDescription>
             </div>
             {/* Type filter */}
@@ -955,7 +970,7 @@ export function TelemetryTab({ projectId: _projectId }: { projectId: string }) {
                 htmlFor="telemetry-type-filter"
                 className="type-label text-on-surface-variant"
               >
-                Typ
+                {t("filter.type")}
               </label>
               <select
                 id="telemetry-type-filter"
@@ -963,12 +978,20 @@ export function TelemetryTab({ projectId: _projectId }: { projectId: string }) {
                 onChange={(e) => handleTypeFilterChange(e.target.value)}
                 className="h-8 rounded-full border border-outline-variant bg-card px-3 type-label hover:bg-surface-container-high focus:outline-none focus:ring-2 focus:ring-primary/30"
               >
-                <option value="">Vše</option>
-                {availableTypes.map((t) => (
-                  <option key={t} value={t}>
-                    {EVENT_TYPE_LABELS[t] ?? t}
-                  </option>
-                ))}
+                <option value="">{t("filter.all")}</option>
+                {availableTypes.map((eventType) => {
+                  let label;
+                  try {
+                    label = tEventTypes(eventType);
+                  } catch {
+                    label = eventType;
+                  }
+                  return (
+                    <option key={eventType} value={eventType}>
+                      {label}
+                    </option>
+                  );
+                })}
               </select>
             </div>
           </div>
@@ -979,20 +1002,20 @@ export function TelemetryTab({ projectId: _projectId }: { projectId: string }) {
           <div className="flex flex-wrap items-center gap-2">
             <div className="flex items-center gap-1.5 type-label text-on-surface-variant">
               <Filter className="h-3.5 w-3.5" />
-              Filtry:
+              {t("filter.label")}
             </div>
             {/* User filter */}
             <div className="flex items-center gap-1.5">
-              <span className="type-label-sm text-on-surface-variant">Uživatel</span>
+              <span className="type-label-sm text-on-surface-variant">{t("filter.user")}</span>
               <Select
                 value={userFilter || "__all__"}
                 onValueChange={handleUserFilterChange}
               >
                 <SelectTrigger className="h-8 w-[180px] rounded-full type-label-sm">
-                  <SelectValue placeholder="Všichni uživatelé" />
+                  <SelectValue placeholder={t("filter.allUsers")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="__all__">Všichni uživatelé</SelectItem>
+                  <SelectItem value="__all__">{t("filter.allUsers")}</SelectItem>
                   {users.map((u) => (
                     <SelectItem key={u.id} value={u.id}>
                       {u.name || u.email}
@@ -1003,19 +1026,19 @@ export function TelemetryTab({ projectId: _projectId }: { projectId: string }) {
             </div>
             {/* Page filter */}
             <div className="flex items-center gap-1.5">
-              <span className="type-label-sm text-on-surface-variant">Stránka</span>
+              <span className="type-label-sm text-on-surface-variant">{t("filter.page")}</span>
               <Select
                 value={pageFilter || "__all__"}
                 onValueChange={handlePageFilterChange}
               >
                 <SelectTrigger className="h-8 w-[160px] rounded-full type-label-sm">
-                  <SelectValue placeholder="Všechny stránky" />
+                  <SelectValue placeholder={t("filter.allPages")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="__all__">Všechny stránky</SelectItem>
+                  <SelectItem value="__all__">{t("filter.allPages")}</SelectItem>
                   {pages.map((p) => (
                     <SelectItem key={p} value={p}>
-                      {formatPageLabel(p)}
+                      {formatPageLabel(p, tNav)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -1023,16 +1046,16 @@ export function TelemetryTab({ projectId: _projectId }: { projectId: string }) {
             </div>
             {/* Project filter */}
             <div className="flex items-center gap-1.5">
-              <span className="type-label-sm text-on-surface-variant">Projekt</span>
+              <span className="type-label-sm text-on-surface-variant">{t("filter.project")}</span>
               <Select
                 value={projectFilter || "__all__"}
                 onValueChange={handleProjectFilterChange}
               >
                 <SelectTrigger className="h-8 w-[200px] rounded-full type-label-sm">
-                  <SelectValue placeholder="Všechny projekty" />
+                  <SelectValue placeholder={t("filter.allProjects")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="__all__">Všechny projekty</SelectItem>
+                  <SelectItem value="__all__">{t("filter.allProjects")}</SelectItem>
                   {projects.map((p) => (
                     <SelectItem key={p.id} value={p.id}>
                       {p.name}
@@ -1055,7 +1078,7 @@ export function TelemetryTab({ projectId: _projectId }: { projectId: string }) {
                   setPage(1);
                 }}
               >
-                Zrušit filtry
+                {t("filter.button.reset")}
               </Button>
             )}
           </div>
@@ -1064,7 +1087,7 @@ export function TelemetryTab({ projectId: _projectId }: { projectId: string }) {
         <CardContent>
           {entries.length === 0 ? (
             <p className="type-body text-on-surface-variant py-6 text-center">
-              Žádné události pro vybraný filtr.
+              {t("recent.empty")}
             </p>
           ) : (
             <>
@@ -1073,22 +1096,22 @@ export function TelemetryTab({ projectId: _projectId }: { projectId: string }) {
                   <thead>
                     <tr className="border-b border-outline-variant bg-surface-container-high">
                       <th className="type-overline text-on-surface-variant px-3 py-2 text-left whitespace-nowrap">
-                        Datum
+                        {t("recent.column.date")}
                       </th>
                       <th className="type-overline text-on-surface-variant px-3 py-2 text-left whitespace-nowrap">
-                        Čas
+                        {t("recent.column.time")}
                       </th>
                       <th className="type-overline text-on-surface-variant px-3 py-2 text-left">
-                        Uživatel
+                        {t("recent.column.user")}
                       </th>
                       <th className="type-overline text-on-surface-variant px-3 py-2 text-left">
-                        Typ události
+                        {t("recent.column.eventType")}
                       </th>
                       <th className="type-overline text-on-surface-variant px-3 py-2 text-left">
-                        Stránka
+                        {t("recent.column.page")}
                       </th>
                       <th className="type-overline text-on-surface-variant px-3 py-2 text-left">
-                        Projekt
+                        {t("recent.column.project")}
                       </th>
                     </tr>
                   </thead>
@@ -1096,14 +1119,18 @@ export function TelemetryTab({ projectId: _projectId }: { projectId: string }) {
                     {entries.map((entry) => {
                       const { date, time } = formatEventTimestamp(entry.createdAt);
                       const userName =
-                        entry.user?.name || entry.user?.email || "Neznámý";
+                        entry.user?.name || entry.user?.email || t("recent.unknownUser");
                       const initials =
                         userName
                           .split(/\s+/)
                           .slice(0, 2)
                           .map((s) => s[0]?.toUpperCase() ?? "")
                           .join("") || "?";
-                      const project = lookupProjectName(entry.metadata, projects);
+                      const project = lookupProjectName(
+                        entry.metadata,
+                        projects,
+                        (id) => t("recent.unknownProject", { id }),
+                      );
                       return (
                         <tr
                           key={entry.id}
@@ -1138,12 +1165,18 @@ export function TelemetryTab({ projectId: _projectId }: { projectId: string }) {
                               variant="secondary"
                               className="type-label-sm rounded-full"
                             >
-                              {EVENT_TYPE_LABELS[entry.eventType] ?? entry.eventType}
+                              {(() => {
+                                try {
+                                  return tEventTypes(entry.eventType);
+                                } catch {
+                                  return entry.eventType;
+                                }
+                              })()}
                             </Badge>
                           </td>
                           <td className="px-3 py-2">
                             <span className="type-body">
-                              {formatPageLabel(entry.pageUrl)}
+                              {formatPageLabel(entry.pageUrl, tNav)}
                             </span>
                             {entry.timeSpent !== null &&
                               entry.timeSpent > 0 && (
@@ -1168,8 +1201,7 @@ export function TelemetryTab({ projectId: _projectId }: { projectId: string }) {
               {total > 0 && (
                 <div className="flex flex-wrap items-center justify-between gap-2 border-t border-outline-variant pt-3">
                   <span className="type-label-sm text-on-surface-variant tabular-nums">
-                    Zobrazeno {(page - 1) * 20 + 1}–
-                    {Math.min(page * 20, total)} z {total}
+                    {t("pagination.summary", { from: (page - 1) * 20 + 1, to: Math.min(page * 20, total), total })}
                   </span>
                   <div className="flex items-center gap-1">
                     <Button
@@ -1179,10 +1211,10 @@ export function TelemetryTab({ projectId: _projectId }: { projectId: string }) {
                       onClick={() => setPage((p) => Math.max(1, p - 1))}
                       disabled={page <= 1}
                     >
-                      <ChevronLeft className="h-3.5 w-3.5" /> Předchozí
+                      <ChevronLeft className="h-3.5 w-3.5" /> {t("pagination.prev")}
                     </Button>
                     <span className="type-label-sm px-2 tabular-nums">
-                      {page} / {totalPages}
+                      {t("pagination.pageOf", { page, totalPages })}
                     </span>
                     <Button
                       variant="outline"
@@ -1193,7 +1225,7 @@ export function TelemetryTab({ projectId: _projectId }: { projectId: string }) {
                       }
                       disabled={page >= totalPages}
                     >
-                      Další <ChevronRight className="h-3.5 w-3.5" />
+                      {t("pagination.next")} <ChevronRight className="h-3.5 w-3.5" />
                     </Button>
                   </div>
                 </div>

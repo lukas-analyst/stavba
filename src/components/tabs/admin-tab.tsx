@@ -65,6 +65,7 @@ import { useProjects } from "@/lib/api";
 import { formatDate } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 import {
   Tooltip,
   TooltipContent,
@@ -169,33 +170,18 @@ type AnalyticsResponse = {
 // ===== Constants =====
 // `adminOnly: true` marks sections that should only appear in the side
 // nav (and main content) when the current user is an admin.
+// Section labels are resolved via next-intl (`tabs.admin.section.<id>`)
+// at render time — the static `label` here is only a fallback for
+// edge cases where the translator hasn't loaded yet.
 const SECTION_LINKS = [
-  { id: "projects", label: "Moje projekty", icon: Building2, adminOnly: false },
-  { id: "users", label: "Správa uživatelů", icon: Users, adminOnly: true },
-  { id: "export", label: "Export", icon: Download, adminOnly: false },
-  { id: "notifications", label: "Notifikace", icon: Bell, adminOnly: false },
-  { id: "danger", label: "Nebezpečná zóna", icon: AlertTriangle, adminOnly: false },
+  { id: "projects", icon: Building2, adminOnly: false },
+  { id: "users", icon: Users, adminOnly: true },
+  { id: "export", icon: Download, adminOnly: false },
+  { id: "notifications", icon: Bell, adminOnly: false },
+  { id: "danger", icon: AlertTriangle, adminOnly: false },
 ] as const;
 
 const NOTIFICATIONS_KEY = "stavba.notifications.preferences";
-
-const EVENT_TYPE_LABELS: Record<string, string> = {
-  page_view: "Zobrazení stránky",
-  add_payment: "Přidání platby",
-  add_time_entry: "Přidání času",
-  edit_time_entry: "Úprava času",
-  edit_payment: "Úprava platby",
-  delete_payment: "Smazání platby",
-  add_contact: "Přidání kontaktu",
-  add_note: "Přidání poznámky",
-  edit_note: "Úprava poznámky",
-  add_budget_item: "Přidání položky",
-  edit_budget_item: "Úprava položky",
-  download_data: "Stažení dat",
-  login: "Přihlášení",
-  logout: "Odhlášení",
-  project_share: "Sdílení projektu",
-};
 
 const EVENT_TYPE_COLORS: Record<string, string> = {
   page_view: "bg-primary",
@@ -246,56 +232,52 @@ function formatTimeSpent(seconds: number): string {
   return remMin > 0 ? `${hours} h ${remMin} min` : `${hours} h`;
 }
 
-function formatPageLabel(url: string | null): string {
+// Resolve a page URL to a localized label via the shared `nav.items.*`
+// namespace (also used by the sidebar). Falls back to the cleaned URL
+// segment when no translation is found.
+// `tNav` should be a root-scoped translator (so we can call
+// `tNav("nav.items." + key)` with the full dotted path).
+function formatPageLabel(
+  url: string | null,
+  tNav: (key: string) => string,
+): string {
   if (!url) return "—";
   // Normalize: remove duplicate slashes, strip leading /
   const cleaned = url.replace(/\/+/g, "/").replace(/^\/+/, "");
-  const labels: Record<string, string> = {
-    dashboard: "Přehled",
-    "dashboard-test": "Přehled",
-    budget: "Rozpočet",
-    payments: "Platby",
-    time: "Čas",
-    contacts: "Kontakty",
-    timeline: "Časová osa",
-    notes: "Poznámky",
-    management: "Správa projektu",
-    telemetry: "Telemetrie",
-    admin: "Administrace",
-  };
-  return labels[cleaned] ?? cleaned;
+  // Map alternate dashboard slug to the same key as `dashboard`.
+  const key = cleaned === "dashboard-test" ? "dashboard" : cleaned;
+  const translated = tNav(`nav.items.${key}`);
+  // next-intl returns the key itself when the translation is missing —
+  // fall back to the cleaned URL in that case.
+  return translated === `nav.items.${key}` ? cleaned : translated;
 }
 
-function formatRelativeTime(iso: string | null): string {
+// Format an ISO timestamp as a relative "time ago" string using ICU
+// plural-aware translations from the shared `relativeTime.*` namespace.
+// `tRel` is scoped to `relativeTime`.
+function formatRelativeTime(
+  iso: string | null,
+  tRel: (key: string, params?: Record<string, unknown>) => string,
+): string {
   if (!iso) return "—";
   const d = new Date(iso);
   if (isNaN(d.getTime())) return "—";
   const diffSec = Math.round((Date.now() - d.getTime()) / 1000);
-  if (diffSec < 60) return "právě teď";
+  if (diffSec < 60) return tRel("justNow");
   const diffMin = Math.round(diffSec / 60);
   if (diffMin < 60) {
-    if (diffMin === 1) return "před minutou";
-    if (diffMin < 5) return `před ${diffMin} minutami`;
-    return `před ${diffMin} minutami`;
+    return tRel("minute", { n: diffMin });
   }
   const diffHr = Math.round(diffMin / 60);
   if (diffHr < 24) {
-    if (diffHr === 1) return "před hodinou";
-    if (diffHr < 5) return `před ${diffHr} hodinami`;
-    return `před ${diffHr} hodinami`;
+    return tRel("hour", { n: diffHr });
   }
   const diffDay = Math.round(diffHr / 24);
-  if (diffDay === 1) return "včera";
-  if (diffDay < 5) return `před ${diffDay} dny`;
-  return `před ${diffDay} dny`;
+  if (diffDay === 1) return tRel("yesterday");
+  return tRel("days", { n: diffDay });
 }
 
-const ROLE_LABELS: Record<string, string> = {
-  owner: "Správce",
-  editor: "Editor",
-  viewer: "Čtenář",
-};
-
+// Role badge CSS classes (locale-independent).
 const ROLE_BADGES: Record<string, string> = {
   owner: "bg-primary-container text-primary-container-foreground",
   editor: "bg-info-soft text-info-strong dark:bg-info-soft dark:text-info-strong",
@@ -308,6 +290,7 @@ const ROLE_BADGES: Record<string, string> = {
 export function AdminTab() {
   const qc = useQueryClient();
   const [activeSection, setActiveSection] = useState<string>("projects");
+  const t = useTranslations("tabs.admin");
 
   // Fetch current user profile
   const { data: currentUser, isLoading: userLoading } = useQuery({
@@ -369,8 +352,8 @@ export function AdminTab() {
       <aside className="hidden w-64 shrink-0 lg:block">
         <nav className="sticky top-0 max-h-[calc(100vh-0px)] overflow-y-auto px-3 py-6 scrollbar-thin">
           <div className="mb-4 px-3">
-            <span className="type-overline text-on-surface-variant">Administrace</span>
-            <h2 className="type-title-lg mt-1">Nastavení účtu</h2>
+            <span className="type-overline text-on-surface-variant">{t("nav.label")}</span>
+            <h2 className="type-title-lg mt-1">{t("nav.title")}</h2>
           </div>
           <ul className="space-y-0.5">
             {visibleSections.map((link) => {
@@ -390,7 +373,7 @@ export function AdminTab() {
                     )}
                   >
                     <Icon className="h-4 w-4 shrink-0" />
-                    <span className="flex-1 truncate">{link.label}</span>
+                    <span className="flex-1 truncate">{t(`section.${link.id}`)}</span>
                     <ChevronRight
                       className={cn(
                         "h-3.5 w-3.5 shrink-0 transition-opacity",
@@ -427,7 +410,7 @@ export function AdminTab() {
                   )}
                 >
                   <Icon className="h-4 w-4" />
-                  <span className="whitespace-nowrap">{link.label}</span>
+                  <span className="whitespace-nowrap">{t(`section.${link.id}`)}</span>
                 </button>
               );
             })}
@@ -438,10 +421,10 @@ export function AdminTab() {
         <header className="lg:hidden">
           <h1 className="type-title-lg flex items-center gap-2">
             <User className="h-5 w-5 text-primary" />
-            Nastavení účtu
+            {t("nav.title")}
           </h1>
           <p className="type-body text-on-surface-variant">
-            Profil, projekty, statistiky a preference.
+            {t("subtitle")}
           </p>
         </header>
 
@@ -458,6 +441,7 @@ export function AdminTab() {
             {currentUser.isAdmin && (
               <UsersSection currentUser={currentUser} qc={qc} />
             )}
+            <StatsSection currentUser={currentUser} />
             <ExportSection />
             <NotificationsSection />
             <DangerSection currentUser={currentUser} qc={qc} />
@@ -476,6 +460,7 @@ function ProfileSection({ user }: { user: CurrentUser }) {
   const [name, setName] = useState(user.name ?? "");
   const [saving, setSaving] = useState(false);
   const qc = useQueryClient();
+  const t = useTranslations("tabs.admin.profile");
 
   // Reset local state if the upstream user changes
   useEffect(() => {
@@ -485,7 +470,7 @@ function ProfileSection({ user }: { user: CurrentUser }) {
   const handleSave = async () => {
     const trimmed = name.trim();
     if (!trimmed) {
-      toast.error("Jméno nesmí být prázdné");
+      toast.error(t("toasts.emptyName"));
       return;
     }
     setSaving(true);
@@ -497,14 +482,14 @@ function ProfileSection({ user }: { user: CurrentUser }) {
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        throw new Error(err.error || "Nepodařilo se upravit profil");
+        throw new Error(err.error || t("toasts.saveError"));
       }
       await qc.invalidateQueries({ queryKey: ["user-profile"] });
       await qc.invalidateQueries({ queryKey: ["users"] });
-      toast.success("Profil uložen");
+      toast.success(t("toasts.saved"));
       setEditing(false);
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Nepodařilo se upravit profil");
+      toast.error(e instanceof Error ? e.message : t("toasts.saveError"));
     } finally {
       setSaving(false);
     }
@@ -529,10 +514,10 @@ function ProfileSection({ user }: { user: CurrentUser }) {
             <div className="min-w-0 flex-1">
               <CardTitle className="type-title-lg flex items-center gap-2">
                 <User className="h-4 w-4 text-primary" />
-                Můj profil
+                {t("title")}
               </CardTitle>
               <CardDescription className="mt-1">
-                Zobrazované jméno a e-mail, které ostatní uživatelé vidí při sdílení projektů.
+                {t("description")}
               </CardDescription>
             </div>
             {editing ? (
@@ -544,7 +529,7 @@ function ProfileSection({ user }: { user: CurrentUser }) {
                   disabled={saving}
                 >
                   {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
-                  Uložit
+                  {t("button.save")}
                 </Button>
                 <Button
                   variant="outline"
@@ -563,7 +548,7 @@ function ProfileSection({ user }: { user: CurrentUser }) {
                 className="shrink-0 rounded-full gap-1.5"
                 onClick={() => setEditing(true)}
               >
-                <Pencil className="h-3.5 w-3.5" /> Upravit
+                <Pencil className="h-3.5 w-3.5" /> {t("button.edit")}
               </Button>
             )}
           </div>
@@ -589,13 +574,13 @@ function ProfileSection({ user }: { user: CurrentUser }) {
               {editing ? (
                 <div className="space-y-1.5">
                   <Label htmlFor="profile-name" className="type-label-sm text-on-surface-variant">
-                    Zobrazované jméno
+                    {t("field.displayName")}
                   </Label>
                   <Input
                     id="profile-name"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    placeholder="např. Lukáš Hanzlík"
+                    placeholder={t("placeholder.name")}
                     className="h-9 max-w-sm"
                     autoFocus
                     onKeyDown={(e) => {
@@ -604,7 +589,7 @@ function ProfileSection({ user }: { user: CurrentUser }) {
                     }}
                   />
                   <p className="type-label-sm text-on-surface-variant">
-                    Změna se projeví ve všech projektech, kde jste členem.
+                    {t("hint.nameChange")}
                   </p>
                 </div>
               ) : (
@@ -617,7 +602,7 @@ function ProfileSection({ user }: { user: CurrentUser }) {
                     <span className="truncate">{user.email}</span>
                   </div>
                   <div className="type-label text-on-surface-variant">
-                    Účet vytvořen: {formatDate(user.createdAt)}
+                    {t("label.accountCreated", { date: formatDate(user.createdAt) })}
                   </div>
                 </>
               )}
@@ -640,6 +625,8 @@ function ProjectsSection({
   qc: ReturnType<typeof useQueryClient>;
 }) {
   const { data: projects, isLoading: projectsLoading } = useProjects();
+  const t = useTranslations("tabs.admin.projects");
+  const tRoles = useTranslations("roles");
   const [membersByProject, setMembersByProject] = useState<
     Record<string, MembersResponse | null>
   >({});
@@ -731,9 +718,9 @@ function ProjectsSection({
         return next;
       });
       await qc.invalidateQueries({ queryKey: ["projects"] });
-      toast.success(`Odpojeno od projektu „${project.name}"`);
+      toast.success(t("toasts.left", { name: project.name }));
     } catch {
-      toast.error("Nepodařilo se odpojit od projektu");
+      toast.error(t("toasts.leaveError"));
     } finally {
       setLeavingProjectId(null);
     }
@@ -749,10 +736,10 @@ function ProjectsSection({
         <CardHeader className="pb-3">
           <CardTitle className="type-title-lg flex items-center gap-2">
             <Building2 className="h-4 w-4 text-primary" />
-            Moje projekty
+            {t("title")}
           </CardTitle>
           <CardDescription>
-            Projekty, kde jste správcem nebo členem. Odpojit se můžete jen z projektů, kde nejste správce.
+            {t("description")}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -765,7 +752,7 @@ function ProjectsSection({
               </div>
             ) : (
               <p className="type-body py-6 text-center text-on-surface-variant">
-                Zatím nejste členem žádného projektu.
+                {t("empty")}
               </p>
             )
           ) : (
@@ -787,7 +774,7 @@ function ProjectsSection({
                           {p.role === "owner" && <Crown className="mr-1 h-3 w-3" />}
                           {p.role === "editor" && <Edit3 className="mr-1 h-3 w-3" />}
                           {p.role === "viewer" && <Eye className="mr-1 h-3 w-3" />}
-                          {ROLE_LABELS[p.role]}
+                          {tRoles(p.role)}
                         </Badge>
                       </div>
                       {p.address && (
@@ -810,27 +797,26 @@ function ProjectsSection({
                             ) : (
                               <LogOut className="h-3.5 w-3.5" />
                             )}
-                            Odpojit se
+                            {t("button.leave")}
                           </Button>
                         </AlertDialogTrigger>
                         <AlertDialogContent>
                           <AlertDialogHeader>
                             <AlertDialogTitle>
-                              Odpojit se od projektu „{p.name}"?
+                              {t("leave.confirmTitle", { name: p.name })}
                             </AlertDialogTitle>
                             <AlertDialogDescription>
-                              Ztratíte přístup ke všem datům projektu.
-                              Tato akce je nevratná.
+                              {t("leave.confirmBody")}
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
-                            <AlertDialogCancel>Zrušit</AlertDialogCancel>
+                            <AlertDialogCancel>{t("leave.cancel")}</AlertDialogCancel>
                             <AlertDialogAction
                               onClick={() => handleLeaveProject(p)}
                               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                             >
                               <LogOut className="mr-1.5 h-3.5 w-3.5" />
-                              Odpojit se
+                              {t("button.leaveConfirm")}
                             </AlertDialogAction>
                           </AlertDialogFooter>
                         </AlertDialogContent>
@@ -838,7 +824,7 @@ function ProjectsSection({
                     )}
                     {p.role === "owner" && (
                       <Badge variant="outline" className="type-label-sm">
-                        Nelze opustit
+                        {t("badge.cannotLeave")}
                       </Badge>
                     )}
                   </li>
@@ -882,6 +868,7 @@ function UsersSection({
   currentUser: CurrentUser;
   qc: ReturnType<typeof useQueryClient>;
 }) {
+  const t = useTranslations("tabs.admin.users");
   const { data: users, isLoading } = useQuery<ManagedUser[]>({
     queryKey: ["users"],
     queryFn: async () => {
@@ -902,7 +889,7 @@ function UsersSection({
   ) => {
     // Defense-in-depth: never allow self-demotion from the UI.
     if (user.id === currentUser.id) {
-      toast.error("Nelze odebrat admin práva sám sobě");
+      toast.error(t("toasts.cannotDemoteSelf"));
       return;
     }
     setPendingIds((prev) => new Set(prev).add(user.id));
@@ -917,7 +904,7 @@ function UsersSection({
           error?: string;
         };
         throw new Error(
-          err.error ?? "Nepodařilo se změnit admin práva",
+          err.error ?? t("toasts.toggleError"),
         );
       }
       // Invalidate the users list so the Switch reflects the new state
@@ -926,12 +913,12 @@ function UsersSection({
       const displayName = user.name ?? user.email;
       toast.success(
         nextValue
-          ? `Uživatel ${displayName} je nyní administrátor`
-          : `Uživatel ${displayName} již není administrátor`,
+          ? t("toasts.promoted", { name: displayName })
+          : t("toasts.demoted", { name: displayName }),
       );
     } catch (e) {
       toast.error(
-        e instanceof Error ? e.message : "Nepodařilo se změnit admin práva",
+        e instanceof Error ? e.message : t("toasts.toggleError"),
       );
     } finally {
       setPendingIds((prev) => {
@@ -952,11 +939,10 @@ function UsersSection({
         <CardHeader className="pb-3">
           <CardTitle className="text-lg font-semibold flex items-center gap-2">
             <Users className="h-4 w-4 text-primary" />
-            Správa uživatelů
+            {t("title")}
           </CardTitle>
           <CardDescription>
-            Přehled všech uživatelů instance a jejich admin práv. Změny se
-            projeví okamžitě.
+            {t("description")}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -968,7 +954,7 @@ function UsersSection({
             </div>
           ) : !users || users.length === 0 ? (
             <p className="type-body py-6 text-center text-on-surface-variant">
-              Žádní další uživatelé k správě.
+              {t("empty")}
             </p>
           ) : (
             <ul className="space-y-2">
@@ -1004,7 +990,7 @@ function UsersSection({
                               className="type-label-sm bg-primary-container text-primary-container-foreground gap-1"
                             >
                               <ShieldCheck className="h-3 w-3" />
-                              Administrátor
+                              {t("badge.admin")}
                             </Badge>
                           ) : (
                             <Badge
@@ -1012,7 +998,7 @@ function UsersSection({
                               className="type-label-sm bg-muted text-muted-foreground gap-1"
                             >
                               <Shield className="h-3 w-3" />
-                              Uživatel
+                              {t("badge.user")}
                             </Badge>
                           )}
                         </div>
@@ -1036,12 +1022,12 @@ function UsersSection({
                                 <Switch
                                   checked={u.isAdmin}
                                   disabled
-                                  aria-label={`Admin práva uživatele ${u.name ?? u.email} (nelze změnit)`}
+                                  aria-label={t("aria.adminToggleSelf", { name: u.name ?? u.email })}
                                 />
                               </span>
                             </TooltipTrigger>
                             <TooltipContent side="left">
-                              Nelze odebrat admin práva sám sobě
+                              {t("tooltip.noSelfDemote")}
                             </TooltipContent>
                           </Tooltip>
                         ) : (
@@ -1049,7 +1035,7 @@ function UsersSection({
                             checked={u.isAdmin}
                             disabled={isPending}
                             onCheckedChange={(v) => handleToggleAdmin(u, v)}
-                            aria-label={`Přepnout admin práva uživatele ${u.name ?? u.email}`}
+                            aria-label={t("aria.adminToggleOther", { name: u.name ?? u.email })}
                           />
                         )}
                       </div>
@@ -1060,8 +1046,7 @@ function UsersSection({
             </ul>
           )}
           <p className="type-label-sm text-on-surface-variant mt-3">
-            Vlastní účet ({currentUser.email}) je ze seznamu vynechán —
-            vlastní admin práva nelze odebrat.
+            {t("hint.selfExcluded", { email: currentUser.email })}
           </p>
         </CardContent>
       </Card>
@@ -1074,6 +1059,10 @@ function UsersSection({
 // =====================================================================
 export function StatsSection({ currentUser }: { currentUser: CurrentUser }) {
   const [selectedProjectId, setSelectedProjectId] = useState<string>("all");
+  const t = useTranslations("tabs.admin.stats");
+  const tNav = useTranslations();
+  const tRel = useTranslations("relativeTime");
+  const tEventTypes = useTranslations("analytics.eventTypes");
 
   // Fetch projects for the dropdown
   const { data: projects } = useQuery({
@@ -1133,10 +1122,10 @@ export function StatsSection({ currentUser }: { currentUser: CurrentUser }) {
             <div>
               <CardTitle className="type-title-lg flex items-center gap-2">
                 <Activity className="h-4 w-4 text-primary" />
-                Statistiky mé aktivity
+                {t("title")}
               </CardTitle>
               <CardDescription>
-                Přehled vašich akcí v aplikaci za celé období.
+                {t("description")}
               </CardDescription>
             </div>
             {/* Project filter dropdown */}
@@ -1146,7 +1135,7 @@ export function StatsSection({ currentUser }: { currentUser: CurrentUser }) {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Všechny projekty</SelectItem>
+                  <SelectItem value="all">{t("filter.allProjects")}</SelectItem>
                   {projects.map((p) => (
                     <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
                   ))}
@@ -1165,7 +1154,7 @@ export function StatsSection({ currentUser }: { currentUser: CurrentUser }) {
               ) : (
                 <RefreshCw className="h-3.5 w-3.5" />
               )}
-              Obnovit
+              {t("button.refresh")}
             </Button>
           </div>
         </CardHeader>
@@ -1184,29 +1173,29 @@ export function StatsSection({ currentUser }: { currentUser: CurrentUser }) {
               {/* KPI cards */}
               <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
                 <StatsKpi
-                  label="Celkem akcí"
+                  label={t("kpi.totalActions")}
                   value={summary?.totalEvents ?? 0}
                   icon={<Activity className="h-4 w-4 text-primary" />}
                   iconBg="bg-primary-container"
                   accent="border-primary/30"
                 />
                 <StatsKpi
-                  label="Zobrazení stránek"
+                  label={t("kpi.pageViews")}
                   value={summary?.totalPageViews ?? 0}
                   icon={<Eye className="h-4 w-4 text-info" />}
                   iconBg="bg-info-soft"
                   accent="border-info/30"
                 />
                 <StatsKpi
-                  label="Celkem čas na stránkách"
+                  label={t("kpi.totalTime")}
                   value={formatTimeSpent(summary?.totalTimeSpent ?? 0)}
                   icon={<Timer className="h-4 w-4 text-warning" />}
                   iconBg="bg-warning-soft"
                   accent="border-warning/30"
                 />
                 <StatsKpi
-                  label="Poslední aktivita"
-                  value={formatRelativeTime(lastActiveIso)}
+                  label={t("kpi.lastActive")}
+                  value={formatRelativeTime(lastActiveIso, tRel)}
                   icon={<Clock className="h-4 w-4 text-success" />}
                   iconBg="bg-success-soft"
                   accent="border-success/30"
@@ -1216,18 +1205,26 @@ export function StatsSection({ currentUser }: { currentUser: CurrentUser }) {
               {/* Bar chart: events by type */}
               <div className="mt-6 space-y-2">
                 <h3 className="type-label text-on-surface-variant">
-                  Události podle typu
+                  {t("chart.byType.title")}
                 </h3>
                 {eventTypeRows.length === 0 ? (
                   <p className="type-body py-6 text-center text-on-surface-variant">
-                    Zatím nebyla zaznamenána žádná aktivita.
+                    {t("chart.byType.empty")}
                   </p>
                 ) : (
                   <div className="max-h-80 space-y-2 overflow-y-auto pr-1 scrollbar-thin">
                     {eventTypeRows.slice(0, 12).map(([type, count]) => {
                       const pct = (count / maxEventCount) * 100;
                       const colorClass = EVENT_TYPE_COLORS[type] ?? "bg-primary";
-                      const label = EVENT_TYPE_LABELS[type] ?? type;
+                      // Try to translate via the shared analytics.eventTypes.*
+                      // namespace; fall back to the raw type string when no
+                      // translation exists.
+                      let label: string;
+                      try {
+                        label = tEventTypes(type) ?? type;
+                      } catch {
+                        label = type;
+                      }
                       return (
                         <div key={type} className="space-y-1">
                           <div className="flex items-center justify-between gap-2">
@@ -1252,11 +1249,11 @@ export function StatsSection({ currentUser }: { currentUser: CurrentUser }) {
               {/* Top 5 pages by time spent */}
               <div className="mt-6 space-y-2">
                 <h3 className="type-label text-on-surface-variant">
-                  Moje nejaktivnější stránky
+                  {t("topPages.title")}
                 </h3>
                 {topPagesByTime.length === 0 ? (
                   <p className="type-body py-6 text-center text-on-surface-variant">
-                    Žádná data o čase na stránkách.
+                    {t("topPages.empty")}
                   </p>
                 ) : (
                   <div className="overflow-x-auto rounded-lg border border-outline-variant">
@@ -1264,13 +1261,13 @@ export function StatsSection({ currentUser }: { currentUser: CurrentUser }) {
                       <thead>
                         <tr className="border-b border-outline-variant bg-surface-container-high">
                           <th className="type-overline text-on-surface-variant px-3 py-2 text-left">
-                            Stránka
+                            {t("topPages.column.page")}
                           </th>
                           <th className="type-overline text-on-surface-variant px-3 py-2 text-right whitespace-nowrap">
-                            Zobrazení
+                            {t("topPages.column.views")}
                           </th>
                           <th className="type-overline text-on-surface-variant px-3 py-2 text-right whitespace-nowrap">
-                            Celkem čas
+                            {t("topPages.column.totalTime")}
                           </th>
                         </tr>
                       </thead>
@@ -1282,7 +1279,7 @@ export function StatsSection({ currentUser }: { currentUser: CurrentUser }) {
                           >
                             <td className="px-3 py-2">
                               <span className="type-body font-medium">
-                                {formatPageLabel(p.pageUrl)}
+                                {formatPageLabel(p.pageUrl, tNav)}
                               </span>
                               <span className="type-label text-on-surface-variant ml-2">
                                 {p.pageUrl}
@@ -1347,6 +1344,7 @@ function ExportSection() {
   const [exportingJson, setExportingJson] = useState(false);
   const [exportingCsv, setExportingCsv] = useState(false);
   const { data: projects } = useProjects();
+  const t = useTranslations("tabs.admin.export");
 
   const handleExportJson = async () => {
     setExportingJson(true);
@@ -1368,9 +1366,9 @@ function ExportSection() {
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
-      toast.success("Data exportována");
+      toast.success(t("toasts.jsonSuccess"));
     } catch {
-      toast.error("Export selhal");
+      toast.error(t("toasts.jsonError"));
     } finally {
       setExportingJson(false);
     }
@@ -1378,7 +1376,7 @@ function ExportSection() {
 
   const handleExportAllCsv = async () => {
     if (!projects || projects.length === 0) {
-      toast.info("Nejsou k dispozici žádné projekty pro export");
+      toast.info(t("toasts.csvNoProjects"));
       return;
     }
     setExportingCsv(true);
@@ -1432,11 +1430,11 @@ function ExportSection() {
         }
       }
       if (failCount === 0) {
-        toast.success(`Data exportována (${successCount} souborů)`);
+        toast.success(t("toasts.csvSuccess", { count: successCount }));
       } else if (successCount === 0) {
-        toast.error("CSV export selhal");
+        toast.error(t("toasts.csvAllFailed"));
       } else {
-        toast.warning(`Exportováno ${successCount} souborů, ${failCount} selhalo`);
+        toast.warning(t("toasts.csvPartialSuccess", { success: successCount, failed: failCount }));
       }
     } finally {
       setExportingCsv(false);
@@ -1453,10 +1451,10 @@ function ExportSection() {
         <CardHeader className="pb-3">
           <CardTitle className="type-title-lg flex items-center gap-2">
             <Download className="h-4 w-4 text-primary" />
-            Export mých dat
+            {t("title")}
           </CardTitle>
           <CardDescription>
-            Stáhněte si všechna data aplikace ve formátu JSON nebo CSV pro zálohování a analýzu.
+            {t("description")}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -1472,7 +1470,7 @@ function ExportSection() {
               ) : (
                 <FileJson className="h-3.5 w-3.5" />
               )}
-              Stáhnout všechna data (JSON)
+              {t("button.json")}
             </Button>
             <Button
               variant="outline"
@@ -1485,12 +1483,11 @@ function ExportSection() {
               ) : (
                 <FileSpreadsheet className="h-3.5 w-3.5" />
               )}
-              Stáhnout CSV všechny projekty
+              {t("button.csv")}
             </Button>
           </div>
           <p className="type-label-sm text-on-surface-variant mt-3">
-            JSON obsahuje kompletní stav všech projektů (rozpočet, platby, čas, kontakty).
-            CSV stáhne pro každý projekt 4 soubory (rozpočet, platby, čas, kontakty).
+            {t("hint")}
           </p>
         </CardContent>
       </Card>
@@ -1504,6 +1501,7 @@ function ExportSection() {
 function NotificationsSection() {
   const [prefs, setPrefs] = useState<NotificationPrefs>(DEFAULT_NOTIFICATION_PREFS);
   const [loaded, setLoaded] = useState(false);
+  const t = useTranslations("tabs.admin.notifications");
 
   // Load preferences from localStorage on mount
   useEffect(() => {
@@ -1530,32 +1528,19 @@ function NotificationsSection() {
     setPrefs(next);
     try {
       localStorage.setItem(NOTIFICATIONS_KEY, JSON.stringify(next));
-      toast.success("Preference uložena");
+      toast.success(t("toasts.saved"));
     } catch {
-      toast.error("Nepodařilo se uložit preferenci");
+      toast.error(t("toasts.saveError"));
     }
   };
 
-  const toggleRows: Array<{
-    key: keyof NotificationPrefs;
-    label: string;
-    description: string;
-  }> = [
-    {
-      key: "onMemberAssigned",
-      label: "E-mail při přiřazení člena",
-      description: "Upozornění, když vás někdo přidá jako člena projektu.",
-    },
-    {
-      key: "onItemDelayed",
-      label: "E-mail při zpoždění položky",
-      description: "Upozornění, když se položka rozpočtu dostane za plánovaný termín.",
-    },
-    {
-      key: "onOwnerChanged",
-      label: "E-mail při změně vlastníka",
-      description: "Upozornění, když někdo změní správce projektu, jehož jste členem.",
-    },
+  // Static array of toggle rows — labels and descriptions are resolved
+  // via the `tabs.admin.notifications.toggle.<key>` namespace at render
+  // time so they translate when the user switches locale.
+  const toggleRows: Array<{ key: keyof NotificationPrefs }> = [
+    { key: "onMemberAssigned" },
+    { key: "onItemDelayed" },
+    { key: "onOwnerChanged" },
   ];
 
   return (
@@ -1568,32 +1553,36 @@ function NotificationsSection() {
         <CardHeader className="pb-3">
           <CardTitle className="type-title-lg flex items-center gap-2">
             <Bell className="h-4 w-4 text-primary" />
-            Notifikační preference
+            {t("title")}
           </CardTitle>
           <CardDescription>
-            Dokud není aktivní Google Auth, ukládáme preference lokálně ve vašem prohlížeči.
+            {t("description")}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <ul className="space-y-1">
-            {toggleRows.map((row) => (
-              <li
-                key={row.key}
-                className="flex items-start justify-between gap-4 rounded-lg border border-outline-variant bg-surface-container-low p-3"
-              >
-                <div className="min-w-0 flex-1">
-                  <div className="type-body font-medium">{row.label}</div>
-                  <div className="type-label text-on-surface-variant mt-0.5">
-                    {row.description}
+            {toggleRows.map((row) => {
+              const label = t(`toggle.${row.key}.label`);
+              const description = t(`toggle.${row.key}.description`);
+              return (
+                <li
+                  key={row.key}
+                  className="flex items-start justify-between gap-4 rounded-lg border border-outline-variant bg-surface-container-low p-3"
+                >
+                  <div className="min-w-0 flex-1">
+                    <div className="type-body font-medium">{label}</div>
+                    <div className="type-label text-on-surface-variant mt-0.5">
+                      {description}
+                    </div>
                   </div>
-                </div>
-                <Switch
-                  checked={loaded ? prefs[row.key] : false}
-                  onCheckedChange={(v) => updatePref(row.key, v)}
-                  aria-label={row.label}
-                />
-              </li>
-            ))}
+                  <Switch
+                    checked={loaded ? prefs[row.key] : false}
+                    onCheckedChange={(v) => updatePref(row.key, v)}
+                    aria-label={label}
+                  />
+                </li>
+              );
+            })}
           </ul>
         </CardContent>
       </Card>
@@ -1614,6 +1603,8 @@ function DangerSection({
   const { data: projects } = useProjects();
   const [deletingNotes, setDeletingNotes] = useState(false);
   const [leavingAll, setLeavingAll] = useState(false);
+  const t = useTranslations("tabs.admin.danger");
+  const tCommon = useTranslations("common");
 
   // "Smazat všechny mé poznámky" — loops through projects, fetches notes,
   // filters to those authored by the current user, and deletes each via
@@ -1654,14 +1645,14 @@ function DangerSection({
       }
       await qc.invalidateQueries({ queryKey: ["notes"] });
       if (deleted === 0 && failed === 0) {
-        toast.info("Žádné poznámky ke smazání");
+        toast.info(t("deleteNotes.toasts.none"));
       } else if (failed === 0) {
-        toast.success(`Smazáno ${deleted} poznámek`);
+        toast.success(t("deleteNotes.toasts.success", { count: deleted }));
       } else {
-        toast.warning(`Smazáno ${deleted}, ${failed} selhalo`);
+        toast.warning(t("deleteNotes.toasts.partial", { deleted, failed }));
       }
     } catch {
-      toast.error("Nepodařilo se smazat poznámky");
+      toast.error(t("deleteNotes.toasts.error"));
     } finally {
       setDeletingNotes(false);
     }
@@ -1698,14 +1689,14 @@ function DangerSection({
       }
       await qc.invalidateQueries({ queryKey: ["projects"] });
       if (left === 0 && failed === 0) {
-        toast.info("Nejste členem žádného projektu (kde můžete odejít)");
+        toast.info(t("leaveAll.toasts.none"));
       } else if (failed === 0) {
-        toast.success(`Odpojeno od ${left} projektů`);
+        toast.success(t("leaveAll.toasts.success", { count: left }));
       } else {
-        toast.warning(`Odpojeno ${left}, ${failed} selhalo`);
+        toast.warning(t("leaveAll.toasts.partial", { left, failed }));
       }
     } catch {
-      toast.error("Nepodařilo se odpojit od projektů");
+      toast.error(t("leaveAll.toasts.error"));
     } finally {
       setLeavingAll(false);
     }
@@ -1721,10 +1712,10 @@ function DangerSection({
         <CardHeader className="pb-3">
           <CardTitle className="type-title-lg flex items-center gap-2 text-danger">
             <AlertTriangle className="h-4 w-4" />
-            Nebezpečná zóna
+            {t("title")}
           </CardTitle>
           <CardDescription>
-            Akce v této sekci jsou nevratné. Vyžadují explicitní potvrzení v dialogu.
+            {t("description")}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
@@ -1733,9 +1724,9 @@ function DangerSection({
             <div className="flex items-start gap-2">
               <Trash2 className="mt-0.5 h-4 w-4 shrink-0 text-danger" />
               <div className="min-w-0">
-                <div className="type-body font-medium">Smazat všechny mé poznámky</div>
+                <div className="type-body font-medium">{t("deleteNotes.title")}</div>
                 <div className="type-label text-on-surface-variant">
-                  Trvale smaže všechny poznámky, které jste vytvořili napříč všemi projekty.
+                  {t("deleteNotes.description")}
                 </div>
               </div>
             </div>
@@ -1747,19 +1738,18 @@ function DangerSection({
                   className="rounded-full gap-1.5 text-danger border-danger/30 hover:bg-danger-soft"
                   disabled={deletingNotes}
                 >
-                  <Trash2 className="h-3.5 w-3.5" /> Smazat
+                  <Trash2 className="h-3.5 w-3.5" /> {tCommon("delete")}
                 </Button>
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
-                  <AlertDialogTitle>Smazat všechny mé poznámky?</AlertDialogTitle>
+                  <AlertDialogTitle>{t("deleteNotes.confirmTitle")}</AlertDialogTitle>
                   <AlertDialogDescription>
-                    Tato akce je nevratná. Všechny poznámky, které jste vytvořili,
-                    budou trvale smazány ze všech projektů.
+                    {t("deleteNotes.confirmBody")}
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                  <AlertDialogCancel>Zrušit</AlertDialogCancel>
+                  <AlertDialogCancel>{tCommon("cancel")}</AlertDialogCancel>
                   <AlertDialogAction
                     onClick={handleDeleteAllNotes}
                     className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
@@ -1769,7 +1759,7 @@ function DangerSection({
                     ) : (
                       <Trash2 className="mr-1.5 h-3.5 w-3.5" />
                     )}
-                    Smazat všechny poznámky
+                    {t("deleteNotes.confirmButton")}
                   </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
@@ -1781,10 +1771,9 @@ function DangerSection({
             <div className="flex items-start gap-2">
               <LogOut className="mt-0.5 h-4 w-4 shrink-0 text-danger" />
               <div className="min-w-0">
-                <div className="type-body font-medium">Odpojit se od všech projektů</div>
+                <div className="type-body font-medium">{t("leaveAll.title")}</div>
                 <div className="type-label text-on-surface-variant">
-                  Odpojí vás ze všech projektů, kde jste členem (ne vlastníkem).
-                  Ztratíte přístup ke všem datům těchto projektů.
+                  {t("leaveAll.description")}
                 </div>
               </div>
             </div>
@@ -1796,22 +1785,20 @@ function DangerSection({
                   className="rounded-full gap-1.5"
                   disabled={leavingAll}
                 >
-                  <LogOut className="h-3.5 w-3.5" /> Odpojit se od všech
+                  <LogOut className="h-3.5 w-3.5" /> {t("leaveAll.button")}
                 </Button>
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
                   <AlertDialogTitle>
-                    Odpojit se od všech projektů?
+                    {t("leaveAll.confirmTitle")}
                   </AlertDialogTitle>
                   <AlertDialogDescription>
-                    Ztratíte přístup ke všem datům projektů, kde jste členem.
-                    Projekty, které spravujete, zůstanou nedotčeny.
-                    Tato akce je nevratná.
+                    {t("leaveAll.confirmBody")}
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                  <AlertDialogCancel>Zrušit</AlertDialogCancel>
+                  <AlertDialogCancel>{tCommon("cancel")}</AlertDialogCancel>
                   <AlertDialogAction
                     onClick={handleLeaveAllProjects}
                     className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
@@ -1821,7 +1808,7 @@ function DangerSection({
                     ) : (
                       <LogOut className="mr-1.5 h-3.5 w-3.5" />
                     )}
-                    Odpojit se od všech
+                    {t("leaveAll.confirmButton")}
                   </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>

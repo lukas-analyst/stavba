@@ -23,12 +23,13 @@ export type TemplateItem = {
   planDays?: number;
 };
 
-// Common phases
-const PRIPRAVA = "Příprava";
-const DEMOLICE = "Demolice";
-const HRUBA_STAVBA = "Hrubá stavba";
-const ZABYDLOVANI = "Zabydlování";
-const DO_BUDOUCNA = "Do budoucna";
+// Common phases — use stable English IDs (Phase B migration).
+// These map to PHASE_LEGACY_TO_ID / PHASE_ID_TO_LEGACY in format.ts.
+const PRIPRAVA = "preparation";
+const DEMOLICE = "demolition";
+const HRUBA_STAVBA = "shell";
+const ZABYDLOVANI = "finishing";
+const DO_BUDOUCNA = "future";
 
 export const PROJECT_TEMPLATES: ProjectTemplate[] = [
   {

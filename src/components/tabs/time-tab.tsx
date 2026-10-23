@@ -58,7 +58,7 @@ import {
   Clock,
   ArrowUpDown,
 } from "lucide-react";
-import { formatNumber, formatDate, WORKER_TYPES, workerTypeLabel } from "@/lib/format";
+import { formatNumber, formatDate, WORKER_TYPES, workerTypeLabel, toBcp47 } from "@/lib/format";
 import { toast } from "sonner";
 import { EmptyStateBox } from "@/components/empty-state-box";
 import { InlineDate, InlineNumber } from "@/components/ui/inline-editors";
@@ -67,14 +67,17 @@ import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { useLastValue } from "@/hooks/use-last-value";
 import { useAnalytics } from "@/hooks/use-analytics";
 import { cn } from "@/lib/utils";
+import { useLocale, useTranslations } from "next-intl";
+import type { Locale } from "@/i18n/config";
 
 type SortKey = "date" | "worker" | "hours" | "workerType";
 
-const SORT_OPTIONS: { value: SortKey; label: string }[] = [
-  { value: "date", label: "Datum (nejnovější)" },
-  { value: "worker", label: "Pracovník (A→Z)" },
-  { value: "hours", label: "Hodiny (sestupně)" },
-  { value: "workerType", label: "Typ pracovníka" },
+// Sort options — labels are localized at render time via `t("sort." + value)`.
+const SORT_OPTIONS: { value: SortKey }[] = [
+  { value: "date" },
+  { value: "worker" },
+  { value: "hours" },
+  { value: "workerType" },
 ];
 
 export function TimeTab({ projectId }: { projectId: string }) {
@@ -86,6 +89,12 @@ export function TimeTab({ projectId }: { projectId: string }) {
   const deleteTimeEntry = useDeleteTimeEntry(projectId);
   const updateBudgetItem = useUpdateBudgetItem(projectId);
   const { trackEvent } = useAnalytics(projectId);
+  const t = useTranslations("tabs.time");
+  const tc = useTranslations("common");
+  const tWorkerTypes = useTranslations("workerTypes");
+  const tAll = useTranslations();
+  const activeLocale = useLocale() as Locale;
+  const bcp47 = toBcp47(activeLocale);
   const [addOpen, setAddOpen] = useState(false);
   const [editEntry, setEditEntry] = useState<TimeEntry | null>(null);
   const [search, setSearch] = useState("");
@@ -113,16 +122,16 @@ export function TimeTab({ projectId }: { projectId: string }) {
     for (const b of budgetItems ?? []) {
       if (b.category) set.add(b.category);
     }
-    return Array.from(set.values()).sort((a, b) => a.localeCompare(b, "cs-CZ"));
-  }, [budgetItems]);
+    return Array.from(set.values()).sort((a, b) => a.localeCompare(b, bcp47));
+  }, [budgetItems, bcp47]);
 
   const filtered = useMemo(() => {
-    const arr = (entries ?? []).filter((t) => {
-      if (typeFilter !== "all" && t.workerType !== typeFilter) return false;
-      if (categoryFilter !== "all" && (t.budgetItem?.category ?? "") !== categoryFilter) return false;
+    const arr = (entries ?? []).filter((entry) => {
+      if (typeFilter !== "all" && entry.workerType !== typeFilter) return false;
+      if (categoryFilter !== "all" && (entry.budgetItem?.category ?? "") !== categoryFilter) return false;
       if (debouncedSearch.trim()) {
         const q = debouncedSearch.toLowerCase();
-        const text = `${t.workerName} ${t.description ?? ""} ${t.budgetItem?.category ?? ""} ${t.budgetItem?.subcategory ?? ""}`.toLowerCase();
+        const text = `${entry.workerName} ${entry.description ?? ""} ${entry.budgetItem?.category ?? ""} ${entry.budgetItem?.subcategory ?? ""}`.toLowerCase();
         if (!text.includes(q)) return false;
       }
       return true;
@@ -131,14 +140,14 @@ export function TimeTab({ projectId }: { projectId: string }) {
     arr.sort((a, b) => {
       switch (sortBy) {
         case "worker":
-          return a.workerName.localeCompare(b.workerName, "cs-CZ");
+          return a.workerName.localeCompare(b.workerName, bcp47);
         case "hours":
           return b.hours - a.hours;
         case "workerType":
           if (a.workerType === b.workerType) {
             return b.date.localeCompare(a.date);
           }
-          return a.workerType.localeCompare(b.workerType, "cs-CZ");
+          return a.workerType.localeCompare(b.workerType, bcp47);
         case "date":
         default: {
           // Newest first; tiebreak by id
@@ -148,17 +157,17 @@ export function TimeTab({ projectId }: { projectId: string }) {
       }
     });
     return arr;
-  }, [entries, debouncedSearch, typeFilter, categoryFilter, sortBy]);
+  }, [entries, debouncedSearch, typeFilter, categoryFilter, sortBy, bcp47]);
 
-  const totalHours = filtered.reduce((s, t) => s + t.hours, 0);
+  const totalHours = filtered.reduce((s, e) => s + e.hours, 0);
 
   // Group by worker (top stats) - based on all entries (not filtered)
   const byWorker = useMemo(() => {
     const map = new Map<string, { hours: number; entries: number; type: string }>();
-    for (const t of entries ?? []) {
-      const key = t.workerName;
-      const cur = map.get(key) ?? { hours: 0, entries: 0, type: t.workerType };
-      cur.hours += t.hours;
+    for (const e of entries ?? []) {
+      const key = e.workerName;
+      const cur = map.get(key) ?? { hours: 0, entries: 0, type: e.workerType };
+      cur.hours += e.hours;
       cur.entries += 1;
       map.set(key, cur);
     }
@@ -170,7 +179,7 @@ export function TimeTab({ projectId }: { projectId: string }) {
       {/* Top stats: hours by worker */}
       <div id="time-worker-stats" className="grid grid-cols-2 gap-3 md:grid-cols-4 lg:grid-cols-6">
         {byWorker.slice(0, 6).map(([name, info]) => {
-          const w = workerTypeLabel(info.type);
+          const w = workerTypeLabel(info.type, tAll);
           return (
             <Card key={name} className="p-3">
               <div className="flex items-center gap-1 text-xs text-muted-foreground">
@@ -180,17 +189,17 @@ export function TimeTab({ projectId }: { projectId: string }) {
                 {name}
               </div>
               <div className="mt-1 text-lg font-bold text-time">
-                {formatNumber(info.hours, " h")}
+                {formatNumber(info.hours, " h", activeLocale)}
               </div>
               <div className="text-xs text-muted-foreground">
-                {info.entries} záznamů
+                {t("stats.entries", { count: info.entries })}
               </div>
             </Card>
           );
         })}
         {byWorker.length === 0 && (
           <Card className="col-span-full p-4 text-center text-sm text-muted-foreground">
-            Zatím žádné časové záznamy
+            {t("stats.empty")}
           </Card>
         )}
       </div>
@@ -201,10 +210,10 @@ export function TimeTab({ projectId }: { projectId: string }) {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Všechny typy</SelectItem>
-            {WORKER_TYPES.map((t) => (
-              <SelectItem key={t.value} value={t.value}>
-                {t.emoji} {t.label}
+            <SelectItem value="all">{t("filter.allTypes")}</SelectItem>
+            {WORKER_TYPES.map((wt) => (
+              <SelectItem key={wt.value} value={wt.value}>
+                {wt.emoji} {tWorkerTypes(wt.value)}
               </SelectItem>
             ))}
           </SelectContent>
@@ -214,7 +223,7 @@ export function TimeTab({ projectId }: { projectId: string }) {
             <SelectValue />
           </SelectTrigger>
           <SelectContent className="max-h-72">
-            <SelectItem value="all">Všechny kategorie</SelectItem>
+            <SelectItem value="all">{t("filter.allCategories")}</SelectItem>
             {categories.map((c) => (
               <SelectItem key={c} value={c}>
                 {c}
@@ -230,16 +239,16 @@ export function TimeTab({ projectId }: { projectId: string }) {
           <SelectContent>
             {SORT_OPTIONS.map((o) => (
               <SelectItem key={o.value} value={o.value}>
-                {o.label}
+                {t(`sort.${o.value}`)}
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
         <div className="ml-auto flex items-center gap-3 text-sm">
           <div className="text-right">
-            <div className="text-xs text-muted-foreground">Celkem ({filtered.length})</div>
+            <div className="text-xs text-muted-foreground">{t("total.label", { count: filtered.length })}</div>
             <div className="text-lg font-bold text-time">
-              {formatNumber(totalHours, " h")}
+              {formatNumber(totalHours, " h", activeLocale)}
             </div>
           </div>
         </div>
@@ -278,16 +287,16 @@ export function TimeTab({ projectId }: { projectId: string }) {
       ) : filtered.length === 0 ? (
         <EmptyStateBox
           icon={Clock}
-          title={entries?.length === 0 ? "Zatím žádné časové záznamy" : "Žádné záznamy neodpovídají filtru"}
+          title={entries?.length === 0 ? t("empty.title.noRecords") : t("empty.title.noMatch")}
           description={
             entries?.length === 0
-              ? "Zaznamenávejte čas strávený prací - firma, řemeslník i svépomoc. Podporuje i vícedenní záznamy."
-              : "Zkuste změnit filtr nebo vyhledávání."
+              ? t("empty.description.noRecords")
+              : t("empty.description.noMatch")
           }
           action={
             entries?.length === 0 ? (
               <Button size="sm" onClick={() => setAddOpen(true)}>
-                <Plus className="mr-1 h-4 w-4" /> Zaznamenat první čas
+                <Plus className="mr-1 h-4 w-4" /> {t("empty.button.firstRecord")}
               </Button>
             ) : undefined
           }
@@ -298,29 +307,29 @@ export function TimeTab({ projectId }: { projectId: string }) {
             <TableHeader>
               <TableRow className="sticky top-0 z-30 bg-surface-container-high">
                 <TableHead className="w-16"></TableHead>
-                <TableHead className="w-28">Datum</TableHead>
-                <TableHead className="min-w-[200px]">Položka rozpočtu</TableHead>
-                <TableHead className="min-w-[180px]">Popis</TableHead>
-                <TableHead className="w-32">Typ</TableHead>
-                <TableHead className="min-w-[160px]">Kontakt</TableHead>
-                <TableHead className="text-right">Hodiny</TableHead>
+                <TableHead className="w-28">{t("column.date")}</TableHead>
+                <TableHead className="min-w-[200px]">{t("column.budgetItem")}</TableHead>
+                <TableHead className="min-w-[180px]">{t("column.description")}</TableHead>
+                <TableHead className="w-32">{t("column.type")}</TableHead>
+                <TableHead className="min-w-[160px]">{t("column.contact")}</TableHead>
+                <TableHead className="text-right">{t("column.hours")}</TableHead>
                 <TableHead className="w-8"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filtered.map((t) => (
+              {filtered.map((entry) => (
                 <TimeRow
-                  key={t.id}
-                  entry={t}
+                  key={entry.id}
+                  entry={entry}
                   projectId={projectId}
-                  onEdit={() => setEditEntry(t)}
+                  onEdit={() => setEditEntry(entry)}
                   updateTimeEntry={updateTimeEntry}
                   onDelete={async () => {
                     try {
-                      await deleteTimeEntry.mutateAsync(t.id);
-                      toast.success("Záznam smazán");
+                      await deleteTimeEntry.mutateAsync(entry.id);
+                      toast.success(t("toasts.deleteSuccess"));
                     } catch (err) {
-                      toast.error(err instanceof Error ? err.message : "Nepodařilo se smazat");
+                      toast.error(err instanceof Error ? err.message : t("toasts.deleteError"));
                     }
                   }}
                 />
@@ -371,9 +380,14 @@ function TimeRow({
   onDelete: () => void;
   updateTimeEntry?: ReturnType<typeof useUpdateTimeEntry>;
 }) {
+  const t = useTranslations("tabs.time");
+  const tc = useTranslations("common");
+  const tWorkerTypes = useTranslations("workerTypes");
+  const tAll = useTranslations();
+  const activeLocale = useLocale() as Locale;
   const [confirm, setConfirm] = useState(false);
   const { trackEvent } = useAnalytics(projectId);
-  const w = workerTypeLabel(entry.workerType);
+  const w = workerTypeLabel(entry.workerType, tAll);
 
   // Inline update helper — patches a single field without opening the edit dialog.
   const update = (field: keyof TimeEntry, value: unknown) => {
@@ -385,13 +399,13 @@ function TimeRow({
     <TableRow
       className="group cursor-pointer hover:bg-muted/30 cv-row"
       onClick={() => onEdit()}
-      title="Klikněte pro úpravu záznamu"
+      title={t("aria.rowClick")}
     >
       <TableCell className="w-16">
         <Badge
           variant="outline"
           className="type-label-sm text-time"
-          title={`${entry.workerCount} ${entry.workerCount === 1 ? "pracovník" : entry.workerCount < 5 ? "pracovníci" : "pracovníků"}`}
+          title={t("aria.workersCount", { count: entry.workerCount })}
         >
           × {entry.workerCount}
         </Badge>
@@ -404,7 +418,7 @@ function TimeRow({
           />
           {entry.dateTo && (
             <span className="type-label text-time">
-              → {formatDate(entry.dateTo)}
+              → {formatDate(entry.dateTo, undefined, activeLocale)}
             </span>
           )}
         </div>
@@ -436,7 +450,7 @@ function TimeRow({
           <SelectContent>
             {WORKER_TYPES.map((wt) => (
               <SelectItem key={wt.value} value={wt.value}>
-                {wt.emoji} {wt.label}
+                {wt.emoji} {tWorkerTypes(wt.value)}
               </SelectItem>
             ))}
           </SelectContent>
@@ -474,32 +488,34 @@ function TimeRow({
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem onClick={onEdit}>
-              <Pencil className="mr-2 h-3.5 w-3.5" /> Upravit
+              <Pencil className="mr-2 h-3.5 w-3.5" /> {tc("edit")}
             </DropdownMenuItem>
             <DropdownMenuItem
               className="text-destructive focus:text-destructive"
               onClick={() => setConfirm(true)}
             >
-              <Trash2 className="mr-2 h-3.5 w-3.5" /> Smazat
+              <Trash2 className="mr-2 h-3.5 w-3.5" /> {tc("delete")}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
         <Dialog open={confirm} onOpenChange={setConfirm}>
           <DialogContent className="max-w-sm">
             <DialogHeader>
-              <DialogTitle>Smazat časový záznam?</DialogTitle>
+              <DialogTitle>{t("dialog.delete.title")}</DialogTitle>
               <DialogDescription>
-                Opravdu chcete smazat záznam{" "}
-                <strong>{entry.workerName}</strong> ·{" "}
-                {formatNumber(entry.hours, " h")}?
+                {t.rich("dialog.delete.body", {
+                  workerName: entry.workerName,
+                  hours: formatNumber(entry.hours, " h", activeLocale),
+                  strong: (chunks) => <strong>{chunks}</strong>,
+                })}
               </DialogDescription>
             </DialogHeader>
             <DialogFooter>
               <Button variant="outline" onClick={() => setConfirm(false)}>
-                Zrušit
+                {tc("cancel")}
               </Button>
               <Button variant="destructive" onClick={() => { setConfirm(false); onDelete(); }}>
-                Smazat
+                {tc("delete")}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -561,6 +577,9 @@ function TimeDialogInner({
   const isEdit = !!editEntry;
   const today = new Date().toISOString().substring(0, 10);
   const { trackEvent } = useAnalytics(projectId);
+  const t = useTranslations("tabs.time");
+  const tWorkerTypes = useTranslations("workerTypes");
+  const activeLocale = useLocale() as Locale;
   // Smart defaults: remember last used value per project (only persisted on
   // create — edit mode seeds from editEntry and skips localStorage writes).
   const [lastWorkerName, setLastWorkerName] = useLastValue<string>(
@@ -609,10 +628,10 @@ function TimeDialogInner({
 
   const handleSubmit = async () => {
     const newErrors: Record<string, string> = {};
-    if (!budgetItemId) newErrors.budgetItemId = "Vyberte položku rozpočtu";
-    if (!workerName.trim()) newErrors.workerName = "Zadejte jméno pracovníka";
+    if (!budgetItemId) newErrors.budgetItemId = t("form.error.budgetItem");
+    if (!workerName.trim()) newErrors.workerName = t("form.error.workerName");
     const h = Number(hours.replace(",", "."));
-    if (!hours || isNaN(h) || h <= 0) newErrors.hours = "Zadejte platný počet hodin";
+    if (!hours || isNaN(h) || h <= 0) newErrors.hours = t("form.error.hours");
     setErrors(newErrors);
     if (Object.keys(newErrors).length > 0) return;
 
@@ -635,12 +654,12 @@ function TimeDialogInner({
         if (markCompleted) {
           try {
             await updateBudgetItem.mutateAsync({ id: budgetItemId, data: { completed: true } });
-            toast.success("Záznam upraven, položka označena jako hotová");
+            toast.success(t("toasts.updateSuccessWithItem"));
           } catch {
-            toast.success("Záznam upraven (nepodařilo se označit položku jako hotovou)");
+            toast.success(t("toasts.updateSuccessItemFail"));
           }
         } else {
-          toast.success("Záznam upraven");
+          toast.success(t("toasts.updateSuccess"));
         }
       } else {
         await createTimeEntry.mutateAsync(payload);
@@ -652,18 +671,18 @@ function TimeDialogInner({
         if (markCompleted) {
           try {
             await updateBudgetItem.mutateAsync({ id: budgetItemId, data: { completed: true } });
-            toast.success("Čas zaznamenán, položka označena jako hotová");
+            toast.success(t("toasts.createSuccessWithItem"));
           } catch {
-            toast.success("Čas zaznamenán (nepodařilo se označit položku jako hotovou)");
+            toast.success(t("toasts.createSuccessItemFail"));
           }
         } else {
-          toast.success("Čas zaznamenán");
+          toast.success(t("toasts.createSuccess"));
         }
       }
       onOpenChange(false);
       onClose?.();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : (isEdit ? "Nepodařilo se upravit záznam" : "Nepodařilo se zaznamenat čas"));
+      toast.error(err instanceof Error ? err.message : (isEdit ? t("toasts.updateError") : t("toasts.createError")));
     }
   };
 
@@ -671,7 +690,7 @@ function TimeDialogInner({
   const selectedBudgetItem = budgetItems.find((b) => b.id === budgetItemId);
   const alreadyCompleted = selectedBudgetItem?.completed === true;
 
-  const submitLabel = isEdit ? "Upravit záznam" : "Zaznamenat čas";
+  const submitLabel = isEdit ? t("form.submitLabel.edit") : t("form.submitLabel.create");
 
   return (
     <AddDialogShell
@@ -679,10 +698,10 @@ function TimeDialogInner({
       onOpenChange={onOpenChange}
       titleValue={workerName}
       onTitleChange={setWorkerName}
-      titlePlaceholder="Pracovník…"
+      titlePlaceholder={t("form.titlePlaceholder")}
       descriptionValue={description}
       onDescriptionChange={setDescription}
-      descriptionPlaceholder="Popis práce…"
+      descriptionPlaceholder={t("form.descriptionPlaceholder")}
       submitLabel={submitLabel}
       onSubmit={handleSubmit}
       isSubmitting={isPending}
@@ -694,7 +713,7 @@ function TimeDialogInner({
 
       {/* ===== ZÁKLAD ===== */}
       <div className="space-y-2">
-        <Label htmlFor="budgetItem">Položka rozpočtu *</Label>
+        <Label htmlFor="budgetItem">{t("form.label.budgetItem")}</Label>
         <SearchableSelect
           id="budgetItem"
           options={budgetItems.map((b) => ({
@@ -712,9 +731,9 @@ function TimeDialogInner({
                 return n;
               });
           }}
-          placeholder="Vyberte položku…"
-          searchPlaceholder="Hledat položku…"
-          emptyText="Žádné položky nenalezeny"
+          placeholder={t("form.placeholder.budgetItem")}
+          searchPlaceholder={t("form.search.budgetItem")}
+          emptyText={t("form.empty.budgetItem")}
           className={cn(errors.budgetItemId && "border-destructive ring-destructive")}
         />
         {errors.budgetItemId && (
@@ -725,7 +744,7 @@ function TimeDialogInner({
       {/* Hodiny + Počet lidí + Datum od */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <div className="space-y-2">
-          <Label htmlFor="hours">Hodiny *</Label>
+          <Label htmlFor="hours">{t("form.label.hours")}</Label>
           <Input
             id="hours"
             value={hours}
@@ -738,7 +757,7 @@ function TimeDialogInner({
                   return n;
                 });
             }}
-            placeholder="8"
+            placeholder={t("form.placeholder.hours")}
             inputMode="decimal"
             aria-invalid={!!errors.hours}
             className={cn(errors.hours && "border-destructive ring-destructive")}
@@ -749,12 +768,12 @@ function TimeDialogInner({
           )}
           {daySpan > 1 && hoursPerDay && (
             <p className="text-[11px] text-muted-foreground">
-              ≈ {hoursPerDay} h/den × {daySpan} dní
+              {t("form.hint.hoursPerDay", { hours: hoursPerDay, days: daySpan })}
             </p>
           )}
         </div>
         <div className="space-y-2">
-          <Label htmlFor="workerCount">Počet lidí</Label>
+          <Label htmlFor="workerCount">{t("form.label.workerCount")}</Label>
           <Input
             id="workerCount"
             type="number"
@@ -762,16 +781,18 @@ function TimeDialogInner({
             min="1"
             value={workerCount}
             onChange={(e) => setWorkerCount(e.target.value)}
-            placeholder="1"
+            placeholder={t("form.placeholder.workerCount")}
           />
           {workerCount && Number(workerCount) > 1 && (
             <p className="text-[11px] text-muted-foreground">
-              Celkem {formatNumber(Number(hours || 0) * Number(workerCount), " h")} osobohodin
+              {t("form.hint.personHours", {
+                total: formatNumber(Number(hours || 0) * Number(workerCount), " h", activeLocale),
+              })}
             </p>
           )}
         </div>
         <div className="space-y-2">
-          <Label htmlFor="date">Datum od *</Label>
+          <Label htmlFor="date">{t("form.label.dateFrom")}</Label>
           <Input
             id="date"
             type="date"
@@ -783,18 +804,18 @@ function TimeDialogInner({
       </div>
 
       {/* ===== DETAILY (volitelné) ===== */}
-      <CollapsibleSection title="Detaily (volitelné)">
+      <CollapsibleSection title={t("form.section.details")}>
         {/* Typ pracovníka */}
         <div className="space-y-2">
-          <Label htmlFor="workerType">Typ pracovníka</Label>
+          <Label htmlFor="workerType">{t("form.label.workerType")}</Label>
           <Select value={workerType} onValueChange={setWorkerType}>
             <SelectTrigger id="workerType">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {WORKER_TYPES.map((t) => (
-                <SelectItem key={t.value} value={t.value}>
-                  {t.emoji} {t.label}
+              {WORKER_TYPES.map((wt) => (
+                <SelectItem key={wt.value} value={wt.value}>
+                  {wt.emoji} {tWorkerTypes(wt.value)}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -803,25 +824,25 @@ function TimeDialogInner({
 
         {/* Datum do (vícedenní) */}
         <div className="space-y-2">
-          <Label htmlFor="dateTo">Datum do (vícedenní)</Label>
+          <Label htmlFor="dateTo">{t("form.label.dateTo")}</Label>
           <Input
             id="dateTo"
             type="date"
             value={dateTo}
             min={date}
             onChange={(e) => setDateTo(e.target.value)}
-            placeholder="(volitelné)"
+            placeholder={t("form.placeholder.dateTo")}
           />
           {dateTo && (
             <p className="text-[11px] text-muted-foreground">
-              Práce trvá {daySpan} {daySpan === 1 ? "den" : daySpan < 5 ? "dny" : "dní"}
+              {t("form.hint.daySpan", { days: daySpan })}
             </p>
           )}
         </div>
 
         {/* Kontakt (volitelné) */}
         <div className="space-y-2">
-          <Label htmlFor="contact">Kontakt (volitelné)</Label>
+          <Label htmlFor="contact">{t("form.label.contact")}</Label>
           <SearchableSelect
             id="contact"
             options={contacts.map((c) => ({
@@ -848,9 +869,9 @@ function TimeDialogInner({
                 setWorkerName(selected.name);
               }
             }}
-            placeholder="Bez kontaktu"
-            searchPlaceholder="Hledat kontakt…"
-            emptyText="Žádné kontakty nenalezeny"
+            placeholder={t("form.placeholder.contact")}
+            searchPlaceholder={t("form.search.contact")}
+            emptyText={t("form.empty.contact")}
           />
         </div>
 
@@ -864,13 +885,13 @@ function TimeDialogInner({
               className="mt-0.5"
             />
             <Label htmlFor="markCompleted" className="cursor-pointer text-sm font-medium leading-tight">
-              Označit položku rozpočtu jako hotovou
+              {t("form.markCompleted.label")}
             </Label>
           </div>
           <p className="ml-6 text-[11px] text-muted-foreground">
             {alreadyCompleted
-              ? "Položka je již označena jako hotová."
-              : "Po uložení záznamu se zavolá PATCH na budget item s completed: true. Propojí časový záznam s dokončením položky."}
+              ? t("form.markCompleted.alreadyCompleted")
+              : t("form.markCompleted.hint")}
           </p>
         </div>
       </CollapsibleSection>
