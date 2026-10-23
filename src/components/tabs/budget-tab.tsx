@@ -584,6 +584,38 @@ function BudgetTab({ projectId, dragEndHandlerRef }: { projectId: string; dragEn
           }
         }
       }
+
+      // Task drag: "task:XXX" IDs — reorder children within the SAME parent.
+      // We find the parent that owns both the active and over task, then
+      // swap their sortOrder values and persist the full new ordering.
+      if (activeId.startsWith("task:") && overId.startsWith("task:")) {
+        const activeTaskId = activeId.slice(5);
+        const overTaskId = overId.slice(5);
+        if (activeTaskId === overTaskId) return;
+        // Build a parent → children map from the unfiltered items list
+        // (filters would give a partial view and break reordering).
+        const childrenOf = new Map<string, BudgetItem[]>();
+        for (const it of items ?? []) {
+          if (it.parentId) {
+            const arr = childrenOf.get(it.parentId) ?? [];
+            arr.push(it);
+            childrenOf.set(it.parentId, arr);
+          }
+        }
+        for (const [, siblings] of childrenOf) {
+          const oldIndex = siblings.findIndex((c) => c.id === activeTaskId);
+          const newIndex = siblings.findIndex((c) => c.id === overTaskId);
+          if (oldIndex !== -1 && newIndex !== -1) {
+            const reordered = arrayMove(siblings, oldIndex, newIndex);
+            const newSortOrders = reordered.map((it, idx) => ({
+              id: it.id,
+              sortOrder: idx,
+            }));
+            reorder.mutate({ items: newSortOrders });
+            return;
+          }
+        }
+      }
     };
 
     dragEndHandlerRef.current = handler;
@@ -1127,6 +1159,74 @@ function SortableBudgetItemRows({
 }
 
 // =====================================================================
+// SortableChildRow — wraps a child task in useSortable so it can be
+// dragged to reorder within its parent. Uses "task:XXX" IDs (distinct
+// from top-level "item:XXX" IDs) so the drag-end handler can tell them
+// apart and only allow reordering within the same parent.
+// =====================================================================
+function SortableChildRow({
+  childId,
+  item,
+  childItems,
+  projectId,
+  isExpanded,
+  onToggleExpand,
+  expandedItems,
+  onToggleChildExpand,
+  onEdit,
+  highlightId,
+  registerRow,
+}: {
+  childId: string;
+  item: BudgetItem;
+  childItems: BudgetItem[];
+  projectId: string;
+  isExpanded: boolean;
+  onToggleExpand: () => void;
+  expandedItems: Set<string>;
+  onToggleChildExpand: (id: string) => void;
+  onEdit: (item: BudgetItem) => void;
+  highlightId?: string | null;
+  registerRow?: (id: string, el: HTMLTableRowElement | null) => void;
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({
+    id: `task:${childId}`,
+    data: { type: "task", label: item.subcategory || item.category },
+  });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.4 : 1,
+  };
+
+  return (
+    <RowDragContext.Provider value={{ listeners, isDragging, sortableRef: setNodeRef, sortableStyle: style, sortableAttributes: attributes }}>
+      <BudgetItemRows
+        item={item}
+        childItems={childItems}
+        projectId={projectId}
+        isExpanded={isExpanded}
+        onToggleExpand={onToggleExpand}
+        expandedItems={expandedItems}
+        onToggleChildExpand={onToggleChildExpand}
+        onEdit={onEdit}
+        isChild
+        highlightId={highlightId}
+        registerRow={registerRow}
+      />
+    </RowDragContext.Provider>
+  );
+}
+
+// =====================================================================
 // BudgetItemRows — renders one parent row + optional detail panel + child rows
 // (Same as original, but now includes a drag handle)
 // =====================================================================
@@ -1207,26 +1307,33 @@ function BudgetItemRows({
       {isExpanded &&
         hasChildren &&
         !isChild &&
-        childItems.map((child, ci) => {
-          const childExpanded = expandedItems.has(child.id);
-          const childChildren: BudgetItem[] = [];
+        (() => {
+          const taskIds = childItems.map((c) => `task:${c.id}`);
           return (
-            <BudgetItemRows
-              key={child.id}
-              item={child}
-              childItems={childChildren}
-              projectId={projectId}
-              isExpanded={childExpanded}
-              onToggleExpand={() => onToggleChildExpand(child.id)}
-              expandedItems={expandedItems}
-              onToggleChildExpand={onToggleChildExpand}
-              onEdit={onEdit}
-              isChild
-              highlightId={highlightId}
-              registerRow={registerRow}
-            />
+            <SortableContext items={taskIds} strategy={verticalListSortingStrategy}>
+              {childItems.map((child) => {
+                const childExpanded = expandedItems.has(child.id);
+                const childChildren: BudgetItem[] = [];
+                return (
+                  <SortableChildRow
+                    key={child.id}
+                    childId={child.id}
+                    item={child}
+                    childItems={childChildren}
+                    projectId={projectId}
+                    isExpanded={childExpanded}
+                    onToggleExpand={() => onToggleChildExpand(child.id)}
+                    expandedItems={expandedItems}
+                    onToggleChildExpand={onToggleChildExpand}
+                    onEdit={onEdit}
+                    highlightId={highlightId}
+                    registerRow={registerRow}
+                  />
+                );
+              })}
+            </SortableContext>
           );
-        })}
+        })()}
     </>
   );
 }
@@ -1327,16 +1434,20 @@ const BudgetRow = memo(function BudgetRow({
         dragCtx?.isDragging && "opacity-40",
       )}
     >
-      {/* Drag handle cell (only for top-level items, not children) */}
-      {!isChild && dragCtx?.listeners ? (
+      {/* Drag handle cell — top-level items AND child tasks.
+          Children get a lighter, indented handle to hint at sub-level. */}
+      {dragCtx?.listeners ? (
         <TableCell className="w-8 align-middle">
           <span
             {...dragCtx.listeners}
-            className="flex h-5 w-5 cursor-grab items-center justify-center rounded text-muted-foreground/30 hover:bg-muted hover:text-foreground active:cursor-grabbing"
-            aria-label="Přetáhnout položku"
+            className={cn(
+              "flex h-5 w-5 cursor-grab items-center justify-center rounded text-muted-foreground/30 hover:bg-muted hover:text-foreground active:cursor-grabbing",
+              isChild && "ml-2 opacity-60",
+            )}
+            aria-label="Přetáhnout úkol"
             onClick={(e) => e.stopPropagation()}
           >
-            <GripVertical className="h-4 w-4" />
+            <GripVertical className="h-3.5 w-3.5" />
           </span>
         </TableCell>
       ) : (
@@ -1531,20 +1642,46 @@ const BudgetRow = memo(function BudgetRow({
         </Select>
       </TableCell>
 
-      {/* Plán (Kč) — editable for ALL items (parent + leaf).
-          Parent items show their OWN planCost (not rolled-up) so users
-          can always click and edit directly. */}
+      {/* Plán (Kč) — Variant D:
+          • Leaf (no children): own planCost, editable inline.
+          • Parent (has children): TOTAL (own + Σ children) shown bold as
+            the primary number; the parent's OWN planCost shown below as a
+            small muted "vlastní" line that is itself editable inline.
+            Children's planCosts are visible as rows below, so we don't
+            repeat them in the breakdown. */}
       <TableCell onClick={(e) => e.stopPropagation()} className="text-right">
-        <InlineNumber
-          value={item.planCost}
-          onCommit={(v) => update("planCost", v)}
-          className={cn("text-right", childCount > 0 && "font-semibold")}
-          suffix=" Kč"
-        />
-        {childCount > 0 && item.planCost == null && displayPlanCost > 0 && (
-          <span className="block text-right type-label-sm text-muted-foreground tabular-nums">
-            (sum: {formatNumber(displayPlanCost, " Kč")})
-          </span>
+        {childCount > 0 ? (
+          <div className="flex flex-col items-end gap-0.5">
+            {/* Total = own + Σ children (read-only display) */}
+            <span
+              className={cn(
+                "block w-full rounded px-1 py-0.5 text-right font-semibold tabular-nums",
+                "hover:bg-surface-container-high",
+              )}
+              title={`Celkem: vlastní ${formatNumber(item.planCost ?? 0, "Kč")} + úkoly ${formatNumber(displayPlanCost - (item.planCost ?? 0), "Kč")}`}
+            >
+              {displayPlanCost > 0 ? formatNumber(displayPlanCost, " Kč") : (
+                <span className="text-muted-foreground/50">—</span>
+              )}
+            </span>
+            {/* Own cost — editable inline, muted "vlastní" label */}
+            <span className="flex w-full items-center justify-end gap-1 type-label-sm text-muted-foreground">
+              <span className="shrink-0">vlastní</span>
+              <InlineNumber
+                value={item.planCost}
+                onCommit={(v) => update("planCost", v)}
+                className="text-right tabular-nums text-muted-foreground hover:text-foreground"
+                suffix=" Kč"
+              />
+            </span>
+          </div>
+        ) : (
+          <InlineNumber
+            value={item.planCost}
+            onCommit={(v) => update("planCost", v)}
+            className={cn("text-right font-medium")}
+            suffix=" Kč"
+          />
         )}
       </TableCell>
 
@@ -1573,23 +1710,46 @@ const BudgetRow = memo(function BudgetRow({
         />
       </TableCell>
 
-      {/* Skut. (Kč) */}
+      {/* Skut. (Kč) — Variant D (same pattern as Plán):
+          • Leaf: own actualCost, editable inline.
+          • Parent: TOTAL (own + Σ children) bold + "vlastní" editable below.
+            actualCost is normally auto-computed from payments, but the
+            parent's own actualCost can still be adjusted manually. */}
       <TableCell
         onClick={(e) => e.stopPropagation()}
         className={cn(
           "text-right",
-          overBudget && "font-semibold text-danger",
+          overBudget && "text-danger",
         )}
       >
         {childCount > 0 ? (
-          <span className="block w-full rounded px-1 py-0.5 text-right text-xs font-semibold">
-            {formatNumber(displayActualCost, " Kč")}
-          </span>
+          <div className="flex flex-col items-end gap-0.5">
+            <span
+              className={cn(
+                "block w-full rounded px-1 py-0.5 text-right font-semibold tabular-nums",
+                overBudget && "text-danger",
+              )}
+              title={`Celkem: vlastní ${formatNumber(item.actualCost ?? 0, "Kč")} + úkoly ${formatNumber(displayActualCost - (item.actualCost ?? 0), "Kč")}`}
+            >
+              {displayActualCost > 0 ? formatNumber(displayActualCost, " Kč") : (
+                <span className="text-muted-foreground/50">—</span>
+              )}
+            </span>
+            <span className="flex w-full items-center justify-end gap-1 type-label-sm text-muted-foreground">
+              <span className="shrink-0">vlastní</span>
+              <InlineNumber
+                value={item.actualCost}
+                onCommit={(v) => update("actualCost", v)}
+                className="text-right tabular-nums text-muted-foreground hover:text-foreground"
+                suffix=" Kč"
+              />
+            </span>
+          </div>
         ) : (
           <InlineNumber
             value={item.actualCost}
             onCommit={(v) => update("actualCost", v)}
-            className="text-right"
+            className={cn("text-right", overBudget && "font-semibold text-danger")}
           />
         )}
         {overBudget && (
