@@ -571,6 +571,10 @@ function ProjectDropdownItem({
   onSelect: (id: string) => void;
   onToggleStar: (e: React.MouseEvent) => void;
 }) {
+  // `t` is scoped per-component — `ProjectDropdownItem` is a separate
+  // function from `TopBar`, so it needs its own `useTranslations` hook.
+  // Without this, `t("star.remove")` below throws "t is not defined".
+  const t = useTranslations("topbar");
   const status = STATUS_LABELS[project.status] ?? STATUS_LABELS.active;
 
   return (
