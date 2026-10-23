@@ -2158,5 +2158,143 @@
         "select": "Select"
       }
     }
+  },
+  "errors": {
+    "title": "Something went wrong",
+    "description": "The application encountered an unexpected error and cannot continue. Please try again. If the problem persists, reload the page or go back to the home page.",
+    "tryAgain": "Try again",
+    "home": "Home",
+    "copyError": "Copy error",
+    "copied": "Copied",
+    "copySuccessToast": "Error copied to clipboard",
+    "copyFailedToast": "Failed to copy the error",
+    "technicalDetails": "Technical details",
+    "errorCode": "Error code:",
+    "message": "Message:",
+    "stackTrace": "Stack trace:",
+    "noMessage": "(no message)",
+    "noStack": "(not available)",
+    "report": {
+      "subject": "Stavba — error report",
+      "time": "Time: {time}",
+      "code": "Error code: {code}",
+      "message": "Message: {message}",
+      "stackHeader": "Stack trace:"
+    },
+    "notFound": {
+      "code": "404",
+      "title": "Page not found",
+      "description": "The page you're looking for doesn't exist or has been moved. Go back to the home page of Rozpočet Stavby and continue managing your budget.",
+      "homeButton": "Back to home"
+    },
+    "global": {
+      "title": "Something went wrong",
+      "description": "The application encountered an unexpected error.",
+      "tryAgain": "Try again"
+    }
+  },
+  "public": {
+    "project": {
+      "header": {
+        "publicBadge": "Public project — read only",
+        "publicView": "Public view"
+      },
+      "actions": {
+        "requestAccess": "Request access",
+        "openInApp": "Open in app"
+      },
+      "kpi": {
+        "burnRate": "Budget burn",
+        "remaining": "Budget left",
+        "remainingSub": "of {total}",
+        "itemsCompleted": "Items done",
+        "hoursLogged": "Hours logged",
+        "noItems": "No items",
+        "completedPercent": "{percent}% completed",
+        "plannedHours": "Plan: {hours} days",
+        "allCompleted": "All done"
+      },
+      "phases": {
+        "title": "Project phases",
+        "description": "Budget overview by phase — read only",
+        "column": {
+          "phase": "Phase",
+          "items": "Items",
+          "plan": "Plan",
+          "actual": "Actual",
+          "hours": "Hours",
+          "burn": "Burn",
+          "status": "Status"
+        },
+        "empty": "No phases to show.",
+        "status": {
+          "done": "Done",
+          "inProgress": "In progress",
+          "soon": "Soon",
+          "waiting": "Waiting"
+        }
+      },
+      "footer": "This is a simplified, read-only view of a public project. To edit and access full features, sign in or open the project in the app.",
+      "notFound": {
+        "title": "Project is not publicly available",
+        "redirecting": "Redirecting to sign in…"
+      },
+      "toasts": {
+        "loadFailed": "Failed to load project data.",
+        "notPublic": "Project is not publicly available",
+        "accessGranted": "Access granted — redirecting to project",
+        "accessFailed": "Failed to grant access"
+      }
+    },
+    "invite": {
+      "loading": "Loading invitation…",
+      "unauthenticated": {
+        "title": "Sign in to view the invitation",
+        "redirecting": "Redirecting to sign in…",
+        "goToLogin": "Go to sign in"
+      },
+      "error": {
+        "title": "Invitation unavailable"
+      },
+      "status": {
+        "accepted": "Invitation has already been accepted",
+        "rejected": "Invitation was rejected",
+        "revoked": "Invitation was revoked by an admin",
+        "expired": "Invitation has expired",
+        "invalid": "Invitation is no longer valid"
+      },
+      "title": "Project invitation",
+      "description": "You have been invited to the project <strong>{name}</strong> with the role <badge>{role}</badge>.",
+      "field": {
+        "project": "Project:",
+        "owner": "Owner:",
+        "inviter": "Invited by:",
+        "role": "Role:",
+        "expiresAt": "Valid until:"
+      },
+      "roleDescription": {
+        "viewer": "You can view the budget, payments and time entries (read only).",
+        "editor": "You can view and edit the budget, payments, time entries and contacts.",
+        "owner": "You have full control over the project — edits, payments, time entries, contacts and member management.",
+        "admin": "You have full control over the project, including member management and settings."
+      },
+      "emailNotice": {
+        "title": "This invitation is for the email:",
+        "hint": "You must be signed in with this email to accept it."
+      },
+      "actions": {
+        "accept": "Accept invitation",
+        "reject": "Reject",
+        "openProject": "Open project"
+      },
+      "footer": "If you were not expecting this invitation, you can safely ignore this email.",
+      "toasts": {
+        "loadFailed": "Failed to load invitation.",
+        "acceptSuccess": "Invitation accepted — redirecting to project",
+        "acceptFailed": "Failed to accept invitation.",
+        "rejectSuccess": "Invitation rejected",
+        "rejectFailed": "Failed to reject invitation."
+      }
+    }
   }
 }

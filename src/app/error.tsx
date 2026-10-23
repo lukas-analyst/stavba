@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import {
   Collapsible,
@@ -18,6 +19,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { reportError } from "@/lib/error-reporting";
+import { ErrorLocaleProvider } from "@/components/error-locale-provider";
 
 /**
  * Next.js route-level error boundary.
@@ -35,6 +37,16 @@ import { reportError } from "@/lib/error-reporting";
  *      so power users / developers can inspect without overwhelming
  *      non-technical users.
  *   3. Copy-to-clipboard for easy error reporting.
+ *
+ * i18n: This file lives at the ROOT of the App Router (NOT under a
+ * `[locale]` segment), so the parent `[locale]/layout.tsx`'s
+ * `NextIntlClientProvider` is NOT available here (error boundaries
+ * reset the React context tree above the failing segment). We wrap
+ * the inner content in `<ErrorLocaleProvider>` which detects the
+ * locale from the `NEXT_LOCALE` cookie + `navigator.language` on the
+ * client and bundles both `cs.json` + `en.json` statically so the
+ * error page renders in the user's chosen language without any
+ * network round-trip.
  */
 export default function Error({
   error,
@@ -43,6 +55,21 @@ export default function Error({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  return (
+    <ErrorLocaleProvider>
+      <ErrorContent error={error} reset={reset} />
+    </ErrorLocaleProvider>
+  );
+}
+
+function ErrorContent({
+  error,
+  reset,
+}: {
+  error: Error & { digest?: string };
+  reset: () => void;
+}) {
+  const t = useTranslations("errors");
   const [copied, setCopied] = useState(false);
   const [detailsOpen, setDetailsOpen] = useState(false);
 
@@ -55,14 +82,14 @@ export default function Error({
 
   const handleCopy = async () => {
     const report = [
-      `Stavba — chybový report`,
-      `Čas: ${new Date().toISOString()}`,
-      error.digest ? `Kód chyby: ${error.digest}` : null,
+      t("report.subject"),
+      t("report.time", { time: new Date().toISOString() }),
+      error.digest ? t("report.code", { code: error.digest }) : null,
       ``,
-      `Zpráva: ${error.message || "(bez zprávy)"}`,
+      t("report.message", { message: error.message || t("noMessage") }),
       ``,
-      `Stack trace:`,
-      error.stack || "(není k dispozici)",
+      t("report.stackHeader"),
+      error.stack || t("noStack"),
     ]
       .filter(Boolean)
       .join("\n");
@@ -70,10 +97,10 @@ export default function Error({
     try {
       await navigator.clipboard.writeText(report);
       setCopied(true);
-      toast.success("Chyba zkopírována do schránky");
+      toast.success(t("copySuccessToast"));
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      toast.error("Nepodařilo se zkopírovat chyru");
+      toast.error(t("copyFailedToast"));
     }
   };
 
@@ -83,19 +110,15 @@ export default function Error({
         <AlertTriangle className="h-8 w-8" />
       </div>
       <div className="space-y-2">
-        <h1 className="type-display tracking-tight">
-          Něco se pokazilo
-        </h1>
+        <h1 className="type-display tracking-tight">{t("title")}</h1>
         <p className="mx-auto max-w-md text-sm text-muted-foreground">
-          Aplikace narazila na neočekávanou chybu a nemůže pokračovat. Zkuste
-          akci opakovat. Pokud chyba přetrvává, načtěte stránku znovu nebo se
-          vraťte na hlavní stránku.
+          {t("description")}
         </p>
       </div>
       <div className="flex flex-wrap items-center justify-center gap-3">
         <Button onClick={reset} variant="default">
           <RotateCcw className="mr-2 h-4 w-4" />
-          Zkusit znovu
+          {t("tryAgain")}
         </Button>
         <Button
           onClick={() => {
@@ -104,18 +127,18 @@ export default function Error({
           variant="outline"
         >
           <Home className="mr-2 h-4 w-4" />
-          Domů
+          {t("home")}
         </Button>
         <Button onClick={handleCopy} variant="ghost" size="sm">
           {copied ? (
             <>
               <Check className="mr-2 h-4 w-4 text-success" />
-              Zkopírováno
+              {t("copied")}
             </>
           ) : (
             <>
               <Copy className="mr-2 h-4 w-4" />
-              Kopírovat chybu
+              {t("copyError")}
             </>
           )}
         </Button>
@@ -126,7 +149,7 @@ export default function Error({
         <CollapsibleTrigger asChild>
           <Button variant="ghost" size="sm" className="mx-auto">
             <Bug className="mr-2 h-3.5 w-3.5" />
-            Technické detaily
+            {t("technicalDetails")}
             <ChevronDown
               className={`ml-2 h-3.5 w-3.5 transition-transform ${detailsOpen ? "rotate-180" : ""}`}
             />
@@ -136,22 +159,22 @@ export default function Error({
           <div className="rounded-lg border bg-muted/30 p-4 text-left">
             {error.digest && (
               <div className="mb-2 flex items-center gap-2 text-xs">
-                <span className="font-medium text-muted-foreground">Kód chyby:</span>
+                <span className="font-medium text-muted-foreground">{t("errorCode")}</span>
                 <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-[11px]">
                   {error.digest}
                 </code>
               </div>
             )}
             <div className="mb-2">
-              <span className="text-xs font-medium text-muted-foreground">Zpráva:</span>
+              <span className="text-xs font-medium text-muted-foreground">{t("message")}</span>
               <p className="mt-1 break-words font-mono text-xs text-foreground">
-                {error.message || "(bez zprávy)"}
+                {error.message || t("noMessage")}
               </p>
             </div>
             {error.stack && (
               <div className="mt-3">
                 <span className="text-xs font-medium text-muted-foreground">
-                  Stack trace:
+                  {t("stackTrace")}
                 </span>
                 <pre className="mt-1 max-h-48 overflow-auto rounded bg-muted/50 p-2 font-mono text-[10px] leading-relaxed text-muted-foreground">
                   {error.stack}

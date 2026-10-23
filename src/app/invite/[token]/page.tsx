@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
+import { useTranslations, useLocale } from "next-intl";
 import {
   Card,
   CardContent,
@@ -14,7 +15,6 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   Loader2,
   LogIn,
@@ -25,6 +25,8 @@ import {
   AlertTriangle,
   Clock,
 } from "lucide-react";
+import type { Locale } from "@/i18n/config";
+import { BRAND } from "@/i18n/brand";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { formatDate } from "@/lib/format";
@@ -47,6 +49,13 @@ import { formatDate } from "@/lib/format";
 //   - 404 invitation not found → show "Pozvánka nebyla nalezena"
 //   - 403 wrong e-mail → show "Pozvánka není pro váš e-mail"
 //   - 400 expired/used → show appropriate message
+//
+// i18n: the `/invite/[token]/layout.tsx` wraps children in
+// `<NextIntlClientProvider>` (via `PublicProviders`), so `useTranslations`
+// works in this client component. Shared namespaces reused:
+//   - `roles.*`         — role labels (viewer/editor/owner/admin)
+//   - `auth.common.*`   — backToHome link
+// Page-specific text lives under `public.invite.*`.
 // =====================================================================
 
 type InvitationInfo = {
@@ -67,6 +76,19 @@ type InvitationInfo = {
   inviter: { id: string; name: string | null; email: string } | null;
 };
 
+// Known role IDs — values stored as English IDs in the DB.
+const KNOWN_ROLES = ["viewer", "editor", "owner", "admin"] as const;
+type RoleId = (typeof KNOWN_ROLES)[number];
+
+function isKnownRole(r: string): r is RoleId {
+  return (KNOWN_ROLES as readonly string[]).includes(r);
+}
+
+// Status keys mapped to the `public.invite.status.*` namespace.
+// The DB may return "pending" | "accepted" | "rejected" | "revoked" | "expired".
+// For a pending-but-expired invitation we display the "expired" status.
+type InviteStatusKey = "accepted" | "rejected" | "revoked" | "expired" | "invalid";
+
 export default function InvitationPage({
   params,
 }: {
@@ -74,6 +96,10 @@ export default function InvitationPage({
 }) {
   const router = useRouter();
   const { status: sessionStatus } = useSession();
+  const t = useTranslations("public.invite");
+  const tRoles = useTranslations("roles");
+  const tAuthCommon = useTranslations("auth.common");
+  const locale = useLocale() as Locale;
   const [token, setToken] = useState<string | null>(null);
   const [info, setInfo] = useState<InvitationInfo | null>(null);
   const [loading, setLoading] = useState(true);
@@ -115,7 +141,7 @@ export default function InvitationPage({
       })
       .catch((e: unknown) => {
         if (cancelled) return;
-        setError(e instanceof Error ? e.message : "Nepodařilo se načíst pozvánku.");
+        setError(e instanceof Error ? e.message : t("toasts.loadFailed"));
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -123,7 +149,7 @@ export default function InvitationPage({
     return () => {
       cancelled = true;
     };
-  }, [token, sessionStatus]);
+  }, [token, sessionStatus, t]);
 
   const handleAccept = async () => {
     if (!token) return;
@@ -134,13 +160,13 @@ export default function InvitationPage({
       });
       const json = await res.json().catch(() => ({}));
       if (!res.ok) {
-        throw new Error((json as { error?: string }).error || "Nepodařilo se přijmout pozvánku.");
+        throw new Error((json as { error?: string }).error || t("toasts.acceptFailed"));
       }
-      toast.success("Pozvánka přijata — přesouvám do projektu");
+      toast.success(t("toasts.acceptSuccess"));
       const slug = info?.project?.slug;
       router.push(slug ? `/?project=${slug}` : "/");
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Nepodařilo se přijmout pozvánku.");
+      toast.error(e instanceof Error ? e.message : t("toasts.acceptFailed"));
       setActing(null);
     }
   };
@@ -154,12 +180,12 @@ export default function InvitationPage({
       });
       const json = await res.json().catch(() => ({}));
       if (!res.ok) {
-        throw new Error((json as { error?: string }).error || "Nepodařilo se odmítnout pozvánku.");
+        throw new Error((json as { error?: string }).error || t("toasts.rejectFailed"));
       }
-      toast.success("Pozvánka odmítnuta");
+      toast.success(t("toasts.rejectSuccess"));
       router.push("/");
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Nepodařilo se odmítnout pozvánku.");
+      toast.error(e instanceof Error ? e.message : t("toasts.rejectFailed"));
       setActing(null);
     }
   };
@@ -171,7 +197,7 @@ export default function InvitationPage({
         <div className="w-full max-w-md space-y-4">
           <div className="text-center">
             <Loader2 className="mx-auto h-8 w-8 animate-spin text-muted-foreground" />
-            <p className="mt-3 text-sm text-muted-foreground">Načítám pozvánku…</p>
+            <p className="mt-3 text-sm text-muted-foreground">{t("loading")}</p>
           </div>
           <Skeleton className="h-48" />
         </div>
@@ -184,11 +210,11 @@ export default function InvitationPage({
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-background px-4 text-center">
         <LogIn className="h-12 w-12 text-muted-foreground" />
-        <p className="text-lg font-medium">Přihlaste se pro zobrazení pozvánky</p>
-        <p className="text-sm text-muted-foreground">Přesměrovávám na přihlášení…</p>
+        <p className="text-lg font-medium">{t("unauthenticated.title")}</p>
+        <p className="text-sm text-muted-foreground">{t("unauthenticated.redirecting")}</p>
         <Button asChild className="mt-2">
           <Link href={token ? `/auth/login?callbackUrl=/invite/${token}` : "/auth/login"}>
-            Přejít na přihlášení
+            {t("unauthenticated.goToLogin")}
           </Link>
         </Button>
       </div>
@@ -202,11 +228,11 @@ export default function InvitationPage({
         <div className="w-full max-w-md space-y-4">
           <div className="flex flex-col items-center gap-2">
             <AlertTriangle className="h-12 w-12 text-warning" />
-            <h1 className="text-xl font-semibold">Pozvánka není dostupná</h1>
+            <h1 className="text-xl font-semibold">{t("error.title")}</h1>
             <p className="text-sm text-muted-foreground">{error}</p>
           </div>
           <Button asChild className="w-full">
-            <Link href="/">Zpět na hlavní stránku</Link>
+            <Link href="/">{tAuthCommon("backToHome")}</Link>
           </Button>
         </div>
       </div>
@@ -217,26 +243,24 @@ export default function InvitationPage({
     return null;
   }
 
-  const roleLabel = info.role === "editor" ? "Editor" : "Čtenář";
-  const roleDesc =
-    info.role === "editor"
-      ? "Můžete prohlížet a upravovat rozpočet, platby, časové záznamy a kontakty."
-      : "Můžete prohlížet rozpočet, platby a časové záznamy (pouze pro čtení).";
+  const roleId: RoleId = isKnownRole(info.role) ? info.role : "viewer";
+  const roleLabel = tRoles(roleId);
+  const roleDesc = t(`roleDescription.${roleId}`);
   const isExpired = new Date(info.expiresAt) < new Date();
   const isUsed = info.status !== "pending";
 
+  // Map the DB status (or expired-pending) to a translation key.
+  function resolveStatusKey(): InviteStatusKey {
+    if (info.status === "accepted") return "accepted";
+    if (info.status === "rejected") return "rejected";
+    if (info.status === "revoked") return "revoked";
+    if (info.status === "expired" || isExpired) return "expired";
+    return "invalid";
+  }
+  const statusLabel = t(`status.${resolveStatusKey()}`);
+
   // Already-used or expired invitation — show appropriate state with no actions
   if (isUsed || isExpired) {
-    const statusLabel =
-      info.status === "accepted"
-        ? "Pozvánka již byla přijata"
-        : info.status === "rejected"
-          ? "Pozvánka byla odmítnuta"
-          : info.status === "revoked"
-            ? "Pozvánka byla zrušena správcem"
-            : info.status === "expired" || isExpired
-              ? "Pozvánka vypršela"
-              : "Pozvánka již není platná";
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-background px-4 py-12 text-center">
         <div className="w-full max-w-md space-y-4">
@@ -244,16 +268,16 @@ export default function InvitationPage({
             <AlertTriangle className="h-12 w-12 text-warning" />
             <h1 className="text-xl font-semibold">{statusLabel}</h1>
             <p className="text-sm text-muted-foreground">
-              Projekt: <strong>{info.project.name}</strong>
+              {t("field.project")} <strong>{info.project.name}</strong>
             </p>
           </div>
           <Button asChild className="w-full">
             <Link href={info.project.slug ? `/?project=${info.project.slug}` : "/"}>
-              Otevřít projekt
+              {t("actions.openProject")}
             </Link>
           </Button>
           <Button asChild variant="outline" className="w-full">
-            <Link href="/">Zpět na hlavní stránku</Link>
+            <Link href="/">{tAuthCommon("backToHome")}</Link>
           </Button>
         </div>
       </div>
@@ -267,7 +291,7 @@ export default function InvitationPage({
         <div className="mb-6 text-center">
           <Link href="/" className="inline-flex items-center gap-2">
             <span className="text-2xl font-bold tracking-tight">
-              Stavba<span className="text-primary">.</span>
+              {BRAND.shortName}<span className="text-primary">.</span>
             </span>
           </Link>
         </div>
@@ -278,46 +302,56 @@ export default function InvitationPage({
             <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
               <UserPlus className="h-7 w-7 text-primary" />
             </div>
-            <CardTitle className="text-xl">Pozvánka do projektu</CardTitle>
+            <CardTitle className="text-xl">{t("title")}</CardTitle>
             <CardDescription>
-              Byl jste pozván do projektu{" "}
-              <strong className="text-foreground">{info.project.name}</strong>{" "}
-              rolí{" "}
-              <Badge variant="secondary" className="mx-0.5 align-middle">
-                {roleLabel}
-              </Badge>
+              {t.rich("description", {
+                name: info.project.name,
+                role: roleLabel,
+                strong: (chunks) => (
+                  <strong className="text-foreground">{chunks}</strong>
+                ),
+                badge: (chunks) => (
+                  <Badge variant="secondary" className="mx-0.5 align-middle">
+                    {chunks}
+                  </Badge>
+                ),
+              })}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             {/* Project + inviter details */}
             <div className="space-y-2 rounded-lg border bg-surface-container-low p-3 text-sm">
               <div className="flex items-start justify-between gap-2">
-                <span className="text-on-surface-variant">Projekt:</span>
+                <span className="text-on-surface-variant">{t("field.project")}</span>
                 <span className="font-medium text-right">{info.project.name}</span>
               </div>
               <div className="flex items-start justify-between gap-2">
-                <span className="text-on-surface-variant">Správce:</span>
+                <span className="text-on-surface-variant">{t("field.owner")}</span>
                 <span className="font-medium text-right">
                   {info.project.ownerName || info.project.ownerEmail}
                 </span>
               </div>
               {info.inviter && (
                 <div className="flex items-start justify-between gap-2">
-                  <span className="text-on-surface-variant">Pozval:</span>
+                  <span className="text-on-surface-variant">{t("field.inviter")}</span>
                   <span className="font-medium text-right">
                     {info.inviter.name || info.inviter.email}
                   </span>
                 </div>
               )}
               <div className="flex items-start justify-between gap-2">
-                <span className="text-on-surface-variant">Role:</span>
+                <span className="text-on-surface-variant">{t("field.role")}</span>
                 <span className="font-medium text-right">{roleLabel}</span>
               </div>
               <div className="flex items-start justify-between gap-2">
-                <span className="text-on-surface-variant">Platnost do:</span>
+                <span className="text-on-surface-variant">{t("field.expiresAt")}</span>
                 <span className="font-medium text-right flex items-center gap-1">
                   <Clock className="h-3 w-3" />
-                  {formatDate(info.expiresAt, { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })}
+                  {formatDate(
+                    info.expiresAt,
+                    { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" },
+                    locale,
+                  )}
                 </span>
               </div>
             </div>
@@ -329,10 +363,10 @@ export default function InvitationPage({
             <div className="flex items-start gap-2 rounded-lg border border-info/30 bg-info/5 p-3 text-sm">
               <Mail className="mt-0.5 h-4 w-4 shrink-0 text-info" />
               <div>
-                <p>Pozvánka je určena pro e-mail:</p>
+                <p>{t("emailNotice.title")}</p>
                 <p className="font-medium">{info.inviteeEmail}</p>
                 <p className="mt-1 text-xs text-on-surface-variant">
-                  Pro přijetí musíte být přihlášeni pod tímto e-mailem.
+                  {t("emailNotice.hint")}
                 </p>
               </div>
             </div>
@@ -350,7 +384,7 @@ export default function InvitationPage({
                 ) : (
                   <Check className="h-4 w-4" />
                 )}
-                Přijmout pozvánku
+                {t("actions.accept")}
               </Button>
               <Button
                 onClick={handleReject}
@@ -364,14 +398,14 @@ export default function InvitationPage({
                 ) : (
                   <X className="h-4 w-4" />
                 )}
-                Odmítnout
+                {t("actions.reject")}
               </Button>
             </div>
           </CardContent>
         </Card>
 
         <p className="mt-6 text-center text-xs text-muted-foreground">
-          Pokud vás nikdo nepozval, tento e-mail můžete bezpečně ignorovat.
+          {t("footer")}
         </p>
       </div>
     </div>

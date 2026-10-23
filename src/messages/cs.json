@@ -2158,5 +2158,143 @@
         "select": "Vybrat"
       }
     }
+  },
+  "errors": {
+    "title": "Něco se pokazilo",
+    "description": "Aplikace narazila na neočekávanou chybu a nemůže pokračovat. Zkuste akci opakovat. Pokud chyba přetrvává, načtěte stránku znovu nebo se vraťte na hlavní stránku.",
+    "tryAgain": "Zkusit znovu",
+    "home": "Domů",
+    "copyError": "Kopírovat chybu",
+    "copied": "Zkopírováno",
+    "copySuccessToast": "Chyba zkopírována do schránky",
+    "copyFailedToast": "Nepodařilo se zkopírovat chybu",
+    "technicalDetails": "Technické detaily",
+    "errorCode": "Kód chyby:",
+    "message": "Zpráva:",
+    "stackTrace": "Stack trace:",
+    "noMessage": "(bez zprávy)",
+    "noStack": "(není k dispozici)",
+    "report": {
+      "subject": "Stavba — chybový report",
+      "time": "Čas: {time}",
+      "code": "Kód chyby: {code}",
+      "message": "Zpráva: {message}",
+      "stackHeader": "Stack trace:"
+    },
+    "notFound": {
+      "code": "404",
+      "title": "Stránka nenalezena",
+      "description": "Hledaná stránka neexistuje nebo byla přesunuta. Vraťte se na hlavní stránku aplikace Rozpočet Stavby a pokračujte ve správě rozpočtu.",
+      "homeButton": "Zpět na hlavní stránku"
+    },
+    "global": {
+      "title": "Něco se pokazilo",
+      "description": "Aplikace narazila na neočekávanou chybu.",
+      "tryAgain": "Zkusit znovu"
+    }
+  },
+  "public": {
+    "project": {
+      "header": {
+        "publicBadge": "Veřejný projekt — pouze pro čtení",
+        "publicView": "Veřejný pohled"
+      },
+      "actions": {
+        "requestAccess": "Zažádat o přístup",
+        "openInApp": "Otevřít v aplikaci"
+      },
+      "kpi": {
+        "burnRate": "Čerpání rozpočtu",
+        "remaining": "Zbývá rozpočtu",
+        "remainingSub": "z {total}",
+        "itemsCompleted": "Hotovo položek",
+        "hoursLogged": "Odpracováno hodin",
+        "noItems": "Žádné položky",
+        "completedPercent": "{percent}% dokončeno",
+        "plannedHours": "Plán: {hours} dní",
+        "allCompleted": "Vše hotovo"
+      },
+      "phases": {
+        "title": "Fáze projektu",
+        "description": "Přehled rozpočtu dle fáze — pouze pro čtení",
+        "column": {
+          "phase": "Fáze",
+          "items": "Položky",
+          "plan": "Plán",
+          "actual": "Skutečnost",
+          "hours": "Hodiny",
+          "burn": "Čerpání",
+          "status": "Stav"
+        },
+        "empty": "Žádné fáze k zobrazení.",
+        "status": {
+          "done": "Hotovo",
+          "inProgress": "Probíhá",
+          "soon": "Brzy",
+          "waiting": "Čeká"
+        }
+      },
+      "footer": "Toto je zjednodušené, pouze pro čtení zobrazení veřejného projektu. Pro úpravy a kompletní funkce se přihlaste nebo otevřete projekt v aplikaci.",
+      "notFound": {
+        "title": "Projekt není veřejně dostupný",
+        "redirecting": "Přesměrovávám na přihlášení…"
+      },
+      "toasts": {
+        "loadFailed": "Nepodařilo se načíst data projektu.",
+        "notPublic": "Projekt není veřejně dostupný",
+        "accessGranted": "Přístup udělen — přesouvám do projektu",
+        "accessFailed": "Nepodařilo se udělit přístup"
+      }
+    },
+    "invite": {
+      "loading": "Načítám pozvánku…",
+      "unauthenticated": {
+        "title": "Přihlaste se pro zobrazení pozvánky",
+        "redirecting": "Přesměrovávám na přihlášení…",
+        "goToLogin": "Přejít na přihlášení"
+      },
+      "error": {
+        "title": "Pozvánka není dostupná"
+      },
+      "status": {
+        "accepted": "Pozvánka již byla přijata",
+        "rejected": "Pozvánka byla odmítnuta",
+        "revoked": "Pozvánka byla zrušena správcem",
+        "expired": "Pozvánka vypršela",
+        "invalid": "Pozvánka již není platná"
+      },
+      "title": "Pozvánka do projektu",
+      "description": "Byl jste pozván do projektu <strong>{name}</strong> rolí <badge>{role}</badge>.",
+      "field": {
+        "project": "Projekt:",
+        "owner": "Správce:",
+        "inviter": "Pozval:",
+        "role": "Role:",
+        "expiresAt": "Platnost do:"
+      },
+      "roleDescription": {
+        "viewer": "Můžete prohlížet rozpočet, platby a časové záznamy (pouze pro čtení).",
+        "editor": "Můžete prohlížet a upravovat rozpočet, platby, časové záznamy a kontakty.",
+        "owner": "Máte plnou kontrolu nad projektem — úpravy, platby, časové záznamy, kontakty i správu členů.",
+        "admin": "Máte plnou kontrolu nad projektem včetně správy členů a nastavení."
+      },
+      "emailNotice": {
+        "title": "Pozvánka je určena pro e-mail:",
+        "hint": "Pro přijetí musíte být přihlášeni pod tímto e-mailem."
+      },
+      "actions": {
+        "accept": "Přijmout pozvánku",
+        "reject": "Odmítnout",
+        "openProject": "Otevřít projekt"
+      },
+      "footer": "Pokud vás nikdo nepozval, tento e-mail můžete bezpečně ignorovat.",
+      "toasts": {
+        "loadFailed": "Nepodařilo se načíst pozvánku.",
+        "acceptSuccess": "Pozvánka přijata — přesouvám do projektu",
+        "acceptFailed": "Nepodařilo se přijmout pozvánku.",
+        "rejectSuccess": "Pozvánka odmítnuta",
+        "rejectFailed": "Nepodařilo se odmítnout pozvánku."
+      }
+    }
   }
 }
