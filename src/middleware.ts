@@ -204,13 +204,15 @@ export const config = {
   // Match all paths except:
   //   - _next/static, _next/image (Next.js internals)
   //   - favicon.ico and image files
-  //   - /api/* (API routes handle their own auth — except /api/auth/*,
-  //     but we explicitly let those through above)
+  //   - /api/* (API routes handle their own auth via `requireUser()` and
+  //     don't need locale routing — intl middleware on API routes can
+  //     cause issues with URL rewriting and break fetch calls)
   //
-  // Note: we DO match /api/* paths so the auth check can return 403 for
-  // unauthenticated API calls. The intl middleware is a no-op on API
-  // routes (they don't have locale segments).
+  // Note: /api/auth/* and public API routes are let through by the auth
+  // logic above, but they never reach this matcher anyway because we
+  // return early for them. Excluding /api/* entirely keeps the intl
+  // middleware from accidentally rewriting API URLs.
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
+    "/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
   ],
 };
