@@ -1785,5 +1785,378 @@
       "logout": "Odhlášení",
       "project_share": "Sdílení projektu"
     }
+  },
+  "components": {
+    "emptyState": {
+      "welcome": "Vítejte v aplikaci Stavba",
+      "description": "Vyberte projekt z postranního panelu, nebo vytvořte nový projekt pro sledování rozpočtu, nákladů, času a materiálu stavby a rekonstrukce.",
+      "button": "Vytvořit první projekt"
+    },
+    "contextualFab": {
+      "actions": {
+        "addItem": "Přidat položku",
+        "addPayment": "Přidat platbu",
+        "addTime": "Přidat čas",
+        "addContact": "Přidat kontakt"
+      }
+    },
+    "aresSearch": {
+      "placeholder": "Hledat firmu (IČO nebo název)…",
+      "needsApiKey": {
+        "title": "ARES API klíč není nastaven.",
+        "hint": "Firmu můžete zadat manuálně níže."
+      },
+      "noResults": "Žádné firmy nenalezeny pro „{query}\"",
+      "result": {
+        "ico": "IČO: {ico}",
+        "dic": "DIČ: {dic}"
+      }
+    },
+    "sessionTimeoutWarning": {
+      "message": "Vaše relace vyprší za {minutesLeft, plural, one {# minutu} few {# minuty} many {# minut} other {# minut}}. Prodlužte relaci, abyste zabránili ztrátě dat.",
+      "description": "Po vypršení budete automaticky odhlášeni.",
+      "action": {
+        "extend": "Prodloužit",
+        "signOut": "Odhlásit se"
+      },
+      "success": "Relace byla prodloužena."
+    }
+  },
+  "dialogs": {
+    "budgetItem": {
+      "toasts": {
+        "dateFromSetByRef": "Datum od nastaveno podle „{name}\"",
+        "dateFromAlreadySet": "Datum od již bylo vyplněno — nebylo změněno.",
+        "dateFromNotChanged": "„{name}\" nemá Datum do — Datum od nebylo změněno.",
+        "categoryRequired": "Kategorie je povinná",
+        "taskUpdated": "Úkol upraven",
+        "itemUpdated": "Položka upravena",
+        "taskAdded": "Úkol přidán",
+        "itemAdded": "Položka přidána",
+        "saveError": "Nepodařilo se uložit položku"
+      },
+      "submit": {
+        "editTask": "Upravit úkol",
+        "editItem": "Upravit položku",
+        "addTask": "Přidat úkol",
+        "addItem": "Přidat položku"
+      },
+      "placeholder": {
+        "taskName": "Název úkolu…",
+        "itemName": "Název položky…",
+        "note": "Poznámka…",
+        "newCategory": "Nová kategorie",
+        "selectCategory": "Vyberte kategorii",
+        "subsidyAmount": "např. 15000",
+        "linkLabel": "Název",
+        "linkUrl": "https://…",
+        "searchItem": "Hledat položku…",
+        "searchContact": "Hledat kontakt…"
+      },
+      "context": {
+        "taskUnderItem": "Úkol pod položkou „{name}\""
+      },
+      "label": {
+        "category": "Kategorie *",
+        "phase": "Fáze",
+        "required": "Nutné",
+        "completed": "Hotovo",
+        "rejected": "Zavrženo",
+        "subsidy": "Dotace",
+        "subsidyAmount": "Částka dotace (Kč)",
+        "dateFrom": "Datum od",
+        "dateTo": "Datum do",
+        "planDays": "Plán (dní)",
+        "dependsOn": "Navazuje na",
+        "planCost": "Plán (Kč)",
+        "flexibility": "Vůle (%)",
+        "contactHint": "Zodpovědná osoba / firma",
+        "links": "Odkazy",
+        "noDependency": "— žádná závislost —",
+        "noContact": "— bez kontaktu —",
+        "selectExisting": "Vybrat existující",
+        "addNewCategory": "+ Nová kategorie"
+      },
+      "title": {
+        "requiredHint": "Položka je povinná pro dokončení projektu",
+        "subsidyHint": "Pro tuto položku lze čerpat dotaci",
+        "openInNewWindow": "Otevřít v novém okně",
+        "deleteLink": "Smazat odkaz"
+      },
+      "section": {
+        "date": "Datum (volitelné)",
+        "money": "Peníze (volitelné)",
+        "contact": "Kontakt (volitelné)",
+        "links": "Odkazy (volitelné)"
+      },
+      "empty": {
+        "items": "Žádné položky nenalezeny",
+        "contacts": "Žádné kontakty nenalezeny",
+        "noContactsHint": "Zatím nejsou žádné kontakty. Přidejte je v záložce Kontakty."
+      },
+      "button": {
+        "add": "Přidat"
+      }
+    },
+    "newProject": {
+      "toasts": {
+        "createSuccess": "Projekt vytvořen",
+        "createError": "Nepodařilo se vytvořit projekt",
+        "templateCreateSuccess": "Projekt vytvořen se šablonou položek",
+        "sourceNotFound": "Zdrojový projekt nebyl nalezen",
+        "copyPartial": "Projekt vytvořen z „{sourceName}\" — zkopírováno {copied, plural, one {# položka} few {# položky} many {# položek} other {# položek}}, {failed, plural, one {# se nepodařilo zkopírovat} few {# se nepodařilo zkopírovat} many {# se nepodařilo zkopírovat} other {# se nepodařilo zkopírovat}}.",
+        "copyAllFailed": "Projekt vytvořen, ale nepodařilo se zkopírovat žádné položky rozpočtu ({failed} selhání).",
+        "copySuccess": "Projekt vytvořen (zkopírováno {copied, plural, one {# položka} few {# položky} many {# položek} other {# položek}} z „{sourceName}\")",
+        "copyError": "Nepodařilo se zkopírovat projekt",
+        "nameRequired": "Název projektu je povinný",
+        "typeRequired": "Vyberte typ stavby",
+        "scopeRequired": "Vyberte rozsah rekonstrukce",
+        "sourceRequired": "Vyberte zdrojový projekt"
+      },
+      "submit": {
+        "selectType": "Vyberte typ projektu",
+        "createBlank": "Vytvořit projekt",
+        "createFromTemplate": "Vytvořit se šablonou",
+        "copyExisting": "Zkopírovat projekt"
+      },
+      "placeholder": {
+        "projectName": "Název projektu…",
+        "selectTypeHint": "Nový projekt — vyberte typ níže",
+        "description": "Krátký popis projektu…",
+        "selectProjectCopy": "Vyberte projekt ke zkopírování…",
+        "address": "např. Praha - Troja"
+      },
+      "context": {
+        "blank": "Prázdný projekt",
+        "template": "Ze šablony",
+        "copy": "Kopie existujícího",
+        "new": "Nový projekt"
+      },
+      "mode": {
+        "blank": {
+          "title": "Prázdný projekt",
+          "description": "Začnete s čistým štítem, rozpočet přidáte později"
+        },
+        "template": {
+          "title": "Ze šablony",
+          "description": "Rekonstrukce, nová stavba, interiér nebo přístavba"
+        },
+        "copy": {
+          "title": "Kopírovat projekt",
+          "description": "Zkopíruje rozpočet z existujícího projektu"
+        }
+      },
+      "back": "← Zpět na výběr typu",
+      "template": {
+        "typeLabel": "Typ stavby",
+        "scopeLabel": "Rozsah rekonstrukce",
+        "preview": "Náhled podle kategorií",
+        "itemsCount": "{count, plural, one {# položka} few {# položky} many {# položek} other {# položek}}",
+        "itemsPlan": "{count, plural, one {# položka} few {# položky} many {# položek} other {# položek}} · {sum} Kč plán",
+        "total": "Celkem: {count, plural, one {# položka} few {# položky} many {# položek} other {# položek}}, {sum} Kč"
+      },
+      "copy": {
+        "sourceLabel": "Zdrojový projekt *",
+        "description": "Zkopírují se všechny položky rozpočtu (kategorie, plány, vůle, fáze). Skutečné hodnoty, hotovo a zavržené stavy se resetují. Platby, časové záznamy a kontakty se nekopírují."
+      },
+      "field": {
+        "address": "Adresa",
+        "startDate": "Datum zahájení",
+        "endDate": "Datum dokončení"
+      },
+      "templates": {
+        "reconstruction": {
+          "label": "Rekonstrukce",
+          "description": "Rekonstrukce existujícího domu, bytu nebo chalupy.",
+          "scopeOptions": {
+            "partial": {
+              "label": "Částečná rekonstrukce",
+              "description": "Jen vybrané místnosti nebo systémy (např. koupelna, kuchyň, elektro)"
+            },
+            "complete": {
+              "label": "Kompletní rekonstrukce",
+              "description": "Celý objekt včetně hrubé stavby, instalací a dokončovacích prací"
+            },
+            "structural": {
+              "label": "Strukturní rekonstrukce",
+              "description": "Zásahy do nosných konstrukcí, přestavby, nástavby"
+            }
+          }
+        },
+        "new_build": {
+          "label": "Nová stavba",
+          "description": "Výstavba nového domu od základů."
+        },
+        "interior": {
+          "label": "Interiér",
+          "description": "Vybavení a úpravy interiéru (malování, podlahy, vybavení)."
+        },
+        "extension": {
+          "label": "Přístavba",
+          "description": "Přístavba k existujícímu objektu (nástavba, přístavba garáže, zimní zahrada)."
+        },
+        "apartment_2plus1": {
+          "label": "Rekonstrukce bytu 2+1",
+          "description": "Kompletní rekonstrukce bytu 2+1 (~70 m²) — demolice, rozvody, koupelna, kuchyně, podlahy, malování."
+        },
+        "bathroom": {
+          "label": "Rekonstrukce koupelny",
+          "description": "Kompletní rekonstrukce koupelny (~5 m²) — demolice, rozvody, obklady, vybavení, elektro."
+        },
+        "roof": {
+          "label": "Rekonstrukce střechy",
+          "description": "Kompletní výměna střechy — demolice, krov, izolace, krytina, klempíř."
+        }
+      }
+    },
+    "project": {
+      "toasts": {
+        "nameRequired": "Název projektu je povinný",
+        "updateSuccess": "Projekt byl upraven",
+        "createSuccess": "Projekt byl vytvořen",
+        "updateError": "Nepodařilo se upravit projekt",
+        "createError": "Nepodařilo se vytvořit projekt"
+      },
+      "placeholder": {
+        "name": "Název projektu…",
+        "description": "Krátký popis projektu…",
+        "address": "např. Praha - Troja"
+      },
+      "context": {
+        "edit": "Úprava projektu",
+        "new": "Nový projekt"
+      },
+      "submit": {
+        "saveChanges": "Uložit změny",
+        "create": "Vytvořit projekt"
+      },
+      "label": {
+        "address": "Adresa",
+        "status": "Stav"
+      },
+      "section": {
+        "dates": "Termíny (volitelné)"
+      },
+      "field": {
+        "startDate": "Datum zahájení",
+        "endDate": "Datum dokončení"
+      }
+    },
+    "printReport": {
+      "toasts": {
+        "dataNotLoaded": "Data reportu nejsou načtena.",
+        "mobileExportHint": "Pro export PDF otevřete aplikaci v desktopovém prohlížeči.",
+        "printFailed": "Tisk se nezdařil. Zkuste to prosím znovu."
+      },
+      "title": "Report projektu — náhled PDF",
+      "description": "Náhled reportu pro export do PDF. Klikněte „Stáhnout PDF\" — v dialogu tisku prohlížeče zvolte cíl „Uložit jako PDF\".",
+      "mobileWarning": "Na mobilním prohlížeči nelze PDF exportovat přímo — otevřete aplikaci v desktopovém prohlížeči.",
+      "button": {
+        "close": "Zavřít",
+        "exportDesktop": "Exportovat v desktopu",
+        "downloadPdf": "Stáhnout PDF"
+      },
+      "header": {
+        "generated": "Vygenerováno:",
+        "start": "Zahájení:",
+        "end": "Dokončení:"
+      },
+      "section": {
+        "summary": "Shrnutí rozpočtu",
+        "alerts": "Upozornění",
+        "projection": "Projekční odhad",
+        "phases": "Rozpad podle fází",
+        "categories": "Rozpad podle kategorií {top}",
+        "categoriesTop": "(top 15)",
+        "budgetItems": "Položky rozpočtu ({count})",
+        "payments": "Platby (posledních {count})"
+      },
+      "kpi": {
+        "plan": "Plán",
+        "actual": "Skutečnost",
+        "remaining": "Zbývá",
+        "saved": "Ušetřeno",
+        "completed": "Hotovo",
+        "hours": "Hodiny",
+        "avgOverrun": "Prům. překročení",
+        "predictedFinal": "Predikce konečných nákladů",
+        "estimatedOverrun": "Odhadované překročení",
+        "planRatio": "Podíl plánu"
+      },
+      "alert": {
+        "overdue": "Zpožděné ({count})",
+        "upcoming": "Blížící se ({count})",
+        "overBudget": "Překročeno ({count})"
+      },
+      "projection": {
+        "empty": "Žádné dokončené položky — projekce konečných nákladů není dostupná. Po dokončení prvních položek se zde zobrazí odhad na základě průměrné míry překročení plánu."
+      },
+      "column": {
+        "phase": "Fáze",
+        "plan": "Plán",
+        "actual": "Skutečnost",
+        "percent": "%",
+        "hours": "Hodiny",
+        "category": "Kategorie",
+        "name": "Název",
+        "actualShort": "Skut.",
+        "from": "Od",
+        "to": "Do",
+        "status": "Stav",
+        "date": "Datum",
+        "item": "Položka",
+        "vendor": "Dodavatel",
+        "amount": "Částka",
+        "type": "Typ"
+      },
+      "empty": {
+        "phases": "Žádné fáze k zobrazení.",
+        "categories": "Žádné kategorie k zobrazení.",
+        "budgetItems": "Žádné položky rozpočtu.",
+        "payments": "Žádné platby k zobrazení."
+      },
+      "fallback": {
+        "noName": "(bez názvu)",
+        "noItem": "(bez položky)"
+      },
+      "status": {
+        "rejected": "Zavrženo",
+        "completed": "Hotovo",
+        "active": "Aktivní",
+        "plan": "Plán"
+      },
+      "footer": "Report vygenerován aplikací Rozpočet Stavby dne {date} — {projectName}."
+    },
+    "auditLog": {
+      "title": "Historie změn",
+      "description": "Posledních {count} změn v projektu (úpravy, vytvoření, mazání).",
+      "empty": "Zatím žádné zaznamenané změny.",
+      "emptyValue": "(prázdné)",
+      "action": {
+        "fallback": "{action}"
+      },
+      "field": {
+        "element": "Prvek",
+        "actualHours": "Hodiny",
+        "date": "Datum"
+      }
+    },
+    "globalSearch": {
+      "title": "Globální vyhledávání",
+      "placeholder": "Hledat projekty, položky, kontakty, platby, poznámky…",
+      "initialHint": "Začněte psát pro vyhledávání napříč aplikací",
+      "noResults": "Žádné výsledky pro „{query}\"",
+      "group": {
+        "projects": "Projekty",
+        "items": "Položky rozpočtu",
+        "contacts": "Kontakty",
+        "payments": "Platby",
+        "notes": "Poznámky"
+      },
+      "footer": {
+        "navigation": "Navigace",
+        "select": "Vybrat"
+      }
+    }
   }
 }

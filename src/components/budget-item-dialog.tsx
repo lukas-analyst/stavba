@@ -14,6 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { PHASES } from "@/lib/format";
+import { useTranslations } from "next-intl";
 import {
   useBudgetItems,
   useContacts,
@@ -180,6 +181,9 @@ function BudgetItemForm({
   const parentName = parentItemName
     ?? (item?.parentId ? (items ?? []).find((i) => i.id === item.parentId)?.subcategory ?? "" : "");
 
+  const t = useTranslations("dialogs.budgetItem");
+  const tPhases = useTranslations("phases");
+
   const [category, setCategory] = useState(item?.category ?? defaultCategory ?? "");
   const [customCategory, setCustomCategory] = useState(
     item && !existingCategories.includes(item.category) ? item.category : "",
@@ -188,7 +192,7 @@ function BudgetItemForm({
     item ? !existingCategories.includes(item.category) : false,
   );
   const [subcategory, setSubcategory] = useState(item?.subcategory ?? "");
-  const [phase, setPhase] = useState(item?.phase ?? defaultPhase ?? "Neurčeno");
+  const [phase, setPhase] = useState(item?.phase ?? defaultPhase ?? "unspecified");
   const [required, setRequired] = useState(item ? item.required : true);
   const [completed, setCompleted] = useState(item?.completed ?? false);
   const [rejected, setRejected] = useState(item?.rejected ?? false);
@@ -222,13 +226,14 @@ function BudgetItemForm({
     if (!ref) return;
     // Only auto-fill Datum od if it's not already set — don't overwrite
     // an existing date the user may have entered manually.
+    const refName = ref.subcategory || ref.category;
     if (ref.dateTo && !dateFrom) {
       setDateFrom(ref.dateTo.substring(0, 10));
-      toast.success(`Datum od nastaveno podle „${ref.subcategory || ref.category}"`);
+      toast.success(t("toasts.dateFromSetByRef", { name: refName }));
     } else if (ref.dateTo && dateFrom) {
-      toast.info(`Datum od již bylo vyplněno — nebylo změněno.`);
+      toast.info(t("toasts.dateFromAlreadySet"));
     } else {
-      toast.info(`„${ref.subcategory || ref.category}" nemá Datum do — Datum od nebylo změněno.`);
+      toast.info(t("toasts.dateFromNotChanged", { name: refName }));
     }
   };
 
@@ -281,7 +286,7 @@ function BudgetItemForm({
         ? customCategory.trim()
         : category;
     if (!finalCategory) {
-      toast.error("Kategorie je povinná");
+      toast.error(t("toasts.categoryRequired"));
       return;
     }
     try {
@@ -315,22 +320,22 @@ function BudgetItemForm({
       }
       if (item) {
         const updated = await updateItem.mutateAsync({ id: item.id, data });
-        toast.success(isTaskMode ? "Úkol upraven" : "Položka upravena");
+        toast.success(isTaskMode ? t("toasts.taskUpdated") : t("toasts.itemUpdated"));
         onSubmitted?.(updated as BudgetItem, false);
       } else {
         const created = await createItem.mutateAsync(data);
-        toast.success(isTaskMode ? "Úkol přidán" : "Položka přidána");
+        toast.success(isTaskMode ? t("toasts.taskAdded") : t("toasts.itemAdded"));
         onSubmitted?.(created as BudgetItem, true);
       }
       onOpenChange(false);
     } catch {
-      toast.error("Nepodařilo se uložit položku");
+      toast.error(t("toasts.saveError"));
     }
   };
 
   const submitLabel = item
-    ? isTaskMode ? "Upravit úkol" : "Upravit položku"
-    : isTaskMode ? "Přidat úkol" : "Přidat položku";
+    ? isTaskMode ? t("submit.editTask") : t("submit.editItem")
+    : isTaskMode ? t("submit.addTask") : t("submit.addItem");
 
   return (
     <AddDialogShell
@@ -338,11 +343,11 @@ function BudgetItemForm({
       onOpenChange={onOpenChange}
       titleValue={subcategory}
       onTitleChange={setSubcategory}
-      titlePlaceholder={isTaskMode ? "Název úkolu…" : "Název položky…"}
+      titlePlaceholder={isTaskMode ? t("placeholder.taskName") : t("placeholder.itemName")}
       descriptionValue={isTaskMode ? undefined : note}
       onDescriptionChange={isTaskMode ? undefined : setNote}
-      descriptionPlaceholder={isTaskMode ? undefined : "Poznámka…"}
-      contextText={isTaskMode ? `Úkol pod položkou „${parentName}"` : undefined}
+      descriptionPlaceholder={isTaskMode ? undefined : t("placeholder.note")}
+      contextText={isTaskMode ? t("context.taskUnderItem", { name: parentName }) : undefined}
       submitLabel={submitLabel}
       onSubmit={handleSubmit}
       isSubmitting={createItem.isPending || updateItem.isPending}
@@ -359,11 +364,11 @@ function BudgetItemForm({
         {!isTaskMode && (
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="category">Kategorie *</Label>
+              <Label htmlFor="category">{t("label.category")}</Label>
               {!isCustomCat ? (
                 <Select value={category} onValueChange={setCategory}>
                   <SelectTrigger id="category">
-                    <SelectValue placeholder="Vyberte kategorii" />
+                    <SelectValue placeholder={t("placeholder.selectCategory")} />
                   </SelectTrigger>
                   <SelectContent>
                     {existingCategories.map((c) => (
@@ -375,7 +380,7 @@ function BudgetItemForm({
                 <Input
                   value={customCategory}
                   onChange={(e) => setCustomCategory(e.target.value)}
-                  placeholder="Nová kategorie"
+                  placeholder={t("placeholder.newCategory")}
                 />
               )}
               <Button
@@ -385,18 +390,18 @@ function BudgetItemForm({
                 className="h-auto p-0 text-xs"
                 onClick={() => setIsCustomCat(!isCustomCat)}
               >
-                {isCustomCat ? "Vybrat existující" : "+ Nová kategorie"}
+                {isCustomCat ? t("label.selectExisting") : t("label.addNewCategory")}
               </Button>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="phase">Fáze</Label>
+              <Label htmlFor="phase">{t("label.phase")}</Label>
               <Select value={phase} onValueChange={setPhase}>
                 <SelectTrigger id="phase">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   {PHASES.map((p) => (
-                    <SelectItem key={p} value={p}>{p}</SelectItem>
+                    <SelectItem key={p} value={p}>{tPhases(p)}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -410,36 +415,36 @@ function BudgetItemForm({
             active={required}
             onClick={() => setRequired(!required)}
             icon={AlertTriangle}
-            label="Nutné"
+            label={t("label.required")}
             token="warning"
-            title="Položka je povinná pro dokončení projektu"
+            title={t("title.requiredHint")}
           />
           <ToggleChip
             active={completed}
             onClick={() => setCompleted(!completed)}
             icon={completed ? CheckCircle2 : Circle}
-            label="Hotovo"
+            label={t("label.completed")}
             token="success"
           />
           <ToggleChip
             active={rejected}
             onClick={() => setRejected(!rejected)}
             icon={X}
-            label="Zavrženo"
+            label={t("label.rejected")}
             token="danger"
           />
           <ToggleChip
             active={subsidyEligible}
             onClick={() => setSubsidyEligible(!subsidyEligible)}
             icon={HandCoins}
-            label="Dotace"
+            label={t("label.subsidy")}
             token="subsidy"
-            title="Pro tuto položku lze čerpat dotaci"
+            title={t("title.subsidyHint")}
           />
         </div>
         {subsidyEligible && (
           <div className="space-y-2">
-            <Label htmlFor="subsidyAmount">Částka dotace (Kč)</Label>
+            <Label htmlFor="subsidyAmount">{t("label.subsidyAmount")}</Label>
             <Input
               id="subsidyAmount"
               type="number"
@@ -448,73 +453,73 @@ function BudgetItemForm({
               min="0"
               value={subsidyAmount}
               onChange={(e) => setSubsidyAmount(e.target.value)}
-              placeholder="např. 15000"
+              placeholder={t("placeholder.subsidyAmount")}
             />
           </div>
         )}
 
         {/* ===== DATUM (volitelné) — MD3 tonal section ===== */}
-        <CollapsibleSection title="Datum (volitelné)">
+        <CollapsibleSection title={t("section.date")}>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="dateFrom">Datum od</Label>
+              <Label htmlFor="dateFrom">{t("label.dateFrom")}</Label>
               <Input id="dateFrom" type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="dateTo">Datum do</Label>
+              <Label htmlFor="dateTo">{t("label.dateTo")}</Label>
               <Input id="dateTo" type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
             </div>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="planDays">Plán (dní)</Label>
+            <Label htmlFor="planDays">{t("label.planDays")}</Label>
             <Input id="planDays" value={planDays} onChange={(e) => setPlanDays(e.target.value)} placeholder="21" inputMode="decimal" />
           </div>
           {!isTaskMode && (
             <div className="space-y-2">
-              <Label htmlFor="dependsOn">Navazuje na</Label>
+              <Label htmlFor="dependsOn">{t("label.dependsOn")}</Label>
               <SearchableSelect
                 id="dependsOn"
                 options={[
-                  { value: "__none__", label: "— žádná závislost —", hint: "" },
+                  { value: "__none__", label: t("label.noDependency"), hint: "" },
                   ...dependsOnOptions.map((i) => ({
                     value: i.id,
                     label: i.subcategory || i.category,
-                    hint: `${i.category}${i.dateTo ? ` · do ${i.dateTo.substring(0, 10)}` : ""}`,
+                    hint: `${i.category}${i.dateTo ? ` · ${i.dateTo.substring(0, 10)}` : ""}`,
                   })),
                 ]}
                 value={dependsOnId}
                 onChange={(v) => handleDependsOnChange(v)}
-                placeholder="— žádná závislost —"
-                searchPlaceholder="Hledat položku…"
-                emptyText="Žádné položky nenalezeny"
+                placeholder={t("label.noDependency")}
+                searchPlaceholder={t("placeholder.searchItem")}
+                emptyText={t("empty.items")}
               />
             </div>
           )}
         </CollapsibleSection>
 
         {/* ===== PENÍZE (volitelné) — MD3 tonal section ===== */}
-        <CollapsibleSection title="Peníze (volitelné)">
+        <CollapsibleSection title={t("section.money")}>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="planCost">Plán (Kč)</Label>
+              <Label htmlFor="planCost">{t("label.planCost")}</Label>
               <Input id="planCost" value={planCost} onChange={(e) => setPlanCost(e.target.value)} placeholder="25000" inputMode="decimal" />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="flexibility">Vůle (%)</Label>
+              <Label htmlFor="flexibility">{t("label.flexibility")}</Label>
               <Input id="flexibility" value={flexibility} onChange={(e) => setFlexibility(e.target.value)} placeholder="50" inputMode="decimal" />
             </div>
           </div>
         </CollapsibleSection>
 
         {/* ===== KONTAKT (volitelné) — přiřazená osoba/firma ===== */}
-        <CollapsibleSection title="Kontakt (volitelné)">
+        <CollapsibleSection title={t("section.contact")}>
           <Label className="flex items-center gap-1.5 text-xs">
             <User className="h-3.5 w-3.5 text-muted-foreground" />
-            Zodpovědná osoba / firma
+            {t("label.contactHint")}
           </Label>
           <SearchableSelect
             options={[
-              { value: "__none__", label: "— bez kontaktu —", hint: "" },
+              { value: "__none__", label: t("label.noContact"), hint: "" },
               ...((contacts ?? []).map((c) => ({
                 value: c.id,
                 label: c.name,
@@ -523,23 +528,23 @@ function BudgetItemForm({
             ]}
             value={contactId}
             onChange={setContactId}
-            placeholder="— bez kontaktu —"
-            searchPlaceholder="Hledat kontakt…"
-            emptyText="Žádné kontakty nenalezeny"
+            placeholder={t("label.noContact")}
+            searchPlaceholder={t("placeholder.searchContact")}
+            emptyText={t("empty.contacts")}
           />
           {(contacts ?? []).length === 0 && (
             <p className="text-[10px] text-muted-foreground">
-              Zatím nejsou žádné kontakty. Přidejte je v záložce Kontakty.
+              {t("empty.noContactsHint")}
             </p>
           )}
         </CollapsibleSection>
 
         {/* ===== ODKAZY (volitelné) — MD3 tonal section ===== */}
-        <CollapsibleSection title="Odkazy (volitelné)" badge={links.length}>
+        <CollapsibleSection title={t("section.links")} badge={links.length}>
           <div className="flex items-center justify-between">
             <Label className="flex items-center gap-1.5 text-xs">
               <LinkIcon className="h-3.5 w-3.5 text-muted-foreground" />
-              Odkazy
+              {t("label.links")}
             </Label>
             <Button
               type="button"
@@ -548,7 +553,7 @@ function BudgetItemForm({
               className="h-7 gap-1 px-2 text-[11px]"
               onClick={() => setLinks((prev) => [...prev, { id: undefined, label: "", url: "" }])}
             >
-              <Plus className="h-3 w-3" /> Přidat
+              <Plus className="h-3 w-3" /> {t("button.add")}
             </Button>
           </div>
           {links.length > 0 && (
@@ -565,14 +570,14 @@ function BudgetItemForm({
                         prev.map((l, i) => (i === idx ? { ...l, label: e.target.value } : l)),
                       )
                     }
-                    placeholder="Název"
+                    placeholder={t("placeholder.linkLabel")}
                     className="h-7 flex-1 min-w-[120px] text-xs"
                   />
                   <div className="relative flex-1 min-w-[140px]">
                     <Input
                       value={link.url}
                       onChange={(e) => handleUrlChange(idx, e.target.value)}
-                      placeholder="https://…"
+                      placeholder={t("placeholder.linkUrl")}
                       className="h-7 pr-7 text-xs"
                       inputMode="url"
                     />
@@ -582,7 +587,7 @@ function BudgetItemForm({
                         target="_blank"
                         rel="noopener noreferrer"
                         onClick={(e) => e.stopPropagation()}
-                        title="Otevřít v novém okně"
+                        title={t("title.openInNewWindow")}
                         className="absolute right-1.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                       >
                         <ExternalLink className="h-3.5 w-3.5" />
@@ -595,8 +600,7 @@ function BudgetItemForm({
                     size="icon"
                     className="h-7 w-7 shrink-0 text-muted-foreground hover:text-destructive"
                     onClick={() => setLinks((prev) => prev.filter((_, i) => i !== idx))}
-                    title="Smazat"
-                    aria-label="Smazat odkaz"
+                    aria-label={t("title.deleteLink")}
                   >
                     <Trash2 className="h-3.5 w-3.5" />
                   </Button>

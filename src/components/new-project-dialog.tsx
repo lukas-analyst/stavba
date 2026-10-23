@@ -20,6 +20,8 @@ import { Loader2, Building, Home, Palette, Plus, Copy, FileText, Bath, Warehouse
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { useQueryClient } from "@tanstack/react-query";
+import { useTranslations, useLocale } from "next-intl";
+import { formatCzk } from "@/lib/format";
 
 type Props = {
   open: boolean;
@@ -36,24 +38,14 @@ const TEMPLATE_ICONS: Record<string, React.ComponentType<{ className?: string }>
   roof: Warehouse,
 };
 
-// Czech pluralization for "položka".
-// 1 → položka, 2-4 → položky, 0/5+ → položek
-// (with exception for 11-14 which use "položek")
-function pluralizeItems(count: number): string {
-  if (count === 1) return "položka";
-  const lastTwo = count % 100;
-  if (lastTwo >= 11 && lastTwo <= 14) return "položek";
-  const last = count % 10;
-  if (last >= 2 && last <= 4) return "položky";
-  return "položek";
-}
-
 type Mode = "blank" | "template" | "copy";
 
 export function NewProjectDialog({ open, onOpenChange }: Props) {
   const createFromTemplate = useCreateProjectFromTemplate();
   const qc = useQueryClient();
   const { data: projects } = useProjects();
+  const t = useTranslations("dialogs.newProject");
+  const locale = useLocale() as "cs" | "en";
 
   const [mode, setMode] = useState<Mode | null>(null);
   const [name, setName] = useState("");
@@ -142,12 +134,12 @@ export function NewProjectDialog({ open, onOpenChange }: Props) {
         const err = await res.json().catch(() => ({}));
         throw new Error(err.error || "Failed to create project");
       }
-      toast.success("Projekt vytvořen");
+      toast.success(t("toasts.createSuccess"));
       qc.invalidateQueries({ queryKey: ["projects"] });
       reset();
       handleClose(false);
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Nepodařilo se vytvořit projekt");
+      toast.error(e instanceof Error ? e.message : t("toasts.createError"));
     } finally {
       setIsSubmitting(false);
     }
@@ -165,11 +157,11 @@ export function NewProjectDialog({ open, onOpenChange }: Props) {
         startDate: startDate || undefined,
         endDate: endDate || undefined,
       });
-      toast.success("Projekt vytvořen se šablonou položek");
+      toast.success(t("toasts.templateCreateSuccess"));
       reset();
       handleClose(false);
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Nepodařilo se vytvořit projekt");
+      toast.error(e instanceof Error ? e.message : t("toasts.createError"));
     } finally {
       setIsSubmitting(false);
     }
@@ -180,7 +172,7 @@ export function NewProjectDialog({ open, onOpenChange }: Props) {
     setIsSubmitting(true);
     try {
       const source = projects?.find((p) => p.id === copyFromId);
-      if (!source) throw new Error("Zdrojový projekt nebyl nalezen");
+      if (!source) throw new Error(t("toasts.sourceNotFound"));
 
       // Create new project
       const res = await fetch("/api/projects", {
@@ -278,22 +270,22 @@ export function NewProjectDialog({ open, onOpenChange }: Props) {
       // couldn't be copied, otherwise a clean success toast.
       if (failedCount > 0 && copiedCount > 0) {
         toast.warning(
-          `Projekt vytvořen z "${source.name}" — zkopírováno ${copiedCount} položek, ${failedCount} se nepodařilo zkopírovat.`,
+          t("toasts.copyPartial", { sourceName: source.name, copied: copiedCount, failed: failedCount }),
         );
       } else if (failedCount > 0 && copiedCount === 0) {
         toast.error(
-          `Projekt vytvořen, ale nepodařilo se zkopírovat žádné položky rozpočtu (${failedCount} selhání).`,
+          t("toasts.copyAllFailed", { failed: failedCount }),
         );
       } else {
         toast.success(
-          `Projekt vytvořen (zkopírováno ${copiedCount} položek z "${source.name}")`,
+          t("toasts.copySuccess", { sourceName: source.name, copied: copiedCount }),
         );
       }
       qc.invalidateQueries({ queryKey: ["projects"] });
       reset();
       handleClose(false);
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Nepodařilo se zkopírovat projekt");
+      toast.error(e instanceof Error ? e.message : t("toasts.copyError"));
     } finally {
       setIsSubmitting(false);
     }
@@ -301,23 +293,23 @@ export function NewProjectDialog({ open, onOpenChange }: Props) {
 
   const handleSubmit = () => {
     if (!name.trim()) {
-      toast.error("Název projektu je povinný");
+      toast.error(t("toasts.nameRequired"));
       return;
     }
     if (mode === "blank") handleCreateBlank();
     else if (mode === "template") {
       if (!templateType) {
-        toast.error("Vyberte typ stavby");
+        toast.error(t("toasts.typeRequired"));
         return;
       }
       if (needsScope && !scope) {
-        toast.error("Vyberte rozsah rekonstrukce");
+        toast.error(t("toasts.scopeRequired"));
         return;
       }
       handleCreateFromTemplate();
     } else if (mode === "copy") {
       if (!copyFromId) {
-        toast.error("Vyberte zdrojový projekt");
+        toast.error(t("toasts.sourceRequired"));
         return;
       }
       handleCopyProject();
@@ -333,12 +325,12 @@ export function NewProjectDialog({ open, onOpenChange }: Props) {
     !isSubmitting;
 
   const submitLabel = !mode
-    ? "Vyberte typ projektu"
+    ? t("submit.selectType")
     : mode === "blank"
-      ? "Vytvořit projekt"
+      ? t("submit.createBlank")
       : mode === "template"
-        ? "Vytvořit se šablonou"
-        : "Zkopírovat projekt";
+        ? t("submit.createFromTemplate")
+        : t("submit.copyExisting");
 
   return (
     <AddDialogShell
@@ -346,11 +338,11 @@ export function NewProjectDialog({ open, onOpenChange }: Props) {
       onOpenChange={handleClose}
       titleValue={name}
       onTitleChange={setName}
-      titlePlaceholder={mode ? "Název projektu…" : "Nový projekt — vyberte typ níže"}
+      titlePlaceholder={mode ? t("placeholder.projectName") : t("placeholder.selectTypeHint")}
       descriptionValue={mode ? description : undefined}
       onDescriptionChange={mode ? setDescription : undefined}
-      descriptionPlaceholder={mode ? "Krátký popis projektu…" : undefined}
-      contextText={mode === "blank" ? "Prázdný projekt" : mode === "template" ? "Ze šablony" : mode === "copy" ? "Kopie existujícího" : "Nový projekt"}
+      descriptionPlaceholder={mode ? t("placeholder.description") : undefined}
+      contextText={mode === "blank" ? t("context.blank") : mode === "template" ? t("context.template") : mode === "copy" ? t("context.copy") : t("context.new")}
       submitLabel={submitLabel}
       onSubmit={handleSubmit}
       isSubmitting={isSubmitting}
@@ -369,9 +361,9 @@ export function NewProjectDialog({ open, onOpenChange }: Props) {
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
                 <FileText className="h-6 w-6 text-primary" />
               </div>
-              <div className="text-sm font-semibold">Prázdný projekt</div>
+              <div className="text-sm font-semibold">{t("mode.blank.title")}</div>
               <p className="text-[11px] text-muted-foreground">
-                Začnete s čistým štítem, rozpočet přidáte později
+                {t("mode.blank.description")}
               </p>
             </button>
 
@@ -383,9 +375,9 @@ export function NewProjectDialog({ open, onOpenChange }: Props) {
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
                 <Home className="h-6 w-6 text-primary" />
               </div>
-              <div className="text-sm font-semibold">Ze šablony</div>
+              <div className="text-sm font-semibold">{t("mode.template.title")}</div>
               <p className="text-[11px] text-muted-foreground">
-                Rekonstrukce, nová stavba, interiér nebo přístavba
+                {t("mode.template.description")}
               </p>
             </button>
 
@@ -398,9 +390,9 @@ export function NewProjectDialog({ open, onOpenChange }: Props) {
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
                 <Copy className="h-6 w-6 text-primary" />
               </div>
-              <div className="text-sm font-semibold">Kopírovat projekt</div>
+              <div className="text-sm font-semibold">{t("mode.copy.title")}</div>
               <p className="text-[11px] text-muted-foreground">
-                Zkopíruje rozpočet z existujícího projektu
+                {t("mode.copy.description")}
               </p>
             </button>
           </div>
@@ -413,14 +405,14 @@ export function NewProjectDialog({ open, onOpenChange }: Props) {
               onClick={() => setMode(null)}
               className="flex items-center gap-1 text-xs text-muted-foreground transition-colors hover:text-foreground"
             >
-              ← Zpět na výběr typu
+              {t("back")}
             </button>
 
             {/* ===== Template mode: select template type + scope ===== */}
             {mode === "template" && (
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label>Typ stavby</Label>
+                  <Label>{t("template.typeLabel")}</Label>
                   <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                     {PROJECT_TEMPLATES.map((tpl) => {
                       const Icon = TEMPLATE_ICONS[tpl.type] ?? Building;
@@ -440,11 +432,13 @@ export function NewProjectDialog({ open, onOpenChange }: Props) {
                         >
                           <Icon className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
                           <div className="min-w-0">
-                            <div className="text-sm font-semibold">{tpl.label}</div>
-                            <p className="text-[11px] text-muted-foreground">{tpl.description}</p>
+                            <div className="text-sm font-semibold">{t(`templates.${tpl.type}.label`)}</div>
+                            <p className="text-[11px] text-muted-foreground">{t(`templates.${tpl.type}.description`)}</p>
                             <p className="mt-1 text-[10px] text-muted-foreground">
-                              {tpl.items.length} položek ·{" "}
-                              {tpl.items.reduce((s, i) => s + (i.planCost || 0), 0).toLocaleString("cs-CZ")} Kč plán
+                              {t("template.itemsPlan", {
+                                count: tpl.items.length,
+                                sum: tpl.items.reduce((s, i) => s + (i.planCost || 0), 0).toLocaleString(locale === "cs" ? "cs-CZ" : "en-US"),
+                              })}
                             </p>
                           </div>
                         </button>
@@ -456,7 +450,7 @@ export function NewProjectDialog({ open, onOpenChange }: Props) {
                 {/* Scope selection (for reconstruction) */}
                 {needsScope && templateType && (
                   <div className="space-y-2">
-                    <Label>Rozsah rekonstrukce</Label>
+                    <Label>{t("template.scopeLabel")}</Label>
                     <div className="grid grid-cols-1 gap-2">
                       {selectedTemplate?.scopeOptions?.map((opt) => (
                         <button
@@ -470,8 +464,8 @@ export function NewProjectDialog({ open, onOpenChange }: Props) {
                           )}
                         >
                           <div className="min-w-0">
-                            <div className="text-sm font-semibold">{opt.label}</div>
-                            <p className="text-[11px] text-muted-foreground">{opt.description}</p>
+                            <div className="text-sm font-semibold">{t(`templates.${templateType}.scopeOptions.${opt.id}.label`)}</div>
+                            <p className="text-[11px] text-muted-foreground">{t(`templates.${templateType}.scopeOptions.${opt.id}.description`)}</p>
                           </div>
                         </button>
                       ))}
@@ -484,7 +478,7 @@ export function NewProjectDialog({ open, onOpenChange }: Props) {
                   <div className="rounded-lg border bg-muted/20 p-3">
                     <div className="mb-2 flex items-center justify-between">
                       <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                        Náhled podle kategorií
+                        {t("template.preview")}
                       </span>
                     </div>
                     <div className="space-y-1">
@@ -492,17 +486,19 @@ export function NewProjectDialog({ open, onOpenChange }: Props) {
                         <div key={category} className="flex items-center gap-2 text-[11px]">
                           <Badge variant="secondary" className="font-medium">{category}</Badge>
                           <span className="text-muted-foreground">
-                            {count} {pluralizeItems(count)}
+                            {t("template.itemsCount", { count })}
                           </span>
                           <span className="ml-auto font-medium tabular-nums">
-                            {sum.toLocaleString("cs-CZ")} Kč
+                            {formatCzk(sum, locale)}
                           </span>
                         </div>
                       ))}
                     </div>
                     <div className="mt-2 border-t pt-2 text-[11px] font-semibold">
-                      Celkem: {previewTemplate.items.length} {pluralizeItems(previewTemplate.items.length)}, {" "}
-                      {totalPlanSum.toLocaleString("cs-CZ")} Kč
+                      {t("template.total", {
+                        count: previewTemplate.items.length,
+                        sum: formatCzk(totalPlanSum, locale),
+                      })}
                     </div>
                   </div>
                 )}
@@ -513,10 +509,10 @@ export function NewProjectDialog({ open, onOpenChange }: Props) {
             {mode === "copy" && (
               <div className="space-y-3">
                 <div className="space-y-2">
-                  <Label>Zdrojový projekt *</Label>
+                  <Label>{t("copy.sourceLabel")}</Label>
                   <Select value={copyFromId} onValueChange={setCopyFromId}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Vyberte projekt ke zkopírování…" />
+                      <SelectValue placeholder={t("placeholder.selectProjectCopy")} />
                     </SelectTrigger>
                     <SelectContent>
                       {projects?.map((p) => (
@@ -530,9 +526,7 @@ export function NewProjectDialog({ open, onOpenChange }: Props) {
                 {copyFromId && (
                   <div className="rounded-lg border bg-muted/20 p-3">
                     <p className="text-[11px] text-muted-foreground">
-                      Zkopírují se všechny položky rozpočtu (kategorie, plány, vůle, fáze).
-                      Skutečné hodnoty, hotovo a zavržené stavy se resetují.
-                      Platby, časové záznamy a kontakty se nekopírují.
+                      {t("copy.description")}
                     </p>
                   </div>
                 )}
@@ -543,16 +537,16 @@ export function NewProjectDialog({ open, onOpenChange }: Props) {
             {mode && (
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="proj-address">Adresa</Label>
+                  <Label htmlFor="proj-address">{t("field.address")}</Label>
                   <Input
                     id="proj-address"
                     value={address}
                     onChange={(e) => setAddress(e.target.value)}
-                    placeholder="např. Praha - Troja"
+                    placeholder={t("placeholder.address")}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="proj-start">Datum zahájení</Label>
+                  <Label htmlFor="proj-start">{t("field.startDate")}</Label>
                   <Input
                     id="proj-start"
                     type="date"
@@ -565,7 +559,7 @@ export function NewProjectDialog({ open, onOpenChange }: Props) {
             {mode && (
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="proj-end">Datum dokončení</Label>
+                  <Label htmlFor="proj-end">{t("field.endDate")}</Label>
                   <Input
                     id="proj-end"
                     type="date"

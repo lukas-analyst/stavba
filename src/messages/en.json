@@ -1785,5 +1785,378 @@
       "logout": "Sign out",
       "project_share": "Share project"
     }
+  },
+  "components": {
+    "emptyState": {
+      "welcome": "Welcome to Stavba",
+      "description": "Select a project from the sidebar, or create a new project to track the budget, costs, time, and materials of your construction and renovation.",
+      "button": "Create first project"
+    },
+    "contextualFab": {
+      "actions": {
+        "addItem": "Add item",
+        "addPayment": "Add payment",
+        "addTime": "Add time",
+        "addContact": "Add contact"
+      }
+    },
+    "aresSearch": {
+      "placeholder": "Search company (ID or name)…",
+      "needsApiKey": {
+        "title": "ARES API key is not configured.",
+        "hint": "You can enter the company manually below."
+      },
+      "noResults": "No companies found for \"{query}\"",
+      "result": {
+        "ico": "ID: {ico}",
+        "dic": "VAT: {dic}"
+      }
+    },
+    "sessionTimeoutWarning": {
+      "message": "Your session expires in {minutesLeft, plural, one {# minute} other {# minutes}}. Extend the session to prevent data loss.",
+      "description": "You will be signed out automatically when it expires.",
+      "action": {
+        "extend": "Extend",
+        "signOut": "Sign out"
+      },
+      "success": "Session extended."
+    }
+  },
+  "dialogs": {
+    "budgetItem": {
+      "toasts": {
+        "dateFromSetByRef": "Start date set from „{name}\"",
+        "dateFromAlreadySet": "Start date was already filled — not changed.",
+        "dateFromNotChanged": "„{name}\" has no end date — start date not changed.",
+        "categoryRequired": "Category is required",
+        "taskUpdated": "Task updated",
+        "itemUpdated": "Item updated",
+        "taskAdded": "Task added",
+        "itemAdded": "Item added",
+        "saveError": "Failed to save item"
+      },
+      "submit": {
+        "editTask": "Edit task",
+        "editItem": "Edit item",
+        "addTask": "Add task",
+        "addItem": "Add item"
+      },
+      "placeholder": {
+        "taskName": "Task name…",
+        "itemName": "Item name…",
+        "note": "Note…",
+        "newCategory": "New category",
+        "selectCategory": "Select category",
+        "subsidyAmount": "e.g. 15000",
+        "linkLabel": "Name",
+        "linkUrl": "https://…",
+        "searchItem": "Search item…",
+        "searchContact": "Search contact…"
+      },
+      "context": {
+        "taskUnderItem": "Task under item „{name}\""
+      },
+      "label": {
+        "category": "Category *",
+        "phase": "Phase",
+        "required": "Required",
+        "completed": "Done",
+        "rejected": "Rejected",
+        "subsidy": "Subsidy",
+        "subsidyAmount": "Subsidy amount (CZK)",
+        "dateFrom": "Date from",
+        "dateTo": "Date to",
+        "planDays": "Plan (days)",
+        "dependsOn": "Depends on",
+        "planCost": "Plan (CZK)",
+        "flexibility": "Flexibility (%)",
+        "contactHint": "Responsible person / company",
+        "links": "Links",
+        "noDependency": "— no dependency —",
+        "noContact": "— no contact —",
+        "selectExisting": "Select existing",
+        "addNewCategory": "+ New category"
+      },
+      "title": {
+        "requiredHint": "Item is required to complete the project",
+        "subsidyHint": "Subsidy can be claimed for this item",
+        "openInNewWindow": "Open in new window",
+        "deleteLink": "Delete link"
+      },
+      "section": {
+        "date": "Date (optional)",
+        "money": "Money (optional)",
+        "contact": "Contact (optional)",
+        "links": "Links (optional)"
+      },
+      "empty": {
+        "items": "No items found",
+        "contacts": "No contacts found",
+        "noContactsHint": "No contacts yet. Add them in the Contacts tab."
+      },
+      "button": {
+        "add": "Add"
+      }
+    },
+    "newProject": {
+      "toasts": {
+        "createSuccess": "Project created",
+        "createError": "Failed to create project",
+        "templateCreateSuccess": "Project created with item template",
+        "sourceNotFound": "Source project not found",
+        "copyPartial": "Project created from „{sourceName}\" — {copied, plural, one {# item copied} other {# items copied}}, {failed, plural, one {# failed to copy} other {# failed to copy}}.",
+        "copyAllFailed": "Project created, but no budget items could be copied ({failed} failures).",
+        "copySuccess": "Project created ({copied, plural, one {# item copied} other {# items copied}} from „{sourceName}\")",
+        "copyError": "Failed to copy project",
+        "nameRequired": "Project name is required",
+        "typeRequired": "Select construction type",
+        "scopeRequired": "Select reconstruction scope",
+        "sourceRequired": "Select source project"
+      },
+      "submit": {
+        "selectType": "Select project type",
+        "createBlank": "Create project",
+        "createFromTemplate": "Create with template",
+        "copyExisting": "Copy project"
+      },
+      "placeholder": {
+        "projectName": "Project name…",
+        "selectTypeHint": "New project — select type below",
+        "description": "Short project description…",
+        "selectProjectCopy": "Select project to copy…",
+        "address": "e.g. Prague - Troja"
+      },
+      "context": {
+        "blank": "Blank project",
+        "template": "From template",
+        "copy": "Copy of existing",
+        "new": "New project"
+      },
+      "mode": {
+        "blank": {
+          "title": "Blank project",
+          "description": "Start with a clean slate, add budget later"
+        },
+        "template": {
+          "title": "From template",
+          "description": "Reconstruction, new build, interior or extension"
+        },
+        "copy": {
+          "title": "Copy project",
+          "description": "Copies budget from an existing project"
+        }
+      },
+      "back": "← Back to type selection",
+      "template": {
+        "typeLabel": "Construction type",
+        "scopeLabel": "Reconstruction scope",
+        "preview": "Preview by category",
+        "itemsCount": "{count, plural, one {# item} other {# items}}",
+        "itemsPlan": "{count, plural, one {# item} other {# items}} · {sum} CZK plan",
+        "total": "Total: {count, plural, one {# item} other {# items}}, {sum} CZK"
+      },
+      "copy": {
+        "sourceLabel": "Source project *",
+        "description": "All budget items (categories, plans, flexibility, phases) will be copied. Actual values, done and rejected states are reset. Payments, time entries and contacts are not copied."
+      },
+      "field": {
+        "address": "Address",
+        "startDate": "Start date",
+        "endDate": "End date"
+      },
+      "templates": {
+        "reconstruction": {
+          "label": "Reconstruction",
+          "description": "Reconstruction of an existing house, apartment or cottage.",
+          "scopeOptions": {
+            "partial": {
+              "label": "Partial reconstruction",
+              "description": "Only selected rooms or systems (e.g. bathroom, kitchen, electrical)"
+            },
+            "complete": {
+              "label": "Complete reconstruction",
+              "description": "Entire building including shell, installations and finishing work"
+            },
+            "structural": {
+              "label": "Structural reconstruction",
+              "description": "Interventions in load-bearing structures, conversions, additions"
+            }
+          }
+        },
+        "new_build": {
+          "label": "New build",
+          "description": "Construction of a new house from the ground up."
+        },
+        "interior": {
+          "label": "Interior",
+          "description": "Interior furnishing and finishing (painting, floors, fixtures)."
+        },
+        "extension": {
+          "label": "Extension",
+          "description": "Extension to an existing building (addition, garage extension, winter garden)."
+        },
+        "apartment_2plus1": {
+          "label": "2+1 apartment reconstruction",
+          "description": "Complete reconstruction of a 2+1 apartment (~70 m²) — demolition, wiring, bathroom, kitchen, floors, painting."
+        },
+        "bathroom": {
+          "label": "Bathroom reconstruction",
+          "description": "Complete bathroom reconstruction (~5 m²) — demolition, plumbing, tiles, fixtures, electrical."
+        },
+        "roof": {
+          "label": "Roof reconstruction",
+          "description": "Complete roof replacement — demolition, framing, insulation, tiling, sheet metal."
+        }
+      }
+    },
+    "project": {
+      "toasts": {
+        "nameRequired": "Project name is required",
+        "updateSuccess": "Project updated",
+        "createSuccess": "Project created",
+        "updateError": "Failed to update project",
+        "createError": "Failed to create project"
+      },
+      "placeholder": {
+        "name": "Project name…",
+        "description": "Short project description…",
+        "address": "e.g. Prague - Troja"
+      },
+      "context": {
+        "edit": "Editing project",
+        "new": "New project"
+      },
+      "submit": {
+        "saveChanges": "Save changes",
+        "create": "Create project"
+      },
+      "label": {
+        "address": "Address",
+        "status": "Status"
+      },
+      "section": {
+        "dates": "Dates (optional)"
+      },
+      "field": {
+        "startDate": "Start date",
+        "endDate": "End date"
+      }
+    },
+    "printReport": {
+      "toasts": {
+        "dataNotLoaded": "Report data not loaded.",
+        "mobileExportHint": "Open the app in a desktop browser to export PDF.",
+        "printFailed": "Print failed. Please try again."
+      },
+      "title": "Project report — PDF preview",
+      "description": "Report preview for PDF export. Click \"Download PDF\" — in the browser's print dialog, choose \"Save as PDF\" as the destination.",
+      "mobileWarning": "PDF cannot be exported directly on a mobile browser — open the app in a desktop browser.",
+      "button": {
+        "close": "Close",
+        "exportDesktop": "Export on desktop",
+        "downloadPdf": "Download PDF"
+      },
+      "header": {
+        "generated": "Generated:",
+        "start": "Start:",
+        "end": "End:"
+      },
+      "section": {
+        "summary": "Budget summary",
+        "alerts": "Alerts",
+        "projection": "Projection estimate",
+        "phases": "Breakdown by phase",
+        "categories": "Breakdown by category {top}",
+        "categoriesTop": "(top 15)",
+        "budgetItems": "Budget items ({count})",
+        "payments": "Payments (last {count})"
+      },
+      "kpi": {
+        "plan": "Plan",
+        "actual": "Actual",
+        "remaining": "Remaining",
+        "saved": "Saved",
+        "completed": "Done",
+        "hours": "Hours",
+        "avgOverrun": "Avg. overrun",
+        "predictedFinal": "Predicted final cost",
+        "estimatedOverrun": "Estimated overrun",
+        "planRatio": "Plan ratio"
+      },
+      "alert": {
+        "overdue": "Overdue ({count})",
+        "upcoming": "Upcoming ({count})",
+        "overBudget": "Over budget ({count})"
+      },
+      "projection": {
+        "empty": "No completed items — final cost projection is unavailable. After completing the first items, an estimate based on the average plan overrun will appear here."
+      },
+      "column": {
+        "phase": "Phase",
+        "plan": "Plan",
+        "actual": "Actual",
+        "percent": "%",
+        "hours": "Hours",
+        "category": "Category",
+        "name": "Name",
+        "actualShort": "Act.",
+        "from": "From",
+        "to": "To",
+        "status": "Status",
+        "date": "Date",
+        "item": "Item",
+        "vendor": "Vendor",
+        "amount": "Amount",
+        "type": "Type"
+      },
+      "empty": {
+        "phases": "No phases to show.",
+        "categories": "No categories to show.",
+        "budgetItems": "No budget items.",
+        "payments": "No payments to show."
+      },
+      "fallback": {
+        "noName": "(no name)",
+        "noItem": "(no item)"
+      },
+      "status": {
+        "rejected": "Rejected",
+        "completed": "Done",
+        "active": "Active",
+        "plan": "Plan"
+      },
+      "footer": "Report generated by Rozpočet Stavby on {date} — {projectName}."
+    },
+    "auditLog": {
+      "title": "Change history",
+      "description": "Last {count} changes in the project (edits, creations, deletions).",
+      "empty": "No recorded changes yet.",
+      "emptyValue": "(empty)",
+      "action": {
+        "fallback": "{action}"
+      },
+      "field": {
+        "element": "Element",
+        "actualHours": "Hours",
+        "date": "Date"
+      }
+    },
+    "globalSearch": {
+      "title": "Global search",
+      "placeholder": "Search projects, items, contacts, payments, notes…",
+      "initialHint": "Start typing to search across the app",
+      "noResults": "No results for „{query}\"",
+      "group": {
+        "projects": "Projects",
+        "items": "Budget items",
+        "contacts": "Contacts",
+        "payments": "Payments",
+        "notes": "Notes"
+      },
+      "footer": {
+        "navigation": "Navigation",
+        "select": "Select"
+      }
+    }
   }
 }

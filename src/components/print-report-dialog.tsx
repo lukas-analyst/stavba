@@ -10,24 +10,14 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  useDashboard,
-  useBudgetItems,
-  usePayments,
-  type BudgetItem,
-  type AlertItem,
-  type Payment,
-} from "@/lib/api";
-import {
-  formatCzk,
-  formatNumber,
-  formatDate,
-  PHASE_COLORS,
-} from "@/lib/format";
+import { useDashboard, useBudgetItems, usePayments, type BudgetItem, type AlertItem, type Payment } from "@/lib/api";
+import { formatCzk, formatNumber, formatDate, PHASE_COLORS, normalizePhase } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { Download, FileText, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useTranslations, useLocale } from "next-intl";
+import type { Locale } from "@/i18n/config";
 
 type Props = {
   open: boolean;
@@ -55,10 +45,12 @@ export function PrintReportDialog({
   const { data: budgetItems } = useBudgetItems(projectId);
   const { data: payments } = usePayments(projectId);
   const isMobile = useIsMobile();
+  const t = useTranslations("dialogs.printReport");
+  const locale = useLocale() as Locale;
 
   const handleDownloadPdf = () => {
     if (!data) {
-      toast.error("Data reportu nejsou načtena.");
+      toast.error(t("toasts.dataNotLoaded"));
       return;
     }
     // U18: window.print() does not work reliably on mobile browsers
@@ -66,10 +58,7 @@ export function PrintReportDialog({
     // without the "Save as PDF" option). Redirect mobile users to the
     // desktop version of the app instead of attempting the print flow.
     if (isMobile) {
-      toast.info(
-        "Pro export PDF otevřete aplikaci v desktopovém prohlížeči.",
-        { duration: 6000 },
-      );
+      toast.info(t("toasts.mobileExportHint"), { duration: 6000 });
       return;
     }
     document.body.classList.add("printing");
@@ -86,7 +75,7 @@ export function PrintReportDialog({
       } catch {
         // Some browsers may throw if print is blocked — cleanup anyway.
         cleanup();
-        toast.error("Tisk se nezdařil. Zkuste to prosím znovu.");
+        toast.error(t("toasts.printFailed"));
       }
     }, 60);
   };
@@ -99,17 +88,15 @@ export function PrintReportDialog({
         <DialogHeader>
           <div className="flex items-center gap-2">
             <FileText className="h-5 w-5 text-primary" />
-            <DialogTitle>Report projektu — náhled PDF</DialogTitle>
+            <DialogTitle>{t("title")}</DialogTitle>
           </div>
           <DialogDescription>
-            Náhled reportu pro export do PDF. Klikněte „Stáhnout PDF" — v dialogu
-            tisku prohlížeče zvolte cíl <strong>„Uložit jako PDF"</strong>.
+            {t("description")}
             {isMobile && (
               <>
                 {" "}
                 <span className="text-warning">
-                  Na mobilním prohlížeči nelze PDF exportovat přímo — otevřete
-                  aplikaci v desktopovém prohlížeči.
+                  {t("mobileWarning")}
                 </span>
               </>
             )}
@@ -126,12 +113,13 @@ export function PrintReportDialog({
             data={data}
             budgetItems={budgetItems ?? []}
             payments={(payments ?? []).slice(0, 10)}
+            locale={locale}
           />
         )}
 
         <DialogFooter className="no-print">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Zavřít
+            {t("button.close")}
           </Button>
           <Button
             onClick={handleDownloadPdf}
@@ -139,7 +127,7 @@ export function PrintReportDialog({
             aria-busy={isLoading}
           >
             <Download className="mr-2 h-4 w-4" />
-            {isMobile ? "Exportovat v desktopu" : "Stáhnout PDF"}
+            {isMobile ? t("button.exportDesktop") : t("button.downloadPdf")}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -157,12 +145,16 @@ function ReportBody({
   data,
   budgetItems,
   payments,
+  locale,
 }: {
   projectName: string;
   data: NonNullable<ReturnType<typeof useDashboard>["data"]>;
   budgetItems: BudgetItem[];
   payments: Payment[];
+  locale: Locale;
 }) {
+  const t = useTranslations("dialogs.printReport");
+  const tPhases = useTranslations("phases");
   const { project, totals, byPhase, byCategory, alerts } = data;
   const hasCompleted = totals.completedCount > 0;
   const overPct = totals.planTotal > 0
@@ -187,14 +179,14 @@ function ReportBody({
           </div>
           <div className="shrink-0 text-right text-xs text-muted-foreground">
             <div>
-              <span className="font-medium text-foreground">Vygenerováno:</span>{" "}
-              {formatDate(new Date(), { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })}
+              <span className="font-medium text-foreground">{t("header.generated")}</span>{" "}
+              {formatDate(new Date(), { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" }, locale)}
             </div>
             {project.startDate && (
-              <div>Zahájení: {formatDate(project.startDate)}</div>
+              <div>{t("header.start")} {formatDate(project.startDate, undefined, locale)}</div>
             )}
             {project.endDate && (
-              <div>Dokončení: {formatDate(project.endDate)}</div>
+              <div>{t("header.end")} {formatDate(project.endDate, undefined, locale)}</div>
             )}
           </div>
         </div>
@@ -203,28 +195,28 @@ function ReportBody({
       {/* ===== KPI souhrn ===== */}
       <section className="print-section">
         <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-          Shrnutí rozpočtu
+          {t("section.summary")}
         </h2>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-          <KpiCard label="Plán" value={formatCzk(totals.planTotal)} />
-          <KpiCard label="Skutečnost" value={formatCzk(totals.actualTotal)} />
+          <KpiCard label={t("kpi.plan")} value={formatCzk(totals.planTotal, locale)} />
+          <KpiCard label={t("kpi.actual")} value={formatCzk(totals.actualTotal, locale)} />
           <KpiCard
-            label="Zbývá"
-            value={formatCzk(totals.remaining)}
+            label={t("kpi.remaining")}
+            value={formatCzk(totals.remaining, locale)}
             tone={totals.remaining < 0 ? "danger" : "ok"}
           />
           <KpiCard
-            label="Ušetřeno"
-            value={formatCzk(totals.savedTotal)}
+            label={t("kpi.saved")}
+            value={formatCzk(totals.savedTotal, locale)}
             tone="ok"
           />
           <KpiCard
-            label="Hotovo"
+            label={t("kpi.completed")}
             value={`${totals.completedCount} / ${totals.itemCount}`}
           />
           <KpiCard
-            label="Hodiny"
-            value={formatNumber(totals.hoursTotal, " h")}
+            label={t("kpi.hours")}
+            value={formatNumber(totals.hoursTotal, " h", locale)}
           />
         </div>
       </section>
@@ -235,27 +227,27 @@ function ReportBody({
         alerts.overBudget.length > 0) && (
         <section className="print-section">
           <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-            Upozornění
+            {t("section.alerts")}
           </h2>
           <div className="space-y-1.5 text-xs">
             {alerts.overdue.length > 0 && (
               <AlertLine
                 tone="danger"
-                label={`Zpožděné (${alerts.overdue.length})`}
+                label={t("alert.overdue", { count: alerts.overdue.length })}
                 items={alerts.overdue}
               />
             )}
             {alerts.upcoming.length > 0 && (
               <AlertLine
                 tone="info"
-                label={`Blížící se (${alerts.upcoming.length})`}
+                label={t("alert.upcoming", { count: alerts.upcoming.length })}
                 items={alerts.upcoming}
               />
             )}
             {alerts.overBudget.length > 0 && (
               <AlertLine
                 tone="danger"
-                label={`Překročeno (${alerts.overBudget.length})`}
+                label={t("alert.overBudget", { count: alerts.overBudget.length })}
                 items={alerts.overBudget}
               />
             )}
@@ -266,36 +258,34 @@ function ReportBody({
       {/* ===== Projekční odhad ===== */}
       <section className="print-section">
         <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-          Projekční odhad
+          {t("section.projection")}
         </h2>
         {hasCompleted ? (
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
             <KpiCard
-              label="Prům. překročení"
+              label={t("kpi.avgOverrun")}
               value={`${(totals.avgOverrunRatio * 100).toFixed(0)} %`}
               tone={totals.avgOverrunRatio > 1 ? "danger" : "ok"}
             />
             <KpiCard
-              label="Predikce konečných nákladů"
-              value={formatCzk(totals.projectedFinal)}
+              label={t("kpi.predictedFinal")}
+              value={formatCzk(totals.projectedFinal, locale)}
               tone={totals.projectedOverrun > 0 ? "danger" : "ok"}
             />
             <KpiCard
-              label="Odhadované překročení"
-              value={formatCzk(totals.projectedOverrun)}
+              label={t("kpi.estimatedOverrun")}
+              value={formatCzk(totals.projectedOverrun, locale)}
               tone={totals.projectedOverrun > 0 ? "danger" : "ok"}
             />
             <KpiCard
-              label="Podíl plánu"
+              label={t("kpi.planRatio")}
               value={`${overPct.toFixed(0)} %`}
               tone={overPct > 100 ? "danger" : "ok"}
             />
           </div>
         ) : (
           <p className="text-xs text-muted-foreground">
-            Žádné dokončené položky — projekce konečných nákladů není dostupná.
-            Po dokončení prvních položek se zde zobrazí odhad na základě průměrné
-            míry překročení plánu.
+            {t("projection.empty")}
           </p>
         )}
       </section>
@@ -303,36 +293,37 @@ function ReportBody({
       {/* ===== Fáze ===== */}
       <section className="print-section print-break-before">
         <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-          Rozpad podle fází
+          {t("section.phases")}
         </h2>
         <table className="w-full border-collapse text-sm">
           <thead>
             <tr className="border-b border-border text-left">
-              <th className="py-1.5 pr-2 font-medium">Fáze</th>
-              <th className="py-1.5 px-2 text-right font-medium">Plán</th>
-              <th className="py-1.5 px-2 text-right font-medium">Skutečnost</th>
-              <th className="py-1.5 px-2 text-right font-medium">%</th>
-              <th className="py-1.5 pl-2 text-right font-medium">Hodiny</th>
+              <th className="py-1.5 pr-2 font-medium">{t("column.phase")}</th>
+              <th className="py-1.5 px-2 text-right font-medium">{t("column.plan")}</th>
+              <th className="py-1.5 px-2 text-right font-medium">{t("column.actual")}</th>
+              <th className="py-1.5 px-2 text-right font-medium">{t("column.percent")}</th>
+              <th className="py-1.5 pl-2 text-right font-medium">{t("column.hours")}</th>
             </tr>
           </thead>
           <tbody>
             {byPhase.map((p) => {
               const burn = p.plan > 0 ? (p.actual / p.plan) * 100 : 0;
+              const phaseId = normalizePhase(p.phase);
               return (
                 <tr key={p.phase} className="border-b border-border">
                   <td className="py-1.5 pr-2">
                     <Badge
                       variant="outline"
-                      className={cn("text-[10px]", PHASE_COLORS[p.phase] ?? "")}
+                      className={cn("text-[10px]", PHASE_COLORS[phaseId] ?? "")}
                     >
-                      {p.phase}
+                      {tPhases(phaseId)}
                     </Badge>
                   </td>
                   <td className="py-1.5 px-2 text-right tabular-nums">
-                    {formatCzk(p.plan)}
+                    {formatCzk(p.plan, locale)}
                   </td>
                   <td className="py-1.5 px-2 text-right tabular-nums">
-                    {formatCzk(p.actual)}
+                    {formatCzk(p.actual, locale)}
                   </td>
                   <td
                     className={cn(
@@ -343,7 +334,7 @@ function ReportBody({
                     {burn.toFixed(0)} %
                   </td>
                   <td className="py-1.5 pl-2 text-right tabular-nums">
-                    {formatNumber(p.hours, " h")}
+                    {formatNumber(p.hours, " h", locale)}
                   </td>
                 </tr>
               );
@@ -351,7 +342,7 @@ function ReportBody({
             {byPhase.length === 0 && (
               <tr>
                 <td colSpan={5} className="py-3 text-center text-xs text-muted-foreground">
-                  Žádné fáze k zobrazení.
+                  {t("empty.phases")}
                 </td>
               </tr>
             )}
@@ -362,15 +353,15 @@ function ReportBody({
       {/* ===== Kategorie (top 15) ===== */}
       <section className="print-section">
         <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-          Rozpad podle kategorií {byCategory.length > 15 && "(top 15)"}
+          {t("section.categories", { top: byCategory.length > 15 ? t("section.categoriesTop") : "" })}
         </h2>
         <table className="w-full border-collapse text-sm">
           <thead>
             <tr className="border-b border-border text-left">
-              <th className="py-1.5 pr-2 font-medium">Kategorie</th>
-              <th className="py-1.5 px-2 text-right font-medium">Plán</th>
-              <th className="py-1.5 px-2 text-right font-medium">Skutečnost</th>
-              <th className="py-1.5 pl-2 text-right font-medium">%</th>
+              <th className="py-1.5 pr-2 font-medium">{t("column.category")}</th>
+              <th className="py-1.5 px-2 text-right font-medium">{t("column.plan")}</th>
+              <th className="py-1.5 px-2 text-right font-medium">{t("column.actual")}</th>
+              <th className="py-1.5 pl-2 text-right font-medium">{t("column.percent")}</th>
             </tr>
           </thead>
           <tbody>
@@ -379,8 +370,8 @@ function ReportBody({
               return (
                 <tr key={c.category} className="border-b border-border">
                   <td className="py-1.5 pr-2">{c.category}</td>
-                  <td className="py-1.5 px-2 text-right tabular-nums">{formatCzk(c.plan)}</td>
-                  <td className="py-1.5 px-2 text-right tabular-nums">{formatCzk(c.actual)}</td>
+                  <td className="py-1.5 px-2 text-right tabular-nums">{formatCzk(c.plan, locale)}</td>
+                  <td className="py-1.5 px-2 text-right tabular-nums">{formatCzk(c.actual, locale)}</td>
                   <td
                     className={cn(
                       "py-1.5 pl-2 text-right tabular-nums",
@@ -395,7 +386,7 @@ function ReportBody({
             {byCategory.length === 0 && (
               <tr>
                 <td colSpan={4} className="py-3 text-center text-xs text-muted-foreground">
-                  Žádné kategorie k zobrazení.
+                  {t("empty.categories")}
                 </td>
               </tr>
             )}
@@ -406,30 +397,30 @@ function ReportBody({
       {/* ===== Položky rozpočtu ===== */}
       <section className="print-section print-break-before">
         <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-          Položky rozpočtu ({budgetItems.length})
+          {t("section.budgetItems", { count: budgetItems.length })}
         </h2>
         <table className="w-full border-collapse text-xs">
           <thead>
             <tr className="border-b border-border text-left">
-              <th className="py-1.5 pr-2 font-medium">Kategorie</th>
-              <th className="py-1.5 px-2 font-medium">Název</th>
-              <th className="py-1.5 px-2 text-right font-medium">Plán</th>
-              <th className="py-1.5 px-2 text-right font-medium">Skut.</th>
-              <th className="py-1.5 px-2 font-medium">Od</th>
-              <th className="py-1.5 px-2 font-medium">Do</th>
-              <th className="py-1.5 pl-2 font-medium">Stav</th>
+              <th className="py-1.5 pr-2 font-medium">{t("column.category")}</th>
+              <th className="py-1.5 px-2 font-medium">{t("column.name")}</th>
+              <th className="py-1.5 px-2 text-right font-medium">{t("column.plan")}</th>
+              <th className="py-1.5 px-2 text-right font-medium">{t("column.actualShort")}</th>
+              <th className="py-1.5 px-2 font-medium">{t("column.from")}</th>
+              <th className="py-1.5 px-2 font-medium">{t("column.to")}</th>
+              <th className="py-1.5 pl-2 font-medium">{t("column.status")}</th>
             </tr>
           </thead>
           <tbody>
             {budgetItems.map((it) => {
-              const name = it.subcategory || "(bez názvu)";
+              const name = it.subcategory || t("fallback.noName");
               const status = it.rejected
-                ? "Zavrženo"
+                ? t("status.rejected")
                 : it.completed
-                  ? "Hotovo"
+                  ? t("status.completed")
                   : it.actualCost > 0 || it.actualHours > 0
-                    ? "Aktivní"
-                    : "Plán";
+                    ? t("status.active")
+                    : t("status.plan");
               const statusTone = it.rejected
                 ? "bg-zinc-100 text-zinc-700 border-zinc-200"
                 : it.completed
@@ -442,16 +433,16 @@ function ReportBody({
                   <td className="py-1 pr-2 align-top text-muted-foreground">{it.category}</td>
                   <td className="py-1 px-2 align-top">{name}</td>
                   <td className="py-1 px-2 text-right align-top tabular-nums">
-                    {formatCzk(it.planCost)}
+                    {formatCzk(it.planCost, locale)}
                   </td>
                   <td className="py-1 px-2 text-right align-top tabular-nums">
-                    {formatCzk(it.actualCost)}
+                    {formatCzk(it.actualCost, locale)}
                   </td>
                   <td className="py-1 px-2 align-top text-muted-foreground">
-                    {formatDate(it.dateFrom)}
+                    {formatDate(it.dateFrom, undefined, locale)}
                   </td>
                   <td className="py-1 px-2 align-top text-muted-foreground">
-                    {formatDate(it.dateTo)}
+                    {formatDate(it.dateTo, undefined, locale)}
                   </td>
                   <td className="py-1 pl-2 align-top">
                     <Badge variant="outline" className={cn("text-[10px]", statusTone)}>
@@ -464,7 +455,7 @@ function ReportBody({
             {budgetItems.length === 0 && (
               <tr>
                 <td colSpan={7} className="py-3 text-center text-xs text-muted-foreground">
-                  Žádné položky rozpočtu.
+                  {t("empty.budgetItems")}
                 </td>
               </tr>
             )}
@@ -475,16 +466,16 @@ function ReportBody({
       {/* ===== Platby (posledních 10) ===== */}
       <section className="print-section print-break-before">
         <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-          Platby (posledních {payments.length})
+          {t("section.payments", { count: payments.length })}
         </h2>
         <table className="w-full border-collapse text-xs">
           <thead>
             <tr className="border-b border-border text-left">
-              <th className="py-1.5 pr-2 font-medium">Datum</th>
-              <th className="py-1.5 px-2 font-medium">Položka</th>
-              <th className="py-1.5 px-2 font-medium">Dodavatel</th>
-              <th className="py-1.5 px-2 text-right font-medium">Částka</th>
-              <th className="py-1.5 pl-2 font-medium">Typ</th>
+              <th className="py-1.5 pr-2 font-medium">{t("column.date")}</th>
+              <th className="py-1.5 px-2 font-medium">{t("column.item")}</th>
+              <th className="py-1.5 px-2 font-medium">{t("column.vendor")}</th>
+              <th className="py-1.5 px-2 text-right font-medium">{t("column.amount")}</th>
+              <th className="py-1.5 pl-2 font-medium">{t("column.type")}</th>
             </tr>
           </thead>
           <tbody>
@@ -493,16 +484,16 @@ function ReportBody({
                 ? [p.budgetItem.category, p.budgetItem.subcategory]
                     .filter(Boolean)
                     .join(" — ")
-                : "(bez položky)";
+                : t("fallback.noItem");
               return (
                 <tr key={p.id} className="border-b border-border">
-                  <td className="py-1 pr-2 align-top tabular-nums">{formatDate(p.date)}</td>
+                  <td className="py-1 pr-2 align-top tabular-nums">{formatDate(p.date, undefined, locale)}</td>
                   <td className="py-1 px-2 align-top">{itemLabel}</td>
                   <td className="py-1 px-2 align-top text-muted-foreground">
                     {p.vendor ?? p.contact?.name ?? "—"}
                   </td>
                   <td className="py-1 px-2 text-right align-top tabular-nums">
-                    {formatCzk(p.amount)}
+                    {formatCzk(p.amount, locale)}
                   </td>
                   <td className="py-1 pl-2 align-top text-muted-foreground">{p.type}</td>
                 </tr>
@@ -511,7 +502,7 @@ function ReportBody({
             {payments.length === 0 && (
               <tr>
                 <td colSpan={5} className="py-3 text-center text-xs text-muted-foreground">
-                  Žádné platby k zobrazení.
+                  {t("empty.payments")}
                 </td>
               </tr>
             )}
@@ -521,9 +512,10 @@ function ReportBody({
 
       {/* ===== Patička ===== */}
       <footer className="border-t border-border pt-3 text-[10px] text-muted-foreground">
-        Report vygenerován aplikací Rozpočet Stavby dne{" "}
-        {formatDate(new Date(), { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })}{" "}
-        — {projectName}.
+        {t("footer", {
+          date: formatDate(new Date(), { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" }, locale),
+          projectName,
+        })}
       </footer>
     </div>
   );

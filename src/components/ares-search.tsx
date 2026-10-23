@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Search, Building2, ChevronRight, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTranslations } from "next-intl";
 
 export type AresCompany = {
   ico: string;
@@ -23,6 +24,7 @@ type Props = {
 };
 
 export function AresSearch({ onSelect }: Props) {
+  const t = useTranslations("components.aresSearch");
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<AresCompany[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -106,7 +108,7 @@ export function AresSearch({ onSelect }: Props) {
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleKeyDown}
             onFocus={() => results.length > 0 && setShowResults(true)}
-            placeholder="Hledat firmu (IČO nebo název)…"
+            placeholder={t("placeholder")}
             className="h-8 pl-8 text-xs"
           />
           {isLoading && (
@@ -120,12 +122,12 @@ export function AresSearch({ onSelect }: Props) {
         <div className="absolute z-50 mt-1 max-h-64 w-full overflow-y-auto scrollbar-thin rounded-md border bg-popover shadow-md">
           {needsApiKey ? (
             <div className="p-3 text-center text-[11px] text-muted-foreground">
-              ARES API klíč není nastaven.<br />
-              Firmu můžete zadat manuálně níže.
+              {t("needsApiKey.title")}<br />
+              {t("needsApiKey.hint")}
             </div>
           ) : results.length === 0 && !isLoading ? (
             <div className="p-3 text-center text-[11px] text-muted-foreground">
-              Žádné firmy nenalezeny pro „{query}"
+              {t("noResults", { query })}
             </div>
           ) : (
             <ul className="py-1">
@@ -144,8 +146,8 @@ export function AresSearch({ onSelect }: Props) {
                     <div className="min-w-0 flex-1">
                       <div className="truncate font-medium">{company.name}</div>
                       <div className="truncate text-[10px] text-muted-foreground">
-                        IČO: {company.ico}
-                        {company.dic && ` · DIČ: ${company.dic}`}
+                        {t("result.ico", { ico: company.ico })}
+                        {company.dic && ` · ${t("result.dic", { dic: company.dic })}`}
                         {company.address && ` · ${company.address}`}
                       </div>
                     </div>

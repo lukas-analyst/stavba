@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { formatCzk, PHASE_COLORS, formatDate, paymentTypeLabel } from "@/lib/format";
+import { useTranslations } from "next-intl";
 
 type SearchResult = {
   projects: {
@@ -77,10 +78,11 @@ export function GlobalSearchDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
+  const t = useTranslations("dialogs.globalSearch");
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl gap-0 overflow-hidden p-0">
-        <DialogTitle className="sr-only">Globální vyhledávání</DialogTitle>
+        <DialogTitle className="sr-only">{t("title")}</DialogTitle>
         {open && <GlobalSearchInner onOpenChange={onOpenChange} />}
       </DialogContent>
     </Dialog>
@@ -88,6 +90,9 @@ export function GlobalSearchDialog({
 }
 
 function GlobalSearchInner({ onOpenChange }: { onOpenChange: (open: boolean) => void }) {
+  const t = useTranslations("dialogs.globalSearch");
+  const tRoot = useTranslations();
+  const tPhases = useTranslations("phases");
   const [query, setQuery] = useState("");
   const [selectedIndex, setSelectedIndex] = useState(0);
   const setSelectedProject = useAppStore((s) => s.setSelectedProject);
@@ -173,7 +178,7 @@ function GlobalSearchInner({ onOpenChange }: { onOpenChange: (open: boolean) => 
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Hledat projekty, položky, kontakty, platby, poznámky…"
+          placeholder={t("placeholder")}
           className="h-8 border-0 px-0 text-sm shadow-none focus-visible:ring-0"
           />
           <kbd className="shrink-0 rounded border bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground">
@@ -186,22 +191,22 @@ function GlobalSearchInner({ onOpenChange }: { onOpenChange: (open: boolean) => 
           {debouncedQuery.length < 2 ? (
             <div className="py-12 text-center text-sm text-muted-foreground">
               <Search className="mx-auto mb-2 h-8 w-8 opacity-30" />
-              Začněte psát pro vyhledávání napříč aplikací
+              {t("initialHint")}
               <div className="mt-3 flex flex-wrap justify-center gap-2 text-[11px]">
                 <span className="rounded-md border bg-muted/50 px-2 py-1">
-                  Projekty
+                  {t("group.projects")}
                 </span>
                 <span className="rounded-md border bg-muted/50 px-2 py-1">
-                  Položky rozpočtu
+                  {t("group.items")}
                 </span>
                 <span className="rounded-md border bg-muted/50 px-2 py-1">
-                  Kontakty
+                  {t("group.contacts")}
                 </span>
                 <span className="rounded-md border bg-muted/50 px-2 py-1">
-                  Platby
+                  {t("group.payments")}
                 </span>
                 <span className="rounded-md border bg-muted/50 px-2 py-1">
-                  Poznámky
+                  {t("group.notes")}
                 </span>
               </div>
             </div>
@@ -213,13 +218,13 @@ function GlobalSearchInner({ onOpenChange }: { onOpenChange: (open: boolean) => 
             </div>
           ) : !hasResults ? (
             <div className="py-12 text-center text-sm text-muted-foreground">
-              Žádné výsledky pro „{debouncedQuery}"
+              {t("noResults", { query: debouncedQuery })}
             </div>
           ) : (
             <div className="p-2">
               {/* Group: Projects */}
               {data && data.projects.length > 0 && (
-                <ResultGroup label="Projekty" icon={<FolderKanban className="h-3.5 w-3.5" />}>
+                <ResultGroup label={t("group.projects")} icon={<FolderKanban className="h-3.5 w-3.5" />}>
                   {data.projects.map((p, idx) => {
                     const flatIdx = flatResults.findIndex(
                       (r) => r.type === "project" && r.id === p.id,
@@ -243,7 +248,7 @@ function GlobalSearchInner({ onOpenChange }: { onOpenChange: (open: boolean) => 
 
               {/* Group: Budget Items */}
               {data && data.items.length > 0 && (
-                <ResultGroup label="Položky rozpočtu" icon={<Package className="h-3.5 w-3.5" />}>
+                <ResultGroup label={t("group.items")} icon={<Package className="h-3.5 w-3.5" />}>
                   {data.items.map((item) => {
                     const flatIdx = flatResults.findIndex(
                       (r) => r.type === "item" && r.id === item.id,
@@ -260,6 +265,7 @@ function GlobalSearchInner({ onOpenChange }: { onOpenChange: (open: boolean) => 
                         subtitle={item.category}
                         badge={item.planCost ? formatCzk(item.planCost) : undefined}
                         phaseBadge={item.phase}
+                        phaseLabel={tPhases(item.phase)}
                       />
                     );
                   })}
@@ -268,7 +274,7 @@ function GlobalSearchInner({ onOpenChange }: { onOpenChange: (open: boolean) => 
 
               {/* Group: Contacts */}
               {data && data.contacts.length > 0 && (
-                <ResultGroup label="Kontakty" icon={<Users className="h-3.5 w-3.5" />}>
+                <ResultGroup label={t("group.contacts")} icon={<Users className="h-3.5 w-3.5" />}>
                   {data.contacts.map((contact) => {
                     const flatIdx = flatResults.findIndex(
                       (r) => r.type === "contact" && r.id === contact.id,
@@ -292,7 +298,7 @@ function GlobalSearchInner({ onOpenChange }: { onOpenChange: (open: boolean) => 
 
               {/* Group: Payments */}
               {data && data.payments.length > 0 && (
-                <ResultGroup label="Platby" icon={<Receipt className="h-3.5 w-3.5" />}>
+                <ResultGroup label={t("group.payments")} icon={<Receipt className="h-3.5 w-3.5" />}>
                   {data.payments.map((payment) => {
                     const flatIdx = flatResults.findIndex(
                       (r) => r.type === "payment" && r.id === payment.id,
@@ -306,7 +312,7 @@ function GlobalSearchInner({ onOpenChange }: { onOpenChange: (open: boolean) => 
                         onClick={() => handleSelect(flatResults[flatIdx])}
                         icon={<Receipt className="h-4 w-4 text-danger" />}
                         title={payment.vendor || payment.description || formatCzk(payment.amount)}
-                        subtitle={`${paymentTypeLabel(payment.type).label} · ${formatDate(payment.date)}`}
+                        subtitle={`${paymentTypeLabel(payment.type, (k: string) => tRoot(k)).label} · ${formatDate(payment.date)}`}
                         badge={formatCzk(payment.amount)}
                       />
                     );
@@ -316,7 +322,7 @@ function GlobalSearchInner({ onOpenChange }: { onOpenChange: (open: boolean) => 
 
               {/* Group: Notes */}
               {data && data.notes.length > 0 && (
-                <ResultGroup label="Poznámky" icon={<FileText className="h-3.5 w-3.5" />}>
+                <ResultGroup label={t("group.notes")} icon={<FileText className="h-3.5 w-3.5" />}>
                   {data.notes.map((note) => {
                     const flatIdx = flatResults.findIndex(
                       (r) => r.type === "note" && r.id === note.id,
@@ -343,10 +349,10 @@ function GlobalSearchInner({ onOpenChange }: { onOpenChange: (open: boolean) => 
 
               {/* Footer hint */}
               <div className="mt-2 flex items-center justify-end gap-2 px-2 pb-1 text-[10px] text-muted-foreground">
-                <span>Navigace</span>
+                <span>{t("footer.navigation")}</span>
                 <kbd className="rounded border bg-muted px-1 py-0.5">↑↓</kbd>
                 <kbd className="flex items-center gap-0.5 rounded border bg-muted px-1 py-0.5">
-                  <CornerDownLeft className="h-2.5 w-2.5" /> Vybrat
+                  <CornerDownLeft className="h-2.5 w-2.5" /> {t("footer.select")}
                 </kbd>
               </div>
             </div>
@@ -386,6 +392,7 @@ function ResultItem({
   subtitle,
   badge,
   phaseBadge,
+  phaseLabel,
 }: {
   selected: boolean;
   flatIdx: number;
@@ -396,6 +403,7 @@ function ResultItem({
   subtitle?: string;
   badge?: string;
   phaseBadge?: string;
+  phaseLabel?: string;
 }) {
   return (
     <button
@@ -419,10 +427,10 @@ function ResultItem({
         <span
           className={cn(
             "shrink-0 rounded px-1.5 py-0.5 text-[10px]",
-            PHASE_COLORS[phaseBadge] ?? "",
+            PHASE_COLORS[phaseBadge as keyof typeof PHASE_COLORS] ?? "",
           )}
         >
-          {phaseBadge}
+          {phaseLabel ?? phaseBadge}
         </span>
       )}
       {badge && (

@@ -20,6 +20,7 @@ import {
   Trash2,
   CircleDot,
 } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 type Props = {
   open: boolean;
@@ -27,44 +28,10 @@ type Props = {
   projectId: string;
 };
 
-const ENTITY_LABELS: Record<string, string> = {
-  BudgetItem: "Položka rozpočtu",
-  Payment: "Platba",
-  TimeEntry: "Časový záznam",
-  Contact: "Kontakt",
-  Project: "Projekt",
-};
-
-const FIELD_LABELS: Record<string, string> = {
-  category: "Kategorie",
-  subcategory: "Podkategorie",
-  element: "Prvek",
-  phase: "Fáze",
-  required: "Nutné",
-  completed: "Hotovo",
-  note: "Poznámka",
-  planCost: "Plán (Kč)",
-  actualCost: "Skutečnost (Kč)",
-  flexibilityPercent: "Vůle (%)",
-  planDays: "Plán (dní)",
-  dateFrom: "Datum od",
-  dateTo: "Datum do",
-  actualHours: "Hodiny",
-  amount: "Částka",
-  date: "Datum",
-  type: "Typ",
-  vendor: "Firma",
-  description: "Popis",
-  name: "Jméno",
-  workerName: "Pracovník",
-  hours: "Hodiny",
-  starred: "Hvězdička",
-  status: "Stav",
-};
-
 export function AuditLogDialog({ open, onOpenChange, projectId }: Props) {
   const { data: auditData, isLoading } = useAuditLog(open ? projectId : null);
   const logs = auditData?.entries ?? [];
+  const t = useTranslations("dialogs.auditLog");
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -74,10 +41,10 @@ export function AuditLogDialog({ open, onOpenChange, projectId }: Props) {
         <DialogHeader className="shrink-0">
           <div className="flex items-center gap-2">
             <History className="h-5 w-5 text-primary" />
-            <DialogTitle>Historie změn</DialogTitle>
+            <DialogTitle>{t("title")}</DialogTitle>
           </div>
           <DialogDescription>
-            Posledních {logs.length || 100} změn v projektu (úpravy, vytvoření, mazání).
+            {t("description", { count: logs.length || 100 })}
           </DialogDescription>
         </DialogHeader>
 
@@ -90,7 +57,7 @@ export function AuditLogDialog({ open, onOpenChange, projectId }: Props) {
         ) : !logs || logs.length === 0 ? (
           <div className="py-12 text-center text-sm text-muted-foreground">
             <History className="mx-auto mb-2 h-8 w-8 opacity-40" />
-            Zatím žádné zaznamenané změny.
+            {t("empty")}
           </div>
         ) : (
           // Plain scrollable container — using a div instead of ScrollArea
@@ -114,15 +81,37 @@ export function AuditLogDialog({ open, onOpenChange, projectId }: Props) {
 }
 
 function AuditLogEntry({ log }: { log: AuditLog }) {
+  // C3a: REUSE `tabs.management.auditLog.*` for action/entity/field labels
+  // (the management tab already has the full superset of these keys).
+  // Keep `dialogs.auditLog` for dialog-specific keys (emptyValue, action.fallback).
+  const t = useTranslations("dialogs.auditLog");
+  const tMgmt = useTranslations("tabs.management.auditLog");
   const actionConfig = {
-    create: { icon: Plus, color: "text-success", bg: "bg-success-soft/50 dark:bg-success-soft/60", label: "Vytvořeno" },
-    update: { icon: Pencil, color: "text-info", bg: "bg-info-soft/50 dark:bg-info-soft/60", label: "Upraveno" },
-    delete: { icon: Trash2, color: "text-danger", bg: "bg-danger-soft/50 dark:bg-danger-soft/60", label: "Smazáno" },
-  }[log.action] ?? { icon: CircleDot, color: "text-muted-foreground", bg: "bg-muted/30", label: log.action };
+    create: { icon: Plus, color: "text-success", bg: "bg-success-soft/50 dark:bg-success-soft/60", label: tMgmt("actions.create") },
+    update: { icon: Pencil, color: "text-info", bg: "bg-info-soft/50 dark:bg-info-soft/60", label: tMgmt("actions.update") },
+    delete: { icon: Trash2, color: "text-danger", bg: "bg-danger-soft/50 dark:bg-danger-soft/60", label: tMgmt("actions.delete") },
+  }[log.action] ?? { icon: CircleDot, color: "text-muted-foreground", bg: "bg-muted/30", label: t("action.fallback", { action: log.action }) };
 
   const Icon = actionConfig.icon;
-  const entityLabel = ENTITY_LABELS[log.entityType] ?? log.entityType;
-  const fieldLabel = log.field ? (FIELD_LABELS[log.field] ?? log.field) : null;
+  // Entity and field labels: look up via the management-tab namespace
+  // (superset of entities/fields), with raw fallback.
+  // next-intl returns the key path when missing — for fields not in the
+  // management namespace (e.g. `element`, `actualHours`, `date`), fall back
+  // to the dialog-local `dialogs.auditLog.field.*` sub-namespace, then to
+  // the raw value as a last resort.
+  const entityKey = `entities.${log.entityType}` as const;
+  const fieldKey = log.field ? (`fields.${log.field}` as const) : null;
+  const entityRaw = tMgmt(entityKey);
+  const entityLabel = entityRaw === entityKey ? log.entityType : entityRaw;
+  const fieldLabel = fieldKey
+    ? (() => {
+        const f = tMgmt(fieldKey);
+        if (f !== fieldKey) return f;
+        // Field not in management namespace — try dialog-local field.* (e.g. element/actualHours/date).
+        const f2 = t(`field.${log.field}` as const);
+        return f2 === `field.${log.field}` ? log.field : f2;
+      })()
+    : null;
 
   return (
     <div className={cn("flex items-start gap-3 rounded-lg border p-2.5 text-xs", actionConfig.bg)}>
@@ -153,11 +142,11 @@ function AuditLogEntry({ log }: { log: AuditLog }) {
           <div className="mt-1 flex items-center gap-2 font-mono text-[11px]">
             <span className="rounded bg-danger-soft/50 px-1.5 py-0.5 text-danger-strong line-through dark:bg-danger-soft/70 dark:text-danger-strong">
               {/* B28: Translation happens here in the UI — DB stores raw values. */}
-              {getFieldValue(log.field ?? "", log.oldValue) || "(prázdné)"}
+              {getFieldValue(log.field ?? "", log.oldValue) || t("emptyValue")}
             </span>
             <span className="text-muted-foreground">→</span>
             <span className="rounded bg-success-soft/50 px-1.5 py-0.5 text-success-strong dark:bg-success-soft/70 dark:text-success-strong">
-              {getFieldValue(log.field ?? "", log.newValue) || "(prázdné)"}
+              {getFieldValue(log.field ?? "", log.newValue) || t("emptyValue")}
             </span>
           </div>
         )}

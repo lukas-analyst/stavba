@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import { toast } from "sonner";
 import { RefreshCw, LogOut } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 // =====================================================================
 // SessionTimeoutWarning (F7)
@@ -40,6 +41,7 @@ const WARN_BEFORE_MS = 5 * 60 * 1000; // 5 minutes
 const POLL_INTERVAL_MS = 30 * 1000; // 30 seconds
 
 export function SessionTimeoutWarning() {
+  const t = useTranslations("components.sessionTimeoutWarning");
   const { data: session, status } = useSession();
   const router = useRouter();
   const toastShownRef = useRef(false);
@@ -61,13 +63,13 @@ export function SessionTimeoutWarning() {
 
         const minutesLeft = Math.max(1, Math.ceil(remainingMs / 60_000));
         toast.warning(
-          `Vaše relace vyprší za ${minutesLeft} min. Pro nezáruku ztráty dat prodlužte relaci.`,
+          t("message", { minutesLeft }),
           {
             duration: Infinity,
             id: "session-timeout-warning",
-            description: "Po vypršení budete automaticky odhlášeni.",
+            description: t("description"),
             action: {
-              label: "Prodloužit",
+              label: t("action.extend"),
               onClick: () => {
                 // Trigger the NextAuth jwt callback — the token will be
                 // renewed server-side if past `updateAge`. The session
@@ -75,11 +77,11 @@ export function SessionTimeoutWarning() {
                 router.refresh();
                 toastShownRef.current = false;
                 toast.dismiss("session-timeout-warning");
-                toast.success("Relace byla prodloužena.");
+                toast.success(t("success"));
               },
             },
             cancel: {
-              label: "Odhlásit se",
+              label: t("action.signOut"),
               onClick: () => {
                 signOut({ callbackUrl: "/auth/login" });
               },
@@ -100,7 +102,7 @@ export function SessionTimeoutWarning() {
 
     const interval = setInterval(checkExpiry, POLL_INTERVAL_MS);
     return () => clearInterval(interval);
-  }, [session, status, router]);
+  }, [session, status, router, t]);
 
   // This component renders nothing — it only emits a toast.
   return null;
