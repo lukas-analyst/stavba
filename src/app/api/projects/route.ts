@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getTranslations } from "next-intl/server";
 import { db, dbRead } from "@/lib/db";
 import { requireUser } from "@/lib/require-user";
 
@@ -8,12 +9,13 @@ import { requireUser } from "@/lib/require-user";
 // pre-aggregated stats per project. This is ~10× faster for 5+ projects.
 // Uses `dbRead` (read replica if configured, falls back to primary).
 export async function GET() {
+  const t = await getTranslations("api.errors");
   try {
     // Require authentication — show projects owned by the logged-in user
     // OR where the user is a member (shared projects)
     const { user, response } = await requireUser();
     if (response) return response;
-    if (!user) return NextResponse.json({ error: "Nejste přihlášen." }, { status: 401 });
+    if (!user) return NextResponse.json({ error: t("auth.notAuthenticated") }, { status: 401 });
 
     // If user.isAdmin, return ALL projects (admin bypass — no ownerId
     // filter and no membership lookup). Useful for the admin UI / super-
@@ -152,6 +154,7 @@ export async function GET() {
 
 // POST /api/projects - create a project
 export async function POST(request: Request) {
+  const t = await getTranslations("api.errors");
   try {
     const body = await request.json();
     const { name, address, description, starred, status, currency, startDate, endDate } = body;
@@ -183,7 +186,7 @@ export async function POST(request: Request) {
     // Require authentication — projects are owned by the logged-in user
     const { user, response } = await requireUser();
     if (response) return response;
-    if (!user) return NextResponse.json({ error: "Nejste přihlášen." }, { status: 401 });
+    if (!user) return NextResponse.json({ error: t("auth.notAuthenticated") }, { status: 401 });
     const ownerId = user.id;
 
     const project = await db.project.create({

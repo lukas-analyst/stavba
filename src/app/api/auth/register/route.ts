@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getTranslations } from "next-intl/server";
 import { db } from "@/lib/db";
 import {
   hashPassword,
@@ -29,6 +30,7 @@ import { checkRateLimit, getClientIp, REGISTER_RATE_LIMIT } from "@/lib/rate-lim
 // =====================================================================
 
 export async function POST(request: Request) {
+  const t = await getTranslations("api.errors");
   try {
     const body = await request.json();
     const { email, password, name } = body as {
@@ -43,7 +45,7 @@ export async function POST(request: Request) {
     if (rl.limited) {
       const minutes = Math.ceil(rl.retryAfter / 60);
       return NextResponse.json(
-        { error: `Příliš mnoho registrací. Zkuste to za ${minutes} minut.` },
+        { error: t("auth.rateLimit.register", { minutes }) },
         { status: 429, headers: { "Retry-After": String(rl.retryAfter) } },
       );
     }
@@ -51,7 +53,7 @@ export async function POST(request: Request) {
     // --- Validation ---
     if (!email || !password) {
       return NextResponse.json(
-        { error: "E-mail a heslo jsou povinné." },
+        { error: t("auth.emailAndPasswordRequired") },
         { status: 400 },
       );
     }
@@ -97,9 +99,7 @@ export async function POST(request: Request) {
     if (existing && existing.password) {
       // Scenario 3: already registered with password
       return NextResponse.json(
-        {
-          error: "Účet s tímto e-mailem již existuje. Přihlaste se nebo si resetujte heslo.",
-        },
+        { error: t("auth.accountExists") },
         { status: 409 },
       );
     }
@@ -117,9 +117,7 @@ export async function POST(request: Request) {
         const hasOAuthAccount = existing.accounts.length > 0;
         if (hasOAuthAccount) {
           return NextResponse.json(
-            {
-              error: "Účet s tímto e-mailem již existuje. Přihlaste se nebo si resetujte heslo.",
-            },
+            { error: t("auth.accountExists") },
             { status: 409 },
           );
         }
@@ -141,9 +139,7 @@ export async function POST(request: Request) {
           // Another request claimed this account between our check and
           // update — treat as already registered.
           return NextResponse.json(
-            {
-              error: "Účet s tímto e-mailem již existuje. Přihlaste se nebo si resetujte heslo.",
-            },
+            { error: t("auth.accountExists") },
             { status: 409 },
           );
         }
@@ -163,9 +159,7 @@ export async function POST(request: Request) {
       const code = (error as { code?: string })?.code;
       if (code === "P2002") {
         return NextResponse.json(
-          {
-            error: "Účet s tímto e-mailem již existuje. Přihlaste se nebo si resetujte heslo.",
-          },
+          { error: t("auth.accountExists") },
           { status: 409 },
         );
       }
@@ -185,20 +179,20 @@ export async function POST(request: Request) {
       return NextResponse.json(
         {
           ok: true,
-          warning: "Registrace proběhla, ale odeslání verifikačního e-mailu selhalo. Můžete si ho nechat zaslat znovu.",
+          warning: t("auth.registerWarningEmailFailed"),
         },
         { status: 201 },
       );
     }
 
     return NextResponse.json(
-      { ok: true, message: "Registrace proběhla. Zkontrolujte svůj e-mail pro ověření." },
+      { ok: true, message: t("auth.registerSuccess") },
       { status: 201 },
     );
   } catch (error) {
     console.error("POST /api/auth/register error:", error);
     return NextResponse.json(
-      { error: "Registrace selhala. Zkuste to prosím znovu." },
+      { error: t("auth.registerFailed") },
       { status: 500 },
     );
   }

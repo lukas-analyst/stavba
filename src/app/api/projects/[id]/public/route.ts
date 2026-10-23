@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getTranslations } from "next-intl/server";
 import { dbRead } from "@/lib/db";
 import { getDashboardData } from "@/lib/dashboard-cache";
 
@@ -34,6 +35,7 @@ export async function GET(
   _request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const t = await getTranslations("api.errors");
   try {
     const { id: slugOrId } = await params;
 
@@ -100,13 +102,13 @@ export async function GET(
     // Same response whether the project doesn't exist OR isn't public —
     // don't leak existence of private projects.
     return NextResponse.json(
-      { error: "Projekt nebyl nalezen nebo není veřejný." },
+      { error: t("project.notFoundOrNotPublic") },
       { status: 404 },
     );
   } catch (error) {
     console.error("GET /api/projects/[id]/public error:", error);
     return NextResponse.json(
-      { error: "Nepodařilo se načíst veřejná data projektu." },
+      { error: t("project.publicLoadFailed") },
       { status: 500 },
     );
   }
@@ -134,10 +136,11 @@ async function handlePublicProject(project: {
   floors: number | null;
   propertyNote: string | null;
 }) {
+  const t = await getTranslations("api.errors");
   // Check if project is public
   if (!project.isPublic) {
     return NextResponse.json(
-      { error: "Projekt nebyl nalezen nebo není veřejný." },
+      { error: t("project.notFoundOrNotPublic") },
       { status: 404 },
     );
   }
@@ -146,7 +149,7 @@ async function handlePublicProject(project: {
   const dashboard = await getDashboardData(project.id);
   if (!dashboard) {
     return NextResponse.json(
-      { error: "Projekt nebyl nalezen nebo není veřejný." },
+      { error: t("project.notFoundOrNotPublic") },
       { status: 404 },
     );
   }

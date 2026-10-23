@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getTranslations } from "next-intl/server";
 import { verifyResetToken } from "@/lib/email";
 
 // =====================================================================
@@ -18,13 +19,14 @@ import { verifyResetToken } from "@/lib/email";
 // =====================================================================
 
 export async function GET(request: Request) {
+  const t = await getTranslations("api.errors");
   const { searchParams } = new URL(request.url);
   const type = searchParams.get("type");
   const token = searchParams.get("token");
 
   if (!type || !token) {
     return NextResponse.json(
-      { error: "type a token jsou povinné." },
+      { error: t("auth.typeAndTokenRequired") },
       { status: 400 },
     );
   }
@@ -41,7 +43,7 @@ export async function GET(request: Request) {
   // reveal whether a verification token exists for a specific e-mail).
   // The verify-email GET endpoint handles verification directly.
   return NextResponse.json(
-    { error: "Neplatný typ tokenu." },
+    { error: t("auth.invalidTokenType") },
     { status: 400 },
   );
 }

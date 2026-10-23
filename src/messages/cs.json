@@ -2296,5 +2296,90 @@
         "rejectFailed": "Nepodařilo se odmítnout pozvánku."
       }
     }
+  },
+  "api": {
+    "errors": {
+      "auth": {
+        "notAuthenticated": "Nejste přihlášen.",
+        "emailAndPasswordRequired": "E-mail a heslo jsou povinné.",
+        "accountExists": "Účet s tímto e-mailem již existuje. Přihlaste se nebo si resetujte heslo.",
+        "registerWarningEmailFailed": "Registrace proběhla, ale odeslání verifikačního e-mailu selhalo. Můžete si ho nechat zaslat znovu.",
+        "registerSuccess": "Registrace proběhla. Zkontrolujte svůj e-mail pro ověření.",
+        "registerFailed": "Registrace selhala. Zkuste to prosím znovu.",
+        "emailRequired": "E-mail je povinný.",
+        "emailAlreadyVerified": "Váš e-mail je již ověřen. Můžete se přihlásit.",
+        "verifyEmailFailed": "Odeslání verifikačního e-mailu selhalo.",
+        "forgotPasswordSent": "Pokud účet existuje, e-mail s odkazem pro reset byl odeslán.",
+        "tokenAndPasswordRequired": "Token a nové heslo jsou povinné.",
+        "invalidResetLink": "Neplatný odkaz pro reset hesla.",
+        "resetLinkExpired": "Odkaz pro reset hesla vypršel. Vyžádejte si nový.",
+        "resetLinkUsed": "Odkaz pro reset hesla byl již použit. Vyžádejte si nový.",
+        "resetSuccess": "Heslo bylo úspěšně změněno. Můžete se přihlásit.",
+        "resetFailed": "Reset hesla selhal.",
+        "typeAndTokenRequired": "type a token jsou povinné.",
+        "invalidTokenType": "Neplatný typ tokenu.",
+        "unknownAuthAction": "Neznámá auth akce.",
+        "successMustBeBoolean": "`success` musí být boolean.",
+        "rateLimit": {
+          "register": "Příliš mnoho registrací. Zkuste to za {minutes} minut.",
+          "requests": "Příliš mnoho požadavků. Zkuste to za {minutes} minut.",
+          "attempts": "Příliš mnoho pokusů. Zkuste to za {minutes} minut."
+        }
+      },
+      "invitations": {
+        "notFound": "Pozvánka nebyla nalezena.",
+        "alreadyUsed": "Pozvánka již byla použita.",
+        "expired": "Pozvánka vypršela.",
+        "notYourEmail": "Tato pozvánka není pro váš e-mail.",
+        "acceptFailed": "Nepodařilo se přijmout pozvánku.",
+        "rejectFailed": "Nepodařilo se odmítnout pozvánku.",
+        "loadFailed": "Nepodařilo se načíst pozvánky.",
+        "invalidRequestJson": "Neplatný požadavek — očekáván JSON objekt.",
+        "invalidEmailFormat": "Neplatný formát e-mailu.",
+        "alreadyOwner": "Tento uživatel je již správcem projektu.",
+        "alreadyMember": "Tento uživatel je již členem projektu.",
+        "createFailed": "Nepodařilo se vytvořit pozvánku.",
+        "cancelFailed": "Nepodařilo se zrušit pozvánku."
+      },
+      "budget": {
+        "cannotMoveToSelf": "Položku nelze přesunout pod ni samotnou.",
+        "targetNotFound": "Cílová položka neexistuje.",
+        "cannotMoveAcrossProjects": "Nelze přesunout úkol do jiného projektu.",
+        "cycleDetected": "Nelze přesunout položku pod jejího vlastního potomka (cyklus)."
+      },
+      "users": {
+        "adminOnly": "Pouze administrátor může měnit admin práva.",
+        "cannotEditOtherProfile": "Úprava cizího profilu není povolena.",
+        "userNotFound": "Uživatel nebyl nalezen.",
+        "noPasswordSet": "Váš účet nemá nastavené heslo (přihlašujete se přes Google). Heslo můžete nastavit přes funkci „Zapomenuté heslo\"."
+      },
+      "password": {
+        "currentRequired": "Aktuální heslo je povinné.",
+        "newRequired": "Nové heslo je povinné.",
+        "incorrectCurrent": "Aktuální heslo není správné.",
+        "changeFailed": "Změna hesla selhala. Zkuste to prosím znovu.",
+        "changed": "Heslo bylo změněno."
+      },
+      "sessions": {
+        "revokeFailed": "Odhlášení ostatních relací selhalo. Zkuste to prosím znovu.",
+        "allRevoked": "Všechny ostatní relace byly odhlášeny."
+      },
+      "project": {
+        "notFoundOrNotPublic": "Projekt nebyl nalezen nebo není veřejný.",
+        "publicLoadFailed": "Nepodařilo se načíst veřejná data projektu."
+      },
+      "ares": {
+        "apiUnavailable": "ARES API nedostupné.",
+        "searchError": "Chyba při vyhledávání.",
+        "apiKeyMissing": "ARES API klíč není nastaven. Firmy lze zadat manuálně."
+      },
+      "notes": {
+        "cannotEditOthers": "Můžete upravovat pouze své poznámky.",
+        "cannotDeleteOthers": "Můžete mazat pouze své poznámky."
+      },
+      "generic": {
+        "invalidRequest": "Neplatný požadavek."
+      }
+    }
   }
 }

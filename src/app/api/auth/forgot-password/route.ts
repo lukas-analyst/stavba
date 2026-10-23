@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getTranslations } from "next-intl/server";
 import { sendPasswordResetEmail } from "@/lib/email";
 import { checkRateLimit, getClientIp, RESET_REQUEST_RATE_LIMIT } from "@/lib/rate-limit";
 
@@ -12,6 +13,7 @@ import { checkRateLimit, getClientIp, RESET_REQUEST_RATE_LIMIT } from "@/lib/rat
 // =====================================================================
 
 export async function POST(request: Request) {
+  const t = await getTranslations("api.errors");
   try {
     // --- Rate limiting (IP-based: 3 requests per hour) ---
     const ip = getClientIp(request);
@@ -19,7 +21,7 @@ export async function POST(request: Request) {
     if (rl.limited) {
       const minutes = Math.ceil(rl.retryAfter / 60);
       return NextResponse.json(
-        { error: `Příliš mnoho požadavků. Zkuste to za ${minutes} minut.` },
+        { error: t("auth.rateLimit.requests", { minutes }) },
         { status: 429, headers: { "Retry-After": String(rl.retryAfter) } },
       );
     }
@@ -29,7 +31,7 @@ export async function POST(request: Request) {
 
     if (!email) {
       return NextResponse.json(
-        { error: "E-mail je povinný." },
+        { error: t("auth.emailRequired") },
         { status: 400 },
       );
     }
@@ -39,14 +41,14 @@ export async function POST(request: Request) {
     // Always return OK — don't reveal whether the e-mail exists
     return NextResponse.json({
       ok: true,
-      message: "Pokud účet existuje, e-mail s odkazem pro reset byl odeslán.",
+      message: t("auth.forgotPasswordSent"),
     });
   } catch (error) {
     console.error("POST /api/auth/forgot-password error:", error);
     // Still return OK to avoid enumeration
     return NextResponse.json({
       ok: true,
-      message: "Pokud účet existuje, e-mail s odkazem pro reset byl odeslán.",
+      message: t("auth.forgotPasswordSent"),
     });
   }
 }

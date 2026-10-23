@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getTranslations } from "next-intl/server";
 import { verifyEmailToken, sendVerificationEmail } from "@/lib/email";
 import { db } from "@/lib/db";
 import { checkRateLimit, getClientIp, VERIFY_RESEND_RATE_LIMIT } from "@/lib/rate-limit";
@@ -55,13 +56,14 @@ export async function GET(request: Request) {
 // =====================================================================
 
 export async function POST(request: Request) {
+  const t = await getTranslations("api.errors");
   try {
     const body = await request.json();
     const { email } = body as { email?: string };
 
     if (!email) {
       return NextResponse.json(
-        { error: "E-mail je povinný." },
+        { error: t("auth.emailRequired") },
         { status: 400 },
       );
     }
@@ -73,7 +75,7 @@ export async function POST(request: Request) {
     if (rl.limited) {
       const minutes = Math.ceil(rl.retryAfter / 60);
       return NextResponse.json(
-        { error: `Příliš mnoho požadavků. Zkuste to za ${minutes} minut.` },
+        { error: t("auth.rateLimit.requests", { minutes }) },
         { status: 429, headers: { "Retry-After": String(rl.retryAfter) } },
       );
     }
@@ -90,7 +92,7 @@ export async function POST(request: Request) {
 
     if (user.emailVerified) {
       return NextResponse.json(
-        { error: "Váš e-mail je již ověřen. Můžete se přihlásit." },
+        { error: t("auth.emailAlreadyVerified") },
         { status: 400 },
       );
     }
@@ -101,7 +103,7 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error("POST /api/auth/verify-email error:", error);
     return NextResponse.json(
-      { error: "Odeslání verifikačního e-mailu selhalo." },
+      { error: t("auth.verifyEmailFailed") },
       { status: 500 },
     );
   }

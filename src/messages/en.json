@@ -2296,5 +2296,90 @@
         "rejectFailed": "Failed to reject invitation."
       }
     }
+  },
+  "api": {
+    "errors": {
+      "auth": {
+        "notAuthenticated": "Not authenticated.",
+        "emailAndPasswordRequired": "Email and password are required.",
+        "accountExists": "An account with this email already exists. Please log in or reset your password.",
+        "registerWarningEmailFailed": "Registration succeeded, but the verification email could not be sent. You can request a new one.",
+        "registerSuccess": "Registration successful. Check your email to verify your account.",
+        "registerFailed": "Registration failed. Please try again.",
+        "emailRequired": "Email is required.",
+        "emailAlreadyVerified": "Your email is already verified. You can log in.",
+        "verifyEmailFailed": "Failed to send verification email.",
+        "forgotPasswordSent": "If the account exists, an email with a reset link has been sent.",
+        "tokenAndPasswordRequired": "Token and new password are required.",
+        "invalidResetLink": "Invalid password reset link.",
+        "resetLinkExpired": "This password reset link has expired. Request a new one.",
+        "resetLinkUsed": "This password reset link has already been used. Request a new one.",
+        "resetSuccess": "Your password has been changed successfully. You can log in.",
+        "resetFailed": "Password reset failed.",
+        "typeAndTokenRequired": "type and token are required.",
+        "invalidTokenType": "Invalid token type.",
+        "unknownAuthAction": "Unknown auth action.",
+        "successMustBeBoolean": "`success` must be a boolean.",
+        "rateLimit": {
+          "register": "Too many registrations. Try again in {minutes} minutes.",
+          "requests": "Too many requests. Try again in {minutes} minutes.",
+          "attempts": "Too many attempts. Try again in {minutes} minutes."
+        }
+      },
+      "invitations": {
+        "notFound": "Invitation not found.",
+        "alreadyUsed": "Invitation has already been used.",
+        "expired": "Invitation has expired.",
+        "notYourEmail": "This invitation is not for your email.",
+        "acceptFailed": "Failed to accept invitation.",
+        "rejectFailed": "Failed to reject invitation.",
+        "loadFailed": "Failed to load invitations.",
+        "invalidRequestJson": "Invalid request — expected a JSON object.",
+        "invalidEmailFormat": "Invalid email format.",
+        "alreadyOwner": "This user is already the project owner.",
+        "alreadyMember": "This user is already a member of the project.",
+        "createFailed": "Failed to create invitation.",
+        "cancelFailed": "Failed to revoke invitation."
+      },
+      "budget": {
+        "cannotMoveToSelf": "An item cannot be moved under itself.",
+        "targetNotFound": "The target item does not exist.",
+        "cannotMoveAcrossProjects": "A task cannot be moved to another project.",
+        "cycleDetected": "An item cannot be moved under its own descendant (cycle)."
+      },
+      "users": {
+        "adminOnly": "Only an administrator can change admin privileges.",
+        "cannotEditOtherProfile": "Editing another user's profile is not allowed.",
+        "userNotFound": "User not found.",
+        "noPasswordSet": "Your account does not have a password set (you sign in via Google). You can set one via the \u201cForgot password\u201d feature."
+      },
+      "password": {
+        "currentRequired": "Current password is required.",
+        "newRequired": "New password is required.",
+        "incorrectCurrent": "Current password is incorrect.",
+        "changeFailed": "Password change failed. Please try again.",
+        "changed": "Password has been changed."
+      },
+      "sessions": {
+        "revokeFailed": "Failed to revoke other sessions. Please try again.",
+        "allRevoked": "All other sessions have been signed out."
+      },
+      "project": {
+        "notFoundOrNotPublic": "Project not found or not public.",
+        "publicLoadFailed": "Failed to load public project data."
+      },
+      "ares": {
+        "apiUnavailable": "ARES API unavailable.",
+        "searchError": "Search error.",
+        "apiKeyMissing": "ARES API key is not configured. You can enter company details manually."
+      },
+      "notes": {
+        "cannotEditOthers": "You can only edit your own notes.",
+        "cannotDeleteOthers": "You can only delete your own notes."
+      },
+      "generic": {
+        "invalidRequest": "Invalid request."
+      }
+    }
   }
 }

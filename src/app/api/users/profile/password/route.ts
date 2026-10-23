@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getTranslations } from "next-intl/server";
 import { db } from "@/lib/db";
 import { requireVerifiedUser } from "@/lib/authz";
 import {
@@ -33,12 +34,13 @@ import { logAuthEvent } from "@/lib/auth-audit";
 // =====================================================================
 
 export async function POST(request: Request) {
+  const t = await getTranslations("api.errors");
   try {
     const { user, response } = await requireVerifiedUser();
     if (response) return response;
     if (!user) {
       return NextResponse.json(
-        { error: "Nejste přihlášen." },
+        { error: t("auth.notAuthenticated") },
         { status: 401 },
       );
     }
@@ -46,7 +48,7 @@ export async function POST(request: Request) {
     const body = await request.json().catch(() => null);
     if (!body || typeof body !== "object") {
       return NextResponse.json(
-        { error: "Neplatný požadavek." },
+        { error: t("generic.invalidRequest") },
         { status: 400 },
       );
     }
@@ -58,13 +60,13 @@ export async function POST(request: Request) {
 
     if (typeof currentPassword !== "string" || !currentPassword) {
       return NextResponse.json(
-        { error: "Aktuální heslo je povinné." },
+        { error: t("password.currentRequired") },
         { status: 400 },
       );
     }
     if (typeof newPassword !== "string" || !newPassword) {
       return NextResponse.json(
-        { error: "Nové heslo je povinné." },
+        { error: t("password.newRequired") },
         { status: 400 },
       );
     }
@@ -77,7 +79,7 @@ export async function POST(request: Request) {
 
     if (!dbUser) {
       return NextResponse.json(
-        { error: "Uživatel nebyl nalezen." },
+        { error: t("users.userNotFound") },
         { status: 404 },
       );
     }
@@ -86,11 +88,7 @@ export async function POST(request: Request) {
     // (They would need to use the forgot-password flow to set one.)
     if (!dbUser.password) {
       return NextResponse.json(
-        {
-          error:
-            "Váš účet nemá nastavené heslo (přihlašujete se přes Google). " +
-            'Heslo můžete nastavit přes funkci „Zapomenuté heslo".',
-        },
+        { error: t("users.noPasswordSet") },
         { status: 400 },
       );
     }
@@ -103,7 +101,7 @@ export async function POST(request: Request) {
         reason: "invalid_current_password",
       });
       return NextResponse.json(
-        { error: "Aktuální heslo není správné." },
+        { error: t("password.incorrectCurrent") },
         { status: 400 },
       );
     }
@@ -136,12 +134,12 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       ok: true,
-      message: "Heslo bylo změněno.",
+      message: t("password.changed"),
     });
   } catch (error) {
     console.error("POST /api/users/profile/password error:", error);
     return NextResponse.json(
-      { error: "Změna hesla selhala. Zkuste to prosím znovu." },
+      { error: t("password.changeFailed") },
       { status: 500 },
     );
   }

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getTranslations } from "next-intl/server";
 import { verifyResetToken } from "@/lib/email";
 import {
   hashPassword,
@@ -18,6 +19,7 @@ import { checkRateLimit, getClientIp, RESET_SUBMIT_RATE_LIMIT } from "@/lib/rate
 // =====================================================================
 
 export async function POST(request: Request) {
+  const t = await getTranslations("api.errors");
   try {
     const body = await request.json();
     const { token, password } = body as { token?: string; password?: string };
@@ -28,14 +30,14 @@ export async function POST(request: Request) {
     if (rl.limited) {
       const minutes = Math.ceil(rl.retryAfter / 60);
       return NextResponse.json(
-        { error: `Příliš mnoho pokusů. Zkuste to za ${minutes} minut.` },
+        { error: t("auth.rateLimit.attempts", { minutes }) },
         { status: 429, headers: { "Retry-After": String(rl.retryAfter) } },
       );
     }
 
     if (!token || !password) {
       return NextResponse.json(
-        { error: "Token a nové heslo jsou povinné." },
+        { error: t("auth.tokenAndPasswordRequired") },
         { status: 400 },
       );
     }
@@ -43,7 +45,7 @@ export async function POST(request: Request) {
     // Validate token format (64 hex chars) — prevents unnecessary DB queries
     if (!isValidTokenFormat(token)) {
       return NextResponse.json(
-        { error: "Neplatný odkaz pro reset hesla." },
+        { error: t("auth.invalidResetLink") },
         { status: 400 },
       );
     }
@@ -58,8 +60,8 @@ export async function POST(request: Request) {
     if (!tokenResult.success) {
       const message =
         tokenResult.reason === "expired"
-          ? "Odkaz pro reset hesla vypršel. Vyžádejte si nový."
-          : "Neplatný odkaz pro reset hesla.";
+          ? t("auth.resetLinkExpired")
+          : t("auth.invalidResetLink");
       return NextResponse.json({ error: message }, { status: 400 });
     }
 
@@ -89,19 +91,19 @@ export async function POST(request: Request) {
     if (result.count === 0) {
       // Token was used by another request between our verify and update
       return NextResponse.json(
-        { error: "Odkaz pro reset hesla byl již použit. Vyžádejte si nový." },
+        { error: t("auth.resetLinkUsed") },
         { status: 400 },
       );
     }
 
     return NextResponse.json({
       ok: true,
-      message: "Heslo bylo úspěšně změněno. Můžete se přihlásit.",
+      message: t("auth.resetSuccess"),
     });
   } catch (error) {
     console.error("POST /api/auth/reset-password error:", error);
     return NextResponse.json(
-      { error: "Reset hesla selhal." },
+      { error: t("auth.resetFailed") },
       { status: 500 },
     );
   }

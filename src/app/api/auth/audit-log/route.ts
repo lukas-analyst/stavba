@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getTranslations } from "next-intl/server";
 import { requireUser } from "@/lib/authz";
 import { logAuthEvent, type AuthAction } from "@/lib/auth-audit";
 
@@ -32,11 +33,12 @@ const ALLOWED_ACTIONS: ReadonlySet<AuthAction> = new Set<AuthAction>([
 ]);
 
 export async function POST(request: Request) {
+  const t = await getTranslations("api.errors");
   try {
     const body = await request.json().catch(() => null);
     if (!body || typeof body !== "object") {
       return NextResponse.json(
-        { error: "Neplatný požadavek." },
+        { error: t("generic.invalidRequest") },
         { status: 400 },
       );
     }
@@ -49,14 +51,14 @@ export async function POST(request: Request) {
 
     if (typeof action !== "string" || !ALLOWED_ACTIONS.has(action as AuthAction)) {
       return NextResponse.json(
-        { error: "Neznámá auth akce." },
+        { error: t("auth.unknownAuthAction") },
         { status: 400 },
       );
     }
 
     if (typeof success !== "boolean") {
       return NextResponse.json(
-        { error: "`success` musí být boolean." },
+        { error: t("auth.successMustBeBoolean") },
         { status: 400 },
       );
     }

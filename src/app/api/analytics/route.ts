@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getTranslations } from "next-intl/server";
 import { Prisma } from "@prisma/client";
 import { db, dbRead } from "@/lib/db";
 import { requireUser } from "@/lib/require-user";
@@ -18,6 +19,7 @@ import { requireUser } from "@/lib/require-user";
 // Body: { eventType, pageUrl?, timeSpent?, metadata? }
 // Returns: 201 { id } on success, 400 if `eventType` is missing.
 export async function POST(request: Request) {
+  const t = await getTranslations("api.errors");
   try {
     const body = await request.json().catch(() => null);
     if (!body || typeof body !== "object") {
@@ -44,7 +46,7 @@ export async function POST(request: Request) {
     // Attribute events to the authenticated user
     const { user, response } = await requireUser();
     if (response) return response;
-    if (!user) return NextResponse.json({ error: "Nejste přihlášen." }, { status: 401 });
+    if (!user) return NextResponse.json({ error: t("auth.notAuthenticated") }, { status: 401 });
     const userId = user.id;
 
     const event = await db.analyticsEvent.create({

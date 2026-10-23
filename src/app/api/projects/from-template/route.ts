@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getTranslations } from "next-intl/server";
 import { db } from "@/lib/db";
 import { requireUser } from "@/lib/require-user";
 import { getTemplate } from "@/lib/project-templates";
@@ -7,6 +8,7 @@ import { getTemplate } from "@/lib/project-templates";
 // Body: { name, address, description, templateType, scope?, startDate?, endDate? }
 // Creates a project with pre-filled budget items from a template.
 export async function POST(request: Request) {
+  const t = await getTranslations("api.errors");
   try {
     const body = await request.json();
     const {
@@ -49,7 +51,7 @@ export async function POST(request: Request) {
     // Require authentication — projects are owned by the logged-in user
     const { user, response } = await requireUser();
     if (response) return response;
-    if (!user) return NextResponse.json({ error: "Nejste přihlášen." }, { status: 401 });
+    if (!user) return NextResponse.json({ error: t("auth.notAuthenticated") }, { status: 401 });
     const ownerId = user.id;
 
     // Create the project

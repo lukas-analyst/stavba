@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getTranslations } from "next-intl/server";
 import { db } from "@/lib/db";
 import { logChanges } from "@/lib/audit";
 import { requireProjectAccess } from "@/lib/authz";
@@ -9,6 +10,7 @@ export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const t = await getTranslations("api.errors");
   try {
     const { id } = await params;
     const body = await request.json().catch(() => ({}));
@@ -42,7 +44,7 @@ export async function PATCH(
     const isOwner = access.project.ownerId === access.user.id;
     if (!isOwner && existing.userId !== access.user.id) {
       return NextResponse.json(
-        { error: "Můžete upravovat pouze své poznámky." },
+        { error: t("notes.cannotEditOthers") },
         { status: 403 },
       );
     }
@@ -79,6 +81,7 @@ export async function DELETE(
   _request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const t = await getTranslations("api.errors");
   try {
     const { id } = await params;
     const existing = await db.note.findUnique({ where: { id } });
@@ -94,7 +97,7 @@ export async function DELETE(
     const isOwner = access.project.ownerId === access.user.id;
     if (!isOwner && existing.userId !== access.user.id) {
       return NextResponse.json(
-        { error: "Můžete mazat pouze své poznámky." },
+        { error: t("notes.cannotDeleteOthers") },
         { status: 403 },
       );
     }

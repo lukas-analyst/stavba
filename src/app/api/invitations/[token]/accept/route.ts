@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getTranslations } from "next-intl/server";
 import { db } from "@/lib/db";
 import { logChanges } from "@/lib/audit";
 import { requireUser } from "@/lib/authz";
@@ -33,6 +34,7 @@ export async function POST(
   const { user, response } = await requireUser();
   if (response || !user) return response!;
 
+  const t = await getTranslations("api.errors");
   try {
     const { token } = await params;
 
@@ -42,14 +44,14 @@ export async function POST(
 
     if (!invitation) {
       return NextResponse.json(
-        { error: "Pozvánka nebyla nalezena." },
+        { error: t("invitations.notFound") },
         { status: 404 },
       );
     }
 
     if (invitation.status !== "pending") {
       return NextResponse.json(
-        { error: "Pozvánka již byla použita." },
+        { error: t("invitations.alreadyUsed") },
         { status: 400 },
       );
     }
@@ -62,7 +64,7 @@ export async function POST(
         data: { status: "expired" },
       });
       return NextResponse.json(
-        { error: "Pozvánka vypršela." },
+        { error: t("invitations.expired") },
         { status: 400 },
       );
     }
@@ -73,7 +75,7 @@ export async function POST(
       user.email.trim().toLowerCase() !== invitation.inviteeEmail
     ) {
       return NextResponse.json(
-        { error: "Tato pozvánka není pro váš e-mail." },
+        { error: t("invitations.notYourEmail") },
         { status: 403 },
       );
     }
@@ -132,7 +134,7 @@ export async function POST(
   } catch (error) {
     console.error("POST /api/invitations/[token]/accept error:", error);
     return NextResponse.json(
-      { error: "Nepodařilo se přijmout pozvánku." },
+      { error: t("invitations.acceptFailed") },
       { status: 500 },
     );
   }

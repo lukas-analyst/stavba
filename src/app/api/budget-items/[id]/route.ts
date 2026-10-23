@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getTranslations } from "next-intl/server";
 import { db } from "@/lib/db";
 import { logChanges } from "@/lib/audit";
 import { recalcParentDates } from "@/lib/recalc-parent-dates";
@@ -9,6 +10,7 @@ export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const t = await getTranslations("api.errors");
   try {
     const { id } = await params;
     const body = await request.json();
@@ -51,7 +53,7 @@ export async function PATCH(
 
       if (newParentId === id) {
         return NextResponse.json(
-          { error: "Položku nelze přesunout pod ni samotnou." },
+          { error: t("budget.cannotMoveToSelf") },
           { status: 400 },
         );
       }
@@ -64,13 +66,13 @@ export async function PATCH(
         });
         if (!newParent) {
           return NextResponse.json(
-            { error: "Cílová položka neexistuje." },
+            { error: t("budget.targetNotFound") },
             { status: 404 },
           );
         }
         if (newParent.projectId !== existing.projectId) {
           return NextResponse.json(
-            { error: "Nelze přesunout úkol do jiného projektu." },
+            { error: t("budget.cannotMoveAcrossProjects") },
             { status: 400 },
           );
         }
@@ -94,7 +96,7 @@ export async function PATCH(
         }
         if (descendants.has(newParentId)) {
           return NextResponse.json(
-            { error: "Nelze přesunout položku pod jejího vlastního potomka (cyklus)." },
+            { error: t("budget.cycleDetected") },
             { status: 400 },
           );
         }

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getTranslations } from "next-intl/server";
 import { db } from "@/lib/db";
 import { requireUser } from "@/lib/require-user";
 
@@ -45,6 +46,7 @@ export async function GET(_request: Request, { params }: RouteContext) {
 }
 
 export async function PATCH(request: Request, { params }: RouteContext) {
+  const t = await getTranslations("api.errors");
   try {
     const { id } = await params;
     const body = await request.json().catch(() => null);
@@ -81,7 +83,7 @@ export async function PATCH(request: Request, { params }: RouteContext) {
       if (authResponse) return authResponse;
       if (!requester) {
         return NextResponse.json(
-          { error: "Nejste přihlášen." },
+          { error: t("auth.notAuthenticated") },
           { status: 401 },
         );
       }
@@ -91,7 +93,7 @@ export async function PATCH(request: Request, { params }: RouteContext) {
       });
       if (!requesterUser?.isAdmin) {
         return NextResponse.json(
-          { error: "Pouze administrátor může měnit admin práva." },
+          { error: t("users.adminOnly") },
           { status: 403 },
         );
       }
@@ -131,13 +133,13 @@ export async function PATCH(request: Request, { params }: RouteContext) {
       if (authResponse) return authResponse;
       if (!requester) {
         return NextResponse.json(
-          { error: "Nejste přihlášen." },
+          { error: t("auth.notAuthenticated") },
           { status: 401 },
         );
       }
       if (id !== requester.id && !requester.isAdmin) {
         return NextResponse.json(
-          { error: "Úprava cizího profilu není povolena" },
+          { error: t("users.cannotEditOtherProfile") },
           { status: 403 },
         );
       }

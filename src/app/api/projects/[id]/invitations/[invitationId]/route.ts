@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getTranslations } from "next-intl/server";
 import { db } from "@/lib/db";
 import { logChanges } from "@/lib/audit";
 import { requireProjectAccess } from "@/lib/authz";
@@ -22,6 +23,7 @@ export async function DELETE(
   const access = await requireProjectAccess(id, "owner");
   if (!access.ok) return access.response;
 
+  const t = await getTranslations("api.errors");
   try {
     const invitation = await db.projectInvitation.findFirst({
       where: { id: invitationId, projectId: id },
@@ -29,7 +31,7 @@ export async function DELETE(
 
     if (!invitation) {
       return NextResponse.json(
-        { error: "Pozvánka nebyla nalezena." },
+        { error: t("invitations.notFound") },
         { status: 404 },
       );
     }
@@ -58,7 +60,7 @@ export async function DELETE(
   } catch (error) {
     console.error("DELETE /api/projects/[id]/invitations/[invitationId] error:", error);
     return NextResponse.json(
-      { error: "Nepodařilo se zrušit pozvánku." },
+      { error: t("invitations.cancelFailed") },
       { status: 500 },
     );
   }

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getTranslations } from "next-intl/server";
 import { db } from "@/lib/db";
 import { requireVerifiedUser } from "@/lib/authz";
 import { logAuthEvent } from "@/lib/auth-audit";
@@ -30,12 +31,13 @@ import { logAuthEvent } from "@/lib/auth-audit";
 // =====================================================================
 
 export async function POST() {
+  const t = await getTranslations("api.errors");
   try {
     const { user, response } = await requireVerifiedUser();
     if (response) return response;
     if (!user) {
       return NextResponse.json(
-        { error: "Nejste přihlášen." },
+        { error: t("auth.notAuthenticated") },
         { status: 401 },
       );
     }
@@ -51,12 +53,12 @@ export async function POST() {
 
     return NextResponse.json({
       ok: true,
-      message: "Všechny ostatní relace byly odhlášeny.",
+      message: t("sessions.allRevoked"),
     });
   } catch (error) {
     console.error("POST /api/users/profile/sessions/revoke error:", error);
     return NextResponse.json(
-      { error: "Odhlášení ostatních relací selhalo. Zkuste to prosím znovu." },
+      { error: t("sessions.revokeFailed") },
       { status: 500 },
     );
   }

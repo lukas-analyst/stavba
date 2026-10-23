@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getTranslations } from "next-intl/server";
 import { requireVerifiedUser } from "@/lib/authz";
 
 // GET /api/ares?q={ico nebo nazev}
@@ -18,6 +19,7 @@ export async function GET(request: Request) {
   const { response } = await requireVerifiedUser();
   if (response) return response;
 
+  const t = await getTranslations("api.errors");
   try {
     const { searchParams } = new URL(request.url);
     const q = searchParams.get("q")?.trim() ?? "";
@@ -33,7 +35,7 @@ export async function GET(request: Request) {
       return NextResponse.json({
         results: [],
         needsApiKey: true,
-        message: "ARES API klíč není nastaven. Firmy lze zadat manuálně.",
+        message: t("ares.apiKeyMissing"),
       });
     }
 
@@ -62,7 +64,7 @@ export async function GET(request: Request) {
       console.error("ARES API error:", resp.status);
       return NextResponse.json({
         results: [],
-        error: "ARES API nedostupné",
+        error: t("ares.apiUnavailable"),
       }, { status: 502 });
     }
 
@@ -84,7 +86,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ results });
   } catch (error) {
     console.error("ARES search error:", error);
-    return NextResponse.json({ results: [], error: "Chyba při vyhledávání" }, { status: 500 });
+    return NextResponse.json({ results: [], error: t("ares.searchError") }, { status: 500 });
   }
 }
 

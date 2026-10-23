@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getTranslations } from "next-intl/server";
 import { db, dbRead } from "@/lib/db";
 import { logChanges } from "@/lib/audit";
 import { requireProjectAccess } from "@/lib/authz";
@@ -58,6 +59,7 @@ export async function GET(
   const access = await requireProjectAccess(id, "viewer");
   if (!access.ok) return access.response;
 
+  const t = await getTranslations("api.errors");
   try {
     const invitations = await dbRead.projectInvitation.findMany({
       where: { projectId: id },
@@ -91,7 +93,7 @@ export async function GET(
   } catch (error) {
     console.error("GET /api/projects/[id]/invitations error:", error);
     return NextResponse.json(
-      { error: "Nepodařilo se načíst pozvánky." },
+      { error: t("invitations.loadFailed") },
       { status: 500 },
     );
   }
@@ -110,11 +112,12 @@ export async function POST(
   if (!access.ok) return access.response;
   const { user } = access;
 
+  const t = await getTranslations("api.errors");
   try {
     const body = await request.json().catch(() => null);
     if (!body || typeof body !== "object") {
       return NextResponse.json(
-        { error: "Neplatný požadavek — očekáván JSON objekt." },
+        { error: t("invitations.invalidRequestJson") },
         { status: 400 },
       );
     }
@@ -123,7 +126,7 @@ export async function POST(
 
     if (typeof email !== "string" || !email.trim()) {
       return NextResponse.json(
-        { error: "E-mail je povinný." },
+        { error: t("auth.emailRequired") },
         { status: 400 },
       );
     }
@@ -132,7 +135,7 @@ export async function POST(
     // Basic e-mail shape validation — same regex as auth-helpers.
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(inviteeEmail)) {
       return NextResponse.json(
-        { error: "Neplatný formát e-mailu." },
+        { error: t("invitations.invalidEmailFormat") },
         { status: 400 },
       );
     }
@@ -149,7 +152,7 @@ export async function POST(
       // Owner check (owner is implicitly a member — don't allow inviting them)
       if (access.project.ownerId === existingMember.id) {
         return NextResponse.json(
-          { error: "Tento uživatel je již správcem projektu." },
+          { error: t("invitations.alreadyOwner") },
           { status: 400 },
         );
       }
@@ -159,7 +162,7 @@ export async function POST(
       });
       if (membership) {
         return NextResponse.json(
-          { error: "Tento uživatel je již členem projektu." },
+          { error: t("invitations.alreadyMember") },
           { status: 400 },
         );
       }
@@ -231,7 +234,7 @@ export async function POST(
   } catch (error) {
     console.error("POST /api/projects/[id]/invitations error:", error);
     return NextResponse.json(
-      { error: "Nepodařilo se vytvořit pozvánku." },
+      { error: t("invitations.createFailed") },
       { status: 500 },
     );
   }

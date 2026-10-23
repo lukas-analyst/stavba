@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getTranslations } from "next-intl/server";
 import { dbRead } from "@/lib/db";
 import { authOptions } from "@/lib/auth";
 import { getServerSession } from "next-auth";
@@ -20,10 +21,11 @@ import { requireUser } from "@/lib/require-user";
 // immediately.
 // =====================================================================
 export async function GET() {
+  const t = await getTranslations("api.errors");
   try {
     const { user, response } = await requireUser();
     if (response) return response;
-    if (!user) return NextResponse.json({ error: "Nejste přihlášen." }, { status: 401 });
+    if (!user) return NextResponse.json({ error: t("auth.notAuthenticated") }, { status: 401 });
 
     const userProfile = await dbRead.user.findUnique({
       where: { id: user.id },
