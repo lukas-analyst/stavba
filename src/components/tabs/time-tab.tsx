@@ -529,7 +529,7 @@ interface TimeDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   projectId: string;
-  budgetItems: { id: string; category: string; subcategory: string | null; completed?: boolean }[];
+  budgetItems: { id: string; category: string; subcategory: string | null; parentId?: string | null; completed?: boolean }[];
   contacts: { id: string; name: string; type: string }[];
   createTimeEntry: ReturnType<typeof useCreateTimeEntry>;
   updateTimeEntry?: ReturnType<typeof useUpdateTimeEntry>;
@@ -716,11 +716,22 @@ function TimeDialogInner({
         <Label htmlFor="budgetItem">{t("form.label.budgetItem")}</Label>
         <SearchableSelect
           id="budgetItem"
-          options={budgetItems.map((b) => ({
-            value: b.id,
-            label: `${b.category}${b.subcategory ? ` / ${b.subcategory}` : ""}${b.completed ? " ✓" : ""}`,
-            hint: b.category,
-          }))}
+          options={budgetItems.map((b) => {
+            // For child items (tasks), show the parent item's name as hint
+            // so the user can distinguish which parent a task belongs to.
+            // e.g. "Hydroizolace" with hint "Hrubá stavba › Hydroizolace"
+            const parent = b.parentId
+              ? budgetItems.find((p) => p.id === b.parentId)
+              : null;
+            const label = `${b.category}${b.subcategory ? ` / ${b.subcategory}` : ""}${b.completed ? " ✓" : ""}`;
+            return {
+              value: b.id,
+              label,
+              hint: parent
+                ? `${parent.subcategory || parent.category} › ${b.subcategory || b.category}`
+                : b.category,
+            };
+          })}
           value={budgetItemId}
           onChange={(v) => {
             setBudgetItemId(v);

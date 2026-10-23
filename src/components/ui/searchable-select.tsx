@@ -157,13 +157,34 @@ export function SearchableSelect({
             PopoverContent (transform animations can break inner scroll on some
             setups). This matches the pattern used by shadcn Combobox.
             overscroll-behavior: contain prevents the scroll from propagating to
-            the parent (especially important when used inside a Dialog). */}
+            the parent (especially important when used inside a Dialog).
+            touch-action: manipulation allows native touch scrolling without
+            300ms delay; pan-y ensures vertical pan works even when Radix
+            intercepts pointer events. */}
         <div
           id={listId}
           role="listbox"
-          className="max-h-[260px] overflow-y-auto overflow-x-hidden p-1"
-          style={{ overscrollBehavior: 'contain', touchAction: 'pan-y', WebkitOverflowScrolling: 'touch' }}
-          onPointerDown={(e) => e.stopPropagation()}
+          className="max-h-[min(50vh,320px)] overflow-y-auto overflow-x-hidden p-1"
+          style={{
+            overscrollBehavior: 'contain',
+            touchAction: 'pan-y',
+            WebkitOverflowScrolling: 'touch',
+          }}
+          // CRITICAL for mobile: Radix Popover intercepts pointerdown on the
+          // content wrapper, which can block native touch scroll on the inner
+          // list. We stop propagation here ONLY for pointerdown that starts on
+          // the scrollbar/list area, so the scroll gesture isn't cancelled.
+          // Clicks on option buttons still work (they use onClick, which fires
+          // after pointerup). This matches the Radix-recommended workaround
+          // for touch scroll inside PopoverContent.
+          onPointerDown={(e) => {
+            // Only intercept if the target is the list container itself or
+            // a non-interactive child (text node). Clicks on <button> options
+            // should propagate normally so selection works.
+            const target = e.target as HTMLElement;
+            if (target.closest('button[role="option"]')) return;
+            e.stopPropagation();
+          }}
         >
           {filtered.length === 0 ? (
             <p className="py-4 text-center text-xs text-muted-foreground">{emptyText}</p>
