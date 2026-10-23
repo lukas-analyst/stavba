@@ -1,0 +1,87 @@
+{
+  "Meta": {
+    "appName": "Build Budget",
+    "description": "Comprehensive budget, cost and time management for construction and renovation. Overview of projects, payments, work and material in one place.",
+    "keywords": ["construction", "renovation", "budget", "costs", "project", "management"]
+  },
+  "common": {
+    "appName": "Build Budget",
+    "loading": "Loading…",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "close": "Close",
+    "search": "Search",
+    "yes": "Yes",
+    "no": "No",
+    "all": "All",
+    "none": "None",
+    "add": "Add"
+  },
+  "nav": {
+    "sections": {
+      "main": "Main",
+      "work": "Work",
+      "organization": "Organization"
+    },
+    "items": {
+      "dashboard": "Overview",
+      "budget": "Budget",
+      "payments": "Payments",
+      "time": "Time",
+      "contacts": "Contacts",
+      "timeline": "Timeline",
+      "notes": "Notes",
+      "management": "Project management",
+      "telemetry": "Telemetry"
+    }
+  },
+  "phases": {
+    "preparation": "Preparation",
+    "demolition": "Demolition",
+    "shell": "Shell construction",
+    "finishing": "Finishing",
+    "future": "Future",
+    "unspecified": "Unspecified"
+  },
+  "statuses": {
+    "active": "Active",
+    "planning": "Planning",
+    "completed": "Completed",
+    "paused": "Paused"
+  },
+  "contactTypes": {
+    "company": "Company",
+    "craftsman": "Craftsman",
+    "self": "DIY",
+    "family": "Family",
+    "supplier": "Supplier",
+    "architect": "Architect",
+    "office": "Office"
+  },
+  "paymentTypes": {
+    "receipt": "Receipt",
+    "invoice": "Invoice",
+    "work": "Work",
+    "material": "Material",
+    "person": "Person",
+    "other": "Other"
+  },
+  "workerTypes": {
+    "company": "Company",
+    "craftsman": "Craftsman",
+    "self": "DIY",
+    "family": "Family"
+  },
+  "roles": {
+    "viewer": "Viewer",
+    "editor": "Editor",
+    "owner": "Owner",
+    "admin": "Admin"
+  },
+  "LanguageSwitcher": {
+    "language": "Language",
+    "changeLanguage": "Change language"
+  }
+}

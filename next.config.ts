@@ -1,5 +1,11 @@
 import type { NextConfig } from "next";
 import withBundleAnalyzer from "@next/bundle-analyzer";
+import createNextIntlPlugin from "next-intl/plugin";
+
+// next-intl plugin — wires up the request-time locale resolution.
+// `src/i18n/request.ts` is loaded for every server-rendered page and
+// API route so `useTranslations()` / `getTranslations()` work.
+const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 
 const nextConfig: NextConfig = {
   // Standalone output for smaller deployments (Vercel auto-detects this)
@@ -50,4 +56,5 @@ const analyzerConfig = withBundleAnalyzer({
   enabled: process.env.ANALYZE === "true",
 })(nextConfig);
 
-export default analyzerConfig;
+// Apply next-intl plugin last so it can wrap the final config.
+export default withNextIntl(analyzerConfig);

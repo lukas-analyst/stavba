@@ -1,0 +1,87 @@
+{
+  "Meta": {
+    "appName": "Rozpočet Stavby",
+    "description": "Komplexní správa rozpočtu, nákladů a času pro stavby a rekonstrukce. Přehled projektů, plateb, práce i materiálu na jednom místě.",
+    "keywords": ["stavba", "rekonstrukce", "rozpočet", "náklady", "projekt", "správa"]
+  },
+  "common": {
+    "appName": "Rozpočet Stavby",
+    "loading": "Načítání…",
+    "cancel": "Zrušit",
+    "save": "Uložit",
+    "delete": "Smazat",
+    "edit": "Upravit",
+    "close": "Zavřít",
+    "search": "Hledat",
+    "yes": "Ano",
+    "no": "Ne",
+    "all": "Vše",
+    "none": "Žádné",
+    "add": "Přidat"
+  },
+  "nav": {
+    "sections": {
+      "main": "Hlavní",
+      "work": "Práce",
+      "organization": "Organizace"
+    },
+    "items": {
+      "dashboard": "Přehled",
+      "budget": "Rozpočet",
+      "payments": "Platby",
+      "time": "Čas",
+      "contacts": "Kontakty",
+      "timeline": "Časová osa",
+      "notes": "Poznámky",
+      "management": "Správa projektu",
+      "telemetry": "Telemetrie"
+    }
+  },
+  "phases": {
+    "preparation": "Příprava",
+    "demolition": "Demolice",
+    "shell": "Hrubá stavba",
+    "finishing": "Zabydlování",
+    "future": "Do budoucna",
+    "unspecified": "Neurčeno"
+  },
+  "statuses": {
+    "active": "Aktivní",
+    "planning": "Plánování",
+    "completed": "Dokončeno",
+    "paused": "Pozastaveno"
+  },
+  "contactTypes": {
+    "company": "Firma",
+    "craftsman": "Řemeslník",
+    "self": "Svépomoc",
+    "family": "Rodina",
+    "supplier": "Dodavatel",
+    "architect": "Architekt",
+    "office": "Úřad"
+  },
+  "paymentTypes": {
+    "receipt": "Účtenka",
+    "invoice": "Faktura",
+    "work": "Práce",
+    "material": "Materiál",
+    "person": "Osoba",
+    "other": "Jiné"
+  },
+  "workerTypes": {
+    "company": "Firma",
+    "craftsman": "Řemeslník",
+    "self": "Svépomoc",
+    "family": "Rodina"
+  },
+  "roles": {
+    "viewer": "Pozorovatel",
+    "editor": "Editor",
+    "owner": "Majitel",
+    "admin": "Správce"
+  },
+  "LanguageSwitcher": {
+    "language": "Jazyk",
+    "changeLanguage": "Změnit jazyk"
+  }
+}

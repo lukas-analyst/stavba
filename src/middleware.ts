@@ -1,48 +1,58 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
+import createIntlMiddleware from "next-intl/middleware";
+import { routing } from "@/i18n/routing";
 
 // =====================================================================
-// Auth middleware — auth guard + e-mail verification enforcement
+// Combined middleware — auth guard + locale routing
 // ---------------------------------------------------------------------
-// This middleware runs on every request (except static assets) and:
-//   1. Redirects unauthenticated users to /auth/login
-//   2. Redirects authenticated-but-unverified users to /auth/verify-pending
-//   3. Redirects authenticated+verified users away from /auth/* pages
-//      (EXCEPT /auth/profile and /auth/settings — those pages are for
-//       authenticated users)
+// This middleware runs on every request (except static assets) and does
+// TWO jobs in sequence:
 //
-// We use `getToken` from `next-auth/jwt` directly instead of `withAuth`
-// because `withAuth` can cause redirect loops on Vercel Edge Runtime
-// (it sometimes ignores the `authorized` callback and redirects to
-// /api/auth/signin, creating a loop with our custom login page).
+//   1. INTL ROUTING (next-intl):
+//      Detects the user's locale (URL prefix > cookie > Accept-Language)
+//      and rewrites/redirects the URL accordingly. Default locale (cs)
+//      gets NO prefix (as-needed strategy); non-default locales get a
+//      prefix (`/en/`, `/de/`, …).
 //
-// `getToken` is simpler and more predictable: it reads the JWT from
-// the cookie, verifies it with NEXTAUTH_SECRET, and returns the
-// decoded token (or null if not authenticated).
+//   2. AUTH GUARD:
+//      a. Redirects unauthenticated users to /auth/login
+//      b. Redirects authenticated-but-unverified users to /auth/verify-pending
+//      c. Redirects authenticated+verified users away from /auth/* pages
+//         (EXCEPT /auth/profile and /auth/settings — those pages are for
+//          authenticated users)
 //
-// Public paths (no auth required):
-//   - /auth/*          (login, register, forgot-password, reset-password,
-//                       verify-email, verify-pending)
-//   - /api/auth/*      (NextAuth endpoints + our register/verify/reset)
-//   - /api/projects/[slug]/public  (public read-only project view — B25)
-//   - /p/*             (public project pages — read-only, no auth)
-//   - /invite/*        (invitation accept page — the page itself redirects
-//                       to /auth/login if not authenticated; middleware
-//                       lets through so the page can do that)
+// Public paths (no auth required, BUT intl routing still applies):
+//   - /auth/*          (login, register, forgot-password, …)
+//   - /api/auth/*      (NextAuth endpoints)
+//   - /api/projects/[slug]/public  (public project API)
+//   - /p/*             (public project pages — see note below)
+//   - /invite/*        (invitation accept page)
 //
-// Authenticated paths:
-//   - /auth/profile    (account settings — requires verified e-mail)
-//   - /auth/settings   (unified settings: hidden projects, profile, about)
+// PUBLIC ROUTES (`/p/*`, `/invite/*`) — special handling:
+//   These are shared URLs (QR codes, e-mail links). They do NOT get a
+//   locale prefix. Instead, the page components detect the locale from
+//   the `NEXT_LOCALE` cookie + `Accept-Language` header and render in
+//   the right language. We EXCLUDE them from intl middleware so the URL
+//   stays clean (`/p/slug`, not `/cs/p/slug`).
 // =====================================================================
+
+const intlMiddleware = createIntlMiddleware(routing);
 
 // Match /api/projects/<slug>/public — public read-only project endpoint.
-// We don't allow ANY other /api/projects/* path to bypass auth.
 function isPublicProjectApi(pathname: string): boolean {
-  // /api/projects/<slug>/public
-  //   segments: ["", "api", "projects", "<slug>", "public"]
-  // We use a regex to keep this strict — only this exact shape passes.
   return /^\/api\/projects\/[^/]+\/public\/?$/.test(pathname);
+}
+
+// Public routes that should NEVER get a locale prefix and don't require
+// auth. next-intl middleware is skipped for these so the URL stays clean.
+function isLocaleExemptPath(pathname: string): boolean {
+  return (
+    pathname.startsWith("/p/") ||
+    pathname.startsWith("/invite/") ||
+    isPublicProjectApi(pathname)
+  );
 }
 
 export async function middleware(req: NextRequest) {
@@ -50,52 +60,68 @@ export async function middleware(req: NextRequest) {
 
   const isAuthApi = pathname.startsWith("/api/auth");
 
-  // Public auth APIs — always let through (NextAuth handles these)
+  // Public auth APIs — always let through (NextAuth handles these).
+  // No intl routing on /api/* at all.
   if (isAuthApi) {
     return NextResponse.next();
   }
 
-  // Public project view API — no auth required (B25: shared project view).
+  // Public project view API — no auth, no intl.
   if (isPublicProjectApi(pathname)) {
     return NextResponse.next();
   }
 
-  // Public project page — anyone can view a public project.
-  // The page itself fetches /api/projects/[slug]/public which returns 404
-  // if the project isn't public, then the page redirects to /auth/login.
-  // We must let these through here so unauthenticated users can see
-  // public projects without first being bounced to /auth/login.
-  if (pathname.startsWith("/p/")) {
+  // Public project pages + invitation accept pages — NO locale prefix.
+  // The page components handle locale detection themselves (via the
+  // `NEXT_LOCALE` cookie + `Accept-Language` header).
+  // We let these through to the auth check below; the auth middleware
+  // already allows unauthenticated access to /p/* and /invite/*.
+  if (pathname.startsWith("/p/") || pathname.startsWith("/invite/")) {
     return NextResponse.next();
   }
 
-  // Invitation accept page — handled client-side. The page itself
-  // redirects to /auth/login?callbackUrl=/invite/[token] if not
-  // authenticated, so we let it through here regardless of auth state.
-  if (pathname.startsWith("/invite/")) {
-    return NextResponse.next();
-  }
+  // ───────────────────────────────────────────────────────────────
+  // STEP 1: next-intl middleware (locale detection + URL rewrite)
+  // For non-public routes, run the intl middleware first. It will:
+  //   - Rewrite `/budget` → `/cs/budget` internally (default locale)
+  //   - Redirect `/en/budget` → `/en/budget` (already prefixed)
+  //   - Set the `NEXT_LOCALE` cookie for future visits
+  // The response object returned contains headers + cookies we MUST
+  // preserve when chaining the auth check.
+  // ───────────────────────────────────────────────────────────────
+  const intlResponse = intlMiddleware(req);
 
-  // Get the JWT token from the cookie.
-  // `getToken` verifies the JWT signature using NEXTAUTH_SECRET.
-  // Returns null if no cookie or invalid/expired token.
+  // ───────────────────────────────────────────────────────────────
+  // STEP 2: Auth guard
+  // We use `getToken` from `next-auth/jwt` directly (see comment in
+  // the original middleware for why `withAuth` was avoided).
+  //
+  // IMPORTANT: after intl middleware rewrites the URL, `req.nextUrl`
+  // still reflects the ORIGINAL pathname (not the rewritten one) —
+  // so `pathname` here is the user-facing URL. For auth purposes,
+  // we strip any locale prefix to get the "logical" path.
+  // ───────────────────────────────────────────────────────────────
+
+  // Strip the locale prefix (e.g. `/en/budget` → `/budget`) so auth
+  // checks work regardless of locale.
+  const pathWithoutLocale = pathname.replace(/^\/(cs|en)(?=\/|$)/, "") || "/";
+
   const token = await getToken({
     req,
     secret: process.env.NEXTAUTH_SECRET,
   });
 
   // /auth/profile and /auth/settings are special auth pages — they require
-  // authentication + verification, unlike the other /auth/* pages. Treat
-  // them like normal authenticated routes (handled below).
+  // authentication + verification, unlike the other /auth/* pages.
   const isProfilePage =
-    pathname === "/auth/profile" ||
-    pathname.startsWith("/auth/profile/") ||
-    pathname === "/auth/settings";
-  const isAuthPage = pathname.startsWith("/auth") && !isProfilePage;
+    pathWithoutLocale === "/auth/profile" ||
+    pathWithoutLocale.startsWith("/auth/profile/") ||
+    pathWithoutLocale === "/auth/settings";
+  const isAuthPage = pathWithoutLocale.startsWith("/auth") && !isProfilePage;
 
   // Auth pages (login, register, forgot-password, etc.)
   if (isAuthPage) {
-    // If already logged in + verified → redirect to home
+    // If already logged in + verified → redirect to home.
     // Check both emailVerified AND email/id to handle the case where
     // the JWT callback returned an empty token {} (tokenVersion mismatch)
     // — in that case, token exists but has no email, so we treat the
@@ -105,18 +131,40 @@ export async function middleware(req: NextRequest) {
       (token as { email?: string }).email &&
       (token as { emailVerified?: string | null }).emailVerified
     ) {
-      return NextResponse.redirect(new URL("/", req.url));
+      // Redirect to home — preserve locale prefix in the redirect URL.
+      const homeUrl = new URL("/", req.url);
+      // Copy the locale from the intl response if it set a cookie/rewrite.
+      const localeCookie = intlResponse.headers.get("x-next-intl-locale");
+      if (localeCookie) {
+        homeUrl.pathname = `/${localeCookie}`;
+      }
+      intlResponse.headers.forEach((value, key) => {
+        if (key.toLowerCase() === "location") {
+          // next-intl may have already set a Location header for redirects.
+          // We override it to go home.
+        }
+      });
+      return NextResponse.redirect(homeUrl);
     }
     // Allow access to auth pages for unauthenticated or unverified users
-    return NextResponse.next();
+    return intlResponse;
   }
 
-  // For all other pages — require authentication
+  // For all other pages — require authentication.
   // token might be {} (empty object from tokenVersion mismatch) — treat
   // it the same as null (not authenticated)
   if (!token || !(token as { email?: string }).email) {
-    // Redirect to login with callback URL
-    const loginUrl = new URL("/auth/login", req.url);
+    // Redirect to login with callback URL — preserve locale prefix.
+    // We need to construct the login URL with the locale prefix so the
+    // user stays in the same language after the redirect.
+    const detectedLocale =
+      intlResponse.headers.get("x-next-intl-locale") ??
+      req.cookies.get("NEXT_LOCALE")?.value ??
+      "cs";
+    const loginUrl = new URL(
+      `/${detectedLocale === "cs" ? "" : detectedLocale + "/"}auth/login`,
+      req.url,
+    );
     loginUrl.searchParams.set("callbackUrl", `${pathname}${search}`);
     return NextResponse.redirect(loginUrl);
   }
@@ -124,30 +172,44 @@ export async function middleware(req: NextRequest) {
   // Authenticated but e-mail not verified
   if (!(token as { emailVerified?: string | null }).emailVerified) {
     // Allow access to the verify-pending page itself
-    if (pathname === "/auth/verify-pending") {
-      return NextResponse.next();
+    if (pathWithoutLocale === "/auth/verify-pending") {
+      return intlResponse;
     }
 
     // For API routes (non-auth), return 403 JSON instead of redirect
-    if (pathname.startsWith("/api/")) {
+    if (pathWithoutLocale.startsWith("/api/")) {
       return NextResponse.json(
         { error: "E-mail není ověřen. Zkontrolujte svou schránku." },
         { status: 403 },
       );
     }
 
-    // For pages, redirect to verify-pending
-    return NextResponse.redirect(new URL("/auth/verify-pending", req.url));
+    // For pages, redirect to verify-pending (preserve locale)
+    const detectedLocale =
+      intlResponse.headers.get("x-next-intl-locale") ??
+      req.cookies.get("NEXT_LOCALE")?.value ??
+      "cs";
+    const verifyUrl = new URL(
+      `/${detectedLocale === "cs" ? "" : detectedLocale + "/"}auth/verify-pending`,
+      req.url,
+    );
+    return NextResponse.redirect(verifyUrl);
   }
 
-  // Authenticated + verified → allow
-  return NextResponse.next();
+  // Authenticated + verified → allow (return intl response so cookies/headers persist)
+  return intlResponse;
 }
 
 export const config = {
   // Match all paths except:
   //   - _next/static, _next/image (Next.js internals)
   //   - favicon.ico and image files
+  //   - /api/* (API routes handle their own auth — except /api/auth/*,
+  //     but we explicitly let those through above)
+  //
+  // Note: we DO match /api/* paths so the auth check can return 403 for
+  // unauthenticated API calls. The intl middleware is a no-op on API
+  // routes (they don't have locale segments).
   matcher: [
     "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
   ],

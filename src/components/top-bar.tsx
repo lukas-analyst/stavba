@@ -41,6 +41,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { NewProjectDialog } from "@/components/new-project-dialog";
 import { GlobalSearchDialog } from "@/components/global-search-dialog";
+import { LanguageSwitcher } from "@/components/language-switcher";
 import { formatCzk, STATUS_LABELS } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -421,6 +422,14 @@ export function TopBar() {
             </span>
           </button>
         )}
+
+        {/* Language switcher (flag icon) — sits just left of the account
+            avatar. Hidden on very small screens to keep the top bar
+            uncluttered; the language can still be changed from the
+            Settings tab. */}
+        <div className="hidden sm:block">
+          <LanguageSwitcher />
+        </div>
 
         {/* Account dropdown — avatar with initials + Profil + Admin (if admin) +
             Odhlásit + theme toggle. Nastavení lives in the sidebar footer

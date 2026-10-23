@@ -4,7 +4,7 @@ import { useCallback, useMemo } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { Settings } from "lucide-react";
-import { NAV_ITEMS, NAV_SECTIONS, type NavItem } from "@/lib/navigation";
+import { useLocalizedNav, type NavItem } from "@/lib/navigation";
 import { useAppStore } from "@/lib/store";
 import { useProjects, useProjectMembers } from "@/lib/api";
 import { computeUserRole, roleClears } from "@/lib/roles";
@@ -75,16 +75,21 @@ export function AppSidebar() {
     [setActiveTab, setSidebarOpen, isMobile],
   );
 
+  // Localized navigation items + sections (resolved via next-intl).
+  // `useLocalizedNav` returns the same arrays as NAV_ITEMS / NAV_SECTIONS
+  // but with a localized `label` field attached.
+  const { items: navItems, sections: navSections } = useLocalizedNav();
+
   // Group items by section for rendering — filter out items whose
   // `minRole` is above the user's current role in the selected project.
   // `userRole` falls back to "viewer" when no project is selected, so
   // restricted items (management, telemetry) stay hidden until a project
   // is picked.
   const visibleItems = useMemo(
-    () => NAV_ITEMS.filter((item) => roleClears(userRole, item.minRole)),
-    [userRole],
+    () => navItems.filter((item) => roleClears(userRole, item.minRole)),
+    [userRole, navItems],
   );
-  const itemsBySection = NAV_SECTIONS.map((section) => ({
+  const itemsBySection = navSections.map((section) => ({
     section,
     items: visibleItems.filter((t) => t.section === section.id),
   })).filter((g) => g.items.length > 0);
