@@ -193,11 +193,11 @@ export async function PATCH(
       updated as unknown as Record<string, unknown>,
     );
 
-    // If dateFrom/dateTo changed or item was re-parented, recalculate parent dates
+    // If dateFrom/dateTo changed or item was re-parented, recalculate parent dates.
+    // `parentChanged` was already computed at the top of this handler (re-parenting
+    // validation block) — we reuse it here to avoid a duplicate declaration.
     const dateChanged =
       updateData.dateFrom !== undefined || updateData.dateTo !== undefined;
-    const parentChanged =
-      updateData.parentId !== undefined && updateData.parentId !== existing.parentId;
 
     if (updated.parentId && (dateChanged || parentChanged)) {
       await recalcParentDates(updated.parentId);
