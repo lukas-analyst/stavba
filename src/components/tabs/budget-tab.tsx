@@ -1646,7 +1646,8 @@ const BudgetRow = memo(function BudgetRow({
           • Leaf (no children): own planCost, editable inline.
           • Parent (has children): TOTAL (own + Σ children) shown bold as
             the primary number; the parent's OWN planCost shown below as a
-            small muted "vlastní" line that is itself editable inline.
+            small muted "+ X Kč" line (editable inline). Hidden when the
+            parent's own cost is null/0 to avoid noise.
             Children's planCosts are visible as rows below, so we don't
             repeat them in the breakdown. */}
       <TableCell onClick={(e) => e.stopPropagation()} className="text-right">
@@ -1664,16 +1665,19 @@ const BudgetRow = memo(function BudgetRow({
                 <span className="text-muted-foreground/50">—</span>
               )}
             </span>
-            {/* Own cost — editable inline, muted "vlastní" label */}
-            <span className="flex w-full items-center justify-end gap-1 type-label-sm text-muted-foreground">
-              <span className="shrink-0">vlastní</span>
-              <InlineNumber
-                value={item.planCost}
-                onCommit={(v) => update("planCost", v)}
-                className="text-right tabular-nums text-muted-foreground hover:text-foreground"
-                suffix=" Kč"
-              />
-            </span>
+            {/* Own cost — editable inline, shown only when there's a value.
+                "+" prefix indicates it adds to the total. */}
+            {item.planCost != null && item.planCost !== 0 && (
+              <span className="flex w-full items-center justify-end gap-0.5 type-label-sm text-muted-foreground tabular-nums">
+                <span className="shrink-0 text-muted-foreground/60">+</span>
+                <InlineNumber
+                  value={item.planCost}
+                  onCommit={(v) => update("planCost", v)}
+                  className="text-right tabular-nums text-muted-foreground hover:text-foreground"
+                  suffix=" Kč"
+                />
+              </span>
+            )}
           </div>
         ) : (
           <InlineNumber
@@ -1712,7 +1716,8 @@ const BudgetRow = memo(function BudgetRow({
 
       {/* Skut. (Kč) — Variant D (same pattern as Plán):
           • Leaf: own actualCost, editable inline.
-          • Parent: TOTAL (own + Σ children) bold + "vlastní" editable below.
+          • Parent: TOTAL (own + Σ children) bold + "+ X Kč" editable below
+            (only when parent's own actualCost is non-null/non-zero).
             actualCost is normally auto-computed from payments, but the
             parent's own actualCost can still be adjusted manually. */}
       <TableCell
@@ -1735,15 +1740,17 @@ const BudgetRow = memo(function BudgetRow({
                 <span className="text-muted-foreground/50">—</span>
               )}
             </span>
-            <span className="flex w-full items-center justify-end gap-1 type-label-sm text-muted-foreground">
-              <span className="shrink-0">vlastní</span>
-              <InlineNumber
-                value={item.actualCost}
-                onCommit={(v) => update("actualCost", v)}
-                className="text-right tabular-nums text-muted-foreground hover:text-foreground"
-                suffix=" Kč"
-              />
-            </span>
+            {item.actualCost != null && item.actualCost !== 0 && (
+              <span className="flex w-full items-center justify-end gap-0.5 type-label-sm text-muted-foreground tabular-nums">
+                <span className="shrink-0 text-muted-foreground/60">+</span>
+                <InlineNumber
+                  value={item.actualCost}
+                  onCommit={(v) => update("actualCost", v)}
+                  className="text-right tabular-nums text-muted-foreground hover:text-foreground"
+                  suffix=" Kč"
+                />
+              </span>
+            )}
           </div>
         ) : (
           <InlineNumber
@@ -2011,15 +2018,6 @@ function DetailPanelRow({
                 <span className="font-medium text-foreground">{item.contact.name}</span>
                 {item.contact.role && (
                   <span className="text-muted-foreground">· {item.contact.role}</span>
-                )}
-                {item.contact.phone && (
-                  <a
-                    href={`tel:${item.contact.phone}`}
-                    className="ml-auto inline-flex items-center gap-0.5 text-primary hover:underline"
-                    title={item.contact.phone}
-                  >
-                    {item.contact.phone}
-                  </a>
                 )}
               </div>
             ) : (
