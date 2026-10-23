@@ -3,13 +3,18 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2, Mail, Lock, User, AlertCircle, CheckCircle2 } from "lucide-react";
+import { BRAND } from "@/i18n/brand";
 
 export default function RegisterPage() {
   const router = useRouter();
+  const t = useTranslations("auth.register");
+  const tc = useTranslations("auth.common");
+  const tv = useTranslations("auth.validation");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -23,15 +28,15 @@ export default function RegisterPage() {
 
     // Client-side validation
     if (password !== passwordConfirm) {
-      setError("Hesla se neshodují.");
+      setError(tv("passwordMismatch"));
       return;
     }
     if (password.length < 8) {
-      setError("Heslo musí mít alespoň 8 znaků.");
+      setError(tv("passwordTooShort"));
       return;
     }
     if (!/[a-zA-Z]/.test(password) || !/[0-9]/.test(password)) {
-      setError("Heslo musí obsahovat alespoň jedno písmeno a jednu číslici.");
+      setError(tv("passwordTooWeak"));
       return;
     }
 
@@ -47,7 +52,7 @@ export default function RegisterPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.error || "Registrace selhala.");
+        setError(data.error || t("errors.generic"));
         setLoading(false);
         return;
       }
@@ -56,7 +61,7 @@ export default function RegisterPage() {
       router.push("/auth/login?registered=1");
     } catch (err) {
       console.error("Register error:", err);
-      setError("Registrace selhala. Zkuste to prosím znovu.");
+      setError(t("errors.generic"));
       setLoading(false);
     }
   };
@@ -68,19 +73,19 @@ export default function RegisterPage() {
         <div className="mb-8 text-center">
           <Link href="/" className="inline-flex items-center gap-2">
             <span className="text-2xl font-bold tracking-tight">
-              Stavba<span className="text-primary">.</span>
+              {BRAND.shortName}<span className="text-primary">.</span>
             </span>
           </Link>
           <p className="mt-2 text-sm text-muted-foreground">
-            Vytvořte si účet a začněte spravovat své projekty
+            {t("tagline")}
           </p>
         </div>
 
         {/* Card */}
         <div className="rounded-2xl border bg-card p-6 shadow-sm sm:p-8">
-          <h1 className="mb-1 text-xl font-semibold">Registrace</h1>
+          <h1 className="mb-1 text-xl font-semibold">{t("title")}</h1>
           <p className="mb-6 text-sm text-muted-foreground">
-            Založte si nový účet zdarma
+            {t("subtitle")}
           </p>
 
           {error && (
@@ -96,13 +101,13 @@ export default function RegisterPage() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-1.5">
-              <Label htmlFor="name">Jméno (volitelné)</Label>
+              <Label htmlFor="name">{t("nameLabel")}</Label>
               <div className="relative">
                 <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   id="name"
                   type="text"
-                  placeholder="Jan Novák"
+                  placeholder={t("namePlaceholder")}
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   autoComplete="name"
@@ -112,13 +117,13 @@ export default function RegisterPage() {
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="email">E-mail</Label>
+              <Label htmlFor="email">{tc("email")}</Label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   id="email"
                   type="email"
-                  placeholder="vase@email.cz"
+                  placeholder={tc("emailPlaceholder")}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
@@ -131,13 +136,13 @@ export default function RegisterPage() {
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="password">Heslo</Label>
+              <Label htmlFor="password">{tc("password")}</Label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   id="password"
                   type="password"
-                  placeholder="Min. 8 znaků, písmeno + číslo"
+                  placeholder={tv("passwordPlaceholder")}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
@@ -150,13 +155,13 @@ export default function RegisterPage() {
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="passwordConfirm">Potvrzení hesla</Label>
+              <Label htmlFor="passwordConfirm">{tv("passwordConfirmLabel")}</Label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   id="passwordConfirm"
                   type="password"
-                  placeholder="Zopakujte heslo"
+                  placeholder={tv("passwordConfirmPlaceholder")}
                   value={passwordConfirm}
                   onChange={(e) => setPasswordConfirm(e.target.value)}
                   required
@@ -178,27 +183,27 @@ export default function RegisterPage() {
               {loading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Registruji…
+                  {t("submitting")}
                 </>
               ) : (
-                "Vytvořit účet"
+                t("submit")
               )}
             </Button>
           </form>
 
           <p className="mt-6 text-center text-sm text-muted-foreground">
-            Už máte účet?{" "}
+            {t("hasAccount")}{" "}
             <Link
               href="/auth/login"
               className="font-medium text-foreground hover:underline"
             >
-              Přihlásit se
+              {tc("signInLink")}
             </Link>
           </p>
         </div>
 
         <p className="mt-6 text-center text-xs text-muted-foreground">
-          © {new Date().getFullYear()} Stavba — Rozpočet Stavby
+          {tc("copyright", { year: new Date().getFullYear() })}
         </p>
       </div>
     </div>

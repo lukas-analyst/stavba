@@ -83,5 +83,223 @@
   "LanguageSwitcher": {
     "language": "Jazyk",
     "changeLanguage": "Změnit jazyk"
+  },
+  "auth": {
+    "common": {
+      "email": "E-mail",
+      "emailPlaceholder": "vase@email.cz",
+      "or": "nebo",
+      "password": "Heslo",
+      "copyright": "© {year} Stavba — Rozpočet Stavby",
+      "backToLogin": "Zpět na přihlášení",
+      "signInLink": "Přihlásit se",
+      "backToHome": "Zpět na hlavní stránku"
+    },
+    "validation": {
+      "passwordMismatch": "Hesla se neshodují.",
+      "passwordTooShort": "Heslo musí mít alespoň 8 znaků.",
+      "passwordTooWeak": "Heslo musí obsahovat alespoň jedno písmeno a jednu číslici.",
+      "passwordPlaceholder": "Min. 8 znaků, písmeno + číslo",
+      "passwordConfirmLabel": "Potvrzení hesla",
+      "passwordConfirmPlaceholder": "Zopakujte heslo"
+    },
+    "login": {
+      "title": "Přihlášení",
+      "subtitle": "Přihlaste se ke svému účtu",
+      "tagline": "Správa rozpočtu, nákladů a času pro stavby a rekonstrukce",
+      "registeredSuccess": "Registrace proběhla. Zkontrolujte svůj e-mail pro ověření adresy.",
+      "forgotPassword": "Zapomenuté heslo?",
+      "submitting": "Přihlašuji…",
+      "submit": "Přihlásit se",
+      "googleButton": "Přihlásit přes Google",
+      "noAccount": "Nemáte účet?",
+      "registerLink": "Zaregistrovat se",
+      "errors": {
+        "useOAuth": "Tento e-mail je zaregistrován přes Google. Použijte tlačítko „Přihlásit přes Google“.",
+        "registerFirst": "Pro tento e-mail ještě nebyl vytvořen účet. Zaregistrujte se prosím.",
+        "invalidCredentials": "Neplatný e-mail nebo heslo.",
+        "configuration": "Chyba konfigurace přihlášení. Kontaktujte správce.",
+        "oauthFailed": "Přihlášení přes Google selhalo. Zkuste to znovu.",
+        "rateLimitedMinutes": "Příliš mnoho pokusů o přihlášení. Zkuste to za {minutes} minut.",
+        "rateLimitedSeconds": "Příliš mnoho pokusů o přihlášení. Zkuste to za {seconds} sekund.",
+        "generic": "Přihlášení selhalo. Zkuste to prosím znovu."
+      }
+    },
+    "register": {
+      "title": "Registrace",
+      "subtitle": "Založte si nový účet zdarma",
+      "tagline": "Vytvořte si účet a začněte spravovat své projekty",
+      "nameLabel": "Jméno (volitelné)",
+      "namePlaceholder": "Jan Novák",
+      "submitting": "Registruji…",
+      "submit": "Vytvořit účet",
+      "hasAccount": "Už máte účet?",
+      "errors": {
+        "generic": "Registrace selhala. Zkuste to prosím znovu."
+      }
+    },
+    "forgotPassword": {
+      "title": "Zapomenuté heslo",
+      "subtitle": "Zadejte svůj e-mail a pošleme vám odkaz pro reset hesla.",
+      "submitting": "Odesílám…",
+      "submit": "Odeslat odkaz pro reset",
+      "remember": "Vzpomněli jste si na heslo?",
+      "success": {
+        "title": "Zkontrolujte svůj e-mail",
+        "body": "Pokud účet s e-mailem {email} existuje, odeslali jsme vám odkaz pro reset hesla. Platnost odkazu je 1 hodina."
+      },
+      "errors": {
+        "generic": "Žádost selhala. Zkuste to prosím znovu."
+      }
+    },
+    "resetPassword": {
+      "title": "Nové heslo",
+      "subtitle": "Zadejte své nové heslo",
+      "newPasswordLabel": "Nové heslo",
+      "submitting": "Měním heslo…",
+      "submit": "Změnit heslo",
+      "checking": "Ověřuji odkaz…",
+      "invalidTitle": "Neplatný odkaz",
+      "invalidBody": "Tento odkaz pro reset hesla je neplatný nebo vypršel (platnost 1 hodina). Vyžádejte si prosím nový.",
+      "newLink": "Nový odkaz",
+      "successTitle": "Heslo změněno",
+      "successBody": "Vaše heslo bylo úspěšně změněno. Přesměrovávám na přihlášení…",
+      "successToast": "Heslo bylo úspěšně změněno.",
+      "errors": {
+        "generic": "Reset hesla selhal. Zkuste to prosím znovu."
+      }
+    },
+    "verifyEmail": {
+      "validTitle": "E-mail ověřen!",
+      "validBody": "Vaše e-mailová adresa byla úspěšně potvrzena. Nyní se můžete přihlásit a začít spravovat své projekty.",
+      "alreadyTitle": "E-mail je již ověřen",
+      "alreadyBody": "Vaše e-mailová adresa byla již dříve úspěšně ověřena. Můžete se přihlásit ke svému účtu.",
+      "expiredTitle": "Odkaz vypršel",
+      "expiredBody": "Platnost tohoto odkazu již vypršela (platnost je 24 hodin). Přihlaste se a vyžádejte si nový verifikační e-mail.",
+      "invalidTitle": "Neplatný odkaz",
+      "invalidBody": "Tento odkaz je neplatní nebo byl již použit. Přihlaste se a vyžádejte si nový verifikační e-mail.",
+      "errorTitle": "Chyba při ověřování",
+      "errorBody": "Něco se pokazilo. Zkuste to prosím později nebo nás kontaktujte.",
+      "checking": "Ověřuji…"
+    },
+    "verifyPending": {
+      "title": "Ověřte svůj e-mail",
+      "body": "Pro přístup k vašim projektům musíte potvrdit svou e-mailovou adresu. Zkontrolujte svou schránku včetně složky spam.",
+      "sentTo": "E-mail odeslán na:",
+      "resendLabel": "Nedorazil vám e-mail?",
+      "resendButton": "Znovu odeslat odkaz",
+      "resendSubmitting": "Odesílám…",
+      "checkButton": "Již jsem ověřil — obnovit",
+      "checkSubmitting": "Kontroluji…",
+      "signOut": "Odhlásit se",
+      "footer": "Po ověření e-mailu budete automaticky přesměrováni na hlavní stránku.",
+      "toasts": {
+        "resent": "Verifikační e-mail byl znovu odeslán. Zkontrolujte svou schránku.",
+        "sendFailed": "Odeslání selhalo. Zkuste to prosím znovu."
+      }
+    },
+    "profile": {
+      "tagline": "Spravujte svůj účet, heslo a relace",
+      "title": "Profil",
+      "subtitle": "Zde můžete upravit své údaje, změnit heslo a spravovat aktivní relace.",
+      "sections": {
+        "profile": "Profil",
+        "password": "Změnit heslo",
+        "sessions": "Relace",
+        "signOut": "Odhlásit se"
+      },
+      "fields": {
+        "name": "Jméno",
+        "namePlaceholder": "Jan Novák",
+        "currentPassword": "Aktuální heslo",
+        "currentPasswordPlaceholder": "••••••••",
+        "newPassword": "Nové heslo",
+        "confirmNewPassword": "Potvrzení nového hesla",
+        "confirmNewPasswordPlaceholder": "Zopakujte nové heslo"
+      },
+      "emailReadOnlyNote": "E-mail nelze změnit. Pro změnu kontaktujte podporu.",
+      "passwordChangeNote": "Po změně hesla budou odhlášeny všechny ostatní relace (na jiných zařízeních).",
+      "sessionsDescription": "Odhlásí všechny ostatní přihlášené relace (na jiných zařízeních). Tato relace zůstane aktivní.",
+      "buttons": {
+        "saveProfile": "Uložit změny",
+        "savingProfile": "Ukládám…",
+        "changePassword": "Změnit heslo",
+        "changingPassword": "Měním heslo…",
+        "revokeSessions": "Odhlásit všechny ostatní relace",
+        "revokingSessions": "Odhlašuji…",
+        "signOutThisDevice": "Odhlásit se z tohoto zařízení"
+      },
+      "toasts": {
+        "saveSuccess": "Profil byl uložen.",
+        "saveError": "Uložení profilu selhalo.",
+        "saveErrorException": "Uložení profilu selhalo. Zkuste to prosím znovu.",
+        "passwordSuccess": "Heslo bylo změněno.",
+        "passwordError": "Změna hesla selhala.",
+        "passwordErrorException": "Změna hesla selhala. Zkuste to prosím znovu.",
+        "revokeSuccess": "Všechny ostatní relace byly odhlášeny.",
+        "revokeError": "Odhlášení ostatních relací selhalo.",
+        "revokeErrorException": "Odhlášení ostatních relací selhalo. Zkuste to prosím znovu."
+      }
+    },
+    "settings": {
+      "tagline": "Globální nastavení aplikace",
+      "sections": {
+        "hiddenProjects": "Skryté projekty",
+        "activity": "Statistiky mé aktivity",
+        "about": "O aplikaci"
+      },
+      "hiddenProjects": {
+        "description": "Skryté projekty se nezobrazují v přepínači projektů v horní liště. Stále jsou přístupné přes přímý odkaz.",
+        "empty": "Zatím nemáte žádné projekty.",
+        "toggleHint": "Zapnutý přepínač = projekt je skrytý. Změny se ukládají automaticky.",
+        "aria": {
+          "show": "Zobrazit projekt {name}",
+          "hide": "Skrýt projekt {name}"
+        }
+      },
+      "activity": {
+        "description": "Přehled vašich akcí v aplikaci za celé období napříč všemi projekty."
+      },
+      "about": {
+        "body": "Aplikace <brand>Stavba</brand> slouží ke komplexní správě rozpočtu, nákladů, času a materiálu pro stavby a rekonstrukce.",
+        "version": "Verze",
+        "commit": "Commit",
+        "buildDate": "Datum buildu",
+        "branch": "Větev",
+        "label": "Label",
+        "githubLink": "Zdrojový kód na GitHubu"
+      },
+      "accountProfileLink": "Profil účtu"
+    }
+  },
+  "topbar": {
+    "account": "Účet",
+    "loading": "Načítání…",
+    "selectProject": "Vyberte projekt",
+    "searchProject": "Hledat projekt…",
+    "search": "Hledat",
+    "toggleSidebar": {
+      "open": "Otevřít panel",
+      "close": "Zavřít panel"
+    },
+    "menu": {
+      "profile": "Profil",
+      "admin": "Admin",
+      "signOut": "Odhlásit",
+      "theme": {
+        "light": "Světlý motiv",
+        "dark": "Tmavý motiv"
+      }
+    },
+    "star": {
+      "add": "Ohvězdičkovat",
+      "remove": "Odebrat hvězdičku"
+    },
+    "toasts": {
+      "projectUpdateFailed": "Nepodařilo se upravit projekt"
+    }
+  },
+  "sidebar": {
+    "settings": "Nastavení"
   }
 }

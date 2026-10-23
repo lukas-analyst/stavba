@@ -83,5 +83,223 @@
   "LanguageSwitcher": {
     "language": "Language",
     "changeLanguage": "Change language"
+  },
+  "auth": {
+    "common": {
+      "email": "Email",
+      "emailPlaceholder": "you@email.com",
+      "or": "or",
+      "password": "Password",
+      "copyright": "© {year} Stavba — Build Budget",
+      "backToLogin": "Back to sign in",
+      "signInLink": "Sign in",
+      "backToHome": "Back to home"
+    },
+    "validation": {
+      "passwordMismatch": "Passwords don't match.",
+      "passwordTooShort": "Password must be at least 8 characters long.",
+      "passwordTooWeak": "Password must contain at least one letter and one digit.",
+      "passwordPlaceholder": "Min. 8 chars, letter + digit",
+      "passwordConfirmLabel": "Confirm password",
+      "passwordConfirmPlaceholder": "Repeat password"
+    },
+    "login": {
+      "title": "Sign in",
+      "subtitle": "Sign in to your account",
+      "tagline": "Budget, cost and time management for construction and renovation",
+      "registeredSuccess": "Registration successful. Check your email to verify your address.",
+      "forgotPassword": "Forgot password?",
+      "submitting": "Signing in…",
+      "submit": "Sign in",
+      "googleButton": "Sign in with Google",
+      "noAccount": "Don't have an account?",
+      "registerLink": "Sign up",
+      "errors": {
+        "useOAuth": "This email is registered via Google. Use the “Sign in with Google” button.",
+        "registerFirst": "No account exists for this email yet. Please sign up.",
+        "invalidCredentials": "Invalid email or password.",
+        "configuration": "Sign-in configuration error. Contact the administrator.",
+        "oauthFailed": "Google sign-in failed. Please try again.",
+        "rateLimitedMinutes": "Too many sign-in attempts. Try again in {minutes} minutes.",
+        "rateLimitedSeconds": "Too many sign-in attempts. Try again in {seconds} seconds.",
+        "generic": "Sign-in failed. Please try again."
+      }
+    },
+    "register": {
+      "title": "Sign up",
+      "subtitle": "Create a free account",
+      "tagline": "Create an account and start managing your projects",
+      "nameLabel": "Name (optional)",
+      "namePlaceholder": "John Doe",
+      "submitting": "Creating account…",
+      "submit": "Create account",
+      "hasAccount": "Already have an account?",
+      "errors": {
+        "generic": "Registration failed. Please try again."
+      }
+    },
+    "forgotPassword": {
+      "title": "Forgot password",
+      "subtitle": "Enter your email and we'll send you a password reset link.",
+      "submitting": "Sending…",
+      "submit": "Send reset link",
+      "remember": "Remember your password?",
+      "success": {
+        "title": "Check your email",
+        "body": "If an account with email {email} exists, we've sent you a password reset link. The link is valid for 1 hour."
+      },
+      "errors": {
+        "generic": "Request failed. Please try again."
+      }
+    },
+    "resetPassword": {
+      "title": "New password",
+      "subtitle": "Set your new password",
+      "newPasswordLabel": "New password",
+      "submitting": "Changing password…",
+      "submit": "Change password",
+      "checking": "Verifying link…",
+      "invalidTitle": "Invalid link",
+      "invalidBody": "This password reset link is invalid or expired (valid for 1 hour). Please request a new one.",
+      "newLink": "New link",
+      "successTitle": "Password changed",
+      "successBody": "Your password has been changed successfully. Redirecting to sign in…",
+      "successToast": "Password changed successfully.",
+      "errors": {
+        "generic": "Password reset failed. Please try again."
+      }
+    },
+    "verifyEmail": {
+      "validTitle": "Email verified!",
+      "validBody": "Your email address has been successfully confirmed. You can now sign in and start managing your projects.",
+      "alreadyTitle": "Email already verified",
+      "alreadyBody": "Your email address was already verified previously. You can sign in to your account.",
+      "expiredTitle": "Link expired",
+      "expiredBody": "This link has expired (valid for 24 hours). Please sign in and request a new verification email.",
+      "invalidTitle": "Invalid link",
+      "invalidBody": "This link is invalid or has already been used. Please sign in and request a new verification email.",
+      "errorTitle": "Verification error",
+      "errorBody": "Something went wrong. Please try again later or contact us.",
+      "checking": "Verifying…"
+    },
+    "verifyPending": {
+      "title": "Verify your email",
+      "body": "To access your projects, you must confirm your email address. Check your inbox, including the spam folder.",
+      "sentTo": "Email sent to:",
+      "resendLabel": "Didn't get the email?",
+      "resendButton": "Resend link",
+      "resendSubmitting": "Sending…",
+      "checkButton": "I've verified — refresh",
+      "checkSubmitting": "Checking…",
+      "signOut": "Sign out",
+      "footer": "After verifying your email, you'll be automatically redirected to the home page.",
+      "toasts": {
+        "resent": "Verification email has been resent. Check your inbox.",
+        "sendFailed": "Sending failed. Please try again."
+      }
+    },
+    "profile": {
+      "tagline": "Manage your account, password and sessions",
+      "title": "Profile",
+      "subtitle": "Edit your details, change your password and manage active sessions here.",
+      "sections": {
+        "profile": "Profile",
+        "password": "Change password",
+        "sessions": "Sessions",
+        "signOut": "Sign out"
+      },
+      "fields": {
+        "name": "Name",
+        "namePlaceholder": "John Doe",
+        "currentPassword": "Current password",
+        "currentPasswordPlaceholder": "••••••••",
+        "newPassword": "New password",
+        "confirmNewPassword": "Confirm new password",
+        "confirmNewPasswordPlaceholder": "Repeat new password"
+      },
+      "emailReadOnlyNote": "Email cannot be changed. Contact support to change it.",
+      "passwordChangeNote": "After changing your password, all other sessions (on other devices) will be signed out.",
+      "sessionsDescription": "Signs out all other signed-in sessions (on other devices). This session stays active.",
+      "buttons": {
+        "saveProfile": "Save changes",
+        "savingProfile": "Saving…",
+        "changePassword": "Change password",
+        "changingPassword": "Changing password…",
+        "revokeSessions": "Sign out all other sessions",
+        "revokingSessions": "Signing out…",
+        "signOutThisDevice": "Sign out of this device"
+      },
+      "toasts": {
+        "saveSuccess": "Profile saved.",
+        "saveError": "Saving profile failed.",
+        "saveErrorException": "Saving profile failed. Please try again.",
+        "passwordSuccess": "Password changed.",
+        "passwordError": "Changing password failed.",
+        "passwordErrorException": "Changing password failed. Please try again.",
+        "revokeSuccess": "All other sessions have been signed out.",
+        "revokeError": "Signing out other sessions failed.",
+        "revokeErrorException": "Signing out other sessions failed. Please try again."
+      }
+    },
+    "settings": {
+      "tagline": "Global app settings",
+      "sections": {
+        "hiddenProjects": "Hidden projects",
+        "activity": "My activity stats",
+        "about": "About"
+      },
+      "hiddenProjects": {
+        "description": "Hidden projects don't appear in the project switcher in the top bar. They're still accessible via direct link.",
+        "empty": "You don't have any projects yet.",
+        "toggleHint": "Toggle on = project is hidden. Changes are saved automatically.",
+        "aria": {
+          "show": "Show project {name}",
+          "hide": "Hide project {name}"
+        }
+      },
+      "activity": {
+        "description": "Overview of your actions in the app across all time and projects."
+      },
+      "about": {
+        "body": "The <brand>Stavba</brand> app provides comprehensive budget, cost, time and material management for construction and renovation.",
+        "version": "Version",
+        "commit": "Commit",
+        "buildDate": "Build date",
+        "branch": "Branch",
+        "label": "Label",
+        "githubLink": "Source code on GitHub"
+      },
+      "accountProfileLink": "Account profile"
+    }
+  },
+  "topbar": {
+    "account": "Account",
+    "loading": "Loading…",
+    "selectProject": "Select project",
+    "searchProject": "Search project…",
+    "search": "Search",
+    "toggleSidebar": {
+      "open": "Open panel",
+      "close": "Close panel"
+    },
+    "menu": {
+      "profile": "Profile",
+      "admin": "Admin",
+      "signOut": "Sign out",
+      "theme": {
+        "light": "Light theme",
+        "dark": "Dark theme"
+      }
+    },
+    "star": {
+      "add": "Star",
+      "remove": "Remove star"
+    },
+    "toasts": {
+      "projectUpdateFailed": "Failed to update project"
+    }
+  },
+  "sidebar": {
+    "settings": "Settings"
   }
 }

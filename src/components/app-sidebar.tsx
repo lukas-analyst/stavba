@@ -4,6 +4,7 @@ import { useCallback, useMemo } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { Settings } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useLocalizedNav, type NavItem } from "@/lib/navigation";
 import { useAppStore } from "@/lib/store";
 import { useProjects, useProjectMembers } from "@/lib/api";
@@ -38,6 +39,7 @@ export function AppSidebar() {
   const setActiveTab = useAppStore((s) => s.setActiveTab);
   const selectedProjectId = useAppStore((s) => s.selectedProjectId);
   const setSidebarOpen = useAppStore((s) => s.setSidebarOpen);
+  const tSidebar = useTranslations("sidebar");
 
   // Role-based UI: fetch the current user (session), the projects list
   // (for the selected project's `ownerId`) and the project's members.
@@ -132,7 +134,7 @@ export function AppSidebar() {
           className="w-full justify-start gap-2.5 px-3 text-sm font-medium state-layer-on-surface rounded-full"
         >
           <Settings className="h-4 w-4 shrink-0" />
-          Nastavení
+          {tSidebar("settings")}
         </Button>
       </div>
     </nav>

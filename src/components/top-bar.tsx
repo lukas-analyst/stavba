@@ -42,6 +42,7 @@ import {
 import { NewProjectDialog } from "@/components/new-project-dialog";
 import { GlobalSearchDialog } from "@/components/global-search-dialog";
 import { LanguageSwitcher } from "@/components/language-switcher";
+import { useTranslations } from "next-intl";
 import { formatCzk, STATUS_LABELS } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -67,6 +68,7 @@ function getInitials(name: string | null | undefined): string {
 
 export function TopBar() {
   const router = useRouter();
+  const t = useTranslations("topbar");
   const sidebarOpen = useAppStore((s) => s.sidebarOpen);
   const toggleSidebar = useAppStore((s) => s.toggleSidebar);
   const selectedProjectId = useAppStore((s) => s.selectedProjectId);
@@ -170,10 +172,10 @@ export function TopBar() {
         });
         qc.invalidateQueries({ queryKey: ["projects"] });
       } catch {
-        toast.error("Nepodařilo se upravit projekt");
+        toast.error(t("toasts.projectUpdateFailed"));
       }
     },
-    [qc],
+    [qc, t],
   );
 
   // ===== Sign-out with audit log =====
@@ -252,7 +254,7 @@ export function TopBar() {
           variant="ghost"
           size="icon"
           onClick={toggleSidebar}
-          aria-label={sidebarOpen ? "Zavřít panel" : "Otevřít panel"}
+          aria-label={sidebarOpen ? t("toggleSidebar.close") : t("toggleSidebar.open")}
           className="h-11 w-11 shrink-0 state-layer-on-surface rounded-full sm:h-9 sm:w-9"
         >
           <Menu className="h-6 w-6 sm:h-5 sm:w-5" />
@@ -267,7 +269,7 @@ export function TopBar() {
                 className="flex h-9 items-center gap-1 rounded-full px-2 text-sm font-semibold leading-none state-layer-on-surface sm:h-7 sm:px-1.5"
               >
                 <span className="max-w-[120px] truncate sm:max-w-[180px]">
-                  {selectedProject ? selectedProject.name : "Vyberte projekt"}
+                  {selectedProject ? selectedProject.name : t("selectProject")}
                 </span>
                 <ChevronDown className="h-4 w-4 text-muted-foreground sm:h-3.5 sm:w-3.5" />
               </button>
@@ -282,7 +284,7 @@ export function TopBar() {
                 <Input
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Hledat projekt…"
+                  placeholder={t("searchProject")}
                   className="h-8 text-sm"
                   autoFocus
                 />
@@ -360,7 +362,7 @@ export function TopBar() {
         {/* MD3 Search bar — centered on desktop, hidden on mobile (icon only) */}
         <button
           onClick={() => setGlobalSearchOpen(true)}
-          aria-label="Hledat"
+          aria-label={t("search")}
           className="hidden h-9 max-w-md flex-1 items-center gap-2 rounded-full border border-outline-variant bg-surface-container-low px-3 text-sm text-on-surface-variant/60 transition-colors hover:bg-surface-container-high md:flex"
         >
           <Search className="h-4 w-4 shrink-0" />
@@ -372,7 +374,7 @@ export function TopBar() {
           variant="ghost"
           size="icon"
           onClick={() => setGlobalSearchOpen(true)}
-          aria-label="Hledat"
+          aria-label={t("search")}
           className="h-11 w-11 shrink-0 state-layer-on-surface rounded-full sm:h-9 sm:w-9 md:hidden"
         >
           <Search className="h-5 w-5 sm:h-4 sm:w-4" />
@@ -446,8 +448,8 @@ export function TopBar() {
                 // On mobile, if no budget chip is shown, push avatar to right
                 (!selectedProject || planTotal === 0) && "ml-auto md:ml-0",
               )}
-              aria-label="Účet"
-              title={displayUser?.name ?? displayUser?.email ?? "Účet"}
+              aria-label={t("account")}
+              title={displayUser?.name ?? displayUser?.email ?? t("account")}
             >
               {displayUser?.image ? (
                 <Avatar className="h-9 w-9 sm:h-7 sm:w-7">
@@ -478,7 +480,7 @@ export function TopBar() {
               </Avatar>
               <div className="min-w-0 flex-1">
                 <div className="type-body font-semibold truncate">
-                  {displayUser?.name ?? "Načítání…"}
+                  {displayUser?.name ?? t("loading")}
                 </div>
                 <div className="type-label text-on-surface-variant truncate">
                   {displayUser?.email ?? ""}
@@ -496,7 +498,7 @@ export function TopBar() {
               className="cursor-pointer gap-2.5 rounded-none px-3 py-2.5 type-body hover:bg-surface-container-high"
             >
               <User className="h-4 w-4 text-primary" />
-              Profil
+              {t("menu.profile")}
             </DropdownMenuItem>
 
             {/* Admin — global admins only. Switches to the admin tab
@@ -509,7 +511,7 @@ export function TopBar() {
                 className="cursor-pointer gap-2.5 rounded-none px-3 py-2.5 type-body hover:bg-surface-container-high"
               >
                 <Shield className="h-4 w-4 text-primary" />
-                Admin
+                {t("menu.admin")}
               </DropdownMenuItem>
             )}
 
@@ -519,7 +521,7 @@ export function TopBar() {
               className="cursor-pointer gap-2.5 rounded-none px-3 py-2.5 type-body hover:bg-surface-container-high"
             >
               <LogOut className="h-4 w-4 text-muted-foreground" />
-              Odhlásit
+              {t("menu.signOut")}
             </DropdownMenuItem>
 
             <DropdownMenuSeparator className="bg-outline-variant" />
@@ -534,7 +536,7 @@ export function TopBar() {
               ) : (
                 <Moon className="h-4 w-4 text-info" />
               )}
-              {isDark ? "Světlý motiv" : "Tmavý motiv"}
+              {isDark ? t("menu.theme.light") : t("menu.theme.dark")}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -591,7 +593,7 @@ function ProjectDropdownItem({
           }
         }}
         className="shrink-0 rounded-full p-1 hover:bg-surface-container-high"
-        aria-label={project.starred ? "Odebrat hvězdičku" : "Ohvězdičkovat"}
+        aria-label={project.starred ? t("star.remove") : t("star.add")}
       >
         <Star
           className={cn(

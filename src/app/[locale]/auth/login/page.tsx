@@ -4,10 +4,12 @@ import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2, Mail, Lock, AlertCircle } from "lucide-react";
+import { BRAND } from "@/i18n/brand";
 
 // =====================================================================
 // Helper: log auth event to /api/auth/audit-log (F8).
@@ -50,6 +52,8 @@ function GoogleIcon({ className }: { className?: string }) {
 export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const t = useTranslations("auth.login");
+  const tc = useTranslations("auth.common");
   // Validate callbackUrl is a safe relative path (prevent open redirect).
   // Only allow paths starting with "/" but not "//" (protocol-relative).
   const rawCallbackUrl = searchParams.get("callbackUrl") || "/";
@@ -63,19 +67,26 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(
-    errorParam === "use-oauth"
-      ? "Tento e-mail je zaregistrován přes Google. Použijte tlačítko „Přihlásit přes Google“."
-      : errorParam === "register-first"
-        ? "Pro tento e-mail ještě nebyl vytvořen účet. Zaregistrujte se prosím."
-        : errorParam === "CredentialsSignin"
-          ? "Neplatný e-mail nebo heslo."
-          : errorParam === "Configuration"
-            ? "Chyba konfigurace přihlášení. Kontaktujte správce."
-            : errorParam === "OAuthSignin" || errorParam === "OAuthCallback"
-              ? "Přihlášení přes Google selhalo. Zkuste to znovu."
-              : null,
-  );
+  // Resolve the initial error message based on the ?error= query param.
+  // We can't call `t()` inside useState initializer (it's a hook, must
+  // run unconditionally at top level), so we resolve lazily on first render.
+  const [error, setError] = useState<string | null>(() => {
+    switch (errorParam) {
+      case "use-oauth":
+        return t("errors.useOAuth");
+      case "register-first":
+        return t("errors.registerFirst");
+      case "CredentialsSignin":
+        return t("errors.invalidCredentials");
+      case "Configuration":
+        return t("errors.configuration");
+      case "OAuthSignin":
+      case "OAuthCallback":
+        return t("errors.oauthFailed");
+      default:
+        return null;
+    }
+  });
 
   const [googleLoading, setGoogleLoading] = useState(false);
 
@@ -98,22 +109,22 @@ export default function LoginPage() {
 
       if (result?.error) {
         if (result.error === "use-oauth") {
-          setError("Tento e-mail je zaregistrován přes Google. Použijte tlačítko „Přihlásit přes Google“.");
+          setError(t("errors.useOAuth"));
           logAuthEvent("login", false, { reason: "use-oauth", email });
         } else if (result.error === "register-first") {
-          setError("Pro tento e-mail ještě nebyl vytvořen účet. Zaregistrujte se prosím.");
+          setError(t("errors.registerFirst"));
           logAuthEvent("login", false, { reason: "register-first", email });
         } else if (result.error.startsWith("rate_limited:")) {
           const retryAfter = result.error.split(":")[1];
           const minutes = Math.ceil(Number(retryAfter) / 60);
           setError(
             minutes > 1
-              ? `Příliš mnoho pokusů o přihlášení. Zkuste to za ${minutes} minut.`
-              : `Příliš mnoho pokusů o přihlášení. Zkuste to za ${retryAfter} sekund.`,
+              ? t("errors.rateLimitedMinutes", { minutes })
+              : t("errors.rateLimitedSeconds", { seconds: retryAfter }),
           );
           logAuthEvent("login", false, { reason: "rate_limited", email });
         } else {
-          setError("Neplatný e-mail nebo heslo.");
+          setError(t("errors.invalidCredentials"));
           logAuthEvent("login", false, { reason: "invalid_credentials", email });
         }
         setLoading(false);
@@ -127,7 +138,7 @@ export default function LoginPage() {
       }
     } catch (err) {
       console.error("Login error:", err);
-      setError("Přihlášení selhalo. Zkuste to prosím znovu.");
+      setError(t("errors.generic"));
       logAuthEvent("login", false, { reason: "exception", email });
       setLoading(false);
     }
@@ -140,25 +151,25 @@ export default function LoginPage() {
         <div className="mb-8 text-center">
           <Link href="/" className="inline-flex items-center gap-2">
             <span className="text-2xl font-bold tracking-tight">
-              Stavba<span className="text-primary">.</span>
+              {BRAND.shortName}<span className="text-primary">.</span>
             </span>
           </Link>
           <p className="mt-2 text-sm text-muted-foreground">
-            Správa rozpočtu, nákladů a času pro stavby a rekonstrukce
+            {t("tagline")}
           </p>
         </div>
 
         {/* Card */}
         <div className="rounded-2xl border bg-card p-6 shadow-sm sm:p-8">
-          <h1 className="mb-1 text-xl font-semibold">Přihlášení</h1>
+          <h1 className="mb-1 text-xl font-semibold">{t("title")}</h1>
           <p className="mb-6 text-sm text-muted-foreground">
-            Přihlaste se ke svému účtu
+            {t("subtitle")}
           </p>
 
           {registeredParam === "1" && (
             <div className="mb-4 flex items-start gap-2 rounded-lg border border-success/20 bg-success/10 p-3 text-sm text-success">
               <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-              <span>Registrace proběhla. Zkontrolujte svůj e-mail pro ověření adresy.</span>
+              <span>{t("registeredSuccess")}</span>
             </div>
           )}
 
@@ -175,13 +186,13 @@ export default function LoginPage() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-1.5">
-              <Label htmlFor="email">E-mail</Label>
+              <Label htmlFor="email">{tc("email")}</Label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   id="email"
                   type="email"
-                  placeholder="vase@email.cz"
+                  placeholder={tc("emailPlaceholder")}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
@@ -195,12 +206,12 @@ export default function LoginPage() {
 
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
-                <Label htmlFor="password">Heslo</Label>
+                <Label htmlFor="password">{tc("password")}</Label>
                 <Link
                   href="/auth/forgot-password"
                   className="text-xs text-muted-foreground hover:text-foreground hover:underline"
                 >
-                  Zapomenuté heslo?
+                  {t("forgotPassword")}
                 </Link>
               </div>
               <div className="relative">
@@ -230,10 +241,10 @@ export default function LoginPage() {
               {loading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Přihlašuji…
+                  {t("submitting")}
                 </>
               ) : (
-                "Přihlásit se"
+                t("submit")
               )}
             </Button>
           </form>
@@ -241,7 +252,7 @@ export default function LoginPage() {
           {/* Divider */}
           <div className="my-6 flex items-center gap-3">
             <div className="h-px flex-1 bg-border" />
-            <span className="text-xs text-muted-foreground">nebo</span>
+            <span className="text-xs text-muted-foreground">{tc("or")}</span>
             <div className="h-px flex-1 bg-border" />
           </div>
 
@@ -259,22 +270,22 @@ export default function LoginPage() {
             ) : (
               <GoogleIcon className="h-5 w-5" />
             )}
-            {googleLoading ? "Přihlašuji…" : "Přihlásit přes Google"}
+            {googleLoading ? t("submitting") : t("googleButton")}
           </Button>
 
           <p className="mt-6 text-center text-sm text-muted-foreground">
-            Nemáte účet?{" "}
+            {t("noAccount")}{" "}
             <Link
               href="/auth/register"
               className="font-medium text-foreground hover:underline"
             >
-              Zaregistrovat se
+              {t("registerLink")}
             </Link>
           </p>
         </div>
 
         <p className="mt-6 text-center text-xs text-muted-foreground">
-          © {new Date().getFullYear()} Stavba — Rozpočet Stavby
+          {tc("copyright", { year: new Date().getFullYear() })}
         </p>
       </div>
     </div>

@@ -4,15 +4,19 @@ import { useState, useEffect, useCallback } from "react";
 import { signOut, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2, MailCheck, RefreshCw, LogOut } from "lucide-react";
 import { toast } from "sonner";
+import { BRAND } from "@/i18n/brand";
 
 export default function VerifyPendingPage() {
   const router = useRouter();
   const { data: session, status, update } = useSession();
+  const t = useTranslations("auth.verifyPending");
+  const tc = useTranslations("auth.common");
   const [email, setEmail] = useState("");
   const [sending, setSending] = useState(false);
   const [checking, setChecking] = useState(false);
@@ -75,12 +79,12 @@ export default function VerifyPendingPage() {
       });
       const data = await res.json();
       if (!res.ok) {
-        toast.error(data.error || "Odeslání selhalo.");
+        toast.error(data.error || t("toasts.sendFailed"));
       } else {
-        toast.success("Verifikační e-mail byl znovu odeslán. Zkontrolujte svou schránku.");
+        toast.success(t("toasts.resent"));
       }
     } catch {
-      toast.error("Odeslání selhalo. Zkuste to prosím znovu.");
+      toast.error(t("toasts.sendFailed"));
     } finally {
       setSending(false);
     }
@@ -101,7 +105,7 @@ export default function VerifyPendingPage() {
         <div className="mb-8 text-center">
           <Link href="/" className="inline-flex items-center gap-2">
             <span className="text-2xl font-bold tracking-tight">
-              Stavba<span className="text-primary">.</span>
+              {BRAND.shortName}<span className="text-primary">.</span>
             </span>
           </Link>
         </div>
@@ -112,16 +116,15 @@ export default function VerifyPendingPage() {
             <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-warning/10">
               <MailCheck className="h-8 w-8 text-warning" />
             </div>
-            <h1 className="mb-2 text-xl font-semibold">Ověřte svůj e-mail</h1>
+            <h1 className="mb-2 text-xl font-semibold">{t("title")}</h1>
             <p className="text-sm text-muted-foreground">
-              Pro přístup k vašim projektům musíte potvrdit svou e-mailovou adresu.
-              Zkontrolujte svou schránku včetně složky spam.
+              {t("body")}
             </p>
           </div>
 
           {session?.user?.email && (
             <div className="mb-4 rounded-lg bg-muted/50 p-3 text-center text-sm">
-              <span className="text-muted-foreground">E-mail odeslán na: </span>
+              <span className="text-muted-foreground">{t("sentTo")} </span>
               <span className="font-medium">{session.user.email}</span>
             </div>
           )}
@@ -129,13 +132,13 @@ export default function VerifyPendingPage() {
           {/* Resend form */}
           <form onSubmit={handleResend} className="space-y-3">
             <div className="space-y-1.5">
-              <Label htmlFor="email">Nedorazil vám e-mail?</Label>
+              <Label htmlFor="email">{t("resendLabel")}</Label>
               <Input
                 id="email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="vase@email.cz"
+                placeholder={tc("emailPlaceholder")}
                 className="h-9"
               />
             </div>
@@ -149,12 +152,12 @@ export default function VerifyPendingPage() {
               {sending ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Odesílám…
+                  {t("resendSubmitting")}
                 </>
               ) : (
                 <>
                   <RefreshCw className="mr-2 h-4 w-4" />
-                  Znovu odeslat odkaz
+                  {t("resendButton")}
                 </>
               )}
             </Button>
@@ -172,12 +175,12 @@ export default function VerifyPendingPage() {
               {checking ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Kontroluji…
+                  {t("checkSubmitting")}
                 </>
               ) : (
                 <>
                   <RefreshCw className="mr-2 h-4 w-4" />
-                  Již jsem ověřil — obnovit
+                  {t("checkButton")}
                 </>
               )}
             </Button>
@@ -188,21 +191,21 @@ export default function VerifyPendingPage() {
               onClick={() => signOut({ callbackUrl: "/auth/login" })}
             >
               <LogOut className="mr-2 h-4 w-4" />
-              Odhlásit se
+              {t("signOut")}
             </Button>
             <Button asChild variant="ghost" size="sm" className="w-full">
               <Link
                 href="/auth/login"
                 className="text-muted-foreground hover:text-foreground"
               >
-                Zpět na přihlášení
+                {tc("backToLogin")}
               </Link>
             </Button>
           </div>
         </div>
 
         <p className="mt-6 text-center text-xs text-muted-foreground">
-          Po ověření e-mailu budete automaticky přesměrováni na hlavní stránku.
+          {t("footer")}
         </p>
       </div>
     </div>

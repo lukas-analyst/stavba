@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,6 +20,7 @@ import {
   MonitorSmartphone,
 } from "lucide-react";
 import { toast } from "sonner";
+import { BRAND } from "@/i18n/brand";
 
 // =====================================================================
 // /auth/profile — user profile + password change + session management
@@ -47,6 +49,9 @@ type UserProfile = {
 export default function ProfilePage() {
   const router = useRouter();
   const { data: session, update: updateSession } = useSession();
+  const t = useTranslations("auth.profile");
+  const tc = useTranslations("auth.common");
+  const tv = useTranslations("auth.validation");
 
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loadingProfile, setLoadingProfile] = useState(true);
@@ -99,15 +104,15 @@ export default function ProfilePage() {
       });
       const data = await res.json().catch(() => null);
       if (!res.ok) {
-        toast.error(data?.error ?? "Uložení profilu selhalo.");
+        toast.error(data?.error ?? t("toasts.saveError"));
         return;
       }
       // Refresh session so the avatar/name updates immediately in TopBar
       await updateSession();
       setProfile({ ...profile, name: name.trim() || null });
-      toast.success("Profil byl uložen.");
+      toast.success(t("toasts.saveSuccess"));
     } catch {
-      toast.error("Uložení profilu selhalo. Zkuste to prosím znovu.");
+      toast.error(t("toasts.saveErrorException"));
     } finally {
       setSavingProfile(false);
     }
@@ -120,15 +125,15 @@ export default function ProfilePage() {
 
     // Client-side validation
     if (newPassword !== confirmPassword) {
-      toast.error("Nová hesla se neshodují.");
+      toast.error(tv("passwordMismatch"));
       return;
     }
     if (newPassword.length < 8) {
-      toast.error("Heslo musí mít alespoň 8 znaků.");
+      toast.error(tv("passwordTooShort"));
       return;
     }
     if (!/[a-zA-Z]/.test(newPassword) || !/[0-9]/.test(newPassword)) {
-      toast.error("Heslo musí obsahovat alespoň jedno písmeno a jednu číslici.");
+      toast.error(tv("passwordTooWeak"));
       return;
     }
 
@@ -141,15 +146,15 @@ export default function ProfilePage() {
       });
       const data = await res.json().catch(() => null);
       if (!res.ok) {
-        toast.error(data?.error ?? "Změna hesla selhala.");
+        toast.error(data?.error ?? t("toasts.passwordError"));
         return;
       }
-      toast.success("Heslo bylo změněno.");
+      toast.success(t("toasts.passwordSuccess"));
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
     } catch {
-      toast.error("Změna hesla selhala. Zkuste to prosím znovu.");
+      toast.error(t("toasts.passwordErrorException"));
     } finally {
       setChangingPassword(false);
     }
@@ -164,20 +169,20 @@ export default function ProfilePage() {
       });
       const data = await res.json().catch(() => null);
       if (!res.ok) {
-        toast.error(data?.error ?? "Odhlášení ostatních relací selhalo.");
+        toast.error(data?.error ?? t("toasts.revokeError"));
         return;
       }
       // Re-sync the session so the current JWT's tokenVersion is updated
       // (it will be re-synced on the next jwt callback run anyway, but
       // calling update() now speeds it up).
       await updateSession();
-      toast.success("Všechny ostatní relace byly odhlášeny.");
+      toast.success(t("toasts.revokeSuccess"));
     } catch {
-      toast.error("Odhlášení ostatních relací selhalo. Zkuste to prosím znovu.");
+      toast.error(t("toasts.revokeErrorException"));
     } finally {
       setRevokingSessions(false);
     }
-  }, [updateSession]);
+  }, [updateSession, t]);
 
   // ===== Section 4: Sign out =====
   const handleSignOut = () => {
@@ -214,19 +219,19 @@ export default function ProfilePage() {
         <div className="mb-8 text-center">
           <Link href="/" className="inline-flex items-center gap-2">
             <span className="text-2xl font-bold tracking-tight">
-              Stavba<span className="text-primary">.</span>
+              {BRAND.shortName}<span className="text-primary">.</span>
             </span>
           </Link>
           <p className="mt-2 text-sm text-muted-foreground">
-            Spravujte svůj účet, heslo a relace
+            {t("tagline")}
           </p>
         </div>
 
         {/* Card */}
         <div className="rounded-2xl border bg-card p-6 shadow-sm sm:p-8">
-          <h1 className="mb-1 text-xl font-semibold">Profil</h1>
+          <h1 className="mb-1 text-xl font-semibold">{t("title")}</h1>
           <p className="mb-6 text-sm text-muted-foreground">
-            Zde můžete upravit své údaje, změnit heslo a spravovat aktivní relace.
+            {t("subtitle")}
           </p>
 
           {loadingProfile ? (
@@ -239,17 +244,17 @@ export default function ProfilePage() {
               <form onSubmit={handleSaveProfile} className="space-y-4">
                 <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
                   <UserIcon className="h-4 w-4" />
-                  <span>Profil</span>
+                  <span>{t("sections.profile")}</span>
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label htmlFor="name">Jméno</Label>
+                  <Label htmlFor="name">{t("fields.name")}</Label>
                   <div className="relative">
                     <UserIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                     <Input
                       id="name"
                       type="text"
-                      placeholder="Jan Novák"
+                      placeholder={t("fields.namePlaceholder")}
                       value={name}
                       onChange={(e) => setName(e.target.value)}
                       autoComplete="name"
@@ -259,7 +264,7 @@ export default function ProfilePage() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label htmlFor="email">E-mail</Label>
+                  <Label htmlFor="email">{tc("email")}</Label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                     <Input
@@ -272,7 +277,7 @@ export default function ProfilePage() {
                     />
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    E-mail nelze změnit. Pro změnu kontaktujte podporu.
+                    {t("emailReadOnlyNote")}
                   </p>
                 </div>
 
@@ -285,10 +290,10 @@ export default function ProfilePage() {
                   {savingProfile ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Ukládám…
+                      {t("buttons.savingProfile")}
                     </>
                   ) : (
-                    "Uložit změny"
+                    t("buttons.saveProfile")
                   )}
                 </Button>
               </form>
@@ -299,17 +304,17 @@ export default function ProfilePage() {
               <form onSubmit={handleChangePassword} className="space-y-4">
                 <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
                   <KeyRound className="h-4 w-4" />
-                  <span>Změnit heslo</span>
+                  <span>{t("sections.password")}</span>
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label htmlFor="currentPassword">Aktuální heslo</Label>
+                  <Label htmlFor="currentPassword">{t("fields.currentPassword")}</Label>
                   <div className="relative">
                     <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                     <Input
                       id="currentPassword"
                       type="password"
-                      placeholder="••••••••"
+                      placeholder={t("fields.currentPasswordPlaceholder")}
                       value={currentPassword}
                       onChange={(e) => setCurrentPassword(e.target.value)}
                       required
@@ -320,13 +325,13 @@ export default function ProfilePage() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label htmlFor="newPassword">Nové heslo</Label>
+                  <Label htmlFor="newPassword">{t("fields.newPassword")}</Label>
                   <div className="relative">
                     <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                     <Input
                       id="newPassword"
                       type="password"
-                      placeholder="Min. 8 znaků, písmeno + číslo"
+                      placeholder={tv("passwordPlaceholder")}
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
                       required
@@ -337,13 +342,13 @@ export default function ProfilePage() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label htmlFor="confirmPassword">Potvrzení nového hesla</Label>
+                  <Label htmlFor="confirmPassword">{t("fields.confirmNewPassword")}</Label>
                   <div className="relative">
                     <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                     <Input
                       id="confirmPassword"
                       type="password"
-                      placeholder="Zopakujte nové heslo"
+                      placeholder={t("fields.confirmNewPasswordPlaceholder")}
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       required
@@ -363,16 +368,15 @@ export default function ProfilePage() {
                   {changingPassword ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Měním heslo…
+                      {t("buttons.changingPassword")}
                     </>
                   ) : (
-                    "Změnit heslo"
+                    t("buttons.changePassword")
                   )}
                 </Button>
 
                 <p className="text-xs text-muted-foreground">
-                  Po změně hesla budou odhlášeny všechny ostatní relace
-                  (na jiných zařízeních).
+                  {t("passwordChangeNote")}
                 </p>
               </form>
 
@@ -382,11 +386,10 @@ export default function ProfilePage() {
               <div className="space-y-3">
                 <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
                   <MonitorSmartphone className="h-4 w-4" />
-                  <span>Relace</span>
+                  <span>{t("sections.sessions")}</span>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  Odhlásí všechny ostatní přihlášené relace (na jiných
-                  zařízeních). Tato relace zůstane aktivní.
+                  {t("sessionsDescription")}
                 </p>
                 <Button
                   type="button"
@@ -399,12 +402,12 @@ export default function ProfilePage() {
                   {revokingSessions ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Odhlašuji…
+                      {t("buttons.revokingSessions")}
                     </>
                   ) : (
                     <>
                       <ShieldCheck className="mr-2 h-4 w-4" />
-                      Odhlásit všechny ostatní relace
+                      {t("buttons.revokeSessions")}
                     </>
                   )}
                 </Button>
@@ -416,7 +419,7 @@ export default function ProfilePage() {
               <div className="space-y-3">
                 <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
                   <LogOut className="h-4 w-4" />
-                  <span>Odhlásit se</span>
+                  <span>{t("sections.signOut")}</span>
                 </div>
                 <Button
                   type="button"
@@ -425,7 +428,7 @@ export default function ProfilePage() {
                   size="lg"
                   onClick={handleSignOut}
                 >
-                  Odhlásit se z tohoto zařízení
+                  {t("buttons.signOutThisDevice")}
                 </Button>
               </div>
             </div>
@@ -442,11 +445,11 @@ export default function ProfilePage() {
           >
             <Link href="/">
               <ArrowLeft className="h-4 w-4" />
-              Zpět na hlavní stránku
+              {tc("backToHome")}
             </Link>
           </Button>
           <p className="text-center text-xs text-muted-foreground">
-            © {new Date().getFullYear()} Stavba — Rozpočet Stavby
+            {tc("copyright", { year: new Date().getFullYear() })}
           </p>
         </div>
       </div>

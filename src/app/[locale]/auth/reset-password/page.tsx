@@ -3,16 +3,21 @@
 import { useState, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2, Lock, CheckCircle2, AlertCircle, XCircle } from "lucide-react";
 import { toast } from "sonner";
+import { BRAND } from "@/i18n/brand";
 
 export default function ResetPasswordPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
+  const t = useTranslations("auth.resetPassword");
+  const tc = useTranslations("auth.common");
+  const tv = useTranslations("auth.validation");
 
   const [password, setPassword] = useState("");
   const [passwordConfirm, setPasswordConfirm] = useState("");
@@ -65,15 +70,15 @@ export default function ResetPasswordPage() {
     setError(null);
 
     if (password !== passwordConfirm) {
-      setError("Hesla se neshodují.");
+      setError(tv("passwordMismatch"));
       return;
     }
     if (password.length < 8) {
-      setError("Heslo musí mít alespoň 8 znaků.");
+      setError(tv("passwordTooShort"));
       return;
     }
     if (!/[a-zA-Z]/.test(password) || !/[0-9]/.test(password)) {
-      setError("Heslo musí obsahovat alespoň jedno písmeno a jednu číslici.");
+      setError(tv("passwordTooWeak"));
       return;
     }
 
@@ -89,22 +94,25 @@ export default function ResetPasswordPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        if (data.error?.includes("vypršel") || data.error?.includes("použit")) {
+        // Token validity check: API returns error strings that indicate
+        // expired/used tokens. We detect this via substring match (legacy —
+        // TODO: API should return error codes, see Phase F backlog).
+        if (data.error?.includes("vypršel") || data.error?.includes("použit") || data.error?.includes("expired") || data.error?.includes("used")) {
           setError(data.error);
           setTokenState("invalid");
         } else {
-          setError(data.error || "Reset hesla selhal.");
+          setError(data.error || t("errors.generic"));
         }
         setLoading(false);
         return;
       }
 
       setSuccess(true);
-      toast.success("Heslo bylo úspěšně změněno.");
+      toast.success(t("successToast"));
       setTimeout(() => router.push("/auth/login"), 2000);
     } catch (err) {
       console.error("Reset password error:", err);
-      setError("Reset hesla selhal. Zkuste to prosím znovu.");
+      setError(t("errors.generic"));
       setLoading(false);
     }
   };
@@ -117,14 +125,14 @@ export default function ResetPasswordPage() {
           <div className="mb-8 text-center">
             <Link href="/" className="inline-flex items-center gap-2">
               <span className="text-2xl font-bold tracking-tight">
-                Stavba<span className="text-primary">.</span>
+                {BRAND.shortName}<span className="text-primary">.</span>
               </span>
             </Link>
           </div>
           <div className="rounded-2xl border bg-card p-6 shadow-sm sm:p-8">
             <div className="flex flex-col items-center text-center">
               <Loader2 className="mb-4 h-8 w-8 animate-spin text-muted-foreground" />
-              <p className="text-sm text-muted-foreground">Ověřuji odkaz…</p>
+              <p className="text-sm text-muted-foreground">{t("checking")}</p>
             </div>
           </div>
         </div>
@@ -140,7 +148,7 @@ export default function ResetPasswordPage() {
           <div className="mb-8 text-center">
             <Link href="/" className="inline-flex items-center gap-2">
               <span className="text-2xl font-bold tracking-tight">
-                Stavba<span className="text-primary">.</span>
+                {BRAND.shortName}<span className="text-primary">.</span>
               </span>
             </Link>
           </div>
@@ -149,13 +157,12 @@ export default function ResetPasswordPage() {
               <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10">
                 <XCircle className="h-8 w-8 text-destructive" />
               </div>
-              <h1 className="mb-2 text-xl font-semibold">Neplatný odkaz</h1>
+              <h1 className="mb-2 text-xl font-semibold">{t("invalidTitle")}</h1>
               <p className="mb-6 text-sm text-muted-foreground">
-                Tento odkaz pro reset hesla je neplatní nebo vypršel (platnost 1 hodina).
-                Vyžádejte si prosím nový.
+                {t("invalidBody")}
               </p>
               <Button asChild className="w-full" size="lg">
-                <Link href="/auth/forgot-password">Nový odkaz</Link>
+                <Link href="/auth/forgot-password">{t("newLink")}</Link>
               </Button>
             </div>
           </div>
@@ -172,7 +179,7 @@ export default function ResetPasswordPage() {
           <div className="mb-8 text-center">
             <Link href="/" className="inline-flex items-center gap-2">
               <span className="text-2xl font-bold tracking-tight">
-                Stavba<span className="text-primary">.</span>
+                {BRAND.shortName}<span className="text-primary">.</span>
               </span>
             </Link>
           </div>
@@ -181,9 +188,9 @@ export default function ResetPasswordPage() {
               <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-success/10">
                 <CheckCircle2 className="h-8 w-8 text-success" />
               </div>
-              <h1 className="mb-2 text-xl font-semibold">Heslo změněno</h1>
+              <h1 className="mb-2 text-xl font-semibold">{t("successTitle")}</h1>
               <p className="mb-6 text-sm text-muted-foreground">
-                Vaše heslo bylo úspěšně změněno. Přesměrovávám na přihlášení…
+                {t("successBody")}
               </p>
               <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
             </div>
@@ -201,16 +208,16 @@ export default function ResetPasswordPage() {
         <div className="mb-8 text-center">
           <Link href="/" className="inline-flex items-center gap-2">
             <span className="text-2xl font-bold tracking-tight">
-              Stavba<span className="text-primary">.</span>
+              {BRAND.shortName}<span className="text-primary">.</span>
             </span>
           </Link>
         </div>
 
         {/* Card */}
         <div className="rounded-2xl border bg-card p-6 shadow-sm sm:p-8">
-          <h1 className="mb-1 text-xl font-semibold">Nové heslo</h1>
+          <h1 className="mb-1 text-xl font-semibold">{t("title")}</h1>
           <p className="mb-6 text-sm text-muted-foreground">
-            Zadejte své nové heslo
+            {t("subtitle")}
           </p>
 
           {error && (
@@ -226,13 +233,13 @@ export default function ResetPasswordPage() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-1.5">
-              <Label htmlFor="password">Nové heslo</Label>
+              <Label htmlFor="password">{t("newPasswordLabel")}</Label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   id="password"
                   type="password"
-                  placeholder="Min. 8 znaků, písmeno + číslo"
+                  placeholder={tv("passwordPlaceholder")}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
@@ -245,13 +252,13 @@ export default function ResetPasswordPage() {
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="passwordConfirm">Potvrzení hesla</Label>
+              <Label htmlFor="passwordConfirm">{tv("passwordConfirmLabel")}</Label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   id="passwordConfirm"
                   type="password"
-                  placeholder="Zopakujte heslo"
+                  placeholder={tv("passwordConfirmPlaceholder")}
                   value={passwordConfirm}
                   onChange={(e) => setPasswordConfirm(e.target.value)}
                   required
@@ -273,10 +280,10 @@ export default function ResetPasswordPage() {
               {loading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Měním heslo…
+                  {t("submitting")}
                 </>
               ) : (
-                "Změnit heslo"
+                t("submit")
               )}
             </Button>
           </form>

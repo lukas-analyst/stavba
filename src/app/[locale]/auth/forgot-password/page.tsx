@@ -2,12 +2,16 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2, Mail, CheckCircle2, AlertCircle } from "lucide-react";
+import { BRAND } from "@/i18n/brand";
 
 export default function ForgotPasswordPage() {
+  const t = useTranslations("auth.forgotPassword");
+  const tc = useTranslations("auth.common");
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
@@ -27,7 +31,7 @@ export default function ForgotPasswordPage() {
 
       if (!res.ok) {
         const data = await res.json();
-        setError(data.error || "Žádost selhala.");
+        setError(data.error || t("errors.generic"));
         setLoading(false);
         return;
       }
@@ -35,7 +39,7 @@ export default function ForgotPasswordPage() {
       setSent(true);
     } catch (err) {
       console.error("Forgot password error:", err);
-      setError("Žádost selhala. Zkuste to prosím znovu.");
+      setError(t("errors.generic"));
       setLoading(false);
     }
   };
@@ -47,7 +51,7 @@ export default function ForgotPasswordPage() {
         <div className="mb-8 text-center">
           <Link href="/" className="inline-flex items-center gap-2">
             <span className="text-2xl font-bold tracking-tight">
-              Stavba<span className="text-primary">.</span>
+              {BRAND.shortName}<span className="text-primary">.</span>
             </span>
           </Link>
         </div>
@@ -59,20 +63,19 @@ export default function ForgotPasswordPage() {
               <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-success/10">
                 <CheckCircle2 className="h-8 w-8 text-success" />
               </div>
-              <h1 className="mb-2 text-xl font-semibold">Zkontrolujte svůj e-mail</h1>
+              <h1 className="mb-2 text-xl font-semibold">{t("success.title")}</h1>
               <p className="mb-6 text-sm text-muted-foreground">
-                Pokud účet s e-mailem <strong>{email}</strong> existuje, odeslali jsme
-                vám odkaz pro reset hesla. Platnost odkazu je 1 hodina.
+                {t("success.body", { email })}
               </p>
               <Button asChild variant="outline" className="w-full" size="lg">
-                <Link href="/auth/login">Zpět na přihlášení</Link>
+                <Link href="/auth/login">{tc("backToLogin")}</Link>
               </Button>
             </div>
           ) : (
             <>
-              <h1 className="mb-1 text-xl font-semibold">Zapomenuté heslo</h1>
+              <h1 className="mb-1 text-xl font-semibold">{t("title")}</h1>
               <p className="mb-6 text-sm text-muted-foreground">
-                Zadejte svůj e-mail a pošleme vám odkaz pro reset hesla.
+                {t("subtitle")}
               </p>
 
               {error && (
@@ -88,13 +91,13 @@ export default function ForgotPasswordPage() {
 
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-1.5">
-                  <Label htmlFor="email">E-mail</Label>
+                  <Label htmlFor="email">{tc("email")}</Label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                     <Input
                       id="email"
                       type="email"
-                      placeholder="vase@email.cz"
+                      placeholder={tc("emailPlaceholder")}
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
@@ -116,21 +119,21 @@ export default function ForgotPasswordPage() {
                   {loading ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Odesílám…
+                      {t("submitting")}
                     </>
                   ) : (
-                    "Odeslat odkaz pro reset"
+                    t("submit")
                   )}
                 </Button>
               </form>
 
               <p className="mt-6 text-center text-sm text-muted-foreground">
-                Vzpomněli jste si na heslo?{" "}
+                {t("remember")}{" "}
                 <Link
                   href="/auth/login"
                   className="font-medium text-foreground hover:underline"
                 >
-                  Přihlásit se
+                  {tc("signInLink")}
                 </Link>
               </p>
             </>
