@@ -17,6 +17,7 @@ import {
   Sun,
   Moon,
   LogOut,
+  AlertTriangle,
 } from "lucide-react";
 import { useProjects } from "@/lib/api";
 import { useAppStore } from "@/lib/store";
@@ -565,6 +566,7 @@ function ProjectDropdownItem({
     address: string | null;
     starred: boolean;
     status: string;
+    owner?: { deletedAt?: string | null } | null;
     stats?: { actualTotal: number; planTotal: number; burnRate: number } | null;
   };
   isSelected: boolean;
@@ -576,6 +578,7 @@ function ProjectDropdownItem({
   // Without this, `t("star.remove")` below throws "t is not defined".
   const t = useTranslations("topbar");
   const status = STATUS_LABELS[project.status] ?? STATUS_LABELS.active;
+  const ownerDeleted = !!project.owner?.deletedAt;
 
   return (
     <button
@@ -627,6 +630,12 @@ function ProjectDropdownItem({
             </span>
           )}
         </div>
+        {ownerDeleted && (
+          <div className="mt-0.5 flex items-center gap-1 text-[10px] text-warning">
+            <AlertTriangle className="h-2.5 w-2.5" />
+            <span className="truncate">{t("noOwner")}</span>
+          </div>
+        )}
       </div>
 
       {/* Status badge */}

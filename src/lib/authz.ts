@@ -68,12 +68,15 @@ export async function requireUser(): Promise<{
     };
   }
 
-  // Fetch isAdmin from DB (source of truth — beats trusting the JWT, which
-  // can be stale by up to 60s due to the jwt callback's staleness window).
-  // If the user no longer exists in DB, treat them as logged out.
+  // Fetch isAdmin + deletedAt from DB (source of truth — beats trusting
+  // the JWT, which can be stale by up to 60s due to the jwt callback's
+  // staleness window). If the user no longer exists in DB, treat them as
+  // logged out. If the account was soft-deleted (deletedAt set), also
+  // treat as logged out — this is a defense-in-depth check in case a
+  // stale JWT (with deletedAt not yet checked) reaches an API route.
   const dbUser = await db.user.findUnique({
     where: { id: (session.user as { id?: string }).id ?? "" },
-    select: { isAdmin: true },
+    select: { isAdmin: true, deletedAt: true },
   });
 
   if (!dbUser) {
@@ -81,6 +84,17 @@ export async function requireUser(): Promise<{
       user: null,
       response: NextResponse.json(
         { error: "Nejste přihlášen." },
+        { status: 401 },
+      ),
+    };
+  }
+
+  // Account was soft-deleted — reject all API access
+  if (dbUser.deletedAt) {
+    return {
+      user: null,
+      response: NextResponse.json(
+        { error: "Účet byl smazán." },
         { status: 401 },
       ),
     };

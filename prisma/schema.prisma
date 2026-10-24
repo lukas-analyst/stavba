@@ -72,6 +72,18 @@ model User {
   /// or direct DB access. Admins can see ALL projects + telemetry
   /// without being a member. Cannot delete projects they don't own.
   isAdmin       Boolean   @default(false)
+  /// Soft-delete timestamp. null = active account. When set, the user
+  /// cannot log in and their memberships are removed. During the 7-day
+  /// cooling-off period the user can recover the account by signing in
+  /// (deletedAt is cleared). After 7 days, a cron job anonymizes the
+  /// email and name permanently (`deleted_<ts>_<email>` / "Smazaný uživatel").
+  /// Projects owned by the user remain in the DB (orphaned) so other
+  /// members still see them — they're shown a "Bez vlastníka" badge.
+  deletedAt     DateTime?
+  /// Audit timestamp — when the account was last recovered from soft-delete.
+  /// null = never deleted, or deleted and not yet recovered. Used together
+  /// with deletedAt for the audit trail.
+  restoredAt    DateTime?
   /// When this user first signed in
   createdAt     DateTime  @default(now())
   /// When this user's record was last updated

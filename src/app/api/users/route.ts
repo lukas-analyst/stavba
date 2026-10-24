@@ -28,6 +28,8 @@ export async function GET() {
 
   try {
     // ===== Admin bypass — return ALL users with isAdmin flag =====
+    // Includes soft-deleted users (deletedAt set) so admins can see
+    // "pending deletion" accounts in the admin panel.
     if (user.isAdmin) {
       const allUsers = await dbRead.user.findMany({
         where: { id: { not: user.id } },
@@ -38,6 +40,7 @@ export async function GET() {
           image: true,
           isAdmin: true,
           createdAt: true,
+          deletedAt: true,
         },
         orderBy: { createdAt: "desc" },
       });

@@ -2,7 +2,14 @@
   "Meta": {
     "appName": "Rozpočet Stavby",
     "description": "Komplexní správa rozpočtu, nákladů a času pro stavby a rekonstrukce. Přehled projektů, plateb, práce i materiálu na jednom místě.",
-    "keywords": ["stavba", "rekonstrukce", "rozpočet", "náklady", "projekt", "správa"]
+    "keywords": [
+      "stavba",
+      "rekonstrukce",
+      "rozpočet",
+      "náklady",
+      "projekt",
+      "správa"
+    ]
   },
   "common": {
     "appName": "Rozpočet Stavby",
@@ -124,6 +131,10 @@
         "rateLimitedMinutes": "Příliš mnoho pokusů o přihlášení. Zkuste to za {minutes} minut.",
         "rateLimitedSeconds": "Příliš mnoho pokusů o přihlášení. Zkuste to za {seconds} sekund.",
         "generic": "Přihlášení selhalo. Zkuste to prosím znovu."
+      },
+      "accountDeleted": {
+        "title": "Účet byl smazán",
+        "body": "Váš účet byl smazán a bude trvale odstraněn za 7 dní. Pokud se chcete obnovit, přihlaste se znovu se stejným e-mailem."
       }
     },
     "register": {
@@ -240,6 +251,24 @@
         "revokeSuccess": "Všechny ostatní relace byly odhlášeny.",
         "revokeError": "Odhlášení ostatních relací selhalo.",
         "revokeErrorException": "Odhlášení ostatních relací selhalo. Zkuste to prosím znovu."
+      },
+      "deleteAccount": {
+        "sectionTitle": "Smazat účet",
+        "sectionDescription": "Váš účet bude smazán za 7 dní. Během této doby ho můžete obnovit přihlášením. Po 7 dnech bude účet trvale odstraněn.",
+        "button": "Smazat účet",
+        "title": "Opravdu smazat účet?",
+        "description": "Tato akce odstraní váš účet za 7 dní. Během této doby ho můžete obnovit přihlášením.",
+        "warningTitle": "Varování",
+        "warningBody": "Vaše členství v projektech bude zrušeno. Projekty, které vlastníte, zůstanou viditelné pro ostatní členy, ale bez vlastníka. Po 7 dnech bude účet trvale smazán a e-mail anonymizován.",
+        "passwordLabel": "Zadejte své heslo pro potvrzení",
+        "emailConfirmLabel": "Zadejte svůj e-mail pro potvrzení",
+        "emailConfirmHint": "Zadejte přesně svou e-mailovou adresu pro potvrzení totožnosti.",
+        "acknowledge": "Rozumím, že moje projekty zůstanou viditelné pro ostatní členy a účet bude smazán za 7 dní.",
+        "cancel": "Zrušit",
+        "confirm": "Smazat účet",
+        "deleting": "Mazání…",
+        "success": "Účet byl naplánován ke smazání. Za 7 dní bude trvale odstraněn.",
+        "error": "Mazání účtu selhalo. Zkuste to prosím znovu."
       }
     },
     "settings": {
@@ -298,7 +327,8 @@
     },
     "toasts": {
       "projectUpdateFailed": "Nepodařilo se upravit projekt"
-    }
+    },
+    "noOwner": "Bez vlastníka — kontaktujte administrátory"
   },
   "sidebar": {
     "settings": "Nastavení"
@@ -394,7 +424,8 @@
         "description": "Přehled všech uživatelů instance a jejich admin práv. Změny se projeví okamžitě.",
         "badge": {
           "admin": "Administrátor",
-          "user": "Uživatel"
+          "user": "Uživatel",
+          "pendingDeletion": "Čeká na smazání"
         },
         "aria": {
           "adminToggleSelf": "Admin práva uživatele {name} (nelze změnit)",
@@ -1227,7 +1258,9 @@
       }
     },
     "dashboard": {
-      "button": { "clearFilters": "Zrušit filtry" },
+      "button": {
+        "clearFilters": "Zrušit filtry"
+      },
       "kpi": {
         "burn": {
           "label": "Čerpání rozpočtu",
@@ -1248,7 +1281,9 @@
           "label": "Odpracováno hodin",
           "subValue": "Plán: {days, plural, one {# den} few {# dny} many {# dní} other {# dní}}"
         },
-        "completed": { "allDone": "Vše hotovo" }
+        "completed": {
+          "allDone": "Vše hotovo"
+        }
       },
       "plan": {
         "byStart": {
@@ -1267,8 +1302,12 @@
           "later": "Později",
           "unscheduled": "Nenaplánováno"
         },
-        "empty": { "upcoming": "Žádné blížící se termíny." },
-        "tag": { "overdue": "po termínu" }
+        "empty": {
+          "upcoming": "Žádné blížící se termíny."
+        },
+        "tag": {
+          "overdue": "po termínu"
+        }
       },
       "cashflow": {
         "title": "Cashflow projekce",
@@ -1348,9 +1387,14 @@
       "empty": {
         "title": "Zatím žádné kontakty",
         "description": "Přidejte firmy, řemeslníky, dodavatele a architekty. Můžete jim přiřazovat platby a časové záznamy.",
-        "button": { "first": "Přidat první kontakt" }
+        "button": {
+          "first": "Přidat první kontakt"
+        }
       },
-      "menu": { "edit": "Upravit", "delete": "Smazat" },
+      "menu": {
+        "edit": "Upravit",
+        "delete": "Smazat"
+      },
       "delete": {
         "title": "Smazat kontakt?",
         "body": "Opravdu chcete smazat kontakt <strong>{name}</strong>?",
@@ -1364,8 +1408,13 @@
         "times": "Časů"
       },
       "persons": {
-        "title": "Kontaktní osoby",
-        "button": { "add": "Přidat", "addPerson": "Přidat osobu" },
+        "title": {
+          "delete": "Smazat osobu"
+        },
+        "button": {
+          "add": "Přidat",
+          "addPerson": "Přidat osobu"
+        },
         "field": {
           "firstName": "Jméno *",
           "lastName": "Příjmení *",
@@ -1381,8 +1430,9 @@
           "role": "Vedoucí, Účetní, ..."
         },
         "empty": "Žádné kontaktní osoby. Klikněte „Přidat“ pro přidání.",
-        "aria": { "delete": "Smazat {firstName} {lastName}" },
-        "title": { "delete": "Smazat osobu" }
+        "aria": {
+          "delete": "Smazat {firstName} {lastName}"
+        }
       },
       "toasts": {
         "deleteSuccess": "Kontakt smazán",
@@ -1398,7 +1448,10 @@
         "saveErrorFallback": "Nepodařilo se uložit kontakt"
       },
       "detail": {
-        "button": { "edit": "Upravit", "close": "Zavřít" },
+        "button": {
+          "edit": "Upravit",
+          "close": "Zavřít"
+        },
         "section": {
           "contact": "Kontakt",
           "summary": "Souhrn času a financí"
@@ -1420,7 +1473,16 @@
         }
       },
       "form": {
-        "placeholder": { "title": "Jméno / Název…" },
+        "placeholder": {
+          "role": "např. Zedník, Elektrikář",
+          "company": "např. Stavby s.r.o.",
+          "ico": "např. 12345678",
+          "dic": "např. CZ12345678",
+          "phone": "+420 …",
+          "email": "email@domena.cz",
+          "web": "např. www.firma.cz",
+          "notes": "Zkušenosti, reference, postup práce…"
+        },
         "submitLabel": {
           "edit": "Upravit kontakt",
           "create": "Přidat kontakt"
@@ -1442,18 +1504,12 @@
           "rating": "Hodnocení",
           "notes": "Poznámky"
         },
-        "placeholder": {
-          "role": "např. Zedník, Elektrikář",
-          "company": "např. Stavby s.r.o.",
-          "ico": "např. 12345678",
-          "dic": "např. CZ12345678",
-          "phone": "+420 …",
-          "email": "email@domena.cz",
-          "web": "např. www.firma.cz",
-          "notes": "Zkušenosti, reference, postup práce…"
+        "section": {
+          "details": "Detaily (volitelné)"
         },
-        "section": { "details": "Detaily (volitelné)" },
-        "rating": { "clear": "Zrušit" }
+        "rating": {
+          "clear": "Zrušit"
+        }
       }
     },
     "telemetry": {
@@ -1463,7 +1519,9 @@
         "refresh": "Obnovit",
         "retry": "Zkusit znovu"
       },
-      "error": { "loadFailed": "Nepodařilo se načíst telemetrická data." },
+      "error": {
+        "loadFailed": "Nepodařilo se načíst telemetrická data."
+      },
       "kpi": {
         "totalEvents": "Celkem událostí",
         "totalPageViews": "Celkem zobrazení stránek",
@@ -1524,7 +1582,9 @@
           "eventCount": "Počet akcí",
           "lastActive": "Poslední aktivita"
         },
-        "crown": { "title": "Nejaktivnější" }
+        "crown": {
+          "title": "Nejaktivnější"
+        }
       },
       "recent": {
         "title": "Poslední události",
@@ -1553,7 +1613,9 @@
         "allPages": "Všechny stránky",
         "project": "Projekt",
         "allProjects": "Všechny projekty",
-        "button": { "reset": "Zrušit filtry" }
+        "button": {
+          "reset": "Zrušit filtry"
+        }
       },
       "pagination": {
         "summary": "Zobrazeno {from}–{to} z {total}",
@@ -1579,7 +1641,9 @@
         "contact": "Kontakt (A→Z)",
         "vendor": "Firma (A→Z)"
       },
-      "filter": { "allTypes": "Všechny typy" },
+      "filter": {
+        "allTypes": "Všechny typy"
+      },
       "toolbar": {
         "sum": "Součet ({count})",
         "vatIncluded": "z toho DPH"
@@ -1593,7 +1657,9 @@
           "noRecords": "Začněte evidovat platby - účtenky, faktury nebo výplaty za práci. Můžete je rozdělit i do splátek.",
           "noMatch": "Zkuste změnit filtr nebo vyhledávání."
         },
-        "button": { "first": "Přidat první platbu" }
+        "button": {
+          "first": "Přidat první platbu"
+        }
       },
       "column": {
         "date": "Datum",
@@ -1604,7 +1670,9 @@
         "amount": "Částka"
       },
       "row": {
-        "aria": { "clickToEdit": "Klikněte pro úpravu platby" },
+        "aria": {
+          "clickToEdit": "Klikněte pro úpravu platby"
+        },
         "installment": {
           "title": "Faktura ve splátkách: {invoiceTotal} — zaplaceno {paidTotal} ({percent} %), zbývá {remaining}",
           "fallbackTitle": "Faktura ve splátkách",
@@ -1615,7 +1683,10 @@
         "firstInstallment": "1. splátka",
         "vatRateSuffix": "vč. DPH {rate}%",
         "ofInvoiceTotal": "z {invoiceTotal}",
-        "menu": { "edit": "Upravit", "delete": "Smazat" },
+        "menu": {
+          "edit": "Upravit",
+          "delete": "Smazat"
+        },
         "delete": {
           "title": "Smazat platbu?",
           "body": "Opravdu chcete smazat platbu <strong>{amount}</strong>?",
@@ -1716,8 +1787,12 @@
           "confirm": "Převést na běžnou platbu",
           "confirming": "Převádím…"
         },
-        "section": { "details": "Detaily (volitelné)" },
-        "isInvoice": { "label": "Platba ve splátkách (faktura s více platbami)" },
+        "section": {
+          "details": "Detaily (volitelné)"
+        },
+        "isInvoice": {
+          "label": "Platba ve splátkách (faktura s více platbami)"
+        },
         "installmentOf": {
           "label": "Připojit k faktuře (jako splátka)",
           "placeholder": "Samostatná platba (bez faktury)",
@@ -1733,7 +1808,10 @@
           "0": "0 %"
         },
         "vatCalc": {
-          "label": { "vat": "DPH:", "base": "Základ:" },
+          "label": {
+            "vat": "DPH:",
+            "base": "Základ:"
+          },
           "empty": "Zadejte částku a DPH sazbu"
         },
         "markCompleted": {
@@ -1761,25 +1839,6 @@
         "updateError": "Nepodařilo se upravit platbu",
         "createError": "Nepodařilo se přidat platbu"
       }
-    }
-  },
-  "analytics": {
-    "eventTypes": {
-      "page_view": "Zobrazení stránky",
-      "add_payment": "Přidání platby",
-      "add_time_entry": "Přidání času",
-      "edit_time_entry": "Úprava času",
-      "edit_payment": "Úprava platby",
-      "delete_payment": "Smazání platby",
-      "add_contact": "Přidání kontaktu",
-      "add_note": "Přidání poznámky",
-      "edit_note": "Úprava poznámky",
-      "add_budget_item": "Přidání položky",
-      "edit_budget_item": "Úprava položky",
-      "download_data": "Stažení dat",
-      "login": "Přihlášení",
-      "logout": "Odhlášení",
-      "project_share": "Sdílení projektu"
     }
   },
   "components": {
@@ -2375,6 +2434,19 @@
       },
       "generic": {
         "invalidRequest": "Neplatný požadavek."
+      },
+      "account": {
+        "mustAcknowledge": "Musíte potvrdit, že rozumíte následkům.",
+        "notFound": "Uživatel nebyl nalezen.",
+        "alreadyDeleted": "Účet je již ve stavu mazání.",
+        "passwordRequired": "Heslo je povinné pro ověření totožnosti.",
+        "passwordIncorrect": "Zadané heslo je nesprávné.",
+        "emailConfirmRequired": "Zadejte svůj e-mail pro potvrzení.",
+        "emailConfirmMismatch": "Zadaný e-mail se neshoduje s vaším účtem.",
+        "emailRequired": "E-mail je povinný.",
+        "notDeleted": "Tento účet není smazán.",
+        "permanentlyDeleted": "Doba pro obnovení účtu vypršela. Účet byl trvale smazán.",
+        "useOAuth": "Tento účet nemá nastavené heslo. Přihlaste se přes Google."
       }
     }
   }

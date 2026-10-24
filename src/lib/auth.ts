@@ -156,6 +156,7 @@ export const authOptions: NextAuthOptions = {
             emailVerified: true,
             tokenVersion: true,
             isAdmin: true,
+            deletedAt: true,
             accounts: {
               where: { provider: "google" },
               select: { provider: true },
@@ -167,6 +168,13 @@ export const authOptions: NextAuthOptions = {
         if (!user) {
           // Don't reveal whether the e-mail exists — return null
           return null;
+        }
+
+        // Account is soft-deleted (in cooling-off period)
+        if (user.deletedAt) {
+          // Throw a special error so the login page can redirect to
+          // the "recover account" flow instead of showing a generic error.
+          throw new Error("account-deleted");
         }
 
         // User must have a password set (either via registration or
@@ -258,6 +266,7 @@ export const authOptions: NextAuthOptions = {
             emailVerified: true,
             tokenVersion: true,
             isAdmin: true,
+            deletedAt: true,
             accounts: {
               where: { provider: "google" },
               select: { providerAccountId: true },
@@ -267,6 +276,49 @@ export const authOptions: NextAuthOptions = {
         });
 
         if (existing) {
+          // Account is soft-deleted (in cooling-off period).
+          // Since we deleted the Google Account link during soft-delete,
+          // we reach this branch only if the cooling-off period hasn't
+          // expired AND the user is signing in with Google again.
+          // Recover the account.
+          if (existing.deletedAt) {
+            const daysSinceDeletion =
+              (Date.now() - existing.deletedAt.getTime()) / (1000 * 60 * 60 * 24);
+            const COOLING_OFF_DAYS = 7;
+            if (daysSinceDeletion < COOLING_OFF_DAYS) {
+              // Recover the account
+              await db.user.update({
+                where: { id: existing.id },
+                data: {
+                  deletedAt: null,
+                  restoredAt: new Date(),
+                  tokenVersion: { increment: 1 },
+                },
+              });
+              // Re-create the Google Account link (was deleted during soft-delete)
+              await db.account.create({
+                data: {
+                  userId: existing.id,
+                  provider: "google",
+                  providerAccountId: googleSub,
+                  access_token: account.access_token ?? null,
+                  refresh_token: account.refresh_token ?? null,
+                  expires_at: account.expires_at ?? null,
+                  token_type: account.token_type ?? null,
+                  scope: account.scope ?? null,
+                  id_token: account.id_token ?? null,
+                },
+              });
+              // Continue with sign-in (existing user flow below)
+            } else {
+              // Cooling-off period expired — account permanently anonymized.
+              // The email was changed to `deleted_<id>_<email>`, so
+              // `findUnique` wouldn't have found it. We only reach here
+              // if the cron hasn't run yet. Treat as new user.
+              // Fall through to the "else" branch (new user creation).
+            }
+          }
+
           // User exists. Check if they already have a Google Account linked.
           const existingGoogleAccount = existing.accounts[0];
 
@@ -406,10 +458,16 @@ export const authOptions: NextAuthOptions = {
       if (needsCheck && token.email) {
         const dbUser = await db.user.findUnique({
           where: { email: token.email },
-          select: { emailVerified: true, tokenVersion: true, isAdmin: true },
+          select: { emailVerified: true, tokenVersion: true, isAdmin: true, deletedAt: true },
         });
 
         if (dbUser) {
+          // Check if the account was soft-deleted — if so, return an
+          // empty token so the middleware treats the user as logged out
+          // and redirects to login (where they'll see the recovery page).
+          if (dbUser.deletedAt) {
+            return {} as typeof token;
+          }
           // Update emailVerified if it changed
           if (dbUser.emailVerified) {
             token.emailVerified = dbUser.emailVerified.toISOString();

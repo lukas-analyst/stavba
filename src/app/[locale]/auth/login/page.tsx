@@ -67,10 +67,17 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  // Resolve the initial error message based on the ?error= query param.
-  // We can't call `t()` inside useState initializer (it's a hook, must
-  // run unconditionally at top level), so we resolve lazily on first render.
+  // If the Credentials provider threw "account-deleted", redirect to the
+  // recovery page. We detect this via the `?error=account-deleted` URL
+  // param (set by NextAuth when authorize() throws an Error with that
+  // message) OR via the `?deleted=1` param (set after successful
+  // account deletion via /api/account).
+  const deletedParam = searchParams.get("deleted");
   const [error, setError] = useState<string | null>(() => {
+    if (errorParam === "account-deleted" || deletedParam === "1") {
+      // Show the recovery notice instead of a generic error
+      return null; // Recovery banner is shown below
+    }
     switch (errorParam) {
       case "use-oauth":
         return t("errors.useOAuth");
@@ -170,6 +177,16 @@ export default function LoginPage() {
             <div className="mb-4 flex items-start gap-2 rounded-lg border border-success/20 bg-success/10 p-3 text-sm text-success">
               <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
               <span>{t("registeredSuccess")}</span>
+            </div>
+          )}
+
+          {(errorParam === "account-deleted" || deletedParam === "1") && (
+            <div className="mb-4 flex items-start gap-2 rounded-lg border border-warning/30 bg-warning/10 p-3 text-sm text-warning">
+              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+              <div className="space-y-1">
+                <p className="font-medium">{t("accountDeleted.title")}</p>
+                <p className="text-xs text-muted-foreground">{t("accountDeleted.body")}</p>
+              </div>
             </div>
           )}
 

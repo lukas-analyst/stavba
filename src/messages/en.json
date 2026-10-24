@@ -2,7 +2,14 @@
   "Meta": {
     "appName": "Build Budget",
     "description": "Comprehensive budget, cost and time management for construction and renovation. Overview of projects, payments, work and material in one place.",
-    "keywords": ["construction", "renovation", "budget", "costs", "project", "management"]
+    "keywords": [
+      "construction",
+      "renovation",
+      "budget",
+      "costs",
+      "project",
+      "management"
+    ]
   },
   "common": {
     "appName": "Build Budget",
@@ -124,6 +131,10 @@
         "rateLimitedMinutes": "Too many sign-in attempts. Try again in {minutes} minutes.",
         "rateLimitedSeconds": "Too many sign-in attempts. Try again in {seconds} seconds.",
         "generic": "Sign-in failed. Please try again."
+      },
+      "accountDeleted": {
+        "title": "Account deleted",
+        "body": "Your account has been deleted and will be permanently removed in 7 days. To recover it, sign in again with the same email."
       }
     },
     "register": {
@@ -240,6 +251,24 @@
         "revokeSuccess": "All other sessions have been signed out.",
         "revokeError": "Signing out other sessions failed.",
         "revokeErrorException": "Signing out other sessions failed. Please try again."
+      },
+      "deleteAccount": {
+        "sectionTitle": "Delete account",
+        "sectionDescription": "Your account will be deleted in 7 days. During this time you can recover it by signing in. After 7 days, the account will be permanently removed.",
+        "button": "Delete account",
+        "title": "Really delete account?",
+        "description": "This action will delete your account in 7 days. During this time you can recover it by signing in.",
+        "warningTitle": "Warning",
+        "warningBody": "Your project memberships will be revoked. Projects you own will remain visible to other members, but without an owner. After 7 days, the account will be permanently deleted and the email anonymized.",
+        "passwordLabel": "Enter your password to confirm",
+        "emailConfirmLabel": "Enter your email to confirm",
+        "emailConfirmHint": "Type your exact email address to confirm your identity.",
+        "acknowledge": "I understand that my projects will remain visible to other members and the account will be deleted in 7 days.",
+        "cancel": "Cancel",
+        "confirm": "Delete account",
+        "deleting": "Deleting…",
+        "success": "Account scheduled for deletion. It will be permanently removed in 7 days.",
+        "error": "Account deletion failed. Please try again."
       }
     },
     "settings": {
@@ -298,7 +327,8 @@
     },
     "toasts": {
       "projectUpdateFailed": "Failed to update project"
-    }
+    },
+    "noOwner": "No owner — contact administrators"
   },
   "sidebar": {
     "settings": "Settings"
@@ -307,19 +337,19 @@
     "eventTypes": {
       "page_view": "Page view",
       "add_payment": "Add payment",
-      "add_time_entry": "Add time",
-      "edit_time_entry": "Edit time",
+      "add_time_entry": "Add time entry",
+      "edit_time_entry": "Edit time entry",
       "edit_payment": "Edit payment",
       "delete_payment": "Delete payment",
       "add_contact": "Add contact",
       "add_note": "Add note",
       "edit_note": "Edit note",
-      "add_budget_item": "Add item",
-      "edit_budget_item": "Edit item",
+      "add_budget_item": "Add budget item",
+      "edit_budget_item": "Edit budget item",
       "download_data": "Download data",
       "login": "Sign in",
       "logout": "Sign out",
-      "project_share": "Project share"
+      "project_share": "Share project"
     }
   },
   "relativeTime": {
@@ -394,7 +424,8 @@
         "description": "Overview of all instance users and their admin rights. Changes take effect immediately.",
         "badge": {
           "admin": "Administrator",
-          "user": "User"
+          "user": "User",
+          "pendingDeletion": "Pending deletion"
         },
         "aria": {
           "adminToggleSelf": "Admin rights of user {name} (cannot change)",
@@ -1227,7 +1258,9 @@
       }
     },
     "dashboard": {
-      "button": { "clearFilters": "Clear filters" },
+      "button": {
+        "clearFilters": "Clear filters"
+      },
       "kpi": {
         "burn": {
           "label": "Budget burn",
@@ -1248,7 +1281,9 @@
           "label": "Hours logged",
           "subValue": "Plan: {days, plural, one {# day} other {# days}}"
         },
-        "completed": { "allDone": "All done" }
+        "completed": {
+          "allDone": "All done"
+        }
       },
       "plan": {
         "byStart": {
@@ -1267,8 +1302,12 @@
           "later": "Later",
           "unscheduled": "Unscheduled"
         },
-        "empty": { "upcoming": "No upcoming deadlines." },
-        "tag": { "overdue": "overdue" }
+        "empty": {
+          "upcoming": "No upcoming deadlines."
+        },
+        "tag": {
+          "overdue": "overdue"
+        }
       },
       "cashflow": {
         "title": "Cashflow projection",
@@ -1348,9 +1387,14 @@
       "empty": {
         "title": "No contacts yet",
         "description": "Add companies, craftsmen, suppliers and architects. You can assign payments and time entries to them.",
-        "button": { "first": "Add first contact" }
+        "button": {
+          "first": "Add first contact"
+        }
       },
-      "menu": { "edit": "Edit", "delete": "Delete" },
+      "menu": {
+        "edit": "Edit",
+        "delete": "Delete"
+      },
       "delete": {
         "title": "Delete contact?",
         "body": "Do you really want to delete contact <strong>{name}</strong>?",
@@ -1364,8 +1408,13 @@
         "times": "Time"
       },
       "persons": {
-        "title": "Contact persons",
-        "button": { "add": "Add", "addPerson": "Add person" },
+        "title": {
+          "delete": "Delete person"
+        },
+        "button": {
+          "add": "Add",
+          "addPerson": "Add person"
+        },
         "field": {
           "firstName": "First name *",
           "lastName": "Last name *",
@@ -1381,8 +1430,9 @@
           "role": "Manager, Accountant, ..."
         },
         "empty": "No contact persons. Click “Add” to add one.",
-        "aria": { "delete": "Delete {firstName} {lastName}" },
-        "title": { "delete": "Delete person" }
+        "aria": {
+          "delete": "Delete {firstName} {lastName}"
+        }
       },
       "toasts": {
         "deleteSuccess": "Contact deleted",
@@ -1398,7 +1448,10 @@
         "saveErrorFallback": "Failed to save contact"
       },
       "detail": {
-        "button": { "edit": "Edit", "close": "Close" },
+        "button": {
+          "edit": "Edit",
+          "close": "Close"
+        },
         "section": {
           "contact": "Contact",
           "summary": "Time and money summary"
@@ -1420,7 +1473,16 @@
         }
       },
       "form": {
-        "placeholder": { "title": "Name / Title…" },
+        "placeholder": {
+          "role": "e.g. Mason, Electrician",
+          "company": "e.g. ACME Ltd.",
+          "ico": "e.g. 12345678",
+          "dic": "e.g. CZ12345678",
+          "phone": "+420 …",
+          "email": "email@domain.com",
+          "web": "e.g. www.company.com",
+          "notes": "Experience, references, working method…"
+        },
         "submitLabel": {
           "edit": "Update contact",
           "create": "Add contact"
@@ -1442,18 +1504,12 @@
           "rating": "Rating",
           "notes": "Notes"
         },
-        "placeholder": {
-          "role": "e.g. Mason, Electrician",
-          "company": "e.g. ACME Ltd.",
-          "ico": "e.g. 12345678",
-          "dic": "e.g. CZ12345678",
-          "phone": "+420 …",
-          "email": "email@domain.com",
-          "web": "e.g. www.company.com",
-          "notes": "Experience, references, working method…"
+        "section": {
+          "details": "Details (optional)"
         },
-        "section": { "details": "Details (optional)" },
-        "rating": { "clear": "Clear" }
+        "rating": {
+          "clear": "Clear"
+        }
       }
     },
     "telemetry": {
@@ -1463,7 +1519,9 @@
         "refresh": "Refresh",
         "retry": "Try again"
       },
-      "error": { "loadFailed": "Failed to load telemetry data." },
+      "error": {
+        "loadFailed": "Failed to load telemetry data."
+      },
       "kpi": {
         "totalEvents": "Total events",
         "totalPageViews": "Total page views",
@@ -1524,7 +1582,9 @@
           "eventCount": "Action count",
           "lastActive": "Last activity"
         },
-        "crown": { "title": "Most active" }
+        "crown": {
+          "title": "Most active"
+        }
       },
       "recent": {
         "title": "Recent events",
@@ -1553,7 +1613,9 @@
         "allPages": "All pages",
         "project": "Project",
         "allProjects": "All projects",
-        "button": { "reset": "Clear filters" }
+        "button": {
+          "reset": "Clear filters"
+        }
       },
       "pagination": {
         "summary": "Showing {from}–{to} of {total}",
@@ -1579,7 +1641,9 @@
         "contact": "Contact (A→Z)",
         "vendor": "Vendor (A→Z)"
       },
-      "filter": { "allTypes": "All types" },
+      "filter": {
+        "allTypes": "All types"
+      },
       "toolbar": {
         "sum": "Sum ({count})",
         "vatIncluded": "incl. VAT"
@@ -1593,7 +1657,9 @@
           "noRecords": "Start logging payments — receipts, invoices or wage payouts. You can split them into installments too.",
           "noMatch": "Try changing the filter or search."
         },
-        "button": { "first": "Add first payment" }
+        "button": {
+          "first": "Add first payment"
+        }
       },
       "column": {
         "date": "Date",
@@ -1604,7 +1670,9 @@
         "amount": "Amount"
       },
       "row": {
-        "aria": { "clickToEdit": "Click to edit payment" },
+        "aria": {
+          "clickToEdit": "Click to edit payment"
+        },
         "installment": {
           "title": "Installment invoice: {invoiceTotal} — paid {paidTotal} ({percent} %), remaining {remaining}",
           "fallbackTitle": "Installment invoice",
@@ -1615,7 +1683,10 @@
         "firstInstallment": "1st installment",
         "vatRateSuffix": "incl. VAT {rate}%",
         "ofInvoiceTotal": "of {invoiceTotal}",
-        "menu": { "edit": "Edit", "delete": "Delete" },
+        "menu": {
+          "edit": "Edit",
+          "delete": "Delete"
+        },
         "delete": {
           "title": "Delete payment?",
           "body": "Do you really want to delete payment <strong>{amount}</strong>?",
@@ -1716,8 +1787,12 @@
           "confirm": "Convert to regular payment",
           "confirming": "Converting…"
         },
-        "section": { "details": "Details (optional)" },
-        "isInvoice": { "label": "Installment payment (invoice with multiple payments)" },
+        "section": {
+          "details": "Details (optional)"
+        },
+        "isInvoice": {
+          "label": "Installment payment (invoice with multiple payments)"
+        },
         "installmentOf": {
           "label": "Link to invoice (as installment)",
           "placeholder": "Standalone payment (no invoice)",
@@ -1733,7 +1808,10 @@
           "0": "0 %"
         },
         "vatCalc": {
-          "label": { "vat": "VAT:", "base": "Base:" },
+          "label": {
+            "vat": "VAT:",
+            "base": "Base:"
+          },
           "empty": "Enter amount and VAT rate"
         },
         "markCompleted": {
@@ -1761,25 +1839,6 @@
         "updateError": "Failed to update payment",
         "createError": "Failed to add payment"
       }
-    }
-  },
-  "analytics": {
-    "eventTypes": {
-      "page_view": "Page view",
-      "add_payment": "Add payment",
-      "add_time_entry": "Add time entry",
-      "edit_time_entry": "Edit time entry",
-      "edit_payment": "Edit payment",
-      "delete_payment": "Delete payment",
-      "add_contact": "Add contact",
-      "add_note": "Add note",
-      "edit_note": "Edit note",
-      "add_budget_item": "Add budget item",
-      "edit_budget_item": "Edit budget item",
-      "download_data": "Download data",
-      "login": "Sign in",
-      "logout": "Sign out",
-      "project_share": "Share project"
     }
   },
   "components": {
@@ -2347,7 +2406,7 @@
         "adminOnly": "Only an administrator can change admin privileges.",
         "cannotEditOtherProfile": "Editing another user's profile is not allowed.",
         "userNotFound": "User not found.",
-        "noPasswordSet": "Your account does not have a password set (you sign in via Google). You can set one via the \u201cForgot password\u201d feature."
+        "noPasswordSet": "Your account does not have a password set (you sign in via Google). You can set one via the “Forgot password” feature."
       },
       "password": {
         "currentRequired": "Current password is required.",
@@ -2375,6 +2434,19 @@
       },
       "generic": {
         "invalidRequest": "Invalid request."
+      },
+      "account": {
+        "mustAcknowledge": "You must confirm that you understand the consequences.",
+        "notFound": "User not found.",
+        "alreadyDeleted": "Account is already pending deletion.",
+        "passwordRequired": "Password is required for identity verification.",
+        "passwordIncorrect": "The password you entered is incorrect.",
+        "emailConfirmRequired": "Enter your email address to confirm.",
+        "emailConfirmMismatch": "The email you entered does not match your account.",
+        "emailRequired": "Email is required.",
+        "notDeleted": "This account is not deleted.",
+        "permanentlyDeleted": "The account recovery period has expired. The account has been permanently deleted.",
+        "useOAuth": "This account has no password set. Sign in with Google."
       }
     }
   }

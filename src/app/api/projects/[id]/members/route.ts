@@ -21,13 +21,13 @@ export async function GET(
         where: { id },
         select: {
           ownerId: true,
-          owner: { select: { id: true, name: true, email: true, image: true } },
+          owner: { select: { id: true, name: true, email: true, image: true, deletedAt: true } },
         },
       }),
       dbRead.projectMember.findMany({
         where: { projectId: id },
         include: {
-          user: { select: { id: true, name: true, email: true, image: true } },
+          user: { select: { id: true, name: true, email: true, image: true, deletedAt: true } },
         },
         orderBy: { createdAt: "asc" },
       }),

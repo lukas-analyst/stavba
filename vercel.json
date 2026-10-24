@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/finalize-deletions",
+      "schedule": "0 3 * * *"
+    }
+  ]
+}

@@ -18,9 +18,11 @@ import {
   ArrowLeft,
   ShieldCheck,
   MonitorSmartphone,
+  Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { BRAND } from "@/i18n/brand";
+import { DeleteAccountDialog } from "@/components/delete-account-dialog";
 
 // =====================================================================
 // /auth/profile — user profile + password change + session management
@@ -68,6 +70,7 @@ export default function ProfilePage() {
 
   // Sessions state
   const [revokingSessions, setRevokingSessions] = useState(false);
+  const [deleteAccountOpen, setDeleteAccountOpen] = useState(false);
 
   // Fetch user profile on mount
   useEffect(() => {
@@ -434,6 +437,36 @@ export default function ProfilePage() {
             </div>
           )}
         </div>
+
+        {/* === Danger Zone — Delete Account === */}
+        <div className="mt-8 rounded-lg border border-destructive/30 bg-destructive/5 p-4 sm:p-6">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="space-y-1">
+              <h2 className="flex items-center gap-2 text-base font-semibold text-destructive">
+                <Trash2 className="h-4 w-4" />
+                {t("deleteAccount.sectionTitle")}
+              </h2>
+              <p className="text-xs text-muted-foreground">
+                {t("deleteAccount.sectionDescription")}
+              </p>
+            </div>
+            <Button
+              type="button"
+              variant="destructive"
+              size="sm"
+              className="shrink-0"
+              onClick={() => setDeleteAccountOpen(true)}
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
+              {t("deleteAccount.button")}
+            </Button>
+          </div>
+        </div>
+
+        <DeleteAccountDialog
+          open={deleteAccountOpen}
+          onOpenChange={setDeleteAccountOpen}
+        />
 
         {/* Footer: Back to home */}
         <div className="mt-6 flex flex-col items-center gap-3">

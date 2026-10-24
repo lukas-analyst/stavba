@@ -859,6 +859,7 @@ type ManagedUser = {
   image: string | null;
   isAdmin: boolean;
   createdAt: string;
+  deletedAt: string | null;
 };
 
 function UsersSection({
@@ -984,7 +985,15 @@ function UsersSection({
                           <span className="type-body font-semibold truncate">
                             {u.name ?? "—"}
                           </span>
-                          {u.isAdmin ? (
+                          {u.deletedAt ? (
+                            <Badge
+                              variant="secondary"
+                              className="type-label-sm bg-warning-soft text-warning-strong gap-1"
+                            >
+                              <AlertTriangle className="h-3 w-3" />
+                              {t("badge.pendingDeletion")}
+                            </Badge>
+                          ) : u.isAdmin ? (
                             <Badge
                               variant="secondary"
                               className="type-label-sm bg-primary-container text-primary-container-foreground gap-1"
