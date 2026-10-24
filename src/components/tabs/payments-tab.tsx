@@ -1085,7 +1085,8 @@ function PaymentDialogInner({
   const [date, setDate] = useState(toDateStr(payment?.date) || today);
   const [type, setType] = useState(payment?.type ?? prefillParent?.type ?? lastType);
   const [vendor, setVendor] = useState(
-    payment?.vendor ?? prefillParent?.vendor ?? lastVendor,
+    // Default: empty for new payments (no pre-filled vendor).
+    payment?.vendor ?? prefillParent?.vendor ?? "",
   );
   const [invoiceNumber, setInvoiceNumber] = useState(
     payment?.invoiceNumber ?? prefillParent?.invoiceNumber ?? "",
@@ -1801,11 +1802,11 @@ function PaymentDialogInner({
               {t("dialog.markCompleted.label")}
             </Label>
           </div>
-          <p className="ml-6 text-[11px] text-muted-foreground">
-            {alreadyCompleted
-              ? t("dialog.markCompleted.alreadyCompleted")
-              : t("dialog.markCompleted.hint")}
-          </p>
+          {alreadyCompleted && (
+            <p className="ml-6 text-[11px] text-muted-foreground">
+              {t("dialog.markCompleted.alreadyCompleted")}
+            </p>
+          )}
         </div>
       </CollapsibleSection>
     </AddDialogShell>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useMemo } from "react";
 import { useTranslations } from "next-intl";
 import { useDashboard, useSpendingTrend } from "@/lib/api";
 import {
@@ -11,7 +11,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Wallet,
@@ -27,7 +26,6 @@ import {
   Activity,
   Target,
   Filter,
-  X,
   Users2,
   CalendarDays,
   ListChecks,
@@ -67,7 +65,7 @@ import {
 // =====================================================================
 // DashboardTestTab — enhanced dashboard v2 with:
 //   - Hero KPI section with dynamic colors (green=done, red=over, etc.)
-//   - Cross-filtering that actually works across all charts/tables
+//   - Display-only charts (no cross-filtering)
 //   - "Plán" section: timeline items sorted by start date (active/next week/
 //     next month/next 3 months/later/unscheduled) + second list by end date
 //   - "Poslední aktivita" split into Payments + Time entries
@@ -106,33 +104,9 @@ export function DashboardTab({ projectId }: { projectId: string }) {
   const tPhases = useTranslations("phases");
   const locale = useLocale() as Locale;
 
-  // === Cross-filtering state ===
-  const [selectedPhase, setSelectedPhase] = useState<string | null>(null);
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [selectedContact, setSelectedContact] = useState<string | null>(null);
-
   const goToBudget = (filter: Parameters<typeof setBudgetFilter>[0]) => {
     setBudgetFilter(filter);
     setActiveTab("budget");
-  };
-
-  const togglePhase = (phase: string) => {
-    setSelectedPhase((prev) => (prev === phase ? null : phase));
-    // Don't clear category — let user combine filters
-  };
-
-  const toggleCategory = (category: string) => {
-    setSelectedCategory((prev) => (prev === category ? null : category));
-  };
-
-  const toggleContact = (contactId: string) => {
-    setSelectedContact((prev) => (prev === contactId ? null : contactId));
-  };
-
-  const clearFilters = () => {
-    setSelectedPhase(null);
-    setSelectedCategory(null);
-    setSelectedContact(null);
   };
 
   // === "Plán" section — compute buckets before early return ===
@@ -217,8 +191,6 @@ export function DashboardTab({ projectId }: { projectId: string }) {
   const { project, totals, byPhase, byCategory, byContact, alerts, recent } = data;
   const burnRate = totals.burnRate;
 
-  const hasFilters = selectedPhase || selectedCategory || selectedContact;
-
   // === Compute dynamic colors based on burn rate ===
   // Returns: "success" | "warning" | "danger"
   const getBurnAccent = (rate: number): AccentColor => {
@@ -229,13 +201,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
 
   const burnAccent = getBurnAccent(burnRate);
 
-  // === Filtered data (cross-filtering) ===
-  // Phase table filters by selectedPhase
-  const filteredByPhase = selectedPhase
-    ? byPhase.filter((p) => p.phase === selectedPhase)
-    : byPhase;
-
-  // Pie chart data — filter by selected category (single highlight)
+  // Pie chart data
   const pieData = byCategory
     .filter((c) => c.plan > 0 || c.actual > 0)
     .map((c) => ({
@@ -285,17 +251,6 @@ export function DashboardTab({ projectId }: { projectId: string }) {
             <span className={cn("h-2 w-2 rounded-full", statusColors.dot)} />
             {tStatuses(project.status)}
           </Badge>
-          {hasFilters && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={clearFilters}
-              className="gap-1.5 rounded-full"
-            >
-              <X className="h-3.5 w-3.5" />
-              {t("button.clearFilters")}
-            </Button>
-          )}
         </div>
         {project.description && (
           <p className="text-sm text-on-surface-variant">{project.description}</p>
@@ -561,7 +516,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
 
       {/* === Charts row 1: Phase + Category === */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        {/* Phase chart — interactive (click bars to filter) */}
+        {/* Phase chart — display-only */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -570,12 +525,6 @@ export function DashboardTab({ projectId }: { projectId: string }) {
             </CardTitle>
             <CardDescription>
               {t("chart.phase.description")}
-              {selectedPhase && (
-                <Badge variant="secondary" className="ml-2 gap-1">
-                  {tPhases(selectedPhase)}
-                  <X className="h-3 w-3 cursor-pointer" onClick={() => setSelectedPhase(null)} />
-                </Badge>
-              )}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -608,17 +557,12 @@ export function DashboardTab({ projectId }: { projectId: string }) {
                     name="plan"
                     fill="var(--info)"
                     radius={[4, 4, 0, 0]}
-                    onClick={(data: { phase?: string }) => data.phase && togglePhase(data.phase)}
-                    cursor="pointer"
-                    opacity={selectedPhase && selectedPhase !== phaseData.find(d => d.phase === selectedPhase)?.phase ? 0.4 : 1}
                   />
                   <Bar
                     dataKey="actual"
                     name="actual"
                     fill="var(--warning)"
                     radius={[4, 4, 0, 0]}
-                    onClick={(data: { phase?: string }) => data.phase && togglePhase(data.phase)}
-                    cursor="pointer"
                   />
                 </BarChart>
               </ResponsiveContainer>
@@ -626,7 +570,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
           </CardContent>
         </Card>
 
-        {/* Category chart — interactive */}
+        {/* Category chart — display-only */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -635,12 +579,6 @@ export function DashboardTab({ projectId }: { projectId: string }) {
             </CardTitle>
             <CardDescription>
               {t("chart.category.description")}
-              {selectedCategory && (
-                <Badge variant="secondary" className="ml-2 gap-1">
-                  {selectedCategory}
-                  <X className="h-3 w-3 cursor-pointer" onClick={() => setSelectedCategory(null)} />
-                </Badge>
-              )}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -682,17 +620,12 @@ export function DashboardTab({ projectId }: { projectId: string }) {
                     name="plan"
                     fill="var(--info)"
                     radius={[0, 4, 4, 0]}
-                    onClick={(data: { fullName?: string }) => data.fullName && toggleCategory(data.fullName)}
-                    cursor="pointer"
-                    opacity={selectedCategory && selectedCategory !== categoryBarData.find(d => d.fullName === selectedCategory)?.fullName ? 0.4 : 1}
                   />
                   <Bar
                     dataKey="actual"
                     name="actual"
                     fill="var(--warning)"
                     radius={[0, 4, 4, 0]}
-                    onClick={(data: { fullName?: string }) => data.fullName && toggleCategory(data.fullName)}
-                    cursor="pointer"
                   />
                 </BarChart>
               </ResponsiveContainer>
@@ -821,13 +754,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
                 return (
                   <div
                     key={c.contactId}
-                    className={cn(
-                      "flex items-center gap-3 rounded-lg border p-3 transition-colors hover:bg-surface-container-high",
-                      selectedContact === c.contactId && "bg-primary/5 border-primary/30",
-                    )}
-                    onClick={() => toggleContact(c.contactId)}
-                    role="button"
-                    tabIndex={0}
+                    className="flex items-center gap-3 rounded-lg border p-3 transition-colors hover:bg-surface-container-high"
                   >
                     <div className={cn(
                       "flex h-10 w-10 shrink-0 items-center justify-center rounded-full",
@@ -868,18 +795,12 @@ export function DashboardTab({ projectId }: { projectId: string }) {
         </CardContent>
       </Card>
 
-      {/* === Interactive Phase Table (filtered by selectedPhase) === */}
+      {/* === Phase Table (display-only) === */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Filter className="h-5 w-5 text-primary" />
             {t("phases.title")}
-            {selectedPhase && (
-              <Badge variant="secondary" className="gap-1">
-                {t("phases.filteredBy", { phase: selectedPhase })}
-                <X className="h-3 w-3 cursor-pointer" onClick={() => setSelectedPhase(null)} />
-              </Badge>
-            )}
           </CardTitle>
           <CardDescription>
             {t("phases.description")}
@@ -900,25 +821,19 @@ export function DashboardTab({ projectId }: { projectId: string }) {
                 </tr>
               </thead>
               <tbody>
-                {(selectedPhase ? filteredByPhase : byPhase).map((p) => {
+                {byPhase.map((p) => {
                   const burn = p.plan > 0 ? (p.actual / p.plan) * 100 : 0;
                   const burnCls = burn > 100 ? "text-danger" : burn > 80 ? "text-warning" : "text-success";
-                  const isSelected = selectedPhase === p.phase;
                   const allDone = p.count > 0 && p.completedCount === p.count;
                   return (
                     <tr
                       key={p.phase}
-                      onClick={() => togglePhase(p.phase)}
-                      className={cn(
-                        "cursor-pointer border-b transition-colors hover:bg-surface-container-high",
-                        isSelected && "bg-primary/5",
-                      )}
+                      className="border-b transition-colors hover:bg-surface-container-high"
                     >
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2">
                           <span className={cn("h-2.5 w-2.5 rounded-full", PHASE_DOT_COLORS[p.phase] ?? "bg-muted-foreground")} />
                           <span className="font-medium">{tPhases(p.phase)}</span>
-                          {isSelected && <X className="h-3 w-3 text-muted-foreground" />}
                           {allDone && <CheckCircle2 className="h-4 w-4 text-success" />}
                         </div>
                       </td>

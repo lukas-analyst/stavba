@@ -901,11 +901,11 @@ function TimeDialogInner({
               {t("form.markCompleted.label")}
             </Label>
           </div>
-          <p className="ml-6 text-[11px] text-muted-foreground">
-            {alreadyCompleted
-              ? t("form.markCompleted.alreadyCompleted")
-              : t("form.markCompleted.hint")}
-          </p>
+          {alreadyCompleted && (
+            <p className="ml-6 text-[11px] text-muted-foreground">
+              {t("form.markCompleted.alreadyCompleted")}
+            </p>
+          )}
         </div>
       </CollapsibleSection>
     </AddDialogShell>

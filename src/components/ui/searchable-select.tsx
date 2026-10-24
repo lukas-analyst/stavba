@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Check, ChevronsUpDown, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 type Option = {
   value: string;
@@ -34,6 +35,7 @@ export function SearchableSelect({
   className,
   id,
 }: Props) {
+  const isMobile = useIsMobile();
   const [open, setOpenState] = useState(false);
   const [query, setQuery] = useState("");
   const [activeIndex, setActiveIndex] = useState(0);
@@ -110,6 +112,47 @@ export function SearchableSelect({
     }
   };
 
+  // =====================================================================
+  // Mobile: render a NATIVE <select>.
+  // The Popover-based dropdown breaks inside Vaul Drawer (touch scroll
+  // is intercepted by the Drawer's drag handler). The native OS picker
+  // always scrolls correctly because it's rendered by the browser/OS,
+  // not by JS. We lose the search input on mobile, but the picker is
+  // reliable. The trigger button matches the desktop appearance so the
+  // UX is consistent.
+  // =====================================================================
+  if (isMobile) {
+    return (
+      <div className={cn("relative", className)}>
+        <select
+          id={id}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className={cn(
+            "flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm font-normal ring-offset-background",
+            "focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+            "appearance-none cursor-pointer",
+            !selected && "text-muted-foreground",
+          )}
+          aria-label={placeholder}
+        >
+          <option value="" disabled={!!value}>
+            {placeholder}
+          </option>
+          {options.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.hint ? `${option.hint} — ${option.label}` : option.label}
+            </option>
+          ))}
+        </select>
+        <ChevronsUpDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 opacity-50" />
+      </div>
+    );
+  }
+
+  // =====================================================================
+  // Desktop: searchable Popover (keyboard navigation + filter input)
+  // =====================================================================
   return (
     <Popover open={open} onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>
@@ -133,10 +176,6 @@ export function SearchableSelect({
         className="w-[var(--radix-popover-trigger-width)] min-w-[300px] p-0"
         align="start"
         onOpenAutoFocus={(e) => e.preventDefault()}
-        // `data-vaul-no-drag` prevents Vaul Drawer from intercepting touch
-        // events on the popover content (which would break scroll on mobile).
-        // The attribute is read by Vaul's touch handler.
-        // Note: Radix PopoverContent passes through unknown data-* attributes.
       >
         <div className="relative border-b">
           <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
@@ -157,14 +196,6 @@ export function SearchableSelect({
             aria-autocomplete="list"
           />
         </div>
-        {/* Plain overflow-y-auto div — Radix ScrollArea has known issues inside
-            PopoverContent (transform animations can break inner scroll on some
-            setups). This matches the pattern used by shadcn Combobox.
-            overscroll-behavior: contain prevents the scroll from propagating to
-            the parent (especially important when used inside a Dialog).
-            touch-action: manipulation allows native touch scrolling without
-            300ms delay; pan-y ensures vertical pan works even when Radix
-            intercepts pointer events. */}
         <div
           id={listId}
           role="listbox"
@@ -174,17 +205,9 @@ export function SearchableSelect({
             touchAction: 'pan-y',
             WebkitOverflowScrolling: 'touch',
           }}
-          // CRITICAL for mobile: Radix Popover intercepts pointerdown on the
-          // content wrapper, which can block native touch scroll on the inner
-          // list. We stop propagation here ONLY for pointerdown that starts on
-          // the scrollbar/list area, so the scroll gesture isn't cancelled.
-          // Clicks on option buttons still work (they use onClick, which fires
-          // after pointerup). This matches the Radix-recommended workaround
-          // for touch scroll inside PopoverContent.
           onPointerDown={(e) => {
-            // Only intercept if the target is the list container itself or
-            // a non-interactive child (text node). Clicks on <button> options
-            // should propagate normally so selection works.
+            // Only intercept non-option clicks; option buttons need normal
+            // propagation for their onClick to fire.
             const target = e.target as HTMLElement;
             if (target.closest('button[role="option"]')) return;
             e.stopPropagation();
