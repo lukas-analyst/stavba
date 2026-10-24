@@ -1282,12 +1282,10 @@
       },
       "chart": {
         "phase": {
-          "title": "Plán vs Skutečnost dle fáze",
-          "description": "Klikněte na fázi pro filtrování tabulky"
+          "title": "Plán vs Skutečnost dle fáze"
         },
         "category": {
-          "title": "Rozpočet dle kategorie",
-          "description": "Klikněte na kategorii pro filtrování"
+          "title": "Rozpočet dle kategorie"
         },
         "trend": {
           "title": "Trend čerpání rozpočtu",
@@ -1312,8 +1310,6 @@
       },
       "phases": {
         "title": "Fáze projektu",
-        "filteredBy": "Filtrováno: {phase}",
-        "description": "Klikněte na řádek pro filtrování grafů",
         "column": {
           "phase": "Fáze",
           "items": "Položky",

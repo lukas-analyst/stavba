@@ -1282,12 +1282,10 @@
       },
       "chart": {
         "phase": {
-          "title": "Plan vs Actual by phase",
-          "description": "Click a bar to filter the table"
+          "title": "Plan vs Actual by phase"
         },
         "category": {
-          "title": "Budget by category",
-          "description": "Click a bar to filter"
+          "title": "Budget by category"
         },
         "trend": {
           "title": "Budget burn trend",
@@ -1312,8 +1310,6 @@
       },
       "phases": {
         "title": "Project phases",
-        "filteredBy": "Filtered: {phase}",
-        "description": "Click a row to filter the charts",
         "column": {
           "phase": "Phase",
           "items": "Items",

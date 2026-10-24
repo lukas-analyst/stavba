@@ -523,9 +523,6 @@ export function DashboardTab({ projectId }: { projectId: string }) {
               <Activity className="h-5 w-5 text-primary" />
               {t("chart.phase.title")}
             </CardTitle>
-            <CardDescription>
-              {t("chart.phase.description")}
-            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="h-72">
@@ -577,9 +574,6 @@ export function DashboardTab({ projectId }: { projectId: string }) {
               <Target className="h-5 w-5 text-primary" />
               {t("chart.category.title")}
             </CardTitle>
-            <CardDescription>
-              {t("chart.category.description")}
-            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="h-72">
@@ -802,9 +796,6 @@ export function DashboardTab({ projectId }: { projectId: string }) {
             <Filter className="h-5 w-5 text-primary" />
             {t("phases.title")}
           </CardTitle>
-          <CardDescription>
-            {t("phases.description")}
-          </CardDescription>
         </CardHeader>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
