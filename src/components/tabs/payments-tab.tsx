@@ -1076,7 +1076,10 @@ function PaymentDialogInner({
     payment?.budgetItemId ?? prefillParent?.budgetItemId ?? "",
   );
   const [contactId, setContactId] = useState(
-    payment?.contactId ?? prefillParent?.contactId ?? lastContactId,
+    // Default: NO contact for new payments (user explicitly asked for this).
+    // When editing existing payment, keep its contactId. When prefilling
+    // from a parent invoice, use the parent's contactId. Otherwise empty.
+    payment?.contactId ?? prefillParent?.contactId ?? "",
   );
   const [amount, setAmount] = useState(payment ? String(payment.amount ?? "") : "");
   const [date, setDate] = useState(toDateStr(payment?.date) || today);

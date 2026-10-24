@@ -125,8 +125,14 @@ export function AddDialogShell({
   );
 
   // Body (form fields — scrollable on mobile)
+  // `data-vaul-no-drag` tells Vaul to NOT interpret touches inside this
+  // area as drawer-drag gestures — allowing native scroll to work for
+  // long forms and Select dropdowns.
   const body = (
-    <div className={cn("flex-1 overflow-y-auto scrollbar-thin space-y-4 px-4 pb-4", !isMobile && "overflow-visible")}>
+    <div
+      data-vaul-no-drag
+      className={cn("flex-1 overflow-y-auto scrollbar-thin space-y-4 px-4 pb-4 overscroll-contain", !isMobile && "overflow-visible")}
+    >
       {children}
     </div>
   );

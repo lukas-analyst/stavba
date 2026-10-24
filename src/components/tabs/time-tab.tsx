@@ -598,7 +598,9 @@ function TimeDialogInner({
     projectId,
   );
   const [budgetItemId, setBudgetItemId] = useState(editEntry?.budgetItemId ?? "");
-  const [contactId, setContactId] = useState(editEntry?.contactId ?? lastContactId);
+  // Default: NO contact for new time entries (user explicitly asked for this).
+  // When editing existing entry, keep its contactId. Otherwise empty.
+  const [contactId, setContactId] = useState(editEntry?.contactId ?? "");
   const [workerName, setWorkerName] = useState(editEntry?.workerName ?? lastWorkerName);
   const [workerType, setWorkerType] = useState(editEntry?.workerType ?? lastWorkerType);
   const [date, setDate] = useState(toDateStr(editEntry?.date) || today);

@@ -8,7 +8,20 @@ import { cn } from "@/lib/utils"
 function Drawer({
   ...props
 }: React.ComponentProps<typeof DrawerPrimitive.Root>) {
-  return <DrawerPrimitive.Root data-slot="drawer" {...props} />
+  return (
+    <DrawerPrimitive.Root
+      data-slot="drawer"
+      // CRITICAL for mobile scroll inside Drawer:
+      // Vaul by default captures touch events on the entire drawer content
+      // as potential drag gestures (to close the drawer by swiping down).
+      // This breaks native scroll on any scrollable child (e.g. a Select
+      // dropdown, a long form). `handleOnly` restricts the drag handle to
+      // the visual grabber bar at the top, so the rest of the content
+      // receives normal touch events and scrolls naturally.
+      handleOnly
+      {...props}
+    />
+  )
 }
 
 function DrawerTrigger({

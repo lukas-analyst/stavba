@@ -133,6 +133,10 @@ export function SearchableSelect({
         className="w-[var(--radix-popover-trigger-width)] min-w-[300px] p-0"
         align="start"
         onOpenAutoFocus={(e) => e.preventDefault()}
+        // `data-vaul-no-drag` prevents Vaul Drawer from intercepting touch
+        // events on the popover content (which would break scroll on mobile).
+        // The attribute is read by Vaul's touch handler.
+        // Note: Radix PopoverContent passes through unknown data-* attributes.
       >
         <div className="relative border-b">
           <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
