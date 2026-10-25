@@ -58,6 +58,9 @@ export function CurrencySelect({
           code={value}
           className="h-3.5 w-5 rounded-[2px] overflow-hidden shrink-0"
         />
+        {/* SelectValue renders the selected item's `textValue` (just the code).
+            We set `textValue` on each SelectItem so only the code shows here,
+            not the flag (which we render manually above to avoid duplicates). */}
         <SelectValue />
       </SelectTrigger>
       <SelectContent>
@@ -69,6 +72,9 @@ export function CurrencySelect({
               key={c.code}
               value={c.code}
               disabled={isUnavailable}
+              // textValue is what Radix shows in the trigger via SelectValue.
+              // We include symbol so the trigger shows "CZK Kč" etc.
+              textValue={`${c.code} ${c.symbol}`}
               className="gap-2"
             >
               <div className="flex items-center gap-2">

@@ -59,6 +59,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import {
   Plus,
+  X,
   Pencil,
   Trash2,
   MoreHorizontal,
@@ -566,7 +567,7 @@ function ContactPersonsSection({
           className="h-7 gap-1 rounded-full px-2 text-xs"
           onClick={() => setShowAddForm(!showAddForm)}
         >
-          <Plus className="h-3 w-3" /> {showAddForm ? tCommon("cancel") : t("persons.button.add")}
+          {showAddForm ? <X className="h-3 w-3" /> : <Plus className="h-3 w-3" />} {showAddForm ? tCommon("cancel") : t("persons.button.add")}
         </Button>
       </div>
 
@@ -698,7 +699,7 @@ function ContactPersonsSection({
                   onClick={() => handleDelete(p.id, `${p.firstName} ${p.lastName}`)}
                   disabled={deletePerson.isPending}
                   aria-label={t("persons.aria.delete", { firstName: p.firstName, lastName: p.lastName })}
-                  title={t("persons.title.delete")}
+                  title={t("persons.deleteTitle")}
                 >
                   <Trash2 className="h-3.5 w-3.5 text-muted-foreground hover:text-danger" />
                 </Button>

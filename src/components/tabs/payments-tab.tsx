@@ -1565,10 +1565,10 @@ function PaymentDialogInner({
           payment is an installment-parent with invoiceTotal set). */}
       {isEdit && payment?.invoiceTotal != null && (
         <>
-          <div className="flex flex-wrap items-center gap-2 rounded-md border border-danger/40 bg-danger-soft/30 p-2.5 dark:border-danger-strong/40 dark:bg-danger-soft/20">
-            <AlertTriangle className="h-4 w-4 shrink-0 text-danger-strong dark:text-danger" />
+          <div className="flex flex-wrap items-center gap-2 rounded-md border border-warning/30 bg-warning-soft/50 p-2.5 dark:border-warning-strong/60 dark:bg-warning-soft/40">
+            <AlertTriangle className="h-4 w-4 shrink-0 text-warning-strong dark:text-warning" />
             <div className="flex-1 text-xs leading-tight">
-              <div className="font-medium text-danger-strong dark:text-danger">
+              <div className="font-medium text-warning-strong dark:text-warning">
                 {t("dialog.parentWarning.title")}
               </div>
               <div className="text-on-surface-variant">
@@ -1914,7 +1914,7 @@ function PaymentDialogInner({
         )}
 
         {/* Mark-completed checkbox - links payment to budget item completion */}
-        <div className="flex flex-col gap-1 rounded-md border border-warning/30 bg-warning-soft/50 p-3 dark:border-warning-strong/60 dark:bg-warning-soft/40">
+        <div className="flex flex-col gap-1 rounded-md border border-success/30 bg-success-soft/50 p-3 dark:border-success-strong/60 dark:bg-success-soft/40">
           <div className="flex items-start gap-2">
             <Checkbox
               id="markCompleted"

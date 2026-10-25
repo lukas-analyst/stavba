@@ -76,7 +76,6 @@ import {
   CornerUpRight,
 } from "lucide-react";
 import {
-  formatCzk,
   formatCurrency,
   formatNumber,
   formatDate,
@@ -768,6 +767,7 @@ function BudgetTab({ projectId, dragEndHandlerRef }: { projectId: string; dragEn
                 onToggle={() => toggleCat(category)}
                 totals={totals}
                 burn={burn}
+                projectCurrency={project?.currency ?? "CZK"}
                 onCategoryDragEnd={(oldIdx, newIdx) =>
                   handleCategoryReorder(oldIdx, newIdx)
                 }
@@ -960,6 +960,7 @@ function SortableCategoryCard({
   burn,
   onCategoryDragEnd,
   onAddItem,
+  projectCurrency,
   children,
 }: {
   id: string;
@@ -970,9 +971,11 @@ function SortableCategoryCard({
   burn: number;
   onCategoryDragEnd: (oldIndex: number, newIndex: number) => void;
   onAddItem?: () => void;
+  projectCurrency: string;
   children: React.ReactNode;
 }) {
   const t = useTranslations("tabs.budget.category");
+  const locale = useLocale() as Locale;
   const {
     attributes,
     listeners,
@@ -1029,7 +1032,7 @@ function SortableCategoryCard({
             {totals.saved > 0 && (
               <Badge variant="outline" className="type-label-sm text-success">
                 <PiggyBank className="mr-1 h-2.5 w-2.5" />
-                {formatCzk(totals.saved)}
+                {formatCurrency(totals.saved, projectCurrency, locale)}
               </Badge>
             )}
             {/* Add item to this category (green plus) — span instead of button
@@ -1058,7 +1061,7 @@ function SortableCategoryCard({
             )}
             <div className="ml-auto flex items-center gap-4 text-xs">
               <span className="text-muted-foreground">
-                {formatCzk(totals.actual)} / {formatCzk(totals.plan)}
+                {formatCurrency(totals.actual, projectCurrency, locale)} / {formatCurrency(totals.plan, projectCurrency, locale)}
               </span>
               <div className="h-1.5 w-24 overflow-hidden rounded-full bg-muted">
                 <div
@@ -1599,7 +1602,7 @@ const BudgetRow = memo(function BudgetRow({
                 variant="outline"
                 title={
                   item.subsidyAmount != null
-                    ? t("badge.subsidyTitleWithAmount", { amount: formatCzk(item.subsidyAmount) })
+                    ? t("badge.subsidyTitleWithAmount", { amount: formatCurrency(item.subsidyAmount, projectCurrency, locale) })
                     : t("badge.subsidyTitleNoAmount")
                 }
                 className="type-label-sm h-4 gap-0.5 px-1 text-subsidy-strong dark:text-subsidy"
@@ -1608,7 +1611,7 @@ const BudgetRow = memo(function BudgetRow({
                 {t("badge.subsidy")}
                 {item.subsidyAmount != null && item.subsidyAmount > 0 && (
                   <span className="ml-0.5 tabular-nums">
-                    {formatCzk(item.subsidyAmount)}
+                    {formatCurrency(item.subsidyAmount, projectCurrency, locale)}
                   </span>
                 )}
               </Badge>
@@ -1693,7 +1696,7 @@ const BudgetRow = memo(function BudgetRow({
                 "block w-full rounded px-1 py-0.5 text-right font-semibold tabular-nums",
                 "hover:bg-surface-container-high",
               )}
-              title={t("tooltip.planTotal", { own: formatNumber(item.planCost ?? 0, "Kč"), children: formatNumber(displayPlanCost - (item.planCost ?? 0), "Kč") })}
+              title={t("tooltip.planTotal", { own: formatCurrency(item.planCost ?? 0, projectCurrency, locale), children: formatCurrency(displayPlanCost - (item.planCost ?? 0), projectCurrency, locale) })}
             >
               {displayPlanCost > 0 ? formatCurrency(displayPlanCost, projectCurrency, locale) : (
                 <span className="text-muted-foreground/50">—</span>
@@ -1780,9 +1783,9 @@ const BudgetRow = memo(function BudgetRow({
                 "block w-full rounded px-1 py-0.5 text-right font-semibold tabular-nums",
                 overBudget && "text-danger",
               )}
-              title={t("tooltip.actualTotal", { own: formatNumber(item.actualCost ?? 0, "Kč"), children: formatNumber(displayActualCost - (item.actualCost ?? 0), "Kč") })}
+              title={t("tooltip.actualTotal", { own: formatCurrency(item.actualCost ?? 0, projectCurrency, locale), children: formatCurrency(displayActualCost - (item.actualCost ?? 0), projectCurrency, locale) })}
             >
-              {displayActualCost > 0 ? formatNumber(displayActualCost, " Kč") : (
+              {displayActualCost > 0 ? formatCurrency(displayActualCost, projectCurrency, locale) : (
                 <span className="text-muted-foreground/50">—</span>
               )}
             </span>
@@ -1793,7 +1796,7 @@ const BudgetRow = memo(function BudgetRow({
                   value={item.actualCost}
                   onCommit={(v) => update("actualCost", v)}
                   className="text-right tabular-nums text-muted-foreground hover:text-foreground"
-                  suffix=" Kč"
+                  suffix={` ${projectSymbol}`}
                 />
               </span>
             )}

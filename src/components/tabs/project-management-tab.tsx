@@ -2012,12 +2012,6 @@ function SharingSection({
             </div>
           )}
         </div>
-        <div className="flex items-start gap-2 rounded-lg bg-info/5 p-2.5 text-xs text-on-surface-variant">
-          <Info className="h-3.5 w-3.5 shrink-0 mt-0.5 text-info" />
-          <span>
-            {t("inviteForm.info")}
-          </span>
-        </div>
 
         {/* ===== QR code — share via scan ===== */}
         <div className="rounded-lg border border-outline-variant bg-surface-container-low p-4">
@@ -2031,12 +2025,6 @@ function SharingSection({
           <div className="flex flex-col items-center gap-3">
             <QrCode projectSlug={projectSlug} projectName={projectName} />
           </div>
-        </div>
-        <div className="flex items-start gap-2 rounded-lg bg-info/5 p-2.5 text-xs text-on-surface-variant">
-          <Info className="h-3.5 w-3.5 shrink-0 mt-0.5 text-info" />
-          <span>
-            {t("qr.info")}
-          </span>
         </div>
       </CardContent>
     </Card>

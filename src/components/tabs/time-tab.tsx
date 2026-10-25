@@ -889,7 +889,7 @@ function TimeDialogInner({
         </div>
 
         {/* Hotovo checkbox - propojí časový záznam s dokončením budget item */}
-        <div className="flex flex-col gap-1 rounded-md border border-time/30 bg-time-soft/50 p-3 dark:border-time-strong/60 dark:bg-time-soft/60">
+        <div className="flex flex-col gap-1 rounded-md border border-success/30 bg-success-soft/50 p-3 dark:border-success-strong/60 dark:bg-success-soft/40">
           <div className="flex items-start gap-2">
             <Checkbox
               id="markCompleted"

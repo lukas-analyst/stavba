@@ -16,7 +16,6 @@ import {
 import { locales, LOCALE_META, defaultLocale, type Locale } from "@/i18n/config";
 import { Flag } from "@/components/ui/flags";
 import { cn } from "@/lib/utils";
-
 // =====================================================================
 // LanguageSwitcher — flag-based locale dropdown
 // ---------------------------------------------------------------------
@@ -39,8 +38,20 @@ export function LanguageSwitcher({ className }: { className?: string }) {
 
   const switchTo = (next: Locale) => {
     if (next === currentLocale) return;
+
+    // `usePathname()` from next/navigation returns the FULL path including
+    // the locale prefix (e.g. "/en/auth/login"). Strip it so we can rebuild
+    // the URL for the target locale.
+    let strippedPath = pathname;
+    for (const loc of locales) {
+      if (strippedPath === `/${loc}` || strippedPath.startsWith(`/${loc}/`)) {
+        strippedPath = strippedPath.slice(`/${loc}`.length) || "/";
+        break;
+      }
+    }
+
     const query = searchParams.toString();
-    const pathWithQuery = query ? `${pathname}?${query}` : pathname;
+    const pathWithQuery = query ? `${strippedPath}?${query}` : strippedPath;
 
     const targetPath =
       next === defaultLocale

@@ -890,13 +890,11 @@
             "newUser": "Nový uživatel — pozvánka mu přijde na e-mail, po registraci získá přístup",
             "editor": "Jako editor můžete přidávat pouze Čtenáře nebo Editory",
             "noInvite": "Pozvat nové uživatele může pouze správce projektu"
-          },
-          "info": "Pozvat e-mailem: Pozvaný uživatel získá přístup po přihlášení nebo registraci s daným e-mailem. Platnost pozvánky: 24 hodin."
+          }
         },
         "qr": {
           "title": "QR kód projektu",
           "description": "Naskenujte QR kód pro otevření projektu na mobilu.",
-          "info": "QR kód: Naskenujte pro otevření projektu na mobilu. Odkazuje na veřejný pohled projektu.",
           "aria": "QR kód pro projekt {name}",
           "button": {
             "copyLink": "Kopírovat odkaz",
@@ -1416,9 +1414,8 @@
         "times": "Časů"
       },
       "persons": {
-        "title": {
-          "delete": "Smazat osobu"
-        },
+        "title": "Kontaktní osoby",
+        "deleteTitle": "Smazat osobu",
         "button": {
           "add": "Přidat",
           "addPerson": "Přidat osobu"

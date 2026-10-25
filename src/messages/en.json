@@ -890,13 +890,11 @@
             "newUser": "New user — they'll receive an email invitation and gain access after registration",
             "editor": "As an editor you can only add Viewers or Editors",
             "noInvite": "Only the project manager can invite new users"
-          },
-          "info": "Invite by email: The invited user will gain access after signing in or registering with the given email. Invitation is valid for 24 hours."
+          }
         },
         "qr": {
           "title": "Project QR code",
           "description": "Scan the QR code to open the project on mobile.",
-          "info": "QR code: Scan to open the project on mobile. It points to the public project view.",
           "aria": "QR code for project {name}",
           "button": {
             "copyLink": "Copy link",
@@ -1416,9 +1414,8 @@
         "times": "Time"
       },
       "persons": {
-        "title": {
-          "delete": "Delete person"
-        },
+        "title": "Contact persons",
+        "deleteTitle": "Delete person",
         "button": {
           "add": "Add",
           "addPerson": "Add person"
