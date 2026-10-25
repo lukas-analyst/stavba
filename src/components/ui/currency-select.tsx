@@ -4,25 +4,31 @@ import { useTranslations } from "next-intl";
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
 import { Flag } from "@/components/ui/flags";
-import { SUPPORTED_CURRENCIES, type CurrencyCode } from "@/lib/currency-config";
+import { SUPPORTED_CURRENCIES, CURRENCY_MAP } from "@/lib/currency-config";
 import { cn } from "@/lib/utils";
 
 // =====================================================================
 // CurrencySelect — MD3-styled currency selector with flag + code
 // ---------------------------------------------------------------------
-// Uses the shadcn Select component (Radix Select) for consistent
-// cross-platform behavior. Each option shows:
-//   [flag] CODE  Symbol
+// IMPORTANT: Radix Select's `<SelectValue>` renders the CHILDREN of the
+// selected `<SelectItem>`, not just `textValue`. If we put a `<Flag>`
+// SVG inside the SelectItem children, it would also appear in the
+// trigger (via SelectValue), creating a double-flag.
 //
-// e.g. [🇪🇺] EUR  €
+// Solution: SelectItem children contain ONLY text ("CZK Kč", "EUR €").
+// The Flag is rendered manually in the trigger, driven by the current
+// `value` prop. The dropdown items show flags via a custom renderer
+// that uses `textValue` for display + a data attribute for the flag.
 //
-// When a rate is unavailable (grayed out + tooltip), we still show
-// the option but disable it — the user sees it's "in preparation".
+// Actually, the simplest approach that works: don't render Flag inside
+// SelectItem at all. Just text. The trigger has its own Flag.
 // =====================================================================
 
 type CurrencySelectProps = {
@@ -47,6 +53,7 @@ export function CurrencySelect({
   disabled,
 }: CurrencySelectProps) {
   const t = useTranslations("currency");
+  const currentMeta = CURRENCY_MAP[value];
 
   return (
     <Select value={value} onValueChange={onChange} disabled={disabled}>
@@ -54,49 +61,48 @@ export function CurrencySelect({
         id={id}
         className={cn("w-full gap-2 font-normal", className)}
       >
+        {/* Flag rendered manually in the trigger — NOT inside SelectItem
+            children (Radix would clone it into SelectValue → double flag). */}
         <Flag
           code={value}
           className="h-3.5 w-5 rounded-[2px] overflow-hidden shrink-0"
         />
-        {/* SelectValue renders the selected item's `textValue` (just the code).
-            We set `textValue` on each SelectItem so only the code shows here,
-            not the flag (which we render manually above to avoid duplicates). */}
+        {/* SelectValue shows the selected item's text content.
+            We only put text (code + symbol) in SelectItem children,
+            so the trigger shows: [flag] CZK Kč */}
         <SelectValue />
       </SelectTrigger>
       <SelectContent>
         {SUPPORTED_CURRENCIES.map((c) => {
           const isUnavailable = unavailableCurrencies?.has(c.code);
           const isDefault = c.code === defaultCurrency;
+          // textValue is what SelectValue displays in the trigger.
+          // Include symbol so trigger shows "CZK Kč" etc.
+          const textValue = `${c.code} ${c.symbol}`;
           return (
             <SelectItem
               key={c.code}
               value={c.code}
               disabled={isUnavailable}
-              // textValue is what Radix shows in the trigger via SelectValue.
-              // We include symbol so the trigger shows "CZK Kč" etc.
-              textValue={`${c.code} ${c.symbol}`}
-              className="gap-2"
+              textValue={textValue}
             >
-              <div className="flex items-center gap-2">
-                <Flag
-                  code={c.flagCode}
-                  className="h-3.5 w-5 rounded-[2px] overflow-hidden shrink-0"
-                />
-                <span className={cn(isUnavailable && "text-muted-foreground/50")}>
-                  {c.code}
+              {/* Children = what shows in the DROPDOWN (not the trigger).
+                  SelectValue in the trigger uses textValue, not children.
+                  Wait — Radix actually renders children in SelectValue.
+                  So we must NOT put Flag here. Text only. */}
+              <span className={cn(isUnavailable && "text-muted-foreground/50")}>
+                {c.code} {c.symbol}
+              </span>
+              {isDefault && (
+                <span className="text-[10px] text-muted-foreground/70 ml-1">
+                  ({t("default")})
                 </span>
-                <span className="text-muted-foreground">{c.symbol}</span>
-                {isDefault && (
-                  <span className="text-[10px] text-muted-foreground/70 ml-1">
-                    ({t("default")})
-                  </span>
-                )}
-                {isUnavailable && (
-                  <span className="text-[10px] text-muted-foreground/50 ml-auto italic">
-                    {t("unavailable")}
-                  </span>
-                )}
-              </div>
+              )}
+              {isUnavailable && (
+                <span className="text-[10px] text-muted-foreground/50 ml-auto italic">
+                  {t("unavailable")}
+                </span>
+              )}
             </SelectItem>
           );
         })}
