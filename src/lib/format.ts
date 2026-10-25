@@ -68,6 +68,34 @@ export function formatPercent(
 }
 
 // ───────────────────────────────────────────────────────────────
+// Multi-currency formatting
+// ---------------------------------------------------------------------
+// Formats an amount with the appropriate currency symbol + locale-aware
+// digit grouping. Uses Intl.NumberFormat with `style: "currency"`.
+//
+// For CZK: no decimal places (Kč amounts are whole numbers in practice).
+// For EUR/USD/GBP: 2 decimal places.
+// For HUF/VND: 0 decimal places.
+// =====================================================================
+export function formatCurrency(
+  amount: number | null | undefined,
+  currency: string = "CZK",
+  locale: Locale = defaultLocale,
+): string {
+  if (amount === null || amount === undefined || isNaN(amount)) return "—";
+  // CZK: 0 decimals (Czech practice — haléře are not used)
+  // HUF, VND: 0 decimals (high denomination currencies)
+  // EUR, USD, GBP, PLN, AUD: 2 decimals
+  const decimals = currency === "CZK" || currency === "HUF" || currency === "VND" ? 0 : 2;
+  return new Intl.NumberFormat(toBcp47(locale), {
+    style: "currency",
+    currency,
+    minimumFractionDigits: decimals,
+    maximumFractionDigits: decimals,
+  }).format(amount);
+}
+
+// ───────────────────────────────────────────────────────────────
 // Date formatting
 // ───────────────────────────────────────────────────────────────
 

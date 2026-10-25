@@ -716,6 +716,15 @@ model Payment {
   contact       Contact?   @relation(fields: [contactId], references: [id], onDelete: SetNull)
   /// Paid amount for this record (0 for a pure invoice parent)
   amount        Float
+  /// Currency of the payment (ISO 4217: CZK, EUR, USD, etc.).
+  /// Null = project's default currency.
+  currency      String?
+  /// Amount converted to the project's default currency.
+  /// Computed at save time using the exchange rate for the payment date.
+  amountConverted Float  @default(0)
+  /// Exchange rate used for conversion (snapshot — stored so the
+  /// original conversion can be reproduced even if the rate changes later).
+  exchangeRateUsed Float?
   /// Full invoice amount expected (set only on parent/installment group)
   /// If null, this is a standalone payment (not part of installments)
   invoiceTotal  Float?
@@ -788,4 +797,33 @@ model TimeEntry {
   @@index([workerType])
   @@index([date, workerType])
   @@map("time_entries")
+}
+
+/// Exchange rate from a foreign currency to CZK (Czech National Bank).
+/// Downloaded daily by a cron job (`/api/cron/fetch-exchange-rates`).
+/// Used to convert payment/budget amounts to the project's default
+/// currency for display and aggregation.
+///
+/// CZK is the reference currency (rate = 1.0, always available).
+/// For other currencies, the rate represents how many CZK = 1 unit of
+/// the foreign currency (e.g., EUR rate 25.50 means 1 EUR = 25.50 CZK).
+///
+/// The `date` is the date the rate applies to (ČNB publishes on
+/// business days). If a rate for a weekend/holiday is needed, we use
+/// the most recent available date.
+model ExchangeRate {
+  id        String   @id @default(cuid())
+  /// ISO 4217 currency code (EUR, USD, GBP, HUF, PLN, AUD, VND, CZK)
+  currency  String
+  /// Exchange rate: how many CZK = 1 unit of this currency
+  rate      Float
+  /// Date the rate applies to (ČNB publication date, ~14:30 CET)
+  date      DateTime @db.Date
+  /// Source of the rate (cnb, manual)
+  source    String   @default("cnb")
+  createdAt DateTime @default(now())
+
+  @@unique([currency, date])
+  @@index([currency, date])
+  @@map("exchange_rates")
 }

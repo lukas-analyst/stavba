@@ -3,6 +3,10 @@
     {
       "path": "/api/cron/finalize-deletions",
       "schedule": "0 3 * * *"
+    },
+    {
+      "path": "/api/cron/fetch-exchange-rates",
+      "schedule": "0 15 * * 1-5"
     }
   ]
 }

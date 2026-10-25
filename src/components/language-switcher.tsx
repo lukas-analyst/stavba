@@ -2,7 +2,7 @@
 
 import { useTransition } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { Check, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,26 +14,19 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { locales, LOCALE_META, defaultLocale, type Locale } from "@/i18n/config";
-import { useSearchParams } from "next/navigation";
+import { Flag } from "@/components/ui/flags";
 import { cn } from "@/lib/utils";
 
 // =====================================================================
 // LanguageSwitcher — flag-based locale dropdown
 // ---------------------------------------------------------------------
-// Renders a globe icon + current locale flag. Clicking opens a dropdown
-// listing all available locales (defined in `src/i18n/config.ts`).
+// Renders the current locale's SVG flag + a dropdown to switch.
+// Uses inline SVG flags (not emoji) because emoji flags don't render
+// on Windows. The SVG component (`@/components/ui/flags`) maps locale
+// codes (cs, en) to the correct flag.
 //
-// Selecting a locale navigates to the localized URL:
-//   • Default locale (cs): NO prefix (`/`, `/budget`, …)
-//   • Non-default (en, de, …): prefix (`/en/`, `/de/`, …)
-//
-// The current path + search params are preserved when switching —
-// `next-intl`'s `usePathname()` returns the locale-stripped path so we
-// can reconstruct the URL in the target locale. We use `router.replace`
-// inside a `startTransition` to avoid a full page reload.
-//
-// The cookie (`NEXT_LOCALE`) is set automatically by next-intl middleware
-// when the locale prefix is detected on the next request.
+// Visible on ALL screen sizes (mobile + desktop) — previously hidden
+// on mobile, but the user requested it be available everywhere.
 // =====================================================================
 
 export function LanguageSwitcher({ className }: { className?: string }) {
@@ -46,13 +39,9 @@ export function LanguageSwitcher({ className }: { className?: string }) {
 
   const switchTo = (next: Locale) => {
     if (next === currentLocale) return;
-    // Build the new URL with the same path + query.
     const query = searchParams.toString();
     const pathWithQuery = query ? `${pathname}?${query}` : pathname;
 
-    // For the default locale, no prefix. For others, prefix with /<locale>.
-    // next-intl's `usePathname()` already strips the locale segment, so
-    // `pathname` here is locale-independent (e.g. "/budget", not "/en/budget").
     const targetPath =
       next === defaultLocale
         ? pathWithQuery
@@ -60,8 +49,6 @@ export function LanguageSwitcher({ className }: { className?: string }) {
 
     startTransition(() => {
       router.replace(targetPath);
-      // Force a refresh so server components re-render with the new locale
-      // (messages, metadata, etc.).
       router.refresh();
     });
   };
@@ -82,8 +69,10 @@ export function LanguageSwitcher({ className }: { className?: string }) {
           title={currentMeta.name}
           disabled={isPending}
         >
-          {/* Show flag on mobile, flag + code on desktop */}
-          <span className="text-base leading-none">{currentMeta.flag}</span>
+          <Flag
+            code={currentLocale}
+            className="h-4 w-6 sm:h-3.5 sm:w-5 rounded-[2px] overflow-hidden"
+          />
           <span className="sr-only">{currentMeta.name}</span>
         </Button>
       </DropdownMenuTrigger>
@@ -101,11 +90,14 @@ export function LanguageSwitcher({ className }: { className?: string }) {
               key={locale}
               onSelect={() => switchTo(locale)}
               className={cn(
-                "cursor-pointer gap-2 rounded-none px-3 py-2 type-body",
+                "cursor-pointer gap-2.5 rounded-none px-3 py-2 type-body",
                 isActive && "bg-primary-container text-primary-container-foreground",
               )}
             >
-              <span className="text-base leading-none">{meta.flag}</span>
+              <Flag
+                code={locale}
+                className="h-3.5 w-5 rounded-[2px] overflow-hidden shrink-0"
+              />
               <span className="flex-1">{meta.name}</span>
               {isActive && <Check className="h-3.5 w-3.5" />}
             </DropdownMenuItem>

@@ -349,7 +349,15 @@
       "download_data": "Stažení dat",
       "login": "Přihlášení",
       "logout": "Odhlášení",
-      "project_share": "Sdílení projektu"
+      "project_share": "Sdílení projektu",
+      "auth_login": "Přihlášení",
+      "auth_logout": "Odhlášení",
+      "auth_register": "Registrace",
+      "auth_password_change": "Změna hesla",
+      "auth_password_reset": "Reset hesla",
+      "auth_email_verify": "Ověření e-mailu",
+      "auth_session_revoke": "Odhlášení relace",
+      "auth_oauth_login": "Přihlášení přes Google"
     }
   },
   "relativeTime": {
@@ -2448,6 +2456,28 @@
         "permanentlyDeleted": "Doba pro obnovení účtu vypršela. Účet byl trvale smazán.",
         "useOAuth": "Tento účet nemá nastavené heslo. Přihlaste se přes Google."
       }
+    }
+  },
+  "currency": {
+    "default": "výchozí",
+    "unavailable": "kurz v přípravě",
+    "label": "Měna",
+    "projectCurrency": "Měna projektu",
+    "projectCurrencyHint": "Všechny součty a grafy se zobrazují v této měně.",
+    "paymentCurrency": "Měna platby",
+    "paymentCurrencyHint": "Pokud se liší od projektové měny, částka se automaticky přepočítá podle denního kurzu ČNB.",
+    "budgetItemCurrency": "Měna položky",
+    "converted": "přepočteno",
+    "rateUnavailable": "Kurz pro tuto měnu zatím není k dispozici. Platbu zatím uložte v projektové měně.",
+    "currencies": {
+      "CZK": "Česká koruna",
+      "EUR": "Euro",
+      "USD": "Americký dolar",
+      "GBP": "Britská libra",
+      "HUF": "Maďarský forint",
+      "PLN": "Polský zlotý",
+      "AUD": "Australský dolar",
+      "VND": "Vietnamský dong"
     }
   }
 }

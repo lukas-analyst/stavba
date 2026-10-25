@@ -349,7 +349,15 @@
       "download_data": "Download data",
       "login": "Sign in",
       "logout": "Sign out",
-      "project_share": "Share project"
+      "project_share": "Share project",
+      "auth_login": "Sign in",
+      "auth_logout": "Sign out",
+      "auth_register": "Registration",
+      "auth_password_change": "Password change",
+      "auth_password_reset": "Password reset",
+      "auth_email_verify": "Email verification",
+      "auth_session_revoke": "Session revoke",
+      "auth_oauth_login": "Google sign-in"
     }
   },
   "relativeTime": {
@@ -2448,6 +2456,28 @@
         "permanentlyDeleted": "The account recovery period has expired. The account has been permanently deleted.",
         "useOAuth": "This account has no password set. Sign in with Google."
       }
+    }
+  },
+  "currency": {
+    "default": "default",
+    "unavailable": "rate pending",
+    "label": "Currency",
+    "projectCurrency": "Project currency",
+    "projectCurrencyHint": "All totals and charts are displayed in this currency.",
+    "paymentCurrency": "Payment currency",
+    "paymentCurrencyHint": "If different from the project currency, the amount is automatically converted using the daily ČNB exchange rate.",
+    "budgetItemCurrency": "Item currency",
+    "converted": "converted",
+    "rateUnavailable": "Exchange rate for this currency is not yet available. Please save the payment in the project currency for now.",
+    "currencies": {
+      "CZK": "Czech koruna",
+      "EUR": "Euro",
+      "USD": "US dollar",
+      "GBP": "British pound",
+      "HUF": "Hungarian forint",
+      "PLN": "Polish złoty",
+      "AUD": "Australian dollar",
+      "VND": "Vietnamese đồng"
     }
   }
 }

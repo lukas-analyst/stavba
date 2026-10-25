@@ -426,13 +426,10 @@ export function TopBar() {
           </button>
         )}
 
-        {/* Language switcher (flag icon) — sits just left of the account
-            avatar. Hidden on very small screens to keep the top bar
-            uncluttered; the language can still be changed from the
-            Settings tab. */}
-        <div className="hidden sm:block">
-          <LanguageSwitcher />
-        </div>
+        {/* Language switcher (flag icon) — visible on ALL screen sizes.
+            Sits just left of the account avatar. Uses SVG flags (not emoji)
+            so it renders correctly on Windows too. */}
+        <LanguageSwitcher />
 
         {/* Account dropdown — avatar with initials + Profil + Admin (if admin) +
             Odhlásit + theme toggle. Nastavení lives in the sidebar footer
