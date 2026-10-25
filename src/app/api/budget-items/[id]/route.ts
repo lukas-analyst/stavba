@@ -127,6 +127,7 @@ export async function PATCH(
     if (body.note !== undefined) updateData.note = body.note?.trim() || null;
     if (body.unitPrice !== undefined) updateData.unitPrice = body.unitPrice?.trim() || null;
     if (body.planCost !== undefined) updateData.planCost = numOrUndef(body.planCost);
+    if (body.planCostCurrency !== undefined) updateData.planCostCurrency = body.planCostCurrency || null;
     if (body.flexibilityPercent !== undefined) updateData.flexibilityPercent = numOrUndef(body.flexibilityPercent);
     if (body.planDays !== undefined) updateData.planDays = numOrUndef(body.planDays);
     if (body.dateFrom !== undefined) updateData.dateFrom = body.dateFrom ? new Date(body.dateFrom) : null;

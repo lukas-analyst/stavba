@@ -25,6 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { CurrencySelect } from "@/components/ui/currency-select";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -537,11 +538,13 @@ function ProjectInfoCard({
   const [description, setDescription] = useState(project.description ?? "");
   const [address, setAddress] = useState(project.address ?? "");
   const [status, setStatus] = useState(project.status);
+  const [currency, setCurrency] = useState(project.currency ?? "CZK");
   const [startDate, setStartDate] = useState(project.startDate ? project.startDate.substring(0, 10) : "");
   const [endDate, setEndDate] = useState(project.endDate ? project.endDate.substring(0, 10) : "");
   const t = useTranslations("tabs.management.info");
   const tStatuses = useTranslations("statuses");
   const tCommon = useTranslations("common");
+  const tCurrency = useTranslations("currency");
 
   // B26: Keep the local form state in sync with the React Query cache.
   // `useState(project.name)` initializes once on mount and would
@@ -558,7 +561,7 @@ function ProjectInfoCard({
   // which triggers a cascading render and is flagged by ESLint's
   // `react-hooks/set-state-in-effect` rule.
   // https://react.dev/reference/react/useState#storing-information-from-previous-renders
-  const projectSyncKey = `${project.name}\u0000${project.description ?? ""}\u0000${project.address ?? ""}\u0000${project.status}\u0000${project.startDate ?? ""}\u0000${project.endDate ?? ""}`;
+  const projectSyncKey = `${project.name}\u0000${project.description ?? ""}\u0000${project.address ?? ""}\u0000${project.status}\u0000${project.currency ?? "CZK"}\u0000${project.startDate ?? ""}\u0000${project.endDate ?? ""}`;
   const [lastSyncKey, setLastSyncKey] = useState(projectSyncKey);
   if (!editing && projectSyncKey !== lastSyncKey) {
     setLastSyncKey(projectSyncKey);
@@ -566,6 +569,7 @@ function ProjectInfoCard({
     setDescription(project.description ?? "");
     setAddress(project.address ?? "");
     setStatus(project.status);
+    setCurrency(project.currency ?? "CZK");
     setStartDate(project.startDate ? project.startDate.substring(0, 10) : "");
     setEndDate(project.endDate ? project.endDate.substring(0, 10) : "");
   }
@@ -577,6 +581,7 @@ function ProjectInfoCard({
         description: description.trim() || null,
         address: address.trim() || null,
         status,
+        currency,
         startDate: startDate || null,
         endDate: endDate || null,
       });
@@ -699,6 +704,16 @@ function ProjectInfoCard({
                   <SelectItem value="completed">{tStatuses("completed")}</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="mgmt-currency" className="text-xs font-medium text-on-surface-variant">{tCurrency("projectCurrency")}</Label>
+              <CurrencySelect
+                id="mgmt-currency"
+                value={currency}
+                onChange={setCurrency}
+                defaultCurrency={currency}
+                className="h-9 rounded-md border-outline-variant bg-surface-container-low"
+              />
             </div>
           </div>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">

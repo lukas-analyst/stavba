@@ -21,6 +21,8 @@ const BUDGET_ITEM_SELECT = {
   parentId: true,
   dependsOnId: true,
   planCost: true,
+  planCostCurrency: true,
+  planCostConverted: true,
   flexibilityPercent: true,
   planDays: true,
   dateFrom: true,
@@ -99,6 +101,7 @@ export async function POST(
       parentId,
       dependsOnId,
       planCost,
+      planCostCurrency,
       flexibilityPercent,
       planDays,
       dateFrom,
@@ -177,6 +180,7 @@ export async function POST(
         parentId: parentId || null,
         dependsOnId: dependsOnId || null,
         planCost: planCost !== undefined && planCost !== null && planCost !== "" ? Number(planCost) : null,
+        planCostCurrency: planCostCurrency || null,
         flexibilityPercent:
           flexibilityPercent !== undefined && flexibilityPercent !== null && flexibilityPercent !== ""
             ? Number(flexibilityPercent)

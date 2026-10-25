@@ -3,6 +3,7 @@ import { unstable_cache } from "next/cache";
 import { db, dbRead } from "@/lib/db";
 import { logChanges } from "@/lib/audit";
 import { requireProjectAccess } from "@/lib/authz";
+import { convertAmount } from "@/lib/currency";
 
 // Explicit field selection — fetch only what the frontend uses.
 // `include` would fetch every column of budgetItem + contact (10+ columns each);
@@ -12,6 +13,9 @@ const PAYMENT_SELECT = {
   budgetItemId: true,
   contactId: true,
   amount: true,
+  currency: true,
+  amountConverted: true,
+  exchangeRateUsed: true,
   invoiceTotal: true,
   installmentOf: true,
   vatRate: true,
@@ -82,6 +86,7 @@ export async function POST(
       budgetItemId,
       contactId,
       amount,
+      currency,
       invoiceTotal,
       installmentOf,
       vatRate,
@@ -124,16 +129,47 @@ export async function POST(
         ? (numAmount * numVatRate) / (100 + numVatRate)
         : null;
 
+    // === Multi-currency conversion ===
+    // Resolve the project's default currency to know what to convert TO.
+    const project = await dbRead.project.findUnique({
+      where: { id },
+      select: { currency: true },
+    });
+    const projectCurrency = project?.currency ?? "CZK";
+    const paymentCurrency = currency || projectCurrency;
+    const paymentDate = date ? new Date(date) : new Date();
+
+    // Convert amount to project currency
+    let amountConverted = numAmount;
+    let exchangeRateUsed: number | null = null;
+
+    if (paymentCurrency !== projectCurrency) {
+      const conversion = await convertAmount(
+        numAmount,
+        paymentCurrency,
+        projectCurrency,
+        paymentDate,
+      );
+      if (conversion) {
+        amountConverted = conversion.converted;
+        exchangeRateUsed = conversion.rate;
+      }
+      // If no rate available, amountConverted stays = numAmount (fallback)
+    }
+
     const payment = await db.payment.create({
       data: {
         budgetItemId,
         contactId: contactId || null,
         amount: numAmount,
+        currency: paymentCurrency !== projectCurrency ? paymentCurrency : null,
+        amountConverted,
+        exchangeRateUsed,
         invoiceTotal: invoiceTotal !== undefined && invoiceTotal !== null && invoiceTotal !== "" ? Number(invoiceTotal) : null,
         installmentOf: installmentOf || null,
         vatRate: numVatRate,
         vatAmount: numVatAmount,
-        date: date ? new Date(date) : new Date(),
+        date: paymentDate,
         type: type || "other",
         vendor: vendor?.trim() || null,
         invoiceNumber: invoiceNumber?.trim() || null,
@@ -142,16 +178,14 @@ export async function POST(
       select: PAYMENT_SELECT,
     });
 
-    // Recompute the budget item actualCost.
-    // Important: parent/invoice payments have amount=0 (they are just the "expected total" record),
-    // installments have the actual paid amount. So summing all payments works correctly.
+    // Recompute the budget item actualCost using converted amounts.
     const agg = await db.payment.aggregate({
       where: { budgetItemId },
-      _sum: { amount: true },
+      _sum: { amountConverted: true },
     });
     await db.budgetItem.update({
       where: { id: budgetItemId },
-      data: { actualCost: agg._sum.amount ?? 0 },
+      data: { actualCost: agg._sum.amountConverted ?? 0 },
     });
 
     // Log creation to audit log. `item.projectId` is the parent project

@@ -102,6 +102,11 @@ export type BudgetItem = {
   parentId: string | null;
   dependsOnId: string | null;
   planCost: number | null;
+  // Currency of the planned cost (ISO 4217). Null/undefined = project's default currency.
+  // When set (foreign currency), `planCostConverted` holds the converted amount
+  // in the project's default currency.
+  planCostCurrency?: string | null;
+  planCostConverted?: number | null;
   flexibilityPercent: number | null;
   planDays: number | null;
   dateFrom: string | null;
@@ -168,6 +173,13 @@ export type Payment = {
   budgetItemId: string;
   contactId: string | null;
   amount: number;
+  // Currency of the payment (ISO 4217). Null/undefined = project's default currency.
+  // When set (foreign currency), `amountConverted` holds the converted amount
+  // in the project's default currency (computed at save time using the ČNB rate
+  // for the payment date).
+  currency?: string | null;
+  amountConverted?: number;
+  exchangeRateUsed?: number | null;
   invoiceTotal: number | null;
   installmentOf: string | null;
   vatRate: number | null;

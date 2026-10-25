@@ -77,15 +77,18 @@ import {
 } from "lucide-react";
 import {
   formatCzk,
+  formatCurrency,
   formatNumber,
   formatDate,
   PHASES,
   PHASE_COLORS,
   PHASE_BG_COLORS,
 } from "@/lib/format";
+import { CURRENCY_MAP } from "@/lib/currency-config";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
+import type { Locale } from "@/i18n/config";
 import { BudgetItemDialog } from "@/components/budget-item-dialog";
 import { EmptyStateBox } from "@/components/empty-state-box";
 import { InlineNumber, InlineDate } from "@/components/ui/inline-editors";
@@ -837,6 +840,7 @@ function BudgetTab({ projectId, dragEndHandlerRef }: { projectId: string; dragEn
         open={addOpen}
         onOpenChange={setAddOpen}
         projectId={projectId}
+        projectCurrency={project?.currency ?? "CZK"}
         onSubmitted={(created, isNew) => {
           setCollapsedCats((prev) => {
             const next = new Set(prev);
@@ -860,6 +864,7 @@ function BudgetTab({ projectId, dragEndHandlerRef }: { projectId: string; dragEn
         open={!!editingItem}
         onOpenChange={(o) => !o && setEditingItem(null)}
         projectId={projectId}
+        projectCurrency={project?.currency ?? "CZK"}
         item={editingItem}
         onSubmitted={(updated, isNew) => {
           setCollapsedCats((prev) => {
@@ -882,6 +887,7 @@ function BudgetTab({ projectId, dragEndHandlerRef }: { projectId: string; dragEn
           open={!!addTaskFor}
           onOpenChange={(o) => !o && setAddTaskFor(null)}
           projectId={projectId}
+          projectCurrency={project?.currency ?? "CZK"}
           parentId={addTaskFor.id}
           defaultCategory={addTaskFor.category}
           defaultPhase={addTaskFor.phase}
@@ -917,6 +923,7 @@ function BudgetTab({ projectId, dragEndHandlerRef }: { projectId: string; dragEn
         open={!!addOpenForCategory}
         onOpenChange={(o) => !o && setAddOpenForCategory(null)}
         projectId={projectId}
+        projectCurrency={project?.currency ?? "CZK"}
         defaultCategory={addOpenForCategory ?? undefined}
         onSubmitted={(created, isNew) => {
           setCollapsedCats((prev) => {
@@ -1385,10 +1392,16 @@ const BudgetRow = memo(function BudgetRow({
   const t = useTranslations("tabs.budget.row");
   const tPhases = useTranslations("phases");
   const tCommon = useTranslations("common");
+  const locale = useLocale() as Locale;
   // Fetch the full budget item list so the MoveItemDialog can show all
   // candidate parents. react-query dedupes identical queries so this is
   // free (the parent component already fetched the same data).
   const { data: allItems } = useBudgetItems(projectId);
+  // Resolve the project's default currency for multi-currency display.
+  // `useProjects()` is shared with `BudgetTab` (react-query dedupes), so
+  // this is a cache lookup, not a network request on every row render.
+  const { data: projects } = useProjects();
+  const projectCurrency = projects?.find((p) => p.id === projectId)?.currency ?? "CZK";
 
   const update = (field: keyof BudgetItem, value: unknown) => {
     updateItem.mutate({ id: item.id, data: { [field]: value } });
@@ -1407,6 +1420,17 @@ const BudgetRow = memo(function BudgetRow({
   const displayPlanDays = childCount > 0 ? rolled.planDays : item.planDays;
   const displayActualCost = childCount > 0 ? rolled.actualCost : item.actualCost;
   const displayActualHours = childCount > 0 ? rolled.actualHours : item.actualHours;
+
+  // Multi-currency: when the item has `planCostCurrency` set (foreign currency),
+  // the Plán column shows the original amount + the converted amount in
+  // parens. Parents aggregate `planCostConverted` from children (all in
+  // project currency), so the foreign-currency branch only applies to
+  // leaf items (childCount === 0).
+  const planCostCurrency = item.planCostCurrency ?? projectCurrency;
+  const isForeignPlanCurrency =
+    childCount === 0 && !!item.planCostCurrency && item.planCostCurrency !== projectCurrency;
+  const planConverted = item.planCostConverted ?? item.planCost ?? 0;
+  const projectSymbol = CURRENCY_MAP[projectCurrency]?.symbol ?? projectCurrency;
 
   const isHighlighted = !!highlightId && highlightId === item.id;
 
@@ -1652,11 +1676,18 @@ const BudgetRow = memo(function BudgetRow({
             small muted "+ X Kč" line (editable inline). Hidden when the
             parent's own cost is null/0 to avoid noise.
             Children's planCosts are visible as rows below, so we don't
-            repeat them in the breakdown. */}
+            repeat them in the breakdown.
+
+          Multi-currency: when a LEAF item has `planCostCurrency` set
+          (foreign currency), we display the original amount in that
+          currency + the converted amount in the project's currency in
+          parens — same pattern as the payment table. Inline editing is
+          disabled for foreign-currency rows (the user must open the
+          edit dialog). */}
       <TableCell onClick={(e) => e.stopPropagation()} className="text-right">
         {childCount > 0 ? (
           <div className="flex flex-col items-end gap-0.5">
-            {/* Total = own + Σ children (read-only display) */}
+            {/* Total = own + Σ children (read-only display, in project currency) */}
             <span
               className={cn(
                 "block w-full rounded px-1 py-0.5 text-right font-semibold tabular-nums",
@@ -1664,7 +1695,7 @@ const BudgetRow = memo(function BudgetRow({
               )}
               title={t("tooltip.planTotal", { own: formatNumber(item.planCost ?? 0, "Kč"), children: formatNumber(displayPlanCost - (item.planCost ?? 0), "Kč") })}
             >
-              {displayPlanCost > 0 ? formatNumber(displayPlanCost, " Kč") : (
+              {displayPlanCost > 0 ? formatCurrency(displayPlanCost, projectCurrency, locale) : (
                 <span className="text-muted-foreground/50">—</span>
               )}
             </span>
@@ -1677,17 +1708,29 @@ const BudgetRow = memo(function BudgetRow({
                   value={item.planCost}
                   onCommit={(v) => update("planCost", v)}
                   className="text-right tabular-nums text-muted-foreground hover:text-foreground"
-                  suffix=" Kč"
+                  suffix={` ${projectSymbol}`}
                 />
               </span>
             )}
+          </div>
+        ) : isForeignPlanCurrency ? (
+          // Foreign currency leaf: original amount + converted amount in parens.
+          // Inline editing is disabled (the currency + amount together determine
+          // the converted value, so the user must open the edit dialog).
+          <div className="flex flex-col items-end">
+            <span className="font-medium tabular-nums">
+              {formatCurrency(item.planCost ?? 0, planCostCurrency, locale)}
+            </span>
+            <span className="type-label text-muted-foreground tabular-nums">
+              ({formatCurrency(planConverted, projectCurrency, locale)})
+            </span>
           </div>
         ) : (
           <InlineNumber
             value={item.planCost}
             onCommit={(v) => update("planCost", v)}
             className={cn("text-right font-medium")}
-            suffix=" Kč"
+            suffix={` ${projectSymbol}`}
           />
         )}
       </TableCell>

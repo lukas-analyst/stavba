@@ -2461,6 +2461,8 @@
   "currency": {
     "default": "default",
     "unavailable": "rate pending",
+    "loadingRate": "Loading rate…",
+    "conversionPreview": "{fromAmount} → {toAmount} (rate {rate})",
     "label": "Currency",
     "projectCurrency": "Project currency",
     "projectCurrencyHint": "All totals and charts are displayed in this currency.",

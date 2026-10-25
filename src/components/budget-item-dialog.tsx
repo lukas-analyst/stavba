@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { useLocale, useTranslations } from "next-intl";
 import { AddDialogShell } from "@/components/ui/add-dialog-shell";
 import { CollapsibleSection } from "@/components/ui/collapsible-section";
 import { Button } from "@/components/ui/button";
@@ -13,8 +14,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { CurrencySelect } from "@/components/ui/currency-select";
+import { CurrencyConversionPreview } from "@/components/ui/currency-conversion-preview";
 import { PHASES } from "@/lib/format";
-import { useTranslations } from "next-intl";
+import type { Locale } from "@/i18n/config";
+import { useExchangeRates } from "@/hooks/use-exchange-rates";
 import {
   useBudgetItems,
   useContacts,
@@ -43,6 +47,13 @@ type Props = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   projectId: string;
+  /**
+   * Project's default currency (ISO 4217 — e.g. "CZK", "EUR"). When omitted,
+   * defaults to "CZK". The CurrencySelect next to the plan-cost input marks
+   * this currency with a "(default)" badge; the conversion preview converts
+   * the foreign amount back into this currency.
+   */
+  projectCurrency?: string;
   item?: BudgetItem | null;
   parentId?: string;
   defaultCategory?: string;
@@ -58,6 +69,7 @@ export function BudgetItemDialog({
   open,
   onOpenChange,
   projectId,
+  projectCurrency = "CZK",
   item,
   parentId,
   defaultCategory,
@@ -74,6 +86,7 @@ export function BudgetItemDialog({
       open={open}
       onOpenChange={onOpenChange}
       projectId={projectId}
+      projectCurrency={projectCurrency}
       item={item}
       parentId={parentId}
       defaultCategory={defaultCategory}
@@ -140,6 +153,7 @@ function BudgetItemForm({
   open,
   onOpenChange,
   projectId,
+  projectCurrency = "CZK",
   item,
   parentId,
   defaultCategory,
@@ -152,6 +166,7 @@ function BudgetItemForm({
   open: boolean;
   onOpenChange: (open: boolean) => void;
   projectId: string;
+  projectCurrency?: string;
   item?: BudgetItem | null;
   parentId?: string;
   defaultCategory?: string;
@@ -183,6 +198,7 @@ function BudgetItemForm({
 
   const t = useTranslations("dialogs.budgetItem");
   const tPhases = useTranslations("phases");
+  const locale = useLocale() as Locale;
 
   const [category, setCategory] = useState(item?.category ?? defaultCategory ?? "");
   const [customCategory, setCustomCategory] = useState(
@@ -203,6 +219,12 @@ function BudgetItemForm({
   );
   const [note, setNote] = useState(item?.note ?? "");
   const [planCost, setPlanCost] = useState(item?.planCost?.toString() ?? "");
+  // Multi-currency: when editing an item with `planCostCurrency` set
+  // (foreign currency), pre-fill the selector. For new items (or items
+  // without `planCostCurrency`), default to the project's currency.
+  const [planCostCurrency, setPlanCostCurrency] = useState<string>(
+    item?.planCostCurrency ?? projectCurrency,
+  );
   const [flexibility, setFlexibility] = useState(item?.flexibilityPercent?.toString() ?? "");
   const [planDays, setPlanDays] = useState(item?.planDays?.toString() ?? "");
   const [dateFrom, setDateFrom] = useState(
@@ -213,6 +235,13 @@ function BudgetItemForm({
   );
   const [dependsOnId, setDependsOnId] = useState<string>(item?.dependsOnId ?? "__none__");
   const [contactId, setContactId] = useState<string>(item?.contactId ?? "__none__");
+
+  // Fetch today's exchange rates — budget items don't have a date of
+  // their own (planCost is an estimate, not tied to a payment date), so
+  // we use the current rate. Re-fetched only when the dialog opens.
+  const { data: exchangeRates, isLoading: ratesLoading } = useExchangeRates(
+    open ? undefined : null,
+  );
 
   const dependsOnOptions = useMemo(
     () => topLevelItems.filter((i) => i.id !== item?.id),
@@ -299,6 +328,11 @@ function BudgetItemForm({
         rejected,
         note,
         planCost: planCost === "" ? null : Number(planCost.replace(",", ".")),
+        // Multi-currency: send `planCostCurrency` so the server can compute
+        // the converted amount. The server treats
+        // `planCostCurrency === projectCurrency` as "no foreign currency"
+        // (stores NULL in the DB column).
+        planCostCurrency: planCostCurrency || null,
         flexibilityPercent: flexibility === "" ? null : Number(flexibility.replace(",", ".")),
         planDays: planDays === "" ? null : Number(planDays.replace(",", ".")),
         dateFrom: dateFrom || null,
@@ -502,7 +536,30 @@ function BudgetItemForm({
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="planCost">{t("label.planCost")}</Label>
-              <Input id="planCost" value={planCost} onChange={(e) => setPlanCost(e.target.value)} placeholder="25000" inputMode="decimal" />
+              <div className="flex gap-2">
+                <Input
+                  id="planCost"
+                  value={planCost}
+                  onChange={(e) => setPlanCost(e.target.value)}
+                  placeholder="25000"
+                  inputMode="decimal"
+                  className="flex-1"
+                />
+                <CurrencySelect
+                  id="planCost-currency"
+                  value={planCostCurrency}
+                  onChange={setPlanCostCurrency}
+                  defaultCurrency={projectCurrency}
+                  className="w-32 shrink-0"
+                />
+              </div>
+              <CurrencyConversionPreview
+                amountStr={planCost}
+                fromCurrency={planCostCurrency}
+                toCurrency={projectCurrency}
+                rates={exchangeRates}
+                isLoading={ratesLoading}
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="flexibility">{t("label.flexibility")}</Label>

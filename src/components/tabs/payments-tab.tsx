@@ -10,6 +10,7 @@ import {
   useUpdatePayment,
   useDeletePayment,
   useUpdateBudgetItem,
+  useProjects,
   type Payment,
 } from "@/lib/api";
 import {
@@ -70,12 +71,16 @@ import {
   AlertTriangle,
   ChevronRight,
 } from "lucide-react";
-import { formatCzk, formatDate, PAYMENT_TYPES, toBcp47 } from "@/lib/format";
+import { formatCzk, formatCurrency, formatDate, PAYMENT_TYPES, toBcp47 } from "@/lib/format";
 import type { Locale } from "@/i18n/config";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { EmptyStateBox } from "@/components/empty-state-box";
 import { InlineDate, InlineNumber } from "@/components/ui/inline-editors";
+import { CurrencySelect } from "@/components/ui/currency-select";
+import { CurrencyConversionPreview } from "@/components/ui/currency-conversion-preview";
+import { CURRENCY_MAP } from "@/lib/currency-config";
+import { useExchangeRates } from "@/hooks/use-exchange-rates";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { useLastValue } from "@/hooks/use-last-value";
 import { useAnalytics } from "@/hooks/use-analytics";
@@ -159,6 +164,13 @@ export function PaymentsTab({ projectId }: { projectId: string }) {
   const { data: payments, isLoading } = usePayments(projectId);
   const { data: budgetItems } = useBudgetItems(projectId);
   const { data: contacts } = useContacts(projectId);
+  const { data: projects } = useProjects();
+  const project = projects?.find((p) => p.id === projectId);
+  // Resolve the project's default currency — used to label the CurrencySelect
+  // ("(default)" badge) and to compute the live conversion preview in the
+  // payment dialog. Falls back to CZK when the project isn't loaded yet
+  // (the dialog won't be openable during that brief loading window anyway).
+  const projectCurrency = project?.currency ?? "CZK";
   const createPayment = useCreatePayment(projectId);
   const updatePayment = useUpdatePayment(projectId);
   const deletePayment = useDeletePayment(projectId);
@@ -450,6 +462,7 @@ export function PaymentsTab({ projectId }: { projectId: string }) {
                         key={p.id}
                         payment={p}
                         projectId={projectId}
+                        projectCurrency={projectCurrency}
                         onEdit={() => setEditPayment(p)}
                         updatePayment={updatePayment}
                         onDelete={async () => {
@@ -483,6 +496,7 @@ export function PaymentsTab({ projectId }: { projectId: string }) {
                       highlighted={highlightInvoiceId === parent.id}
                       rowId={`invoice-row-${parent.id}`}
                       projectId={projectId}
+                      projectCurrency={projectCurrency}
                       onEdit={() => setEditPayment(parent)}
                       updatePayment={updatePayment}
                       onDelete={async () => {
@@ -514,6 +528,7 @@ export function PaymentsTab({ projectId }: { projectId: string }) {
                         }}
                         highlighted={highlightInvoiceId === parent.id}
                         projectId={projectId}
+                        projectCurrency={projectCurrency}
                         onEdit={() => setEditPayment(c)}
                         updatePayment={updatePayment}
                         onDelete={async () => {
@@ -551,6 +566,7 @@ export function PaymentsTab({ projectId }: { projectId: string }) {
           if (!o) setInstallmentPrefillParent(null);
         }}
         projectId={projectId}
+        projectCurrency={projectCurrency}
         budgetItems={budgetItems ?? []}
         contacts={contacts ?? []}
         payments={payments ?? []}
@@ -573,6 +589,7 @@ export function PaymentsTab({ projectId }: { projectId: string }) {
           if (!o) setInstallmentPrefillParent(null);
         }}
         projectId={projectId}
+        projectCurrency={projectCurrency}
         budgetItems={budgetItems ?? []}
         contacts={contacts ?? []}
         payments={payments ?? []}
@@ -587,6 +604,7 @@ export function PaymentsTab({ projectId }: { projectId: string }) {
           if (!open) setEditPayment(null);
         }}
         projectId={projectId}
+        projectCurrency={projectCurrency}
         budgetItems={budgetItems ?? []}
         contacts={contacts ?? []}
         payments={payments ?? []}
@@ -620,6 +638,7 @@ function PaymentRow({
   highlighted,
   rowId,
   projectId,
+  projectCurrency = "CZK",
   onEdit,
   onDelete,
   updatePayment,
@@ -629,6 +648,9 @@ function PaymentRow({
   highlighted?: boolean;
   rowId?: string;
   projectId: string;
+  // Project's default currency — used to format the converted amount
+  // shown in parentheses when `payment.currency` is set (foreign).
+  projectCurrency?: string;
   onEdit: () => void;
   onDelete: () => void;
   updatePayment?: ReturnType<typeof useUpdatePayment>;
@@ -646,6 +668,23 @@ function PaymentRow({
   const installmentNumber = meta?.installmentNumber ?? 0;
   const totalInstallments = meta?.totalInstallments ?? 0;
   const hasInstallment = isParent || isChild;
+
+  // Multi-currency: when `payment.currency` is set (foreign currency),
+  // the row displays the original amount in that currency followed by
+  // the converted amount in the project's default currency in parens.
+  //   Example:  "200 €"
+  //             "(5 041 Kč)"
+  // When currency is null/undefined, the payment is in the project's
+  // default currency — we just show the amount formatted with the
+  // project's currency symbol.
+  const paymentCurrency = payment.currency ?? projectCurrency;
+  const isForeignCurrency = !!payment.currency && payment.currency !== projectCurrency;
+  // amountConverted falls back to `amount` if the server didn't compute
+  // a conversion yet (e.g. rate was unavailable at save time).
+  const convertedAmount = payment.amountConverted ?? payment.amount;
+  // Suffix for the InlineNumber in the default-currency branch — uses
+  // the project's currency symbol (e.g. " Kč" for CZK, " €" for EUR).
+  const projectSymbol = CURRENCY_MAP[projectCurrency]?.symbol ?? projectCurrency;
 
   // Inline update helper — patches a single field without opening the edit dialog.
   const update = (field: keyof Payment, value: unknown) => {
@@ -762,12 +801,31 @@ function PaymentRow({
       </TableCell>
       <TableCell className={cn("text-right", childIndent, rowBg)} onClick={(e) => e.stopPropagation()}>
         <div className="flex flex-col items-end">
-          <InlineNumber
-            value={payment.amount}
-            onCommit={(v) => update("amount", v)}
-            suffix=" Kč"
-            className="font-semibold text-warning"
-          />
+          {isForeignCurrency ? (
+            // Foreign currency: original amount + converted amount in parens.
+            //   "200 €"
+            //   "(5 041 Kč)"
+            // Inline editing is disabled for foreign-currency rows — the
+            // amount + currency + date together determine the converted
+            // value, so the user must open the edit dialog to change any
+            // of these (the dialog recomputes the conversion on save).
+            <>
+              <span className="font-semibold text-warning tabular-nums">
+                {formatCurrency(payment.amount, paymentCurrency, locale)}
+              </span>
+              <span className="type-label text-on-surface-variant tabular-nums">
+                ({formatCurrency(convertedAmount, projectCurrency, locale)})
+              </span>
+            </>
+          ) : (
+            // Default currency: editable inline (same UX as before).
+            <InlineNumber
+              value={payment.amount}
+              onCommit={(v) => update("amount", v)}
+              suffix={` ${projectSymbol}`}
+              className="font-semibold text-warning"
+            />
+          )}
           {isParent && meta?.invoiceTotal != null && (
             <span className="type-label text-on-surface-variant tabular-nums">
               {t("row.ofInvoiceTotal", { invoiceTotal: formatCzk(meta.invoiceTotal, locale) })}
@@ -805,7 +863,7 @@ function PaymentRow({
               <DialogTitle>{t("row.delete.title")}</DialogTitle>
               <DialogDescription>
                 {t.rich("row.delete.body", {
-                  amount: formatCzk(payment.amount, locale),
+                  amount: formatCurrency(payment.amount, paymentCurrency, locale),
                   strong: (chunks) => <strong>{chunks}</strong>,
                 })}
               </DialogDescription>
@@ -995,6 +1053,13 @@ interface PaymentDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   projectId: string;
+  /**
+   * Project's default currency (ISO 4217 — e.g. "CZK", "EUR"). Resolved
+   * by the parent `PaymentsTab` via `useProjects()`. The CurrencySelect
+   * marks this currency with a "(default)" badge, and the conversion
+   * preview converts foreign amounts back into this currency.
+   */
+  projectCurrency?: string;
   budgetItems: { id: string; category: string; subcategory: string | null; parentId?: string | null; completed?: boolean }[];
   contacts: { id: string; name: string; type: string }[];
   /**
@@ -1047,6 +1112,7 @@ function PaymentDialogInner({
   open,
   onOpenChange,
   projectId,
+  projectCurrency = "CZK",
   budgetItems,
   contacts,
   payments,
@@ -1082,6 +1148,12 @@ function PaymentDialogInner({
     payment?.contactId ?? prefillParent?.contactId ?? "",
   );
   const [amount, setAmount] = useState(payment ? String(payment.amount ?? "") : "");
+  // Multi-currency: when editing a payment that has `currency` set (foreign
+  // currency), pre-fill the selector with that currency. For new payments
+  // (or payments without `currency`), default to the project's currency.
+  const [currency, setCurrency] = useState<string>(
+    payment?.currency ?? projectCurrency,
+  );
   const [date, setDate] = useState(toDateStr(payment?.date) || today);
   const [type, setType] = useState(payment?.type ?? prefillParent?.type ?? lastType);
   const [vendor, setVendor] = useState(
@@ -1101,6 +1173,11 @@ function PaymentDialogInner({
   const [isInvoice, setIsInvoice] = useState(false);
   const [invoiceTotal, setInvoiceTotal] = useState("");
   const [markCompleted, setMarkCompleted] = useState(false);
+
+  // Fetch exchange rates for the payment date — used to compute the live
+  // conversion preview ("200 € → 5 041 Kč (kurz 25.21)") shown below the
+  // amount field when a foreign currency is selected.
+  const { data: exchangeRates, isLoading: ratesLoading } = useExchangeRates(date);
 
   // U22: In edit mode, allow linking this payment to an existing
   // invoice-parent as an installment. `installmentParentId` is "" when
@@ -1124,6 +1201,7 @@ function PaymentDialogInner({
     setBudgetItemId("");
     setContactId("");
     setAmount("");
+    setCurrency(projectCurrency);
     setVendor("");
     setInvoiceNumber("");
     setDescription("");
@@ -1229,6 +1307,10 @@ function PaymentDialogInner({
           budgetItemId,
           contactId: contactId || null,
           amount: amt,
+          // Multi-currency: send `currency` so the server can recompute the
+          // converted amount. The server treats `currency === projectCurrency`
+          // as "no foreign currency" (stores NULL in the DB column).
+          currency: currency || null,
           date,
           type,
           vendor: vendor || null,
@@ -1271,6 +1353,7 @@ function PaymentDialogInner({
           budgetItemId,
           contactId: contactId || null,
           amount: amt, // first installment amount (not 0!)
+          currency: currency || null,
           invoiceTotal: inv, // full invoice amount
           installmentOf: null, // this IS the parent
           vatRate: vatRate || null,
@@ -1296,6 +1379,7 @@ function PaymentDialogInner({
           budgetItemId,
           contactId: contactId || null,
           amount: amt,
+          currency: currency || null,
           vatRate: vatRate || null,
           date,
           type,
@@ -1560,15 +1644,39 @@ function PaymentDialogInner({
             {errors.invoiceTotal && (
               <p className="text-xs text-destructive mt-1">{errors.invoiceTotal}</p>
             )}
+            <CurrencyConversionPreview
+              amountStr={invoiceTotal}
+              fromCurrency={currency}
+              toCurrency={projectCurrency}
+              rates={exchangeRates}
+              isLoading={ratesLoading}
+            />
           </div>
           <div className="space-y-2">
             <Label htmlFor="amount">{t("dialog.label.firstInstallment")}</Label>
-            <Input
-              id="amount"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              placeholder={t("dialog.placeholder.firstInstallment")}
-              inputMode="decimal"
+            <div className="flex gap-2">
+              <Input
+                id="amount"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                placeholder={t("dialog.placeholder.firstInstallment")}
+                inputMode="decimal"
+                className="flex-1"
+              />
+              <CurrencySelect
+                id="amount-currency"
+                value={currency}
+                onChange={setCurrency}
+                defaultCurrency={projectCurrency}
+                className="w-32 shrink-0"
+              />
+            </div>
+            <CurrencyConversionPreview
+              amountStr={amount}
+              fromCurrency={currency}
+              toCurrency={projectCurrency}
+              rates={exchangeRates}
+              isLoading={ratesLoading}
             />
           </div>
         </div>
@@ -1576,25 +1684,41 @@ function PaymentDialogInner({
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-2">
             <Label htmlFor="amount">{t("dialog.label.amount")}</Label>
-            <Input
-              id="amount"
-              value={amount}
-              onChange={(e) => {
-                setAmount(e.target.value);
-                if (errors.amount)
-                  setErrors((prev) => {
-                    const n = { ...prev };
-                    delete n.amount;
-                    return n;
-                  });
-              }}
-              placeholder={t("dialog.placeholder.amount")}
-              inputMode="decimal"
-              className={cn(errors.amount && "border-destructive")}
-            />
+            <div className="flex gap-2">
+              <Input
+                id="amount"
+                value={amount}
+                onChange={(e) => {
+                  setAmount(e.target.value);
+                  if (errors.amount)
+                    setErrors((prev) => {
+                      const n = { ...prev };
+                      delete n.amount;
+                      return n;
+                    });
+                }}
+                placeholder={t("dialog.placeholder.amount")}
+                inputMode="decimal"
+                className={cn("flex-1", errors.amount && "border-destructive")}
+              />
+              <CurrencySelect
+                id="amount-currency"
+                value={currency}
+                onChange={setCurrency}
+                defaultCurrency={projectCurrency}
+                className="w-32 shrink-0"
+              />
+            </div>
             {errors.amount && (
               <p className="text-xs text-destructive mt-1">{errors.amount}</p>
             )}
+            <CurrencyConversionPreview
+              amountStr={amount}
+              fromCurrency={currency}
+              toCurrency={projectCurrency}
+              rates={exchangeRates}
+              isLoading={ratesLoading}
+            />
           </div>
           <div className="space-y-2">
             <Label htmlFor="date">{t("dialog.label.date")}</Label>

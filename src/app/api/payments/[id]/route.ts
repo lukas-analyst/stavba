@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
-import { db } from "@/lib/db";
+import { db, dbRead } from "@/lib/db";
 import { logChanges } from "@/lib/audit";
 import { requireProjectAccess } from "@/lib/authz";
+import { convertAmount } from "@/lib/currency";
 
 // PATCH /api/payments/[id]
 export async function PATCH(
@@ -30,6 +31,38 @@ export async function PATCH(
     const access = await requireProjectAccess(budgetItem.projectId, "editor");
     if (!access.ok) return access.response;
 
+    // === Multi-currency conversion ===
+    // If currency or amount or date is being updated, recompute the conversion.
+    const project = await dbRead.project.findUnique({
+      where: { id: budgetItem.projectId },
+      select: { currency: true },
+    });
+    const projectCurrency = project?.currency ?? "CZK";
+    const effectiveAmount =
+      body.amount !== undefined ? Number(body.amount) : existing.amount;
+    const effectiveCurrency =
+      body.currency !== undefined ? (body.currency || projectCurrency) : (existing.currency || projectCurrency);
+    const effectiveDate =
+      body.date !== undefined ? (body.date ? new Date(body.date) : new Date()) : existing.date;
+
+    let amountConverted = effectiveAmount;
+    let exchangeRateUsed: number | null | undefined = undefined;
+
+    if (effectiveCurrency !== projectCurrency) {
+      const conversion = await convertAmount(
+        effectiveAmount,
+        effectiveCurrency,
+        projectCurrency,
+        effectiveDate,
+      );
+      if (conversion) {
+        amountConverted = conversion.converted;
+        exchangeRateUsed = conversion.rate;
+      }
+    } else {
+      exchangeRateUsed = null;
+    }
+
     // Compute VAT amount if amount or vatRate is being updated
     let numVatRate: number | null | undefined = undefined;
     let numVatAmount: number | null | undefined = undefined;
@@ -38,8 +71,6 @@ export async function PATCH(
         body.vatRate === null || body.vatRate === ""
           ? null
           : Number(body.vatRate);
-      const effectiveAmount =
-        body.amount !== undefined ? Number(body.amount) : existing.amount;
       numVatAmount =
         numVatRate !== null && numVatRate > 0
           ? (effectiveAmount * numVatRate) / (100 + numVatRate)
@@ -56,6 +87,15 @@ export async function PATCH(
           body.budgetItemId !== undefined ? body.budgetItemId : undefined,
         contactId: body.contactId !== undefined ? body.contactId || null : undefined,
         amount: body.amount !== undefined ? Number(body.amount) : undefined,
+        currency: body.currency !== undefined
+          ? (effectiveCurrency !== projectCurrency ? effectiveCurrency : null)
+          : undefined,
+        amountConverted: (body.amount !== undefined || body.currency !== undefined || body.date !== undefined)
+          ? amountConverted
+          : undefined,
+        exchangeRateUsed: (body.amount !== undefined || body.currency !== undefined || body.date !== undefined)
+          ? exchangeRateUsed
+          : undefined,
         invoiceTotal:
           body.invoiceTotal !== undefined
             ? body.invoiceTotal === null || body.invoiceTotal === ""
@@ -100,11 +140,11 @@ export async function PATCH(
 
     const newAgg = await db.payment.aggregate({
       where: { budgetItemId: newBudgetItemId },
-      _sum: { amount: true },
+      _sum: { amountConverted: true },
     });
     await db.budgetItem.update({
       where: { id: newBudgetItemId },
-      data: { actualCost: newAgg._sum.amount ?? 0 },
+      data: { actualCost: newAgg._sum.amountConverted ?? 0 },
     });
 
     if (
@@ -113,11 +153,11 @@ export async function PATCH(
     ) {
       const originalAgg = await db.payment.aggregate({
         where: { budgetItemId: originalBudgetItemId },
-        _sum: { amount: true },
+        _sum: { amountConverted: true },
       });
       await db.budgetItem.update({
         where: { id: originalBudgetItemId },
-        data: { actualCost: originalAgg._sum.amount ?? 0 },
+        data: { actualCost: originalAgg._sum.amountConverted ?? 0 },
       });
     }
 
@@ -166,14 +206,14 @@ export async function DELETE(
 
     await db.payment.delete({ where: { id } });
 
-    // Recompute the budget item actualCost
+    // Recompute the budget item actualCost using converted amounts
     const agg = await db.payment.aggregate({
       where: { budgetItemId },
-      _sum: { amount: true },
+      _sum: { amountConverted: true },
     });
     await db.budgetItem.update({
       where: { id: budgetItemId },
-      data: { actualCost: agg._sum.amount ?? 0 },
+      data: { actualCost: agg._sum.amountConverted ?? 0 },
     });
 
     return NextResponse.json({ success: true });

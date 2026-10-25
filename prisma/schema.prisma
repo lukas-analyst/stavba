@@ -456,8 +456,13 @@ model BudgetItem {
   dependsOnId        String?
   dependsOn          BudgetItem?  @relation("BudgetItemDependency", fields: [dependsOnId], references: [id], onDelete: SetNull)
   dependents         BudgetItem[] @relation("BudgetItemDependency")
-  /// Planned cost in the project currency (Kč). Null = not yet estimated.
+  /// Planned cost in the original currency. Null = not yet estimated.
   planCost           Float?
+  /// Currency of the planned cost (ISO 4217). Null = project's default currency.
+  planCostCurrency   String?
+  /// Planned cost converted to the project's default currency.
+  /// Computed at save time using the exchange rate.
+  planCostConverted  Float?
   /// Flexibility percentage ("Vůle") — how much the estimate could swing up.
   /// Example: 10 means +10% possible overrun.
   flexibilityPercent Float?
@@ -467,8 +472,8 @@ model BudgetItem {
   dateFrom           DateTime?
   /// Planned end date
   dateTo             DateTime?
-  /// Actual cost (sum of all linked payments). Updated automatically
-  /// when a payment is created/updated/deleted.
+  /// Actual cost in the project currency (sum of converted payments).
+  /// Updated automatically when a payment is created/updated/deleted.
   actualCost         Float        @default(0)
   /// Actual hours worked (sum of all linked time entries). Updated
   /// automatically when a time entry is created/updated/deleted.

@@ -2461,6 +2461,8 @@
   "currency": {
     "default": "výchozí",
     "unavailable": "kurz v přípravě",
+    "loadingRate": "Načítám kurz…",
+    "conversionPreview": "{fromAmount} → {toAmount} (kurz {rate})",
     "label": "Měna",
     "projectCurrency": "Měna projektu",
     "projectCurrencyHint": "Všechny součty a grafy se zobrazují v této měně.",
