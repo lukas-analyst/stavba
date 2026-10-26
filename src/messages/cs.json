@@ -24,7 +24,12 @@
     "no": "Ne",
     "all": "Vše",
     "none": "Žádné",
-    "add": "Přidat"
+    "add": "Přidat",
+    "select": {
+      "placeholder": "Vyberte…",
+      "search": "Hledat…",
+      "noResults": "Žádné výsledky"
+    }
   },
   "nav": {
     "sections": {
@@ -48,8 +53,16 @@
   "phases": {
     "preparation": "Příprava",
     "demolition": "Demolice",
+    "earthworks": "Terénní úpravy",
+    "foundation": "Základ",
     "shell": "Hrubá stavba",
+    "installations": "Instalace",
     "finishing": "Zabydlování",
+    "facade": "Fasáda",
+    "roof": "Střecha",
+    "interior": "Interiér",
+    "exterior": "Zahrada/exteriér",
+    "final_inspection": "Kolaudace",
     "future": "Do budoucna",
     "unspecified": "Neurčeno"
   },
@@ -232,6 +245,28 @@
       "emailReadOnlyNote": "E-mail nelze změnit. Pro změnu kontaktujte podporu.",
       "passwordChangeNote": "Po změně hesla budou odhlášeny všechny ostatní relace (na jiných zařízeních).",
       "sessionsDescription": "Odhlásí všechny ostatní přihlášené relace (na jiných zařízeních). Tato relace zůstane aktivní.",
+      "notifications": {
+        "title": "Notifikační preference",
+        "description": "Nastavte si, kdy chcete být informováni e-mailem.",
+        "toggle": {
+          "onMemberAssigned": {
+            "label": "E-mail při přiřazení člena",
+            "description": "Upozornění, když vás někdo přidá jako člena projektu."
+          },
+          "onItemDelayed": {
+            "label": "E-mail při zpoždění položky",
+            "description": "Upozornění, když se položka rozpočtu dostane za plánovaný termín."
+          },
+          "onOwnerChanged": {
+            "label": "E-mail při změně vlastníka",
+            "description": "Upozornění, když někdo změní správce projektu, jehož jste členem."
+          }
+        },
+        "toasts": {
+          "saved": "Preference uložena",
+          "saveError": "Nepodařilo se uložit preferenci"
+        }
+      },
       "buttons": {
         "saveProfile": "Uložit změny",
         "savingProfile": "Ukládám…",
@@ -274,9 +309,19 @@
     "settings": {
       "tagline": "Globální nastavení aplikace",
       "sections": {
+        "appearance": "Vzhled",
         "hiddenProjects": "Skryté projekty",
         "activity": "Statistiky mé aktivity",
         "about": "O aplikaci"
+      },
+      "appearance": {
+        "description": "Změňte vzhled a jazyk rozhraní.",
+        "theme": "Motiv",
+        "themeHint": "Přepněte mezi světlým a tmavým motivem.",
+        "themeLight": "Světlý motiv",
+        "themeDark": "Tmavý motiv",
+        "language": "Jazyk",
+        "languageHint": "Změna jazyka se projeví okamžitě."
       },
       "hiddenProjects": {
         "description": "Skryté projekty se nezobrazují v přepínači projektů v horní liště. Stále jsou přístupné přes přímý odkaz.",
@@ -314,6 +359,7 @@
     },
     "menu": {
       "profile": "Profil",
+      "settings": "Nastavení",
       "admin": "Admin",
       "signOut": "Odhlásit",
       "theme": {
@@ -328,7 +374,12 @@
     "toasts": {
       "projectUpdateFailed": "Nepodařilo se upravit projekt"
     },
-    "noOwner": "Bez vlastníka — kontaktujte administrátory"
+    "noOwner": "Bez vlastníka — kontaktujte administrátory",
+    "noProjectsFound": "Žádné projekty nenalezeny.",
+    "addProject": "Přidat projekt",
+    "searchInProject": "Hledat v projektu…",
+    "budgetChip": "Čerpání: {actual} z {plan}",
+    "budgetChipPercent": "Čerpání rozpočtu: {percent} procent"
   },
   "sidebar": {
     "settings": "Nastavení"
@@ -565,6 +616,9 @@
       },
       "filter": {
         "phase": "Fáze:"
+      },
+      "toolbar": {
+        "search": "Hledat v rozpočtu…"
       },
       "empty": {
         "title": "Žádné položky neodpovídají filtru",
@@ -1651,7 +1705,8 @@
       },
       "toolbar": {
         "sum": "Součet ({count})",
-        "vatIncluded": "z toho DPH"
+        "vatIncluded": "z toho DPH",
+        "search": "Hledat v platbách…"
       },
       "empty": {
         "title": {

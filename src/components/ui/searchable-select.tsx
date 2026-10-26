@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Check, ChevronsUpDown, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTranslations } from "next-intl";
 
 type Option = {
   value: string;
@@ -17,6 +18,10 @@ type Props = {
   options: Option[];
   value: string;
   onChange: (value: string) => void;
+  // All three text props are optional — when omitted, the component
+  // falls back to translated strings from the `common.select.*`
+  // namespace (added in cs.json / en.json). Callers can override with
+  // context-specific text (e.g. "Hledat položku…" for budget items).
   placeholder?: string;
   searchPlaceholder?: string;
   emptyText?: string;
@@ -28,12 +33,18 @@ export function SearchableSelect({
   options,
   value,
   onChange,
-  placeholder = "Vyberte…",
-  searchPlaceholder = "Hledat…",
-  emptyText = "Žádné výsledky",
+  placeholder,
+  searchPlaceholder,
+  emptyText,
   className,
   id,
 }: Props) {
+  // Fallbacks: pull from `common.select.*` so the component never
+  // renders hardcoded Czech when a caller forgets to pass props.
+  const tSelect = useTranslations("common.select");
+  const finalPlaceholder = placeholder ?? tSelect("placeholder");
+  const finalSearchPlaceholder = searchPlaceholder ?? tSelect("search");
+  const finalEmptyText = emptyText ?? tSelect("noResults");
   const [open, setOpenState] = useState(false);
   const [query, setQuery] = useState("");
   const [activeIndex, setActiveIndex] = useState(0);
@@ -116,7 +127,7 @@ export function SearchableSelect({
           className={cn("w-full justify-between font-normal", !selected && "text-muted-foreground", className)}
         >
           <span className="truncate">
-            {selected ? selected.label : placeholder}
+            {selected ? selected.label : finalPlaceholder}
           </span>
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
@@ -144,9 +155,9 @@ export function SearchableSelect({
               setActiveIndex(0);
             }}
             onKeyDown={handleKeyDown}
-            placeholder={searchPlaceholder}
+            placeholder={finalSearchPlaceholder}
             className="h-9 rounded-none border-0 pl-8 shadow-none focus-visible:ring-0"
-            aria-label={searchPlaceholder}
+            aria-label={finalSearchPlaceholder}
             role="combobox"
             aria-expanded={open}
             aria-controls={listId}
@@ -173,7 +184,7 @@ export function SearchableSelect({
           onTouchMove={(e) => e.stopPropagation()}
         >
           {filtered.length === 0 ? (
-            <p className="py-4 text-center text-xs text-muted-foreground">{emptyText}</p>
+            <p className="py-4 text-center text-xs text-muted-foreground">{finalEmptyText}</p>
           ) : (
             filtered.map((option, idx) => (
               <button

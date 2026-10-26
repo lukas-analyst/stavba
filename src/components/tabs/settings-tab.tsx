@@ -1,14 +1,23 @@
 "use client";
 
-import { Loader2, EyeOff, Info, Github, ExternalLink, Activity } from "lucide-react";
+import { Loader2, EyeOff, Info, Github, ExternalLink, Activity, Palette, Sun, Moon } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useQuery } from "@tanstack/react-query";
 import { useFormatter, useTranslations } from "next-intl";
+import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { LanguageSwitcher } from "@/components/language-switcher";
 import { useProjects } from "@/lib/api";
 import { useAppStore } from "@/lib/store";
 import { useHiddenProjectsSync } from "@/hooks/use-hidden-projects";
@@ -25,9 +34,10 @@ import {
 // SettingsTab — global user settings (in-app tab, not standalone page)
 // ---------------------------------------------------------------------
 // Sections:
-//   1. Skryté projekty — toggle per-project visibility
-//   2. Statistiky mé aktivity — KPIs + bar chart + top pages
-//   3. O aplikaci — version, GitHub link
+//   1. Vzhled                  — theme toggle (light/dark) + language
+//   2. Skryté projekty         — toggle per-project visibility
+//   3. Statistiky mé aktivity  — KPIs + bar chart + top pages
+//   4. O aplikaci              — version, GitHub link
 // =====================================================================
 
 const GITHUB_URL = "https://github.com/lukas-hanzlik/stavba";
@@ -35,6 +45,7 @@ const GITHUB_URL = "https://github.com/lukas-hanzlik/stavba";
 export function SettingsTab() {
   const t = useTranslations("auth.settings");
   const format = useFormatter();
+  const { theme, setTheme } = useTheme();
   const hiddenProjectIds = useAppStore((s) => s.hiddenProjectIds);
   const toggleProjectHidden = useAppStore((s) => s.toggleProjectHidden);
   useHiddenProjectsSync();
@@ -64,7 +75,85 @@ export function SettingsTab() {
 
   return (
     <div className="space-y-6 p-4 md:p-6">
-      {/* ====== Section 1: Skryté projekty ====== */}
+      {/* ====== Section 1: Vzhled (Appearance) ====== */}
+      <Card className="bg-surface-container-low shadow-sm">
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-lg font-semibold">
+            <Palette className="h-5 w-5 text-primary" />
+            {t("sections.appearance")}
+          </CardTitle>
+          <CardDescription>
+            {t("appearance.description")}
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          {/* Theme row — Select dropdown bound to next-themes.
+              `theme` may be undefined during first paint (SSR + hydration),
+              so we fall back to "light" as the controlled value to keep
+              the Select happy. setTheme() persists the choice to
+              localStorage via next-themes' `ThemeProvider`. */}
+          <div className="flex items-center justify-between gap-3 rounded-lg border bg-card p-3">
+            <div className="flex items-center gap-2.5 min-w-0">
+              {theme === "dark" ? (
+                <Moon className="h-4 w-4 shrink-0 text-info" />
+              ) : (
+                <Sun className="h-4 w-4 shrink-0 text-warning" />
+              )}
+              <div className="min-w-0">
+                <div className="type-body font-medium truncate">
+                  {t("appearance.theme")}
+                </div>
+                <p className="text-xs text-muted-foreground truncate">
+                  {t("appearance.themeHint")}
+                </p>
+              </div>
+            </div>
+            <Select
+              value={theme === "dark" ? "dark" : "light"}
+              onValueChange={(v) => setTheme(v as "light" | "dark")}
+            >
+              <SelectTrigger className="w-[10rem] shrink-0" aria-label={t("appearance.theme")}>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent align="end">
+                <SelectItem value="light">
+                  <span className="flex items-center gap-2">
+                    <Sun className="h-3.5 w-3.5" />
+                    {t("appearance.themeLight")}
+                  </span>
+                </SelectItem>
+                <SelectItem value="dark">
+                  <span className="flex items-center gap-2">
+                    <Moon className="h-3.5 w-3.5" />
+                    {t("appearance.themeDark")}
+                  </span>
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Language row — reuses the existing LanguageSwitcher dropdown
+              (flag + name) so the picker UI stays consistent across the
+              app. The switcher handles router.replace() + refresh() to
+              swap the locale prefix in the URL. */}
+          <div className="flex items-center justify-between gap-3 rounded-lg border bg-card p-3">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <Palette className="h-4 w-4 shrink-0 text-primary" />
+              <div className="min-w-0">
+                <div className="type-body font-medium truncate">
+                  {t("appearance.language")}
+                </div>
+                <p className="text-xs text-muted-foreground truncate">
+                  {t("appearance.languageHint")}
+                </p>
+              </div>
+            </div>
+            <LanguageSwitcher className="shrink-0" />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* ====== Section 2: Skryté projekty ====== */}
       <Card className="bg-surface-container-low shadow-sm">
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-lg font-semibold">
@@ -134,7 +223,7 @@ export function SettingsTab() {
         </CardContent>
       </Card>
 
-      {/* ====== Section 2: Statistiky mé aktivity ====== */}
+      {/* ====== Section 3: Statistiky mé aktivity ====== */}
       {profile ? (
         <Card className="bg-surface-container-low shadow-sm overflow-hidden">
           <CardHeader className="pb-3">
@@ -154,7 +243,7 @@ export function SettingsTab() {
         <Skeleton className="h-64" />
       )}
 
-      {/* ====== Section 3: O aplikaci ====== */}
+      {/* ====== Section 4: O aplikaci ====== */}
       <Card className="bg-surface-container-low shadow-sm">
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-lg font-semibold">

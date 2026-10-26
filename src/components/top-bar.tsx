@@ -14,6 +14,7 @@ import {
   Plus,
   Check,
   Shield,
+  Settings,
   Sun,
   Moon,
   LogOut,
@@ -326,7 +327,7 @@ export function TopBar() {
                 ))}
                 {filtered?.length === 0 && (
                   <div className="px-3 py-6 text-center text-xs text-muted-foreground">
-                    Žádné projekty nenalezeny.
+                    {t("noProjectsFound")}
                   </div>
                 )}
               </div>
@@ -343,7 +344,7 @@ export function TopBar() {
                     setProjectOpen(false);
                   }}
                 >
-                  <Plus className="h-4 w-4" /> Přidat projekt
+                  <Plus className="h-4 w-4" /> {t("addProject")}
                 </Button>
               </div>
             </PopoverContent>
@@ -367,7 +368,7 @@ export function TopBar() {
           className="hidden h-9 max-w-md flex-1 items-center gap-2 rounded-full border border-outline-variant bg-surface-container-low px-3 text-sm text-on-surface-variant/60 transition-colors hover:bg-surface-container-high md:flex"
         >
           <Search className="h-4 w-4 shrink-0" />
-          <span className="truncate">Hledat v projektu…</span>
+          <span className="truncate">{t("searchInProject")}</span>
         </button>
 
         {/* Mobile search icon — larger touch target (44px) */}
@@ -400,8 +401,8 @@ export function TopBar() {
                 ? "bg-surface-container-high"
                 : "bg-surface-container",
             )}
-            title={`Čerpání: ${formatCzk(actualTotal)} z ${formatCzk(planTotal)}`}
-            aria-label={`Čerpání rozpočtu: ${burnRate.toFixed(0)} procent`}
+            title={t("budgetChip", { actual: formatCzk(actualTotal), plan: formatCzk(planTotal) })}
+            aria-label={t("budgetChipPercent", { percent: burnRate.toFixed(0) })}
           >
             {/* Full "actual / plan" text — md+ only (desktop) */}
             <span className="hidden tabular-nums text-on-surface-variant md:inline">
@@ -431,11 +432,10 @@ export function TopBar() {
             so it renders correctly on Windows too. */}
         <LanguageSwitcher />
 
-        {/* Account dropdown — avatar with initials + Profil + Admin (if admin) +
-            Odhlásit + theme toggle. Nastavení lives in the sidebar footer
-            (button → /auth/settings). ml-auto on mobile ensures the avatar is
-            in the right corner even when the budget chip is not rendered
-            (no project selected). */}
+        {/* Account dropdown — avatar with initials + Profil + Nastavení +
+            Admin (if admin) + Theme toggle + Odhlásit. ml-auto on mobile
+            ensures the avatar is in the right corner even when the budget
+            chip is not rendered (no project selected). */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
@@ -499,6 +499,18 @@ export function TopBar() {
               {t("menu.profile")}
             </DropdownMenuItem>
 
+            {/* Nastavení — switches to the in-app settings tab (single-
+                page-app pattern; no /auth/settings route any more).
+                Surfaces Hidden projects, Activity stats, About, and the
+                Appearance (theme + language) controls. */}
+            <DropdownMenuItem
+              onSelect={() => setActiveTab("settings")}
+              className="cursor-pointer gap-2.5 rounded-none px-3 py-2.5 type-body hover:bg-surface-container-high"
+            >
+              <Settings className="h-4 w-4 text-primary" />
+              {t("menu.settings")}
+            </DropdownMenuItem>
+
             {/* Admin — global admins only. Switches to the admin tab
                 (single-page-app pattern; there's no /auth/admin route).
                 Surfaced here in addition to the sidebar so admins have
@@ -513,17 +525,6 @@ export function TopBar() {
               </DropdownMenuItem>
             )}
 
-            {/* Odhlásit — functional sign-out via NextAuth */}
-            <DropdownMenuItem
-              onSelect={handleSignOut}
-              className="cursor-pointer gap-2.5 rounded-none px-3 py-2.5 type-body hover:bg-surface-container-high"
-            >
-              <LogOut className="h-4 w-4 text-muted-foreground" />
-              {t("menu.signOut")}
-            </DropdownMenuItem>
-
-            <DropdownMenuSeparator className="bg-outline-variant" />
-
             {/* Theme toggle — moved from sidebar settings to here */}
             <DropdownMenuItem
               onSelect={() => setTheme(isDark ? "light" : "dark")}
@@ -535,6 +536,17 @@ export function TopBar() {
                 <Moon className="h-4 w-4 text-info" />
               )}
               {isDark ? t("menu.theme.light") : t("menu.theme.dark")}
+            </DropdownMenuItem>
+
+            <DropdownMenuSeparator className="bg-outline-variant" />
+
+            {/* Odhlásit — functional sign-out via NextAuth */}
+            <DropdownMenuItem
+              onSelect={handleSignOut}
+              className="cursor-pointer gap-2.5 rounded-none px-3 py-2.5 type-body hover:bg-surface-container-high"
+            >
+              <LogOut className="h-4 w-4 text-muted-foreground" />
+              {t("menu.signOut")}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

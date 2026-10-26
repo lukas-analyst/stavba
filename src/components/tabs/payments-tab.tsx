@@ -326,6 +326,19 @@ export function PaymentsTab({ projectId }: { projectId: string }) {
   return (
     <div id="payments-root" className="space-y-4">
       <div id="payments-toolbar" className="flex flex-wrap items-center gap-2">
+        {/* Search input — filters payments by description/vendor/invoice #
+            (debounced 250ms). Mirrors the existing `search`/`debouncedSearch`
+            pipeline that was already wired up but had no UI surface. */}
+        <div className="relative w-full sm:w-64">
+          <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder={t("toolbar.search")}
+            aria-label={t("toolbar.search")}
+            className="h-9 rounded-full pl-8"
+          />
+        </div>
         <Select value={typeFilter} onValueChange={setTypeFilter}>
           <SelectTrigger className="h-9 w-44">
             <SelectValue />
@@ -439,8 +452,8 @@ export function PaymentsTab({ projectId }: { projectId: string }) {
           )}
 
           {/* Unified payments table — standalone + installment invoices merged */}
-          <div className="overflow-hidden rounded-lg border border-outline-variant bg-card">
-            <Table>
+          <div className="overflow-x-auto scrollbar-thin rounded-lg border border-outline-variant bg-card">
+            <Table className="min-w-[900px]">
               <TableHeader>
                 <TableRow className="sticky top-0 z-30 bg-surface-container-high">
                   <TableHead className="w-16"></TableHead>

@@ -19,26 +19,46 @@ import {
   ShieldCheck,
   MonitorSmartphone,
   Trash2,
+  Bell,
 } from "lucide-react";
 import { toast } from "sonner";
 import { BRAND } from "@/i18n/brand";
 import { DeleteAccountDialog } from "@/components/delete-account-dialog";
+import { Switch } from "@/components/ui/switch";
 
 // =====================================================================
 // /auth/profile — user profile + password change + session management
 // ---------------------------------------------------------------------
 // Sections:
-//   1. Profil           — edit name (PATCH /api/users/[id])
-//                         email is read-only (F4 e-mail change is out of scope)
-//   2. Změnit heslo    — POST /api/users/profile/password
-//                         currentPassword + newPassword + confirm
-//   3. Relace          — POST /api/users/profile/sessions/revoke
-//                         "Odhlásit všechny ostatní relace"
-//   4. Odhlásit se     — signOut()
+//   1. Profil                    — edit name (PATCH /api/users/[id])
+//                                email is read-only (F4 e-mail change is out of scope)
+//   2. Změnit heslo             — POST /api/users/profile/password
+//                                currentPassword + newPassword + confirm
+//   3. Relace                   — POST /api/users/profile/sessions/revoke
+//                                "Odhlásit všechny ostatní relace"
+//   4. Notifikační preference  — localStorage-based email notification toggles
+//   5. Odhlásit se              — signOut()
 //
 // Layout follows the auth pages pattern: logo + card (max-w-md), but
 // extended vertically with multiple sections separated by dividers.
 // =====================================================================
+
+// localStorage key — used to persist email notification preferences
+// locally (no server-side user-prefs table yet). Kept stable so future
+// server-side sync can read the same key without migration.
+const NOTIFICATIONS_KEY = "stavba.notifications.preferences";
+
+type NotificationPrefs = {
+  onMemberAssigned: boolean;
+  onItemDelayed: boolean;
+  onOwnerChanged: boolean;
+};
+
+const DEFAULT_NOTIFICATION_PREFS: NotificationPrefs = {
+  onMemberAssigned: true,
+  onItemDelayed: false,
+  onOwnerChanged: true,
+};
 
 type UserProfile = {
   id: string;
@@ -54,6 +74,7 @@ export default function ProfilePage() {
   const t = useTranslations("auth.profile");
   const tc = useTranslations("auth.common");
   const tv = useTranslations("auth.validation");
+  const tn = useTranslations("auth.profile.notifications");
 
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loadingProfile, setLoadingProfile] = useState(true);
@@ -71,6 +92,12 @@ export default function ProfilePage() {
   // Sessions state
   const [revokingSessions, setRevokingSessions] = useState(false);
   const [deleteAccountOpen, setDeleteAccountOpen] = useState(false);
+
+  // Notification preferences state (localStorage-backed)
+  const [notifPrefs, setNotifPrefs] = useState<NotificationPrefs>(
+    DEFAULT_NOTIFICATION_PREFS,
+  );
+  const [notifPrefsLoaded, setNotifPrefsLoaded] = useState(false);
 
   // Fetch user profile on mount
   useEffect(() => {
@@ -163,6 +190,46 @@ export default function ProfilePage() {
     }
   };
 
+  // ===== Notification preferences (localStorage) =====
+  // Load preferences on mount. We use a separate effect (rather than
+  // combining with the profile fetch) so the toggles hydrate even if the
+  // profile fetch fails (e.g. user is on a flaky connection).
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const raw = localStorage.getItem(NOTIFICATIONS_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw) as Partial<NotificationPrefs>;
+        setNotifPrefs({
+          onMemberAssigned:
+            parsed.onMemberAssigned ?? DEFAULT_NOTIFICATION_PREFS.onMemberAssigned,
+          onItemDelayed:
+            parsed.onItemDelayed ?? DEFAULT_NOTIFICATION_PREFS.onItemDelayed,
+          onOwnerChanged:
+            parsed.onOwnerChanged ?? DEFAULT_NOTIFICATION_PREFS.onOwnerChanged,
+        });
+      }
+    } catch {
+      // ignore malformed JSON — keep defaults
+    } finally {
+      setNotifPrefsLoaded(true);
+    }
+  }, []);
+
+  const handleToggleNotifPref = useCallback(
+    (key: keyof NotificationPrefs, value: boolean) => {
+      const next = { ...notifPrefs, [key]: value };
+      setNotifPrefs(next);
+      try {
+        localStorage.setItem(NOTIFICATIONS_KEY, JSON.stringify(next));
+        toast.success(tn("toasts.saved"));
+      } catch {
+        toast.error(tn("toasts.saveError"));
+      }
+    },
+    [notifPrefs, tn],
+  );
+
   // ===== Section 3: Revoke other sessions =====
   const handleRevokeSessions = useCallback(async () => {
     setRevokingSessions(true);
@@ -214,6 +281,15 @@ export default function ProfilePage() {
 
   const sessionUser = session?.user;
   const displayEmail = profile?.email ?? sessionUser?.email ?? "";
+
+  // Static array of toggle rows — labels and descriptions are resolved
+  // via the `auth.profile.notifications.toggle.<key>` namespace at render
+  // time so they translate when the user switches locale.
+  const notifToggleRows: Array<{ key: keyof NotificationPrefs }> = [
+    { key: "onMemberAssigned" },
+    { key: "onItemDelayed" },
+    { key: "onOwnerChanged" },
+  ];
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-background px-4 py-12">
@@ -418,7 +494,48 @@ export default function ProfilePage() {
 
               <div className="h-px bg-border" />
 
-              {/* ====== Section 4: Odhlásit se ====== */}
+              {/* ====== Section 4: Notifikační preference ====== */}
+              <div className="space-y-3">
+                <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                  <Bell className="h-4 w-4" />
+                  <span>{tn("title")}</span>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  {tn("description")}
+                </p>
+                <ul className="space-y-1">
+                  {notifToggleRows.map((row) => {
+                    const label = tn(`toggle.${row.key}.label`);
+                    const description = tn(`toggle.${row.key}.description`);
+                    return (
+                      <li
+                        key={row.key}
+                        className="flex items-start justify-between gap-4 rounded-lg border bg-surface-container-low p-3"
+                      >
+                        <div className="min-w-0 flex-1">
+                          <div className="text-sm font-medium">{label}</div>
+                          <div className="mt-0.5 text-xs text-muted-foreground">
+                            {description}
+                          </div>
+                        </div>
+                        <Switch
+                          checked={
+                            notifPrefsLoaded ? notifPrefs[row.key] : false
+                          }
+                          onCheckedChange={(v) =>
+                            handleToggleNotifPref(row.key, v)
+                          }
+                          aria-label={label}
+                        />
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+
+              <div className="h-px bg-border" />
+
+              {/* ====== Section 5: Odhlásit se ====== */}
               <div className="space-y-3">
                 <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
                   <LogOut className="h-4 w-4" />

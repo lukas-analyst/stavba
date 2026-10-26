@@ -709,6 +709,19 @@ function BudgetTab({ projectId, dragEndHandlerRef }: { projectId: string; dragEn
             </Select>
           </div>
 
+          {/* Search input — filters by item name (debounced 250ms).
+              Mirrors the existing `search`/`debouncedSearch`/`itemMatches`
+              pipeline that was already wired up but had no UI surface. */}
+          <div className="relative w-full sm:w-64">
+            <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder={t("toolbar.search")}
+              aria-label={t("toolbar.search")}
+              className="h-9 rounded-full pl-8"
+            />
+          </div>
         </div>
 
         {/* Row 2: Phase filter chips (multi-select) */}
@@ -777,7 +790,8 @@ function BudgetTab({ projectId, dragEndHandlerRef }: { projectId: string; dragEn
               >
                 {/* Inner SortableContext for items within this category */}
                 <SortableContext items={itemIds} strategy={verticalListSortingStrategy}>
-                  <Table>
+                  <div className="overflow-x-auto scrollbar-thin">
+                  <Table className="min-w-[1200px]">
                     <TableHeader>
                       <TableRow className="sticky top-0 z-30 bg-surface-container-high">
                         <TableHead className="w-8"></TableHead>
@@ -829,6 +843,7 @@ function BudgetTab({ projectId, dragEndHandlerRef }: { projectId: string; dragEn
                       })}
                     </TableBody>
                   </Table>
+                  </div>
                 </SortableContext>
               </SortableCategoryCard>
             );
@@ -1508,8 +1523,16 @@ const BudgetRow = memo(function BudgetRow({
               const colorMap: Record<string, string> = {
                 "preparation": "#a78bfa",
                 "demolition": "#f87171",
+                "earthworks": "#8b6f47",
+                "foundation": "#6b7280",
                 "shell": "#fbbf24",
+                "installations": "#3b82f6",
                 "finishing": "#34d399",
+                "facade": "#f59e0b",
+                "roof": "#ef4444",
+                "interior": "#10b981",
+                "exterior": "#84cc16",
+                "final_inspection": "#a855f7",
                 "future": "#60a5fa",
                 "unspecified": "#a1a1aa",
                 "rose": "#f43f5e",
@@ -2036,8 +2059,16 @@ function DetailPanelRow({
             const colorMap: Record<string, string> = {
               "preparation": "#a78bfa",
               "demolition": "#f87171",
+              "earthworks": "#8b6f47",
+              "foundation": "#6b7280",
               "shell": "#fbbf24",
+              "installations": "#3b82f6",
               "finishing": "#34d399",
+              "facade": "#f59e0b",
+              "roof": "#ef4444",
+              "interior": "#10b981",
+              "exterior": "#84cc16",
+              "final_inspection": "#a855f7",
               "future": "#60a5fa",
               "unspecified": "#a1a1aa",
               "rose": "#f43f5e",

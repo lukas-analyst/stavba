@@ -48,7 +48,6 @@ import {
   Download,
   FileJson,
   FileSpreadsheet,
-  Bell,
   AlertTriangle,
   Trash2,
   Crown,
@@ -90,9 +89,7 @@ import {
 //   3. Statistiky mé aktivity   — KPIs + bar chart of events by type
 //                                  + top pages by time spent
 //   4. Export mých dat          — JSON (full state) + per-project CSV
-//   5. Notifikační preference   — Switch toggles persisted to
-//                                  localStorage (no auth yet)
-//   6. Nebezpečná zóna          — destructive account actions guarded
+//   5. Nebezpečná zóna          — destructive account actions guarded
 //                                  by AlertDialog confirmations
 //
 // Constraints honoured:
@@ -177,11 +174,8 @@ const SECTION_LINKS = [
   { id: "projects", icon: Building2, adminOnly: false },
   { id: "users", icon: Users, adminOnly: true },
   { id: "export", icon: Download, adminOnly: false },
-  { id: "notifications", icon: Bell, adminOnly: false },
   { id: "danger", icon: AlertTriangle, adminOnly: false },
 ] as const;
-
-const NOTIFICATIONS_KEY = "stavba.notifications.preferences";
 
 const EVENT_TYPE_COLORS: Record<string, string> = {
   page_view: "bg-primary",
@@ -199,18 +193,6 @@ const EVENT_TYPE_COLORS: Record<string, string> = {
   login: "bg-success/80",
   logout: "bg-danger/80",
   project_share: "bg-info/80",
-};
-
-type NotificationPrefs = {
-  onMemberAssigned: boolean;
-  onItemDelayed: boolean;
-  onOwnerChanged: boolean;
-};
-
-const DEFAULT_NOTIFICATION_PREFS: NotificationPrefs = {
-  onMemberAssigned: true,
-  onItemDelayed: false,
-  onOwnerChanged: true,
 };
 
 // ===== Helpers =====
@@ -443,7 +425,6 @@ export function AdminTab() {
             )}
             <StatsSection currentUser={currentUser} />
             <ExportSection />
-            <NotificationsSection />
             <DangerSection currentUser={currentUser} qc={qc} />
           </>
         )}
@@ -1505,102 +1486,7 @@ function ExportSection() {
 }
 
 // =====================================================================
-// Section 5: Notifications — Switch toggles persisted to localStorage
-// =====================================================================
-function NotificationsSection() {
-  const [prefs, setPrefs] = useState<NotificationPrefs>(DEFAULT_NOTIFICATION_PREFS);
-  const [loaded, setLoaded] = useState(false);
-  const t = useTranslations("tabs.admin.notifications");
-
-  // Load preferences from localStorage on mount
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    try {
-      const raw = localStorage.getItem(NOTIFICATIONS_KEY);
-      if (raw) {
-        const parsed = JSON.parse(raw) as Partial<NotificationPrefs>;
-        setPrefs({
-          onMemberAssigned: parsed.onMemberAssigned ?? DEFAULT_NOTIFICATION_PREFS.onMemberAssigned,
-          onItemDelayed: parsed.onItemDelayed ?? DEFAULT_NOTIFICATION_PREFS.onItemDelayed,
-          onOwnerChanged: parsed.onOwnerChanged ?? DEFAULT_NOTIFICATION_PREFS.onOwnerChanged,
-        });
-      }
-    } catch {
-      // ignore malformed JSON — keep defaults
-    } finally {
-      setLoaded(true);
-    }
-  }, []);
-
-  const updatePref = (key: keyof NotificationPrefs, value: boolean) => {
-    const next = { ...prefs, [key]: value };
-    setPrefs(next);
-    try {
-      localStorage.setItem(NOTIFICATIONS_KEY, JSON.stringify(next));
-      toast.success(t("toasts.saved"));
-    } catch {
-      toast.error(t("toasts.saveError"));
-    }
-  };
-
-  // Static array of toggle rows — labels and descriptions are resolved
-  // via the `tabs.admin.notifications.toggle.<key>` namespace at render
-  // time so they translate when the user switches locale.
-  const toggleRows: Array<{ key: keyof NotificationPrefs }> = [
-    { key: "onMemberAssigned" },
-    { key: "onItemDelayed" },
-    { key: "onOwnerChanged" },
-  ];
-
-  return (
-    <section
-      id="notifications"
-      tabIndex={-1}
-      className="scroll-mt-24 focus:outline-none lg:scroll-mt-6"
-    >
-      <Card className="bg-card shadow-sm border-outline-variant">
-        <CardHeader className="pb-3">
-          <CardTitle className="type-title-lg flex items-center gap-2">
-            <Bell className="h-4 w-4 text-primary" />
-            {t("title")}
-          </CardTitle>
-          <CardDescription>
-            {t("description")}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <ul className="space-y-1">
-            {toggleRows.map((row) => {
-              const label = t(`toggle.${row.key}.label`);
-              const description = t(`toggle.${row.key}.description`);
-              return (
-                <li
-                  key={row.key}
-                  className="flex items-start justify-between gap-4 rounded-lg border border-outline-variant bg-surface-container-low p-3"
-                >
-                  <div className="min-w-0 flex-1">
-                    <div className="type-body font-medium">{label}</div>
-                    <div className="type-label text-on-surface-variant mt-0.5">
-                      {description}
-                    </div>
-                  </div>
-                  <Switch
-                    checked={loaded ? prefs[row.key] : false}
-                    onCheckedChange={(v) => updatePref(row.key, v)}
-                    aria-label={label}
-                  />
-                </li>
-              );
-            })}
-          </ul>
-        </CardContent>
-      </Card>
-    </section>
-  );
-}
-
-// =====================================================================
-// Section 6: Danger zone — destructive account actions
+// Section 5: Danger zone — destructive account actions
 // =====================================================================
 function DangerSection({
   currentUser,

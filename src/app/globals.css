@@ -330,14 +330,27 @@
   }
   body {
     @apply bg-background text-foreground;
+    /* Activate Geist Sans (loaded in [locale]/layout.tsx via next/font/google).
+       The CSS variable --font-geist-sans is set on <body> by the layout's
+       className. We fall back to the system stack if the variable is
+       missing (e.g. static error pages rendered outside the locale layout). */
+    font-family: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
   }
 }
 
-/* Tabular figures for numeric alignment in tables and KPI cards */
+/* Tabular figures for numeric alignment in tables and KPI cards.
+   Activates the "tnum" OpenType feature so all digits share the same
+   advance width — required for clean column alignment of currency
+   amounts (budget actual/plan, payment totals, etc.). */
 @layer utilities {
   .tabular-nums {
     font-variant-numeric: tabular-nums;
-    font-feature-settings: "tnum";
+    font-feature-settings: "tnum" 1;
+  }
+  /* Alias — `.tabular` matches the legacy class name some call sites use. */
+  .tabular {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum" 1;
   }
 }
 

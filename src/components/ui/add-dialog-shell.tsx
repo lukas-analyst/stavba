@@ -17,6 +17,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTranslations } from "next-intl";
 
 // ============================================================
 // AddDialogShell — unified dialog for ALL "Add" operations
@@ -88,6 +89,7 @@ export function AddDialogShell({
   children,
 }: AddDialogShellProps) {
   const isMobile = useIsMobile();
+  const tc = useTranslations("common");
 
   // Title input — works at ALL breakpoints because we override
   // both base AND md: variants. The Input component has
@@ -144,7 +146,7 @@ export function AddDialogShell({
       isMobile ? "sticky bottom-0" : "justify-end",
     )}>
       <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="flex-1 sm:flex-none">
-        Zrušit
+        {tc("cancel")}
       </Button>
       <Button
         type="button"

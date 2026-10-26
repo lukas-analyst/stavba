@@ -24,7 +24,12 @@
     "no": "No",
     "all": "All",
     "none": "None",
-    "add": "Add"
+    "add": "Add",
+    "select": {
+      "placeholder": "Select…",
+      "search": "Search…",
+      "noResults": "No results"
+    }
   },
   "nav": {
     "sections": {
@@ -48,8 +53,16 @@
   "phases": {
     "preparation": "Preparation",
     "demolition": "Demolition",
+    "earthworks": "Earthworks",
+    "foundation": "Foundation",
     "shell": "Shell construction",
+    "installations": "Installations",
     "finishing": "Finishing",
+    "facade": "Facade",
+    "roof": "Roof",
+    "interior": "Interior",
+    "exterior": "Garden/exterior",
+    "final_inspection": "Final inspection",
     "future": "Future",
     "unspecified": "Unspecified"
   },
@@ -232,6 +245,28 @@
       "emailReadOnlyNote": "Email cannot be changed. Contact support to change it.",
       "passwordChangeNote": "After changing your password, all other sessions (on other devices) will be signed out.",
       "sessionsDescription": "Signs out all other signed-in sessions (on other devices). This session stays active.",
+      "notifications": {
+        "title": "Notification preferences",
+        "description": "Set when you want to be notified via email.",
+        "toggle": {
+          "onMemberAssigned": {
+            "label": "Email on member assignment",
+            "description": "Notification when someone adds you as a project member."
+          },
+          "onItemDelayed": {
+            "label": "Email on item delay",
+            "description": "Notification when a budget item goes past its planned deadline."
+          },
+          "onOwnerChanged": {
+            "label": "Email on owner change",
+            "description": "Notification when someone changes the manager of a project you are a member of."
+          }
+        },
+        "toasts": {
+          "saved": "Preference saved",
+          "saveError": "Failed to save preference"
+        }
+      },
       "buttons": {
         "saveProfile": "Save changes",
         "savingProfile": "Saving…",
@@ -274,9 +309,19 @@
     "settings": {
       "tagline": "Global app settings",
       "sections": {
+        "appearance": "Appearance",
         "hiddenProjects": "Hidden projects",
         "activity": "My activity stats",
         "about": "About"
+      },
+      "appearance": {
+        "description": "Change the look and language of the interface.",
+        "theme": "Theme",
+        "themeHint": "Switch between light and dark theme.",
+        "themeLight": "Light theme",
+        "themeDark": "Dark theme",
+        "language": "Language",
+        "languageHint": "Language changes take effect immediately."
       },
       "hiddenProjects": {
         "description": "Hidden projects don't appear in the project switcher in the top bar. They're still accessible via direct link.",
@@ -314,6 +359,7 @@
     },
     "menu": {
       "profile": "Profile",
+      "settings": "Settings",
       "admin": "Admin",
       "signOut": "Sign out",
       "theme": {
@@ -328,7 +374,12 @@
     "toasts": {
       "projectUpdateFailed": "Failed to update project"
     },
-    "noOwner": "No owner — contact administrators"
+    "noOwner": "No owner — contact administrators",
+    "noProjectsFound": "No projects found.",
+    "addProject": "Add project",
+    "searchInProject": "Search in project…",
+    "budgetChip": "Burn rate: {actual} of {plan}",
+    "budgetChipPercent": "Budget burn rate: {percent} percent"
   },
   "sidebar": {
     "settings": "Settings"
@@ -565,6 +616,9 @@
       },
       "filter": {
         "phase": "Phase:"
+      },
+      "toolbar": {
+        "search": "Search budget…"
       },
       "empty": {
         "title": "No items match the filter",
@@ -1651,7 +1705,8 @@
       },
       "toolbar": {
         "sum": "Sum ({count})",
-        "vatIncluded": "incl. VAT"
+        "vatIncluded": "incl. VAT",
+        "search": "Search payments…"
       },
       "empty": {
         "title": {

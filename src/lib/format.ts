@@ -189,11 +189,23 @@ export function remaining(plan: number | null, actual: number): number {
 // ───────────────────────────────────────────────────────────────
 
 // Stable English phase IDs — used everywhere in code + stored in DB.
+// Expanded (2025) with finer-grained construction phases (earthworks,
+// foundation, installations, facade, roof, interior, exterior,
+// final_inspection). Existing data with the original 6 IDs remains
+// valid — we only ADDED new ones, no renames.
 export const PHASES = [
   "preparation",
   "demolition",
+  "earthworks",
+  "foundation",
   "shell",
+  "installations",
   "finishing",
+  "facade",
+  "roof",
+  "interior",
+  "exterior",
+  "final_inspection",
   "future",
   "unspecified",
 ] as const;
@@ -208,6 +220,12 @@ export const PHASE_ORDER = [...PHASES] as const;
 // After the SQL migration runs, every row will already be English —
 // but this mapping ensures backward compatibility if any old data slips
 // through (e.g. restored from a snapshot).
+//
+// NOTE: The expanded phases (earthworks, foundation, installations,
+// facade, roof, interior, exterior, final_inspection) have NO legacy
+// Czech values — they were added in 2025. They are listed here as
+// English→English pass-throughs so `normalizePhase()` returns the ID
+// unchanged when it encounters them.
 export const PHASE_LEGACY_TO_ID: Record<string, PhaseId> = {
   // Czech (legacy)
   "Příprava": "preparation",
@@ -219,19 +237,37 @@ export const PHASE_LEGACY_TO_ID: Record<string, PhaseId> = {
   // English (current — pass-through, ensures idempotency)
   preparation: "preparation",
   demolition: "demolition",
+  earthworks: "earthworks",
+  foundation: "foundation",
   shell: "shell",
+  installations: "installations",
   finishing: "finishing",
+  facade: "facade",
+  roof: "roof",
+  interior: "interior",
+  exterior: "exterior",
+  final_inspection: "final_inspection",
   future: "future",
   unspecified: "unspecified",
 };
 
 // Reverse mapping (ID → Czech) — used ONLY by the SQL migration script
 // to validate that all legacy values are covered. Not for runtime use.
+// For the NEW phases added in 2025, there is no legacy Czech value —
+// we store the English ID itself as the placeholder.
 export const PHASE_ID_TO_LEGACY: Record<PhaseId, string> = {
   preparation: "Příprava",
   demolition: "Demolice",
+  earthworks: "earthworks",
+  foundation: "foundation",
   shell: "Hrubá stavba",
+  installations: "installations",
   finishing: "Zabydlování",
+  facade: "facade",
+  roof: "roof",
+  interior: "interior",
+  exterior: "exterior",
+  final_inspection: "final_inspection",
   future: "Do budoucna",
   unspecified: "Neurčeno",
 };
@@ -259,8 +295,16 @@ export function normalizePhase(raw: string | null | undefined): PhaseId {
 export const PHASE_COLORS: Record<PhaseId, string> = {
   preparation: "bg-info-soft text-info-strong border-info/30 dark:bg-info-soft dark:text-info-strong dark:border-info/40",
   demolition: "bg-danger-soft text-danger-strong border-danger/30 dark:bg-danger-soft dark:text-danger-strong dark:border-danger/40",
+  earthworks: "bg-warning-soft text-warning-strong border-warning/30 dark:bg-warning-soft dark:text-warning-strong dark:border-warning/40",
+  foundation: "bg-muted text-muted-foreground border-border dark:bg-muted dark:text-muted-foreground dark:border-border",
   shell: "bg-warning-soft text-warning-strong border-warning/30 dark:bg-warning-soft dark:text-warning-strong dark:border-warning/40",
+  installations: "bg-info-soft text-info-strong border-info/30 dark:bg-info-soft dark:text-info-strong dark:border-info/40",
   finishing: "bg-success-soft text-success-strong border-success/30 dark:bg-success-soft dark:text-success-strong dark:border-success/40",
+  facade: "bg-warning-soft text-warning-strong border-warning/30 dark:bg-warning-soft dark:text-warning-strong dark:border-warning/40",
+  roof: "bg-danger-soft text-danger-strong border-danger/30 dark:bg-danger-soft dark:text-danger-strong dark:border-danger/40",
+  interior: "bg-success-soft text-success-strong border-success/30 dark:bg-success-soft dark:text-success-strong dark:border-success/40",
+  exterior: "bg-success-soft text-success-strong border-success/30 dark:bg-success-soft dark:text-success-strong dark:border-success/40",
+  final_inspection: "bg-primary/10 text-primary border-primary/30 dark:bg-primary/10 dark:text-primary dark:border-primary/40",
   future: "bg-time-soft text-time-strong border-time/30 dark:bg-time-soft dark:text-time-strong dark:border-time/40",
   unspecified: "bg-muted text-muted-foreground border-border dark:bg-muted dark:text-muted-foreground dark:border-border",
 };
@@ -268,8 +312,16 @@ export const PHASE_COLORS: Record<PhaseId, string> = {
 export const PHASE_BORDER_COLORS: Record<PhaseId, string> = {
   preparation: "border-l-info",
   demolition: "border-l-danger",
+  earthworks: "border-l-warning",
+  foundation: "border-l-border",
   shell: "border-l-warning",
+  installations: "border-l-info",
   finishing: "border-l-success",
+  facade: "border-l-warning",
+  roof: "border-l-danger",
+  interior: "border-l-success",
+  exterior: "border-l-success",
+  final_inspection: "border-l-primary",
   future: "border-l-time",
   unspecified: "border-l-border",
 };
@@ -277,8 +329,16 @@ export const PHASE_BORDER_COLORS: Record<PhaseId, string> = {
 export const PHASE_BG_COLORS: Record<PhaseId, string> = {
   preparation: "bg-info",
   demolition: "bg-danger",
+  earthworks: "bg-warning",
+  foundation: "bg-muted-foreground/50",
   shell: "bg-warning",
+  installations: "bg-info",
   finishing: "bg-success",
+  facade: "bg-warning",
+  roof: "bg-danger",
+  interior: "bg-success",
+  exterior: "bg-success",
+  final_inspection: "bg-primary",
   future: "bg-time",
   unspecified: "bg-muted-foreground/50",
 };
@@ -286,17 +346,37 @@ export const PHASE_BG_COLORS: Record<PhaseId, string> = {
 export const PHASE_DOT_COLORS: Record<PhaseId, string> = {
   preparation: "bg-info",
   demolition: "bg-danger",
+  earthworks: "bg-warning",
+  foundation: "bg-muted-foreground",
   shell: "bg-warning",
+  installations: "bg-info",
   finishing: "bg-success",
+  facade: "bg-warning",
+  roof: "bg-danger",
+  interior: "bg-success",
+  exterior: "bg-success",
+  final_inspection: "bg-primary",
   future: "bg-time",
   unspecified: "bg-muted-foreground",
 };
 
+// CSS custom properties for charts. Reuses existing semantic CSS vars
+// (--info, --warning, --danger, --success, --time, --primary,
+// --muted-foreground) so charts automatically adapt to light/dark mode
+// via the variables defined in globals.css.
 export const PHASE_CSS_VARS: Record<string, string> = {
   preparation: "var(--info)",
   demolition: "var(--danger)",
+  earthworks: "var(--warning)",
+  foundation: "var(--muted-foreground)",
   shell: "var(--warning)",
+  installations: "var(--info)",
   finishing: "var(--success)",
+  facade: "var(--warning)",
+  roof: "var(--danger)",
+  interior: "var(--success)",
+  exterior: "var(--success)",
+  final_inspection: "var(--time)",
   future: "var(--time)",
   unspecified: "var(--muted-foreground)",
   // Rejected items use danger regardless of phase
