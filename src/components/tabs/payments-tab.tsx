@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect, type ReactNode } from "react";
+import { useState, useMemo, useEffect, memo, type ReactNode } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import {
   usePayments,
@@ -205,6 +205,24 @@ export function PaymentsTab({ projectId }: { projectId: string }) {
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [sortBy, setSortBy] = useState<SortKey>("date-desc");
 
+  // Windowing: only render the first `renderLimit` "render blocks" (standalone
+  // payments + installment groups) in the table DOM. For large projects this
+  // avoids rendering 100+ rows up-front; the user clicks "Show N more" to
+  // progressively expand the visible window. Reset whenever filters / sort /
+  // search change so the user always sees the top of the freshly-filtered set.
+  //
+  // The "adjust state during render" pattern (per React docs:
+  // https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes)
+  // is used instead of `useEffect` to avoid the cascading-render smell that
+  // trips the `react-hooks/set-state-in-effect` lint rule.
+  const filterKey = `${debouncedSearch}__${typeFilter}__${sortBy}`;
+  const [renderLimit, setRenderLimit] = useState(50);
+  const [prevFilterKey, setPrevFilterKey] = useState(filterKey);
+  if (filterKey !== prevFilterKey) {
+    setPrevFilterKey(filterKey);
+    setRenderLimit(50);
+  }
+
   // "Přidat splátku" flow: when user clicks the button on an invoice card or
   // the in-dialog "Přidat splátku k této faktuře" action, we open PaymentDialog
   // in create mode with this parent's fields pre-filled and `installmentOf`
@@ -340,6 +358,13 @@ export function PaymentsTab({ projectId }: { projectId: string }) {
     0,
   );
 
+  // Windowed slice for the table render — keeps DOM nodes bounded for big
+  // projects. `renderLimit` is bumped by the "Show N more" button below the
+  // table and reset to 50 when filters / sort / search change (see effect).
+  const visibleBlocks = renderBlocks.slice(0, renderLimit);
+  const remainingCount = Math.max(0, renderBlocks.length - renderLimit);
+  const nextBatchCount = Math.min(50, remainingCount);
+
   return (
     <div id="payments-root" className="space-y-4">
       <div id="payments-toolbar" className="flex flex-wrap items-center gap-2">
@@ -473,7 +498,7 @@ export function PaymentsTab({ projectId }: { projectId: string }) {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {renderBlocks.flatMap((block): ReactNode[] => {
+                {visibleBlocks.flatMap((block): ReactNode[] => {
                   if (block.kind === "standalone") {
                     const p = block.payment;
                     return [
@@ -575,6 +600,21 @@ export function PaymentsTab({ projectId }: { projectId: string }) {
               </TableBody>
             </Table>
           </div>
+          {/* "Show N more" — progressive windowing. Hidden when all blocks
+              already fit within `renderLimit`. Button is full-width on mobile
+              and auto-width on desktop. */}
+          {remainingCount > 0 && (
+            <div className="py-3 text-center">
+              <Button
+                variant="outline"
+                onClick={() => setRenderLimit((r) => r + 50)}
+                className="gap-1.5 rounded-full"
+                size="sm"
+              >
+                {t("loadMore", { count: nextBatchCount })}
+              </Button>
+            </div>
+          )}
         </div>
       )}
 
@@ -651,7 +691,7 @@ type RowMeta = {
   parentId?: string;
 };
 
-function PaymentRow({
+const PaymentRow = memo(function PaymentRow({
   payment,
   meta,
   highlighted,
@@ -942,7 +982,7 @@ function PaymentRow({
       </TableCell>
     </TableRow>
   );
-}
+});
 
 // ===== "Add installment" inline row (rendered at the end of an installment group) =====
 function AddInstallmentRow({

@@ -118,6 +118,24 @@ export function TimeTab({ projectId }: { projectId: string }) {
   // a replacement. The same `entries` dataset feeds both views.
   const [viewMode, setViewMode] = useState<TimeViewMode>("table");
 
+  // Windowing: only render the first `renderLimit` filtered entries in the
+  // table DOM. For large projects with 200+ time entries this avoids
+  // rendering every row up-front; the user clicks "Show N more" to expand
+  // the visible window. Reset whenever filters / sort / search / view-mode
+  // change so the user always sees the top of the freshly-filtered set.
+  //
+  // The "adjust state during render" pattern (per React docs:
+  // https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes)
+  // is used instead of `useEffect` to avoid the cascading-render smell that
+  // trips the `react-hooks/set-state-in-effect` lint rule.
+  const filterKey = `${debouncedSearch}__${typeFilter}__${categoryFilter}__${sortBy}__${viewMode}`;
+  const [renderLimit, setRenderLimit] = useState(50);
+  const [prevFilterKey, setPrevFilterKey] = useState(filterKey);
+  if (filterKey !== prevFilterKey) {
+    setPrevFilterKey(filterKey);
+    setRenderLimit(50);
+  }
+
   // Listen for FAB "add time" trigger (mobile contextual FAB)
   useEffect(() => {
     const handler = (e: Event) => {
@@ -174,6 +192,14 @@ export function TimeTab({ projectId }: { projectId: string }) {
   }, [entries, debouncedSearch, typeFilter, categoryFilter, sortBy, bcp47]);
 
   const totalHours = filtered.reduce((s, e) => s + e.hours, 0);
+
+  // Windowed slice for the table render — keeps DOM nodes bounded for big
+  // projects. `renderLimit` is bumped by the "Show N more" button below the
+  // table and reset to 50 when filters / sort / search / view-mode change
+  // (see effect above).
+  const visibleEntries = filtered.slice(0, renderLimit);
+  const remainingCount = Math.max(0, filtered.length - renderLimit);
+  const nextBatchCount = Math.min(50, remainingCount);
 
   // Group by worker (top stats) - based on all entries (not filtered)
   const byWorker = useMemo(() => {
@@ -334,40 +360,56 @@ export function TimeTab({ projectId }: { projectId: string }) {
           }
         />
       ) : (
-        <div className="overflow-x-auto scrollbar-thin rounded-lg border border-outline-variant bg-card">
-          <Table className="min-w-[800px]">
-            <TableHeader>
-              <TableRow className="sticky top-0 z-30 bg-surface-container-high">
-                <TableHead className="w-16"></TableHead>
-                <TableHead className="w-28">{t("column.date")}</TableHead>
-                <TableHead className="min-w-[200px]">{t("column.budgetItem")}</TableHead>
-                <TableHead className="min-w-[180px]">{t("column.description")}</TableHead>
-                <TableHead className="w-32">{t("column.type")}</TableHead>
-                <TableHead className="min-w-[160px]">{t("column.contact")}</TableHead>
-                <TableHead className="text-right">{t("column.hours")}</TableHead>
-                <TableHead className="w-8"></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filtered.map((entry) => (
-                <TimeRow
-                  key={entry.id}
-                  entry={entry}
-                  projectId={projectId}
-                  onEdit={() => setEditEntry(entry)}
-                  updateTimeEntry={updateTimeEntry}
-                  onDelete={async () => {
-                    try {
-                      await deleteTimeEntry.mutateAsync(entry.id);
-                      toast.success(t("toasts.deleteSuccess"));
-                    } catch (err) {
-                      toast.error(err instanceof Error ? err.message : t("toasts.deleteError"));
-                    }
-                  }}
-                />
-              ))}
-            </TableBody>
-          </Table>
+        <div className="space-y-3">
+          <div className="overflow-x-auto scrollbar-thin rounded-lg border border-outline-variant bg-card">
+            <Table className="min-w-[800px]">
+              <TableHeader>
+                <TableRow className="sticky top-0 z-30 bg-surface-container-high">
+                  <TableHead className="w-16"></TableHead>
+                  <TableHead className="w-28">{t("column.date")}</TableHead>
+                  <TableHead className="min-w-[200px]">{t("column.budgetItem")}</TableHead>
+                  <TableHead className="min-w-[180px]">{t("column.description")}</TableHead>
+                  <TableHead className="w-32">{t("column.type")}</TableHead>
+                  <TableHead className="min-w-[160px]">{t("column.contact")}</TableHead>
+                  <TableHead className="text-right">{t("column.hours")}</TableHead>
+                  <TableHead className="w-8"></TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {visibleEntries.map((entry) => (
+                  <TimeRow
+                    key={entry.id}
+                    entry={entry}
+                    projectId={projectId}
+                    onEdit={() => setEditEntry(entry)}
+                    updateTimeEntry={updateTimeEntry}
+                    onDelete={async () => {
+                      try {
+                        await deleteTimeEntry.mutateAsync(entry.id);
+                        toast.success(t("toasts.deleteSuccess"));
+                      } catch (err) {
+                        toast.error(err instanceof Error ? err.message : t("toasts.deleteError"));
+                      }
+                    }}
+                  />
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+          {/* "Show N more" — progressive windowing. Hidden when all entries
+              already fit within `renderLimit`. */}
+          {remainingCount > 0 && (
+            <div className="py-3 text-center">
+              <Button
+                variant="outline"
+                onClick={() => setRenderLimit((r) => r + 50)}
+                className="gap-1.5 rounded-full"
+                size="sm"
+              >
+                {t("loadMore", { count: nextBatchCount })}
+              </Button>
+            </div>
+          )}
         </div>
       )}
 

@@ -54,6 +54,7 @@
     "@reactuses/core": "^6.0.5",
     "@tanstack/react-query": "^5.82.0",
     "@tanstack/react-table": "^8.21.3",
+    "@tanstack/react-virtual": "^3.14.23",
     "@types/qrcode": "^1.5.6",
     "bcryptjs": "^3.0.3",
     "class-variance-authority": "^0.7.1",

@@ -1429,7 +1429,8 @@
           "sat": "Sat",
           "sun": "Sun"
         }
-      }
+      },
+      "loadMore": "Show {count} more"
     },
     "dashboard": {
       "button": {
@@ -2024,7 +2025,8 @@
         "convertError": "Failed to convert invoice to regular payment",
         "updateError": "Failed to update payment",
         "createError": "Failed to add payment"
-      }
+      },
+      "loadMore": "Show {count} more"
     }
   },
   "components": {

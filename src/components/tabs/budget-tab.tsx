@@ -499,23 +499,23 @@ function BudgetTab({ projectId, dragEndHandlerRef }: { projectId: string; dragEn
     return () => window.removeEventListener("stavba:fab-add", handler);
   }, []);
 
-  const toggleCat = (cat: string) => {
+  const toggleCat = useCallback((cat: string) => {
     setCollapsedCats((prev) => {
       const next = new Set(prev);
       if (next.has(cat)) next.delete(cat);
       else next.add(cat);
       return next;
     });
-  };
+  }, []);
 
-  const toggleItem = (id: string) => {
+  const toggleItem = useCallback((id: string) => {
     setExpandedItems((prev) => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
       else next.add(id);
       return next;
     });
-  };
+  }, []);
 
   const childrenMap = useMemo(() => {
     const map = new Map<string, BudgetItem[]>();
@@ -624,30 +624,25 @@ function BudgetTab({ projectId, dragEndHandlerRef }: { projectId: string; dragEn
     return map;
   }, [items, childrenMap]);
 
-  const grandPlan = (items ?? [])
-    .filter((i) => !i.parentId)
-    .reduce((s, i) => {
-      const children = childrenMap.get(i.id) ?? [];
-      return s + computeRolledUp(i, children).planCost;
-    }, 0);
-  const grandActual = (items ?? [])
-    .filter((i) => !i.parentId)
-    .reduce((s, i) => {
-      const children = childrenMap.get(i.id) ?? [];
-      return s + computeRolledUp(i, children).actualCost;
-    }, 0);
-  const grandSaved = (items ?? [])
-    .filter((i) => !i.parentId && i.completed)
-    .reduce((s, i) => {
-      const children = childrenMap.get(i.id) ?? [];
-      const rolled = computeRolledUp(i, children);
-      return s + Math.max(0, rolled.planCost - rolled.actualCost);
-    }, 0);
-
-  const topLevelCount = (items ?? []).filter((i) => !i.parentId).length;
-  const completedCount = (items ?? []).filter(
-    (i) => !i.parentId && i.completed,
-  ).length;
+  // Grand totals — wrapped in useMemo so they're recomputed only when the
+  // underlying items or childrenMap change, not on every render (which
+  // previously caused unnecessary recalculations on hover/state changes).
+  const { grandPlan, grandActual, grandSaved, topLevelCount, completedCount } = useMemo(() => {
+    let gp = 0, ga = 0, gs = 0, tc = 0, cc = 0;
+    for (const it of items ?? []) {
+      if (it.parentId) continue;
+      tc++;
+      if (it.completed) cc++;
+      const children = childrenMap.get(it.id) ?? [];
+      const rolled = computeRolledUp(it, children);
+      gp += rolled.planCost;
+      ga += rolled.actualCost;
+      if (it.completed) {
+        gs += Math.max(0, rolled.planCost - rolled.actualCost);
+      }
+    }
+    return { grandPlan: gp, grandActual: ga, grandSaved: gs, topLevelCount: tc, completedCount: cc };
+  }, [items, childrenMap]);
 
   // ===== DnD handlers =====
 
@@ -1013,6 +1008,8 @@ function BudgetTab({ projectId, dragEndHandlerRef }: { projectId: string; dragEn
                             selectionMode={selectionMode}
                             selectedIds={selectedIds}
                             onToggleSelection={toggleSelection}
+                            allItems={items}
+                            projectCurrency={project?.currency ?? "CZK"}
                           />
                         );
                       })}
@@ -1438,6 +1435,8 @@ function SortableBudgetItemRows({
   selectionMode,
   selectedIds,
   onToggleSelection,
+  allItems,
+  projectCurrency,
 }: {
   sortableId: string;
   item: BudgetItem;
@@ -1456,6 +1455,8 @@ function SortableBudgetItemRows({
   selectionMode: boolean;
   selectedIds: Set<string>;
   onToggleSelection: (id: string) => void;
+  allItems?: BudgetItem[];
+  projectCurrency: string;
 }) {
   const {
     attributes,
@@ -1496,6 +1497,8 @@ function SortableBudgetItemRows({
         selectionMode={selectionMode}
         selectedIds={selectedIds}
         onToggleSelection={onToggleSelection}
+        allItems={allItems}
+        projectCurrency={projectCurrency}
       />
     </RowDragContext.Provider>
   );
@@ -1522,6 +1525,8 @@ function SortableChildRow({
   selectionMode,
   selectedIds,
   onToggleSelection,
+  allItems,
+  projectCurrency,
 }: {
   childId: string;
   item: BudgetItem;
@@ -1537,6 +1542,8 @@ function SortableChildRow({
   selectionMode: boolean;
   selectedIds: Set<string>;
   onToggleSelection: (id: string) => void;
+  allItems?: BudgetItem[];
+  projectCurrency: string;
 }) {
   const {
     attributes,
@@ -1573,6 +1580,8 @@ function SortableChildRow({
         selectionMode={selectionMode}
         selectedIds={selectedIds}
         onToggleSelection={onToggleSelection}
+        allItems={allItems}
+        projectCurrency={projectCurrency}
       />
     </RowDragContext.Provider>
   );
@@ -1599,6 +1608,8 @@ function BudgetItemRows({
   selectionMode = false,
   selectedIds,
   onToggleSelection,
+  allItems,
+  projectCurrency,
 }: {
   item: BudgetItem;
   childItems: BudgetItem[];
@@ -1616,6 +1627,11 @@ function BudgetItemRows({
   selectionMode?: boolean;
   selectedIds?: Set<string>;
   onToggleSelection?: (id: string) => void;
+  // Hoisted from BudgetRow — full budget item list (for MoveItemDialog) and
+  // the project's default currency. Threaded down from BudgetTab so each
+  // row doesn't subscribe to the React Query cache itself.
+  allItems?: BudgetItem[];
+  projectCurrency: string;
 }) {
   const reorder = useReorder(projectId);
   const handleMoveChild = (siblings: BudgetItem[], idx: number, dir: -1 | 1) => {
@@ -1638,6 +1654,15 @@ function BudgetItemRows({
   const saved = computeSaved(item, childItems);
   const overBudget = rolled.planCost > 0 && rolled.actualCost > rolled.planCost;
 
+  // Memoize the per-expanded-block child task IDs so the SortableContext
+  // `items` array reference is stable across re-renders unless `childItems`
+  // changes. Previously this was computed inside an IIFE on every render,
+  // which defeated React's reconciliation (and any downstream memoization).
+  const childTaskIds = useMemo(
+    () => childItems.map((c) => `task:${c.id}`),
+    [childItems],
+  );
+
   return (
     <>
       <BudgetRow
@@ -1657,6 +1682,8 @@ function BudgetItemRows({
         selectionMode={selectionMode}
         selected={!!selectedIds?.has(item.id)}
         onToggleSelection={onToggleSelection}
+        allItems={allItems}
+        projectCurrency={projectCurrency}
       />
       {isExpanded && !isChild && (
         <DetailPanelRow
@@ -1666,39 +1693,35 @@ function BudgetItemRows({
           selectionMode={selectionMode}
         />
       )}
-      {isExpanded &&
-        hasChildren &&
-        !isChild &&
-        (() => {
-          const taskIds = childItems.map((c) => `task:${c.id}`);
-          return (
-            <SortableContext items={taskIds} strategy={verticalListSortingStrategy}>
-              {childItems.map((child) => {
-                const childExpanded = expandedItems.has(child.id);
-                const childChildren: BudgetItem[] = [];
-                return (
-                  <SortableChildRow
-                    key={child.id}
-                    childId={child.id}
-                    item={child}
-                    childItems={childChildren}
-                    projectId={projectId}
-                    isExpanded={childExpanded}
-                    onToggleExpand={() => onToggleChildExpand(child.id)}
-                    expandedItems={expandedItems}
-                    onToggleChildExpand={onToggleChildExpand}
-                    onEdit={onEdit}
-                    highlightId={highlightId}
-                    registerRow={registerRow}
-                    selectionMode={selectionMode}
-                    selectedIds={selectedIds}
-                    onToggleSelection={onToggleSelection}
-                  />
-                );
-              })}
-            </SortableContext>
-          );
-        })()}
+      {isExpanded && hasChildren && !isChild && (
+        <SortableContext items={childTaskIds} strategy={verticalListSortingStrategy}>
+          {childItems.map((child) => {
+            const childExpanded = expandedItems.has(child.id);
+            const childChildren: BudgetItem[] = [];
+            return (
+              <SortableChildRow
+                key={child.id}
+                childId={child.id}
+                item={child}
+                childItems={childChildren}
+                projectId={projectId}
+                isExpanded={childExpanded}
+                onToggleExpand={() => onToggleChildExpand(child.id)}
+                expandedItems={expandedItems}
+                onToggleChildExpand={onToggleChildExpand}
+                onEdit={onEdit}
+                highlightId={highlightId}
+                registerRow={registerRow}
+                selectionMode={selectionMode}
+                selectedIds={selectedIds}
+                onToggleSelection={onToggleSelection}
+                allItems={allItems}
+                projectCurrency={projectCurrency}
+              />
+            );
+          })}
+        </SortableContext>
+      )}
     </>
   );
 }
@@ -1724,6 +1747,8 @@ const BudgetRow = memo(function BudgetRow({
   selectionMode = false,
   selected = false,
   onToggleSelection,
+  allItems,
+  projectCurrency,
 }: {
   item: BudgetItem;
   projectId: string;
@@ -1741,6 +1766,13 @@ const BudgetRow = memo(function BudgetRow({
   selectionMode?: boolean;
   selected?: boolean;
   onToggleSelection?: (id: string) => void;
+  // Hoisted out of BudgetRow to avoid per-row React Query subscriptions.
+  // The parent (BudgetTab) already fetches both via useBudgetItems(projectId)
+  // and useProjects(); passing them down as props lets BudgetRow's memo()
+  // actually short-circuit when the underlying cache changes don't affect
+  // this particular row.
+  allItems?: BudgetItem[];
+  projectCurrency: string;
 }) {
   const updateItem = useUpdateBudgetItem(projectId);
   const deleteItem = useDeleteBudgetItem(projectId);
@@ -1757,15 +1789,6 @@ const BudgetRow = memo(function BudgetRow({
   const tPhases = useTranslations("phases");
   const tCommon = useTranslations("common");
   const locale = useLocale() as Locale;
-  // Fetch the full budget item list so the MoveItemDialog can show all
-  // candidate parents. react-query dedupes identical queries so this is
-  // free (the parent component already fetched the same data).
-  const { data: allItems } = useBudgetItems(projectId);
-  // Resolve the project's default currency for multi-currency display.
-  // `useProjects()` is shared with `BudgetTab` (react-query dedupes), so
-  // this is a cache lookup, not a network request on every row render.
-  const { data: projects } = useProjects();
-  const projectCurrency = projects?.find((p) => p.id === projectId)?.currency ?? "CZK";
 
   const update = (field: keyof BudgetItem, value: unknown) => {
     updateItem.mutate({ id: item.id, data: { [field]: value } });
