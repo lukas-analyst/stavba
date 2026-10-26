@@ -807,14 +807,22 @@
     print-color-adjust: exact !important;
   }
 
-  /* Hide every element visually by default when printing the report */
+  /* Hide every element visually by default when printing the report.
+     Scoped to `body.printing` so regular Ctrl+P on other pages still
+     works as expected — the `.printing` class is only added by the
+     PrintReportDialog immediately before calling window.print(). */
   body.printing * {
     visibility: hidden !important;
   }
 
-  /* Reveal only the report subtree */
+  /* Reveal only the report subtree. The `.print-report-content`
+     class is an alias added alongside `.print-report` so the new
+     print stylesheet (added for the mobile-friendly print flow)
+     can target the same wrapper without breaking the legacy rule. */
   body.printing .print-report,
-  body.printing .print-report * {
+  body.printing .print-report *,
+  body.printing .print-report-content,
+  body.printing .print-report-content * {
     visibility: visible !important;
   }
 
@@ -844,8 +852,12 @@
     border-radius: 0 !important;
   }
 
-  /* The report container takes the full page width and starts at the top */
-  body.printing .print-report {
+  /* The report container takes the full page width and starts at the top.
+     Both `.print-report` and `.print-report-content` are applied to the
+     same wrapper element in the dialog; both selectors are listed here so
+     renaming either class in the future doesn't silently break print. */
+  body.printing .print-report,
+  body.printing .print-report-content {
     position: absolute;
     left: 0;
     top: 0;

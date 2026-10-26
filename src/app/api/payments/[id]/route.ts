@@ -3,6 +3,7 @@ import { db, dbRead } from "@/lib/db";
 import { logChanges } from "@/lib/audit";
 import { requireProjectAccess } from "@/lib/authz";
 import { convertAmount } from "@/lib/currency";
+import { normalizeRecurringInterval, computeNextRecurringDate } from "@/lib/recurring";
 
 // PATCH /api/payments/[id]
 export async function PATCH(
@@ -80,6 +81,39 @@ export async function PATCH(
       numVatAmount = (Number(body.amount) * existing.vatRate) / (100 + existing.vatRate);
     }
 
+    // === Recurring payment fields ===
+    // Two cases:
+    //   1. User explicitly changed `recurringInterval` (including sending
+    //      null / "" / "none" to disable recurrence).
+    //   2. User changed `date` while a recurring interval was already set —
+    //      in that case the next-date must be recomputed off the new date.
+    //
+    // `recurringIntervalValue` ends up as `null | RecurringInterval`, where
+    // `null` means "not recurring".
+    let recurringIntervalValue: "weekly" | "monthly" | "quarterly" | "yearly" | null | undefined = undefined;
+    let recurringNextDateValue: Date | null | undefined = undefined;
+    if (body.recurringInterval !== undefined) {
+      const normalized = normalizeRecurringInterval(body.recurringInterval);
+      recurringIntervalValue = normalized;
+      if (normalized !== null) {
+        recurringNextDateValue = computeNextRecurringDate(effectiveDate, normalized);
+      } else {
+        recurringNextDateValue = null;
+      }
+    } else if (
+      body.date !== undefined &&
+      existing.recurringInterval !== null &&
+      existing.recurringInterval !== undefined
+    ) {
+      // Date changed on an existing recurring template — recompute next-date
+      // using the (already-validated) existing interval.
+      const normalized = normalizeRecurringInterval(existing.recurringInterval);
+      if (normalized !== null) {
+        recurringIntervalValue = normalized; // unchanged, but explicit is fine
+        recurringNextDateValue = computeNextRecurringDate(effectiveDate, normalized);
+      }
+    }
+
     const updated = await db.payment.update({
       where: { id },
       data: {
@@ -113,6 +147,8 @@ export async function PATCH(
           body.description !== undefined ? (body.description?.trim() || null) : undefined,
         vatRate: numVatRate,
         vatAmount: numVatAmount,
+        recurringInterval: recurringIntervalValue,
+        recurringNextDate: recurringNextDateValue,
       },
       include: {
         budgetItem: { select: { id: true, category: true, subcategory: true } },

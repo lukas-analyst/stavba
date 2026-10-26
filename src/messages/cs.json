@@ -122,7 +122,13 @@
       "passwordTooWeak": "Heslo musí obsahovat alespoň jedno písmeno a jednu číslici.",
       "passwordPlaceholder": "Min. 8 znaků, písmeno + číslo",
       "passwordConfirmLabel": "Potvrzení hesla",
-      "passwordConfirmPlaceholder": "Zopakujte heslo"
+      "passwordConfirmPlaceholder": "Zopakujte heslo",
+      "strength": {
+        "weak": "Slabé",
+        "fair": "Průměrné",
+        "good": "Dobré",
+        "strong": "Silné"
+      }
     },
     "login": {
       "title": "Přihlášení",
@@ -619,7 +625,21 @@
       },
       "toolbar": {
         "search": "Hledat v rozpočtu…",
-        "add": "Přidat položku"
+        "add": "Přidat položku",
+        "selectionMode": "Režim výběru",
+        "selected": "Vybráno: {count, plural, one {# položka} few {# položky} many {# položek} other {# položek}}",
+        "bulkComplete": "Označit jako hotové",
+        "bulkIncomplete": "Označit jako nedokončené",
+        "bulkReject": "Zavrhnout",
+        "bulkUnreject": "Zrušit zavržení",
+        "bulkDelete": "Smazat vybrané",
+        "cancelSelection": "Zrušit výběr",
+        "bulkSuccess": "{count, plural, one {# položka byla upravena} few {# položky byly upraveny} many {# položek bylo upraveno} other {# položek bylo upraveno}}",
+        "bulkDeleteSuccess": "{count, plural, one {# položka byla smazána} few {# položky byly smazány} many {# položek bylo smazáno} other {# položek bylo smazáno}}",
+        "bulkPartialError": "{count} z {total} selhalo",
+        "bulkError": "Hromadná úprava selhala",
+        "bulkDeleteTitle": "Smazat vybrané položky?",
+        "bulkDeleteDescription": "{count, plural, one {Opravdu chcete smazat # vybranou položku? Tato akce je nevratná.} few {Opravdu chcete smazat # vybrané položky? Tato akce je nevratná.} many {Opravdu chcete smazat # vybraných položek? Tato akce je nevratná.} other {Opravdu chcete smazat # vybraných položek? Tato akce je nevratná.}}"
       },
       "empty": {
         "title": "Žádné položky neodpovídají filtru",
@@ -651,7 +671,9 @@
         "aria": {
           "drag": "Přetáhnout úkol",
           "expand": "Rozbalit",
-          "collapse": "Sbalit"
+          "collapse": "Sbalit",
+          "selectRow": "Vybrat položku „{name}\"",
+          "selectAllInCategory": "Vybrat všechny položky v kategorii"
         },
         "childCount": "{count, plural, one {# úkol} few {# úkoly} other {# úkolů}}",
         "addTask": "Přidat úkol",
@@ -1805,7 +1827,8 @@
           "vendor": "Firma / Obchod",
           "invoiceNumber": "Číslo faktury/účtenky",
           "vatRate": "DPH sazba (%)",
-          "vatCalculation": "Výpočet DPH"
+          "vatCalculation": "Výpočet DPH",
+          "recurring": "Opakování"
         },
         "placeholder": {
           "budgetItem": "Vyberte položku…",
@@ -1883,6 +1906,15 @@
           "label": "Označit položku jako hotovou",
           "alreadyCompleted": "Položka je již označena jako hotová.",
           "hint": "Položka bude označena jako dokončená"
+        },
+        "recurring": {
+          "none": "Jednorázová",
+          "weekly": "Týdně",
+          "monthly": "Měsíčně",
+          "quarterly": "Čtvrtletně",
+          "yearly": "Ročně",
+          "nextDate": "Další automatická platba: {date}",
+          "badge": "Opakovaná"
         }
       },
       "toasts": {
@@ -2171,6 +2203,9 @@
       "title": "Report projektu — náhled PDF",
       "description": "Náhled reportu pro export do PDF. Klikněte „Stáhnout PDF\" — v dialogu tisku prohlížeče zvolte cíl „Uložit jako PDF\".",
       "mobileWarning": "Na mobilním prohlížeči nelze PDF exportovat přímo — otevřete aplikaci v desktopovém prohlížeči.",
+      "note": {
+        "useDesktop": "Pro nejlepší výsledky použijte desktopový prohlížeč"
+      },
       "button": {
         "close": "Zavřít",
         "exportDesktop": "Exportovat v desktopu",

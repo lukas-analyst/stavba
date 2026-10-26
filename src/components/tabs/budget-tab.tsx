@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useRef, useEffect, useCallback, createContext, useContext, memo } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { useAnalytics } from "@/hooks/use-analytics";
 import {
@@ -25,6 +26,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -45,6 +47,16 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -74,6 +86,9 @@ import {
   User,
   ArrowRightLeft,
   CornerUpRight,
+  ListChecks,
+  CircleSlash,
+  Ban,
 } from "lucide-react";
 import {
   formatCurrency,
@@ -267,6 +282,8 @@ type CompletionFilter = (typeof COMPLETION_OPTIONS)[number]["id"];
 function BudgetTab({ projectId, dragEndHandlerRef }: { projectId: string; dragEndHandlerRef: React.MutableRefObject<((event: DragEndEvent) => void) | null> }) {
   const t = useTranslations("tabs.budget");
   const tPhases = useTranslations("phases");
+  const tCommon = useTranslations("common");
+  const qc = useQueryClient();
   const { data: items, isLoading } = useBudgetItems(projectId);
   const { data: projects } = useProjects();
   const project = projects?.find((p) => p.id === projectId);
@@ -282,6 +299,113 @@ function BudgetTab({ projectId, dragEndHandlerRef }: { projectId: string; dragEn
   const debouncedSearch = useDebouncedValue(search, 250);
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const budgetFilter = useAppStore((s) => s.budgetFilter);
+
+  // ===== Bulk-edit (multi-select) state =====
+  // `selectionMode` toggles whether each row shows a Checkbox cell at the
+  // start of the row (before the drag handle). When active, the row's
+  // onClick (which opens the edit dialog) is disabled — clicking the row
+  // body does nothing; the user must use the explicit checkbox.
+  // `selectedIds` holds the IDs of currently selected items (across all
+  // categories and pages of the table).
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkPending, setBulkPending] = useState(false);
+  const [confirmBulkDelete, setConfirmBulkDelete] = useState(false);
+
+  const toggleSelection = useCallback((id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
+
+  const toggleSelectionMode = useCallback(() => {
+    setSelectionMode((prev) => {
+      const next = !prev;
+      if (!next) setSelectedIds(new Set());
+      return next;
+    });
+  }, []);
+
+  // Bulk PATCH — fires N parallel PATCHes (one per selected ID) and then
+  // invalidates the budget + dashboard queries. Per spec, we use raw
+  // fetch() here (not the useUpdateBudgetItem mutation) so all the
+  // parallel requests share a single pending state + toast.
+  const bulkUpdate = useCallback(
+    async (field: "completed" | "rejected", value: boolean) => {
+      if (selectedIds.size === 0) return;
+      setBulkPending(true);
+      try {
+        const promises = Array.from(selectedIds).map((id) =>
+          fetch(`/api/budget-items/${id}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ [field]: value }),
+          }),
+        );
+        const results = await Promise.allSettled(promises);
+        const failed = results.filter((r) => r.status === "rejected").length;
+        await qc.invalidateQueries({ queryKey: ["budget", projectId] });
+        await qc.invalidateQueries({ queryKey: ["dashboard", projectId] });
+        if (failed === 0) {
+          toast.success(
+            t("toolbar.bulkSuccess", { count: selectedIds.size }),
+          );
+        } else {
+          toast.error(
+            t("toolbar.bulkPartialError", {
+              count: failed,
+              total: selectedIds.size,
+            }),
+          );
+        }
+        trackEvent("bulk_update_budget_items", { field, value, count: selectedIds.size });
+        setSelectedIds(new Set());
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : t("toolbar.bulkError"));
+      } finally {
+        setBulkPending(false);
+      }
+    },
+    [selectedIds, qc, projectId, t, trackEvent],
+  );
+
+  // Bulk DELETE — same pattern as bulkUpdate but DELETE method. Requires
+  // confirmation (setConfirmBulkDelete) before firing.
+  const bulkDelete = useCallback(async () => {
+    if (selectedIds.size === 0) return;
+    setBulkPending(true);
+    try {
+      const promises = Array.from(selectedIds).map((id) =>
+        fetch(`/api/budget-items/${id}`, { method: "DELETE" }),
+      );
+      const results = await Promise.allSettled(promises);
+      const failed = results.filter((r) => r.status === "rejected").length;
+      await qc.invalidateQueries({ queryKey: ["budget", projectId] });
+      await qc.invalidateQueries({ queryKey: ["dashboard", projectId] });
+      if (failed === 0) {
+        toast.success(
+          t("toolbar.bulkDeleteSuccess", { count: selectedIds.size }),
+        );
+      } else {
+        toast.error(
+          t("toolbar.bulkPartialError", {
+            count: failed,
+            total: selectedIds.size,
+          }),
+        );
+      }
+      trackEvent("bulk_delete_budget_items", { count: selectedIds.size });
+      setSelectedIds(new Set());
+      setConfirmBulkDelete(false);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : t("toolbar.bulkError"));
+    } finally {
+      setBulkPending(false);
+    }
+  }, [selectedIds, qc, projectId, t, trackEvent]);
 
   // Apply budget filter from store (set from Dashboard KPI cards)
   useEffect(() => {
@@ -644,6 +768,25 @@ function BudgetTab({ projectId, dragEndHandlerRef }: { projectId: string; dragEn
           event — having both on the narrow mobile viewport would be redundant.
           On desktop the FAB is hidden, so the toolbar Add button takes over. */}
       <div id="budget-toolbar" className="flex flex-wrap items-center gap-2">
+        {/* Selection-mode toggle — switches the table into multi-select
+            mode where each row shows a Checkbox cell at the start.
+            When active, the button is rendered with the "default" variant
+            (filled) to indicate the active state; otherwise it's a soft
+            outline button. The active state also disables the row
+            onClick (edit dialog) and reveals a sticky bulk-action bar
+            at the bottom of the budget root container. */}
+        <Button
+          onClick={toggleSelectionMode}
+          variant={selectionMode ? "default" : "outline"}
+          size="icon"
+          aria-pressed={selectionMode}
+          aria-label={t("toolbar.selectionMode")}
+          title={t("toolbar.selectionMode")}
+          className="h-9 w-9 shrink-0 rounded-full"
+        >
+          <ListChecks className="h-4 w-4" />
+        </Button>
+
         {/* MD3 Segmented Button — completion status
             Hidden on mobile (< sm) and replaced by the compact
             <Select> dropdown below (mobile-only) to save horizontal
@@ -776,9 +919,29 @@ function BudgetTab({ projectId, dragEndHandlerRef }: { projectId: string; dragEn
                 {/* Inner SortableContext for items within this category */}
                 <SortableContext items={itemIds} strategy={verticalListSortingStrategy}>
                   <div className="overflow-x-auto scrollbar-thin">
-                  <Table className="min-w-[1200px]">
+                  <Table className={selectionMode ? "min-w-[1240px]" : "min-w-[1200px]"}>
                     <TableHeader>
                       <TableRow className="sticky top-0 z-30 bg-surface-container-high">
+                        {selectionMode && (
+                          <TableHead className="w-10 text-center">
+                            <CategorySelectAllCheckbox
+                              catItems={catItems}
+                              selectedIds={selectedIds}
+                              onToggleAll={(ids) => {
+                                setSelectedIds((prev) => {
+                                  const next = new Set(prev);
+                                  const allSelected = ids.every((id) => next.has(id));
+                                  if (allSelected) {
+                                    ids.forEach((id) => next.delete(id));
+                                  } else {
+                                    ids.forEach((id) => next.add(id));
+                                  }
+                                  return next;
+                                });
+                              }}
+                            />
+                          </TableHead>
+                        )}
                         <TableHead className="w-8"></TableHead>
                         <TableHead className="w-12"></TableHead>
                         <TableHead className="min-w-[200px]">{t("column.item")}</TableHead>
@@ -796,12 +959,12 @@ function BudgetTab({ projectId, dragEndHandlerRef }: { projectId: string; dragEn
                     <TableBody>
                       {catItems.length === 0 && (
                         <TableRow>
-                          <TableCell colSpan={12} className="py-8 text-center text-sm text-muted-foreground">
+                          <TableCell colSpan={selectionMode ? 13 : 12} className="py-8 text-center text-sm text-muted-foreground">
                             {t("empty.categoryRow")}
                           </TableCell>
                         </TableRow>
                       )}
-                      {catItems.map((item, idx) => {
+                      {catItems.map((item) => {
                         const children = filteredChildrenMap.get(item.id) ?? [];
                         const isExpanded = expandedItems.has(item.id);
                         return (
@@ -823,6 +986,9 @@ function BudgetTab({ projectId, dragEndHandlerRef }: { projectId: string; dragEn
                             onItemDragEnd={(oldI, newI) =>
                               handleItemReorder(category, oldI, newI)
                             }
+                            selectionMode={selectionMode}
+                            selectedIds={selectedIds}
+                            onToggleSelection={toggleSelection}
                           />
                         );
                       })}
@@ -835,6 +1001,103 @@ function BudgetTab({ projectId, dragEndHandlerRef }: { projectId: string; dragEn
           })}
         </div>
       </SortableContext>
+
+      {/* Bulk-action bar — sticky at the bottom of the budget root container.
+          Only rendered when at least one item is selected. Shows the count
+          of selected items + action buttons: mark complete/incomplete,
+          reject/unreject, delete selected, cancel selection. */}
+      {selectionMode && selectedIds.size > 0 && (
+        <div className="sticky bottom-4 z-40 rounded-lg border border-outline-variant bg-surface-container-high p-3 shadow-lg">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-sm font-medium">
+              {t("toolbar.selected", { count: selectedIds.size })}
+            </span>
+            <div className="ml-auto flex flex-wrap items-center gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => bulkUpdate("completed", true)}
+                disabled={bulkPending}
+                className="rounded-full"
+              >
+                <CheckCircle2 className="h-4 w-4" />
+                <span className="hidden sm:inline">{t("toolbar.bulkComplete")}</span>
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => bulkUpdate("completed", false)}
+                disabled={bulkPending}
+                className="rounded-full"
+              >
+                <CircleSlash className="h-4 w-4" />
+                <span className="hidden sm:inline">{t("toolbar.bulkIncomplete")}</span>
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => bulkUpdate("rejected", true)}
+                disabled={bulkPending}
+                className="rounded-full text-danger hover:bg-danger-soft hover:text-danger-strong"
+              >
+                <Ban className="h-4 w-4" />
+                <span className="hidden sm:inline">{t("toolbar.bulkReject")}</span>
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => bulkUpdate("rejected", false)}
+                disabled={bulkPending}
+                className="rounded-full"
+              >
+                <span className="hidden sm:inline">{t("toolbar.bulkUnreject")}</span>
+              </Button>
+              <Button
+                size="sm"
+                variant="destructive"
+                onClick={() => setConfirmBulkDelete(true)}
+                disabled={bulkPending}
+                className="rounded-full"
+              >
+                {bulkPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                <span className="hidden sm:inline">{t("toolbar.bulkDelete")}</span>
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => setSelectedIds(new Set())}
+                disabled={bulkPending}
+                className="rounded-full"
+              >
+                {t("toolbar.cancelSelection")}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Bulk-delete confirmation dialog — fires bulkDelete on confirm. */}
+      <AlertDialog open={confirmBulkDelete} onOpenChange={setConfirmBulkDelete}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("toolbar.bulkDeleteTitle")}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t("toolbar.bulkDeleteDescription", { count: selectedIds.size })}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={bulkPending}>{tCommon("cancel")}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={bulkDelete}
+              disabled={bulkPending}
+              className="bg-destructive text-white hover:bg-destructive/90"
+            >
+              {bulkPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {tCommon("delete")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <BudgetItemDialog
         open={addOpen}
@@ -949,6 +1212,39 @@ function BudgetTab({ projectId, dragEndHandlerRef }: { projectId: string; dragEn
 }
 
 // =====================================================================
+// CategorySelectAllCheckbox — rendered in the table header of each
+// category when selectionMode is on. Toggles all visible top-level
+// items in this category (children are not toggled here — they have
+// their own per-row checkbox). Shows indeterminate state when only
+// some items are selected.
+// =====================================================================
+function CategorySelectAllCheckbox({
+  catItems,
+  selectedIds,
+  onToggleAll,
+}: {
+  catItems: BudgetItem[];
+  selectedIds: Set<string>;
+  onToggleAll: (ids: string[]) => void;
+}) {
+  const t = useTranslations("tabs.budget.row");
+  const ids = useMemo(() => catItems.map((it) => it.id), [catItems]);
+  const selectedCount = ids.filter((id) => selectedIds.has(id)).length;
+  const allSelected = ids.length > 0 && selectedCount === ids.length;
+  const someSelected = selectedCount > 0 && !allSelected;
+
+  return (
+    <Checkbox
+      checked={allSelected}
+      indeterminate={someSelected}
+      onCheckedChange={() => onToggleAll(ids)}
+      aria-label={t("aria.selectAllInCategory")}
+      className="mx-auto"
+    />
+  );
+}
+
+// =====================================================================
 // SortableCategoryCard — wraps a Collapsible category with DnD
 // =====================================================================
 function SortableCategoryCard({
@@ -1014,7 +1310,7 @@ function SortableCategoryCard({
             {/* Drag handle — larger touch target on mobile (32px → 20px on desktop) */}
             <span
               {...listeners}
-              className="flex h-8 w-8 cursor-grab items-center justify-center rounded text-muted-foreground/40 hover:bg-muted hover:text-foreground active:cursor-grabbing sm:h-5 sm:w-5"
+              className="flex h-8 w-8 cursor-grab items-center justify-center rounded text-muted-foreground/40 hover:bg-muted hover:text-foreground active:cursor-grabbing md:h-5 md:w-5"
               aria-label={t("aria.drag")}
               onClick={(e) => e.stopPropagation()}
             >
@@ -1115,6 +1411,9 @@ function SortableBudgetItemRows({
   registerRow,
   categoryName,
   onItemDragEnd,
+  selectionMode,
+  selectedIds,
+  onToggleSelection,
 }: {
   sortableId: string;
   item: BudgetItem;
@@ -1130,6 +1429,9 @@ function SortableBudgetItemRows({
   registerRow?: (id: string, el: HTMLTableRowElement | null) => void;
   categoryName: string;
   onItemDragEnd: (oldIndex: number, newIndex: number) => void;
+  selectionMode: boolean;
+  selectedIds: Set<string>;
+  onToggleSelection: (id: string) => void;
 }) {
   const {
     attributes,
@@ -1167,6 +1469,9 @@ function SortableBudgetItemRows({
         onAddTask={onAddTask}
         highlightId={highlightId}
         registerRow={registerRow}
+        selectionMode={selectionMode}
+        selectedIds={selectedIds}
+        onToggleSelection={onToggleSelection}
       />
     </RowDragContext.Provider>
   );
@@ -1190,6 +1495,9 @@ function SortableChildRow({
   onEdit,
   highlightId,
   registerRow,
+  selectionMode,
+  selectedIds,
+  onToggleSelection,
 }: {
   childId: string;
   item: BudgetItem;
@@ -1202,6 +1510,9 @@ function SortableChildRow({
   onEdit: (item: BudgetItem) => void;
   highlightId?: string | null;
   registerRow?: (id: string, el: HTMLTableRowElement | null) => void;
+  selectionMode: boolean;
+  selectedIds: Set<string>;
+  onToggleSelection: (id: string) => void;
 }) {
   const {
     attributes,
@@ -1235,6 +1546,9 @@ function SortableChildRow({
         isChild
         highlightId={highlightId}
         registerRow={registerRow}
+        selectionMode={selectionMode}
+        selectedIds={selectedIds}
+        onToggleSelection={onToggleSelection}
       />
     </RowDragContext.Provider>
   );
@@ -1258,6 +1572,9 @@ function BudgetItemRows({
   isChild = false,
   highlightId,
   registerRow,
+  selectionMode = false,
+  selectedIds,
+  onToggleSelection,
 }: {
   item: BudgetItem;
   childItems: BudgetItem[];
@@ -1272,6 +1589,9 @@ function BudgetItemRows({
   isChild?: boolean;
   highlightId?: string | null;
   registerRow?: (id: string, el: HTMLTableRowElement | null) => void;
+  selectionMode?: boolean;
+  selectedIds?: Set<string>;
+  onToggleSelection?: (id: string) => void;
 }) {
   const reorder = useReorder(projectId);
   const handleMoveChild = (siblings: BudgetItem[], idx: number, dir: -1 | 1) => {
@@ -1310,12 +1630,16 @@ function BudgetItemRows({
         isChild={isChild}
         highlightId={highlightId}
         registerRow={registerRow}
+        selectionMode={selectionMode}
+        selected={!!selectedIds?.has(item.id)}
+        onToggleSelection={onToggleSelection}
       />
       {isExpanded && !isChild && (
         <DetailPanelRow
           item={item}
           projectId={projectId}
           childItems={childItems}
+          selectionMode={selectionMode}
         />
       )}
       {isExpanded &&
@@ -1342,6 +1666,9 @@ function BudgetItemRows({
                     onEdit={onEdit}
                     highlightId={highlightId}
                     registerRow={registerRow}
+                    selectionMode={selectionMode}
+                    selectedIds={selectedIds}
+                    onToggleSelection={onToggleSelection}
                   />
                 );
               })}
@@ -1370,6 +1697,9 @@ const BudgetRow = memo(function BudgetRow({
   isChild,
   highlightId,
   registerRow,
+  selectionMode = false,
+  selected = false,
+  onToggleSelection,
 }: {
   item: BudgetItem;
   projectId: string;
@@ -1384,6 +1714,9 @@ const BudgetRow = memo(function BudgetRow({
   isChild: boolean;
   highlightId?: string | null;
   registerRow?: (id: string, el: HTMLTableRowElement | null) => void;
+  selectionMode?: boolean;
+  selected?: boolean;
+  onToggleSelection?: (id: string) => void;
 }) {
   const updateItem = useUpdateBudgetItem(projectId);
   const deleteItem = useDeleteBudgetItem(projectId);
@@ -1445,9 +1778,19 @@ const BudgetRow = memo(function BudgetRow({
       }}
       style={dragCtx?.sortableStyle}
       {...(dragCtx?.sortableAttributes ?? {})}
-      onClick={() => onEdit(item)}
+      onClick={() => {
+        // Disable the edit-dialog shortcut when in selection mode —
+        // clicking the row body in selection mode does nothing (the
+        // user must use the explicit checkbox to toggle selection).
+        if (selectionMode) return;
+        onEdit(item);
+      }}
       className={cn(
-        "group cursor-pointer transition-colors",
+        "group transition-colors",
+        // In selection mode the row body is no longer clickable (the
+        // edit dialog is invoked via the actions menu instead), so we
+        // drop the `cursor-pointer` hint to avoid misleading the user.
+        selectionMode ? "cursor-default" : "cursor-pointer",
         // Virtual paint hint — browser skips painting off-screen rows,
         // dramatically improving scroll perf for 100+ item projects.
         // Children rows inherit from parent's expanded state.
@@ -1464,10 +1807,32 @@ const BudgetRow = memo(function BudgetRow({
                   ? "bg-success-soft/30"
                   : "hover:bg-muted/30",
             ),
+        // Highlight selected rows with a primary tint (in selection mode)
+        selected && "bg-primary/10 ring-1 ring-inset ring-primary/40",
         isHighlighted && "stavba-highlight-row",
         dragCtx?.isDragging && "opacity-40",
       )}
     >
+      {/* Selection checkbox cell — only rendered when selectionMode is on.
+          Placed BEFORE the drag handle so the checkbox is the first
+          column (per task spec). Clicking the checkbox toggles the row
+          in `selectedIds`; stopPropagation prevents the row's onClick
+          (which is disabled in selection mode anyway, but the click
+          would still bubble to the drag handle's parent and could
+          interfere with DnD activation). */}
+      {selectionMode && (
+        <TableCell
+          className="w-10 text-center align-middle"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <Checkbox
+            checked={selected}
+            onCheckedChange={() => onToggleSelection?.(item.id)}
+            aria-label={t("aria.selectRow", { name: item.subcategory || item.category })}
+            className="mx-auto"
+          />
+        </TableCell>
+      )}
       {/* Drag handle cell — top-level items AND child tasks.
           Children get a lighter, indented handle to hint at sub-level.
           Cell width is wider on mobile (w-12) to comfortably fit the
@@ -1477,7 +1842,7 @@ const BudgetRow = memo(function BudgetRow({
           <span
             {...dragCtx.listeners}
             className={cn(
-              "flex h-8 w-8 cursor-grab items-center justify-center rounded text-muted-foreground/30 hover:bg-muted hover:text-foreground active:cursor-grabbing sm:h-5 sm:w-5",
+              "flex h-8 w-8 cursor-grab items-center justify-center rounded text-muted-foreground/30 hover:bg-muted hover:text-foreground active:cursor-grabbing md:h-5 md:w-5",
               isChild && "ml-2 opacity-60",
             )}
             aria-label={t("aria.drag")}
@@ -2015,10 +2380,12 @@ function DetailPanelRow({
   item,
   projectId,
   childItems = [],
+  selectionMode = false,
 }: {
   item: BudgetItem;
   projectId: string;
   childItems?: BudgetItem[];
+  selectionMode?: boolean;
 }) {
   const updateItem = useUpdateBudgetItem(projectId);
   const { trackEvent } = useAnalytics(projectId);
@@ -2031,7 +2398,7 @@ function DetailPanelRow({
 
   return (
     <TableRow className="detail-panel bg-muted/20 hover:bg-muted/20">
-      <TableCell colSpan={12} className="relative py-3">
+      <TableCell colSpan={selectionMode ? 13 : 12} className="relative py-3">
         {/* Gradient fade from phase color (left edge) to transparent */}
         <div
           aria-hidden

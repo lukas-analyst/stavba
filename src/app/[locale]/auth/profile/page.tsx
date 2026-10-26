@@ -24,6 +24,7 @@ import {
 import { toast } from "sonner";
 import { BRAND } from "@/i18n/brand";
 import { DeleteAccountDialog } from "@/components/delete-account-dialog";
+import { PasswordStrength } from "@/components/password-strength";
 import { Switch } from "@/components/ui/switch";
 
 // =====================================================================
@@ -418,6 +419,7 @@ export default function ProfilePage() {
                       className="pl-9"
                     />
                   </div>
+                  <PasswordStrength password={newPassword} />
                 </div>
 
                 <div className="space-y-1.5">

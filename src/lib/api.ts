@@ -189,6 +189,16 @@ export type Payment = {
   vendor: string | null;
   invoiceNumber: string | null;
   description: string | null;
+  // Recurring payment support — see `src/lib/recurring.ts`.
+  //   recurringInterval  — "weekly" | "monthly" | "quarterly" | "yearly" | null
+  //                        When set, this row is a recurring "template".
+  //   recurringNextDate  — ISO date string of the next auto-clone. Null when
+  //                        this row is NOT a recurring template.
+  //   recurringParentId  — ID of the recurring template this row was auto-
+  //                        cloned from. Null for manually-created payments.
+  recurringInterval?: string | null;
+  recurringNextDate?: string | null;
+  recurringParentId?: string | null;
   budgetItem?: { id: string; category: string; subcategory: string | null };
   contact?: { id: string; name: string; type: string } | null;
 };

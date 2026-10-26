@@ -122,7 +122,13 @@
       "passwordTooWeak": "Password must contain at least one letter and one digit.",
       "passwordPlaceholder": "Min. 8 chars, letter + digit",
       "passwordConfirmLabel": "Confirm password",
-      "passwordConfirmPlaceholder": "Repeat password"
+      "passwordConfirmPlaceholder": "Repeat password",
+      "strength": {
+        "weak": "Weak",
+        "fair": "Fair",
+        "good": "Good",
+        "strong": "Strong"
+      }
     },
     "login": {
       "title": "Sign in",
@@ -619,7 +625,21 @@
       },
       "toolbar": {
         "search": "Search budget…",
-        "add": "Add item"
+        "add": "Add item",
+        "selectionMode": "Selection mode",
+        "selected": "Selected: {count, plural, one {# item} other {# items}}",
+        "bulkComplete": "Mark as complete",
+        "bulkIncomplete": "Mark as incomplete",
+        "bulkReject": "Reject",
+        "bulkUnreject": "Unreject",
+        "bulkDelete": "Delete selected",
+        "cancelSelection": "Cancel selection",
+        "bulkSuccess": "{count, plural, one {# item updated} other {# items updated}}",
+        "bulkDeleteSuccess": "{count, plural, one {# item deleted} other {# items deleted}}",
+        "bulkPartialError": "{count} of {total} failed",
+        "bulkError": "Bulk action failed",
+        "bulkDeleteTitle": "Delete selected items?",
+        "bulkDeleteDescription": "{count, plural, one {Are you sure you want to delete # selected item? This action cannot be undone.} other {Are you sure you want to delete # selected items? This action cannot be undone.}}"
       },
       "empty": {
         "title": "No items match the filter",
@@ -651,7 +671,9 @@
         "aria": {
           "drag": "Drag task",
           "expand": "Expand",
-          "collapse": "Collapse"
+          "collapse": "Collapse",
+          "selectRow": "Select item \"{name}\"",
+          "selectAllInCategory": "Select all items in category"
         },
         "childCount": "{count, plural, one {# task} other {# tasks}}",
         "addTask": "Add task",
@@ -1805,7 +1827,8 @@
           "vendor": "Vendor / Store",
           "invoiceNumber": "Invoice/receipt no.",
           "vatRate": "VAT rate (%)",
-          "vatCalculation": "VAT calculation"
+          "vatCalculation": "VAT calculation",
+          "recurring": "Recurrence"
         },
         "placeholder": {
           "budgetItem": "Select item…",
@@ -1883,6 +1906,15 @@
           "label": "Mark item as done",
           "alreadyCompleted": "Item is already marked as done.",
           "hint": "Item will be marked as completed"
+        },
+        "recurring": {
+          "none": "One-time",
+          "weekly": "Weekly",
+          "monthly": "Monthly",
+          "quarterly": "Quarterly",
+          "yearly": "Yearly",
+          "nextDate": "Next automatic payment: {date}",
+          "badge": "Recurring"
         }
       },
       "toasts": {
@@ -2171,6 +2203,9 @@
       "title": "Project report — PDF preview",
       "description": "Report preview for PDF export. Click \"Download PDF\" — in the browser's print dialog, choose \"Save as PDF\" as the destination.",
       "mobileWarning": "PDF cannot be exported directly on a mobile browser — open the app in a desktop browser.",
+      "note": {
+        "useDesktop": "For best results use a desktop browser"
+      },
       "button": {
         "close": "Close",
         "exportDesktop": "Export on desktop",

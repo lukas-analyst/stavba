@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2, Mail, Lock, User, AlertCircle, CheckCircle2 } from "lucide-react";
 import { BRAND } from "@/i18n/brand";
+import { PasswordStrength } from "@/components/password-strength";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -152,6 +153,7 @@ export default function RegisterPage() {
                   className="pl-9"
                 />
               </div>
+              <PasswordStrength password={password} />
             </div>
 
             <div className="space-y-1.5">

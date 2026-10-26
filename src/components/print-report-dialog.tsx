@@ -135,6 +135,11 @@ export function PrintReportDialog({
             <Download className="mr-2 h-4 w-4" />
             {isMobile ? t("button.exportDesktop") : t("button.downloadPdf")}
           </Button>
+          {/* Mobile-only hint shown below the print button. Hidden on
+              desktop where window.print() works reliably. */}
+          <p className="basis-full text-center text-xs text-muted-foreground sm:hidden">
+            {t("note.useDesktop")}
+          </p>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -168,7 +173,7 @@ function ReportBody({
     : 0;
 
   return (
-    <div className="print-report space-y-6 rounded-lg border border-border bg-white p-6 text-foreground">
+    <div className="print-report print-report-content space-y-6 rounded-lg border border-border bg-white p-6 text-foreground">
       {/* ===== Hlavička ===== */}
       <header className="border-b border-border pb-4">
         <div className="flex items-start justify-between gap-4">

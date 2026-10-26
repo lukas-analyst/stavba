@@ -70,6 +70,7 @@ import {
   Eye,
   AlertTriangle,
   ChevronRight,
+  RotateCw,
 } from "lucide-react";
 import { formatCzk, formatCurrency, formatDate, PAYMENT_TYPES, toBcp47 } from "@/lib/format";
 import type { Locale } from "@/i18n/config";
@@ -84,6 +85,22 @@ import { useExchangeRates } from "@/hooks/use-exchange-rates";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { useLastValue } from "@/hooks/use-last-value";
 import { useAnalytics } from "@/hooks/use-analytics";
+import {
+  RECURRING_INTERVALS,
+  type RecurringInterval,
+  computeNextRecurringDate,
+} from "@/lib/recurring";
+
+// Map a RecurringInterval value to the i18n key under
+// `tabs.payments.dialog.recurring.*`. Used by the row badge and the
+// dialog Select to avoid dynamic-key lookups (next-intl's strict typing
+// prefers literal keys, so we list them explicitly here).
+const RECURRING_INTERVAL_LABEL_KEYS: Record<RecurringInterval, string> = {
+  weekly: "dialog.recurring.weekly",
+  monthly: "dialog.recurring.monthly",
+  quarterly: "dialog.recurring.quarterly",
+  yearly: "dialog.recurring.yearly",
+};
 
 // ===== Sorting =====
 type SortKey =
@@ -773,7 +790,33 @@ function PaymentRow({
       </TableCell>
       <TableCell className={cn(childIndent, rowBg)}>
         <div className="flex flex-col">
-          <span className="type-body">{payment.description || (isParent ? t("row.firstInstallment") : "—")}</span>
+          <span className="flex items-center gap-1.5 type-body">
+            <span className="flex-1 truncate">
+              {payment.description || (isParent ? t("row.firstInstallment") : "—")}
+            </span>
+            {payment.recurringInterval && (
+              <Badge
+                variant="outline"
+                className="shrink-0 gap-0.5 type-label-sm text-info border-info/40 dark:border-info/40"
+                title={
+                  payment.recurringNextDate
+                    ? t("dialog.recurring.nextDate", {
+                        date: formatDate(payment.recurringNextDate, undefined, locale),
+                      })
+                    : t("dialog.recurring.badge")
+                }
+              >
+                <RotateCw className="h-3 w-3" />
+                <span className="hidden sm:inline">
+                  {t(
+                    RECURRING_INTERVAL_LABEL_KEYS[
+                      payment.recurringInterval as RecurringInterval
+                    ] as Parameters<typeof t>[0],
+                  )}
+                </span>
+              </Badge>
+            )}
+          </span>
           {payment.vendor && (
             <span className="type-label text-on-surface-variant">
               {payment.vendor}
@@ -979,6 +1022,21 @@ function InvoicesOverview({
                 <CardTitle className="flex items-center gap-1.5 text-sm font-semibold leading-tight">
                   <Receipt className="h-3.5 w-3.5 shrink-0 text-on-surface-variant" />
                   <span className="truncate">{c.title}</span>
+                  {c.parent.recurringInterval && (
+                    <span
+                      className="inline-flex shrink-0 items-center text-info"
+                      aria-label={t("dialog.recurring.badge")}
+                      title={
+                        c.parent.recurringNextDate
+                          ? t("dialog.recurring.nextDate", {
+                              date: formatDate(c.parent.recurringNextDate, undefined, locale),
+                            })
+                          : t("dialog.recurring.badge")
+                      }
+                    >
+                      <RotateCw className="h-3.5 w-3.5" />
+                    </span>
+                  )}
                 </CardTitle>
                 <Badge variant="outline" className="shrink-0 type-label-sm">
                   {t("invoices.badge.installmentCount", { count: c.installmentCount })}
@@ -1176,6 +1234,14 @@ function PaymentDialogInner({
   const [invoiceTotal, setInvoiceTotal] = useState("");
   const [markCompleted, setMarkCompleted] = useState(false);
 
+  // Recurring interval ("none" | "weekly" | "monthly" | "quarterly" | "yearly").
+  // When set (not "none"), the payment becomes a recurring template — the
+  // cron job will auto-clone it on each `recurringNextDate`.
+  // Edit-mode payments that already have a recurringInterval keep their value.
+  const [recurringInterval, setRecurringInterval] = useState<string>(
+    payment?.recurringInterval ?? "none",
+  );
+
   // Fetch exchange rates for the payment date — used to compute the live
   // conversion preview ("200 € → 5 041 Kč (kurz 25.21)") shown below the
   // amount field when a foreign currency is selected.
@@ -1213,6 +1279,7 @@ function PaymentDialogInner({
     setVatRate("");
     setMarkCompleted(false);
     setInstallmentParentId("");
+    setRecurringInterval("none");
   }
 
   // U22: Parent candidates = installment-parent payments (invoiceTotal != null)
@@ -1319,6 +1386,11 @@ function PaymentDialogInner({
           invoiceNumber: invoiceNumber || null,
           description: description || null,
           vatRate: vatRate || null,
+          // Recurring: always send `recurringInterval` on submit — the
+          // server normalizes "none" / null to NULL (disable recurrence).
+          // When the user picks a non-"none" interval, the server
+          // recomputes `recurringNextDate` from `date + interval`.
+          recurringInterval: recurringInterval === "none" ? null : recurringInterval,
           // Preserve invoiceTotal if this is an installment parent
           ...(payment.invoiceTotal != null ? { invoiceTotal: payment.invoiceTotal } : {}),
         };
@@ -1364,6 +1436,7 @@ function PaymentDialogInner({
           vendor,
           invoiceNumber,
           description: description || t("row.firstInstallment"),
+          recurringInterval: recurringInterval === "none" ? null : recurringInterval,
         });
         trackEvent("add_payment", { amount: amt, type, invoice: true });
         if (markCompleted) {
@@ -1392,6 +1465,7 @@ function PaymentDialogInner({
           ...(isAddingInstallment && prefillParent
             ? { installmentOf: prefillParent.id }
             : {}),
+          recurringInterval: recurringInterval === "none" ? null : recurringInterval,
         });
         trackEvent("add_payment", {
           amount: amt,
@@ -1914,6 +1988,59 @@ function PaymentDialogInner({
             </div>
           </div>
         )}
+
+        {/* ===== Recurring section =====
+            Lets the user mark this payment as a "recurring template".
+            The cron job (process-recurring-payments) will auto-clone this
+            template on each `recurringNextDate`. The "nextDate" hint shows
+            when the next auto-clone will fire (computed locally from
+            `date + interval` — matches the server-side computation in
+            src/lib/recurring.ts). */}
+        <div className="space-y-2">
+          <Label htmlFor="recurringInterval" className="flex items-center gap-1.5">
+            <RotateCw className="h-3.5 w-3.5 text-info" />
+            {t("dialog.label.recurring")}
+          </Label>
+          <Select
+            value={recurringInterval}
+            onValueChange={(v) => setRecurringInterval(v)}
+          >
+            <SelectTrigger id="recurringInterval">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">
+                {t("dialog.recurring.none")}
+              </SelectItem>
+              {RECURRING_INTERVALS.map((interval) => (
+                <SelectItem key={interval} value={interval}>
+                  {t(
+                    RECURRING_INTERVAL_LABEL_KEYS[interval] as Parameters<typeof t>[0],
+                  )}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {recurringInterval !== "none" && (
+            <p className="text-[11px] text-muted-foreground tabular-nums">
+              {(() => {
+                // Compute the next recurring date locally for the live
+                // preview. The server re-computes on save using the same
+                // helper (`computeNextRecurringDate`), so the displayed
+                // date matches what's stored.
+                const anchor = date ? new Date(date) : new Date();
+                if (isNaN(anchor.getTime())) return null;
+                const next = computeNextRecurringDate(
+                  anchor,
+                  recurringInterval as RecurringInterval,
+                );
+                return t("dialog.recurring.nextDate", {
+                  date: formatDate(next, undefined, locale),
+                });
+              })()}
+            </p>
+          )}
+        </div>
 
         {/* Mark-completed checkbox - links payment to budget item completion */}
         <div className="flex flex-col gap-1 rounded-md border border-success/30 bg-success-soft/50 p-3 dark:border-success-strong/60 dark:bg-success-soft/40">

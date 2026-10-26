@@ -4,6 +4,7 @@ import { db, dbRead } from "@/lib/db";
 import { logChanges } from "@/lib/audit";
 import { requireProjectAccess } from "@/lib/authz";
 import { convertAmount } from "@/lib/currency";
+import { normalizeRecurringInterval, computeNextRecurringDate } from "@/lib/recurring";
 
 // Explicit field selection — fetch only what the frontend uses.
 // `include` would fetch every column of budgetItem + contact (10+ columns each);
@@ -25,6 +26,9 @@ const PAYMENT_SELECT = {
   vendor: true,
   invoiceNumber: true,
   description: true,
+  recurringInterval: true,
+  recurringNextDate: true,
+  recurringParentId: true,
   createdAt: true,
   updatedAt: true,
   budgetItem: { select: { id: true, category: true, subcategory: true } },
@@ -95,6 +99,7 @@ export async function POST(
       vendor,
       invoiceNumber,
       description,
+      recurringInterval: recurringIntervalInput,
     } = body;
 
     if (!budgetItemId) {
@@ -157,6 +162,15 @@ export async function POST(
       // If no rate available, amountConverted stays = numAmount (fallback)
     }
 
+    // Validate + normalize recurring interval. Empty string / "none" / null
+    // means "no recurrence" — recurringInterval and recurringNextDate
+    // are both stored as NULL.
+    const recurringInterval = normalizeRecurringInterval(recurringIntervalInput);
+    const recurringNextDate =
+      recurringInterval !== null
+        ? computeNextRecurringDate(paymentDate, recurringInterval)
+        : null;
+
     const payment = await db.payment.create({
       data: {
         budgetItemId,
@@ -174,6 +188,11 @@ export async function POST(
         vendor: vendor?.trim() || null,
         invoiceNumber: invoiceNumber?.trim() || null,
         description: description?.trim() || null,
+        recurringInterval,
+        recurringNextDate,
+        // New manually-created payments are NOT clones of a template — leave
+        // recurringParentId null. Only the cron job sets this on auto-clones.
+        recurringParentId: null,
       },
       select: PAYMENT_SELECT,
     });

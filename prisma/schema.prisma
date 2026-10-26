@@ -750,6 +750,15 @@ model Payment {
   invoiceNumber String?
   /// Free-form description of the payment
   description   String?
+  /// If set, this is a "template" payment that recurs at this interval.
+  /// Values: "weekly", "monthly", "quarterly", "yearly"
+  recurringInterval  String?
+  /// Next date the recurring payment should be created (auto-triggered by cron).
+  /// Null when this is NOT a recurring template.
+  recurringNextDate  DateTime?
+  /// ID of the recurring template this payment was auto-created from.
+  /// Null for manually created payments.
+  recurringParentId  String?
   /// When this payment record was created
   createdAt     DateTime   @default(now())
   /// When this payment record was last updated
@@ -761,6 +770,8 @@ model Payment {
   @@index([installmentOf])
   @@index([type])
   @@index([date, type])
+  @@index([recurringNextDate])
+  @@index([recurringParentId])
   @@map("payments")
 }
 
