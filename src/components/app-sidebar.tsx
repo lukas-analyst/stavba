@@ -12,6 +12,7 @@ import { computeUserRole, roleClears } from "@/lib/roles";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { HelpButton } from "@/components/help-button";
 
 // ===== AppSidebar — MD3 NavigationRail / NavigationDrawer =====
 //
@@ -104,7 +105,7 @@ export function AppSidebar() {
           <div key={section.id} className={cn(sectionIdx > 0 && "mt-4")}>
             {/* Section heading (MD3 label style) */}
             <div
-              className="px-4 pb-1.5 pt-1 text-[10px] font-semibold uppercase tracking-wider text-on-surface-variant/70"
+              className="px-4 pb-1.5 pt-1 text-[11px] font-semibold uppercase tracking-wider text-on-surface-variant/70"
               aria-label={section.label}
             >
               {section.label}
@@ -124,18 +125,17 @@ export function AppSidebar() {
         ))}
       </div>
 
-      {/* Settings — pinned to bottom (MD3 footer pattern).
-          Now renders as an in-app tab (not external page) so the user
-          keeps the TopBar + Sidebar layout. */}
-      <div className="border-t border-outline-variant p-2">
+      {/* Settings + Help — pinned to bottom (MD3 footer pattern). */}
+      <div className="border-t border-outline-variant p-2 space-y-1">
         <Button
           variant="ghost"
           onClick={() => useAppStore.getState().setActiveTab("settings")}
-          className="w-full justify-start gap-2.5 px-3 text-sm font-medium state-layer-on-surface rounded-full"
+          className="w-full min-h-[44px] justify-start gap-2.5 px-3 text-sm font-medium state-layer-on-surface rounded-full sm:min-h-9"
         >
           <Settings className="h-4 w-4 shrink-0" />
           {tSidebar("settings")}
         </Button>
+        <HelpButton />
       </div>
     </nav>
   );
@@ -168,7 +168,7 @@ function NavButton({
       }}
       aria-current={isActive ? "page" : undefined}
       className={cn(
-        "group relative flex w-full items-center gap-3 rounded-full px-4 py-2.5 text-sm font-medium transition-all duration-150",
+        "group relative flex w-full items-center gap-3 rounded-full px-4 py-2.5 text-sm font-medium transition-all duration-150 min-h-[44px] sm:min-h-0",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
         isActive
           ? // Active: MD3 primary-container tonal pill — most prominent highlight.

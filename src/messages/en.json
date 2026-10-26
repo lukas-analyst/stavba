@@ -618,7 +618,8 @@
         "phase": "Phase:"
       },
       "toolbar": {
-        "search": "Search budget…"
+        "search": "Search budget…",
+        "add": "Add item"
       },
       "empty": {
         "title": "No items match the filter",
@@ -1220,6 +1221,9 @@
         "allTypes": "All types",
         "allCategories": "All categories"
       },
+      "toolbar": {
+        "add": "Add time entry"
+      },
       "total": {
         "label": "Total ({count})"
       },
@@ -1706,7 +1710,8 @@
       "toolbar": {
         "sum": "Sum ({count})",
         "vatIncluded": "incl. VAT",
-        "search": "Search payments…"
+        "search": "Search payments…",
+        "add": "Add payment"
       },
       "empty": {
         "title": {
@@ -2532,6 +2537,47 @@
       "PLN": "Polish złoty",
       "AUD": "Australian dollar",
       "VND": "Vietnamese đồng"
+    }
+  },
+  "help": {
+    "title": "Help",
+    "description": "Quick tips for using the app.",
+    "sections": {
+      "dashboard": {
+        "title": "Dashboard",
+        "tip1": "The main page shows KPI cards, date-based plan, and phase/category charts.",
+        "tip2": "Projection estimates final costs based on average budget overrun of completed items."
+      },
+      "budget": {
+        "title": "Budget",
+        "tip1": "Click any cell in the table for inline editing (Enter = save, Escape = cancel).",
+        "tip2": "Drag & drop to reorder items. Move tasks under a different parent via the ⋯ menu.",
+        "tip3": "Filter by phase or status using the toolbar buttons."
+      },
+      "payments": {
+        "title": "Payments",
+        "tip1": "Invoices with installments: create an invoice with a total amount, then add installments.",
+        "tip2": "Foreign currency payments are automatically converted using daily CNB exchange rates."
+      },
+      "time": {
+        "title": "Time",
+        "tip1": "Enter worker, hours, and date. Last worker and type are remembered for faster entry."
+      },
+      "contacts": {
+        "title": "Contacts",
+        "tip1": "Look up a company by VAT number (ARES) — details are auto-filled."
+      },
+      "timeline": {
+        "title": "Timeline",
+        "tip1": "Switch zoom (days/months/quarters/years) for different detail levels.",
+        "tip2": "Double-click a bar to edit dates."
+      },
+      "shortcuts": {
+        "title": "Keyboard shortcuts",
+        "tip1": "Ctrl+K — global search across the app.",
+        "tip2": "Ctrl+N — create a new project.",
+        "tip3": "Ctrl+B — toggle the sidebar."
+      }
     }
   }
 }

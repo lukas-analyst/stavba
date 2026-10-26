@@ -81,7 +81,7 @@ export function GlobalSearchDialog({
   const t = useTranslations("dialogs.globalSearch");
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl gap-0 overflow-hidden p-0">
+      <DialogContent className="flex max-h-[90vh] max-w-2xl flex-col gap-0 overflow-hidden p-0">
         <DialogTitle className="sr-only">{t("title")}</DialogTitle>
         {open && <GlobalSearchInner onOpenChange={onOpenChange} />}
       </DialogContent>

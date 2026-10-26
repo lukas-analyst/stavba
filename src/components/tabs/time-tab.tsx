@@ -24,6 +24,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { TabSkeleton } from "@/components/ui/tab-skeleton";
 import { Card } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -244,7 +245,7 @@ export function TimeTab({ projectId }: { projectId: string }) {
             ))}
           </SelectContent>
         </Select>
-        <div className="ml-auto flex items-center gap-3 text-sm">
+        <div className="flex items-center gap-3 text-sm">
           <div className="text-right">
             <div className="text-xs text-muted-foreground">{t("total.label", { count: filtered.length })}</div>
             <div className="text-lg font-bold text-time">
@@ -252,38 +253,32 @@ export function TimeTab({ projectId }: { projectId: string }) {
             </div>
           </div>
         </div>
+        {/* Desktop "Add time entry" button — hidden on mobile (mobile uses the FAB).
+            Pushed to the end of the toolbar with ml-auto so it sits at the
+            right edge of the row it lands on. */}
+        <Button
+          onClick={() => setAddOpen(true)}
+          className="hidden sm:flex ml-auto gap-1.5 rounded-full"
+          size="sm"
+        >
+          <Plus className="h-4 w-4" />
+          {t("toolbar.add")}
+        </Button>
       </div>
 
       {isLoading ? (
-        <div className="space-y-3">
-          {/* Toolbar skeleton */}
-          <div className="flex flex-wrap items-center gap-2">
-            <Skeleton className="h-9 w-56" />
-            <Skeleton className="h-9 w-32" />
-            <Skeleton className="h-9 w-32" />
-            <div className="ml-auto flex items-center gap-2">
-              <Skeleton className="h-9 w-24" />
-              <Skeleton className="h-9 w-32" />
-            </div>
-          </div>
-          {/* Stats skeleton */}
+        <>
+          {/* Stats cards skeleton — kept separate since time-tab has unique
+              top stats (worker hours). The TabSkeleton handles the toolbar +
+              table portion below. */}
           <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
             {[1, 2, 3, 4].map((i) => (
               <Skeleton key={i} className="h-20" />
             ))}
           </div>
-          {/* Table skeleton */}
-          <div className="overflow-hidden rounded-lg border">
-            <div className="border-b bg-muted/40 px-4 py-2.5">
-              <Skeleton className="h-4 w-full" />
-            </div>
-            {[1, 2, 3, 4, 5, 6].map((i) => (
-              <div key={i} className="border-b px-4 py-3">
-                <Skeleton className="h-5 w-full" />
-              </div>
-            ))}
-          </div>
-        </div>
+          {/* Standard toolbar + table skeleton */}
+          <TabSkeleton />
+        </>
       ) : filtered.length === 0 ? (
         <EmptyStateBox
           icon={Clock}

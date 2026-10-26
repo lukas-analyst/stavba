@@ -84,8 +84,9 @@ export function PrintReportDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[92vh] max-w-4xl overflow-y-auto">
-        <DialogHeader>
+      <DialogContent className="flex max-h-[90vh] flex-col gap-0 p-0 sm:max-w-3xl">
+        {/* Header — sticky at top with own padding (matches AddDialogShell pattern) */}
+        <DialogHeader className="shrink-0 space-y-2 px-4 pt-4 pb-4">
           <div className="flex items-center gap-2">
             <FileText className="h-5 w-5 text-primary" />
             <DialogTitle>{t("title")}</DialogTitle>
@@ -103,28 +104,33 @@ export function PrintReportDialog({
           </DialogDescription>
         </DialogHeader>
 
-        {!isDataReady ? (
-          <div className="flex items-center justify-center py-12">
-            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-          </div>
-        ) : (
-          <ReportBody
-            projectName={projectName}
-            data={data}
-            budgetItems={budgetItems ?? []}
-            payments={(payments ?? []).slice(0, 10)}
-            locale={locale}
-          />
-        )}
+        {/* Body — scrollable report preview */}
+        <div className="flex-1 overflow-y-auto scrollbar-thin px-4 pb-4">
+          {!isDataReady ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            </div>
+          ) : (
+            <ReportBody
+              projectName={projectName}
+              data={data}
+              budgetItems={budgetItems ?? []}
+              payments={(payments ?? []).slice(0, 10)}
+              locale={locale}
+            />
+          )}
+        </div>
 
-        <DialogFooter className="no-print">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+        {/* Footer — sticky at bottom with border-top (matches AddDialogShell pattern) */}
+        <DialogFooter className="no-print shrink-0 gap-2 border-t bg-background p-3 sm:justify-end">
+          <Button variant="outline" onClick={() => onOpenChange(false)} className="flex-1 sm:flex-none">
             {t("button.close")}
           </Button>
           <Button
             onClick={handleDownloadPdf}
             disabled={!isDataReady}
             aria-busy={isLoading}
+            className="flex-1 sm:flex-none"
           >
             <Download className="mr-2 h-4 w-4" />
             {isMobile ? t("button.exportDesktop") : t("button.downloadPdf")}

@@ -25,7 +25,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
+import { TabSkeleton } from "@/components/ui/tab-skeleton";
 import {
   Dialog,
   DialogContent,
@@ -365,7 +365,7 @@ export function PaymentsTab({ projectId }: { projectId: string }) {
             ))}
           </SelectContent>
         </Select>
-        <div className="ml-auto flex items-center gap-3 text-sm">
+        <div className="flex items-center gap-3 text-sm">
           <div className="text-right">
             <div className="text-xs text-muted-foreground">
               {t("toolbar.sum", { count: filteredStandalone.length + filteredGroups.length })}
@@ -385,32 +385,21 @@ export function PaymentsTab({ projectId }: { projectId: string }) {
             ) : null;
           })()}
         </div>
+        {/* Desktop "Add payment" button — hidden on mobile (mobile uses the FAB).
+            Pushed to the end of the toolbar with ml-auto so it sits at the
+            right edge of the row it lands on. */}
+        <Button
+          onClick={() => setAddOpen(true)}
+          className="hidden sm:flex ml-auto gap-1.5 rounded-full"
+          size="sm"
+        >
+          <Plus className="h-4 w-4" />
+          {t("toolbar.add")}
+        </Button>
       </div>
 
       {isLoading ? (
-        <div className="space-y-3">
-          {/* Toolbar skeleton */}
-          <div className="flex flex-wrap items-center gap-2">
-            <Skeleton className="h-9 w-56" />
-            <Skeleton className="h-9 w-32" />
-            <Skeleton className="h-9 w-24" />
-            <div className="ml-auto flex items-center gap-2">
-              <Skeleton className="h-9 w-24" />
-              <Skeleton className="h-9 w-32" />
-            </div>
-          </div>
-          {/* Table skeleton */}
-          <div className="overflow-hidden rounded-lg border border-outline-variant bg-card">
-            <div className="border-b bg-muted/40 px-4 py-2.5">
-              <Skeleton className="h-4 w-full" />
-            </div>
-            {[1, 2, 3, 4, 5, 6].map((i) => (
-              <div key={i} className="border-b px-4 py-3">
-                <Skeleton className="h-5 w-full" />
-              </div>
-            ))}
-          </div>
-        </div>
+        <TabSkeleton />
       ) : filteredStandalone.length === 0 && filteredGroups.length === 0 ? (
         <EmptyStateBox
           icon={Receipt}

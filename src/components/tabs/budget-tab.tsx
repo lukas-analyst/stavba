@@ -51,7 +51,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Skeleton } from "@/components/ui/skeleton";
+import { TabSkeleton } from "@/components/ui/tab-skeleton";
 import {
   ChevronDown,
   ChevronRight,
@@ -628,31 +628,7 @@ function BudgetTab({ projectId, dragEndHandlerRef }: { projectId: string; dragEn
   }, [grouped, reorder]);
 
   if (isLoading) {
-    return (
-      <div className="space-y-3">
-        <div className="flex flex-wrap items-center gap-2">
-          <Skeleton className="h-9 w-56" />
-          <Skeleton className="h-9 w-44" />
-          <Skeleton className="h-9 w-64" />
-          <div className="ml-auto flex items-center gap-3">
-            <Skeleton className="h-9 w-20" />
-            <Skeleton className="h-9 w-20" />
-            <Skeleton className="h-9 w-20" />
-            <Skeleton className="h-9 w-20" />
-          </div>
-        </div>
-        <div className="overflow-hidden rounded-lg border">
-          <div className="border-b bg-muted/40 px-4 py-2.5">
-            <Skeleton className="h-4 w-full" />
-          </div>
-          {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-            <div key={i} className="border-b px-4 py-3">
-              <Skeleton className="h-5 w-full" />
-            </div>
-          ))}
-        </div>
-      </div>
-    );
+    return <TabSkeleton />;
   }
 
   // Category IDs for the outer SortableContext
@@ -660,71 +636,68 @@ function BudgetTab({ projectId, dragEndHandlerRef }: { projectId: string; dragEn
 
   return (
     <div id="budget-root" className="space-y-4">
-      {/* Toolbar — MD3 filter pattern
-          MOBILE LAYOUT: Stack vertically on phones so each control gets
-          its own full-width row (Search → Status). The "Přidat položku"
-          button is HIDDEN on mobile because the ContextualFab (bottom-
-          right FAB) already triggers the same "add-item" action via the
-          `stavba:fab-add` custom event — having both would be redundant
-          and crowd the narrow mobile viewport. */}
-      <div id="budget-toolbar" className="space-y-3">
-        {/* Row 1: Segmented + filters (search removed — use TopBar global search)
-            Add button removed — use FAB on mobile, or FAB on desktop too */}
-        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
-          {/* MD3 Segmented Button — completion status
-              Hidden on mobile (< sm) and replaced by the compact
-              <Select> dropdown below (mobile-only) to save horizontal
-              space. */}
-          <div className="hidden sm:block">
-            <SegmentedButton
-              value={completionFilter}
-              onChange={(v) => setCompletionFilter(v as CompletionFilter)}
-              options={COMPLETION_OPTIONS.map((opt) => ({
-                value: opt.id,
-                label: t(`completion.${opt.label}`),
-              }))}
-              size="md"
-            />
-          </div>
-
-          {/* Compact Select dropdown — mobile only (< sm)
-              Replaces the SegmentedButton to save space. Same options,
-              same state, just a smaller footprint. Full-width on mobile
-              so it aligns with the search bar above. */}
-          <div className="sm:hidden">
-            <Select
-              value={completionFilter}
-              onValueChange={(v) => setCompletionFilter(v as CompletionFilter)}
-            >
-              <SelectTrigger className="h-9 w-full rounded-full border-outline-variant bg-surface-container-low">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {COMPLETION_OPTIONS.map((opt) => (
-                  <SelectItem key={opt.id} value={opt.id}>
-                    {t(`completion.${opt.label}`)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Search input — filters by item name (debounced 250ms).
-              Mirrors the existing `search`/`debouncedSearch`/`itemMatches`
-              pipeline that was already wired up but had no UI surface. */}
-          <div className="relative w-full sm:w-64">
-            <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder={t("toolbar.search")}
-              aria-label={t("toolbar.search")}
-              className="h-9 rounded-full pl-8"
-            />
-          </div>
+      {/* Toolbar — MD3 horizontal filter pattern (matches Payments / Time tabs).
+          All controls live in a single flex-wrap row that wraps naturally on
+          narrow viewports. The "Přidat položku" button is HIDDEN on mobile
+          (`hidden sm:flex`) because the ContextualFab (bottom-right FAB) already
+          triggers the same "add-item" action via the `stavba:fab-add` custom
+          event — having both on the narrow mobile viewport would be redundant.
+          On desktop the FAB is hidden, so the toolbar Add button takes over. */}
+      <div id="budget-toolbar" className="flex flex-wrap items-center gap-2">
+        {/* MD3 Segmented Button — completion status
+            Hidden on mobile (< sm) and replaced by the compact
+            <Select> dropdown below (mobile-only) to save horizontal
+            space. */}
+        <div className="hidden sm:block">
+          <SegmentedButton
+            value={completionFilter}
+            onChange={(v) => setCompletionFilter(v as CompletionFilter)}
+            options={COMPLETION_OPTIONS.map((opt) => ({
+              value: opt.id,
+              label: t(`completion.${opt.label}`),
+            }))}
+            size="md"
+          />
         </div>
 
-        {/* Row 2: Phase filter chips (multi-select) */}
+        {/* Compact Select dropdown — mobile only (< sm)
+            Replaces the SegmentedButton to save space. Same options,
+            same state, just a smaller footprint. Full-width on mobile
+            so it gets its own row in the wrapping flex toolbar. */}
+        <div className="sm:hidden w-full">
+          <Select
+            value={completionFilter}
+            onValueChange={(v) => setCompletionFilter(v as CompletionFilter)}
+          >
+            <SelectTrigger className="h-9 w-full rounded-full border-outline-variant bg-surface-container-low">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {COMPLETION_OPTIONS.map((opt) => (
+                <SelectItem key={opt.id} value={opt.id}>
+                  {t(`completion.${opt.label}`)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Search input — filters by item name (debounced 250ms).
+            Full-width on mobile (gets its own row), fixed w-64 on desktop. */}
+        <div className="relative w-full sm:w-64">
+          <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder={t("toolbar.search")}
+            aria-label={t("toolbar.search")}
+            className="h-9 rounded-full pl-8"
+          />
+        </div>
+
+        {/* Phase filter chips (multi-select) — wraps naturally inside its
+            FilterChipGroup container; the group itself acts as a single
+            flex item in the wrapping toolbar. */}
         <FilterChipGroup
           hasActiveFilters={phaseFilter.size > 0}
           onClear={() => setPhaseFilter(new Set())}
@@ -747,6 +720,18 @@ function BudgetTab({ projectId, dragEndHandlerRef }: { projectId: string; dragEn
             />
           ))}
         </FilterChipGroup>
+
+        {/* Desktop "Add item" button — hidden on mobile (mobile uses the FAB).
+            Pushed to the end of the toolbar with ml-auto so it sits at the
+            right edge of the row it lands on. */}
+        <Button
+          onClick={() => setAddOpen(true)}
+          className="hidden sm:flex ml-auto gap-1.5 rounded-full"
+          size="sm"
+        >
+          <Plus className="h-4 w-4" />
+          {t("toolbar.add")}
+        </Button>
       </div>
 
       {/* Budget table grouped by category — wrapped in SortableContext for category DnD */}
@@ -1026,10 +1011,10 @@ function SortableCategoryCard({
             className="group flex w-full items-center gap-2 px-4 py-2.5 text-left hover:bg-muted/50"
             {...attributes}
           >
-            {/* Drag handle */}
+            {/* Drag handle — larger touch target on mobile (32px → 20px on desktop) */}
             <span
               {...listeners}
-              className="flex h-5 w-5 cursor-grab items-center justify-center rounded text-muted-foreground/40 hover:bg-muted hover:text-foreground active:cursor-grabbing"
+              className="flex h-8 w-8 cursor-grab items-center justify-center rounded text-muted-foreground/40 hover:bg-muted hover:text-foreground active:cursor-grabbing sm:h-5 sm:w-5"
               aria-label={t("aria.drag")}
               onClick={(e) => e.stopPropagation()}
             >
@@ -1069,9 +1054,9 @@ function SortableCategoryCard({
                 }}
                 title={t("addItem.title", { name: categoryName })}
                 aria-label={t("addItem.aria")}
-                className="inline-flex h-5 w-5 cursor-pointer items-center justify-center rounded-md text-success transition-colors hover:bg-success-soft hover:text-success-strong dark:text-success dark:hover:bg-success-soft"
+                className="inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-md text-success transition-colors hover:bg-success-soft hover:text-success-strong dark:text-success dark:hover:bg-success-soft sm:h-5 sm:w-5"
               >
-                <Plus className="h-3.5 w-3.5" />
+                <Plus className="h-4 w-4 sm:h-3.5 sm:w-3.5" />
               </span>
             )}
             <div className="ml-auto flex items-center gap-4 text-xs">
@@ -1484,23 +1469,25 @@ const BudgetRow = memo(function BudgetRow({
       )}
     >
       {/* Drag handle cell — top-level items AND child tasks.
-          Children get a lighter, indented handle to hint at sub-level. */}
+          Children get a lighter, indented handle to hint at sub-level.
+          Cell width is wider on mobile (w-12) to comfortably fit the
+          32px touch target; collapses to w-8 on desktop. */}
       {dragCtx?.listeners ? (
-        <TableCell className="w-8 align-middle">
+        <TableCell className="w-12 align-middle sm:w-8">
           <span
             {...dragCtx.listeners}
             className={cn(
-              "flex h-5 w-5 cursor-grab items-center justify-center rounded text-muted-foreground/30 hover:bg-muted hover:text-foreground active:cursor-grabbing",
+              "flex h-8 w-8 cursor-grab items-center justify-center rounded text-muted-foreground/30 hover:bg-muted hover:text-foreground active:cursor-grabbing sm:h-5 sm:w-5",
               isChild && "ml-2 opacity-60",
             )}
             aria-label={t("aria.drag")}
             onClick={(e) => e.stopPropagation()}
           >
-            <GripVertical className="h-3.5 w-3.5" />
+            <GripVertical className="h-4 w-4 sm:h-3.5 sm:w-3.5" />
           </span>
         </TableCell>
       ) : (
-        <TableCell className="w-8" />
+        <TableCell className="w-12 sm:w-8" />
       )}
 
       {/* Expand/collapse toggle (parents) OR gradient bg for children */}
@@ -1647,7 +1634,7 @@ const BudgetRow = memo(function BudgetRow({
                 }}
                 title={t("badge.addTaskTitle")}
                 aria-label={t("badge.addTaskAria")}
-                className="inline-flex h-6 w-6 items-center justify-center rounded-md text-success transition-colors hover:bg-success-soft hover:text-success-strong dark:text-success dark:hover:bg-success-soft"
+                className="inline-flex h-8 w-8 items-center justify-center rounded-md text-success transition-colors hover:bg-success-soft hover:text-success-strong dark:text-success dark:hover:bg-success-soft sm:h-6 sm:w-6"
               >
                 <Plus className="h-4 w-4" />
               </button>
@@ -1855,7 +1842,7 @@ const BudgetRow = memo(function BudgetRow({
             aria-pressed={item.required}
             aria-label={item.required ? t("required.ariaRequired") : t("required.ariaOptional")}
             className={cn(
-              "h-7 w-7 shrink-0 p-0",
+              "h-9 w-9 shrink-0 p-0 sm:h-7 sm:w-7",
               item.required
                 ? "border-warning bg-warning text-white hover:bg-warning-strong hover:text-white dark:border-warning/60 dark:bg-warning/70 dark:hover:bg-warning/80"
                 : "text-warning hover:border-warning/50 hover:bg-warning-soft hover:text-warning-strong dark:text-warning/70 dark:hover:border-warning/40 dark:hover:bg-warning-soft/50",
@@ -1866,7 +1853,7 @@ const BudgetRow = memo(function BudgetRow({
                 : t("required.titleOptional")
             }
           >
-            <AlertTriangle className="h-3.5 w-3.5" />
+            <AlertTriangle className="h-4 w-4 sm:h-3.5 sm:w-3.5" />
           </Button>
           <Button
             type="button"
@@ -1876,7 +1863,7 @@ const BudgetRow = memo(function BudgetRow({
             disabled={updateItem.isPending || item.rejected}
             aria-pressed={item.completed}
             className={cn(
-              "h-7 w-7 p-0",
+              "h-9 w-9 p-0 sm:h-7 sm:w-7",
               item.completed
                 ? "border-success bg-success text-white hover:bg-success-strong hover:text-white dark:border-success/60 dark:bg-success/70 dark:hover:bg-success/80"
                 : "text-success hover:border-success/50 hover:bg-success-soft hover:text-success-strong dark:text-success/70 dark:hover:border-success/40 dark:hover:bg-success-soft/50",
@@ -1884,7 +1871,7 @@ const BudgetRow = memo(function BudgetRow({
             title={item.completed ? t("completed.titleDone") : t("completed.titleTodo")}
             aria-label={item.completed ? t("completed.ariaDone") : t("completed.ariaTodo")}
           >
-            <CheckCircle2 className="h-3.5 w-3.5" />
+            <CheckCircle2 className="h-4 w-4 sm:h-3.5 sm:w-3.5" />
           </Button>
           <Button
             type="button"
@@ -1894,7 +1881,7 @@ const BudgetRow = memo(function BudgetRow({
             disabled={updateItem.isPending}
             aria-pressed={item.rejected}
             className={cn(
-              "h-7 w-7 p-0",
+              "h-9 w-9 p-0 sm:h-7 sm:w-7",
               item.rejected
                 ? "border-danger bg-danger text-white hover:bg-danger-strong hover:text-white dark:border-danger/60 dark:bg-danger/70 dark:hover:bg-danger/80"
                 : "text-danger hover:border-danger/50 hover:bg-danger-soft hover:text-danger-strong dark:text-danger/70 dark:hover:border-danger/40 dark:hover:bg-danger-soft/50",
@@ -1902,7 +1889,7 @@ const BudgetRow = memo(function BudgetRow({
             title={item.rejected ? t("rejected.titleRejected") : t("rejected.titleNotRejected")}
             aria-label={item.rejected ? t("rejected.ariaRejected") : t("rejected.ariaNotRejected")}
           >
-            <X className="h-3.5 w-3.5" />
+            <X className="h-4 w-4 sm:h-3.5 sm:w-3.5" />
           </Button>
         </div>
       </TableCell>
@@ -1915,7 +1902,7 @@ const BudgetRow = memo(function BudgetRow({
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-7 w-7 text-muted-foreground opacity-60 transition-opacity hover:opacity-100 group-hover:opacity-100 focus-visible:opacity-100"
+                className="h-9 w-9 text-muted-foreground opacity-60 transition-opacity hover:opacity-100 group-hover:opacity-100 focus-visible:opacity-100 sm:h-7 sm:w-7"
                 title={t("actions.titleMore")}
                 aria-label={t("actions.ariaMore")}
               >

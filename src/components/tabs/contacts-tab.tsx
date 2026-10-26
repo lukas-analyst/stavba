@@ -19,7 +19,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
+import { TabSkeleton } from "@/components/ui/tab-skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -135,11 +135,7 @@ export function ContactsTab({ projectId }: { projectId: string }) {
       </div>
 
       {isLoading ? (
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
-          {[1, 2, 3].map((i) => (
-            <Skeleton key={i} className="h-40" />
-          ))}
-        </div>
+        <TabSkeleton variant="card" rows={3} />
       ) : contacts?.length === 0 ? (
         <EmptyStateBox
           icon={Users}

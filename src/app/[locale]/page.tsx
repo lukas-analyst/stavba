@@ -239,13 +239,13 @@ function HomeContent() {
             {/* Drawer */}
             <aside className="fixed inset-y-0 left-0 z-50 w-72 max-w-[85vw] border-r bg-background md:hidden">
               <AppSidebar />
-              {/* Close button */}
+              {/* Close button — 44px touch target on mobile (per MD3/Apple HIG) */}
               <button
                 onClick={() => setSidebarOpen(false)}
-                className="absolute right-2 top-3 flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-muted md:hidden"
+                className="absolute right-2 top-3 flex h-11 w-11 items-center justify-center rounded-md text-muted-foreground hover:bg-muted md:hidden"
                 aria-label="Zavřít panel"
               >
-                <X className="h-4 w-4" />
+                <X className="h-5 w-5" />
               </button>
             </aside>
           </>

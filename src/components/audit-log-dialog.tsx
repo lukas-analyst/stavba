@@ -36,9 +36,9 @@ export function AuditLogDialog({ open, onOpenChange, projectId }: Props) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="z-50 flex max-h-[85vh] w-full flex-col gap-4 overflow-hidden p-6 sm:max-w-2xl"
+        className="z-50 flex max-h-[90vh] w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-2xl"
       >
-        <DialogHeader className="shrink-0">
+        <DialogHeader className="shrink-0 space-y-2 px-4 pt-4 pb-4">
           <div className="flex items-center gap-2">
             <History className="h-5 w-5 text-primary" />
             <DialogTitle>{t("title")}</DialogTitle>
@@ -49,7 +49,7 @@ export function AuditLogDialog({ open, onOpenChange, projectId }: Props) {
         </DialogHeader>
 
         {isLoading ? (
-          <div className="shrink-0 space-y-2">
+          <div className="shrink-0 space-y-2 px-4 pb-4">
             {[1, 2, 3, 4, 5].map((i) => (
               <Skeleton key={i} className="h-12" />
             ))}
@@ -65,7 +65,7 @@ export function AuditLogDialog({ open, onOpenChange, projectId }: Props) {
           // ScrollArea viewport sometimes doesn't get a proper height and
           // ends up rendering outside the dialog bounds.
           <div
-            className="min-h-0 flex-1 overflow-y-auto pr-1"
+            className="min-h-0 flex-1 overflow-y-auto scrollbar-thin px-4 pb-4"
             style={{ scrollbarGutter: "stable" }}
           >
             <div className="space-y-1.5">

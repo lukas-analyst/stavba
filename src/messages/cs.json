@@ -618,7 +618,8 @@
         "phase": "Fáze:"
       },
       "toolbar": {
-        "search": "Hledat v rozpočtu…"
+        "search": "Hledat v rozpočtu…",
+        "add": "Přidat položku"
       },
       "empty": {
         "title": "Žádné položky neodpovídají filtru",
@@ -1220,6 +1221,9 @@
         "allTypes": "Všechny typy",
         "allCategories": "Všechny kategorie"
       },
+      "toolbar": {
+        "add": "Přidat čas"
+      },
       "total": {
         "label": "Celkem ({count})"
       },
@@ -1706,7 +1710,8 @@
       "toolbar": {
         "sum": "Součet ({count})",
         "vatIncluded": "z toho DPH",
-        "search": "Hledat v platbách…"
+        "search": "Hledat v platbách…",
+        "add": "Přidat platbu"
       },
       "empty": {
         "title": {
@@ -2532,6 +2537,47 @@
       "PLN": "Polský zlotý",
       "AUD": "Australský dolar",
       "VND": "Vietnamský dong"
+    }
+  },
+  "help": {
+    "title": "Nápověda",
+    "description": "Rychlé tipy pro práci s aplikací.",
+    "sections": {
+      "dashboard": {
+        "title": "Přehled",
+        "tip1": "Na hlavní stránce vidíte KPI karty, plán podle data a grafy fáze/kategorie.",
+        "tip2": "Projekce odhaduje konečné náklady na základě průměrného překročení rozpočtu dokončených položek."
+      },
+      "budget": {
+        "title": "Rozpočet",
+        "tip1": "Klikněte na libovolnou buňku v tabulce pro rychlou úpravu (Enter = uložit, Escape = zrušit).",
+        "tip2": "Položky lze přesouvat tažením (drag & drop). Úkoly lze přesouvat pod jinou položku přes menu ⋯.",
+        "tip3": "Filtrujte podle fáze nebo stavu pomocí tlačítek v horní liště."
+      },
+      "payments": {
+        "title": "Platby",
+        "tip1": "Faktury s více splátkami: vytvořte fakturu s celkovou částkou, pak přidávejte splátky.",
+        "tip2": "Platby v cizí měně se automaticky přepočítají podle denního kurzu ČNB."
+      },
+      "time": {
+        "title": "Čas",
+        "tip1": "Zadejte pracovníka, hodiny a datum. Poslední pracovník a typ se pamatují pro rychlejší zadávání."
+      },
+      "contacts": {
+        "title": "Kontakty",
+        "tip1": "Vyhledejte firmu přes IČO (ARES) — údaje se doplní automaticky."
+      },
+      "timeline": {
+        "title": "Časová osa",
+        "tip1": "Změňte zoom (dny/měsíce/čtvrtletí/roky) pro různé úrovně detailu.",
+        "tip2": "Dvakrát klikněte na záložku pro úpravu data."
+      },
+      "shortcuts": {
+        "title": "Klávesové zkratky",
+        "tip1": "Ctrl+K — globální vyhledávání napříč aplikací.",
+        "tip2": "Ctrl+N — vytvořit nový projekt.",
+        "tip3": "Ctrl+B — otevřít/zavřít postranní panel."
+      }
     }
   }
 }
