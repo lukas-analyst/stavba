@@ -775,6 +775,7 @@ function PaymentRow({
           <InlineDate
             value={payment.date}
             onCommit={(v) => update("date", v)}
+            ariaLabel={t("column.date")}
           />
         </div>
       </TableCell>
@@ -869,6 +870,7 @@ function PaymentRow({
               onCommit={(v) => update("amount", v)}
               suffix={` ${projectSymbol}`}
               className="font-semibold text-warning"
+              ariaLabel={t("column.amount")}
             />
           )}
           {isParent && meta?.invoiceTotal != null && (

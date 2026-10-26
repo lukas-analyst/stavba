@@ -891,6 +891,7 @@ function TimeRow({
           <InlineDate
             value={entry.date}
             onCommit={(v) => update("date", v)}
+            ariaLabel={t("column.date")}
           />
           {entry.dateTo && (
             <span className="type-label text-time">
@@ -945,6 +946,7 @@ function TimeRow({
           onCommit={(v) => update("hours", v)}
           suffix=" h"
           className="font-semibold text-time"
+          ariaLabel={t("column.hours")}
         />
       </TableCell>
       <TableCell

@@ -19,12 +19,19 @@ export function InlineNumber({
   suffix,
   className,
   align = "right",
+  ariaLabel,
 }: {
   value: number | null;
   onCommit: (v: number | null) => void;
   suffix?: string;
   className?: string;
   align?: "left" | "right";
+  /**
+   * Accessible label for the clickable value button (and the input that
+   * replaces it in edit mode). Required for screen-reader users since the
+   * visible value alone (a number) has no semantic meaning without context.
+   */
+  ariaLabel?: string;
 }) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(value?.toString() ?? "");
@@ -34,6 +41,7 @@ export function InlineNumber({
       <Input
         autoFocus
         value={draft}
+        aria-label={ariaLabel}
         onChange={(e) => setDraft(e.target.value)}
         onClick={(e) => e.stopPropagation()}
         onBlur={() => {
@@ -54,11 +62,13 @@ export function InlineNumber({
   }
   return (
     <button
+      type="button"
       onClick={(e) => {
         e.stopPropagation();
         setDraft(value?.toString() ?? "");
         setEditing(true);
       }}
+      aria-label={ariaLabel}
       className={cn(
         "block w-full rounded px-1 py-0.5 type-body hover:bg-surface-container-high",
         align === "right" ? "text-right" : "text-left",
@@ -85,10 +95,18 @@ export function InlineDate({
   value,
   onCommit,
   align = "left",
+  ariaLabel,
 }: {
   value: string | null;
   onCommit: (v: string | null) => void;
   align?: "left" | "right";
+  /**
+   * Accessible label for the clickable value button (and the input that
+   * replaces it in edit mode). Required for screen-reader users since the
+   * visible value alone (a formatted date) has no semantic meaning
+   * without context.
+   */
+  ariaLabel?: string;
 }) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(value ? value.substring(0, 10) : "");
@@ -99,6 +117,7 @@ export function InlineDate({
         type="date"
         autoFocus
         value={draft}
+        aria-label={ariaLabel}
         onChange={(e) => setDraft(e.target.value)}
         onClick={(e) => e.stopPropagation()}
         onBlur={() => {
@@ -123,11 +142,13 @@ export function InlineDate({
   }
   return (
     <button
+      type="button"
       onClick={(e) => {
         e.stopPropagation();
         setDraft(value ? value.substring(0, 10) : "");
         setEditing(true);
       }}
+      aria-label={ariaLabel}
       className={cn(
         "block w-full rounded px-1 py-0.5 type-body hover:bg-surface-container-high",
         align === "right" ? "text-right" : "text-left",

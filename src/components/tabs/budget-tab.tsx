@@ -1726,6 +1726,10 @@ const BudgetRow = memo(function BudgetRow({
   const dragCtx = useRowDragListeners();
   const { trackEvent } = useAnalytics(projectId);
   const t = useTranslations("tabs.budget.row");
+  // Column-header translations — used as accessible labels for the inline
+  // editors (InlineNumber / InlineDate) so screen-reader users hear the
+  // field's purpose rather than just its numeric value.
+  const tColumn = useTranslations("tabs.budget.column");
   const tPhases = useTranslations("phases");
   const tCommon = useTranslations("common");
   const locale = useLocale() as Locale;
@@ -2087,6 +2091,7 @@ const BudgetRow = memo(function BudgetRow({
                   onCommit={(v) => update("planCost", v)}
                   className="text-right tabular-nums text-muted-foreground hover:text-foreground"
                   suffix={` ${projectSymbol}`}
+                  ariaLabel={tColumn("plan")}
                 />
               </span>
             )}
@@ -2109,6 +2114,7 @@ const BudgetRow = memo(function BudgetRow({
             onCommit={(v) => update("planCost", v)}
             className={cn("text-right font-medium")}
             suffix={` ${projectSymbol}`}
+            ariaLabel={tColumn("plan")}
           />
         )}
       </TableCell>
@@ -2119,6 +2125,7 @@ const BudgetRow = memo(function BudgetRow({
           value={item.planDays}
           onCommit={(v) => update("planDays", v)}
           className={cn("text-right type-label", childCount > 0 && "font-semibold")}
+          ariaLabel={tColumn("days")}
         />
       </TableCell>
 
@@ -2127,6 +2134,7 @@ const BudgetRow = memo(function BudgetRow({
         <InlineDate
           value={item.dateFrom}
           onCommit={(v) => update("dateFrom", v)}
+          ariaLabel={tColumn("dateFrom")}
         />
       </TableCell>
 
@@ -2135,6 +2143,7 @@ const BudgetRow = memo(function BudgetRow({
         <InlineDate
           value={item.dateTo}
           onCommit={(v) => update("dateTo", v)}
+          ariaLabel={tColumn("dateTo")}
         />
       </TableCell>
 
@@ -2172,6 +2181,7 @@ const BudgetRow = memo(function BudgetRow({
                   onCommit={(v) => update("actualCost", v)}
                   className="text-right tabular-nums text-muted-foreground hover:text-foreground"
                   suffix={` ${projectSymbol}`}
+                  ariaLabel={tColumn("actual")}
                 />
               </span>
             )}
@@ -2181,6 +2191,7 @@ const BudgetRow = memo(function BudgetRow({
             value={item.actualCost}
             onCommit={(v) => update("actualCost", v)}
             className={cn("text-right", overBudget && "font-semibold text-danger")}
+            ariaLabel={tColumn("actual")}
           />
         )}
         {overBudget && (

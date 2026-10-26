@@ -16,6 +16,12 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  // Remove console.log/debug in production builds (keeps console.error/warn)
+  compiler: {
+    removeConsole: {
+      exclude: ["error", "warn"],
+    },
+  },
   // Enable React StrictMode in dev — catches memory leaks, effect bugs,
   // and double-invocation issues.
   reactStrictMode: true,
@@ -44,7 +50,30 @@ const nextConfig: NextConfig = {
       "@radix-ui/react-accordion",
       "@radix-ui/react-tabs",
       "@radix-ui/react-toast",
+      "@radix-ui/react-avatar",
+      "@radix-ui/react-alert-dialog",
+      "@radix-ui/react-context-menu",
+      "@radix-ui/react-hover-card",
+      "@radix-ui/react-label",
+      "@radix-ui/react-progress",
+      "@radix-ui/react-radio-group",
+      "@radix-ui/react-scroll-area",
+      "@radix-ui/react-separator",
+      "@radix-ui/react-slider",
+      "@radix-ui/react-slot",
+      "@radix-ui/react-switch",
+      "@radix-ui/react-toggle",
+      "@radix-ui/react-toggle-group",
+      "@radix-ui/react-navigation-menu",
+      "@radix-ui/react-menubar",
+      "@radix-ui/react-aspect-ratio",
+      "@dnd-kit/core",
+      "@dnd-kit/sortable",
+      "@dnd-kit/utilities",
       "date-fns",
+      "next-intl",
+      "next-themes",
+      "@tanstack/react-query",
     ],
   },
 };
