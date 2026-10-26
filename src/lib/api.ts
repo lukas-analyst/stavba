@@ -13,9 +13,13 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 // This is fire-and-forget — we don't await it and don't surface errors to
 // the user (the React Query client-side cache is invalidated separately
 // and will trigger a refetch regardless).
+//
+// Per-project tags: each tag is suffixed with `:${projectId}` so that
+// a mutation on project A only invalidates project A's cache, not all
+// projects globally. The /api/revalidate endpoint accepts any tag
+// string that starts with a known prefix.
 export function bustServerCache(projectId: string, tags: string[] = ["dashboards"]) {
   if (typeof window === "undefined") return; // server-side no-op
-  void projectId; // projectId is kept in the signature for API compatibility
   fetch("/api/revalidate", {
     method: "POST",
     headers: { "Content-Type": "application/json" },

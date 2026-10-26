@@ -440,6 +440,12 @@ function BudgetTab({ projectId, dragEndHandlerRef }: { projectId: string; dragEn
   const [addTaskFor, setAddTaskFor] = useState<BudgetItem | null>(null);
   const [highlightId, setHighlightId] = useState<string | null>(null);
   const rowRefs = useRef<Map<string, HTMLTableRowElement>>(new Map());
+  // Accessibility (A4): visually-hidden live region announced to
+  // screen-reader users after a successful drag-and-drop reorder.
+  // dnd-kit handles its own internal announcements during the drag,
+  // but doesn't fire a final "moved" message on drop — this fills
+  // that gap so non-sighted users know the reorder landed.
+  const dndAnnouncerRef = useRef<HTMLDivElement>(null);
 
   const registerRow = useCallback((id: string, el: HTMLTableRowElement | null) => {
     const map = rowRefs.current;
@@ -690,6 +696,10 @@ function BudgetTab({ projectId, dragEndHandlerRef }: { projectId: string; dragEn
           const allCats = grouped.map(([c]) => c);
           const reordered = arrayMove(allCats, oldIndex, newIndex);
           reorder.mutate({ categoryOrder: reordered });
+          // A4: announce the completed reorder to screen-reader users.
+          if (dndAnnouncerRef.current) {
+            dndAnnouncerRef.current.textContent = "Položka přesunuta";
+          }
         }
         return;
       }
@@ -709,6 +719,10 @@ function BudgetTab({ projectId, dragEndHandlerRef }: { projectId: string; dragEn
               sortOrder: idx,
             }));
             reorder.mutate({ items: newSortOrders });
+            // A4: announce the completed reorder to screen-reader users.
+            if (dndAnnouncerRef.current) {
+              dndAnnouncerRef.current.textContent = "Položka přesunuta";
+            }
             return;
           }
         }
@@ -741,6 +755,10 @@ function BudgetTab({ projectId, dragEndHandlerRef }: { projectId: string; dragEn
               sortOrder: idx,
             }));
             reorder.mutate({ items: newSortOrders });
+            // A4: announce the completed reorder to screen-reader users.
+            if (dndAnnouncerRef.current) {
+              dndAnnouncerRef.current.textContent = "Položka přesunuta";
+            }
             return;
           }
         }
@@ -760,6 +778,12 @@ function BudgetTab({ projectId, dragEndHandlerRef }: { projectId: string; dragEn
 
   return (
     <div id="budget-root" className="space-y-4">
+      {/* A4: visually-hidden live region. dnd-kit announces drag-start /
+          drag-over messages itself, but doesn't fire a final "moved"
+          message on drop. We set this element's textContent after each
+          successful reorder (see dragEndHandlerRef effect above) so
+          non-sighted users get confirmation that the reorder landed. */}
+      <div aria-live="polite" className="sr-only" ref={dndAnnouncerRef} />
       {/* Toolbar — MD3 horizontal filter pattern (matches Payments / Time tabs).
           All controls live in a single flex-wrap row that wraps naturally on
           narrow viewports. The "Přidat položku" button is HIDDEN on mobile
@@ -1789,6 +1813,29 @@ const BudgetRow = memo(function BudgetRow({
         if (selectionMode) return;
         onEdit(item);
       }}
+      // Accessibility (A3): keyboard users can focus the row and press
+      // Enter to open the edit dialog (same as a click). In selection
+      // mode the row body is no longer an edit affordance — the
+      // checkbox handles selection — so we drop it from the tab order
+      // (tabIndex=undefined) to avoid a misleading focusable-but-inert
+      // element. aria-label is also omitted in selection mode (the
+      // checkbox already announces the row via its own aria-label).
+      tabIndex={!selectionMode ? 0 : undefined}
+      onKeyDown={
+        !selectionMode
+          ? (e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                onEdit(item);
+              }
+            }
+          : undefined
+      }
+      aria-label={
+        !selectionMode
+          ? t("aria.editRow", { name: item.subcategory || item.category })
+          : undefined
+      }
       className={cn(
         "group transition-colors",
         // In selection mode the row body is no longer clickable (the

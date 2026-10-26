@@ -245,8 +245,22 @@ function HomeContent() {
               onClick={() => setSidebarOpen(false)}
               aria-hidden="true"
             />
-            {/* Drawer */}
-            <aside className="fixed inset-y-0 left-0 z-50 w-72 max-w-[85vw] border-r bg-background md:hidden">
+            {/* Drawer
+                Accessibility (A1): the drawer is announced as a modal dialog
+                so screen-reader users understand focus is constrained to the
+                sidebar contents while it's open. Pressing Escape dismisses
+                the drawer — same gesture users expect from native dialogs.
+                A full focus trap is nice-to-have; role + Escape is the
+                minimum bar. */}
+            <aside
+              role="dialog"
+              aria-modal="true"
+              aria-label="Navigace"
+              onKeyDown={(e) => {
+                if (e.key === "Escape") setSidebarOpen(false);
+              }}
+              className="fixed inset-y-0 left-0 z-50 w-72 max-w-[85vw] border-r bg-background md:hidden"
+            >
               <AppSidebar />
               {/* Close button — 44px touch target on mobile (per MD3/Apple HIG) */}
               <button

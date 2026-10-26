@@ -734,7 +734,8 @@
           "expand": "Expand",
           "collapse": "Collapse",
           "selectRow": "Select item \"{name}\"",
-          "selectAllInCategory": "Select all items in category"
+          "selectAllInCategory": "Select all items in category",
+          "editRow": "Edit item \"{name}\""
         },
         "childCount": "{count, plural, one {# task} other {# tasks}}",
         "addTask": "Add task",
@@ -1335,7 +1336,8 @@
       },
       "aria": {
         "rowClick": "Click to edit entry",
-        "workersCount": "{count, plural, one {# worker} other {# workers}}"
+        "workersCount": "{count, plural, one {# worker} other {# workers}}",
+        "editRow": "Edit entry {workerName}"
       },
       "dialog": {
         "delete": {
@@ -1844,7 +1846,8 @@
       },
       "row": {
         "aria": {
-          "clickToEdit": "Click to edit payment"
+          "clickToEdit": "Click to edit payment",
+          "editRow": "Edit payment {description}"
         },
         "installment": {
           "title": "Installment invoice: {invoiceTotal} — paid {paidTotal} ({percent} %), remaining {remaining}",

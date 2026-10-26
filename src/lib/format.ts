@@ -99,6 +99,21 @@ export function formatCurrency(
 // Date formatting
 // ───────────────────────────────────────────────────────────────
 
+/**
+ * Extract YYYY-MM-DD from a date string or Date object, treating the
+ * date as UTC (not local timezone). This prevents dates from shifting
+ * back by one day in negative-offset timezones.
+ *
+ * Use this instead of `date.substring(0, 10)` for all date input fields
+ * (`<input type="date">`).
+ */
+export function toDateInputValue(date: Date | string | null | undefined): string {
+  if (!date) return "";
+  const d = typeof date === "string" ? new Date(date) : date;
+  if (isNaN(d.getTime())) return "";
+  return d.toISOString().substring(0, 10);
+}
+
 export function formatDate(
   date: Date | string | null | undefined,
   opts?: Intl.DateTimeFormatOptions,

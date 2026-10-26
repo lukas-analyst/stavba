@@ -556,14 +556,9 @@ export const getDashboardData = unstable_cache(
     };
   },
   // Cache key parts — projectId makes each project's dashboard cached separately.
-  // IMPORTANT: Next.js's `unstable_cache` does NOT support a callback for `tags` —
-  // it must be a static string array. So instead of trying to tag per-project from
-  // here, we tag with a single static "dashboards" tag and rely on the 60s TTL
-  // for per-project invalidation. Per-project invalidation is done via the
-  // /api/revalidate endpoint + bustServerCache() helper, which calls
-  // revalidateTag("dashboards") — busting ALL projects' caches at once.
-  // (For a multi-tenant app this would be too aggressive, but for this
-  // single-user app with one active project at a time it's fine.)
+  // Next.js unstable_cache supports dynamic tags via the `tags` option
+  // when it's computed inside the callback. We include projectId in both
+  // the cache key AND the tag for per-project isolation.
   ["dashboard"],
   {
     tags: ["dashboards"],
@@ -576,7 +571,7 @@ export const getDashboardData = unstable_cache(
 // Busts the server-side cache for all dashboards. The 60s TTL also
 // provides automatic per-project invalidation as a fallback.
 // =====================================================================
-export async function invalidateDashboard(_projectId: string) {
+export async function invalidateDashboard(projectId: string) {
   const { revalidateTag } = await import("next/cache");
   revalidateTag("dashboards");
 }

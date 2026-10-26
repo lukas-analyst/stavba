@@ -729,6 +729,20 @@ function PaymentRow({
       )}
       onClick={() => onEdit()}
       title={t("row.aria.clickToEdit")}
+      // Accessibility (A3): keyboard users can focus the row and press
+      // Enter to open the edit dialog (same as a click). The aria-label
+      // includes the payment description so screen-reader users hear
+      // which row they're on before activating it.
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          onEdit();
+        }
+      }}
+      aria-label={t("row.aria.editRow", {
+        description: payment.description || payment.vendor || "",
+      })}
     >
       <TableCell className={cn("w-16", childIndent, rowBg)}>
         {isParent ? (

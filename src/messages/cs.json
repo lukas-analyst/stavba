@@ -734,7 +734,8 @@
           "expand": "Rozbalit",
           "collapse": "Sbalit",
           "selectRow": "Vybrat položku „{name}\"",
-          "selectAllInCategory": "Vybrat všechny položky v kategorii"
+          "selectAllInCategory": "Vybrat všechny položky v kategorii",
+          "editRow": "Upravit položku „{name}\""
         },
         "childCount": "{count, plural, one {# úkol} few {# úkoly} other {# úkolů}}",
         "addTask": "Přidat úkol",
@@ -1335,7 +1336,8 @@
       },
       "aria": {
         "rowClick": "Klikněte pro úpravu záznamu",
-        "workersCount": "{count, plural, one {# pracovník} few {# pracovníci} many {# pracovníků} other {# pracovníků}}"
+        "workersCount": "{count, plural, one {# pracovník} few {# pracovníci} many {# pracovníků} other {# pracovníků}}",
+        "editRow": "Upravit záznam {workerName}"
       },
       "dialog": {
         "delete": {
@@ -1844,7 +1846,8 @@
       },
       "row": {
         "aria": {
-          "clickToEdit": "Klikněte pro úpravu platby"
+          "clickToEdit": "Klikněte pro úpravu platby",
+          "editRow": "Upravit platbu {description}"
         },
         "installment": {
           "title": "Faktura ve splátkách: {invoiceTotal} — zaplaceno {paidTotal} ({percent} %), zbývá {remaining}",

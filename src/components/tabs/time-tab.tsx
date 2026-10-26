@@ -876,6 +876,18 @@ function TimeRow({
       className="group cursor-pointer hover:bg-muted/30 cv-row"
       onClick={() => onEdit()}
       title={t("aria.rowClick")}
+      // Accessibility (A3): keyboard users can focus the row and press
+      // Enter to open the edit dialog (same as a click). The aria-label
+      // includes the worker name so screen-reader users hear which row
+      // they're on before activating it.
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          onEdit();
+        }
+      }}
+      aria-label={t("aria.editRow", { workerName: entry.workerName || "" })}
     >
       <TableCell className="w-16">
         <Badge
