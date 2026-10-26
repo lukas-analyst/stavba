@@ -88,10 +88,19 @@ export function AppSidebar() {
   // `userRole` falls back to "viewer" when no project is selected, so
   // restricted items (management, telemetry) stay hidden until a project
   // is picked.
-  const visibleItems = useMemo(
-    () => navItems.filter((item) => roleClears(userRole, item.minRole)),
-    [userRole, navItems],
-  );
+  //
+  // Portfolio tab is a special case — it spans ALL projects the user can
+  // access, so it's only meaningful when there are 2+ projects to compare.
+  // With 0 or 1 project we hide it from the sidebar (deep-linking still
+  // works because the tab ID stays in VALID_TABS).
+  const visibleItems = useMemo(() => {
+    const projectCount = projects?.length ?? 0;
+    return navItems.filter((item) => {
+      if (!roleClears(userRole, item.minRole)) return false;
+      if (item.id === "portfolio" && projectCount < 2) return false;
+      return true;
+    });
+  }, [userRole, navItems, projects]);
   const itemsBySection = navSections.map((section) => ({
     section,
     items: visibleItems.filter((t) => t.section === section.id),

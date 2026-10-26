@@ -58,8 +58,12 @@ import {
   Search,
   Clock,
   ArrowUpDown,
+  CalendarRange,
+  Table2,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
-import { formatNumber, formatDate, WORKER_TYPES, workerTypeLabel, toBcp47 } from "@/lib/format";
+import { formatNumber, formatDate, formatDateShort, WORKER_TYPES, workerTypeLabel, toBcp47 } from "@/lib/format";
 import { toast } from "sonner";
 import { EmptyStateBox } from "@/components/empty-state-box";
 import { InlineDate, InlineNumber } from "@/components/ui/inline-editors";
@@ -70,8 +74,13 @@ import { useAnalytics } from "@/hooks/use-analytics";
 import { cn } from "@/lib/utils";
 import { useLocale, useTranslations } from "next-intl";
 import type { Locale } from "@/i18n/config";
+import { SegmentedButton } from "@/components/ui/segmented-button";
 
 type SortKey = "date" | "worker" | "hours" | "workerType";
+
+// View mode for the Time tab — table (default, one-row-per-entry) or
+// weekly (grid of worker × day-of-week with totals).
+type TimeViewMode = "table" | "weekly";
 
 // Sort options — labels are localized at render time via `t("sort." + value)`.
 const SORT_OPTIONS: { value: SortKey }[] = [
@@ -104,6 +113,10 @@ export function TimeTab({ projectId }: { projectId: string }) {
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [sortBy, setSortBy] = useState<SortKey>("date");
+  // Toggle between the classic table view and the weekly grid view.
+  // Defaults to "table" — the weekly grid is an alternate layout, not
+  // a replacement. The same `entries` dataset feeds both views.
+  const [viewMode, setViewMode] = useState<TimeViewMode>("table");
 
   // Listen for FAB "add time" trigger (mobile contextual FAB)
   useEffect(() => {
@@ -206,53 +219,71 @@ export function TimeTab({ projectId }: { projectId: string }) {
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
-        <Select value={typeFilter} onValueChange={setTypeFilter}>
-          <SelectTrigger className="h-9 w-44">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">{t("filter.allTypes")}</SelectItem>
-            {WORKER_TYPES.map((wt) => (
-              <SelectItem key={wt.value} value={wt.value}>
-                {wt.emoji} {tWorkerTypes(wt.value)}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-          <SelectTrigger className="h-9 w-48">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent className="max-h-72">
-            <SelectItem value="all">{t("filter.allCategories")}</SelectItem>
-            {categories.map((c) => (
-              <SelectItem key={c} value={c}>
-                {c}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortKey)}>
-          <SelectTrigger className="h-9 w-48">
-            <ArrowUpDown className="mr-1.5 h-3.5 w-3.5 text-muted-foreground" />
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {SORT_OPTIONS.map((o) => (
-              <SelectItem key={o.value} value={o.value}>
-                {t(`sort.${o.value}`)}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <div className="flex items-center gap-3 text-sm">
-          <div className="text-right">
-            <div className="text-xs text-muted-foreground">{t("total.label", { count: filtered.length })}</div>
-            <div className="text-lg font-bold text-time">
-              {formatNumber(totalHours, " h", activeLocale)}
+        {/* View-mode toggle (Table | Weekly) — same dataset, different layout */}
+        <SegmentedButton
+          value={viewMode}
+          onChange={(v) => setViewMode(v as TimeViewMode)}
+          options={[
+            { value: "table", label: t("weekly.viewTable"), icon: Table2 },
+            { value: "weekly", label: t("weekly.viewWeekly"), icon: CalendarRange },
+          ]}
+          size="sm"
+        />
+        {viewMode === "table" ? (
+          <>
+            <Select value={typeFilter} onValueChange={setTypeFilter}>
+              <SelectTrigger className="h-9 w-44">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t("filter.allTypes")}</SelectItem>
+                {WORKER_TYPES.map((wt) => (
+                  <SelectItem key={wt.value} value={wt.value}>
+                    {wt.emoji} {tWorkerTypes(wt.value)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+              <SelectTrigger className="h-9 w-48">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="max-h-72">
+                <SelectItem value="all">{t("filter.allCategories")}</SelectItem>
+                {categories.map((c) => (
+                  <SelectItem key={c} value={c}>
+                    {c}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortKey)}>
+              <SelectTrigger className="h-9 w-48">
+                <ArrowUpDown className="mr-1.5 h-3.5 w-3.5 text-muted-foreground" />
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {SORT_OPTIONS.map((o) => (
+                  <SelectItem key={o.value} value={o.value}>
+                    {t(`sort.${o.value}`)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <div className="flex items-center gap-3 text-sm">
+              <div className="text-right">
+                <div className="text-xs text-muted-foreground">{t("total.label", { count: filtered.length })}</div>
+                <div className="text-lg font-bold text-time">
+                  {formatNumber(totalHours, " h", activeLocale)}
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
+          </>
+        ) : (
+          <span className="text-xs text-muted-foreground">
+            {t("weekly.title")}
+          </span>
+        )}
         {/* Desktop "Add time entry" button — hidden on mobile (mobile uses the FAB).
             Pushed to the end of the toolbar with ml-auto so it sits at the
             right edge of the row it lands on. */}
@@ -279,6 +310,12 @@ export function TimeTab({ projectId }: { projectId: string }) {
           {/* Standard toolbar + table skeleton */}
           <TabSkeleton />
         </>
+      ) : viewMode === "weekly" ? (
+        <WeeklyTimesheet
+          entries={entries ?? []}
+          projectId={projectId}
+          onEdit={(entry) => setEditEntry(entry)}
+        />
       ) : filtered.length === 0 ? (
         <EmptyStateBox
           icon={Clock}
@@ -359,6 +396,450 @@ export function TimeTab({ projectId }: { projectId: string }) {
         onClose={() => setEditEntry(null)}
       />
     </div>
+  );
+}
+
+// =====================================================================
+// WeeklyTimesheet — grid view of hours logged per worker × day of week.
+// ---------------------------------------------------------------------
+// Used by the Time tab when the user toggles "Týdenní přehled".
+//
+// Layout:
+//   • Toolbar: prev / today / next week buttons + current week range label
+//   • Grid: workers as rows, days (Po–Ne) as columns, plus a totals column
+//   • Footer: per-day totals row + grand total
+//
+// Multi-day entries (when `dateTo` is set) are spread evenly across the
+// day span (hoursPerDay = hours / daySpan) — same convention as the
+// Time-tab dialog's "≈ X h/day × N days" hint.
+//
+// Cell color thresholds:
+//   0 h     → muted (empty / no hours)
+//   1–6 h   → normal (default text color)
+//   7–9 h   → success (green — standard full workday)
+//   10 h+   → warning (amber — overtime / multi-worker)
+// =====================================================================
+
+// Day-of-week order for the grid. Week starts on Monday (ISO 8601) which
+// is the Czech locale convention. JS `Date.getDay()` returns 0=Sun..
+// 6=Sat, so we map to our own index 0..6 starting Monday.
+const DAY_KEYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"] as const;
+type DayKey = (typeof DAY_KEYS)[number];
+
+// Map JS getDay() (0=Sun..6=Sat) to our Monday-based index (0..6).
+function jsDayToMonIndex(jsDay: number): number {
+  // Sunday (0) → 6, Monday (1) → 0, …, Saturday (6) → 5
+  return (jsDay + 6) % 7;
+}
+
+// Returns Monday 00:00 local time of the week containing `date`.
+function startOfWeek(date: Date): Date {
+  const d = new Date(date);
+  d.setHours(0, 0, 0, 0);
+  const dayOffset = jsDayToMonIndex(d.getDay());
+  d.setDate(d.getDate() - dayOffset);
+  return d;
+}
+
+// Adds `weeks` weeks to a Monday-start date (preserves local time 00:00).
+function addWeeks(mondayStart: Date, weeks: number): Date {
+  const d = new Date(mondayStart);
+  d.setDate(d.getDate() + weeks * 7);
+  return d;
+}
+
+// Returns the 7 day Date objects for a week (Monday..Sunday), each at
+// local 00:00. Used for headers + per-day cell matching.
+function weekDays(mondayStart: Date): Date[] {
+  return Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(mondayStart);
+    d.setDate(d.getDate() + i);
+    return d;
+  });
+}
+
+// Same-calendar-day check (compares Y/M/D only, ignores time + tz).
+function sameDay(a: Date, b: Date): boolean {
+  return (
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate()
+  );
+}
+
+// Color-band class for a given hours value.
+// 0 h → muted; 1–6 h → normal; 7–9 h → success; 10+ h → warning.
+function cellColorClass(hours: number): string {
+  if (hours <= 0) return "bg-muted/20 text-muted-foreground";
+  if (hours < 7) return "bg-surface-container text-on-surface";
+  if (hours <= 9) return "bg-success-soft text-success-strong";
+  return "bg-warning-soft text-warning-strong";
+}
+
+type WeeklyCell = {
+  hours: number;
+  // The entries that contributed to this cell — used for the click-
+  // through to open the edit dialog (opens the first one for simplicity).
+  entryIds: string[];
+  firstEntry: TimeEntry | null;
+};
+
+type WeeklyRow = {
+  workerName: string;
+  cells: WeeklyCell[]; // length 7 (Mon..Sun)
+  total: number;
+};
+
+type WeeklyGrid = {
+  rows: WeeklyRow[];
+  dayTotals: number[]; // length 7
+  grandTotal: number;
+  weekStart: Date;
+  weekEnd: Date;
+};
+
+// Distributes a list of time entries across the 7-day grid for the
+// week starting `weekStart`. Multi-day entries are split evenly across
+// the days that fall within the entry's [date, dateTo] range AND the
+// current week window.
+function buildWeeklyGrid(
+  entries: TimeEntry[],
+  weekStart: Date,
+): WeeklyGrid {
+  const days = weekDays(weekStart);
+  const weekEnd = days[6];
+
+  // workerName → cell array (length 7)
+  const rowsMap = new Map<string, WeeklyCell[]>();
+
+  const ensureRow = (workerName: string): WeeklyCell[] => {
+    let cells = rowsMap.get(workerName);
+    if (!cells) {
+      cells = Array.from({ length: 7 }, () => ({
+        hours: 0,
+        entryIds: [],
+        firstEntry: null,
+      }));
+      rowsMap.set(workerName, cells);
+    }
+    return cells;
+  };
+
+  for (const entry of entries) {
+    const start = new Date(entry.date);
+    if (isNaN(start.getTime())) continue;
+
+    // Determine the day range of the entry. Single-day when dateTo is
+    // null/invalid; otherwise from `date` to `dateTo` inclusive.
+    let end = start;
+    if (entry.dateTo) {
+      const parsedEnd = new Date(entry.dateTo);
+      if (!isNaN(parsedEnd.getTime())) end = parsedEnd;
+    }
+
+    // Collect the list of in-week dates this entry touches.
+    const touchedDays: Date[] = [];
+    const cursor = new Date(start);
+    cursor.setHours(0, 0, 0, 0);
+    const endMidnight = new Date(end);
+    endMidnight.setHours(0, 0, 0, 0);
+    // Safety: cap at 14 days so a wildly malformed entry can't hang the UI.
+    let safety = 0;
+    while (cursor <= endMidnight && safety < 14) {
+      if (cursor >= weekStart && cursor <= weekEnd) {
+        touchedDays.push(new Date(cursor));
+      }
+      cursor.setDate(cursor.getDate() + 1);
+      safety++;
+    }
+
+    if (touchedDays.length === 0) continue;
+
+    // Even distribution: total hours / number of touched days.
+    const hoursPerDay = entry.hours / touchedDays.length;
+
+    const cells = ensureRow(entry.workerName);
+    for (const d of touchedDays) {
+      // Find which day index in our Mon..Sun array this is.
+      const idx = days.findIndex((wd) => sameDay(wd, d));
+      if (idx === -1) continue;
+      const cell = cells[idx];
+      cell.hours += hoursPerDay;
+      cell.entryIds.push(entry.id);
+      if (!cell.firstEntry) cell.firstEntry = entry;
+    }
+  }
+
+  // Build sorted rows: by total hours desc, then by workerName asc.
+  const rows: WeeklyRow[] = Array.from(rowsMap.entries())
+    .map(([workerName, cells]) => {
+      const total = cells.reduce((s, c) => s + c.hours, 0);
+      return { workerName, cells, total };
+    })
+    .sort((a, b) => {
+      if (b.total !== a.total) return b.total - a.total;
+      return a.workerName.localeCompare(b.workerName);
+    });
+
+  const dayTotals = days.map((_, i) =>
+    rows.reduce((s, r) => s + r.cells[i].hours, 0),
+  );
+  const grandTotal = dayTotals.reduce((s, v) => s + v, 0);
+
+  return {
+    rows,
+    dayTotals,
+    grandTotal,
+    weekStart,
+    weekEnd: weekEnd,
+  };
+}
+
+function WeeklyTimesheet({
+  entries,
+  projectId,
+  onEdit,
+}: {
+  entries: TimeEntry[];
+  projectId: string;
+  onEdit: (entry: TimeEntry) => void;
+}) {
+  const t = useTranslations("tabs.time");
+  const tc = useTranslations("common");
+  const activeLocale = useLocale() as Locale;
+  const bcp47 = toBcp47(activeLocale);
+  const { trackEvent } = useAnalytics(projectId);
+
+  // Week cursor — anchored on the Monday of the currently shown week.
+  // Defaults to the Monday of "today" so the user lands on the current
+  // week when first opening the weekly view.
+  const [weekStart, setWeekStart] = useState<Date>(() => startOfWeek(new Date()));
+
+  // Reset to current week when the user clicks "Today".
+  const goToday = () => setWeekStart(startOfWeek(new Date()));
+  const goPrev = () => setWeekStart((w) => addWeeks(w, -1));
+  const goNext = () => setWeekStart((w) => addWeeks(w, 1));
+
+  const grid = useMemo(
+    () => buildWeeklyGrid(entries, weekStart),
+    [entries, weekStart],
+  );
+
+  // Friendly week range label, e.g. "21. 10. – 27. 10. 2024".
+  const rangeLabel = useMemo(() => {
+    const fmtShort = (d: Date) =>
+      new Intl.DateTimeFormat(bcp47, {
+        day: "2-digit",
+        month: "2-digit",
+      }).format(d);
+    const fmtYear = (d: Date) =>
+      new Intl.DateTimeFormat(bcp47, { year: "numeric" }).format(d);
+    // Show year once at the end (or twice if it spans years).
+    if (grid.weekStart.getFullYear() === grid.weekEnd.getFullYear()) {
+      return `${fmtShort(grid.weekStart)} – ${fmtShort(grid.weekEnd)} ${fmtYear(grid.weekEnd)}`;
+    }
+    return `${fmtShort(grid.weekStart)} ${fmtYear(grid.weekStart)} – ${fmtShort(grid.weekEnd)} ${fmtYear(grid.weekEnd)}`;
+  }, [grid.weekStart, grid.weekEnd, bcp47]);
+
+  const days = weekDays(weekStart);
+  const todayKey = (() => {
+    const now = new Date();
+    const idx = days.findIndex((d) => sameDay(d, now));
+    return idx === -1 ? null : DAY_KEYS[idx];
+  })();
+
+  const handleCellClick = (cell: WeeklyCell) => {
+    if (cell.firstEntry) {
+      trackEvent("weekly_edit_entry", { hours: cell.hours });
+      onEdit(cell.firstEntry);
+    }
+  };
+
+  return (
+    <div className="space-y-3">
+      {/* === Week navigator === */}
+      <div className="flex flex-wrap items-center gap-2">
+        <Button variant="outline" size="sm" onClick={goPrev} title={t("weekly.prevWeek")}>
+          <ChevronLeft className="h-4 w-4" />
+          <span className="sr-only">{t("weekly.prevWeek")}</span>
+        </Button>
+        <Button variant="outline" size="sm" onClick={goToday}>
+          {t("weekly.today")}
+        </Button>
+        <Button variant="outline" size="sm" onClick={goNext} title={t("weekly.nextWeek")}>
+          <ChevronRight className="h-4 w-4" />
+          <span className="sr-only">{t("weekly.nextWeek")}</span>
+        </Button>
+        <div className="flex items-center gap-2 text-sm">
+          <span className="font-medium">{t("weekly.week")}</span>
+          <span className="tabular-nums">{rangeLabel}</span>
+        </div>
+        <div className="ml-auto flex items-center gap-3 text-sm">
+          <div className="text-right">
+            <div className="text-xs text-muted-foreground">{t("weekly.total")}</div>
+            <div className="text-lg font-bold text-time tabular-nums">
+              {formatNumber(grid.grandTotal, " h", activeLocale)}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* === Weekly grid === */}
+      {grid.rows.length === 0 ? (
+        <EmptyStateBox
+          icon={CalendarRange}
+          title={t("weekly.noEntries")}
+        />
+      ) : (
+        <div className="overflow-x-auto scrollbar-thin rounded-lg border border-outline-variant bg-card">
+          <Table className="min-w-[760px]">
+            <TableHeader>
+              <TableRow className="sticky top-0 z-30 bg-surface-container-high">
+                <TableHead className="sticky left-0 z-40 bg-surface-container-high min-w-[160px]">
+                  {t("weekly.worker")}
+                </TableHead>
+                {DAY_KEYS.map((dk, i) => {
+                  const isToday = todayKey === dk;
+                  const dateLabel = formatDateShort(days[i].toISOString(), activeLocale);
+                  return (
+                    <TableHead
+                      key={dk}
+                      className={cn(
+                        "text-center w-24",
+                        isToday && "bg-primary-container/40",
+                      )}
+                    >
+                      <div className="flex flex-col items-center">
+                        <span className="text-xs">{t(`weekly.dayShort.${dk}`)}</span>
+                        <span className="text-[11px] text-muted-foreground tabular-nums">
+                          {dateLabel}
+                        </span>
+                      </div>
+                    </TableHead>
+                  );
+                })}
+                <TableHead className="text-right w-24">{t("weekly.total")}</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {grid.rows.map((row) => (
+                <TableRow key={row.workerName} className="hover:bg-muted/30">
+                  <TableCell className="sticky left-0 z-20 bg-card font-medium">
+                    <span className="block truncate" title={row.workerName}>
+                      {row.workerName}
+                    </span>
+                  </TableCell>
+                  {row.cells.map((cell, i) => {
+                    const hasHours = cell.hours > 0;
+                    const rounded = Math.round(cell.hours * 10) / 10;
+                    const isToday = todayKey === DAY_KEYS[i];
+                    return (
+                      <TableCell
+                        key={i}
+                        className={cn(
+                          "text-center tabular-nums",
+                          cell.firstEntry && "cursor-pointer",
+                        )}
+                        onClick={() => cell.firstEntry && handleCellClick(cell)}
+                        title={
+                          cell.firstEntry
+                            ? tc("edit")
+                            : undefined
+                        }
+                      >
+                        <span
+                          className={cn(
+                            "inline-flex h-8 min-w-[3rem] items-center justify-center rounded-md px-2 text-sm font-medium",
+                            cellColorClass(cell.hours),
+                            isToday && hasHours && "ring-1 ring-primary",
+                          )}
+                        >
+                          {hasHours ? formatNumber(rounded, " h", activeLocale) : "—"}
+                        </span>
+                      </TableCell>
+                    );
+                  })}
+                  <TableCell className="text-right tabular-nums font-semibold whitespace-nowrap">
+                    {formatNumber(Math.round(row.total * 10) / 10, " h", activeLocale)}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+            <tfoot>
+              <TableRow className="sticky bottom-0 z-10 bg-surface-container-low border-t font-semibold">
+                <TableCell className="sticky left-0 z-20 bg-surface-container-low">
+                  {t("weekly.total")}
+                </TableCell>
+                {grid.dayTotals.map((total, i) => {
+                  const hasHours = total > 0;
+                  const isToday = todayKey === DAY_KEYS[i];
+                  return (
+                    <TableCell
+                      key={i}
+                      className={cn(
+                        "text-center tabular-nums",
+                        isToday && "bg-primary-container/30",
+                      )}
+                    >
+                      <span
+                        className={cn(
+                          "inline-flex h-8 min-w-[3rem] items-center justify-center rounded-md px-2 text-sm",
+                          cellColorClass(total),
+                        )}
+                      >
+                        {hasHours
+                          ? formatNumber(
+                              Math.round(total * 10) / 10,
+                              " h",
+                              activeLocale,
+                            )
+                          : "—"}
+                      </span>
+                    </TableCell>
+                  );
+                })}
+                <TableCell className="text-right tabular-nums whitespace-nowrap text-time">
+                  {formatNumber(
+                    Math.round(grid.grandTotal * 10) / 10,
+                    " h",
+                    activeLocale,
+                  )}
+                </TableCell>
+              </TableRow>
+            </tfoot>
+          </Table>
+        </div>
+      )}
+
+      {/* Legend for the cell color bands — small, discreet */}
+      <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+        <LegendChip
+          className="bg-muted/20"
+          label={t("weekly.hours") + ": 0"}
+        />
+        <LegendChip
+          className="bg-surface-container border border-outline-variant"
+          label="1–6 h"
+        />
+        <LegendChip
+          className="bg-success-soft text-success-strong"
+          label="7–9 h"
+        />
+        <LegendChip
+          className="bg-warning-soft text-warning-strong"
+          label="10+ h"
+        />
+      </div>
+    </div>
+  );
+}
+
+function LegendChip({ className, label }: { className: string; label: string }) {
+  return (
+    <span className="inline-flex items-center gap-1.5">
+      <span className={cn("h-3 w-3 rounded-sm", className)} />
+      <span>{label}</span>
+    </span>
   );
 }
 

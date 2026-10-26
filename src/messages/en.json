@@ -38,6 +38,7 @@
       "organization": "Organization"
     },
     "items": {
+      "portfolio": "Portfolio",
       "dashboard": "Overview",
       "budget": "Budget",
       "payments": "Payments",
@@ -425,6 +426,66 @@
     "days": "{n, plural, one {a day ago} other {{n} days ago}}"
   },
   "tabs": {
+    "portfolio": {
+      "title": "Portfolio",
+      "subtitle": "Overview of all projects — aggregated KPIs across your projects.",
+      "kpi": {
+        "projects": {
+          "label": "Projects",
+          "subValue": "{count, plural, one {# budget item} other {# budget items}}"
+        },
+        "plan": {
+          "label": "Total plan",
+          "subValue": "Aggregated across projects"
+        },
+        "actual": {
+          "label": "Spent",
+          "subValue": "{percent} of plan"
+        },
+        "remaining": {
+          "label": "Remaining",
+          "subValue": "Plan − actual"
+        }
+      },
+      "table": {
+        "title": "Project comparison",
+        "description": "Sortable comparison of plan, actual and budget burn.",
+        "column": {
+          "project": "Project",
+          "plan": "Plan",
+          "actual": "Actual",
+          "burn": "Burn",
+          "remaining": "Left",
+          "status": "Status"
+        },
+        "row": {
+          "total": "Total",
+          "projectCount": "{count, plural, one {# project} other {# projects}}"
+        }
+      },
+      "chart": {
+        "title": "Plan vs Actual per project",
+        "description": "Top 10 projects by planned budget.",
+        "empty": "No data for the chart yet.",
+        "series": {
+          "plan": "Plan",
+          "actual": "Actual"
+        }
+      },
+      "empty": {
+        "noProjects": {
+          "title": "You don't have any projects yet",
+          "description": "Create your first project to track budget, time and materials."
+        },
+        "oneProject": {
+          "title": "Portfolio is available from 2 projects",
+          "description": "Once you create or join a second project, an aggregated cross-project overview will appear here."
+        }
+      },
+      "aria": {
+        "openProject": "Open project"
+      }
+    },
     "admin": {
       "nav": {
         "label": "Administration",
@@ -1205,7 +1266,10 @@
       },
       "legend": {
         "today": "Today",
-        "doubleClickHint": "Double-click = edit dates"
+        "doubleClickHint": "Double-click = edit dates",
+        "dependencies": "Dependencies",
+        "criticalPath": "Critical path",
+        "milestone": "Milestone"
       },
       "title": {
         "gantt": "Construction schedule",
@@ -1340,6 +1404,28 @@
         },
         "button": {
           "firstRecord": "Log first time"
+        }
+      },
+      "weekly": {
+        "title": "Weekly overview",
+        "viewTable": "Table view",
+        "viewWeekly": "Weekly overview",
+        "week": "Week",
+        "prevWeek": "Previous week",
+        "nextWeek": "Next week",
+        "today": "Today",
+        "total": "Total",
+        "worker": "Worker",
+        "hours": "Hours",
+        "noEntries": "No hours logged in this week.",
+        "dayShort": {
+          "mon": "Mon",
+          "tue": "Tue",
+          "wed": "Wed",
+          "thu": "Thu",
+          "fri": "Fri",
+          "sat": "Sat",
+          "sun": "Sun"
         }
       }
     },

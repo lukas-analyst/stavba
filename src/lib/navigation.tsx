@@ -10,6 +10,7 @@ import {
   FileText,
   Settings,
   Activity,
+  Briefcase,
 } from "lucide-react";
 import type { TabId } from "@/lib/store";
 import { useTranslations } from "next-intl";
@@ -48,6 +49,10 @@ export type NavItem = {
 };
 
 export const NAV_ITEMS: NavItem[] = [
+  // Portfolio — cross-project overview. Visible in the sidebar only when
+  // the user has 2+ projects (filter applied in `AppSidebar`). At the
+  // TabId / routing level it is always valid so deep-linking keeps working.
+  { id: "portfolio", labelKey: "portfolio", icon: Briefcase, section: "main" },
   { id: "dashboard", labelKey: "dashboard", icon: LayoutDashboard, section: "main" },
   { id: "budget", labelKey: "budget", icon: Table2, section: "work" },
   { id: "payments", labelKey: "payments", icon: Receipt, section: "work" },

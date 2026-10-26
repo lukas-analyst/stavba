@@ -88,6 +88,7 @@ type RawTimelineRow = {
   rejected: boolean;
   parentId: string | null;
   parentSubcategory: string | null;
+  dependsOnId: string | null;
 };
 
 type RawPaymentRow = {
@@ -294,6 +295,7 @@ export const getDashboardData = unstable_cache(
       // 5) Timeline — ALL items (top-level + child tasks) with at least one date
       //    Includes parentId + parent's subcategory for tasks, so the UI can
       //    distinguish items from tasks and show the parent context.
+      //    Includes dependsOnId for Gantt dependency arrows + critical path.
       db.$queryRaw<RawTimelineRow[]>`
         SELECT
           bi.id, bi.category, bi.subcategory, bi.element, bi.phase,
@@ -302,6 +304,7 @@ export const getDashboardData = unstable_cache(
           bi."planCost", bi."actualCost", bi."planDays",
           bi.required, bi.completed, bi.rejected,
           bi."parentId",
+          bi."dependsOnId",
           parent.subcategory AS "parentSubcategory"
         FROM "budget_items" bi
         LEFT JOIN "budget_items" parent ON parent.id = bi."parentId"
@@ -481,6 +484,7 @@ export const getDashboardData = unstable_cache(
       rejected: row.rejected,
       parentId: row.parentId,
       parentSubcategory: row.parentSubcategory,
+      dependsOnId: row.dependsOnId,
     }));
 
     // ===== Assemble recent activity =====

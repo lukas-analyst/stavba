@@ -3,6 +3,7 @@
 import { create } from "zustand";
 
 export type TabId =
+  | "portfolio"
   | "dashboard"
   | "budget"
   | "payments"

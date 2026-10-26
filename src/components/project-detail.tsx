@@ -105,6 +105,19 @@ export function ProjectDetail({ project }: { project: Project }) {
     const prefetchTab = (tabId: TabId) => {
       const pid = project.id;
       switch (tabId) {
+        case "portfolio":
+          // Portfolio is account-level (spans all projects). Prefetch the
+          // /api/projects list since that's the single source of data
+          // the PortfolioTab consumes.
+          qc.prefetchQuery({
+            queryKey: ["projects"],
+            queryFn: async () => {
+              const res = await fetch("/api/projects");
+              if (!res.ok) throw new Error("Failed to load projects");
+              return res.json();
+            },
+          });
+          break;
         case "dashboard":
           qc.prefetchQuery({
             queryKey: ["dashboard", pid],

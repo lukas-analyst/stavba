@@ -20,6 +20,9 @@ import {
   CalendarRange,
   CalendarDays,
   CheckCircle2,
+  Milestone,
+  GitBranch,
+  AlertTriangle,
 } from "lucide-react";
 import { formatDate, formatCzk, PHASE_COLORS } from "@/lib/format";
 import { useFormatter, useTranslations } from "next-intl";
@@ -37,6 +40,54 @@ const UNIT_WIDTH: Record<ZoomLevel, number> = {
 };
 
 const DAY_MS = 1000 * 60 * 60 * 24;
+
+// ===== Layout constants (must match Tailwind classes below) =====
+// The Gantt body is laid out as a vertical stack of phase-header rows and
+// item rows. These heights are pinned by the `h-7` / `h-12` classes so the
+// dependency-arrow math can run in pure useMemo without DOM measurement.
+const PHASE_HEADER_HEIGHT = 28; // h-7 (1.75rem)
+const ROW_HEIGHT = 48;         // h-12 (3rem)
+const LEFT_COLUMN_PX = 256;     // w-64 (16rem)
+
+// Convert a date to a pixel offset from `rangeStart`. Hoisted to module
+// scope so it has a stable identity for the React Compiler (the closure
+// version created a new function every render, defeating useMemo).
+function dateToOffset(date: Date, zoom: ZoomLevel, rangeStart: Date): number {
+  if (zoom === "days") {
+    return Math.round((date.getTime() - rangeStart.getTime()) / DAY_MS);
+  } else if (zoom === "months") {
+    const months =
+      (date.getFullYear() - rangeStart.getFullYear()) * 12 +
+      (date.getMonth() - rangeStart.getMonth());
+    const dayInMonth = (date.getDate() - 1) / 30;
+    return months + dayInMonth;
+  } else if (zoom === "quarters") {
+    const days = (date.getTime() - rangeStart.getTime()) / DAY_MS;
+    return days / 90;
+  } else {
+    const days = (date.getTime() - rangeStart.getTime()) / DAY_MS;
+    return days / 365;
+  }
+}
+
+// ===== Dependency arrow (computed after layout measurement) =====
+// Each arrow is an L-shaped SVG path from the end of bar B (the dependency)
+// to the start of bar A (the dependent item). Coordinates are in pixels,
+// relative to the Gantt body container (the .relative wrapper that holds
+// all phase groups).
+type DepArrow = {
+  id: string;
+  d: string;
+};
+
+// ===== Milestone detection =====
+// An item is rendered as a milestone (diamond) when its start and end
+// dates are identical. The dashboard SQL COALESCEs dateTo → dateFrom when
+// dateTo is null, so an item with only dateFrom set is also a milestone.
+function isMilestoneItem(item: { dateFrom: string | null; dateTo: string | null }): boolean {
+  if (!item.dateFrom || !item.dateTo) return false;
+  return new Date(item.dateFrom).getTime() === new Date(item.dateTo).getTime();
+}
 
 export function TimelineTab({ projectId }: { projectId: string }) {
   const { data, isLoading } = useDashboard(projectId);
@@ -96,25 +147,6 @@ export function TimelineTab({ projectId }: { projectId: string }) {
     });
     return { items: sorted, rangeStart: start, rangeEnd: end, totalUnits: units };
   }, [data, zoom]);
-
-  // Convert a date to a pixel offset from rangeStart
-  const dateToOffset = (date: Date) => {
-    if (zoom === "days") {
-      return Math.round((date.getTime() - rangeStart.getTime()) / DAY_MS);
-    } else if (zoom === "months") {
-      const months =
-        (date.getFullYear() - rangeStart.getFullYear()) * 12 +
-        (date.getMonth() - rangeStart.getMonth());
-      const dayInMonth = (date.getDate() - 1) / 30;
-      return months + dayInMonth;
-    } else if (zoom === "quarters") {
-      const days = (date.getTime() - rangeStart.getTime()) / DAY_MS;
-      return days / 90;
-    } else {
-      const days = (date.getTime() - rangeStart.getTime()) / DAY_MS;
-      return days / 365;
-    }
-  };
 
   // Convert a pixel offset back to a date
   const offsetToDate = (offset: number) => {
@@ -211,9 +243,123 @@ export function TimelineTab({ projectId }: { projectId: string }) {
 
   // Today marker
   const today = new Date();
-  const todayOffset = dateToOffset(today);
+  const todayOffset = dateToOffset(today, zoom, rangeStart);
 
   const unitW = UNIT_WIDTH[zoom];
+
+  // ===== Critical path (simplified CPM) =====
+  // Each item has at most ONE dependsOnId (single parent), so the dependency
+  // graph is a forest. The critical path is the longest chain (most items)
+  // of dependent items. We compute chainLength(itemId) = length of the
+  // dependency chain ending at itemId (1 = no deps, 2 = depends on one item, ...).
+  // The max chainLength across all items is the critical path length.
+  // Items whose chainLength equals the max AND are reachable by tracing back
+  // through dependsOnId are highlighted on the Gantt.
+  const criticalPath = useMemo(() => {
+    const itemMap = new Map(items.map((it) => [it.id, it]));
+    const chainLength = new Map<string, number>();
+    const visited = new Set<string>(); // cycle guard
+    const getChain = (id: string): number => {
+      if (chainLength.has(id)) return chainLength.get(id)!;
+      const item = itemMap.get(id);
+      if (!item || !item.dependsOnId || !itemMap.has(item.dependsOnId)) {
+        chainLength.set(id, 1);
+        return 1;
+      }
+      // Cycle guard — if we encounter the same item while traversing up,
+      // break the cycle (treat as no dependency).
+      if (visited.has(id)) {
+        chainLength.set(id, 1);
+        return 1;
+      }
+      visited.add(id);
+      const len = getChain(item.dependsOnId) + 1;
+      chainLength.set(id, len);
+      visited.delete(id);
+      return len;
+    };
+    for (const it of items) getChain(it.id);
+
+    let maxLen = 0;
+    for (const len of chainLength.values()) if (len > maxLen) maxLen = len;
+
+    const critical = new Set<string>();
+    // Only highlight if there's an actual chain (maxLen > 1 means at least
+    // one dependency exists).
+    if (maxLen > 1) {
+      for (const [id, len] of chainLength) {
+        if (len !== maxLen) continue;
+        // Trace back through dependsOnId to mark all items on this chain.
+        let cur: string | null = id;
+        const traceVisited = new Set<string>();
+        while (cur && !traceVisited.has(cur)) {
+          traceVisited.add(cur);
+          critical.add(cur);
+          cur = itemMap.get(cur)?.dependsOnId ?? null;
+        }
+      }
+    }
+    return critical;
+  }, [items]);
+
+  // ===== Dependency arrows (pure useMemo, no DOM measurement) =====
+  // Bar positions are deterministic given the layout constants above:
+  //   • X = LEFT_COLUMN_PX + startOffset * unitW
+  //   • Y = cumulative row heights + ROW_HEIGHT / 2
+  // So we can compute every arrow's path during render.
+  const itemPositions = useMemo(() => {
+    const map = new Map<string, { leftEdge: number; rightEdge: number; centerY: number }>();
+    let y = 0;
+    for (const group of phaseGroups) {
+      y += PHASE_HEADER_HEIGHT; // phase header row
+      for (const it of group.items) {
+        const start = it.dateFrom ? new Date(it.dateFrom) : new Date(it.dateTo || today);
+        const end = it.dateTo ? new Date(it.dateTo) : new Date(it.dateFrom || today);
+        const startOffset = dateToOffset(start, zoom, rangeStart);
+        const endOffset = dateToOffset(end, zoom, rangeStart);
+        const widthUnits = Math.max(
+          zoom === "days" ? 1 : 0.3,
+          endOffset - startOffset + (zoom === "days" ? 1 : 0.5),
+        );
+        const centerX = LEFT_COLUMN_PX + startOffset * unitW;
+        const ms = isMilestoneItem(it);
+        const leftEdge = ms ? centerX - 6 : centerX; // 6px = half of 12px diamond
+        const rightEdge = ms
+          ? centerX + 6
+          : centerX + Math.max(widthUnits * unitW, 24);
+        map.set(it.id, { leftEdge, rightEdge, centerY: y + ROW_HEIGHT / 2 });
+        y += ROW_HEIGHT;
+      }
+    }
+    return map;
+  }, [phaseGroups, rangeStart, totalUnits, zoom, unitW, today]);
+
+  const depArrows = useMemo(() => {
+    const itemMap = new Map(items.map((it) => [it.id, it]));
+    const arrows: DepArrow[] = [];
+    for (const it of items) {
+      if (!it.dependsOnId) continue;
+      const dep = itemMap.get(it.dependsOnId);
+      // Skip if the dependency isn't on the timeline (no dates / not returned).
+      if (!dep) continue;
+      const depPos = itemPositions.get(it.dependsOnId);
+      const itemPos = itemPositions.get(it.id);
+      if (!depPos || !itemPos) continue;
+      const startX = depPos.rightEdge;
+      const startY = depPos.centerY;
+      const endX = itemPos.leftEdge;
+      const endY = itemPos.centerY;
+      // Skip arrows that span an unreasonable distance backwards.
+      if (endX - startX < -200) continue;
+      // L-shape: right from dep's end → down/up → left to item's start.
+      // The horizontal mid-point leaves a small gap on each side so the
+      // arrowhead doesn't overlap the bars.
+      const midX = Math.max(startX + 12, endX - 12);
+      const d = `M ${startX} ${startY} L ${midX} ${startY} L ${midX} ${endY} L ${endX - 5} ${endY}`;
+      arrows.push({ id: `${it.id}->${it.dependsOnId}`, d });
+    }
+    return arrows;
+  }, [items, itemPositions]);
 
   if (isLoading) {
     return (
@@ -305,10 +451,21 @@ export function TimelineTab({ projectId }: { projectId: string }) {
             </Badge>
           ))}
         </div>
-        <div className="flex items-center gap-3 type-label text-on-surface-variant">
+        <div className="flex flex-wrap items-center gap-3 type-label text-on-surface-variant">
           <span className="flex items-center gap-1">
             <span className="inline-block h-2 w-2 rounded-full bg-danger" /> {t("legend.today")}
           </span>
+          <span className="flex items-center gap-1">
+            <Milestone className="h-3 w-3" /> {t("legend.milestone")}
+          </span>
+          <span className="flex items-center gap-1">
+            <GitBranch className="h-3 w-3" /> {t("legend.dependencies")}
+          </span>
+          {criticalPath.size > 0 && (
+            <span className="flex items-center gap-1">
+              <AlertTriangle className="h-3 w-3 text-amber-500" /> {t("legend.criticalPath")}
+            </span>
+          )}
           <span>{t("legend.doubleClickHint")}</span>
         </div>
       </div>
@@ -319,7 +476,7 @@ export function TimelineTab({ projectId }: { projectId: string }) {
           <CardTitle className="type-title-lg">{t("title.gantt")}</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto" onScroll={(e) => setScrollLeft(e.currentTarget.scrollLeft)}>
+          <div className="overflow-x-auto">
             <div className="min-w-max">
               {/* Header */}
               <div className="sticky top-0 z-20 flex border-b bg-surface-container-high backdrop-blur">
@@ -367,7 +524,7 @@ export function TimelineTab({ projectId }: { projectId: string }) {
                 </div>
               )}
 
-              {/* Today marker line */}
+              {/* Gantt body */}
               <div className="relative">
                 {todayOffset >= 0 && todayOffset <= totalUnits && (
                   <div
@@ -383,7 +540,7 @@ export function TimelineTab({ projectId }: { projectId: string }) {
                 {phaseGroups.map((group) => (
                   <div key={group.phase}>
                     {/* Phase label row */}
-                    <div className="flex border-b bg-surface-container-low">
+                    <div className="flex h-7 border-b bg-surface-container-low">
                       <div className="sticky left-0 z-20 w-64 shrink-0 border-r bg-surface-container-low px-3 py-1 type-overline text-on-surface-variant">
                         {tPhases(group.phase)}
                       </div>
@@ -393,8 +550,8 @@ export function TimelineTab({ projectId }: { projectId: string }) {
                     {group.items.map((it) => {
                       const start = it.dateFrom ? new Date(it.dateFrom) : new Date(it.dateTo || today);
                       const end = it.dateTo ? new Date(it.dateTo) : new Date(it.dateFrom || today);
-                      const startOffset = dateToOffset(start);
-                      const endOffset = dateToOffset(end);
+                      const startOffset = dateToOffset(start, zoom, rangeStart);
+                      const endOffset = dateToOffset(end, zoom, rangeStart);
                       const widthUnits = Math.max(
                         zoom === "days" ? 1 : 0.3,
                         endOffset - startOffset + (zoom === "days" ? 1 : 0.5),
@@ -404,7 +561,7 @@ export function TimelineTab({ projectId }: { projectId: string }) {
                       const isActive = start <= today && end >= today;
 
                       return (
-                        <div key={it.id} className="flex border-b hover:bg-surface-container-high/60">
+                        <div key={it.id} className="flex h-12 border-b hover:bg-surface-container-high/60">
                           <div className="sticky left-0 z-20 w-64 shrink-0 border-r bg-card px-3 py-2">
                             <div className="flex items-center gap-1.5">
                               {it.completed ? (
@@ -437,6 +594,7 @@ export function TimelineTab({ projectId }: { projectId: string }) {
                               isActive={isActive}
                               isPast={isPast}
                               isFuture={isFuture}
+                              isCritical={criticalPath.has(it.id)}
                               zoom={zoom}
                               onDoubleClick={() => setEditingItem(it.id)}
                             />
@@ -446,6 +604,43 @@ export function TimelineTab({ projectId }: { projectId: string }) {
                     })}
                   </div>
                 ))}
+
+                {/* Dependency arrows — SVG overlay on top of bars but below
+                    sticky labels. pointer-events:none so it never blocks
+                    double-click on bars. */}
+                {depArrows.length > 0 && (
+                  <svg
+                    className="pointer-events-none absolute inset-0 z-[15] text-muted-foreground"
+                    width="100%"
+                    height="100%"
+                    style={{ overflow: "visible" }}
+                    aria-hidden="true"
+                  >
+                    <defs>
+                      <marker
+                        id="gantt-arrow-head"
+                        markerWidth="7"
+                        markerHeight="7"
+                        refX="6"
+                        refY="3.5"
+                        orient="auto"
+                        markerUnits="strokeWidth"
+                      >
+                        <path d="M0,0 L6,3.5 L0,7 Z" fill="currentColor" />
+                      </marker>
+                    </defs>
+                    {depArrows.map((a) => (
+                      <path
+                        key={a.id}
+                        d={a.d}
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth={1}
+                        markerEnd="url(#gantt-arrow-head)"
+                      />
+                    ))}
+                  </svg>
+                )}
               </div>
             </div>
           </div>
@@ -524,6 +719,7 @@ function GanttBar({
   widthUnits,
   unitW,
   isActive,
+  isCritical,
   onDoubleClick,
 }: {
   item: {
@@ -542,6 +738,7 @@ function GanttBar({
   isActive: boolean;
   isPast: boolean;
   isFuture: boolean;
+  isCritical: boolean;
   zoom: ZoomLevel;
   onDoubleClick: () => void;
 }) {
@@ -549,13 +746,49 @@ function GanttBar({
   const width = widthUnits * unitW;
   const left = startOffset * unitW;
   const barColor = PHASE_COLORS[item.phase] ?? "";
+  const milestone = isMilestoneItem(item);
+  const titleText = `${item.subcategory || item.category}\n${formatDate(item.dateFrom)} — ${formatDate(item.dateTo)}\n${formatCzk(item.planCost)}${item.completed ? t("suffix.completed") : ""}${milestone ? ` · ${t("legend.milestone")}` : ""}${isCritical ? ` · ${t("legend.criticalPath")}` : ""}`;
 
+  // ===== Milestone: render as a diamond (rotated square) =====
+  // A milestone is a zero-duration item (dateFrom === dateTo). The diamond
+  // is centered on the date, with a small label below.
+  if (milestone) {
+    return (
+      <div
+        className="absolute top-1/2 cursor-pointer"
+        style={{
+          left: `${left}px`,
+          transform: "translate(-50%, -50%)",
+        }}
+        onDoubleClick={(e) => {
+          e.stopPropagation();
+          onDoubleClick();
+        }}
+        title={titleText}
+      >
+        <div
+          className={cn(
+            "h-3 w-3 rotate-45 border shadow-sm transition-shadow hover:shadow-md hover:brightness-105",
+            barColor,
+            isCritical && "!border-2 !border-amber-500",
+            item.completed && "opacity-70",
+          )}
+        />
+        <div className="absolute left-1/2 top-full mt-0.5 -translate-x-1/2 whitespace-nowrap type-label-sm font-medium text-on-surface-variant">
+          {item.subcategory || item.category}
+        </div>
+      </div>
+    );
+  }
+
+  // ===== Regular bar =====
   return (
     <div
       className={cn(
         "absolute top-1/2 flex h-7 -translate-y-1/2 cursor-pointer items-center overflow-hidden rounded-md border shadow-sm transition-shadow hover:shadow-md hover:brightness-105",
         barColor,
         isActive && "ring-2 ring-offset-1",
+        isCritical && "!border-2 !border-amber-500",
         item.completed && "opacity-70",
       )}
       style={{
@@ -567,7 +800,7 @@ function GanttBar({
         e.stopPropagation();
         onDoubleClick();
       }}
-      title={`${item.subcategory || item.category}\n${formatDate(item.dateFrom)} — ${formatDate(item.dateTo)}\n${formatCzk(item.planCost)}${item.completed ? t("suffix.completed") : ""}`}
+      title={titleText}
     >
       <span className="flex-1 truncate px-1.5 type-label-sm font-medium">
         {item.subcategory || item.category}

@@ -38,6 +38,7 @@
       "organization": "Organizace"
     },
     "items": {
+      "portfolio": "Portfolio",
       "dashboard": "Přehled",
       "budget": "Rozpočet",
       "payments": "Platby",
@@ -425,6 +426,66 @@
     "days": "před {n, plural, one {dnem} few {# dny} other {{n} dny}}"
   },
   "tabs": {
+    "portfolio": {
+      "title": "Portfolio",
+      "subtitle": "Přehled všech projektů — agregované KPI napříč vašimi projekty.",
+      "kpi": {
+        "projects": {
+          "label": "Projekty",
+          "subValue": "{count, plural, one {# položka} few {# položky} many {# položek} other {# položek}} rozpočtu"
+        },
+        "plan": {
+          "label": "Celkem plán",
+          "subValue": "Souhrn napříč projekty"
+        },
+        "actual": {
+          "label": "Čerpáno",
+          "subValue": "{percent} rozpočtu"
+        },
+        "remaining": {
+          "label": "Zbývá",
+          "subValue": "Rozdíl plán − skutečnost"
+        }
+      },
+      "table": {
+        "title": "Porovnání projektů",
+        "description": "Seřaditelné porovnání plánu, skutečnosti a čerpání rozpočtu.",
+        "column": {
+          "project": "Projekt",
+          "plan": "Plán",
+          "actual": "Skut.",
+          "burn": "Čerpání",
+          "remaining": "Zbývá",
+          "status": "Stav"
+        },
+        "row": {
+          "total": "Celkem",
+          "projectCount": "{count, plural, one {# projekt} few {# projekty} many {# projektů} other {# projektů}}"
+        }
+      },
+      "chart": {
+        "title": "Plán vs Skutečnost dle projektu",
+        "description": "Top 10 projektů podle plánovaného rozpočtu.",
+        "empty": "Zatím žádná data pro graf.",
+        "series": {
+          "plan": "Plán",
+          "actual": "Skutečnost"
+        }
+      },
+      "empty": {
+        "noProjects": {
+          "title": "Zatím nemáte žádné projekty",
+          "description": "Vytvořte první projekt pro sledování rozpočtu, času a materiálu."
+        },
+        "oneProject": {
+          "title": "Portfolio je dostupné od 2 projektů",
+          "description": "Až vytvoříte nebo se připojíte k druhému projektu, zobrazí se zde agregovaný přehled napříč všemi projekty."
+        }
+      },
+      "aria": {
+        "openProject": "Otevřít projekt"
+      }
+    },
     "admin": {
       "nav": {
         "label": "Administrace",
@@ -1205,7 +1266,10 @@
       },
       "legend": {
         "today": "Dnes",
-        "doubleClickHint": "Dvojklik = upravit datumy"
+        "doubleClickHint": "Dvojklik = upravit datumy",
+        "dependencies": "Závislosti",
+        "criticalPath": "Kritická cesta",
+        "milestone": "Milník"
       },
       "title": {
         "gantt": "Harmonogram stavby",
@@ -1340,6 +1404,28 @@
         },
         "button": {
           "firstRecord": "Zaznamenat první čas"
+        }
+      },
+      "weekly": {
+        "title": "Týdenní přehled",
+        "viewTable": "Tabulkový pohled",
+        "viewWeekly": "Týdenní přehled",
+        "week": "Týden",
+        "prevWeek": "Předchozí týden",
+        "nextWeek": "Následující týden",
+        "today": "Dnes",
+        "total": "Celkem",
+        "worker": "Pracovník",
+        "hours": "Hodiny",
+        "noEntries": "V tomto týdnu nebyly zaznamenány žádné hodiny.",
+        "dayShort": {
+          "mon": "Po",
+          "tue": "Út",
+          "wed": "St",
+          "thu": "Čt",
+          "fri": "Pá",
+          "sat": "So",
+          "sun": "Ne"
         }
       }
     },

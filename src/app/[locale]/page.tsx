@@ -17,6 +17,7 @@ import { useSwipeToOpenSidebar } from "@/hooks/use-swipe-sidebar";
 import { Loader2, X } from "lucide-react";
 
 const VALID_TABS: ReadonlySet<TabId> = new Set<TabId>([
+  "portfolio",
   "dashboard",
   "budget",
   "payments",
@@ -42,6 +43,14 @@ const AdminTab = dynamic(() => import("@/components/tabs/admin-tab").then((m) =>
   ),
 });
 const SettingsTab = dynamic(() => import("@/components/tabs/settings-tab").then((m) => m.SettingsTab), {
+  ssr: false,
+  loading: () => (
+    <div className="flex h-full items-center justify-center">
+      <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+    </div>
+  ),
+});
+const PortfolioTab = dynamic(() => import("@/components/tabs/portfolio-tab").then((m) => m.PortfolioTab), {
   ssr: false,
   loading: () => (
     <div className="flex h-full items-center justify-center">
@@ -265,6 +274,12 @@ function HomeContent() {
             <AdminTab />
           ) : activeTab === "settings" ? (
             <SettingsTab />
+          ) : activeTab === "portfolio" ? (
+            // Portfolio tab is account-level (spans ALL projects the user
+            // can access). Renders regardless of whether a project is
+            // selected so the user can compare across projects even while
+            // "inside" one of them.
+            <PortfolioTab />
           ) : selectedProject ? (
             <ProjectDetail project={selectedProject} />
           ) : (

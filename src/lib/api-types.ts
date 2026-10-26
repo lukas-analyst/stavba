@@ -97,6 +97,10 @@ export type DashboardData = {
     rejected: boolean;
     parentId: string | null;
     parentSubcategory: string | null;
+    // FK to BudgetItem (self-reference) — if set, this item "depends on"
+    // another item. Used by the Gantt chart to draw dependency arrows
+    // and compute the critical path.
+    dependsOnId: string | null;
   }[];
   recent: {
     payments: {
