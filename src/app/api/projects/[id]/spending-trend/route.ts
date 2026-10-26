@@ -34,7 +34,7 @@ const getCachedSpendingTrend = unstable_cache(
   async (projectId: string): Promise<SpendingTrendResult> => {
     const payments = await dbRead.payment.findMany({
       where: { budgetItem: { projectId } },
-      select: { amount: true, date: true },
+      select: { amountConverted: true, date: true },
     });
     const timeEntries = await dbRead.timeEntry.findMany({
       where: { budgetItem: { projectId } },
@@ -59,7 +59,7 @@ const getCachedSpendingTrend = unstable_cache(
     for (const p of payments) {
       const key = getMonthKey(p.date);
       const m = monthMap.get(key);
-      if (m) m.spend += p.amount;
+      if (m) m.spend += p.amountConverted;
     }
     for (const t of timeEntries) {
       const key = getMonthKey(t.date);
@@ -68,7 +68,7 @@ const getCachedSpendingTrend = unstable_cache(
     }
 
     // If there's no data at all, also include a summary of cumulative spend
-    const totalSpend = payments.reduce((s, p) => s + p.amount, 0);
+    const totalSpend = payments.reduce((s, p) => s + p.amountConverted, 0);
     const totalHours = timeEntries.reduce((s, t) => s + t.hours, 0);
 
     return {

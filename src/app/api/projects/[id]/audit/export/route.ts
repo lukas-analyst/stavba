@@ -1,15 +1,19 @@
 import { NextResponse } from "next/server";
 import { dbRead } from "@/lib/db";
+import { requireProjectAccess } from "@/lib/authz";
 
 // GET /api/projects/[id]/audit/export
 // Exports the full audit log as CSV (for compliance, archiving).
 // Returns a CSV file with all entries, most recent first.
+// Requires viewer+ access to the project.
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const { id } = await params;
+    const access = await requireProjectAccess(id, "viewer");
+    if (!access.ok) return access.response;
 
     const logs = await dbRead.auditLog.findMany({
       where: { projectId: id },

@@ -2592,7 +2592,8 @@
         "adminOnly": "Pouze administrátor může měnit admin práva.",
         "cannotEditOtherProfile": "Úprava cizího profilu není povolena.",
         "userNotFound": "Uživatel nebyl nalezen.",
-        "noPasswordSet": "Váš účet nemá nastavené heslo (přihlašujete se přes Google). Heslo můžete nastavit přes funkci „Zapomenuté heslo\"."
+        "noPasswordSet": "Váš účet nemá nastavené heslo (přihlašujete se přes Google). Heslo můžete nastavit přes funkci „Zapomenuté heslo\".",
+        "cannotDemoteSelf": "Nemůžete odebrat admin práva sám sobě."
       },
       "password": {
         "currentRequired": "Aktuální heslo je povinné.",

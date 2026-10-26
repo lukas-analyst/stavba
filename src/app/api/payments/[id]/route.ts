@@ -32,6 +32,25 @@ export async function PATCH(
     const access = await requireProjectAccess(budgetItem.projectId, "editor");
     if (!access.ok) return access.response;
 
+    // Security: if budgetItemId is being changed, verify the NEW budget item
+    // belongs to the SAME project as the current one (prevent cross-project
+    // data moves that would corrupt the destination's actualCost aggregate).
+    if (body.budgetItemId !== undefined && body.budgetItemId !== existing.budgetItemId) {
+      const newBudgetItem = await db.budgetItem.findUnique({
+        where: { id: body.budgetItemId },
+        select: { projectId: true },
+      });
+      if (!newBudgetItem) {
+        return NextResponse.json({ error: "New budget item not found" }, { status: 404 });
+      }
+      if (newBudgetItem.projectId !== budgetItem.projectId) {
+        return NextResponse.json(
+          { error: "Cannot move payment to a budget item in a different project" },
+          { status: 403 },
+        );
+      }
+    }
+
     // === Multi-currency conversion ===
     // If currency or amount or date is being updated, recompute the conversion.
     const project = await dbRead.project.findUnique({

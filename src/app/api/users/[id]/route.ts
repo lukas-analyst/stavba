@@ -97,14 +97,14 @@ export async function PATCH(request: Request, { params }: RouteContext) {
           { status: 403 },
         );
       }
-      // Optional safety: prevent self-demotion so the instance never
-      // ends up with zero admins. Uncomment if you want this guard.
-      // if (id === requester.id && isAdmin === false) {
-      //   return NextResponse.json(
-      //     { error: "Nemůžete odebrat admin práva sám sobě." },
-      //     { status: 400 },
-      //   );
-      // }
+      // Safety: prevent self-demotion so the instance never
+      // ends up with zero admins.
+      if (id === requester.id && isAdmin === false) {
+        return NextResponse.json(
+          { error: t("users.cannotDemoteSelf") },
+          { status: 400 },
+        );
+      }
       data.isAdmin = Boolean(isAdmin);
     }
 

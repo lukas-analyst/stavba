@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { getTranslations } from "next-intl/server";
 import { normalizeEmail } from "@/lib/auth-helpers";
+import { checkRateLimit, LOGIN_RATE_LIMIT, getClientIp } from "@/lib/rate-limit";
 
 // =====================================================================
 // POST /api/account/recover — recover a soft-deleted account
@@ -24,6 +25,17 @@ const COOLING_OFF_DAYS = 7;
 export async function POST(request: Request) {
   try {
     const t = await getTranslations("api.errors.account");
+
+    // Rate limit: same as login (5 per 15 min per IP) to prevent brute-force
+    const ip = getClientIp(request);
+    const rl = checkRateLimit(`account-recover:${ip}`, LOGIN_RATE_LIMIT);
+    if (rl.limited) {
+      return NextResponse.json(
+        { error: `rate_limited:${rl.retryAfter}` },
+        { status: 429 },
+      );
+    }
+
     const body = await request.json();
     const { email, password, provider } = body;
 

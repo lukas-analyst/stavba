@@ -154,7 +154,8 @@ async function handlePublicProject(project: {
     );
   }
 
-  // Compose a SAFE subset — strip PII
+  // Compose a SAFE subset — strip PII.
+  // Add Cache-Control for CDN caching (public, 60s fresh, 5min stale).
   return NextResponse.json({
     project: {
       id: project.id,
@@ -179,5 +180,9 @@ async function handlePublicProject(project: {
     totals: dashboard.totals,
     byPhase: dashboard.byPhase,
     byCategory: dashboard.byCategory,
+  }, {
+    headers: {
+      "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300",
+    },
   });
 }

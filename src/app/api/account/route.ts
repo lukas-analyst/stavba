@@ -132,7 +132,7 @@ export async function DELETE(request: Request) {
       // 4. Expire pending invitations sent to this email
       db.projectInvitation.updateMany({
         where: {
-          email: dbUser.email,
+          inviteeEmail: dbUser.email,
           status: "pending",
         },
         data: { status: "expired" },

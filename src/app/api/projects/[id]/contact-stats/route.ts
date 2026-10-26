@@ -57,7 +57,7 @@ const getCachedContactStats = unstable_cache(
     const paymentAgg = await dbRead.payment.groupBy({
       by: ["contactId"],
       where: { contactId: { in: contactIds } },
-      _sum: { amount: true },
+      _sum: { amountConverted: true },
       _count: { id: true },
       _max: { date: true },
     });
@@ -78,7 +78,7 @@ const getCachedContactStats = unstable_cache(
     const contactStats: ContactStatRow[] = contacts.map((c) => {
       const p = paymentMap.get(c.id);
       const t = timeMap.get(c.id);
-      const totalPaid = p?._sum.amount ?? 0;
+      const totalPaid = p?._sum.amountConverted ?? 0;
       const totalHours = t?._sum.hours ?? 0;
       const paymentCount = p?._count.id ?? 0;
       const timeEntryCount = t?._count.id ?? 0;
