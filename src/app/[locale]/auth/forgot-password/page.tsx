@@ -51,7 +51,7 @@ export default function ForgotPasswordPage() {
         <div className="mb-8 text-center">
           <Link href="/" className="inline-flex items-center gap-2">
             <span className="text-2xl font-bold tracking-tight">
-              {BRAND.shortName}<span className="text-primary">.</span>
+              <img src="/logo.svg" alt="Logo" className="h-12 w-12 rounded-lg" />
             </span>
           </Link>
         </div>

@@ -75,7 +75,7 @@ export async function generateMetadata({
       siteName: appName,
       images: [
         {
-          url: "/logo.svg",
+          url: "/logo.jpg",
           width: 256,
           height: 256,
           alt: appName,

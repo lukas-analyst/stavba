@@ -457,7 +457,7 @@ function PublicHeader() {
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4 sm:px-6 lg:px-8">
         <Link href="/" className="inline-flex items-center gap-2">
           <span className="text-lg font-bold tracking-tight">
-            {BRAND.shortName}<span className="text-primary">.</span>
+            <img src="/logo.svg" alt="Logo" className="h-12 w-12 rounded-lg" />
           </span>
         </Link>
         <Badge variant="outline" className="gap-1.5 text-xs">
