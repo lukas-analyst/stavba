@@ -23,15 +23,18 @@ const geistMono = Geist_Mono({
 // =====================================================================
 // Static route segment config
 // ---------------------------------------------------------------------
-// `generateStaticParams` pre-generates the supported locale segments at
-// build time so `/cs/` and `/en/` are statically rendered (faster TTFB).
-// The default locale (`cs`) does NOT get a URL prefix thanks to
-// `as-needed` routing, but Next.js still needs the segment to exist.
-// =====================================================================
+// Prevent SSG for all pages under [locale]. Auth pages use useSession()
+// which returns undefined during static generation. Since this is an
+// authenticated app, no page benefits from SSG anyway.
+export const dynamic = "force-dynamic";
 
-export function generateStaticParams() {
-  return locales.map((locale) => ({ locale }));
-}
+// `generateStaticParams` is intentionally NOT used here. See above.
+// Next.js tries to statically prerender ALL pages under [locale] at
+// build time. But auth pages (profile, settings) use `useSession()`
+// which returns `undefined` during SSG (no session context available),
+// causing a build error. Instead, pages are server-rendered on demand.
+// This is fine for an authenticated app — all pages require a session
+// anyway, so static prerendering provides no benefit.
 
 // =====================================================================
 // Metadata — locale-aware

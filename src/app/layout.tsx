@@ -19,6 +19,11 @@
 
 import "./globals.css";
 
+// Prevent SSG for the entire app. Auth pages use useSession() which
+// returns undefined during static generation. Since this is an
+// authenticated app, SSG provides no benefit.
+export const dynamic = "force-dynamic";
+
 export default function RootLayout({
   children,
 }: Readonly<{
