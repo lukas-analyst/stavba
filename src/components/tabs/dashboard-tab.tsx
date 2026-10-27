@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { useTranslations } from "next-intl";
-import { useDashboard, useSpendingTrend } from "@/lib/api";
+import { useDashboard, useSpendingTrend, useProjects } from "@/lib/api";
 import {
   Card,
   CardContent,
