@@ -1,0 +1,2710 @@
+{
+  "Meta": {
+    "appName": "Build Budget",
+    "description": "Gestione integrata di budget, costi e tempi per costruzione e ristrutturazione. Panoramica di progetti, pagamenti, lavoro e materiali in un unico posto.",
+    "keywords": [
+      "costruzione",
+      "ristrutturazione",
+      "budget",
+      "costi",
+      "progetto",
+      "gestione"
+    ]
+  },
+  "common": {
+    "appName": "Build Budget",
+    "loading": "Caricamento…",
+    "cancel": "Annulla",
+    "save": "Salva",
+    "delete": "Elimina",
+    "edit": "Modifica",
+    "close": "Chiudi",
+    "search": "Cerca",
+    "yes": "Sì",
+    "no": "No",
+    "all": "Tutti",
+    "none": "Nessuno",
+    "add": "Aggiungi",
+    "select": {
+      "placeholder": "Seleziona…",
+      "search": "Cerca…",
+      "noResults": "Nessun risultato"
+    }
+  },
+  "nav": {
+    "sections": {
+      "main": "Principale",
+      "work": "Lavoro",
+      "organization": "Organizzazione"
+    },
+    "items": {
+      "portfolio": "Portafoglio",
+      "dashboard": "Panoramica",
+      "budget": "Budget",
+      "payments": "Pagamenti",
+      "time": "Tempo",
+      "contacts": "Contatti",
+      "timeline": "Cronoprogramma",
+      "notes": "Note",
+      "management": "Gestione progetto",
+      "telemetry": "Telemetria",
+      "admin": "Amministrazione"
+    }
+  },
+  "phases": {
+    "preparation": "Preparazione",
+    "demolition": "Demolizione",
+    "earthworks": "Movimenti terra",
+    "foundation": "Fondazioni",
+    "shell": "Struttura grezza",
+    "installations": "Impianti",
+    "finishing": "Finiture",
+    "facade": "Facciata",
+    "roof": "Copertura",
+    "interior": "Interno",
+    "exterior": "Esterno/giardino",
+    "final_inspection": "Collaudo",
+    "future": "Futuro",
+    "unspecified": "Non specificato"
+  },
+  "statuses": {
+    "active": "Attivo",
+    "planning": "Pianificazione",
+    "completed": "Completato",
+    "paused": "In pausa"
+  },
+  "contactTypes": {
+    "company": "Azienda",
+    "craftsman": "Artigiano",
+    "self": "Fai da te",
+    "family": "Famiglia",
+    "supplier": "Fornitore",
+    "architect": "Architetto",
+    "office": "Ufficio"
+  },
+  "paymentTypes": {
+    "receipt": "Ricevuta",
+    "invoice": "Fattura",
+    "work": "Manodopera",
+    "material": "Materiale",
+    "person": "Persona",
+    "other": "Altro"
+  },
+  "workerTypes": {
+    "company": "Azienda",
+    "craftsman": "Artigiano",
+    "self": "Fai da te",
+    "family": "Famiglia"
+  },
+  "roles": {
+    "viewer": "Visualizzatore",
+    "editor": "Editor",
+    "owner": "Gestore",
+    "admin": "Amministratore"
+  },
+  "LanguageSwitcher": {
+    "language": "Lingua",
+    "changeLanguage": "Cambia lingua"
+  },
+  "auth": {
+    "common": {
+      "email": "Email",
+      "emailPlaceholder": "tu@email.com",
+      "or": "oppure",
+      "password": "Password",
+      "copyright": "© {year} Stavba — Build Budget",
+      "backToLogin": "Torna al login",
+      "signInLink": "Accedi",
+      "backToHome": "Torna alla home"
+    },
+    "validation": {
+      "passwordMismatch": "Le password non corrispondono.",
+      "passwordTooShort": "La password deve avere almeno 8 caratteri.",
+      "passwordTooWeak": "La password deve contenere almeno una lettera e una cifra.",
+      "passwordPlaceholder": "Min. 8 caratteri, lettera + cifra",
+      "passwordConfirmLabel": "Conferma password",
+      "passwordConfirmPlaceholder": "Ripeti la password",
+      "strength": {
+        "weak": "Debole",
+        "fair": "Discreta",
+        "good": "Buona",
+        "strong": "Forte"
+      }
+    },
+    "login": {
+      "title": "Accedi",
+      "subtitle": "Accedi al tuo account",
+      "tagline": "Gestione di budget, costi e tempi per costruzione e ristrutturazione",
+      "registeredSuccess": "Registrazione riuscita. Controlla la tua email per verificare l'indirizzo.",
+      "forgotPassword": "Password dimenticata?",
+      "submitting": "Accesso in corso…",
+      "submit": "Accedi",
+      "googleButton": "Accedi con Google",
+      "noAccount": "Non hai un account?",
+      "registerLink": "Registrati",
+      "errors": {
+        "useOAuth": "Questa email è registrata tramite Google. Usa il pulsante «Accedi con Google».",
+        "registerFirst": "Non esiste ancora un account per questa email. Registrati.",
+        "invalidCredentials": "Email o password non validi.",
+        "configuration": "Errore di configurazione dell'accesso. Contatta l'amministratore.",
+        "oauthFailed": "Accesso con Google non riuscito. Riprova.",
+        "rateLimitedMinutes": "Troppi tentativi di accesso. Riprova tra {minutes} minuti.",
+        "rateLimitedSeconds": "Troppi tentativi di accesso. Riprova tra {seconds} secondi.",
+        "generic": "Accesso non riuscito. Riprova."
+      },
+      "accountDeleted": {
+        "title": "Account eliminato",
+        "body": "Il tuo account è stato eliminato e verrà rimosso definitivamente tra 7 giorni. Per recuperarlo, accedi di nuovo con la stessa email."
+      }
+    },
+    "register": {
+      "title": "Registrati",
+      "subtitle": "Crea un account gratuito",
+      "tagline": "Crea un account e inizia a gestire i tuoi progetti",
+      "nameLabel": "Nome (facoltativo)",
+      "namePlaceholder": "Mario Rossi",
+      "submitting": "Creazione account…",
+      "submit": "Crea account",
+      "hasAccount": "Hai già un account?",
+      "errors": {
+        "generic": "Registrazione non riuscita. Riprova."
+      }
+    },
+    "forgotPassword": {
+      "title": "Password dimenticata",
+      "subtitle": "Inserisci la tua email e ti invieremo un link per reimpostare la password.",
+      "submitting": "Invio in corso…",
+      "submit": "Invia link",
+      "remember": "Ricordi la password?",
+      "success": {
+        "title": "Controlla la tua email",
+        "body": "Se esiste un account con l'email {email}, ti abbiamo inviato un link per reimpostare la password. Il link è valido per 1 ora."
+      },
+      "errors": {
+        "generic": "Richiesta non riuscita. Riprova."
+      }
+    },
+    "resetPassword": {
+      "title": "Nuova password",
+      "subtitle": "Imposta la tua nuova password",
+      "newPasswordLabel": "Nuova password",
+      "submitting": "Cambio password…",
+      "submit": "Cambia password",
+      "checking": "Verifica del link…",
+      "invalidTitle": "Link non valido",
+      "invalidBody": "Questo link di reimpostamento della password non è valido o è scaduto (valido 1 ora). Richiedine uno nuovo.",
+      "newLink": "Nuovo link",
+      "successTitle": "Password cambiata",
+      "successBody": "La tua password è stata cambiata con successo. Reindirizzamento al login…",
+      "successToast": "Password cambiata con successo.",
+      "errors": {
+        "generic": "Reimpostamento della password non riuscito. Riprova."
+      }
+    },
+    "verifyEmail": {
+      "validTitle": "Email verificata!",
+      "validBody": "Il tuo indirizzo email è stato confermato con successo. Ora puoi accedere e iniziare a gestire i tuoi progetti.",
+      "alreadyTitle": "Email già verificata",
+      "alreadyBody": "Il tuo indirizzo email era già stato verificato in precedenza. Puoi accedere al tuo account.",
+      "expiredTitle": "Link scaduto",
+      "expiredBody": "Questo link è scaduto (valido 24 ore). Accedi e richiedi una nuova email di verifica.",
+      "invalidTitle": "Link non valido",
+      "invalidBody": "Questo link non è valido o è già stato usato. Accedi e richiedi una nuova email di verifica.",
+      "errorTitle": "Errore di verifica",
+      "errorBody": "Si è verificato un errore. Riprova più tardi o contattaci.",
+      "checking": "Verifica in corso…"
+    },
+    "verifyPending": {
+      "title": "Verifica la tua email",
+      "body": "Per accedere ai progetti devi confermare il tuo indirizzo email. Controlla la casella di posta, inclusa lo spam.",
+      "sentTo": "Email inviata a:",
+      "resendLabel": "Non hai ricevuto l'email?",
+      "resendButton": "Reinvia link",
+      "resendSubmitting": "Invio in corso…",
+      "checkButton": "Ho verificato — aggiorna",
+      "checkSubmitting": "Verifica in corso…",
+      "signOut": "Esci",
+      "footer": "Dopo aver verificato l'email, sarai reindirizzato automaticamente alla home page.",
+      "toasts": {
+        "resent": "L'email di verifica è stata reinviata. Controlla la casella di posta.",
+        "sendFailed": "Invio non riuscito. Riprova."
+      }
+    },
+    "profile": {
+      "tagline": "Gestisci account, password e sessioni",
+      "title": "Profilo",
+      "subtitle": "Modifica i tuoi dati, cambia la password e gestisci le sessioni attive qui.",
+      "sections": {
+        "profile": "Profilo",
+        "password": "Cambia password",
+        "sessions": "Sessioni",
+        "signOut": "Esci"
+      },
+      "fields": {
+        "name": "Nome",
+        "namePlaceholder": "Mario Rossi",
+        "currentPassword": "Password attuale",
+        "currentPasswordPlaceholder": "••••••••",
+        "newPassword": "Nuova password",
+        "confirmNewPassword": "Conferma nuova password",
+        "confirmNewPasswordPlaceholder": "Ripeti la nuova password"
+      },
+      "emailReadOnlyNote": "L'email non può essere modificata. Contatta il supporto per cambiarla.",
+      "passwordChangeNote": "Dopo aver cambiato la password, tutte le altre sessioni (su altri dispositivi) verranno chiuse.",
+      "sessionsDescription": "Disconnette tutte le altre sessioni attive (su altri dispositivi). Questa sessione resta attiva.",
+      "notifications": {
+        "title": "Preferenze di notifica",
+        "description": "Imposta quando vuoi ricevere notifiche via email.",
+        "toggle": {
+          "onMemberAssigned": {
+            "label": "Email all'assegnazione come membro",
+            "description": "Notifica quando qualcuno ti aggiunge come membro di un progetto."
+          },
+          "onItemDelayed": {
+            "label": "Email per ritardo voce",
+            "description": "Notifica quando una voce di budget supera la scadenza prevista."
+          },
+          "onOwnerChanged": {
+            "label": "Email per cambio gestore",
+            "description": "Notifica quando qualcuno cambia il gestore di un progetto di cui sei membro."
+          }
+        },
+        "toasts": {
+          "saved": "Preferenza salvata",
+          "saveError": "Salvataggio della preferenza non riuscito"
+        }
+      },
+      "buttons": {
+        "saveProfile": "Salva modifiche",
+        "savingProfile": "Salvataggio…",
+        "changePassword": "Cambia password",
+        "changingPassword": "Cambio password…",
+        "revokeSessions": "Disconnetti tutte le altre sessioni",
+        "revokingSessions": "Disconnessione…",
+        "signOutThisDevice": "Disconnetti questo dispositivo"
+      },
+      "toasts": {
+        "saveSuccess": "Profilo salvato.",
+        "saveError": "Salvataggio del profilo non riuscito.",
+        "saveErrorException": "Salvataggio del profilo non riuscito. Riprova.",
+        "passwordSuccess": "Password cambiata.",
+        "passwordError": "Cambio della password non riuscito.",
+        "passwordErrorException": "Cambio della password non riuscito. Riprova.",
+        "revokeSuccess": "Tutte le altre sessioni sono state disconnesse.",
+        "revokeError": "Disconnessione delle altre sessioni non riuscita.",
+        "revokeErrorException": "Disconnessione delle altre sessioni non riuscita. Riprova."
+      },
+      "deleteAccount": {
+        "sectionTitle": "Elimina account",
+        "sectionDescription": "Il tuo account verrà eliminato tra 7 giorni. Durante questo periodo puoi recuperarlo accedendo. Dopo 7 giorni l'account verrà rimosso definitivamente.",
+        "button": "Elimina account",
+        "title": "Eliminare davvero l'account?",
+        "description": "Questa azione eliminerà il tuo account tra 7 giorni. Durante questo periodo puoi recuperarlo accedendo.",
+        "warningTitle": "Avviso",
+        "warningBody": "Le tue membership ai progetti verranno revocate. I progetti che gestisci rimarranno visibili agli altri membri, ma senza gestore. Dopo 7 giorni l'account verrà eliminato definitivamente e l'email anonimizzata.",
+        "passwordLabel": "Inserisci la tua password per confermare",
+        "emailConfirmLabel": "Inserisci la tua email per confermare",
+        "emailConfirmHint": "Digita esattamente il tuo indirizzo email per confermare la tua identità.",
+        "acknowledge": "Comprendo che i miei progetti rimarranno visibili agli altri membri e l'account verrà eliminato tra 7 giorni.",
+        "cancel": "Annulla",
+        "confirm": "Elimina account",
+        "deleting": "Eliminazione…",
+        "success": "Account pianificato per l'eliminazione. Verrà rimosso definitivamente tra 7 giorni.",
+        "error": "Eliminazione dell'account non riuscita. Riprova."
+      }
+    },
+    "settings": {
+      "tagline": "Impostazioni globali dell'app",
+      "sections": {
+        "appearance": "Aspetto",
+        "hiddenProjects": "Progetti nascosti",
+        "activity": "Statistiche attività",
+        "about": "Informazioni"
+      },
+      "appearance": {
+        "description": "Cambia l'aspetto e la lingua dell'interfaccia.",
+        "theme": "Tema",
+        "themeHint": "Passa tra tema chiaro e scuro.",
+        "themeLight": "Tema chiaro",
+        "themeDark": "Tema scuro",
+        "language": "Lingua",
+        "languageHint": "Le modifiche della lingua hanno effetto immediato."
+      },
+      "hiddenProjects": {
+        "description": "I progetti nascosti non compaiono nel selettore progetti della barra superiore. Rimangono accessibili tramite link diretto.",
+        "empty": "Non hai ancora progetti.",
+        "toggleHint": "Attivo = progetto nascosto. Le modifiche vengono salvate automaticamente.",
+        "aria": {
+          "show": "Mostra progetto {name}",
+          "hide": "Nascondi progetto {name}"
+        }
+      },
+      "activity": {
+        "description": "Panoramica delle tue azioni nell'app su tutti i tempi e progetti."
+      },
+      "about": {
+        "body": "L'app <brand>Stavba</brand> offre una gestione integrata di budget, costi, tempi e materiali per costruzione e ristrutturazione.",
+        "version": "Versione",
+        "commit": "Commit",
+        "buildDate": "Data di build",
+        "branch": "Branch",
+        "label": "Etichetta",
+        "githubLink": "Codice sorgente su GitHub"
+      },
+      "accountProfileLink": "Profilo account"
+    }
+  },
+  "topbar": {
+    "account": "Account",
+    "loading": "Caricamento…",
+    "selectProject": "Seleziona progetto",
+    "searchProject": "Cerca progetto…",
+    "search": "Cerca",
+    "toggleSidebar": {
+      "open": "Apri pannello",
+      "close": "Chiudi pannello"
+    },
+    "menu": {
+      "profile": "Profilo",
+      "settings": "Impostazioni",
+      "admin": "Admin",
+      "signOut": "Esci",
+      "theme": {
+        "light": "Tema chiaro",
+        "dark": "Tema scuro"
+      }
+    },
+    "star": {
+      "add": "Aggiungi ai preferiti",
+      "remove": "Rimuovi dai preferiti"
+    },
+    "toasts": {
+      "projectUpdateFailed": "Aggiornamento del progetto non riuscito"
+    },
+    "noOwner": "Nessun gestore — contatta gli amministratori",
+    "noProjectsFound": "Nessun progetto trovato.",
+    "addProject": "Aggiungi progetto",
+    "searchInProject": "Cerca nel progetto…",
+    "budgetChip": "Consumo: {actual} di {plan}",
+    "budgetChipPercent": "Consumo del budget: {percent} percento"
+  },
+  "sidebar": {
+    "settings": "Impostazioni"
+  },
+  "analytics": {
+    "eventTypes": {
+      "page_view": "Visita di pagina",
+      "add_payment": "Aggiungi pagamento",
+      "add_time_entry": "Aggiungi registrazione di tempo",
+      "edit_time_entry": "Modifica registrazione di tempo",
+      "edit_payment": "Modifica pagamento",
+      "delete_payment": "Elimina pagamento",
+      "add_contact": "Aggiungi contatto",
+      "add_note": "Aggiungi nota",
+      "edit_note": "Modifica nota",
+      "add_budget_item": "Aggiungi voce di budget",
+      "edit_budget_item": "Modifica voce di budget",
+      "download_data": "Scarica dati",
+      "login": "Accedi",
+      "logout": "Esci",
+      "project_share": "Condividi progetto",
+      "auth_login": "Accesso",
+      "auth_logout": "Disconnessione",
+      "auth_register": "Registrazione",
+      "auth_password_change": "Cambio password",
+      "auth_password_reset": "Reimpostazione password",
+      "auth_email_verify": "Verifica email",
+      "auth_session_revoke": "Revoca sessione",
+      "auth_oauth_login": "Accesso con Google"
+    }
+  },
+  "relativeTime": {
+    "justNow": "adesso",
+    "minute": "{n, plural, one {un minuto fa} other {{n} minuti fa}}",
+    "hour": "{n, plural, one {un'ora fa} other {{n} ore fa}}",
+    "yesterday": "ieri",
+    "days": "{n, plural, one {un giorno fa} other {{n} giorni fa}}"
+  },
+  "tabs": {
+    "portfolio": {
+      "title": "Portafoglio",
+      "subtitle": "Panoramica di tutti i progetti — KPI aggregati sui tuoi progetti.",
+      "kpi": {
+        "projects": {
+          "label": "Progetti",
+          "subValue": "{count, plural, one {# voce di budget} other {# voci di budget}}"
+        },
+        "plan": {
+          "label": "Piano totale",
+          "subValue": "Aggregato tra i progetti"
+        },
+        "actual": {
+          "label": "Speso",
+          "subValue": "{percent} del piano"
+        },
+        "remaining": {
+          "label": "Residuo",
+          "subValue": "Piano − effettivo"
+        }
+      },
+      "table": {
+        "title": "Comparazione progetti",
+        "description": "Comparazione ordinabile per piano, effettivo e consumo del budget.",
+        "column": {
+          "project": "Progetto",
+          "plan": "Piano",
+          "actual": "Effettivo",
+          "burn": "Consumo",
+          "remaining": "Residuo",
+          "status": "Stato"
+        },
+        "row": {
+          "total": "Totale",
+          "projectCount": "{count, plural, one {# progetto} other {# progetti}}"
+        }
+      },
+      "chart": {
+        "title": "Piano vs Effettivo per progetto",
+        "description": "Top 10 progetti per budget pianificato.",
+        "empty": "Nessun dato per il grafico.",
+        "series": {
+          "plan": "Piano",
+          "actual": "Effettivo"
+        }
+      },
+      "empty": {
+        "noProjects": {
+          "title": "Non hai ancora progetti",
+          "description": "Crea il tuo primo progetto per monitorare budget, tempi e materiali."
+        },
+        "oneProject": {
+          "title": "Il portafoglio è disponibile da 2 progetti",
+          "description": "Quando creerai o ti unirai a un secondo progetto, qui apparirà una panoramica aggregata tra progetti."
+        }
+      },
+      "aria": {
+        "openProject": "Apri progetto"
+      }
+    },
+    "admin": {
+      "nav": {
+        "label": "Amministrazione",
+        "title": "Impostazioni account"
+      },
+      "subtitle": "Profilo, progetti, statistiche e preferenze.",
+      "section": {
+        "projects": "I miei progetti",
+        "users": "Gestione utenti",
+        "export": "Esportazione",
+        "notifications": "Notifiche",
+        "danger": "Zona pericolosa"
+      },
+      "profile": {
+        "title": "Il mio profilo",
+        "description": "Nome visualizzato ed email che gli altri utenti vedono quando si condividono progetti.",
+        "button": {
+          "edit": "Modifica",
+          "save": "Salva"
+        },
+        "field": {
+          "displayName": "Nome visualizzato"
+        },
+        "placeholder": {
+          "name": "es. Mario Rossi"
+        },
+        "hint": {
+          "nameChange": "La modifica si applicherà a tutti i progetti in cui sei membro."
+        },
+        "label": {
+          "accountCreated": "Account creato: {date}"
+        },
+        "toasts": {
+          "emptyName": "Il nome non può essere vuoto",
+          "saved": "Profilo salvato",
+          "saveError": "Aggiornamento del profilo non riuscito"
+        }
+      },
+      "projects": {
+        "title": "I miei progetti",
+        "description": "Progetti di cui sei gestore o membro. Puoi lasciare solo i progetti che non gestisci.",
+        "button": {
+          "leave": "Lascia",
+          "leaveConfirm": "Lascia"
+        },
+        "leave": {
+          "confirmTitle": "Lasciare il progetto «{name}»?",
+          "confirmBody": "Perderai l'accesso a tutti i dati del progetto. Questa azione è irreversibile.",
+          "cancel": "Annulla"
+        },
+        "badge": {
+          "cannotLeave": "Non puoi lasciare"
+        },
+        "empty": "Non sei ancora membro di alcun progetto.",
+        "toasts": {
+          "left": "Hai lasciato il progetto «{name}»",
+          "leaveError": "Non è stato possibile lasciare il progetto"
+        }
+      },
+      "users": {
+        "title": "Gestione utenti",
+        "description": "Panoramica di tutti gli utenti dell'istanza e dei loro diritti di amministratore. Le modifiche hanno effetto immediato.",
+        "badge": {
+          "admin": "Amministratore",
+          "user": "Utente",
+          "pendingDeletion": "In attesa di eliminazione"
+        },
+        "aria": {
+          "adminToggleSelf": "Diritti di amministratore dell'utente {name} (non modificabili)",
+          "adminToggleOther": "Attiva/disattiva diritti di amministratore di {name}"
+        },
+        "tooltip": {
+          "noSelfDemote": "Non puoi rimuovere i tuoi diritti di amministratore"
+        },
+        "hint": {
+          "selfExcluded": "Il tuo account ({email}) è escluso dalla lista — non puoi rimuovere i tuoi diritti di amministratore."
+        },
+        "empty": "Nessun altro utente da gestire.",
+        "toasts": {
+          "cannotDemoteSelf": "Non puoi rimuovere i tuoi diritti di amministratore",
+          "promoted": "L'utente {name} è ora amministratore",
+          "demoted": "L'utente {name} non è più amministratore",
+          "toggleError": "Modifica dei diritti di amministratore non riuscita"
+        }
+      },
+      "stats": {
+        "title": "Statistiche della mia attività",
+        "description": "Panoramica delle tue azioni nell'app nel tempo.",
+        "filter": {
+          "allProjects": "Tutti i progetti"
+        },
+        "button": {
+          "refresh": "Aggiorna"
+        },
+        "kpi": {
+          "totalActions": "Azioni totali",
+          "pageViews": "Visite di pagina",
+          "totalTime": "Tempo totale sulle pagine",
+          "lastActive": "Ultima attività"
+        },
+        "chart": {
+          "byType": {
+            "title": "Eventi per tipo",
+            "empty": "Nessuna attività registrata."
+          }
+        },
+        "topPages": {
+          "title": "Le mie pagine più attive",
+          "empty": "Nessun dato di tempo sulle pagine.",
+          "column": {
+            "page": "Pagina",
+            "views": "Visite",
+            "totalTime": "Tempo totale"
+          }
+        }
+      },
+      "export": {
+        "title": "Esporta i miei dati",
+        "description": "Scarica tutti i dati dell'app in formato JSON o CSV per backup e analisi.",
+        "button": {
+          "json": "Scarica tutti i dati (JSON)",
+          "csv": "Scarica CSV di tutti i progetti"
+        },
+        "hint": "JSON contiene lo stato completo di tutti i progetti (budget, pagamenti, tempo, contatti). CSV scarica 4 file per progetto (budget, pagamenti, tempo, contatti).",
+        "toasts": {
+          "jsonSuccess": "Dati esportati",
+          "jsonError": "Esportazione non riuscita",
+          "csvNoProjects": "Nessun progetto da esportare",
+          "csvSuccess": "Dati esportati ({count, plural, one {# file} other {# file}})",
+          "csvAllFailed": "Esportazione CSV non riuscita",
+          "csvPartialSuccess": "Esportati {success} file, {failed} non riusciti"
+        }
+      },
+      "notifications": {
+        "title": "Preferenze di notifica",
+        "description": "Finché Google Auth non è attivo, salviamo le preferenze localmente nel tuo browser.",
+        "toggle": {
+          "onMemberAssigned": {
+            "label": "Email all'assegnazione come membro",
+            "description": "Notifica quando qualcuno ti aggiunge come membro di un progetto."
+          },
+          "onItemDelayed": {
+            "label": "Email per ritardo voce",
+            "description": "Notifica quando una voce di budget supera la scadenza prevista."
+          },
+          "onOwnerChanged": {
+            "label": "Email per cambio gestore",
+            "description": "Notifica quando qualcuno cambia il gestore di un progetto di cui sei membro."
+          }
+        },
+        "toasts": {
+          "saved": "Preferenza salvata",
+          "saveError": "Salvataggio della preferenza non riuscito"
+        }
+      },
+      "danger": {
+        "title": "Zona pericolosa",
+        "description": "Le azioni in questa sezione sono irreversibili. Richiedono conferma esplicita in una finestra di dialogo.",
+        "deleteNotes": {
+          "title": "Elimina tutte le mie note",
+          "description": "Elimina definitivamente tutte le note che hai creato in tutti i progetti.",
+          "button": "Elimina",
+          "confirmTitle": "Eliminare tutte le mie note?",
+          "confirmBody": "Questa azione è irreversibile. Tutte le note che hai creato verranno eliminate definitivamente da tutti i progetti.",
+          "confirmButton": "Elimina tutte le note",
+          "toasts": {
+            "none": "Nessuna nota da eliminare",
+            "success": "Eliminate {count, plural, one {# nota} other {# note}}",
+            "partial": "Eliminate {deleted}, {failed} non riuscite",
+            "error": "Eliminazione delle note non riuscita"
+          }
+        },
+        "leaveAll": {
+          "title": "Lascia tutti i progetti",
+          "description": "Ti rimuove da tutti i progetti in cui sei membro (non gestore). Perderai l'accesso a tutti i dati di quei progetti.",
+          "button": "Lascia tutti",
+          "confirmTitle": "Lasciare tutti i progetti?",
+          "confirmBody": "Perderai l'accesso a tutti i dati dei progetti di cui sei membro. I progetti che gestisci non saranno toccati. Questa azione è irreversibile.",
+          "confirmButton": "Lascia tutti",
+          "toasts": {
+            "none": "Non sei membro di alcun progetto (che puoi lasciare)",
+            "success": "Lasciati {count, plural, one {# progetto} other {# progetti}}",
+            "partial": "Lasciati {left}, {failed} non riusciti",
+            "error": "Non è stato possibile lasciare i progetti"
+          }
+        }
+      }
+    },
+    "budget": {
+      "completion": {
+        "all": "Tutte",
+        "active": "Attive",
+        "done": "Completate",
+        "rejected": "Rifiutate"
+      },
+      "filter": {
+        "phase": "Fase:"
+      },
+      "toolbar": {
+        "search": "Cerca nel budget…",
+        "add": "Aggiungi voce",
+        "selectionMode": "Modalità selezione",
+        "selected": "Selezionate: {count, plural, one {# voce} other {# voci}}",
+        "bulkComplete": "Segna come completate",
+        "bulkIncomplete": "Segna come non completate",
+        "bulkReject": "Rifiuta",
+        "bulkUnreject": "Annulla rifiuto",
+        "bulkDelete": "Elimina selezionate",
+        "cancelSelection": "Annulla selezione",
+        "bulkSuccess": "{count, plural, one {# voce aggiornata} other {# voci aggiornate}}",
+        "bulkDeleteSuccess": "{count, plural, one {# voce eliminata} other {# voci eliminate}}",
+        "bulkPartialError": "{count} di {total} non riuscite",
+        "bulkError": "Azione massiva non riuscita",
+        "bulkDeleteTitle": "Eliminare le voci selezionate?",
+        "bulkDeleteDescription": "{count, plural, one {Sei sicuro di voler eliminare # voce selezionata? Questa azione non può essere annullata.} other {Sei sicuro di voler eliminare # voci selezionate? Questa azione non può essere annullata.}}"
+      },
+      "empty": {
+        "title": "Nessuna voce corrisponde al filtro",
+        "description": "Prova a cambiare fase, stato o filtro di ricerca. Oppure cancella il filtro per vedere tutte le voci.",
+        "categoryRow": "Nessuna voce in questa categoria."
+      },
+      "column": {
+        "item": "Voce",
+        "phase": "Fase",
+        "plan": "Piano (CZK)",
+        "days": "Giorni",
+        "dateFrom": "Dal",
+        "dateTo": "Al",
+        "actual": "Effettivo (CZK)",
+        "hours": "Ore",
+        "status": "Stato"
+      },
+      "category": {
+        "aria": {
+          "drag": "Trascina categoria"
+        },
+        "addItem": {
+          "aria": "Aggiungi voce",
+          "title": "Aggiungi voce alla categoria «{name}»"
+        },
+        "totals": "{actual} / {plan}"
+      },
+      "row": {
+        "aria": {
+          "drag": "Trascina attività",
+          "expand": "Espandi",
+          "collapse": "Comprimi",
+          "selectRow": "Seleziona voce «{name}»",
+          "selectAllInCategory": "Seleziona tutte le voci della categoria",
+          "editRow": "Modifica voce «{name}»"
+        },
+        "childCount": "{count, plural, one {# attività} other {# attività}}",
+        "addTask": "Aggiungi attività",
+        "required": {
+          "title": "Obbligatoria (necessaria per completare il progetto)",
+          "aria": "Obbligatoria",
+          "ariaRequired": "Rimuovi obbligatoria",
+          "ariaOptional": "Segna come obbligatoria",
+          "titleRequired": "Obbligatoria — clic per segnare come facoltativa",
+          "titleOptional": "Facoltativa — clic per segnare come obbligatoria (necessaria per completare il progetto)"
+        },
+        "placeholder": {
+          "noName": "(senza nome)"
+        },
+        "badge": {
+          "rejected": "Rifiutata",
+          "done": "Completata",
+          "subsidy": "Contributo",
+          "subsidyTitleWithAmount": "Contributo possibile: {amount}",
+          "subsidyTitleNoAmount": "Contributo possibile (nessun importo)",
+          "addTaskTitle": "Aggiungi attività sotto questa voce",
+          "addTaskAria": "Aggiungi attività"
+        },
+        "paymentsCount": "{count, plural, one {# pagamento} other {# pagamenti}}",
+        "timeCount": "{count, plural, one {# registrazione} other {# registrazioni}}",
+        "tooltip": {
+          "planTotal": "Totale: proprio {own} + attività {children}",
+          "actualTotal": "Totale: proprio {own} + attività {children}"
+        },
+        "completed": {
+          "ariaDone": "Segna come non completata",
+          "ariaTodo": "Segna come completata",
+          "titleDone": "Segna come non completata",
+          "titleTodo": "Segna come completata"
+        },
+        "rejected": {
+          "ariaRejected": "Annulla rifiuto",
+          "ariaNotRejected": "Rifiuta",
+          "titleRejected": "Annulla rifiuto",
+          "titleNotRejected": "Rifiuta voce"
+        },
+        "actions": {
+          "ariaMore": "Altre azioni",
+          "titleMore": "Altre azioni"
+        },
+        "menu": {
+          "editDetail": "Modifica dettagli",
+          "markRequired": "Segna come obbligatoria",
+          "markOptional": "Segna come facoltativa",
+          "subsidyAdd": "Segna come idonea a contributo",
+          "subsidyRemove": "Rimuovi contributo",
+          "markDone": "Segna come completata",
+          "markNotDone": "Segna come non completata",
+          "reject": "Rifiuta",
+          "unreject": "Annulla rifiuto",
+          "move": "Sposta sotto un'altra voce…",
+          "duplicate": "Duplica",
+          "delete": "Elimina"
+        },
+        "delete": {
+          "title": "Eliminare la voce?",
+          "body": "Vuoi davvero eliminare **{name}**? Anche i pagamenti e le registrazioni di tempo correlate verranno eliminati.",
+          "cancel": "Annulla",
+          "confirm": "Elimina"
+        },
+        "toasts": {
+          "duplicateSuccess": "Voce duplicata",
+          "duplicateError": "Duplicazione non riuscita",
+          "deleteSuccess": "Voce eliminata",
+          "deleteError": "Eliminazione non riuscita"
+        }
+      },
+      "detail": {
+        "label": {
+          "note": "Nota",
+          "contact": "Contatto",
+          "links": "Collegamenti",
+          "linksFromTasks": "Dalle attività"
+        },
+        "placeholder": {
+          "note": "Informazioni aggiuntive, prezzi unitari, procedura…",
+          "noName": "(senza nome)"
+        },
+        "contact": {
+          "unassigned": "Non assegnato — clic sulla voce per modificare"
+        }
+      },
+      "moveDialog": {
+        "title": "Sposta attività",
+        "description": "Sposta **{name}** sotto un'altra voce. La categoria sarà ereditata dalla nuova voce padre.",
+        "currentParent": "Voce padre attuale: {name}",
+        "empty": "Non ci sono altre voci nel progetto sotto cui spostare l'attività.",
+        "placeholder": {
+          "select": "Seleziona voce di destinazione",
+          "noName": "(senza nome)"
+        },
+        "topLevel": "Livello superiore (nessun padre)",
+        "cancel": "Annulla",
+        "confirm": "Sposta",
+        "toasts": {
+          "movedToParent": "Attività spostata sotto nuova voce",
+          "movedToTop": "Attività spostata al livello superiore",
+          "error": "Spostamento non riuscito"
+        }
+      }
+    },
+    "management": {
+      "button": {
+        "editProject": "Modifica progetto",
+        "reportPdf": "Report PDF",
+        "auditHistory": "Cronologia modifiche"
+      },
+      "data": {
+        "title": "Dati ed esportazioni",
+        "description": "Modifica del progetto, report ed esportazioni dati in vari formati",
+        "export": {
+          "label": "Esportazione dati",
+          "json": "Esporta JSON",
+          "import": "Importa JSON (solo gestore)"
+        },
+        "csv": {
+          "label": "Esportazioni CSV (progetto corrente)",
+          "budget": "CSV Budget",
+          "payments": "CSV Pagamenti",
+          "time": "CSV Tempo",
+          "contacts": "CSV Contatti"
+        },
+        "toasts": {
+          "exportSuccess": "Stato esportato",
+          "exportError": "Esportazione non riuscita",
+          "importSuccess": "Stato importato",
+          "importError": "Importazione non riuscita",
+          "csvSuccess": "{type} esportato in CSV",
+          "csvError": "Esportazione CSV non riuscita"
+        }
+      },
+      "audit": {
+        "title": "Registro modifiche — azioni recenti",
+        "description": "Panoramica delle azioni recenti nel progetto"
+      },
+      "danger": {
+        "title": "Gestione progetto",
+        "duplicate": {
+          "title": "Duplica progetto",
+          "description": "Crea una copia con il budget (senza pagamenti e tempi)",
+          "button": "Duplica",
+          "suffix": " (copia)"
+        },
+        "delete": {
+          "title": "Elimina progetto",
+          "description": "Elimina definitivamente tutti i dati",
+          "adminOnlyHint": "Solo il gestore del progetto può eliminarlo",
+          "editorHint": "Solo il gestore del progetto può eliminare il progetto"
+        },
+        "toasts": {
+          "duplicateSuccess": "Progetto duplicato come «{name}»",
+          "duplicateError": "Duplicazione del progetto non riuscita"
+        }
+      },
+      "info": {
+        "roleBadge": {
+          "editor": "Editor",
+          "admin": "Amministratore",
+          "viewer": "Visualizzatore"
+        },
+        "lockHint": "Solo il gestore del progetto può modificare le informazioni del progetto",
+        "label": {
+          "address": "Indirizzo",
+          "status": "Stato",
+          "startDate": "Data di inizio",
+          "endDate": "Data di fine lavori",
+          "description": "Descrizione"
+        },
+        "placeholder": {
+          "address": "es. Praga - Troja",
+          "description": "Breve descrizione del progetto…"
+        },
+        "created": "Creato: {date}",
+        "button": {
+          "save": "Salva",
+          "edit": "Modifica"
+        },
+        "toasts": {
+          "saveSuccess": "Progetto aggiornato",
+          "saveError": "Aggiornamento del progetto non riuscito"
+        }
+      },
+      "property": {
+        "title": "Informazioni sull'immobile",
+        "description": "Indirizzo esatto, classe energetica e documentazione del progetto",
+        "button": {
+          "edit": "Modifica",
+          "save": "Salva"
+        },
+        "label": {
+          "fullAddress": "Indirizzo esatto",
+          "floorArea": "Superficie coperta (m²)",
+          "floors": "Numero di piani",
+          "heatLoss": "Dispersione termica (W/K)",
+          "energyRating": "Classe energetica",
+          "studyUrl": "Link allo studio architettonico",
+          "documentationUrl": "Link alla documentazione del progetto",
+          "note": "Nota"
+        },
+        "placeholder": {
+          "fullAddress": "es. 12 Pražská, 110 00 Praga 1",
+          "floorArea": "es. 120",
+          "floors": "es. 2",
+          "heatLoss": "es. 85",
+          "note": "Nota libera sull'immobile…"
+        },
+        "error": {
+          "url": "Inserisci una URL valida (http:// o https://)."
+        },
+        "lockHint": "Solo il gestore del progetto può modificare le informazioni dell'immobile",
+        "readOnly": {
+          "fullAddress": "Indirizzo esatto",
+          "floorArea": "Superficie coperta",
+          "floorAreaValue": "{value} m²",
+          "floors": "Numero di piani",
+          "heatLoss": "Dispersione termica",
+          "heatLossValue": "{value} W/K",
+          "energyRating": "Classe energetica",
+          "studyUrl": "Studio architettonico",
+          "documentationUrl": "Documentazione del progetto",
+          "note": "Nota"
+        },
+        "toasts": {
+          "urlError": "I link devono essere URL validi (http:// o https://).",
+          "saveSuccess": "Informazioni dell'immobile salvate",
+          "saveError": "Salvataggio delle informazioni dell'immobile non riuscito"
+        }
+      },
+      "sharing": {
+        "title": "Condivisione e permessi di accesso",
+        "description": "Gestisci visibilità del progetto, gestore, membri e inviti",
+        "button": {
+          "share": "Condividi",
+          "shareTitle": "Copia link di visualizzazione pubblica",
+          "transferOwnership": "Trasferisci"
+        },
+        "toggle": {
+          "publicProject": {
+            "label": "Progetto pubblico",
+            "description": "Chiunque abbia il link può visualizzare il progetto (sola lettura)"
+          }
+        },
+        "aria": {
+          "publicToggle": "Attiva/disattiva visibilità del progetto",
+          "removeMember": "Rimuovi membro",
+          "leaveProject": "Lascia il progetto",
+          "revokeInvitation": "Revoca invito"
+        },
+        "lockHint": "Solo il gestore può cambiare la visibilità del progetto",
+        "publicInfo": "Progetto pubblico: chiunque abbia il link può visualizzare il progetto (sola lettura). Disattiva per la privacy.",
+        "badge": {
+          "owner": "Gestore"
+        },
+        "role": {
+          "viewer": "Visualizzatore",
+          "editor": "Editor"
+        },
+        "roleSelect": {
+          "viewer": "Visualizzatore (sola lettura)",
+          "editor": "Editor (modifica)"
+        },
+        "empty": {
+          "members": "Non sono ancora stati aggiunti membri."
+        },
+        "pending": {
+          "title": "Inviti in sospeso",
+          "role": "Ruolo: {role} · Valido fino al: {date}"
+        },
+        "invitationHistory": {
+          "title": "Cronologia inviti ({count})",
+          "role": "Ruolo: {role} · Creato: {date}"
+        },
+        "invitationStatus": {
+          "pending": "In sospeso",
+          "accepted": "Accettato",
+          "rejected": "Rifiutato",
+          "revoked": "Revocato",
+          "expired": "Scaduto"
+        },
+        "inviteForm": {
+          "title": "Invita via email",
+          "placeholderEmail": "email@esempio.com",
+          "button": "Invita via email",
+          "hint": {
+            "existingMember": "Questo utente è già membro del progetto",
+            "newUser": "Nuovo utente — riceverà un'email di invito e otterrà l'accesso dopo la registrazione",
+            "editor": "Come editor puoi aggiungere solo Visualizzatori o Editor",
+            "noInvite": "Solo il gestore del progetto può invitare nuovi utenti"
+          }
+        },
+        "qr": {
+          "title": "Codice QR del progetto",
+          "description": "Scansiona il codice QR per aprire il progetto sul cellulare.",
+          "aria": "Codice QR del progetto {name}",
+          "button": {
+            "copyLink": "Copia link",
+            "copyLinkCopied": "Copiato",
+            "downloadPng": "Scarica PNG"
+          },
+          "toasts": {
+            "copySuccess": "Link copiato negli appunti",
+            "copyError": "Copia non riuscita — copia il link manualmente",
+            "qrNotReady": "Il codice QR non è ancora stato generato",
+            "downloadSuccess": "Codice QR scaricato come PNG",
+            "generateError": "Generazione del codice QR non riuscita"
+          }
+        },
+        "confirmRemove": {
+          "title": "Rimuovere davvero il membro?",
+          "body": "Vuoi davvero rimuovere l'utente «{name}» da questo progetto? Perderà l'accesso a tutti i dati del progetto. Può essere annullato aggiungendo di nuovo il membro.",
+          "cancel": "Annulla",
+          "confirm": "Rimuovi membro"
+        },
+        "toasts": {
+          "shareLinkCopied": "Link del progetto copiato negli appunti",
+          "shareLinkPrivate": "Il progetto non è pubblico — il link reindirizza al login",
+          "shareLinkError": "Copia del link non riuscita",
+          "madePublic": "Il progetto è ora pubblico — chiunque abbia il link può vederlo",
+          "madePrivate": "Il progetto è ora privato",
+          "publicToggleError": "Modifica della visibilità del progetto non riuscita",
+          "alreadyMember": "Questo utente è già membro del progetto",
+          "inviteSent": "Invito inviato a {email}",
+          "inviteError": "Invio dell'invito non riuscito",
+          "inviteRevoked": "Invito per {email} revocato",
+          "inviteRevokeError": "Revoca dell'invito non riuscita",
+          "roleChanged": "Ruolo aggiornato",
+          "roleChangeError": "Aggiornamento del ruolo non riuscito",
+          "memberRemoved": "Membro «{name}» rimosso",
+          "memberRemoveError": "Rimozione del membro non riuscita — il membro è stato ripristinato",
+          "ownerChanged": "Gestore cambiato",
+          "ownerChangeError": "Cambio del gestore non riuscito"
+        }
+      },
+      "auditLog": {
+        "search": {
+          "placeholder": "Cerca nel registro modifiche…",
+          "aria": "Cerca nel registro modifiche",
+          "clearAria": "Cancella ricerca"
+        },
+        "polling": "Caricamento...",
+        "filter": {
+          "action": "Azione",
+          "entity": "Entità",
+          "user": "Autore",
+          "from": "Dal",
+          "to": "Al",
+          "sort": "Ordina",
+          "pageSize": "Per pagina",
+          "fromAria": "Filtro dalla data",
+          "toAria": "Filtro alla data",
+          "all": "Tutti"
+        },
+        "action": {
+          "create": "Creato",
+          "update": "Modificato",
+          "delete": "Eliminato",
+          "export": "Esportato"
+        },
+        "sort": {
+          "desc": "Più recenti",
+          "asc": "Più vecchi"
+        },
+        "empty": "Nessun record per i filtri selezionati.",
+        "column": {
+          "action": "Azione",
+          "detail": "Dettaglio modifica",
+          "author": "Autore",
+          "date": "Data",
+          "time": "Ora"
+        },
+        "author": {
+          "unknown": "Sconosciuto"
+        },
+        "pagination": {
+          "summary": "Mostrati {from}–{to} di {total}",
+          "prev": "Precedente",
+          "next": "Successivo",
+          "pageOf": "{page} / {totalPages}"
+        },
+        "tooltip": {
+          "goToTab": "Vai alla scheda {name}"
+        },
+        "actions": {
+          "create": "Creato",
+          "update": "Modificato",
+          "delete": "Eliminato",
+          "export": "Esportato"
+        },
+        "entities": {
+          "BudgetItem": "Voce di budget",
+          "Payment": "Pagamento",
+          "TimeEntry": "Tempo",
+          "Contact": "Contatto",
+          "Project": "Progetto",
+          "Note": "Nota",
+          "ContactPerson": "Persona di contatto",
+          "ProjectMember": "Membro",
+          "Export": "Esportazione"
+        },
+        "fields": {
+          "required": "Obbligatoria",
+          "completed": "Completata",
+          "rejected": "Rifiuto",
+          "starred": "Preferito",
+          "status": "Stato",
+          "role": "Ruolo",
+          "phase": "Fase",
+          "category": "Categoria",
+          "subcategory": "Nome",
+          "planCost": "Piano (CZK)",
+          "actualCost": "Effettivo (CZK)",
+          "planDays": "Piano (giorni)",
+          "flexibilityPercent": "Flessibilità (%)",
+          "dateFrom": "Dal",
+          "dateTo": "Al",
+          "note": "Nota",
+          "name": "Nome",
+          "email": "Email",
+          "phone": "Telefono",
+          "address": "Indirizzo",
+          "description": "Descrizione",
+          "currency": "Valuta",
+          "ownerId": "Gestore",
+          "contactId": "Contatto",
+          "workerName": "Lavoratore",
+          "workerType": "Tipo di lavoratore",
+          "workerCount": "Numero di lavoratori",
+          "hours": "Ore",
+          "amount": "Importo",
+          "type": "Tipo",
+          "vendor": "Azienda",
+          "invoiceNumber": "Numero fattura",
+          "vatRate": "Aliquota IVA",
+          "vatAmount": "Importo IVA",
+          "website": "Sito web",
+          "company": "Azienda",
+          "ico": "P.IVA",
+          "dic": "Cod. fiscale",
+          "rating": "Valutazione",
+          "sortOrder": "Ordine",
+          "text": "Testo",
+          "author": "Autore",
+          "userEmail": "Email del membro"
+        },
+        "describe": {
+          "memberAdded": "Membro aggiunto ({role}): {email}",
+          "memberRemoved": "Membro rimosso ({role}): {email}",
+          "created": "Creato: {name}",
+          "deleted": "Eliminato: {name}",
+          "fieldRemoved": "{field}: rimosso ({value})"
+        }
+      },
+      "deleteProject": {
+        "button": "Elimina",
+        "confirmTitle": "Eliminare il progetto «{name}»?",
+        "confirmBody": "Questa azione è irreversibile. Tutti i dati verranno eliminati definitivamente. Per confermare, digita il nome del progetto:",
+        "confirmButton": "Elimina progetto",
+        "cancel": "Annulla",
+        "toasts": {
+          "nameMismatch": "Il nome del progetto non corrisponde",
+          "success": "Progetto eliminato",
+          "error": "Eliminazione del progetto non riuscita"
+        }
+      }
+    },
+    "notes": {
+      "title": {
+        "new": "Nuova nota"
+      },
+      "field": {
+        "author": "Nome dell'autore",
+        "text": "Testo della nota"
+      },
+      "placeholder": {
+        "author": "es. Paolo",
+        "text": "Scrivi qui una nota di progetto — decisioni, idee, attività, messaggi… (Ctrl+Enter = aggiungi)"
+      },
+      "count": "{count, plural, one {# nota} other {# note}}",
+      "anonymousAuthor": "Anonimo",
+      "empty": {
+        "title": "Ancora nessuna nota",
+        "description": "Scrivi la tua prima nota nel campo qui sopra. Le note servono per appunti rapidi, link e promemoria."
+      },
+      "badge": {
+        "editing": "in modifica"
+      },
+      "hint": {
+        "editShortcuts": "Enter = salva · Shift+Enter = nuova riga · Esc = annulla"
+      },
+      "clickToEdit": "Clic per modificare",
+      "aria": {
+        "edit": "Modifica nota",
+        "save": "Salva modifiche",
+        "cancel": "Annulla modifica",
+        "delete": "Elimina nota"
+      },
+      "toasts": {
+        "createError": "Aggiunta della nota non riuscita",
+        "deleteSuccess": "Nota eliminata",
+        "deleteError": "Eliminazione della nota non riuscita",
+        "updateEmptyError": "Il testo della nota non può essere vuoto",
+        "updateSuccess": "Nota aggiornata",
+        "updateError": "Aggiornamento della nota non riuscito"
+      }
+    },
+    "timeline": {
+      "empty": {
+        "title": "Nessuna voce con date",
+        "description": "Assegna date dal/al nella tabella del budget e le voci appariranno nel cronogramma.",
+        "upcoming": "Nessuna scadenza imminente",
+        "overdue": "Nessuna voce in ritardo",
+        "unscheduled": "Tutto pianificato"
+      },
+      "label": {
+        "range": "{start} — {end}",
+        "count": "{count, plural, one {# voce} other {# voci}}",
+        "zoom": "Zoom:"
+      },
+      "zoom": {
+        "days": "Giorni",
+        "months": "Mesi",
+        "quarters": "Trimestri",
+        "years": "Anni"
+      },
+      "legend": {
+        "today": "Oggi",
+        "doubleClickHint": "Doppio clic = modifica date",
+        "dependencies": "Dipendenze",
+        "criticalPath": "Cammino critico",
+        "milestone": "Milestone"
+      },
+      "title": {
+        "gantt": "Programma dei lavori",
+        "upcoming": "Imminenti",
+        "overdue": "In ritardo",
+        "unscheduled": "Da pianificare"
+      },
+      "columnHeader": {
+        "item": "Voce"
+      },
+      "suffix": {
+        "completed": " · Completato"
+      },
+      "dialog": {
+        "title": "Modifica date",
+        "description": "Imposta le date esatte di inizio e fine.",
+        "label": {
+          "dateFrom": "Dal",
+          "dateTo": "Al"
+        }
+      }
+    },
+    "time": {
+      "sort": {
+        "date": "Data (più recenti)",
+        "worker": "Lavoratore (A→Z)",
+        "hours": "Ore (decrescente)",
+        "workerType": "Tipo di lavoratore"
+      },
+      "stats": {
+        "entries": "{count, plural, one {# registrazione} other {# registrazioni}}",
+        "empty": "Ancora nessuna registrazione di tempo"
+      },
+      "filter": {
+        "allTypes": "Tutti i tipi",
+        "allCategories": "Tutte le categorie"
+      },
+      "toolbar": {
+        "add": "Aggiungi registrazione di tempo"
+      },
+      "total": {
+        "label": "Totale ({count})"
+      },
+      "column": {
+        "date": "Data",
+        "budgetItem": "Voce di budget",
+        "description": "Descrizione",
+        "type": "Tipo",
+        "contact": "Contatto",
+        "hours": "Ore"
+      },
+      "toasts": {
+        "deleteSuccess": "Registrazione eliminata",
+        "deleteError": "Eliminazione non riuscita",
+        "createSuccess": "Tempo registrato",
+        "createSuccessWithItem": "Tempo registrato, voce segnata come completata",
+        "createSuccessItemFail": "Tempo registrato (segnatura della voce come completata non riuscita)",
+        "updateSuccess": "Registrazione aggiornata",
+        "updateSuccessWithItem": "Registrazione aggiornata, voce segnata come completata",
+        "updateSuccessItemFail": "Registrazione aggiornata (segnatura della voce come completata non riuscita)",
+        "updateError": "Aggiornamento della registrazione non riuscito",
+        "createError": "Registrazione del tempo non riuscita"
+      },
+      "aria": {
+        "rowClick": "Clic per modificare la registrazione",
+        "workersCount": "{count, plural, one {# lavoratore} other {# lavoratori}}",
+        "editRow": "Modifica registrazione {workerName}"
+      },
+      "dialog": {
+        "delete": {
+          "title": "Eliminare la registrazione di tempo?",
+          "body": "Vuoi davvero eliminare la registrazione <strong>{workerName}</strong> · {hours}?"
+        }
+      },
+      "form": {
+        "titlePlaceholder": "Lavoratore…",
+        "descriptionPlaceholder": "Descrizione del lavoro…",
+        "submitLabel": {
+          "edit": "Aggiorna registrazione",
+          "create": "Registra tempo"
+        },
+        "label": {
+          "budgetItem": "Voce di budget *",
+          "hours": "Ore *",
+          "workerCount": "Numero di lavoratori",
+          "dateFrom": "Dal *",
+          "workerType": "Tipo di lavoratore",
+          "dateTo": "Al (più giorni)",
+          "contact": "Contatto (facoltativo)"
+        },
+        "placeholder": {
+          "budgetItem": "Seleziona voce…",
+          "hours": "8",
+          "workerCount": "1",
+          "dateTo": "(facoltativo)",
+          "contact": "Nessun contatto"
+        },
+        "search": {
+          "budgetItem": "Cerca voce…",
+          "contact": "Cerca contatto…"
+        },
+        "empty": {
+          "budgetItem": "Nessuna voce trovata",
+          "contact": "Nessun contatto trovato"
+        },
+        "error": {
+          "budgetItem": "Seleziona una voce di budget",
+          "workerName": "Inserisci il nome del lavoratore",
+          "hours": "Inserisci un numero di ore valido"
+        },
+        "hint": {
+          "hoursPerDay": "≈ {hours} h/giorno × {days} giorni",
+          "personHours": "Totale {total} persona-ore",
+          "daySpan": "Il lavoro si estende per {days, plural, one {# giorno} other {# giorni}}"
+        },
+        "section": {
+          "details": "Dettagli (facoltativo)"
+        },
+        "markCompleted": {
+          "label": "Segna la voce di budget come completata",
+          "alreadyCompleted": "La voce è già segnata come completata.",
+          "hint": "Dopo aver salvato la registrazione, verrà inviata una richiesta PATCH alla voce di budget con completed: true. Collega la registrazione di tempo al completamento della voce."
+        }
+      },
+      "empty": {
+        "title": {
+          "noRecords": "Ancora nessuna registrazione di tempo",
+          "noMatch": "Nessuna registrazione corrisponde al filtro"
+        },
+        "description": {
+          "noRecords": "Registra il tempo di lavoro — azienda, artigiano o fai da te. Supporta registrazioni su più giorni.",
+          "noMatch": "Prova a cambiare il filtro o la ricerca."
+        },
+        "button": {
+          "firstRecord": "Registra primo tempo"
+        }
+      },
+      "weekly": {
+        "title": "Panoramica settimanale",
+        "viewTable": "Vista tabella",
+        "viewWeekly": "Panoramica settimanale",
+        "week": "Settimana",
+        "prevWeek": "Settimana precedente",
+        "nextWeek": "Settimana successiva",
+        "today": "Oggi",
+        "total": "Totale",
+        "worker": "Lavoratore",
+        "hours": "Ore",
+        "noEntries": "Nessuna ora registrata in questa settimana.",
+        "dayShort": {
+          "mon": "Lun",
+          "tue": "Mar",
+          "wed": "Mer",
+          "thu": "Gio",
+          "fri": "Ven",
+          "sat": "Sab",
+          "sun": "Dom"
+        }
+      },
+      "loadMore": "Mostra altri {count}"
+    },
+    "dashboard": {
+      "button": {
+        "clearFilters": "Cancella filtri"
+      },
+      "kpi": {
+        "burn": {
+          "label": "Consumo del budget",
+          "subValue": "{actual} / {plan}"
+        },
+        "remaining": {
+          "label": "Budget residuo",
+          "subValue": "di {planTotal}"
+        },
+        "completedItems": {
+          "label": "Voci completate",
+          "subValue": {
+            "done": "{percent} % completato",
+            "empty": "Nessuna voce"
+          }
+        },
+        "hours": {
+          "label": "Ore registrate",
+          "subValue": "Piano: {days, plural, one {# giorno} other {# giorni}}"
+        },
+        "completed": {
+          "allDone": "Tutto completato"
+        }
+      },
+      "plan": {
+        "byStart": {
+          "title": "Piano — per inizio",
+          "description": "Voci ordinate per data di inizio"
+        },
+        "byEnd": {
+          "title": "Piano — per fine",
+          "description": "Scadenze di completamento più vicine"
+        },
+        "bucket": {
+          "activeNow": "Attive ora",
+          "nextWeek": "Prossima settimana",
+          "nextMonth": "Prossimo mese",
+          "next3Months": "Prossimi 3 mesi",
+          "later": "Più avanti",
+          "unscheduled": "Non pianificate"
+        },
+        "empty": {
+          "upcoming": "Nessuna scadenza imminente."
+        },
+        "tag": {
+          "overdue": "in ritardo"
+        }
+      },
+      "cashflow": {
+        "title": "Proiezione del flusso di cassa",
+        "description": "Budget finale stimato in base al consumo attuale",
+        "projectedFinal": "Finale proiettato",
+        "overrun": "Supero",
+        "percentOfPlan": "% del piano",
+        "remainingEstimate": "Residuo (stima)",
+        "spent": "Speso: {actual}",
+        "estimate": "Stima: {projected}"
+      },
+      "chart": {
+        "phase": {
+          "title": "Piano vs Effettivo per fase"
+        },
+        "category": {
+          "title": "Budget per categoria"
+        },
+        "trend": {
+          "title": "Trend del consumo del budget",
+          "description": "Spesa mensile e ore registrate nel tempo",
+          "empty": "Ancora nessun dato di trend."
+        },
+        "series": {
+          "plan": "Piano",
+          "actual": "Effettivo",
+          "spend": "Spesa",
+          "hours": "Ore"
+        }
+      },
+      "contacts": {
+        "title": "Lavoro per contatto",
+        "description": "Budget e ore registrate per contatto assegnato",
+        "empty": "Nessun contatto con voci assegnate.",
+        "noRole": "Nessun ruolo",
+        "itemsCount": "{count, plural, one {# voce} other {# voci}}",
+        "ofPlan": "di {plan}",
+        "overBudget": "oltre budget"
+      },
+      "phases": {
+        "title": "Fasi del progetto",
+        "column": {
+          "phase": "Fase",
+          "items": "Voci",
+          "plan": "Piano",
+          "actual": "Effettivo",
+          "hours": "Ore",
+          "burn": "Consumo",
+          "status": "Stato"
+        },
+        "status": {
+          "done": "Completata",
+          "inProgress": "In corso",
+          "startingSoon": "A breve",
+          "waiting": "In attesa"
+        }
+      },
+      "recent": {
+        "payments": {
+          "title": "Pagamenti recenti",
+          "description": "Ultime transazioni finanziarie",
+          "empty": "Ancora nessun pagamento.",
+          "fallback": "Pagamento"
+        },
+        "time": {
+          "title": "Registrazioni di tempo recenti",
+          "description": "Ultime ore registrate",
+          "empty": "Ancora nessuna registrazione di tempo.",
+          "fallback": "Lavoro"
+        }
+      }
+    },
+    "contacts": {
+      "header": {
+        "count": "{count, plural, one {# contatto nel progetto} other {# contatti nel progetto}}"
+      },
+      "empty": {
+        "title": "Ancora nessun contatto",
+        "description": "Aggiungi aziende, artigiani, fornitori e architetti. Puoi assegnare loro pagamenti e registrazioni di tempo.",
+        "button": {
+          "first": "Aggiungi primo contatto"
+        }
+      },
+      "menu": {
+        "edit": "Modifica",
+        "delete": "Elimina"
+      },
+      "delete": {
+        "title": "Eliminare il contatto?",
+        "body": "Vuoi davvero eliminare il contatto <strong>{name}</strong>?",
+        "cancel": "Annulla",
+        "confirm": "Elimina"
+      },
+      "stat": {
+        "paid": "Pagato",
+        "hours": "Ore",
+        "payments": "Pagamenti",
+        "times": "Tempo"
+      },
+      "persons": {
+        "title": "Persone di contatto",
+        "deleteTitle": "Elimina persona",
+        "button": {
+          "add": "Aggiungi",
+          "addPerson": "Aggiungi persona"
+        },
+        "field": {
+          "firstName": "Nome *",
+          "lastName": "Cognome *",
+          "phone": "Telefono",
+          "email": "Email",
+          "role": "Ruolo / posizione"
+        },
+        "placeholder": {
+          "firstName": "Mario",
+          "lastName": "Rossi",
+          "phone": "+39 333 123 4567",
+          "email": "mario@azienda.com",
+          "role": "Manager, Contabile, ..."
+        },
+        "empty": "Nessuna persona di contatto. Clic «Aggiungi» per aggiungerne una.",
+        "aria": {
+          "delete": "Elimina {firstName} {lastName}"
+        }
+      },
+      "toasts": {
+        "deleteSuccess": "Contatto eliminato",
+        "deleteError": "Eliminazione non riuscita",
+        "personAddError": "Nome e cognome sono obbligatori",
+        "personAddSuccess": "Persona aggiunta",
+        "personAddErrorFallback": "Aggiunta della persona non riuscita",
+        "personDeleteSuccess": "Persona «{name}» eliminata",
+        "personDeleteError": "Eliminazione della persona non riuscita",
+        "updateError": "Il nome è obbligatorio",
+        "updateSuccess": "Contatto aggiornato",
+        "createSuccess": "Contatto aggiunto",
+        "saveErrorFallback": "Salvataggio del contatto non riuscito"
+      },
+      "detail": {
+        "button": {
+          "edit": "Modifica",
+          "close": "Chiudi"
+        },
+        "section": {
+          "contact": "Contatto",
+          "summary": "Riepilogo tempo e denaro"
+        },
+        "field": {
+          "company": "Azienda",
+          "ico": "P.IVA",
+          "dic": "Cod. fiscale",
+          "phone": "Telefono",
+          "email": "Email",
+          "web": "Web",
+          "lastActivity": "Ultima attività"
+        },
+        "stat": {
+          "totalPaid": "Totale pagato",
+          "totalHours": "Totale ore",
+          "paymentCount": "Numero di pagamenti",
+          "timeEntryCount": "Registrazioni di tempo"
+        }
+      },
+      "form": {
+        "placeholder": {
+          "role": "es. Muratore, Elettricista",
+          "company": "es. ACME S.r.l.",
+          "ico": "es. 12345678",
+          "dic": "es. CZ12345678",
+          "phone": "+420 …",
+          "email": "email@dominio.com",
+          "web": "es. www.azienda.com",
+          "notes": "Esperienza, referenze, metodo di lavoro…"
+        },
+        "submitLabel": {
+          "edit": "Aggiorna contatto",
+          "create": "Aggiungi contatto"
+        },
+        "ares": {
+          "label": "Carica dal registro ARES",
+          "hint": "Cerca un'azienda per P.IVA o nome e precompila i campi.",
+          "addressPrefix": "Indirizzo (ARES): {address}"
+        },
+        "field": {
+          "type": "Tipo",
+          "role": "Ruolo / Mestiere",
+          "company": "Azienda (facoltativo)",
+          "ico": "P.IVA",
+          "dic": "Cod. fiscale",
+          "phone": "Telefono",
+          "email": "Email",
+          "web": "Web",
+          "rating": "Valutazione",
+          "notes": "Note"
+        },
+        "section": {
+          "details": "Dettagli (facoltativo)"
+        },
+        "rating": {
+          "clear": "Cancella"
+        }
+      }
+    },
+    "telemetry": {
+      "title": "Telemetria",
+      "description": "Analitica interna delle azioni degli utenti.",
+      "button": {
+        "refresh": "Aggiorna",
+        "retry": "Riprova"
+      },
+      "error": {
+        "loadFailed": "Caricamento dei dati di telemetria non riuscito."
+      },
+      "kpi": {
+        "totalEvents": "Eventi totali",
+        "totalPageViews": "Visite totali",
+        "totalTimeSpent": "Tempo totale sulle pagine",
+        "uniqueUsers": "Utenti unici"
+      },
+      "chart": {
+        "byType": {
+          "title": "Eventi per tipo",
+          "description": "Conteggio di ogni tipo di evento"
+        },
+        "byDay": {
+          "title": "Attività per giorno",
+          "description": "Ultimi 30 giorni"
+        },
+        "byHour": {
+          "title": "Attività oraria di oggi",
+          "description": "Numero di eventi per ora di oggi"
+        }
+      },
+      "empty": {
+        "byType": "Nessun dato.",
+        "byHour": "Nessuna attività registrata oggi."
+      },
+      "topPages": {
+        "title": "Pagine principali",
+        "description": "Numero di visite e tempo medio su ogni pagina",
+        "empty": "Nessun dato di visite di pagina.",
+        "column": {
+          "page": "Pagina",
+          "views": "Visite",
+          "avgTime": "Tempo medio"
+        }
+      },
+      "timeOverview": {
+        "title": "Panoramica del tempo",
+        "description": "Statistiche riepilogative del tempo nell'app",
+        "totalOnPages": "Tempo totale sulle pagine",
+        "totalOnPagesHint": "numero di visite: {count}",
+        "avgPerPage": "Tempo medio per pagina",
+        "avgPerPageHint": "media tra tutti gli eventi page_view",
+        "longest": "Visita più lunga",
+        "longestHint": "tempoSpent massimo di una singola sessione"
+      },
+      "timeByPage": {
+        "title": "Durata delle visite",
+        "description": "Tempo totale su ogni pagina",
+        "total": "Totale: {time}",
+        "rowSuffix": "{views}× · media {avgTime}",
+        "empty": "Nessun dato di tempo per pagina."
+      },
+      "topUsers": {
+        "title": "Attività degli utenti",
+        "description": "Utenti più attivi per numero di azioni",
+        "empty": "Nessun dato di attività utente.",
+        "column": {
+          "user": "Utente",
+          "eventCount": "Numero di azioni",
+          "lastActive": "Ultima attività"
+        },
+        "crown": {
+          "title": "Più attivo"
+        }
+      },
+      "recent": {
+        "title": "Eventi recenti",
+        "description": "Ultimi {shown} di {total} eventi totali",
+        "empty": "Nessun evento per il filtro selezionato.",
+        "column": {
+          "date": "Data",
+          "time": "Ora",
+          "user": "Utente",
+          "eventType": "Tipo di evento",
+          "page": "Pagina",
+          "project": "Progetto"
+        },
+        "unknownUser": "Sconosciuto",
+        "unknownProject": "Progetto {id}",
+        "tooltipHour": "{hour}:00 — {count, plural, one {# evento} other {# eventi}}",
+        "tooltipDay": "{day}: {count}"
+      },
+      "filter": {
+        "label": "Filtri:",
+        "type": "Tipo",
+        "all": "Tutti",
+        "user": "Utente",
+        "allUsers": "Tutti gli utenti",
+        "page": "Pagina",
+        "allPages": "Tutte le pagine",
+        "project": "Progetto",
+        "allProjects": "Tutti i progetti",
+        "button": {
+          "reset": "Cancella filtri"
+        }
+      },
+      "pagination": {
+        "summary": "Mostrati {from}–{to} di {total}",
+        "prev": "Precedente",
+        "next": "Successivo",
+        "pageOf": "{page} / {totalPages}"
+      },
+      "relativeTime": {
+        "justNow": "adesso",
+        "minute": "{n, plural, one {un minuto fa} other {{n} minuti fa}}",
+        "hour": "{n, plural, one {un'ora fa} other {{n} ore fa}}",
+        "day": "{n, plural, one {ieri} other {{n} giorni fa}}",
+        "yesterday": "ieri"
+      }
+    },
+    "payments": {
+      "sort": {
+        "dateDesc": "Data (più recenti)",
+        "dateAsc": "Data (più vecchie)",
+        "amountDesc": "Importo (decrescente)",
+        "amountAsc": "Importo (crescente)",
+        "type": "Tipo",
+        "contact": "Contatto (A→Z)",
+        "vendor": "Fornitore (A→Z)"
+      },
+      "filter": {
+        "allTypes": "Tutti i tipi"
+      },
+      "toolbar": {
+        "sum": "Somma ({count})",
+        "vatIncluded": "IVA incl.",
+        "search": "Cerca pagamenti…",
+        "add": "Aggiungi pagamento"
+      },
+      "empty": {
+        "title": {
+          "noRecords": "Ancora nessun pagamento",
+          "noMatch": "Nessun pagamento corrisponde al filtro"
+        },
+        "description": {
+          "noRecords": "Inizia a registrare i pagamenti — ricevute, fatture o paghe. Puoi anche suddividerli in rate.",
+          "noMatch": "Prova a cambiare il filtro o la ricerca."
+        },
+        "button": {
+          "first": "Aggiungi primo pagamento"
+        }
+      },
+      "column": {
+        "date": "Data",
+        "budgetItem": "Voce di budget",
+        "description": "Descrizione",
+        "type": "Tipo",
+        "contact": "Contatto",
+        "amount": "Importo"
+      },
+      "row": {
+        "aria": {
+          "clickToEdit": "Clic per modificare il pagamento",
+          "editRow": "Modifica pagamento {description}"
+        },
+        "installment": {
+          "title": "Fattura a rate: {invoiceTotal} — pagato {paidTotal} ({percent} %), residuo {remaining}",
+          "fallbackTitle": "Fattura a rate",
+          "label": "Rata {n}",
+          "labelWithTotal": "Rata {n} / {total}",
+          "titleShort": "Rata {n} di {total}"
+        },
+        "firstInstallment": "1ª rata",
+        "vatRateSuffix": "IVA incl. {rate}%",
+        "ofInvoiceTotal": "di {invoiceTotal}",
+        "menu": {
+          "edit": "Modifica",
+          "delete": "Elimina"
+        },
+        "delete": {
+          "title": "Eliminare il pagamento?",
+          "body": "Vuoi davvero eliminare il pagamento <strong>{amount}</strong>?",
+          "cancel": "Annulla",
+          "confirm": "Elimina"
+        },
+        "addInstallment": "Aggiungi rata",
+        "addInstallmentTitle": "Aggiungi un'altra rata alla fattura {vendor}"
+      },
+      "invoices": {
+        "badge": {
+          "installmentCount": "{count, plural, one {# rata} other {# rate}}"
+        },
+        "label": {
+          "invoice": "Fattura",
+          "paid": "Pagato",
+          "remaining": "Residuo",
+          "percent": "{percent} %",
+          "invoiceNumber": "n. {number}"
+        },
+        "button": {
+          "show": "Mostra",
+          "showTitle": "Mostra le rate nella tabella",
+          "addInstallment": "Aggiungi rata",
+          "addInstallmentTitle": "Aggiungi un'altra rata a questa fattura"
+        },
+        "fallbackTitle": "Fattura"
+      },
+      "dialog": {
+        "titlePlaceholder": "Cosa è stato comprato / pagato…",
+        "submitLabel": {
+          "edit": {
+            "installment": "Modifica rata",
+            "payment": "Modifica pagamento"
+          },
+          "create": {
+            "installment": "Aggiungi rata",
+            "invoice": "Crea fattura",
+            "payment": "Aggiungi pagamento"
+          }
+        },
+        "label": {
+          "budgetItem": "Voce di budget *",
+          "invoiceTotal": "Totale fattura (Kč) *",
+          "firstInstallment": "1ª rata (Kč) *",
+          "amount": "Importo (Kč) *",
+          "date": "Data *",
+          "invoiceDate": "Data fattura *",
+          "type": "Tipo",
+          "contact": "Contatto (facoltativo)",
+          "vendor": "Fornitore / Negozio",
+          "invoiceNumber": "N. fattura/ricevuta",
+          "vatRate": "Aliquota IVA (%)",
+          "vatCalculation": "Calcolo IVA",
+          "recurring": "Ricorrenza"
+        },
+        "placeholder": {
+          "budgetItem": "Seleziona voce…",
+          "invoiceTotal": "150000",
+          "firstInstallment": "50000",
+          "amount": "25000",
+          "contact": "Nessun contatto",
+          "vendor": "es. Hornbach",
+          "invoiceNumber": "2024-001"
+        },
+        "search": {
+          "budgetItem": "Cerca voce…",
+          "contact": "Cerca contatto…"
+        },
+        "empty": {
+          "budgetItem": "Nessuna voce trovata",
+          "contact": "Nessun contatto trovato"
+        },
+        "error": {
+          "budgetItem": "Seleziona una voce di budget",
+          "invoiceTotal": "Inserisci un totale fattura valido",
+          "amount": "Inserisci un importo valido"
+        },
+        "prefill": {
+          "title": "Nuova rata per la fattura",
+          "subtitle": "{vendor} · {amount} totale",
+          "fallback": "Fattura"
+        },
+        "existingInvoice": {
+          "title": "Questa voce ha già una fattura: {vendor}",
+          "subtitle": "{paid} / {invoiceTotal} ({percent} %)",
+          "fallback": "Fattura",
+          "button": "Aggiungi rata a questa fattura"
+        },
+        "parentWarning": {
+          "title": "Questa è una fattura a rate",
+          "body": "Totale fattura {invoiceTotal}. Puoi convertirla di nuovo in pagamento regolare — le rate resteranno come pagamenti autonomi.",
+          "button": "Converti in pagamento regolare"
+        },
+        "convertDialog": {
+          "title": "Convertire la fattura in pagamento regolare?",
+          "body": "Questo converte la fattura in pagamento regolare. Tutte le rate ({count}) resteranno come pagamenti autonomi. Continuare?",
+          "cancel": "Annulla",
+          "confirm": "Converti in pagamento regolare",
+          "confirming": "Conversione…"
+        },
+        "section": {
+          "details": "Dettagli (facoltativo)"
+        },
+        "isInvoice": {
+          "label": "Pagamento a rate (fattura con più pagamenti)"
+        },
+        "installmentOf": {
+          "label": "Collega a fattura (come rata)",
+          "placeholder": "Pagamento autonomo (senza fattura)",
+          "noneLabel": "Pagamento autonomo (senza fattura)",
+          "hint": "Questo pagamento apparirà come la rata successiva della fattura selezionata. Modificarlo aggiorna il totale dei pagamenti della fattura."
+        },
+        "vatRate": {
+          "placeholder": "Nessuna IVA",
+          "none": "Nessuna IVA",
+          "21": "21 % (standard)",
+          "12": "12 % (ridotto 1)",
+          "10": "10 % (ridotto 2)",
+          "0": "0 %"
+        },
+        "vatCalc": {
+          "label": {
+            "vat": "IVA:",
+            "base": "Base:"
+          },
+          "empty": "Inserisci importo e aliquota IVA"
+        },
+        "markCompleted": {
+          "label": "Segna voce come completata",
+          "alreadyCompleted": "La voce è già segnata come completata.",
+          "hint": "La voce verrà segnata come completata"
+        },
+        "recurring": {
+          "none": "Una tantum",
+          "weekly": "Settimanale",
+          "monthly": "Mensile",
+          "quarterly": "Trimestrale",
+          "yearly": "Annuale",
+          "nextDate": "Prossimo pagamento automatico: {date}",
+          "badge": "Ricorrente"
+        }
+      },
+      "toasts": {
+        "deleteSuccess": "Pagamento eliminato",
+        "deleteError": "Eliminazione non riuscita",
+        "updateSuccess": "Pagamento aggiornato",
+        "updateSuccessWithItem": "Pagamento aggiornato, voce segnata come completata",
+        "updateSuccessItemFail": "Pagamento aggiornato (segnatura della voce come completata non riuscita)",
+        "invoiceCreateSuccess": "Fattura con rate creata",
+        "invoiceCreateSuccessWithItem": "Fattura creata, voce segnata come completata",
+        "invoiceCreateSuccessItemFail": "Fattura creata (segnatura della voce come completata non riuscita)",
+        "paymentCreateSuccess": "Pagamento aggiunto",
+        "paymentCreateSuccessWithItem": "Pagamento aggiunto, voce segnata come completata",
+        "paymentCreateSuccessItemFail": "Pagamento aggiunto (segnatura della voce come completata non riuscita)",
+        "installmentAdded": "Rata aggiunta alla fattura",
+        "convertSuccess": "Fattura convertita in pagamento regolare",
+        "convertSuccessWithChildren": "Fattura convertita in pagamento regolare, {count, plural, one {# rata scollegata} other {# rate scollegate}}",
+        "convertError": "Conversione della fattura in pagamento regolare non riuscita",
+        "updateError": "Aggiornamento del pagamento non riuscito",
+        "createError": "Aggiunta del pagamento non riuscita"
+      },
+      "loadMore": "Mostra altri {count}"
+    }
+  },
+  "components": {
+    "emptyState": {
+      "welcome": "Benvenuto in Stavba",
+      "description": "Seleziona un progetto dalla barra laterale o crea un nuovo progetto per monitorare il budget, i costi, i tempi e i materiali della tua costruzione e ristrutturazione.",
+      "button": "Crea primo progetto"
+    },
+    "contextualFab": {
+      "actions": {
+        "addItem": "Aggiungi voce",
+        "addPayment": "Aggiungi pagamento",
+        "addTime": "Aggiungi tempo",
+        "addContact": "Aggiungi contatto"
+      }
+    },
+    "aresSearch": {
+      "placeholder": "Cerca azienda (P.IVA o nome)…",
+      "needsApiKey": {
+        "title": "La API key di ARES non è configurata.",
+        "hint": "Puoi inserire l'azienda manualmente qui sotto."
+      },
+      "noResults": "Nessuna azienda trovata per «{query}»",
+      "result": {
+        "ico": "P.IVA: {ico}",
+        "dic": "Cod. fiscale: {dic}"
+      }
+    },
+    "sessionTimeoutWarning": {
+      "message": "La tua sessione scade tra {minutesLeft, plural, one {# minuto} other {# minuti}}. Prolunga la sessione per evitare perdite di dati.",
+      "description": "Verrai disconnesso automaticamente alla scadenza.",
+      "action": {
+        "extend": "Prolunga",
+        "signOut": "Esci"
+      },
+      "success": "Sessione prolungata."
+    }
+  },
+  "dialogs": {
+    "budgetItem": {
+      "toasts": {
+        "dateFromSetByRef": "Data di inizio impostata da «{name}»",
+        "dateFromAlreadySet": "La data di inizio era già compilata — non modificata.",
+        "dateFromNotChanged": "«{name}» non ha data di fine — data di inizio non modificata.",
+        "categoryRequired": "La categoria è obbligatoria",
+        "taskUpdated": "Attività aggiornata",
+        "itemUpdated": "Voce aggiornata",
+        "taskAdded": "Attività aggiunta",
+        "itemAdded": "Voce aggiunta",
+        "saveError": "Salvataggio della voce non riuscito"
+      },
+      "submit": {
+        "editTask": "Modifica attività",
+        "editItem": "Modifica voce",
+        "addTask": "Aggiungi attività",
+        "addItem": "Aggiungi voce"
+      },
+      "placeholder": {
+        "taskName": "Nome attività…",
+        "itemName": "Nome voce…",
+        "note": "Nota…",
+        "newCategory": "Nuova categoria",
+        "selectCategory": "Seleziona categoria",
+        "subsidyAmount": "es. 15000",
+        "linkLabel": "Nome",
+        "linkUrl": "https://…",
+        "searchItem": "Cerca voce…",
+        "searchContact": "Cerca contatto…"
+      },
+      "context": {
+        "taskUnderItem": "Attività sotto la voce «{name}»"
+      },
+      "label": {
+        "category": "Categoria *",
+        "phase": "Fase",
+        "required": "Obbligatoria",
+        "completed": "Completata",
+        "rejected": "Rifiutata",
+        "subsidy": "Contributo",
+        "subsidyAmount": "Importo contributo (CZK)",
+        "dateFrom": "Dal",
+        "dateTo": "Al",
+        "planDays": "Piano (giorni)",
+        "dependsOn": "Dipende da",
+        "planCost": "Piano (CZK)",
+        "flexibility": "Flessibilità (%)",
+        "contactHint": "Persona / azienda responsabile",
+        "links": "Collegamenti",
+        "noDependency": "— nessuna dipendenza —",
+        "noContact": "— nessun contatto —",
+        "selectExisting": "Seleziona esistente",
+        "addNewCategory": "+ Nuova categoria"
+      },
+      "title": {
+        "requiredHint": "La voce è necessaria per completare il progetto",
+        "subsidyHint": "È possibile richiedere un contributo per questa voce",
+        "openInNewWindow": "Apri in una nuova finestra",
+        "deleteLink": "Elimina collegamento"
+      },
+      "section": {
+        "date": "Data (facoltativo)",
+        "money": "Denaro (facoltativo)",
+        "contact": "Contatto (facoltativo)",
+        "links": "Collegamenti (facoltativo)"
+      },
+      "empty": {
+        "items": "Nessuna voce trovata",
+        "contacts": "Nessun contatto trovato",
+        "noContactsHint": "Ancora nessun contatto. Aggiungili nella scheda Contatti."
+      },
+      "button": {
+        "add": "Aggiungi"
+      }
+    },
+    "newProject": {
+      "toasts": {
+        "createSuccess": "Progetto creato",
+        "createError": "Creazione del progetto non riuscita",
+        "templateCreateSuccess": "Progetto creato con template delle voci",
+        "sourceNotFound": "Progetto di origine non trovato",
+        "copyPartial": "Progetto creato da «{sourceName}» — {copied, plural, one {# voce copiata} other {# voci copiate}}, {failed, plural, one {# copia non riuscita} other {# copie non riuscite}}.",
+        "copyAllFailed": "Progetto creato, ma non è stato possibile copiare nessuna voce di budget ({failed} errori).",
+        "copySuccess": "Progetto creato ({copied, plural, one {# voce copiata} other {# voci copiate}} da «{sourceName}»)",
+        "copyError": "Copia del progetto non riuscita",
+        "nameRequired": "Il nome del progetto è obbligatorio",
+        "typeRequired": "Seleziona il tipo di costruzione",
+        "scopeRequired": "Seleziona l'ambito della ristrutturazione",
+        "sourceRequired": "Seleziona il progetto di origine"
+      },
+      "submit": {
+        "selectType": "Seleziona tipo di progetto",
+        "createBlank": "Crea progetto",
+        "createFromTemplate": "Crea con template",
+        "copyExisting": "Copia progetto"
+      },
+      "placeholder": {
+        "projectName": "Nome del progetto…",
+        "selectTypeHint": "Nuovo progetto — seleziona tipo qui sotto",
+        "description": "Breve descrizione del progetto…",
+        "selectProjectCopy": "Seleziona progetto da copiare…",
+        "address": "es. Praga - Troja"
+      },
+      "context": {
+        "blank": "Progetto vuoto",
+        "template": "Da template",
+        "copy": "Copia di esistente",
+        "new": "Nuovo progetto"
+      },
+      "mode": {
+        "blank": {
+          "title": "Progetto vuoto",
+          "description": "Inizia da zero, aggiungi il budget più tardi"
+        },
+        "template": {
+          "title": "Da template",
+          "description": "Ristrutturazione, nuova costruzione, interno o ampliamento"
+        },
+        "copy": {
+          "title": "Copia progetto",
+          "description": "Copia il budget da un progetto esistente"
+        }
+      },
+      "back": "← Torna alla selezione del tipo",
+      "template": {
+        "typeLabel": "Tipo di costruzione",
+        "scopeLabel": "Ambito della ristrutturazione",
+        "preview": "Anteprima per categoria",
+        "itemsCount": "{count, plural, one {# voce} other {# voci}}",
+        "itemsPlan": "{count, plural, one {# voce} other {# voci}} · {sum} CZK di piano",
+        "total": "Totale: {count, plural, one {# voce} other {# voci}}, {sum} CZK"
+      },
+      "copy": {
+        "sourceLabel": "Progetto di origine *",
+        "description": "Saranno copiate tutte le voci di budget (categorie, piani, flessibilità, fasi). I valori effettivi, gli stati di completamento e di rifiuto vengono reimpostati. Pagamenti, registrazioni di tempo e contatti non vengono copiati."
+      },
+      "field": {
+        "address": "Indirizzo",
+        "startDate": "Data di inizio",
+        "endDate": "Data di fine"
+      },
+      "templates": {
+        "reconstruction": {
+          "label": "Ristrutturazione",
+          "description": "Ristrutturazione di una casa, appartamento o baita esistente.",
+          "scopeOptions": {
+            "partial": {
+              "label": "Ristrutturazione parziale",
+              "description": "Solo alcune stanze o impianti (es. bagno, cucina, impianto elettrico)"
+            },
+            "complete": {
+              "label": "Ristrutturazione completa",
+              "description": "Intero edificio, inclusi struttura, impianti e finiture"
+            },
+            "structural": {
+              "label": "Ristrutturazione strutturale",
+              "description": "Interventi sulle strutture portanti, cambi di destinazione d'uso, ampliamenti"
+            }
+          }
+        },
+        "new_build": {
+          "label": "Nuova costruzione",
+          "description": "Costruzione di una casa nuova dalle fondamenta."
+        },
+        "interior": {
+          "label": "Interno",
+          "description": "Arredamento e finiture interne (pittura, pavimenti, fixture)."
+        },
+        "extension": {
+          "label": "Ampliamento",
+          "description": "Ampliamento di un edificio esistente (corpo aggiunto, ampliamento del box, giardino d'inverno)."
+        },
+        "apartment_2plus1": {
+          "label": "Ristrutturazione appartamento 2+1",
+          "description": "Ristrutturazione completa di un appartamento 2+1 (~70 m²) — demolizione, cablaggio, bagno, cucina, pavimenti, pittura."
+        },
+        "bathroom": {
+          "label": "Ristrutturazione del bagno",
+          "description": "Ristrutturazione completa di un bagno (~5 m²) — demolizione, idraulica, piastrelle, fixture, elettrico."
+        },
+        "roof": {
+          "label": "Ristrutturazione della copertura",
+          "description": "Sostituzione completa della copertura — demolizione, struttura, isolamento, tegole, lamiera."
+        }
+      }
+    },
+    "project": {
+      "toasts": {
+        "nameRequired": "Il nome del progetto è obbligatorio",
+        "updateSuccess": "Progetto aggiornato",
+        "createSuccess": "Progetto creato",
+        "updateError": "Aggiornamento del progetto non riuscito",
+        "createError": "Creazione del progetto non riuscita"
+      },
+      "placeholder": {
+        "name": "Nome del progetto…",
+        "description": "Breve descrizione del progetto…",
+        "address": "es. Praga - Troja"
+      },
+      "context": {
+        "edit": "Modifica del progetto",
+        "new": "Nuovo progetto"
+      },
+      "submit": {
+        "saveChanges": "Salva modifiche",
+        "create": "Crea progetto"
+      },
+      "label": {
+        "address": "Indirizzo",
+        "status": "Stato"
+      },
+      "section": {
+        "dates": "Date (facoltativo)"
+      },
+      "field": {
+        "startDate": "Data di inizio",
+        "endDate": "Data di fine"
+      }
+    },
+    "printReport": {
+      "toasts": {
+        "dataNotLoaded": "I dati del report non sono stati caricati.",
+        "mobileExportHint": "Apri l'app in un browser desktop per esportare il PDF.",
+        "printFailed": "Stampa non riuscita. Riprova."
+      },
+      "title": "Report del progetto — Anteprima PDF",
+      "description": "Anteprima del report per l'esportazione PDF. Clic su «Scarica PDF» — nella finestra di stampa del browser, scegli «Salva come PDF» come destinazione.",
+      "mobileWarning": "Impossibile esportare PDF direttamente in un browser mobile — apri l'app in un browser desktop.",
+      "note": {
+        "useDesktop": "Per risultati ottimali usa un browser desktop"
+      },
+      "button": {
+        "close": "Chiudi",
+        "exportDesktop": "Esporta su desktop",
+        "downloadPdf": "Scarica PDF"
+      },
+      "header": {
+        "generated": "Generato:",
+        "start": "Inizio:",
+        "end": "Fine:"
+      },
+      "section": {
+        "summary": "Riepilogo del budget",
+        "alerts": "Avvisi",
+        "projection": "Stima di proiezione",
+        "phases": "Ripartizione per fase",
+        "categories": "Ripartizione per categoria {top}",
+        "categoriesTop": "(top 15)",
+        "budgetItems": "Voci di budget ({count})",
+        "payments": "Pagamenti (ultimi {count})"
+      },
+      "kpi": {
+        "plan": "Piano",
+        "actual": "Effettivo",
+        "remaining": "Residuo",
+        "saved": "Risparmiato",
+        "completed": "Completato",
+        "hours": "Ore",
+        "avgOverrun": "Supero medio",
+        "predictedFinal": "Costo finale previsto",
+        "estimatedOverrun": "Supero stimato",
+        "planRatio": "Rapporto sul piano"
+      },
+      "alert": {
+        "overdue": "In ritardo ({count})",
+        "upcoming": "Imminenti ({count})",
+        "overBudget": "Oltre budget ({count})"
+      },
+      "projection": {
+        "empty": "Nessuna voce completata — la proiezione del costo finale non è disponibile. Dopo aver completato le prime voci, apparirà qui una stima basata sul supero medio del piano."
+      },
+      "column": {
+        "phase": "Fase",
+        "plan": "Piano",
+        "actual": "Effettivo",
+        "percent": "%",
+        "hours": "Ore",
+        "category": "Categoria",
+        "name": "Nome",
+        "actualShort": "Eff.",
+        "from": "Dal",
+        "to": "Al",
+        "status": "Stato",
+        "date": "Data",
+        "item": "Voce",
+        "vendor": "Fornitore",
+        "amount": "Importo",
+        "type": "Tipo"
+      },
+      "empty": {
+        "phases": "Nessuna fase da mostrare.",
+        "categories": "Nessuna categoria da mostrare.",
+        "budgetItems": "Nessuna voce di budget.",
+        "payments": "Nessun pagamento da mostrare."
+      },
+      "fallback": {
+        "noName": "(senza nome)",
+        "noItem": "(nessuna voce)"
+      },
+      "status": {
+        "rejected": "Rifiutata",
+        "completed": "Completata",
+        "active": "Attiva",
+        "plan": "Piano"
+      },
+      "footer": "Report generato da Rozpočet Stavby il {date} — {projectName}."
+    },
+    "auditLog": {
+      "title": "Cronologia delle modifiche",
+      "description": "Ultime {count} modifiche nel progetto (modifiche, creazioni, eliminazioni).",
+      "empty": "Ancora nessuna modifica registrata.",
+      "emptyValue": "(vuoto)",
+      "action": {
+        "fallback": "{action}"
+      },
+      "field": {
+        "element": "Elemento",
+        "actualHours": "Ore",
+        "date": "Data"
+      }
+    },
+    "globalSearch": {
+      "title": "Ricerca globale",
+      "placeholder": "Cerca progetti, voci, contatti, pagamenti, note…",
+      "initialHint": "Inizia a digitare per cercare in tutta l'app",
+      "noResults": "Nessun risultato per «{query}»",
+      "group": {
+        "projects": "Progetti",
+        "items": "Voci di budget",
+        "contacts": "Contatti",
+        "payments": "Pagamenti",
+        "notes": "Note"
+      },
+      "footer": {
+        "navigation": "Navigazione",
+        "select": "Seleziona"
+      }
+    }
+  },
+  "errors": {
+    "title": "Si è verificato un errore",
+    "description": "L'applicazione ha riscontrato un errore imprevisto e non può continuare. Riprova. Se il problema persiste, ricarica la pagina o torna alla home.",
+    "tryAgain": "Riprova",
+    "home": "Home",
+    "copyError": "Copia errore",
+    "copied": "Copiato",
+    "copySuccessToast": "Errore copiato negli appunti",
+    "copyFailedToast": "Copia dell'errore non riuscita",
+    "technicalDetails": "Dettagli tecnici",
+    "errorCode": "Codice di errore:",
+    "message": "Messaggio:",
+    "stackTrace": "Stack trace:",
+    "noMessage": "(nessun messaggio)",
+    "noStack": "(non disponibile)",
+    "report": {
+      "subject": "Stavba — rapporto di errore",
+      "time": "Ora: {time}",
+      "code": "Codice di errore: {code}",
+      "message": "Messaggio: {message}",
+      "stackHeader": "Stack trace:"
+    },
+    "notFound": {
+      "code": "404",
+      "title": "Pagina non trovata",
+      "description": "La pagina che cerchi non esiste o è stata spostata. Torna alla home di Rozpočet Stavby e continua a gestire il tuo budget.",
+      "homeButton": "Torna alla home"
+    },
+    "global": {
+      "title": "Si è verificato un errore",
+      "description": "L'applicazione ha riscontrato un errore imprevisto.",
+      "tryAgain": "Riprova"
+    }
+  },
+  "public": {
+    "project": {
+      "header": {
+        "publicBadge": "Progetto pubblico — sola lettura",
+        "publicView": "Visualizzazione pubblica"
+      },
+      "actions": {
+        "requestAccess": "Richiedi accesso",
+        "openInApp": "Apri nell'app"
+      },
+      "kpi": {
+        "burnRate": "Consumo del budget",
+        "remaining": "Budget residuo",
+        "remainingSub": "di {total}",
+        "itemsCompleted": "Voci completate",
+        "hoursLogged": "Ore registrate",
+        "noItems": "Nessuna voce",
+        "completedPercent": "{percent}% completato",
+        "plannedHours": "Piano: {hours} giorni",
+        "allCompleted": "Tutto completato"
+      },
+      "phases": {
+        "title": "Fasi del progetto",
+        "description": "Panoramica del budget per fase — sola lettura",
+        "column": {
+          "phase": "Fase",
+          "items": "Voci",
+          "plan": "Piano",
+          "actual": "Effettivo",
+          "hours": "Ore",
+          "burn": "Consumo",
+          "status": "Stato"
+        },
+        "empty": "Nessuna fase da mostrare.",
+        "status": {
+          "done": "Completata",
+          "inProgress": "In corso",
+          "soon": "A breve",
+          "waiting": "In attesa"
+        }
+      },
+      "footer": "Questa è una visualizzazione semplificata, in sola lettura, di un progetto pubblico. Per modificare e accedere a tutte le funzionalità, accedi o apri il progetto nell'app.",
+      "notFound": {
+        "title": "Il progetto non è disponibile pubblicamente",
+        "redirecting": "Reindirizzamento al login…"
+      },
+      "toasts": {
+        "loadFailed": "Caricamento dei dati del progetto non riuscito.",
+        "notPublic": "Il progetto non è disponibile pubblicamente",
+        "accessGranted": "Accesso concesso — reindirizzamento al progetto",
+        "accessFailed": "Concessione dell'accesso non riuscita"
+      }
+    },
+    "invite": {
+      "loading": "Caricamento dell'invito…",
+      "unauthenticated": {
+        "title": "Accedi per visualizzare l'invito",
+        "redirecting": "Reindirizzamento al login…",
+        "goToLogin": "Vai al login"
+      },
+      "error": {
+        "title": "Invito non disponibile"
+      },
+      "status": {
+        "accepted": "L'invito è già stato accettato",
+        "rejected": "L'invito è stato rifiutato",
+        "revoked": "L'invito è stato revocato da un amministratore",
+        "expired": "L'invito è scaduto",
+        "invalid": "L'invito non è più valido"
+      },
+      "title": "Invito al progetto",
+      "description": "Sei stato invitato al progetto <strong>{name}</strong> con il ruolo <badge>{role}</badge>.",
+      "field": {
+        "project": "Progetto:",
+        "owner": "Gestore:",
+        "inviter": "Invitato da:",
+        "role": "Ruolo:",
+        "expiresAt": "Valido fino al:"
+      },
+      "roleDescription": {
+        "viewer": "Puoi visualizzare il budget, i pagamenti e le registrazioni di tempo (sola lettura).",
+        "editor": "Puoi visualizzare e modificare il budget, i pagamenti, le registrazioni di tempo e i contatti.",
+        "owner": "Hai il pieno controllo del progetto — modifiche, pagamenti, registrazioni di tempo, contatti e gestione dei membri.",
+        "admin": "Hai il pieno controllo del progetto, inclusa la gestione dei membri e le impostazioni."
+      },
+      "emailNotice": {
+        "title": "Questo invito è per l'email:",
+        "hint": "Devi essere autenticato con questa email per accettarlo."
+      },
+      "actions": {
+        "accept": "Accetta invito",
+        "reject": "Rifiuta",
+        "openProject": "Apri progetto"
+      },
+      "footer": "Se non aspettavi questo invito, puoi ignorare questa email in tutta sicurezza.",
+      "toasts": {
+        "loadFailed": "Caricamento dell'invito non riuscito.",
+        "acceptSuccess": "Invito accettato — reindirizzamento al progetto",
+        "acceptFailed": "Accettazione dell'invito non riuscita.",
+        "rejectSuccess": "Invito rifiutato",
+        "rejectFailed": "Rifiuto dell'invito non riuscito."
+      }
+    }
+  },
+  "api": {
+    "errors": {
+      "auth": {
+        "notAuthenticated": "Non autenticato.",
+        "emailAndPasswordRequired": "Email e password sono obbligatori.",
+        "accountExists": "Esiste già un account con questa email. Accedi o reimposta la password.",
+        "registerWarningEmailFailed": "Registrazione riuscita, ma non è stato possibile inviare l'email di verifica. Puoi richiederne una nuova.",
+        "registerSuccess": "Registrazione riuscita. Controlla la tua email per verificare l'account.",
+        "registerFailed": "Registrazione non riuscita. Riprova.",
+        "emailRequired": "L'email è obbligatoria.",
+        "emailAlreadyVerified": "La tua email è già verificata. Puoi accedere.",
+        "verifyEmailFailed": "Invio dell'email di verifica non riuscito.",
+        "forgotPasswordSent": "Se l'account esiste, è stata inviata un'email con un link di reimpostamento.",
+        "tokenAndPasswordRequired": "Token e nuova password sono obbligatori.",
+        "invalidResetLink": "Link di reimpostamento della password non valido.",
+        "resetLinkExpired": "Questo link di reimpostamento della password è scaduto. Richiedine uno nuovo.",
+        "resetLinkUsed": "Questo link di reimpostamento della password è già stato usato. Richiedine uno nuovo.",
+        "resetSuccess": "La tua password è stata cambiata con successo. Puoi accedere.",
+        "resetFailed": "Reimpostamento della password non riuscito.",
+        "typeAndTokenRequired": "type e token sono obbligatori.",
+        "invalidTokenType": "Tipo di token non valido.",
+        "unknownAuthAction": "Azione di autenticazione sconosciuta.",
+        "successMustBeBoolean": "`success` deve essere un booleano.",
+        "rateLimit": {
+          "register": "Troppe registrazioni. Riprova tra {minutes} minuti.",
+          "requests": "Troppe richieste. Riprova tra {minutes} minuti.",
+          "attempts": "Troppi tentativi. Riprova tra {minutes} minuti."
+        }
+      },
+      "invitations": {
+        "notFound": "Invito non trovato.",
+        "alreadyUsed": "L'invito è già stato usato.",
+        "expired": "L'invito è scaduto.",
+        "notYourEmail": "Questo invito non è per la tua email.",
+        "acceptFailed": "Accettazione dell'invito non riuscita.",
+        "rejectFailed": "Rifiuto dell'invito non riuscito.",
+        "loadFailed": "Caricamento degli inviti non riuscito.",
+        "invalidRequestJson": "Richiesta non valida — previsto un oggetto JSON.",
+        "invalidEmailFormat": "Formato email non valido.",
+        "alreadyOwner": "Questo utente è già il gestore del progetto.",
+        "alreadyMember": "Questo utente è già membro del progetto.",
+        "createFailed": "Creazione dell'invito non riuscita.",
+        "cancelFailed": "Revoca dell'invito non riuscita."
+      },
+      "budget": {
+        "cannotMoveToSelf": "Una voce non può essere spostata sotto se stessa.",
+        "targetNotFound": "La voce di destinazione non esiste.",
+        "cannotMoveAcrossProjects": "Un'attività non può essere spostata in un altro progetto.",
+        "cycleDetected": "Una voce non può essere spostata sotto un proprio discendente (ciclo)."
+      },
+      "users": {
+        "adminOnly": "Solo un amministratore può modificare i privilegi di amministratore.",
+        "cannotEditOtherProfile": "Non è consentito modificare il profilo di un altro utente.",
+        "userNotFound": "Utente non trovato.",
+        "noPasswordSet": "Il tuo account non ha una password impostata (accedi con Google). Puoi impostarne una tramite la funzione «Password dimenticata».",
+        "cannotDemoteSelf": "Non puoi rimuovere i tuoi privilegi di amministratore."
+      },
+      "password": {
+        "currentRequired": "La password attuale è obbligatoria.",
+        "newRequired": "La nuova password è obbligatoria.",
+        "incorrectCurrent": "La password attuale non è corretta.",
+        "changeFailed": "Cambio della password non riuscito. Riprova.",
+        "changed": "La password è stata cambiata."
+      },
+      "sessions": {
+        "revokeFailed": "Revoca delle altre sessioni non riuscita. Riprova.",
+        "allRevoked": "Tutte le altre sessioni sono state disconnesse."
+      },
+      "project": {
+        "notFoundOrNotPublic": "Progetto non trovato o non pubblico.",
+        "publicLoadFailed": "Caricamento dei dati del progetto pubblico non riuscito."
+      },
+      "ares": {
+        "apiUnavailable": "API ARES non disponibile.",
+        "searchError": "Errore di ricerca.",
+        "apiKeyMissing": "La API key di ARES non è configurata. Puoi inserire i dati dell'azienda manualmente."
+      },
+      "notes": {
+        "cannotEditOthers": "Puoi modificare solo le tue note.",
+        "cannotDeleteOthers": "Puoi eliminare solo le tue note."
+      },
+      "generic": {
+        "invalidRequest": "Richiesta non valida."
+      },
+      "account": {
+        "mustAcknowledge": "Devi confermare di aver compreso le conseguenze.",
+        "notFound": "Utente non trovato.",
+        "alreadyDeleted": "L'account è già in attesa di eliminazione.",
+        "passwordRequired": "La password è obbligatoria per la verifica dell'identità.",
+        "passwordIncorrect": "La password inserita non è corretta.",
+        "emailConfirmRequired": "Inserisci il tuo indirizzo email per confermare.",
+        "emailConfirmMismatch": "L'email inserita non corrisponde al tuo account.",
+        "emailRequired": "L'email è obbligatoria.",
+        "notDeleted": "Questo account non è eliminato.",
+        "permanentlyDeleted": "Il periodo di recupero dell'account è scaduto. L'account è stato eliminato definitivamente.",
+        "useOAuth": "Questo account non ha una password impostata. Accedi con Google."
+      }
+    }
+  },
+  "currency": {
+    "default": "predefinita",
+    "unavailable": "tasso in attesa",
+    "loadingRate": "Caricamento del tasso…",
+    "conversionPreview": "{fromAmount} → {toAmount} (tasso {rate})",
+    "label": "Valuta",
+    "projectCurrency": "Valuta del progetto",
+    "projectCurrencyHint": "Tutti i totali e i grafici sono mostrati in questa valuta.",
+    "paymentCurrency": "Valuta del pagamento",
+    "paymentCurrencyHint": "Se diversa dalla valuta del progetto, l'importo viene convertito automaticamente usando il tasso di cambio giornaliero della ČNB.",
+    "budgetItemCurrency": "Valuta della voce",
+    "converted": "convertita",
+    "rateUnavailable": "Il tasso di cambio per questa valuta non è ancora disponibile. Per ora salva il pagamento nella valuta del progetto.",
+    "currencies": {
+      "CZK": "Corona ceca",
+      "EUR": "Euro",
+      "USD": "Dollaro USA",
+      "GBP": "Sterlina britannica",
+      "HUF": "Fiorino ungherese",
+      "PLN": "Złoty polacco",
+      "AUD": "Dollaro australiano",
+      "VND": "Dong vietnamita"
+    }
+  },
+  "help": {
+    "title": "Aiuto",
+    "description": "Suggerimenti rapidi per usare l'app.",
+    "sections": {
+      "dashboard": {
+        "title": "Cruscotto",
+        "tip1": "La pagina principale mostra schede KPI, piano per date e grafici per fase/categoria.",
+        "tip2": "La proiezione stima i costi finali in base al supero medio del budget delle voci completate."
+      },
+      "budget": {
+        "title": "Budget",
+        "tip1": "Clic su una qualsiasi cella della tabella per la modifica in linea (Enter = salva, Escape = annulla).",
+        "tip2": "Trascina per riordinare le voci. Sposta le attività sotto un'altra voce padre tramite il menu ⋯.",
+        "tip3": "Filtra per fase o stato usando i pulsanti della barra degli strumenti."
+      },
+      "payments": {
+        "title": "Pagamenti",
+        "tip1": "Fatture a rate: crea una fattura con un importo totale e poi aggiungi le rate.",
+        "tip2": "I pagamenti in valuta estera vengono convertiti automaticamente con i tassi giornalieri della ČNB."
+      },
+      "time": {
+        "title": "Tempo",
+        "tip1": "Inserisci lavoratore, ore e data. L'ultimo lavoratore e tipo vengono ricordati per un inserimento più rapido."
+      },
+      "contacts": {
+        "title": "Contatti",
+        "tip1": "Cerca un'azienda per partita IVA (ARES) — i dati vengono precompilati."
+      },
+      "timeline": {
+        "title": "Cronoprogramma",
+        "tip1": "Cambia zoom (giorni/mesi/trimestri/anni) per diversi livelli di dettaglio.",
+        "tip2": "Doppio clic su una barra per modificare le date."
+      },
+      "shortcuts": {
+        "title": "Scorciatoie da tastiera",
+        "tip1": "Ctrl+K — ricerca globale nell'app.",
+        "tip2": "Ctrl+N — crea un nuovo progetto.",
+        "tip3": "Ctrl+B — mostra/nascondi la barra laterale."
+      }
+    }
+  }
+}

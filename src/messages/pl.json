@@ -1,0 +1,2710 @@
+{
+  "Meta": {
+    "appName": "Build Budget",
+    "description": "Kompleksowe zarządzanie budżetem, kosztami i czasem dla budowy i remontu. Przegląd projektów, płatności, prac i materiałów w jednym miejscu.",
+    "keywords": [
+      "budowa",
+      "remont",
+      "budżet",
+      "koszty",
+      "projekt",
+      "zarządzanie"
+    ]
+  },
+  "common": {
+    "appName": "Build Budget",
+    "loading": "Ładowanie…",
+    "cancel": "Anuluj",
+    "save": "Zapisz",
+    "delete": "Usuń",
+    "edit": "Edytuj",
+    "close": "Zamknij",
+    "search": "Szukaj",
+    "yes": "Tak",
+    "no": "Nie",
+    "all": "Wszystko",
+    "none": "Brak",
+    "add": "Dodaj",
+    "select": {
+      "placeholder": "Wybierz…",
+      "search": "Szukaj…",
+      "noResults": "Brak wyników"
+    }
+  },
+  "nav": {
+    "sections": {
+      "main": "Główne",
+      "work": "Prace",
+      "organization": "Organizacja"
+    },
+    "items": {
+      "portfolio": "Portfel",
+      "dashboard": "Panel główny",
+      "budget": "Budżet",
+      "payments": "Płatności",
+      "time": "Czas",
+      "contacts": "Kontakty",
+      "timeline": "Oś czasu",
+      "notes": "Notatki",
+      "management": "Zarządzanie projektem",
+      "telemetry": "Telemetria",
+      "admin": "Administracja"
+    }
+  },
+  "phases": {
+    "preparation": "Przygotowanie",
+    "demolition": "Rozbiórka",
+    "earthworks": "Roboty ziemne",
+    "foundation": "Fundament",
+    "shell": "Stan surowy",
+    "installations": "Instalacje",
+    "finishing": "Wykończenie",
+    "facade": "Fasada",
+    "roof": "Dach",
+    "interior": "Wnętrze",
+    "exterior": "Ogród/teren zewnętrzny",
+    "final_inspection": "Odbiór końcowy",
+    "future": "Na przyszłość",
+    "unspecified": "Nieokreślone"
+  },
+  "statuses": {
+    "active": "Aktywny",
+    "planning": "Planowanie",
+    "completed": "Zakończony",
+    "paused": "Wstrzymany"
+  },
+  "contactTypes": {
+    "company": "Firma",
+    "craftsman": "Rzemieślnik",
+    "self": "Własna robota",
+    "family": "Rodzina",
+    "supplier": "Dostawca",
+    "architect": "Architekt",
+    "office": "Urząd"
+  },
+  "paymentTypes": {
+    "receipt": "Paragon",
+    "invoice": "Faktura",
+    "work": "Praca",
+    "material": "Materiał",
+    "person": "Osoba",
+    "other": "Inne"
+  },
+  "workerTypes": {
+    "company": "Firma",
+    "craftsman": "Rzemieślnik",
+    "self": "Własna robota",
+    "family": "Rodzina"
+  },
+  "roles": {
+    "viewer": "Obserwator",
+    "editor": "Edytor",
+    "owner": "Zarządca",
+    "admin": "Administrator"
+  },
+  "LanguageSwitcher": {
+    "language": "Język",
+    "changeLanguage": "Zmień język"
+  },
+  "auth": {
+    "common": {
+      "email": "E-mail",
+      "emailPlaceholder": "ty@e-mail.com",
+      "or": "lub",
+      "password": "Hasło",
+      "copyright": "© {year} Stavba — Build Budget",
+      "backToLogin": "Wróć do logowania",
+      "signInLink": "Zaloguj się",
+      "backToHome": "Wróć na stronę główną"
+    },
+    "validation": {
+      "passwordMismatch": "Hasła nie są zgodne.",
+      "passwordTooShort": "Hasło musi mieć co najmniej 8 znaków.",
+      "passwordTooWeak": "Hasło musi zawierać co najmniej jedną literę i jedną cyfrę.",
+      "passwordPlaceholder": "Min. 8 znaków, litera + cyfra",
+      "passwordConfirmLabel": "Potwierdź hasło",
+      "passwordConfirmPlaceholder": "Powtórz hasło",
+      "strength": {
+        "weak": "Słabe",
+        "fair": "Średnie",
+        "good": "Dobre",
+        "strong": "Silne"
+      }
+    },
+    "login": {
+      "title": "Zaloguj się",
+      "subtitle": "Zaloguj się na swoje konto",
+      "tagline": "Zarządzanie budżetem, kosztami i czasem dla budowy i remontu",
+      "registeredSuccess": "Rejestracja zakończona. Sprawdź e-mail, aby zweryfikować adres.",
+      "forgotPassword": "Nie pamiętasz hasła?",
+      "submitting": "Logowanie…",
+      "submit": "Zaloguj się",
+      "googleButton": "Zaloguj się przez Google",
+      "noAccount": "Nie masz konta?",
+      "registerLink": "Zarejestruj się",
+      "errors": {
+        "useOAuth": "Ten e-mail jest zarejestrowany przez Google. Użyj przycisku „Zaloguj się przez Google”.",
+        "registerFirst": "Dla tego e-maila nie istnieje jeszcze konto. Zarejestruj się.",
+        "invalidCredentials": "Nieprawidłowy e-mail lub hasło.",
+        "configuration": "Błąd konfiguracji logowania. Skontaktuj się z administratorem.",
+        "oauthFailed": "Logowanie przez Google nie powiodło się. Spróbuj ponownie.",
+        "rateLimitedMinutes": "Zbyt wiele prób logowania. Spróbuj ponownie za {minutes} min.",
+        "rateLimitedSeconds": "Zbyt wiele prób logowania. Spróbuj ponownie za {seconds} s.",
+        "generic": "Logowanie nie powiodło się. Spróbuj ponownie."
+      },
+      "accountDeleted": {
+        "title": "Konto usunięte",
+        "body": "Twoje konto zostało usunięte i zostanie trwale skasowane za 7 dni. Aby je odzyskać, zaloguj się ponownie tym samym e-mailem."
+      }
+    },
+    "register": {
+      "title": "Zarejestruj się",
+      "subtitle": "Utwórz darmowe konto",
+      "tagline": "Załóż konto i zacznij zarządzać swoimi projektami",
+      "nameLabel": "Imię i nazwisko (opcjonalnie)",
+      "namePlaceholder": "Jan Kowalski",
+      "submitting": "Tworzenie konta…",
+      "submit": "Utwórz konto",
+      "hasAccount": "Masz już konto?",
+      "errors": {
+        "generic": "Rejestracja nie powiodła się. Spróbuj ponownie."
+      }
+    },
+    "forgotPassword": {
+      "title": "Nie pamiętasz hasła",
+      "subtitle": "Wpisz swój e-mail, a wyślemy Ci link do resetowania hasła.",
+      "submitting": "Wysyłanie…",
+      "submit": "Wyślij link resetujący",
+      "remember": "Pamiętasz hasło?",
+      "success": {
+        "title": "Sprawdź e-mail",
+        "body": "Jeśli istnieje konto z e-mailem {email}, wysłaliśmy link do resetowania hasła. Link jest ważny przez 1 godzinę."
+      },
+      "errors": {
+        "generic": "Żądanie nie powiodło się. Spróbuj ponownie."
+      }
+    },
+    "resetPassword": {
+      "title": "Nowe hasło",
+      "subtitle": "Ustaw nowe hasło",
+      "newPasswordLabel": "Nowe hasło",
+      "submitting": "Zmiana hasła…",
+      "submit": "Zmień hasło",
+      "checking": "Weryfikacja linku…",
+      "invalidTitle": "Nieprawidłowy link",
+      "invalidBody": "Ten link do resetowania hasła jest nieprawidłowy lub wygasł (ważny przez 1 godzinę). Poproś o nowy.",
+      "newLink": "Nowy link",
+      "successTitle": "Hasło zmienione",
+      "successBody": "Twoje hasło zostało zmienione. Przekierowanie do logowania…",
+      "successToast": "Hasło zostało zmienione.",
+      "errors": {
+        "generic": "Resetowanie hasła nie powiodło się. Spróbuj ponownie."
+      }
+    },
+    "verifyEmail": {
+      "validTitle": "E-mail zweryfikowany!",
+      "validBody": "Twój adres e-mail został pomyślnie potwierdzony. Możesz się teraz zalogować i zacząć zarządzać swoimi projektami.",
+      "alreadyTitle": "E-mail już zweryfikowany",
+      "alreadyBody": "Twój adres e-mail został już wcześniej zweryfikowany. Możesz zalogować się na swoje konto.",
+      "expiredTitle": "Link wygasł",
+      "expiredBody": "Ten link wygasł (ważny przez 24 godziny). Zaloguj się i poproś o nowy e-mail weryfikacyjny.",
+      "invalidTitle": "Nieprawidłowy link",
+      "invalidBody": "Ten link jest nieprawidłowy lub został już użyty. Zaloguj się i poproś o nowy e-mail weryfikacyjny.",
+      "errorTitle": "Błąd weryfikacji",
+      "errorBody": "Coś poszło nie tak. Spróbuj ponownie później lub skontaktuj się z nami.",
+      "checking": "Weryfikacja…"
+    },
+    "verifyPending": {
+      "title": "Zweryfikuj swój e-mail",
+      "body": "Aby uzyskać dostęp do swoich projektów, musisz potwierdzić swój adres e-mail. Sprawdź skrzynkę odbiorczą, w tym folder spam.",
+      "sentTo": "E-mail wysłany do:",
+      "resendLabel": "Nie otrzymałeś e-maila?",
+      "resendButton": "Wyślij ponownie",
+      "resendSubmitting": "Wysyłanie…",
+      "checkButton": "Zweryfikowałem — odśwież",
+      "checkSubmitting": "Sprawdzanie…",
+      "signOut": "Wyloguj się",
+      "footer": "Po weryfikacji e-maila zostaniesz automatycznie przekierowany na stronę główną.",
+      "toasts": {
+        "resent": "E-mail weryfikacyjny został wysłany ponownie. Sprawdź skrzynkę odbiorczą.",
+        "sendFailed": "Wysyłanie nie powiodło się. Spróbuj ponownie."
+      }
+    },
+    "profile": {
+      "tagline": "Zarządzaj swoim kontem, hasłem i sesjami",
+      "title": "Profil",
+      "subtitle": "Edytuj swoje dane, zmień hasło i zarządzaj aktywnymi sesjami.",
+      "sections": {
+        "profile": "Profil",
+        "password": "Zmiana hasła",
+        "sessions": "Sesje",
+        "signOut": "Wyloguj się"
+      },
+      "fields": {
+        "name": "Imię i nazwisko",
+        "namePlaceholder": "Jan Kowalski",
+        "currentPassword": "Aktualne hasło",
+        "currentPasswordPlaceholder": "••••••••",
+        "newPassword": "Nowe hasło",
+        "confirmNewPassword": "Potwierdź nowe hasło",
+        "confirmNewPasswordPlaceholder": "Powtórz nowe hasło"
+      },
+      "emailReadOnlyNote": "Nie można zmienić e-maila. Skontaktuj się z pomocą techniczną, aby go zmienić.",
+      "passwordChangeNote": "Po zmianie hasła wszystkie inne sesje (na innych urządzeniach) zostaną wylogowane.",
+      "sessionsDescription": "Wylogowuje wszystkie inne zalogowane sesje (na innych urządzeniach). Ta sesja pozostaje aktywna.",
+      "notifications": {
+        "title": "Preferencje powiadomień",
+        "description": "Ustaw, kiedy chcesz otrzymywać powiadomienia e-mailem.",
+        "toggle": {
+          "onMemberAssigned": {
+            "label": "E-mail przy przypisaniu do członka",
+            "description": "Powiadomienie, gdy ktoś doda Cię jako członka projektu."
+          },
+          "onItemDelayed": {
+            "label": "E-mail przy opóźnieniu pozycji",
+            "description": "Powiadomienie, gdy pozycja budżetowa przekracza planowany termin."
+          },
+          "onOwnerChanged": {
+            "label": "E-mail przy zmianie zarządcy",
+            "description": "Powiadomienie, gdy ktoś zmienia zarządcę projektu, którego jesteś członkiem."
+          }
+        },
+        "toasts": {
+          "saved": "Preferencja zapisana",
+          "saveError": "Nie udało się zapisać preferencji"
+        }
+      },
+      "buttons": {
+        "saveProfile": "Zapisz zmiany",
+        "savingProfile": "Zapisywanie…",
+        "changePassword": "Zmień hasło",
+        "changingPassword": "Zmiana hasła…",
+        "revokeSessions": "Wyloguj wszystkie inne sesje",
+        "revokingSessions": "Wylogowywanie…",
+        "signOutThisDevice": "Wyloguj to urządzenie"
+      },
+      "toasts": {
+        "saveSuccess": "Profil zapisany.",
+        "saveError": "Zapisanie profilu nie powiodło się.",
+        "saveErrorException": "Zapisanie profilu nie powiodło się. Spróbuj ponownie.",
+        "passwordSuccess": "Hasło zmienione.",
+        "passwordError": "Zmiana hasła nie powiodła się.",
+        "passwordErrorException": "Zmiana hasła nie powiodła się. Spróbuj ponownie.",
+        "revokeSuccess": "Wszystkie inne sesje zostały wylogowane.",
+        "revokeError": "Wylogowanie innych sesji nie powiodło się.",
+        "revokeErrorException": "Wylogowanie innych sesji nie powiodło się. Spróbuj ponownie."
+      },
+      "deleteAccount": {
+        "sectionTitle": "Usunięcie konta",
+        "sectionDescription": "Twoje konto zostanie usunięte za 7 dni. W tym czasie możesz je odzyskać, logując się. Po 7 dniach konto zostanie trwale skasowane.",
+        "button": "Usuń konto",
+        "title": "Naprawdę usunąć konto?",
+        "description": "To działanie usunie Twoje konto za 7 dni. W tym czasie możesz je odzyskać, logując się.",
+        "warningTitle": "Ostrzeżenie",
+        "warningBody": "Twoje członkostwa w projektach zostaną cofnięte. Projekty, którymi zarządzasz, pozostaną widoczne dla innych członków, ale bez zarządcy. Po 7 dniach konto zostanie trwale usunięte, a e-mail zanonimizowany.",
+        "passwordLabel": "Wpisz swoje hasło, aby potwierdzić",
+        "emailConfirmLabel": "Wpisz swój e-mail, aby potwierdzić",
+        "emailConfirmHint": "Wpisz dokładnie swój adres e-mail, aby potwierdzić tożsamość.",
+        "acknowledge": "Rozumiem, że moje projekty pozostaną widoczne dla innych członków, a konto zostanie usunięte za 7 dni.",
+        "cancel": "Anuluj",
+        "confirm": "Usuń konto",
+        "deleting": "Usuwanie…",
+        "success": "Konto zaplanowane do usunięcia. Zostanie trwale skasowane za 7 dni.",
+        "error": "Usunięcie konta nie powiodło się. Spróbuj ponownie."
+      }
+    },
+    "settings": {
+      "tagline": "Globalne ustawienia aplikacji",
+      "sections": {
+        "appearance": "Wygląd",
+        "hiddenProjects": "Ukryte projekty",
+        "activity": "Moje statystyki aktywności",
+        "about": "O aplikacji"
+      },
+      "appearance": {
+        "description": "Zmień wygląd i język interfejsu.",
+        "theme": "Motyw",
+        "themeHint": "Przełącz między motywem jasnym i ciemnym.",
+        "themeLight": "Motyw jasny",
+        "themeDark": "Motyw ciemny",
+        "language": "Język",
+        "languageHint": "Zmiany języka wchodzą w życie natychmiast."
+      },
+      "hiddenProjects": {
+        "description": "Ukryte projekty nie pojawiają się w przełączniku projektów na górnym pasku. Nadal są dostępne przez bezpośredni link.",
+        "empty": "Nie masz jeszcze żadnych projektów.",
+        "toggleHint": "Włączony = projekt ukryty. Zmiany są zapisywane automatycznie.",
+        "aria": {
+          "show": "Pokaż projekt {name}",
+          "hide": "Ukryj projekt {name}"
+        }
+      },
+      "activity": {
+        "description": "Przegląd Twoich działań w aplikacji w całym czasie i projektach."
+      },
+      "about": {
+        "body": "Aplikacja <brand>Stavba</brand> zapewnia kompleksowe zarządzanie budżetem, kosztami, czasem i materiałami dla budowy i remontu.",
+        "version": "Wersja",
+        "commit": "Commit",
+        "buildDate": "Data budowania",
+        "branch": "Gałąź",
+        "label": "Etykieta",
+        "githubLink": "Kod źródłowy na GitHub"
+      },
+      "accountProfileLink": "Profil konta"
+    }
+  },
+  "topbar": {
+    "account": "Konto",
+    "loading": "Ładowanie…",
+    "selectProject": "Wybierz projekt",
+    "searchProject": "Szukaj projektu…",
+    "search": "Szukaj",
+    "toggleSidebar": {
+      "open": "Otwórz panel",
+      "close": "Zamknij panel"
+    },
+    "menu": {
+      "profile": "Profil",
+      "settings": "Ustawienia",
+      "admin": "Admin",
+      "signOut": "Wyloguj się",
+      "theme": {
+        "light": "Motyw jasny",
+        "dark": "Motyw ciemny"
+      }
+    },
+    "star": {
+      "add": "Oznacz gwiazdką",
+      "remove": "Usuń gwiazdkę"
+    },
+    "toasts": {
+      "projectUpdateFailed": "Nie udało się zaktualizować projektu"
+    },
+    "noOwner": "Brak zarządcy — skontaktuj się z administratorami",
+    "noProjectsFound": "Nie znaleziono projektów.",
+    "addProject": "Dodaj projekt",
+    "searchInProject": "Szukaj w projekcie…",
+    "budgetChip": "Tempo wydatków: {actual} z {plan}",
+    "budgetChipPercent": "Tempo zużycia budżetu: {percent} procent"
+  },
+  "sidebar": {
+    "settings": "Ustawienia"
+  },
+  "analytics": {
+    "eventTypes": {
+      "page_view": "Odsłona strony",
+      "add_payment": "Dodaj płatność",
+      "add_time_entry": "Dodaj wpis czasu",
+      "edit_time_entry": "Edytuj wpis czasu",
+      "edit_payment": "Edytuj płatność",
+      "delete_payment": "Usuń płatność",
+      "add_contact": "Dodaj kontakt",
+      "add_note": "Dodaj notatkę",
+      "edit_note": "Edytuj notatkę",
+      "add_budget_item": "Dodaj pozycję budżetu",
+      "edit_budget_item": "Edytuj pozycję budżetu",
+      "download_data": "Pobierz dane",
+      "login": "Logowanie",
+      "logout": "Wylogowanie",
+      "project_share": "Udostępnij projekt",
+      "auth_login": "Logowanie",
+      "auth_logout": "Wylogowanie",
+      "auth_register": "Rejestracja",
+      "auth_password_change": "Zmiana hasła",
+      "auth_password_reset": "Reset hasła",
+      "auth_email_verify": "Weryfikacja e-maila",
+      "auth_session_revoke": "Cofnięcie sesji",
+      "auth_oauth_login": "Logowanie przez Google"
+    }
+  },
+  "relativeTime": {
+    "justNow": "przed chwilą",
+    "minute": "{n, plural, one {minutę temu} few {{n} minuty temu} many {{n} minut temu} other {{n} minut temu}}",
+    "hour": "{n, plural, one {godzinę temu} few {{n} godziny temu} many {{n} godzin temu} other {{n} godzin temu}}",
+    "yesterday": "wczoraj",
+    "days": "{n, plural, one {dzień temu} few {{n} dni temu} many {{n} dni temu} other {{n} dni temu}}"
+  },
+  "tabs": {
+    "portfolio": {
+      "title": "Portfel",
+      "subtitle": "Przegląd wszystkich projektów — zagregowane wskaźniki KPI w Twoich projektach.",
+      "kpi": {
+        "projects": {
+          "label": "Projekty",
+          "subValue": "{count, plural, one {# pozycja budżetu} few {# pozycje budżetu} many {# pozycji budżetu} other {# pozycji budżetu}}"
+        },
+        "plan": {
+          "label": "Łączny plan",
+          "subValue": "Zagregowane w projektach"
+        },
+        "actual": {
+          "label": "Wydano",
+          "subValue": "{percent} planu"
+        },
+        "remaining": {
+          "label": "Pozostało",
+          "subValue": "Plan − rzeczywistość"
+        }
+      },
+      "table": {
+        "title": "Porównanie projektów",
+        "description": "Sortowane porównanie planu, rzeczywistości i zużycia budżetu.",
+        "column": {
+          "project": "Projekt",
+          "plan": "Plan",
+          "actual": "Rzeczywistość",
+          "burn": "Zużycie",
+          "remaining": "Pozostało",
+          "status": "Status"
+        },
+        "row": {
+          "total": "Razem",
+          "projectCount": "{count, plural, one {# projekt} few {# projekty} many {# projektów} other {# projektów}}"
+        }
+      },
+      "chart": {
+        "title": "Plan a rzeczywistość wg projektu",
+        "description": "10 najlepszych projektów wg planowanego budżetu.",
+        "empty": "Brak danych do wykresu.",
+        "series": {
+          "plan": "Plan",
+          "actual": "Rzeczywistość"
+        }
+      },
+      "empty": {
+        "noProjects": {
+          "title": "Nie masz jeszcze żadnych projektów",
+          "description": "Utwórz swój pierwszy projekt, aby śledzić budżet, czas i materiały."
+        },
+        "oneProject": {
+          "title": "Portfel jest dostępny od 2 projektów",
+          "description": "Po utworzeniu lub dołączeniu do drugiego projektu pojawi się tutaj zagregowany przegląd między projektami."
+        }
+      },
+      "aria": {
+        "openProject": "Otwórz projekt"
+      }
+    },
+    "admin": {
+      "nav": {
+        "label": "Administracja",
+        "title": "Ustawienia konta"
+      },
+      "subtitle": "Profil, projekty, statystyki i preferencje.",
+      "section": {
+        "projects": "Moje projekty",
+        "users": "Zarządzanie użytkownikami",
+        "export": "Eksport",
+        "notifications": "Powiadomienia",
+        "danger": "Strefa zagrożeń"
+      },
+      "profile": {
+        "title": "Mój profil",
+        "description": "Nazwa wyświetlana i e-mail, które widzą inni użytkownicy przy udostępnianiu projektów.",
+        "button": {
+          "edit": "Edytuj",
+          "save": "Zapisz"
+        },
+        "field": {
+          "displayName": "Nazwa wyświetlana"
+        },
+        "placeholder": {
+          "name": "np. Jan Kowalski"
+        },
+        "hint": {
+          "nameChange": "Zmiana dotyczy wszystkich projektów, w których jesteś członkiem."
+        },
+        "label": {
+          "accountCreated": "Konto utworzone: {date}"
+        },
+        "toasts": {
+          "emptyName": "Nazwa nie może być pusta",
+          "saved": "Profil zapisany",
+          "saveError": "Nie udało się zaktualizować profilu"
+        }
+      },
+      "projects": {
+        "title": "Moje projekty",
+        "description": "Projekty, w których jesteś zarządcą lub członkiem. Możesz opuścić tylko te projekty, którymi nie zarządzasz.",
+        "button": {
+          "leave": "Opuść",
+          "leaveConfirm": "Opuść"
+        },
+        "leave": {
+          "confirmTitle": "Opuścić projekt „{name}”?",
+          "confirmBody": "Stracisz dostęp do wszystkich danych projektu. To działanie jest nieodwracalne.",
+          "cancel": "Anuluj"
+        },
+        "badge": {
+          "cannotLeave": "Nie można opuścić"
+        },
+        "empty": "Nie jesteś jeszcze członkiem żadnego projektu.",
+        "toasts": {
+          "left": "Opuściłeś projekt „{name}”",
+          "leaveError": "Nie udało się opuścić projektu"
+        }
+      },
+      "users": {
+        "title": "Zarządzanie użytkownikami",
+        "description": "Przegląd wszystkich użytkowników instancji i ich praw administratora. Zmiany wchodzą w życie natychmiast.",
+        "badge": {
+          "admin": "Administrator",
+          "user": "Użytkownik",
+          "pendingDeletion": "Oczekuje na usunięcie"
+        },
+        "aria": {
+          "adminToggleSelf": "Prawa administratora użytkownika {name} (nie można zmienić)",
+          "adminToggleOther": "Przełącz prawa administratora użytkownika {name}"
+        },
+        "tooltip": {
+          "noSelfDemote": "Nie można odebrać własnych praw administratora"
+        },
+        "hint": {
+          "selfExcluded": "Twoje własne konto ({email}) jest wykluczone z listy — nie możesz odebrać własnych praw administratora."
+        },
+        "empty": "Brak innych użytkowników do zarządzania.",
+        "toasts": {
+          "cannotDemoteSelf": "Nie można odebrać własnych praw administratora",
+          "promoted": "Użytkownik {name} jest teraz administratorem",
+          "demoted": "Użytkownik {name} nie jest już administratorem",
+          "toggleError": "Nie udało się zmienić praw administratora"
+        }
+      },
+      "stats": {
+        "title": "Moje statystyki aktywności",
+        "description": "Przegląd Twoich działań w aplikacji w całym czasie.",
+        "filter": {
+          "allProjects": "Wszystkie projekty"
+        },
+        "button": {
+          "refresh": "Odśwież"
+        },
+        "kpi": {
+          "totalActions": "Łączne akcje",
+          "pageViews": "Odsłony stron",
+          "totalTime": "Łączny czas na stronach",
+          "lastActive": "Ostatnia aktywność"
+        },
+        "chart": {
+          "byType": {
+            "title": "Zdarzenia wg typu",
+            "empty": "Nie zarejestrowano jeszcze żadnej aktywności."
+          }
+        },
+        "topPages": {
+          "title": "Moje najczęściej odwiedzane strony",
+          "empty": "Brak danych o czasie na stronach.",
+          "column": {
+            "page": "Strona",
+            "views": "Odsłony",
+            "totalTime": "Łączny czas"
+          }
+        }
+      },
+      "export": {
+        "title": "Eksport moich danych",
+        "description": "Pobierz wszystkie dane aplikacji w formacie JSON lub CSV do kopii zapasowej i analizy.",
+        "button": {
+          "json": "Pobierz wszystkie dane (JSON)",
+          "csv": "Pobierz CSV wszystkich projektów"
+        },
+        "hint": "JSON zawiera pełny stan wszystkich projektów (budżet, płatności, czas, kontakty). CSV pobiera 4 pliki na projekt (budżet, płatności, czas, kontakty).",
+        "toasts": {
+          "jsonSuccess": "Dane wyeksportowane",
+          "jsonError": "Eksport nie powiódł się",
+          "csvNoProjects": "Brak projektów do eksportu",
+          "csvSuccess": "Dane wyeksportowane ({count, plural, one {# plik} few {# pliki} many {# plików} other {# plików}})",
+          "csvAllFailed": "Eksport CSV nie powiódł się",
+          "csvPartialSuccess": "Wyeksportowano {success} plików, {failed} nie powiodło się"
+        }
+      },
+      "notifications": {
+        "title": "Preferencje powiadomień",
+        "description": "Dopóki Google Auth nie jest aktywne, preferencje przechowujemy lokalnie w Twojej przeglądarce.",
+        "toggle": {
+          "onMemberAssigned": {
+            "label": "E-mail przy przypisaniu do członka",
+            "description": "Powiadomienie, gdy ktoś doda Cię jako członka projektu."
+          },
+          "onItemDelayed": {
+            "label": "E-mail przy opóźnieniu pozycji",
+            "description": "Powiadomienie, gdy pozycja budżetowa przekracza planowany termin."
+          },
+          "onOwnerChanged": {
+            "label": "E-mail przy zmianie zarządcy",
+            "description": "Powiadomienie, gdy ktoś zmienia zarządcę projektu, którego jesteś członkiem."
+          }
+        },
+        "toasts": {
+          "saved": "Preferencja zapisana",
+          "saveError": "Nie udało się zapisać preferencji"
+        }
+      },
+      "danger": {
+        "title": "Strefa zagrożeń",
+        "description": "Działania w tej sekcji są nieodwracalne. Wymagają jednoznacznego potwierdzenia w oknie dialogowym.",
+        "deleteNotes": {
+          "title": "Usuń wszystkie moje notatki",
+          "description": "Trwale usuwa wszystkie notatki utworzone przez Ciebie we wszystkich projektach.",
+          "button": "Usuń",
+          "confirmTitle": "Usunąć wszystkie moje notatki?",
+          "confirmBody": "To działanie jest nieodwracalne. Wszystkie notatki utworzone przez Ciebie zostaną trwale usunięte ze wszystkich projektów.",
+          "confirmButton": "Usuń wszystkie notatki",
+          "toasts": {
+            "none": "Brak notatek do usunięcia",
+            "success": "Usunięto {count, plural, one {# notatkę} few {# notatki} many {# notatek} other {# notatek}}",
+            "partial": "Usunięto {deleted}, {failed} nie powiodło się",
+            "error": "Nie udało się usunąć notatek"
+          }
+        },
+        "leaveAll": {
+          "title": "Opuść wszystkie projekty",
+          "description": "Usuwa Cię ze wszystkich projektów, w których jesteś członkiem (nie zarządcą). Stracisz dostęp do wszystkich danych tych projektów.",
+          "button": "Opuść wszystkie",
+          "confirmTitle": "Opuścić wszystkie projekty?",
+          "confirmBody": "Stracisz dostęp do wszystkich danych projektów, w których jesteś członkiem. Projekty, którymi zarządzasz, pozostaną nietknięte. To działanie jest nieodwracalne.",
+          "confirmButton": "Opuść wszystkie",
+          "toasts": {
+            "none": "Nie jesteś członkiem żadnego projektu (którego możesz opuścić)",
+            "success": "Opuściłeś {count, plural, one {# projekt} few {# projekty} many {# projektów} other {# projektów}}",
+            "partial": "Opuściłeś {left}, {failed} nie powiodło się",
+            "error": "Nie udało się opuścić projektów"
+          }
+        }
+      }
+    },
+    "budget": {
+      "completion": {
+        "all": "Wszystko",
+        "active": "Aktywne",
+        "done": "Ukończone",
+        "rejected": "Odrzucone"
+      },
+      "filter": {
+        "phase": "Etap:"
+      },
+      "toolbar": {
+        "search": "Szukaj w budżecie…",
+        "add": "Dodaj pozycję",
+        "selectionMode": "Tryb zaznaczania",
+        "selected": "Zaznaczono: {count, plural, one {# pozycję} few {# pozycje} many {# pozycji} other {# pozycji}}",
+        "bulkComplete": "Oznacz jako ukończone",
+        "bulkIncomplete": "Oznacz jako nieukończone",
+        "bulkReject": "Odrzuć",
+        "bulkUnreject": "Cofnij odrzucenie",
+        "bulkDelete": "Usuń zaznaczone",
+        "cancelSelection": "Anuluj zaznaczanie",
+        "bulkSuccess": "{count, plural, one {Zaktualizowano # pozycję} few {Zaktualizowano # pozycje} many {Zaktualizowano # pozycji} other {Zaktualizowano # pozycji}}",
+        "bulkDeleteSuccess": "{count, plural, one {Usunięto # pozycję} few {Usunięto # pozycje} many {Usunięto # pozycji} other {Usunięto # pozycji}}",
+        "bulkPartialError": "{count} z {total} nie powiodło się",
+        "bulkError": "Działanie masowe nie powiodło się",
+        "bulkDeleteTitle": "Usunąć zaznaczone pozycje?",
+        "bulkDeleteDescription": "{count, plural, one {Czy na pewno chcesz usunąć # zaznaczoną pozycję? Tej operacji nie można cofnąć.} few {Czy na pewno chcesz usunąć # zaznaczone pozycje? Tej operacji nie można cofnąć.} many {Czy na pewno chcesz usunąć # zaznaczonych pozycji? Tej operacji nie można cofnąć.} other {Czy na pewno chcesz usunąć # zaznaczonych pozycji? Tej operacji nie można cofnąć.}}"
+      },
+      "empty": {
+        "title": "Brak pozycji spełniających filtr",
+        "description": "Spróbuj zmienić etap, status lub filtr wyszukiwania. Lub wyczyść filtr, aby zobaczyć wszystkie pozycje.",
+        "categoryRow": "Brak pozycji w tej kategorii."
+      },
+      "column": {
+        "item": "Pozycja",
+        "phase": "Etap",
+        "plan": "Plan (Kč)",
+        "days": "Dni",
+        "dateFrom": "Data od",
+        "dateTo": "Data do",
+        "actual": "Rzeczywistość (Kč)",
+        "hours": "Godz.",
+        "status": "Status"
+      },
+      "category": {
+        "aria": {
+          "drag": "Przeciągnij kategorię"
+        },
+        "addItem": {
+          "aria": "Dodaj pozycję",
+          "title": "Dodaj pozycję do kategorii „{name}”"
+        },
+        "totals": "{actual} / {plan}"
+      },
+      "row": {
+        "aria": {
+          "drag": "Przeciągnij zadanie",
+          "expand": "Rozwiń",
+          "collapse": "Zwiń",
+          "selectRow": "Zaznacz pozycję „{name}”",
+          "selectAllInCategory": "Zaznacz wszystkie pozycje w kategorii",
+          "editRow": "Edytuj pozycję „{name}”"
+        },
+        "childCount": "{count, plural, one {# zadanie} few {# zadania} many {# zadań} other {# zadań}}",
+        "addTask": "Dodaj zadanie",
+        "required": {
+          "title": "Wymagane (niezbędne do ukończenia projektu)",
+          "aria": "Wymagane",
+          "ariaRequired": "Usuń oznaczenie wymagane",
+          "ariaOptional": "Oznacz jako wymagane",
+          "titleRequired": "Wymagane — kliknij, aby oznaczyć jako opcjonalne",
+          "titleOptional": "Opcjonalne — kliknij, aby oznaczyć jako wymagane (niezbędne do ukończenia projektu)"
+        },
+        "placeholder": {
+          "noName": "(bez nazwy)"
+        },
+        "badge": {
+          "rejected": "Odrzucone",
+          "done": "Ukończone",
+          "subsidy": "Dotacja",
+          "subsidyTitleWithAmount": "Możliwa dotacja: {amount}",
+          "subsidyTitleNoAmount": "Możliwa dotacja (bez kwoty)",
+          "addTaskTitle": "Dodaj zadanie pod tą pozycją",
+          "addTaskAria": "Dodaj zadanie"
+        },
+        "paymentsCount": "{count, plural, one {# płatność} few {# płatności} many {# płatności} other {# płatności}}",
+        "timeCount": "{count, plural, one {# wpis czasu} few {# wpisy czasu} many {# wpisów czasu} other {# wpisów czasu}}",
+        "tooltip": {
+          "planTotal": "Łącznie: własne {own} + zadania {children}",
+          "actualTotal": "Łącznie: własne {own} + zadania {children}"
+        },
+        "completed": {
+          "ariaDone": "Oznacz jako nieukończone",
+          "ariaTodo": "Oznacz jako ukończone",
+          "titleDone": "Oznacz jako nieukończone",
+          "titleTodo": "Oznacz jako ukończone"
+        },
+        "rejected": {
+          "ariaRejected": "Cofnij odrzucenie",
+          "ariaNotRejected": "Odrzuć",
+          "titleRejected": "Cofnij odrzucenie",
+          "titleNotRejected": "Odrzuć pozycję"
+        },
+        "actions": {
+          "ariaMore": "Więcej akcji",
+          "titleMore": "Więcej akcji"
+        },
+        "menu": {
+          "editDetail": "Edytuj szczegóły",
+          "markRequired": "Oznacz jako wymagane",
+          "markOptional": "Oznacz jako opcjonalne",
+          "subsidyAdd": "Oznacz jako uprawnione do dotacji",
+          "subsidyRemove": "Usuń dotację",
+          "markDone": "Oznacz jako ukończone",
+          "markNotDone": "Oznacz jako nieukończone",
+          "reject": "Odrzuć",
+          "unreject": "Cofnij odrzucenie",
+          "move": "Przenieś pod inną pozycję…",
+          "duplicate": "Duplikuj",
+          "delete": "Usuń"
+        },
+        "delete": {
+          "title": "Usunąć pozycję?",
+          "body": "Naprawdę usunąć **{name}**? Powiązane płatności i wpisy czasu również zostaną usunięte.",
+          "cancel": "Anuluj",
+          "confirm": "Usuń"
+        },
+        "toasts": {
+          "duplicateSuccess": "Pozycja zduplikowana",
+          "duplicateError": "Nie udało się zduplikować",
+          "deleteSuccess": "Pozycja usunięta",
+          "deleteError": "Nie udało się usunąć"
+        }
+      },
+      "detail": {
+        "label": {
+          "note": "Notatka",
+          "contact": "Kontakt",
+          "links": "Linki",
+          "linksFromTasks": "Z zadań"
+        },
+        "placeholder": {
+          "note": "Dodatkowe informacje, ceny jednostkowe, proces…",
+          "noName": "(bez nazwy)"
+        },
+        "contact": {
+          "unassigned": "Nie przypisano — kliknij pozycję, aby edytować"
+        }
+      },
+      "moveDialog": {
+        "title": "Przenieś zadanie",
+        "description": "Przenieś **{name}** pod inną pozycję. Kategoria zostanie odziedziczona po nowym rodzicu.",
+        "currentParent": "Bieżący rodzic: {name}",
+        "empty": "W projekcie nie ma innych pozycji, pod które można przenieść zadanie.",
+        "placeholder": {
+          "select": "Wybierz pozycję docelową",
+          "noName": "(bez nazwy)"
+        },
+        "topLevel": "Poziom najwyższy (bez rodzica)",
+        "cancel": "Anuluj",
+        "confirm": "Przenieś",
+        "toasts": {
+          "movedToParent": "Zadanie przeniesione pod nową pozycję",
+          "movedToTop": "Zadanie przeniesione na poziom najwyższy",
+          "error": "Przeniesienie nie powiodło się"
+        }
+      }
+    },
+    "management": {
+      "button": {
+        "editProject": "Edytuj projekt",
+        "reportPdf": "Raport PDF",
+        "auditHistory": "Historia zmian"
+      },
+      "data": {
+        "title": "Dane i eksporty",
+        "description": "Edycja projektu, raporty i eksporty danych w różnych formatach",
+        "export": {
+          "label": "Eksport danych",
+          "json": "Eksport JSON",
+          "import": "Import JSON (tylko zarządca)"
+        },
+        "csv": {
+          "label": "Eksporty CSV (bieżący projekt)",
+          "budget": "Budżet CSV",
+          "payments": "Płatności CSV",
+          "time": "Czas CSV",
+          "contacts": "Kontakty CSV"
+        },
+        "toasts": {
+          "exportSuccess": "Stan wyeksportowany",
+          "exportError": "Eksport nie powiódł się",
+          "importSuccess": "Stan zaimportowany",
+          "importError": "Import nie powiódł się",
+          "csvSuccess": "{type} wyeksportowano do CSV",
+          "csvError": "Eksport CSV nie powiódł się"
+        }
+      },
+      "audit": {
+        "title": "Dziennik zmian — ostatnie zmiany",
+        "description": "Przegląd ostatnich akcji w projekcie"
+      },
+      "danger": {
+        "title": "Zarządzanie projektem",
+        "duplicate": {
+          "title": "Duplikuj projekt",
+          "description": "Tworzy kopię z budżetem (bez płatności i czasu)",
+          "button": "Duplikuj",
+          "suffix": " (kopia)"
+        },
+        "delete": {
+          "title": "Usuń projekt",
+          "description": "Trwale usuwa wszystkie dane",
+          "adminOnlyHint": "Tylko zarządca projektu może go usunąć",
+          "editorHint": "Tylko zarządca projektu może usunąć projekt"
+        },
+        "toasts": {
+          "duplicateSuccess": "Projekt zduplikowany jako „{name}”",
+          "duplicateError": "Nie udało się zduplikować projektu"
+        }
+      },
+      "info": {
+        "roleBadge": {
+          "editor": "Edytor",
+          "admin": "Admin",
+          "viewer": "Obserwator"
+        },
+        "lockHint": "Tylko zarządca projektu może edytować informacje o projekcie",
+        "label": {
+          "address": "Adres",
+          "status": "Status",
+          "startDate": "Data rozpoczęcia",
+          "endDate": "Data zakończenia",
+          "description": "Opis"
+        },
+        "placeholder": {
+          "address": "np. Praga - Troja",
+          "description": "Krótki opis projektu…"
+        },
+        "created": "Utworzono: {date}",
+        "button": {
+          "save": "Zapisz",
+          "edit": "Edytuj"
+        },
+        "toasts": {
+          "saveSuccess": "Projekt zaktualizowany",
+          "saveError": "Nie udało się zaktualizować projektu"
+        }
+      },
+      "property": {
+        "title": "Informacje o nieruchomości",
+        "description": "Dokładny adres, klasa energetyczna i dokumentacja projektu",
+        "button": {
+          "edit": "Edytuj",
+          "save": "Zapisz"
+        },
+        "label": {
+          "fullAddress": "Dokładny adres",
+          "floorArea": "Powierzchnia zabudowy (m²)",
+          "floors": "Liczba pięter",
+          "heatLoss": "Straty ciepła (W/K)",
+          "energyRating": "Klasa energetyczna",
+          "studyUrl": "Link do projektu architektonicznego",
+          "documentationUrl": "Link do dokumentacji projektu",
+          "note": "Notatka"
+        },
+        "placeholder": {
+          "fullAddress": "np. Pražská 12, 110 00 Praga 1",
+          "floorArea": "np. 120",
+          "floors": "np. 2",
+          "heatLoss": "np. 85",
+          "note": "Dowolna notatka o nieruchomości…"
+        },
+        "error": {
+          "url": "Wprowadź prawidłowy URL (http:// lub https://)."
+        },
+        "lockHint": "Tylko zarządca projektu może edytować informacje o nieruchomości",
+        "readOnly": {
+          "fullAddress": "Dokładny adres",
+          "floorArea": "Powierzchnia zabudowy",
+          "floorAreaValue": "{value} m²",
+          "floors": "Liczba pięter",
+          "heatLoss": "Straty ciepła",
+          "heatLossValue": "{value} W/K",
+          "energyRating": "Klasa energetyczna",
+          "studyUrl": "Projekt architektoniczny",
+          "documentationUrl": "Dokumentacja projektu",
+          "note": "Notatka"
+        },
+        "toasts": {
+          "urlError": "Linki muszą być prawidłowymi URL (http:// lub https://).",
+          "saveSuccess": "Informacje o nieruchomości zapisane",
+          "saveError": "Nie udało się zapisać informacji o nieruchomości"
+        }
+      },
+      "sharing": {
+        "title": "Udostępnianie i prawa dostępu",
+        "description": "Zarządzaj widocznością projektu, zarządcą, członkami i zaproszeniami",
+        "button": {
+          "share": "Udostępnij",
+          "shareTitle": "Kopiuj link do widoku publicznego",
+          "transferOwnership": "Przekaż"
+        },
+        "toggle": {
+          "publicProject": {
+            "label": "Projekt publiczny",
+            "description": "Każdy z linkem może oglądać projekt (tylko do odczytu)"
+          }
+        },
+        "aria": {
+          "publicToggle": "Przełącz widoczność projektu",
+          "removeMember": "Usuń członka",
+          "leaveProject": "Opuść projekt",
+          "revokeInvitation": "Cofnij zaproszenie"
+        },
+        "lockHint": "Tylko zarządca może zmienić widoczność projektu",
+        "publicInfo": "Projekt publiczny: każdy z linkem może oglądać projekt (tylko do odczytu). Wyłącz dla prywatności.",
+        "badge": {
+          "owner": "Zarządca"
+        },
+        "role": {
+          "viewer": "Obserwator",
+          "editor": "Edytor"
+        },
+        "roleSelect": {
+          "viewer": "Obserwator (tylko odczyt)",
+          "editor": "Edytor (edycja)"
+        },
+        "empty": {
+          "members": "Nie dodano jeszcze żadnych członków."
+        },
+        "pending": {
+          "title": "Oczekujące zaproszenia",
+          "role": "Rola: {role} · Ważne do: {date}"
+        },
+        "invitationHistory": {
+          "title": "Historia zaproszeń ({count})",
+          "role": "Rola: {role} · Utworzono: {date}"
+        },
+        "invitationStatus": {
+          "pending": "Oczekuje",
+          "accepted": "Zaakceptowane",
+          "rejected": "Odrzucone",
+          "revoked": "Cofnięte",
+          "expired": "Wygasłe"
+        },
+        "inviteForm": {
+          "title": "Zaproś e-mailem",
+          "placeholderEmail": "email@example.com",
+          "button": "Zaproś e-mailem",
+          "hint": {
+            "existingMember": "Ten użytkownik jest już członkiem projektu",
+            "newUser": "Nowy użytkownik — otrzyma zaproszenie e-mailem i uzyska dostęp po rejestracji",
+            "editor": "Jako edytor możesz dodawać tylko Obserwatorów lub Edytorów",
+            "noInvite": "Tylko zarządca projektu może zapraszać nowych użytkowników"
+          }
+        },
+        "qr": {
+          "title": "Kod QR projektu",
+          "description": "Zeskanuj kod QR, aby otworzyć projekt na telefonie.",
+          "aria": "Kod QR dla projektu {name}",
+          "button": {
+            "copyLink": "Kopiuj link",
+            "copyLinkCopied": "Skopiowano",
+            "downloadPng": "Pobierz PNG"
+          },
+          "toasts": {
+            "copySuccess": "Link skopiowany do schowka",
+            "copyError": "Kopiowanie nie powiodło się — skopiuj link ręcznie",
+            "qrNotReady": "Kod QR nie został jeszcze wygenerowany",
+            "downloadSuccess": "Kod QR pobrany jako PNG",
+            "generateError": "Nie udało się wygenerować kodu QR"
+          }
+        },
+        "confirmRemove": {
+          "title": "Naprawdę usunąć członka?",
+          "body": "Naprawdę usunąć użytkownika „{name}” z tego projektu? Straci dostęp do wszystkich danych projektu. Można to cofnąć, dodając członka ponownie.",
+          "cancel": "Anuluj",
+          "confirm": "Usuń członka"
+        },
+        "toasts": {
+          "shareLinkCopied": "Link do projektu skopiowany do schowka",
+          "shareLinkPrivate": "Projekt nie jest publiczny — link przekierowuje do logowania",
+          "shareLinkError": "Nie udało się skopiować linku",
+          "madePublic": "Projekt jest teraz publiczny — każdy z linkem może go oglądać",
+          "madePrivate": "Projekt jest teraz prywatny",
+          "publicToggleError": "Nie udało się zmienić widoczności projektu",
+          "alreadyMember": "Ten użytkownik jest już członkiem projektu",
+          "inviteSent": "Zaproszenie wysłane do {email}",
+          "inviteError": "Nie udało się wysłać zaproszenia",
+          "inviteRevoked": "Zaproszenie dla {email} cofnięte",
+          "inviteRevokeError": "Nie udało się cofnąć zaproszenia",
+          "roleChanged": "Rola zaktualizowana",
+          "roleChangeError": "Nie udało się zaktualizować roli",
+          "memberRemoved": "Członek „{name}” usunięty",
+          "memberRemoveError": "Nie udało się usunąć członka — członek został przywrócony",
+          "ownerChanged": "Zarządca zmieniony",
+          "ownerChangeError": "Nie udało się zmienić zarządcy"
+        }
+      },
+      "auditLog": {
+        "search": {
+          "placeholder": "Szukaj w dzienniku zmian…",
+          "aria": "Szukaj w dzienniku zmian",
+          "clearAria": "Wyczyść wyszukiwanie"
+        },
+        "polling": "Ładowanie...",
+        "filter": {
+          "action": "Akcja",
+          "entity": "Encja",
+          "user": "Autor",
+          "from": "Od",
+          "to": "Do",
+          "sort": "Sortuj",
+          "pageSize": "Na stronę",
+          "fromAria": "Filtr daty od",
+          "toAria": "Filtr daty do",
+          "all": "Wszystko"
+        },
+        "action": {
+          "create": "Utworzono",
+          "update": "Edytowano",
+          "delete": "Usunięto",
+          "export": "Wyeksportowano"
+        },
+        "sort": {
+          "desc": "Najnowsze",
+          "asc": "Najstarsze"
+        },
+        "empty": "Brak rekordów dla wybranych filtrów.",
+        "column": {
+          "action": "Akcja",
+          "detail": "Szczegóły zmiany",
+          "author": "Autor",
+          "date": "Data",
+          "time": "Czas"
+        },
+        "author": {
+          "unknown": "Nieznany"
+        },
+        "pagination": {
+          "summary": "Pokazano {from}–{to} z {total}",
+          "prev": "Poprzednia",
+          "next": "Następna",
+          "pageOf": "{page} / {totalPages}"
+        },
+        "tooltip": {
+          "goToTab": "Przejdź do zakładki {name}"
+        },
+        "actions": {
+          "create": "Utworzono",
+          "update": "Edytowano",
+          "delete": "Usunięto",
+          "export": "Wyeksportowano"
+        },
+        "entities": {
+          "BudgetItem": "Pozycja budżetu",
+          "Payment": "Płatność",
+          "TimeEntry": "Czas",
+          "Contact": "Kontakt",
+          "Project": "Projekt",
+          "Note": "Notatka",
+          "ContactPerson": "Osoba kontaktowa",
+          "ProjectMember": "Członek",
+          "Export": "Eksport"
+        },
+        "fields": {
+          "required": "Wymagane",
+          "completed": "Ukończone",
+          "rejected": "Odrzucenie",
+          "starred": "Ulubione",
+          "status": "Status",
+          "role": "Rola",
+          "phase": "Etap",
+          "category": "Kategoria",
+          "subcategory": "Nazwa",
+          "planCost": "Plan (Kč)",
+          "actualCost": "Rzeczywistość (Kč)",
+          "planDays": "Plan (dni)",
+          "flexibilityPercent": "Elastyczność (%)",
+          "dateFrom": "Data od",
+          "dateTo": "Data do",
+          "note": "Notatka",
+          "name": "Nazwa",
+          "email": "E-mail",
+          "phone": "Telefon",
+          "address": "Adres",
+          "description": "Opis",
+          "currency": "Waluta",
+          "ownerId": "Zarządca",
+          "contactId": "Kontakt",
+          "workerName": "Pracownik",
+          "workerType": "Typ pracownika",
+          "workerCount": "Liczba pracowników",
+          "hours": "Godziny",
+          "amount": "Kwota",
+          "type": "Typ",
+          "vendor": "Firma",
+          "invoiceNumber": "Numer faktury",
+          "vatRate": "Stawka VAT",
+          "vatAmount": "Kwota VAT",
+          "website": "Strona WWW",
+          "company": "Firma",
+          "ico": "NIP/reg.",
+          "dic": "NIP UE",
+          "rating": "Ocena",
+          "sortOrder": "Kolejność",
+          "text": "Tekst",
+          "author": "Autor",
+          "userEmail": "E-mail członka"
+        },
+        "describe": {
+          "memberAdded": "Dodano członka ({role}): {email}",
+          "memberRemoved": "Usunięto członka ({role}): {email}",
+          "created": "Utworzono: {name}",
+          "deleted": "Usunięto: {name}",
+          "fieldRemoved": "{field}: usunięto ({value})"
+        }
+      },
+      "deleteProject": {
+        "button": "Usuń",
+        "confirmTitle": "Usunąć projekt „{name}”?",
+        "confirmBody": "To działanie jest nieodwracalne. Wszystkie dane zostaną trwale usunięte. Aby potwierdzić, wpisz nazwę projektu:",
+        "confirmButton": "Usuń projekt",
+        "cancel": "Anuluj",
+        "toasts": {
+          "nameMismatch": "Nazwa projektu nie jest zgodna",
+          "success": "Projekt usunięty",
+          "error": "Nie udało się usunąć projektu"
+        }
+      }
+    },
+    "notes": {
+      "title": {
+        "new": "Nowa notatka"
+      },
+      "field": {
+        "author": "Imię autora",
+        "text": "Treść notatki"
+      },
+      "placeholder": {
+        "author": "np. Paweł",
+        "text": "Napisz notatkę projektową tutaj — decyzje, pomysły, zadania, wiadomości… (Ctrl+Enter = dodaj)"
+      },
+      "count": "{count, plural, one {# notatka} few {# notatki} many {# notatek} other {# notatek}}",
+      "anonymousAuthor": "Anonim",
+      "empty": {
+        "title": "Brak notatek",
+        "description": "Napisz swoją pierwszną notatkę w polu powyżej. Notatki służą do szybkich wpisów, linków i przypomnień."
+      },
+      "badge": {
+        "editing": "edycja"
+      },
+      "hint": {
+        "editShortcuts": "Enter = zapisz · Shift+Enter = nowa linia · Esc = anuluj"
+      },
+      "clickToEdit": "Kliknij, aby edytować",
+      "aria": {
+        "edit": "Edytuj notatkę",
+        "save": "Zapisz zmiany",
+        "cancel": "Anuluj edycję",
+        "delete": "Usuń notatkę"
+      },
+      "toasts": {
+        "createError": "Nie udało się dodać notatki",
+        "deleteSuccess": "Notatka usunięta",
+        "deleteError": "Nie udało się usunąć notatki",
+        "updateEmptyError": "Treść notatki nie może być pusta",
+        "updateSuccess": "Notatka zaktualizowana",
+        "updateError": "Nie udało się zaktualizować notatki"
+      }
+    },
+    "timeline": {
+      "empty": {
+        "title": "Brak pozycji z datami",
+        "description": "Przypisz daty od/do w tabeli budżetu, a pozycje pojawią się na osi czasu.",
+        "upcoming": "Brak nadchodzących terminów",
+        "overdue": "Brak zaległych pozycji",
+        "unscheduled": "Wszystko zaplanowane"
+      },
+      "label": {
+        "range": "{start} — {end}",
+        "count": "{count, plural, one {# pozycja} few {# pozycje} many {# pozycji} other {# pozycji}}",
+        "zoom": "Powiększenie:"
+      },
+      "zoom": {
+        "days": "Dni",
+        "months": "Miesiące",
+        "quarters": "Kwartały",
+        "years": "Lata"
+      },
+      "legend": {
+        "today": "Dziś",
+        "doubleClickHint": "Dwukrotne kliknięcie = edytuj daty",
+        "dependencies": "Zależności",
+        "criticalPath": "Ścieżka krytyczna",
+        "milestone": "Kamień milowy"
+      },
+      "title": {
+        "gantt": "Harmonogram budowy",
+        "upcoming": "Nadchodzące",
+        "overdue": "Zaległe",
+        "unscheduled": "Do zaplanowania"
+      },
+      "columnHeader": {
+        "item": "Pozycja"
+      },
+      "suffix": {
+        "completed": " · Ukończone"
+      },
+      "dialog": {
+        "title": "Edytuj daty",
+        "description": "Ustaw dokładne daty rozpoczęcia i zakończenia.",
+        "label": {
+          "dateFrom": "Data od",
+          "dateTo": "Data do"
+        }
+      }
+    },
+    "time": {
+      "sort": {
+        "date": "Data (najnowsze)",
+        "worker": "Pracownik (A→Z)",
+        "hours": "Godziny (malejąco)",
+        "workerType": "Typ pracownika"
+      },
+      "stats": {
+        "entries": "{count, plural, one {# wpis} few {# wpisy} many {# wpisów} other {# wpisów}}",
+        "empty": "Brak wpisów czasu"
+      },
+      "filter": {
+        "allTypes": "Wszystkie typy",
+        "allCategories": "Wszystkie kategorie"
+      },
+      "toolbar": {
+        "add": "Dodaj wpis czasu"
+      },
+      "total": {
+        "label": "Łącznie ({count})"
+      },
+      "column": {
+        "date": "Data",
+        "budgetItem": "Pozycja budżetu",
+        "description": "Opis",
+        "type": "Typ",
+        "contact": "Kontakt",
+        "hours": "Godziny"
+      },
+      "toasts": {
+        "deleteSuccess": "Wpis usunięty",
+        "deleteError": "Nie udało się usunąć",
+        "createSuccess": "Czas zarejestrowany",
+        "createSuccessWithItem": "Czas zarejestrowany, pozycja oznaczona jako ukończona",
+        "createSuccessItemFail": "Czas zarejestrowany (nie udało się oznaczyć pozycji jako ukończonej)",
+        "updateSuccess": "Wpis zaktualizowany",
+        "updateSuccessWithItem": "Wpis zaktualizowany, pozycja oznaczona jako ukończona",
+        "updateSuccessItemFail": "Wpis zaktualizowany (nie udało się oznaczyć pozycji jako ukończonej)",
+        "updateError": "Nie udało się zaktualizować wpisu",
+        "createError": "Nie udało się zarejestrować czasu"
+      },
+      "aria": {
+        "rowClick": "Kliknij, aby edytować wpis",
+        "workersCount": "{count, plural, one {# pracownik} few {# pracowników} many {# pracowników} other {# pracowników}}",
+        "editRow": "Edytuj wpis {workerName}"
+      },
+      "dialog": {
+        "delete": {
+          "title": "Usunąć wpis czasu?",
+          "body": "Naprawdę usunąć wpis <strong>{workerName}</strong> · {hours}?"
+        }
+      },
+      "form": {
+        "titlePlaceholder": "Pracownik…",
+        "descriptionPlaceholder": "Opis pracy…",
+        "submitLabel": {
+          "edit": "Zaktualizuj wpis",
+          "create": "Zarejestruj czas"
+        },
+        "label": {
+          "budgetItem": "Pozycja budżetu *",
+          "hours": "Godziny *",
+          "workerCount": "Liczba pracowników",
+          "dateFrom": "Data od *",
+          "workerType": "Typ pracownika",
+          "dateTo": "Data do (wielodniowe)",
+          "contact": "Kontakt (opcjonalnie)"
+        },
+        "placeholder": {
+          "budgetItem": "Wybierz pozycję…",
+          "hours": "8",
+          "workerCount": "1",
+          "dateTo": "(opcjonalnie)",
+          "contact": "Brak kontaktu"
+        },
+        "search": {
+          "budgetItem": "Szukaj pozycji…",
+          "contact": "Szukaj kontaktu…"
+        },
+        "empty": {
+          "budgetItem": "Nie znaleziono pozycji",
+          "contact": "Nie znaleziono kontaktów"
+        },
+        "error": {
+          "budgetItem": "Wybierz pozycję budżetu",
+          "workerName": "Wpisz imię pracownika",
+          "hours": "Wpisz prawidłową liczbę godzin"
+        },
+        "hint": {
+          "hoursPerDay": "≈ {hours} godz./dzień × {days} dni",
+          "personHours": "Łącznie {total} roboczogodzin",
+          "daySpan": "Praca obejmuje {days, plural, one {# dzień} few {# dni} many {# dni} other {# dni}}"
+        },
+        "section": {
+          "details": "Szczegóły (opcjonalnie)"
+        },
+        "markCompleted": {
+          "label": "Oznacz pozycję budżetu jako ukończoną",
+          "alreadyCompleted": "Pozycja jest już oznaczona jako ukończona.",
+          "hint": "Po zapisaniu wpisu zostanie wysłane żądanie PATCH do pozycji budżetu z completed: true. Łączy wpis czasu z ukończeniem pozycji."
+        }
+      },
+      "empty": {
+        "title": {
+          "noRecords": "Brak wpisów czasu",
+          "noMatch": "Brak wpisów spełniających filtr"
+        },
+        "description": {
+          "noRecords": "Rejestruj czas pracy — firma, rzemieślnik lub własna robota. Obsługuje wpisy wielodniowe.",
+          "noMatch": "Spróbuj zmienić filtr lub wyszukiwanie."
+        },
+        "button": {
+          "firstRecord": "Zarejestruj pierwszy czas"
+        }
+      },
+      "weekly": {
+        "title": "Przegląd tygodniowy",
+        "viewTable": "Widok tabeli",
+        "viewWeekly": "Przegląd tygodniowy",
+        "week": "Tydzień",
+        "prevWeek": "Poprzedni tydzień",
+        "nextWeek": "Następny tydzień",
+        "today": "Dziś",
+        "total": "Łącznie",
+        "worker": "Pracownik",
+        "hours": "Godziny",
+        "noEntries": "Brak zarejestrowanych godzin w tym tygodniu.",
+        "dayShort": {
+          "mon": "Pon",
+          "tue": "Wt",
+          "wed": "Śr",
+          "thu": "Czw",
+          "fri": "Pt",
+          "sat": "Sob",
+          "sun": "Niedz"
+        }
+      },
+      "loadMore": "Pokaż {count} więcej"
+    },
+    "dashboard": {
+      "button": {
+        "clearFilters": "Wyczyść filtry"
+      },
+      "kpi": {
+        "burn": {
+          "label": "Zużycie budżetu",
+          "subValue": "{actual} / {plan}"
+        },
+        "remaining": {
+          "label": "Pozostało budżetu",
+          "subValue": "z {planTotal}"
+        },
+        "completedItems": {
+          "label": "Ukończone pozycje",
+          "subValue": {
+            "done": "{percent} % ukończono",
+            "empty": "Brak pozycji"
+          }
+        },
+        "hours": {
+          "label": "Zarejestrowane godziny",
+          "subValue": "Plan: {days, plural, one {# dzień} few {# dni} many {# dni} other {# dni}}"
+        },
+        "completed": {
+          "allDone": "Wszystko ukończone"
+        }
+      },
+      "plan": {
+        "byStart": {
+          "title": "Plan — wg rozpoczęcia",
+          "description": "Pozycje posortowane wg daty rozpoczęcia"
+        },
+        "byEnd": {
+          "title": "Plan — wg zakończenia",
+          "description": "Najbliższe terminy ukończenia"
+        },
+        "bucket": {
+          "activeNow": "Aktywne teraz",
+          "nextWeek": "Następny tydzień",
+          "nextMonth": "Następny miesiąc",
+          "next3Months": "Następne 3 miesiące",
+          "later": "Później",
+          "unscheduled": "Niezaplanowane"
+        },
+        "empty": {
+          "upcoming": "Brak nadchodzących terminów."
+        },
+        "tag": {
+          "overdue": "zaległe"
+        }
+      },
+      "cashflow": {
+        "title": "Prognoza cashflow",
+        "description": "Szacowany ostateczny budżet na podstawie bieżącego zużycia",
+        "projectedFinal": "Prognozowane ostateczne",
+        "overrun": "Przekroczenie",
+        "percentOfPlan": "% planu",
+        "remainingEstimate": "Pozostało (szacunek)",
+        "spent": "Wydano: {actual}",
+        "estimate": "Szacunek: {projected}"
+      },
+      "chart": {
+        "phase": {
+          "title": "Plan a rzeczywistość wg etapu"
+        },
+        "category": {
+          "title": "Budżet wg kategorii"
+        },
+        "trend": {
+          "title": "Trend zużycia budżetu",
+          "description": "Miesięczne wydatki i zarejestrowane godziny w czasie",
+          "empty": "Brak danych trendu."
+        },
+        "series": {
+          "plan": "Plan",
+          "actual": "Rzeczywistość",
+          "spend": "Wydatki",
+          "hours": "Godziny"
+        }
+      },
+      "contacts": {
+        "title": "Prace wg kontaktu",
+        "description": "Budżet i zarejestrowane godziny na przypisany kontakt",
+        "empty": "Brak kontaktów z przypisanymi pozycjami.",
+        "noRole": "Brak roli",
+        "itemsCount": "{count, plural, one {# pozycja} few {# pozycje} many {# pozycji} other {# pozycji}}",
+        "ofPlan": "z {plan}",
+        "overBudget": "powyżej budżetu"
+      },
+      "phases": {
+        "title": "Etapy projektu",
+        "column": {
+          "phase": "Etap",
+          "items": "Pozycje",
+          "plan": "Plan",
+          "actual": "Rzeczywistość",
+          "hours": "Godziny",
+          "burn": "Zużycie",
+          "status": "Status"
+        },
+        "status": {
+          "done": "Ukończono",
+          "inProgress": "W trakcie",
+          "startingSoon": "Wkrótce",
+          "waiting": "Oczekuje"
+        }
+      },
+      "recent": {
+        "payments": {
+          "title": "Ostatnie płatności",
+          "description": "Najnowsze transakcje finansowe",
+          "empty": "Brak płatności.",
+          "fallback": "Płatność"
+        },
+        "time": {
+          "title": "Ostatnie wpisy czasu",
+          "description": "Najnowsze zarejestrowane godziny",
+          "empty": "Brak wpisów czasu.",
+          "fallback": "Praca"
+        }
+      }
+    },
+    "contacts": {
+      "header": {
+        "count": "{count, plural, one {# kontakt w projekcie} few {# kontakty w projekcie} many {# kontaktów w projekcie} other {# kontaktów w projekcie}}"
+      },
+      "empty": {
+        "title": "Brak kontaktów",
+        "description": "Dodaj firmy, rzemieślników, dostawców i architektów. Możesz do nich przypisać płatności i wpisy czasu.",
+        "button": {
+          "first": "Dodaj pierwszy kontakt"
+        }
+      },
+      "menu": {
+        "edit": "Edytuj",
+        "delete": "Usuń"
+      },
+      "delete": {
+        "title": "Usunąć kontakt?",
+        "body": "Czy na pewno chcesz usunąć kontakt <strong>{name}</strong>?",
+        "cancel": "Anuluj",
+        "confirm": "Usuń"
+      },
+      "stat": {
+        "paid": "Zapłacono",
+        "hours": "Godziny",
+        "payments": "Płatności",
+        "times": "Czas"
+      },
+      "persons": {
+        "title": "Osoby kontaktowe",
+        "deleteTitle": "Usuń osobę",
+        "button": {
+          "add": "Dodaj",
+          "addPerson": "Dodaj osobę"
+        },
+        "field": {
+          "firstName": "Imię *",
+          "lastName": "Nazwisko *",
+          "phone": "Telefon",
+          "email": "E-mail",
+          "role": "Rola / stanowisko"
+        },
+        "placeholder": {
+          "firstName": "Jan",
+          "lastName": "Kowalski",
+          "phone": "+48 555 123 456",
+          "email": "jan@firma.com",
+          "role": "Kierownik, Księgowy, ..."
+        },
+        "empty": "Brak osób kontaktowych. Kliknij „Dodaj”, aby dodać.",
+        "aria": {
+          "delete": "Usuń {firstName} {lastName}"
+        }
+      },
+      "toasts": {
+        "deleteSuccess": "Kontakt usunięty",
+        "deleteError": "Nie udało się usunąć",
+        "personAddError": "Imię i nazwisko są wymagane",
+        "personAddSuccess": "Osoba dodana",
+        "personAddErrorFallback": "Nie udało się dodać osoby",
+        "personDeleteSuccess": "Osoba „{name}” usunięta",
+        "personDeleteError": "Nie udało się usunąć osoby",
+        "updateError": "Nazwa jest wymagana",
+        "updateSuccess": "Kontakt zaktualizowany",
+        "createSuccess": "Kontakt dodany",
+        "saveErrorFallback": "Nie udało się zapisać kontaktu"
+      },
+      "detail": {
+        "button": {
+          "edit": "Edytuj",
+          "close": "Zamknij"
+        },
+        "section": {
+          "contact": "Kontakt",
+          "summary": "Podsumowanie czasu i pieniędzy"
+        },
+        "field": {
+          "company": "Firma",
+          "ico": "NIP/reg.",
+          "dic": "NIP UE",
+          "phone": "Telefon",
+          "email": "E-mail",
+          "web": "WWW",
+          "lastActivity": "Ostatnia aktywność"
+        },
+        "stat": {
+          "totalPaid": "Łącznie zapłacono",
+          "totalHours": "Łącznie godzin",
+          "paymentCount": "Liczba płatności",
+          "timeEntryCount": "Wpisy czasu"
+        }
+      },
+      "form": {
+        "placeholder": {
+          "role": "np. Murarz, Elektryk",
+          "company": "np. ACME Sp. z o.o.",
+          "ico": "np. 12345678",
+          "dic": "np. CZ12345678",
+          "phone": "+420 …",
+          "email": "email@domena.com",
+          "web": "np. www.firma.com",
+          "notes": "Doświadczenie, referencje, metoda pracy…"
+        },
+        "submitLabel": {
+          "edit": "Zaktualizuj kontakt",
+          "create": "Dodaj kontakt"
+        },
+        "ares": {
+          "label": "Wczytaj z rejestru ARES",
+          "hint": "Wyszukaj firmę po numerze reg. lub nazwie i wypełnij pola.",
+          "addressPrefix": "Adres (ARES): {address}"
+        },
+        "field": {
+          "type": "Typ",
+          "role": "Rola / Branża",
+          "company": "Firma (opcjonalnie)",
+          "ico": "NIP/reg.",
+          "dic": "NIP UE",
+          "phone": "Telefon",
+          "email": "E-mail",
+          "web": "WWW",
+          "rating": "Ocena",
+          "notes": "Notatki"
+        },
+        "section": {
+          "details": "Szczegóły (opcjonalnie)"
+        },
+        "rating": {
+          "clear": "Wyczyść"
+        }
+      }
+    },
+    "telemetry": {
+      "title": "Telemetria",
+      "description": "Wewnętrzna analityka działań użytkowników.",
+      "button": {
+        "refresh": "Odśwież",
+        "retry": "Spróbuj ponownie"
+      },
+      "error": {
+        "loadFailed": "Nie udało się załadować danych telemetrycznych."
+      },
+      "kpi": {
+        "totalEvents": "Łącznie zdarzeń",
+        "totalPageViews": "Łącznie odsłon stron",
+        "totalTimeSpent": "Łączny czas na stronach",
+        "uniqueUsers": "Unikalni użytkownicy"
+      },
+      "chart": {
+        "byType": {
+          "title": "Zdarzenia wg typu",
+          "description": "Liczba każdego typu zdarzenia"
+        },
+        "byDay": {
+          "title": "Aktywność wg dnia",
+          "description": "Ostatnie 30 dni"
+        },
+        "byHour": {
+          "title": "Dzisiejsza aktywność godzinowa",
+          "description": "Liczba zdarzeń na godzinę dziś"
+        }
+      },
+      "empty": {
+        "byType": "Brak danych.",
+        "byHour": "Nie zarejestrowano dziś jeszcze żadnej aktywności."
+      },
+      "topPages": {
+        "title": "Najpopularniejsze strony",
+        "description": "Liczba odsłon i średni czas spędzony na każdej stronie",
+        "empty": "Brak danych odsłon stron.",
+        "column": {
+          "page": "Strona",
+          "views": "Odsłony",
+          "avgTime": "Śred. czas"
+        }
+      },
+      "timeOverview": {
+        "title": "Przegląd czasu",
+        "description": "Statystyki podsumowujące czasu spędzonego w aplikacji",
+        "totalOnPages": "Łączny czas na stronach",
+        "totalOnPagesHint": "liczba odsłon: {count}",
+        "avgPerPage": "Średni czas na stronę",
+        "avgPerPageHint": "średnia we wszystkich zdarzeniach page_view",
+        "longest": "Najdłuższa wizyta",
+        "longestHint": "maksymalny timeSpent pojedynczej sesji"
+      },
+      "timeByPage": {
+        "title": "Czas trwania wizyt",
+        "description": "Łączny czas spędzony na każdej stronie",
+        "total": "Łącznie: {time}",
+        "rowSuffix": "{views}× · śred. {avgTime}",
+        "empty": "Brak danych o czasie na stronach."
+      },
+      "topUsers": {
+        "title": "Aktywność użytkowników",
+        "description": "Najbardziej aktywni użytkownicy wg liczby akcji",
+        "empty": "Brak danych aktywności użytkowników.",
+        "column": {
+          "user": "Użytkownik",
+          "eventCount": "Liczba akcji",
+          "lastActive": "Ostatnia aktywność"
+        },
+        "crown": {
+          "title": "Najbardziej aktywny"
+        }
+      },
+      "recent": {
+        "title": "Ostatnie zdarzenia",
+        "description": "Ostatnie {shown} z {total} łącznie zdarzeń",
+        "empty": "Brak zdarzeń dla wybranego filtra.",
+        "column": {
+          "date": "Data",
+          "time": "Czas",
+          "user": "Użytkownik",
+          "eventType": "Typ zdarzenia",
+          "page": "Strona",
+          "project": "Projekt"
+        },
+        "unknownUser": "Nieznany",
+        "unknownProject": "Projekt {id}",
+        "tooltipHour": "{hour}:00 — {count, plural, one {# zdarzenie} few {# zdarzenia} many {# zdarzeń} other {# zdarzeń}}",
+        "tooltipDay": "{day}: {count}"
+      },
+      "filter": {
+        "label": "Filtry:",
+        "type": "Typ",
+        "all": "Wszystko",
+        "user": "Użytkownik",
+        "allUsers": "Wszyscy użytkownicy",
+        "page": "Strona",
+        "allPages": "Wszystkie strony",
+        "project": "Projekt",
+        "allProjects": "Wszystkie projekty",
+        "button": {
+          "reset": "Wyczyść filtry"
+        }
+      },
+      "pagination": {
+        "summary": "Pokazano {from}–{to} z {total}",
+        "prev": "Poprzednia",
+        "next": "Następna",
+        "pageOf": "{page} / {totalPages}"
+      },
+      "relativeTime": {
+        "justNow": "przed chwilą",
+        "minute": "{n, plural, one {minutę temu} few {{n} minuty temu} many {{n} minut temu} other {{n} minut temu}}",
+        "hour": "{n, plural, one {godzinę temu} few {{n} godziny temu} many {{n} godzin temu} other {{n} godzin temu}}",
+        "day": "{n, plural, one {wczoraj} few {{n} dni temu} many {{n} dni temu} other {{n} dni temu}}",
+        "yesterday": "wczoraj"
+      }
+    },
+    "payments": {
+      "sort": {
+        "dateDesc": "Data (najnowsze)",
+        "dateAsc": "Data (najstarsze)",
+        "amountDesc": "Kwota (malejąco)",
+        "amountAsc": "Kwota (rosnąco)",
+        "type": "Typ",
+        "contact": "Kontakt (A→Z)",
+        "vendor": "Dostawca (A→Z)"
+      },
+      "filter": {
+        "allTypes": "Wszystkie typy"
+      },
+      "toolbar": {
+        "sum": "Suma ({count})",
+        "vatIncluded": "z VAT",
+        "search": "Szukaj płatności…",
+        "add": "Dodaj płatność"
+      },
+      "empty": {
+        "title": {
+          "noRecords": "Brak płatności",
+          "noMatch": "Brak płatności spełniających filtr"
+        },
+        "description": {
+          "noRecords": "Zacznij rejestrować płatności — paragony, faktury lub wypłaty. Możesz je też podzielić na raty.",
+          "noMatch": "Spróbuj zmienić filtr lub wyszukiwanie."
+        },
+        "button": {
+          "first": "Dodaj pierwszą płatność"
+        }
+      },
+      "column": {
+        "date": "Data",
+        "budgetItem": "Pozycja budżetu",
+        "description": "Opis",
+        "type": "Typ",
+        "contact": "Kontakt",
+        "amount": "Kwota"
+      },
+      "row": {
+        "aria": {
+          "clickToEdit": "Kliknij, aby edytować płatność",
+          "editRow": "Edytuj płatność {description}"
+        },
+        "installment": {
+          "title": "Faktura ratalna: {invoiceTotal} — zapłacono {paidTotal} ({percent} %), pozostało {remaining}",
+          "fallbackTitle": "Faktura ratalna",
+          "label": "Rata {n}",
+          "labelWithTotal": "Rata {n} / {total}",
+          "titleShort": "Rata {n} z {total}"
+        },
+        "firstInstallment": "1. rata",
+        "vatRateSuffix": "z VAT {rate}%",
+        "ofInvoiceTotal": "z {invoiceTotal}",
+        "menu": {
+          "edit": "Edytuj",
+          "delete": "Usuń"
+        },
+        "delete": {
+          "title": "Usunąć płatność?",
+          "body": "Czy na pewno chcesz usunąć płatność <strong>{amount}</strong>?",
+          "cancel": "Anuluj",
+          "confirm": "Usuń"
+        },
+        "addInstallment": "Dodaj ratę",
+        "addInstallmentTitle": "Dodaj kolejną ratę do faktury {vendor}"
+      },
+      "invoices": {
+        "badge": {
+          "installmentCount": "{count, plural, one {# rata} few {# raty} many {# rat} other {# rat}}"
+        },
+        "label": {
+          "invoice": "Faktura",
+          "paid": "Zapłacono",
+          "remaining": "Pozostało",
+          "percent": "{percent} %",
+          "invoiceNumber": "nr {number}"
+        },
+        "button": {
+          "show": "Pokaż",
+          "showTitle": "Pokaż raty w tabeli",
+          "addInstallment": "Dodaj ratę",
+          "addInstallmentTitle": "Dodaj kolejną ratę do tej faktury"
+        },
+        "fallbackTitle": "Faktura"
+      },
+      "dialog": {
+        "titlePlaceholder": "Co kupiono / zapłacono…",
+        "submitLabel": {
+          "edit": {
+            "installment": "Edytuj ratę",
+            "payment": "Edytuj płatność"
+          },
+          "create": {
+            "installment": "Dodaj ratę",
+            "invoice": "Utwórz fakturę",
+            "payment": "Dodaj płatność"
+          }
+        },
+        "label": {
+          "budgetItem": "Pozycja budżetu *",
+          "invoiceTotal": "Łącznie na fakturze (Kč) *",
+          "firstInstallment": "1. rata (Kč) *",
+          "amount": "Kwota (Kč) *",
+          "date": "Data *",
+          "invoiceDate": "Data faktury *",
+          "type": "Typ",
+          "contact": "Kontakt (opcjonalnie)",
+          "vendor": "Dostawca / Sklep",
+          "invoiceNumber": "Nr faktury/paragonu",
+          "vatRate": "Stawka VAT (%)",
+          "vatCalculation": "Obliczenie VAT",
+          "recurring": "Cykliczność"
+        },
+        "placeholder": {
+          "budgetItem": "Wybierz pozycję…",
+          "invoiceTotal": "150000",
+          "firstInstallment": "50000",
+          "amount": "25000",
+          "contact": "Brak kontaktu",
+          "vendor": "np. Hornbach",
+          "invoiceNumber": "2024-001"
+        },
+        "search": {
+          "budgetItem": "Szukaj pozycji…",
+          "contact": "Szukaj kontaktu…"
+        },
+        "empty": {
+          "budgetItem": "Nie znaleziono pozycji",
+          "contact": "Nie znaleziono kontaktów"
+        },
+        "error": {
+          "budgetItem": "Wybierz pozycję budżetu",
+          "invoiceTotal": "Wpisz prawidłową łączną kwotę faktury",
+          "amount": "Wpisz prawidłową kwotę"
+        },
+        "prefill": {
+          "title": "Nowa rata do faktury",
+          "subtitle": "{vendor} · łącznie {amount}",
+          "fallback": "Faktura"
+        },
+        "existingInvoice": {
+          "title": "Ta pozycja ma już fakturę: {vendor}",
+          "subtitle": "{paid} / {invoiceTotal} ({percent} %)",
+          "fallback": "Faktura",
+          "button": "Dodaj ratę do tej faktury"
+        },
+        "parentWarning": {
+          "title": "To jest faktura ratalna",
+          "body": "Łączna kwota faktury {invoiceTotal}. Możesz przekonwertować ją z powrotem na zwykłą płatność — raty pozostaną jako samodzielne płatności.",
+          "button": "Konwertuj na zwykłą płatność"
+        },
+        "convertDialog": {
+          "title": "Konwertować fakturę na zwykłą płatność?",
+          "body": "To konwertuje fakturę na zwykłą płatność. Wszystkie raty ({count}) pozostaną jako samodzielne płatności. Kontynuować?",
+          "cancel": "Anuluj",
+          "confirm": "Konwertuj na zwykłą płatność",
+          "confirming": "Konwertowanie…"
+        },
+        "section": {
+          "details": "Szczegóły (opcjonalnie)"
+        },
+        "isInvoice": {
+          "label": "Płatność ratalna (faktura z wieloma płatnościami)"
+        },
+        "installmentOf": {
+          "label": "Połącz z fakturą (jako rata)",
+          "placeholder": "Samodzielna płatność (bez faktury)",
+          "noneLabel": "Samodzielna płatność (bez faktury)",
+          "hint": "Ta płatność pojawi się jako następna rata wybranej faktury. Zmiana aktualizuje łączną kwotę płatności faktury."
+        },
+        "vatRate": {
+          "placeholder": "Bez VAT",
+          "none": "Bez VAT",
+          "21": "21 % (podstawowa)",
+          "12": "12 % (obniżona 1)",
+          "10": "10 % (obniżona 2)",
+          "0": "0 %"
+        },
+        "vatCalc": {
+          "label": {
+            "vat": "VAT:",
+            "base": "Netto:"
+          },
+          "empty": "Wpisz kwotę i stawkę VAT"
+        },
+        "markCompleted": {
+          "label": "Oznacz pozycję jako ukończoną",
+          "alreadyCompleted": "Pozycja jest już oznaczona jako ukończona.",
+          "hint": "Pozycja zostanie oznaczona jako ukończona"
+        },
+        "recurring": {
+          "none": "Jednorazowa",
+          "weekly": "Tygodniowo",
+          "monthly": "Miesięcznie",
+          "quarterly": "Kwartalnie",
+          "yearly": "Rocznie",
+          "nextDate": "Następna automatyczna płatność: {date}",
+          "badge": "Cykliczna"
+        }
+      },
+      "toasts": {
+        "deleteSuccess": "Płatność usunięta",
+        "deleteError": "Nie udało się usunąć",
+        "updateSuccess": "Płatność zaktualizowana",
+        "updateSuccessWithItem": "Płatność zaktualizowana, pozycja oznaczona jako ukończona",
+        "updateSuccessItemFail": "Płatność zaktualizowana (nie udało się oznaczyć pozycji jako ukończonej)",
+        "invoiceCreateSuccess": "Faktura z ratami utworzona",
+        "invoiceCreateSuccessWithItem": "Faktura utworzona, pozycja oznaczona jako ukończona",
+        "invoiceCreateSuccessItemFail": "Faktura utworzona (nie udało się oznaczyć pozycji jako ukończonej)",
+        "paymentCreateSuccess": "Płatność dodana",
+        "paymentCreateSuccessWithItem": "Płatność dodana, pozycja oznaczona jako ukończona",
+        "paymentCreateSuccessItemFail": "Płatność dodana (nie udało się oznaczyć pozycji jako ukończonej)",
+        "installmentAdded": "Rata dodana do faktury",
+        "convertSuccess": "Faktura przekonwertowana na zwykłą płatność",
+        "convertSuccessWithChildren": "Faktura przekonwertowana na zwykłą płatność, {count, plural, one {odłączono # ratę} few {odłączono # raty} many {odłączono # rat} other {odłączono # rat}}",
+        "convertError": "Nie udało się przekonwertować faktury na zwykłą płatność",
+        "updateError": "Nie udało się zaktualizować płatności",
+        "createError": "Nie udało się dodać płatności"
+      },
+      "loadMore": "Pokaż {count} więcej"
+    }
+  },
+  "components": {
+    "emptyState": {
+      "welcome": "Witaj w Stavba",
+      "description": "Wybierz projekt z paska bocznego lub utwórz nowy projekt, aby śledzić budżet, koszty, czas i materiały swojej budowy i remontu.",
+      "button": "Utwórz pierwszy projekt"
+    },
+    "contextualFab": {
+      "actions": {
+        "addItem": "Dodaj pozycję",
+        "addPayment": "Dodaj płatność",
+        "addTime": "Dodaj czas",
+        "addContact": "Dodaj kontakt"
+      }
+    },
+    "aresSearch": {
+      "placeholder": "Szukaj firmy (NIP lub nazwa)…",
+      "needsApiKey": {
+        "title": "Klucz API ARES nie jest skonfigurowany.",
+        "hint": "Możesz wprowadzić dane firmy ręcznie poniżej."
+      },
+      "noResults": "Nie znaleziono firm dla „{query}”",
+      "result": {
+        "ico": "NIP: {ico}",
+        "dic": "VAT: {dic}"
+      }
+    },
+    "sessionTimeoutWarning": {
+      "message": "Twoja sesja wygaśnie za {minutesLeft, plural, one {# minutę} few {# minuty} many {# minut} other {# minut}}. Wydłuż sesję, aby uniknąć utraty danych.",
+      "description": "Po wygaśnięciu zostaniesz automatycznie wylogowany.",
+      "action": {
+        "extend": "Wydłuż",
+        "signOut": "Wyloguj się"
+      },
+      "success": "Sesja wydłużona."
+    }
+  },
+  "dialogs": {
+    "budgetItem": {
+      "toasts": {
+        "dateFromSetByRef": "Data rozpoczęcia ustawiona z „{name}”",
+        "dateFromAlreadySet": "Data rozpoczęcia była już wypełniona — nie zmieniono.",
+        "dateFromNotChanged": "„{name}” nie ma daty zakończenia — data rozpoczęcia nie zmieniona.",
+        "categoryRequired": "Kategoria jest wymagana",
+        "taskUpdated": "Zadanie zaktualizowane",
+        "itemUpdated": "Pozycja zaktualizowana",
+        "taskAdded": "Zadanie dodane",
+        "itemAdded": "Pozycja dodana",
+        "saveError": "Nie udało się zapisać pozycji"
+      },
+      "submit": {
+        "editTask": "Edytuj zadanie",
+        "editItem": "Edytuj pozycję",
+        "addTask": "Dodaj zadanie",
+        "addItem": "Dodaj pozycję"
+      },
+      "placeholder": {
+        "taskName": "Nazwa zadania…",
+        "itemName": "Nazwa pozycji…",
+        "note": "Notatka…",
+        "newCategory": "Nowa kategoria",
+        "selectCategory": "Wybierz kategorię",
+        "subsidyAmount": "np. 15000",
+        "linkLabel": "Nazwa",
+        "linkUrl": "https://…",
+        "searchItem": "Szukaj pozycji…",
+        "searchContact": "Szukaj kontaktu…"
+      },
+      "context": {
+        "taskUnderItem": "Zadanie pod pozycją „{name}”"
+      },
+      "label": {
+        "category": "Kategoria *",
+        "phase": "Etap",
+        "required": "Wymagane",
+        "completed": "Ukończone",
+        "rejected": "Odrzucone",
+        "subsidy": "Dotacja",
+        "subsidyAmount": "Kwota dotacji (CZK)",
+        "dateFrom": "Data od",
+        "dateTo": "Data do",
+        "planDays": "Plan (dni)",
+        "dependsOn": "Zależy od",
+        "planCost": "Plan (CZK)",
+        "flexibility": "Elastyczność (%)",
+        "contactHint": "Osoba odpowiedzialna / firma",
+        "links": "Linki",
+        "noDependency": "— brak zależności —",
+        "noContact": "— brak kontaktu —",
+        "selectExisting": "Wybierz istniejący",
+        "addNewCategory": "+ Nowa kategoria"
+      },
+      "title": {
+        "requiredHint": "Pozycja jest wymagana do ukończenia projektu",
+        "subsidyHint": "Dla tej pozycji można ubiegać się o dotację",
+        "openInNewWindow": "Otwórz w nowym oknie",
+        "deleteLink": "Usuń link"
+      },
+      "section": {
+        "date": "Data (opcjonalnie)",
+        "money": "Pieniądze (opcjonalnie)",
+        "contact": "Kontakt (opcjonalnie)",
+        "links": "Linki (opcjonalnie)"
+      },
+      "empty": {
+        "items": "Nie znaleziono pozycji",
+        "contacts": "Nie znaleziono kontaktów",
+        "noContactsHint": "Brak kontaktów. Dodaj je w zakładce Kontakty."
+      },
+      "button": {
+        "add": "Dodaj"
+      }
+    },
+    "newProject": {
+      "toasts": {
+        "createSuccess": "Projekt utworzony",
+        "createError": "Nie udało się utworzyć projektu",
+        "templateCreateSuccess": "Projekt utworzony z szablonem pozycji",
+        "sourceNotFound": "Nie znaleziono projektu źródłowego",
+        "copyPartial": "Projekt utworzony z „{sourceName}” — {copied, plural, one {skopiowano # pozycję} few {skopiowano # pozycje} many {skopiowano # pozycji} other {skopiowano # pozycji}}, {failed, plural, one {# nie udało się skopiować} few {# nie udały się skopiować} many {# nie udało się skopiować} other {# nie udało się skopiować}}.",
+        "copyAllFailed": "Projekt utworzony, ale nie można skopiować żadnych pozycji budżetu ({failed} błędów).",
+        "copySuccess": "Projekt utworzony ({copied, plural, one {skopiowano # pozycję} few {skopiowano # pozycje} many {skopiowano # pozycji} other {skopiowano # pozycji}} z „{sourceName}”)",
+        "copyError": "Nie udało się skopiować projektu",
+        "nameRequired": "Nazwa projektu jest wymagana",
+        "typeRequired": "Wybierz typ budowy",
+        "scopeRequired": "Wybierz zakres remontu",
+        "sourceRequired": "Wybierz projekt źródłowy"
+      },
+      "submit": {
+        "selectType": "Wybierz typ projektu",
+        "createBlank": "Utwórz projekt",
+        "createFromTemplate": "Utwórz z szablonu",
+        "copyExisting": "Kopiuj projekt"
+      },
+      "placeholder": {
+        "projectName": "Nazwa projektu…",
+        "selectTypeHint": "Nowy projekt — wybierz typ poniżej",
+        "description": "Krótki opis projektu…",
+        "selectProjectCopy": "Wybierz projekt do skopiowania…",
+        "address": "np. Praga - Troja"
+      },
+      "context": {
+        "blank": "Pusty projekt",
+        "template": "Z szablonu",
+        "copy": "Kopia istniejącego",
+        "new": "Nowy projekt"
+      },
+      "mode": {
+        "blank": {
+          "title": "Pusty projekt",
+          "description": "Zacznij od czystej karty, dodaj budżet później"
+        },
+        "template": {
+          "title": "Z szablonu",
+          "description": "Remont, nowa budowa, wnętrwo lub rozbudowa"
+        },
+        "copy": {
+          "title": "Kopiuj projekt",
+          "description": "Kopiuje budżet z istniejącego projektu"
+        }
+      },
+      "back": "← Wstecz do wyboru typu",
+      "template": {
+        "typeLabel": "Typ budowy",
+        "scopeLabel": "Zakres remontu",
+        "preview": "Podgląd wg kategorii",
+        "itemsCount": "{count, plural, one {# pozycja} few {# pozycje} many {# pozycji} other {# pozycji}}",
+        "itemsPlan": "{count, plural, one {# pozycja} few {# pozycje} many {# pozycji} other {# pozycji}} · {sum} Kč plan",
+        "total": "Łącznie: {count, plural, one {# pozycja} few {# pozycje} many {# pozycji} other {# pozycji}}, {sum} Kč"
+      },
+      "copy": {
+        "sourceLabel": "Projekt źródłowy *",
+        "description": "Wszystkie pozycje budżetu (kategorie, plany, elastyczność, etapy) zostaną skopiowane. Wartości rzeczywiste, stany ukończenia i odrzucenia zostaną zresetowane. Płatności, wpisy czasu i kontakty nie są kopiowane."
+      },
+      "field": {
+        "address": "Adres",
+        "startDate": "Data rozpoczęcia",
+        "endDate": "Data zakończenia"
+      },
+      "templates": {
+        "reconstruction": {
+          "label": "Remont",
+          "description": "Remont istniejącego domu, mieszkania lub altany.",
+          "scopeOptions": {
+            "partial": {
+              "label": "Częściowy remont",
+              "description": "Tylko wybrane pomieszczenia lub systemy (np. łazienka, kuchnia, elektryka)"
+            },
+            "complete": {
+              "label": "Pełny remont",
+              "description": "Cały budynek, w tym stan surowy, instalacje i prace wykończeniowe"
+            },
+            "structural": {
+              "label": "Remont konstrukcyjny",
+              "description": "Interwencje w konstrukcje nośne, przebudowy, dobudowy"
+            }
+          }
+        },
+        "new_build": {
+          "label": "Nowa budowa",
+          "description": "Budowa nowego domu od podstaw."
+        },
+        "interior": {
+          "label": "Wnętrze",
+          "description": "Wyposażenie i wykończenie wnętrza (malowanie, podłogi, armatura)."
+        },
+        "extension": {
+          "label": "Rozbudowa",
+          "description": "Rozbudowa istniejącego budynku (dobudówka, powiększenie garażu, ogród zimowy)."
+        },
+        "apartment_2plus1": {
+          "label": "Remont mieszkania 2+1",
+          "description": "Pełny remont mieszkania 2+1 (~70 m²) — rozbiórka, instalacje, łazienka, kuchnia, podłogi, malowanie."
+        },
+        "bathroom": {
+          "label": "Remont łazienki",
+          "description": "Pełny remont łazienki (~5 m²) — rozbiórka, hydraulika, płytki, armatura, elektryka."
+        },
+        "roof": {
+          "label": "Remont dachu",
+          "description": "Pełna wymiana dachu — rozbiórka, konstrukcja, izolacja, dachówka, blacharka."
+        }
+      }
+    },
+    "project": {
+      "toasts": {
+        "nameRequired": "Nazwa projektu jest wymagana",
+        "updateSuccess": "Projekt zaktualizowany",
+        "createSuccess": "Projekt utworzony",
+        "updateError": "Nie udało się zaktualizować projektu",
+        "createError": "Nie udało się utworzyć projektu"
+      },
+      "placeholder": {
+        "name": "Nazwa projektu…",
+        "description": "Krótki opis projektu…",
+        "address": "np. Praga - Troja"
+      },
+      "context": {
+        "edit": "Edycja projektu",
+        "new": "Nowy projekt"
+      },
+      "submit": {
+        "saveChanges": "Zapisz zmiany",
+        "create": "Utwórz projekt"
+      },
+      "label": {
+        "address": "Adres",
+        "status": "Status"
+      },
+      "section": {
+        "dates": "Daty (opcjonalnie)"
+      },
+      "field": {
+        "startDate": "Data rozpoczęcia",
+        "endDate": "Data zakończenia"
+      }
+    },
+    "printReport": {
+      "toasts": {
+        "dataNotLoaded": "Dane raportu nie zostały załadowane.",
+        "mobileExportHint": "Otwórz aplikację w przeglądarce desktopowej, aby wyeksportować PDF.",
+        "printFailed": "Drukowanie nie powiodło się. Spróbuj ponownie."
+      },
+      "title": "Raport projektu — podgląd PDF",
+      "description": "Podgląd raportu do eksportu PDF. Kliknij „Pobierz PDF” — w oknie drukowania przeglądarki wybierz „Zapisz jako PDF” jako miejsce docelowe.",
+      "mobileWarning": "Nie można wyeksportować PDF bezpośrednio w przeglądarce mobilnej — otwórz aplikację w przeglądarce desktopowej.",
+      "note": {
+        "useDesktop": "Dla najlepszych efektów użyj przeglądarki desktopowej"
+      },
+      "button": {
+        "close": "Zamknij",
+        "exportDesktop": "Eksportuj na desktopie",
+        "downloadPdf": "Pobierz PDF"
+      },
+      "header": {
+        "generated": "Wygenerowano:",
+        "start": "Start:",
+        "end": "Koniec:"
+      },
+      "section": {
+        "summary": "Podsumowanie budżetu",
+        "alerts": "Alerty",
+        "projection": "Szacunek projekcji",
+        "phases": "Podział wg etapu",
+        "categories": "Podział wg kategorii {top}",
+        "categoriesTop": "(top 15)",
+        "budgetItems": "Pozycje budżetu ({count})",
+        "payments": "Płatności (ostatnie {count})"
+      },
+      "kpi": {
+        "plan": "Plan",
+        "actual": "Rzeczywistość",
+        "remaining": "Pozostało",
+        "saved": "Oszczędność",
+        "completed": "Ukończono",
+        "hours": "Godziny",
+        "avgOverrun": "Śred. przekroczenie",
+        "predictedFinal": "Przewidywany koszt końcowy",
+        "estimatedOverrun": "Szacowane przekroczenie",
+        "planRatio": "Wskaźnik planu"
+      },
+      "alert": {
+        "overdue": "Zaległe ({count})",
+        "upcoming": "Nadchodzące ({count})",
+        "overBudget": "Powyżej budżetu ({count})"
+      },
+      "projection": {
+        "empty": "Brak ukończonych pozycji — projekcja kosztu końcowego jest niedostępna. Po ukończeniu pierwszych pozycji pojawi się tutaj szacunek oparty na średnim przekroczeniu planu."
+      },
+      "column": {
+        "phase": "Etap",
+        "plan": "Plan",
+        "actual": "Rzeczywistość",
+        "percent": "%",
+        "hours": "Godziny",
+        "category": "Kategoria",
+        "name": "Nazwa",
+        "actualShort": "Rzecz.",
+        "from": "Od",
+        "to": "Do",
+        "status": "Status",
+        "date": "Data",
+        "item": "Pozycja",
+        "vendor": "Dostawca",
+        "amount": "Kwota",
+        "type": "Typ"
+      },
+      "empty": {
+        "phases": "Brak etapów do pokazania.",
+        "categories": "Brak kategorii do pokazania.",
+        "budgetItems": "Brak pozycji budżetu.",
+        "payments": "Brak płatności do pokazania."
+      },
+      "fallback": {
+        "noName": "(bez nazwy)",
+        "noItem": "(brak pozycji)"
+      },
+      "status": {
+        "rejected": "Odrzucone",
+        "completed": "Ukończono",
+        "active": "Aktywne",
+        "plan": "Plan"
+      },
+      "footer": "Raport wygenerowany przez Rozpočet Stavby dnia {date} — {projectName}."
+    },
+    "auditLog": {
+      "title": "Historia zmian",
+      "description": "Ostatnie {count} zmian w projekcie (edycje, utworzenia, usunięcia).",
+      "empty": "Brak zarejestrowanych zmian.",
+      "emptyValue": "(puste)",
+      "action": {
+        "fallback": "{action}"
+      },
+      "field": {
+        "element": "Element",
+        "actualHours": "Godziny",
+        "date": "Data"
+      }
+    },
+    "globalSearch": {
+      "title": "Wyszukiwanie globalne",
+      "placeholder": "Szukaj projektów, pozycji, kontaktów, płatności, notatek…",
+      "initialHint": "Zacznij pisać, aby szukać w całej aplikacji",
+      "noResults": "Brak wyników dla „{query}”",
+      "group": {
+        "projects": "Projekty",
+        "items": "Pozycje budżetu",
+        "contacts": "Kontakty",
+        "payments": "Płatności",
+        "notes": "Notatki"
+      },
+      "footer": {
+        "navigation": "Nawigacja",
+        "select": "Wybierz"
+      }
+    }
+  },
+  "errors": {
+    "title": "Coś poszło nie tak",
+    "description": "Aplikacja napotkała nieoczekiwany błąd i nie może kontynuować. Spróbuj ponownie. Jeśli problem wystąpi ponownie, odśwież stronę lub wróć na stronę główną.",
+    "tryAgain": "Spróbuj ponownie",
+    "home": "Strona główna",
+    "copyError": "Kopiuj błąd",
+    "copied": "Skopiowano",
+    "copySuccessToast": "Błąd skopiowany do schowka",
+    "copyFailedToast": "Nie udało się skopiować błędu",
+    "technicalDetails": "Szczegóły techniczne",
+    "errorCode": "Kod błędu:",
+    "message": "Komunikat:",
+    "stackTrace": "Stos wywołań:",
+    "noMessage": "(brak komunikatu)",
+    "noStack": "(niedostępne)",
+    "report": {
+      "subject": "Stavba — raport błędu",
+      "time": "Czas: {time}",
+      "code": "Kod błędu: {code}",
+      "message": "Komunikat: {message}",
+      "stackHeader": "Stos wywołań:"
+    },
+    "notFound": {
+      "code": "404",
+      "title": "Strona nie znaleziona",
+      "description": "Strona, której szukasz, nie istnieje lub została przeniesiona. Wróć na stronę główną Rozpočet Stavby i kontynuuj zarządzanie swoim budżetem.",
+      "homeButton": "Wróć na stronę główną"
+    },
+    "global": {
+      "title": "Coś poszło nie tak",
+      "description": "Aplikacja napotkała nieoczekiwany błąd.",
+      "tryAgain": "Spróbuj ponownie"
+    }
+  },
+  "public": {
+    "project": {
+      "header": {
+        "publicBadge": "Projekt publiczny — tylko do odczytu",
+        "publicView": "Widok publiczny"
+      },
+      "actions": {
+        "requestAccess": "Poproś o dostęp",
+        "openInApp": "Otwórz w aplikacji"
+      },
+      "kpi": {
+        "burnRate": "Zużycie budżetu",
+        "remaining": "Pozostało budżetu",
+        "remainingSub": "z {total}",
+        "itemsCompleted": "Ukończone pozycje",
+        "hoursLogged": "Zarejestrowane godziny",
+        "noItems": "Brak pozycji",
+        "completedPercent": "{percent}% ukończono",
+        "plannedHours": "Plan: {hours} dni",
+        "allCompleted": "Wszystko ukończone"
+      },
+      "phases": {
+        "title": "Etapy projektu",
+        "description": "Przegląd budżetu wg etapu — tylko do odczytu",
+        "column": {
+          "phase": "Etap",
+          "items": "Pozycje",
+          "plan": "Plan",
+          "actual": "Rzeczywistość",
+          "hours": "Godziny",
+          "burn": "Zużycie",
+          "status": "Status"
+        },
+        "empty": "Brak etapów do pokazania.",
+        "status": {
+          "done": "Ukończono",
+          "inProgress": "W trakcie",
+          "soon": "Wkrótce",
+          "waiting": "Oczekuje"
+        }
+      },
+      "footer": "To jest uproszczony, tylko do odczytu widok publicznego projektu. Aby edytować i uzyskać dostęp do pełnych funkcji, zaloguj się lub otwórz projekt w aplikacji.",
+      "notFound": {
+        "title": "Projekt nie jest publicznie dostępny",
+        "redirecting": "Przekierowanie do logowania…"
+      },
+      "toasts": {
+        "loadFailed": "Nie udało się załadować danych projektu.",
+        "notPublic": "Projekt nie jest publicznie dostępny",
+        "accessGranted": "Dostęp przyznany — przekierowanie do projektu",
+        "accessFailed": "Nie udało się przyznać dostępu"
+      }
+    },
+    "invite": {
+      "loading": "Ładowanie zaproszenia…",
+      "unauthenticated": {
+        "title": "Zaloguj się, aby zobaczyć zaproszenie",
+        "redirecting": "Przekierowanie do logowania…",
+        "goToLogin": "Przejdź do logowania"
+      },
+      "error": {
+        "title": "Zaproszenie niedostępne"
+      },
+      "status": {
+        "accepted": "Zaproszenie zostało już zaakceptowane",
+        "rejected": "Zaproszenie zostało odrzucone",
+        "revoked": "Zaproszenie zostało cofnięte przez administratora",
+        "expired": "Zaproszenie wygasło",
+        "invalid": "Zaproszenie nie jest już ważne"
+      },
+      "title": "Zaproszenie do projektu",
+      "description": "Zostałeś zaproszony do projektu <strong>{name}</strong> z rolą <badge>{role}</badge>.",
+      "field": {
+        "project": "Projekt:",
+        "owner": "Zarządca:",
+        "inviter": "Zaprosił:",
+        "role": "Rola:",
+        "expiresAt": "Ważne do:"
+      },
+      "roleDescription": {
+        "viewer": "Możesz oglądać budżet, płatności i wpisy czasu (tylko do odczytu).",
+        "editor": "Możesz oglądać i edytować budżet, płatności, wpisy czasu i kontakty.",
+        "owner": "Masz pełną kontrolę nad projektem — edycja, płatności, wpisy czasu, kontakty i zarządzanie członkami.",
+        "admin": "Masz pełną kontrolę nad projektem, w tym zarządzanie członkami i ustawieniami."
+      },
+      "emailNotice": {
+        "title": "To zaproszenie jest dla e-maila:",
+        "hint": "Aby je zaakceptować, musisz być zalogowany tym e-mailem."
+      },
+      "actions": {
+        "accept": "Zaakceptuj zaproszenie",
+        "reject": "Odrzuć",
+        "openProject": "Otwórz projekt"
+      },
+      "footer": "Jeśli nie spodziewałeś się tego zaproszenia, możesz bezpiecznie zignorować ten e-mail.",
+      "toasts": {
+        "loadFailed": "Nie udało się załadować zaproszenia.",
+        "acceptSuccess": "Zaproszenie zaakceptowane — przekierowanie do projektu",
+        "acceptFailed": "Nie udało się zaakceptować zaproszenia.",
+        "rejectSuccess": "Zaproszenie odrzucone",
+        "rejectFailed": "Nie udało się odrzucić zaproszenia."
+      }
+    }
+  },
+  "api": {
+    "errors": {
+      "auth": {
+        "notAuthenticated": "Brak uwierzytelnienia.",
+        "emailAndPasswordRequired": "E-mail i hasło są wymagane.",
+        "accountExists": "Konto z tym e-mailem już istnieje. Zaloguj się lub zresetuj hasło.",
+        "registerWarningEmailFailed": "Rejestracja się powiodła, ale nie można było wysłać e-maila weryfikacyjnego. Możesz poprosić o nowy.",
+        "registerSuccess": "Rejestracja zakończona. Sprawdź e-mail, aby zweryfikować konto.",
+        "registerFailed": "Rejestracja nie powiodła się. Spróbuj ponownie.",
+        "emailRequired": "E-mail jest wymagany.",
+        "emailAlreadyVerified": "Twój e-mail jest już zweryfikowany. Możesz się zalogować.",
+        "verifyEmailFailed": "Nie udało się wysłać e-maila weryfikacyjnego.",
+        "forgotPasswordSent": "Jeśli konto istnieje, wysłano e-mail z linkiem resetującym.",
+        "tokenAndPasswordRequired": "Token i nowe hasło są wymagane.",
+        "invalidResetLink": "Nieprawidłowy link do resetowania hasła.",
+        "resetLinkExpired": "Ten link do resetowania hasła wygasł. Poproś o nowy.",
+        "resetLinkUsed": "Ten link do resetowania hasła został już użyty. Poproś o nowy.",
+        "resetSuccess": "Twoje hasło zostało zmienione. Możesz się zalogować.",
+        "resetFailed": "Resetowanie hasła nie powiodło się.",
+        "typeAndTokenRequired": "typ i token są wymagane.",
+        "invalidTokenType": "Nieprawidłowy typ tokenu.",
+        "unknownAuthAction": "Nieznana akcja uwierzytelniania.",
+        "successMustBeBoolean": "`success` musi być wartością logiczną.",
+        "rateLimit": {
+          "register": "Zbyt wiele rejestracji. Spróbuj ponownie za {minutes} min.",
+          "requests": "Zbyt wiele żądań. Spróbuj ponownie za {minutes} min.",
+          "attempts": "Zbyt wiele prób. Spróbuj ponownie za {minutes} min."
+        }
+      },
+      "invitations": {
+        "notFound": "Nie znaleziono zaproszenia.",
+        "alreadyUsed": "Zaproszenie zostało już użyte.",
+        "expired": "Zaproszenie wygasło.",
+        "notYourEmail": "To zaproszenie nie jest dla Twojego e-maila.",
+        "acceptFailed": "Nie udało się zaakceptować zaproszenia.",
+        "rejectFailed": "Nie udało się odrzucić zaproszenia.",
+        "loadFailed": "Nie udało się załadować zaproszeń.",
+        "invalidRequestJson": "Nieprawidłowe żądanie — oczekiwano obiektu JSON.",
+        "invalidEmailFormat": "Nieprawidłowy format e-maila.",
+        "alreadyOwner": "Ten użytkownik jest już zarządcą projektu.",
+        "alreadyMember": "Ten użytkownik jest już członkiem projektu.",
+        "createFailed": "Nie udało się utworzyć zaproszenia.",
+        "cancelFailed": "Nie udało się cofnąć zaproszenia."
+      },
+      "budget": {
+        "cannotMoveToSelf": "Pozycja nie może być przeniesiona pod siebie.",
+        "targetNotFound": "Pozycja docelowa nie istnieje.",
+        "cannotMoveAcrossProjects": "Zadanie nie może być przeniesione do innego projektu.",
+        "cycleDetected": "Pozycja nie może być przeniesiona pod własnego potomka (cykl)."
+      },
+      "users": {
+        "adminOnly": "Tylko administrator może zmieniać uprawnienia administratora.",
+        "cannotEditOtherProfile": "Edycja profilu innego użytkownika nie jest dozwolona.",
+        "userNotFound": "Nie znaleziono użytkownika.",
+        "noPasswordSet": "Twoje konto nie ma ustawionego hasła (logujesz się przez Google). Możesz ustawić je przez funkcję „Nie pamiętasz hasła”.",
+        "cannotDemoteSelf": "Nie możesz odebrać własnych uprawnień administratora."
+      },
+      "password": {
+        "currentRequired": "Aktualne hasło jest wymagane.",
+        "newRequired": "Nowe hasło jest wymagane.",
+        "incorrectCurrent": "Aktualne hasło jest nieprawidłowe.",
+        "changeFailed": "Zmiana hasła nie powiodła się. Spróbuj ponownie.",
+        "changed": "Hasło zostało zmienione."
+      },
+      "sessions": {
+        "revokeFailed": "Nie udało się cofnąć innych sesji. Spróbuj ponownie.",
+        "allRevoked": "Wszystkie inne sesje zostały wylogowane."
+      },
+      "project": {
+        "notFoundOrNotPublic": "Nie znaleziono projektu lub nie jest publiczny.",
+        "publicLoadFailed": "Nie udało się załadować danych publicznego projektu."
+      },
+      "ares": {
+        "apiUnavailable": "API ARES niedostępne.",
+        "searchError": "Błąd wyszukiwania.",
+        "apiKeyMissing": "Klucz API ARES nie jest skonfigurowany. Możesz wprowadzić dane firmy ręcznie."
+      },
+      "notes": {
+        "cannotEditOthers": "Możesz edytować tylko własne notatki.",
+        "cannotDeleteOthers": "Możesz usuwać tylko własne notatki."
+      },
+      "generic": {
+        "invalidRequest": "Nieprawidłowe żądanie."
+      },
+      "account": {
+        "mustAcknowledge": "Musisz potwierdzić, że rozumiesz konsekwencje.",
+        "notFound": "Nie znaleziono użytkownika.",
+        "alreadyDeleted": "Konto już oczekuje na usunięcie.",
+        "passwordRequired": "Hasło jest wymagane do weryfikacji tożsamości.",
+        "passwordIncorrect": "Wpisane hasło jest nieprawidłowe.",
+        "emailConfirmRequired": "Wpisz swój adres e-mail, aby potwierdzić.",
+        "emailConfirmMismatch": "Wpisany e-mail nie jest zgodny z Twoim kontem.",
+        "emailRequired": "E-mail jest wymagany.",
+        "notDeleted": "To konto nie jest usunięte.",
+        "permanentlyDeleted": "Okres odzyskiwania konta wygasł. Konto zostało trwale usunięte.",
+        "useOAuth": "To konto nie ma ustawionego hasła. Zaloguj się przez Google."
+      }
+    }
+  },
+  "currency": {
+    "default": "domyślna",
+    "unavailable": "kurs w toku",
+    "loadingRate": "Ładowanie kursu…",
+    "conversionPreview": "{fromAmount} → {toAmount} (kurs {rate})",
+    "label": "Waluta",
+    "projectCurrency": "Waluta projektu",
+    "projectCurrencyHint": "Wszystkie sumy i wykresy są wyświetlane w tej walucie.",
+    "paymentCurrency": "Waluta płatności",
+    "paymentCurrencyHint": "Jeśli różni się od waluty projektu, kwota jest automatycznie przeliczana przy użyciu dziennego kursu ČNB.",
+    "budgetItemCurrency": "Waluta pozycji",
+    "converted": "przeliczono",
+    "rateUnavailable": "Kurs walutowy dla tej waluty nie jest jeszcze dostępny. Zapisz na razie płatność w walucie projektu.",
+    "currencies": {
+      "CZK": "Korona czeska",
+      "EUR": "Euro",
+      "USD": "Dolar amerykański",
+      "GBP": "Funt brytyjski",
+      "HUF": "Forint węgierski",
+      "PLN": "Złoty polski",
+      "AUD": "Dolar australijski",
+      "VND": "Dong wietnamski"
+    }
+  },
+  "help": {
+    "title": "Pomoc",
+    "description": "Krótkie wskazówki dotyczące korzystania z aplikacji.",
+    "sections": {
+      "dashboard": {
+        "title": "Panel główny",
+        "tip1": "Główna strona pokazuje karty KPI, plan wg dat i wykresy etapów/kategorii.",
+        "tip2": "Projekcja szacuje koszty końcowe na podstawie średniego przekroczenia budżetu ukończonych pozycji."
+      },
+      "budget": {
+        "title": "Budżet",
+        "tip1": "Kliknij dowolną komórkę w tabeli, aby edytować inline (Enter = zapisz, Escape = anuluj).",
+        "tip2": "Przeciągnij i upuść, aby zmienić kolejność pozycji. Przenieś zadania pod innego rodzica przez menu ⋯.",
+        "tip3": "Filtruj wg etapu lub statusu, używając przycisków na pasku narzędzi."
+      },
+      "payments": {
+        "title": "Płatności",
+        "tip1": "Faktury z ratami: utwórz fakturę z łączną kwotą, a następnie dodawaj raty.",
+        "tip2": "Płatności w obcej walucie są automatycznie przeliczane przy użyciu dziennych kursów ČNB."
+      },
+      "time": {
+        "title": "Czas",
+        "tip1": "Wpisz pracownika, godziny i datę. Ostatni pracownik i typ są zapamiętywane dla szybszego wprowadzania."
+      },
+      "contacts": {
+        "title": "Kontakty",
+        "tip1": "Wyszukaj firmę po numerze VAT (ARES) — dane są wypełniane automatycznie."
+      },
+      "timeline": {
+        "title": "Oś czasu",
+        "tip1": "Przełącz powiększenie (dni/miesiące/kwartały/lata), aby uzyskać różne poziomy szczegółowości.",
+        "tip2": "Dwukrotnie kliknij pasek, aby edytować daty."
+      },
+      "shortcuts": {
+        "title": "Skróty klawiszowe",
+        "tip1": "Ctrl+K — wyszukiwanie globalne w aplikacji.",
+        "tip2": "Ctrl+N — utwórz nowy projekt.",
+        "tip3": "Ctrl+B — przełącz panel boczny."
+      }
+    }
+  }
+}

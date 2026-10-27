@@ -1,0 +1,2710 @@
+{
+  "Meta": {
+    "appName": "Rozpočet Stavby",
+    "description": "Átfogó költségvetés-, költség- és időkezelés építkezésekhez és felújításokhoz. Projektek, fizetések, munkák és anyagok áttekintése egy helyen.",
+    "keywords": [
+      "építkezés",
+      "felújítás",
+      "költségvetés",
+      "költségek",
+      "projekt",
+      "kezelés"
+    ]
+  },
+  "common": {
+    "appName": "Rozpočet Stavby",
+    "loading": "Betöltés…",
+    "cancel": "Mégse",
+    "save": "Mentés",
+    "delete": "Törlés",
+    "edit": "Szerkesztés",
+    "close": "Bezárás",
+    "search": "Keresés",
+    "yes": "Igen",
+    "no": "Nem",
+    "all": "Összes",
+    "none": "Nincs",
+    "add": "Hozzáadás",
+    "select": {
+      "placeholder": "Válasszon…",
+      "search": "Keresés…",
+      "noResults": "Nincs találat"
+    }
+  },
+  "nav": {
+    "sections": {
+      "main": "Fő",
+      "work": "Munka",
+      "organization": "Szervezet"
+    },
+    "items": {
+      "portfolio": "Portfólió",
+      "dashboard": "Áttekintés",
+      "budget": "Költségvetés",
+      "payments": "Fizetések",
+      "time": "Idő",
+      "contacts": "Kapcsolatok",
+      "timeline": "Idővonal",
+      "notes": "Jegyzetek",
+      "management": "Projektkezelés",
+      "telemetry": "Telemetria",
+      "admin": "Adminisztráció"
+    }
+  },
+  "phases": {
+    "preparation": "Előkészület",
+    "demolition": "Bontás",
+    "earthworks": "Földmunka",
+    "foundation": "Alapozás",
+    "shell": "Vázszerkezet",
+    "installations": "Szerelvények",
+    "finishing": "Befejezés",
+    "facade": "Homlokzat",
+    "roof": "Tető",
+    "interior": "Belső tér",
+    "exterior": "Kert/kültér",
+    "final_inspection": "Átadás-átvétel",
+    "future": "Jövőbeli",
+    "unspecified": "Meghatározatlan"
+  },
+  "statuses": {
+    "active": "Aktív",
+    "planning": "Tervezés",
+    "completed": "Befejezett",
+    "paused": "Szüneteltetve"
+  },
+  "contactTypes": {
+    "company": "Cég",
+    "craftsman": "Kézműves",
+    "self": "Saját munka",
+    "family": "Család",
+    "supplier": "Beszállító",
+    "architect": "Építész",
+    "office": "Hivatal"
+  },
+  "paymentTypes": {
+    "receipt": "Nyugta",
+    "invoice": "Számla",
+    "work": "Munka",
+    "material": "Anyag",
+    "person": "Személy",
+    "other": "Egyéb"
+  },
+  "workerTypes": {
+    "company": "Cég",
+    "craftsman": "Kézműves",
+    "self": "Saját munka",
+    "family": "Család"
+  },
+  "roles": {
+    "viewer": "Megtekintő",
+    "editor": "Szerkesztő",
+    "owner": "Kezelő",
+    "admin": "Rendszergazda"
+  },
+  "LanguageSwitcher": {
+    "language": "Nyelv",
+    "changeLanguage": "Nyelv módosítása"
+  },
+  "auth": {
+    "common": {
+      "email": "E-mail",
+      "emailPlaceholder": "te@email.com",
+      "or": "vagy",
+      "password": "Jelszó",
+      "copyright": "© {year} Stavba — Rozpočet Stavby",
+      "backToLogin": "Vissza a bejelentkezéshez",
+      "signInLink": "Bejelentkezés",
+      "backToHome": "Vissza a kezdőlapra"
+    },
+    "validation": {
+      "passwordMismatch": "A jelszavak nem egyeznek.",
+      "passwordTooShort": "A jelszónak legalább 8 karakter hosszúnak kell lennie.",
+      "passwordTooWeak": "A jelszónak tartalmaznia kell legalább egy betűt és egy számjegyet.",
+      "passwordPlaceholder": "Min. 8 karakter, betű + számjegy",
+      "passwordConfirmLabel": "Jelszó megerősítése",
+      "passwordConfirmPlaceholder": "Jelszó ismétlése",
+      "strength": {
+        "weak": "Gyenge",
+        "fair": "Közepes",
+        "good": "Jó",
+        "strong": "Erős"
+      }
+    },
+    "login": {
+      "title": "Bejelentkezés",
+      "subtitle": "Jelentkezzen be a fiókjába",
+      "tagline": "Költségvetés-, költség- és időkezelés építkezésekhez és felújításokhoz",
+      "registeredSuccess": "A regisztráció sikeres. Ellenőrizze e-mailjeit a cím hitelesítéséhez.",
+      "forgotPassword": "Elfelejtette a jelszavát?",
+      "submitting": "Bejelentkezés…",
+      "submit": "Bejelentkezés",
+      "googleButton": "Bejelentkezés Google-lal",
+      "noAccount": "Még nincs fiókja?",
+      "registerLink": "Regisztráció",
+      "errors": {
+        "useOAuth": "Ez az e-mail Google regisztrációhoz tartozik. Használja a „Bejelentkezés Google-lal” gombot.",
+        "registerFirst": "Ehhez az e-mailhez még nem tartozik fiók. Kérjük, regisztráljon.",
+        "invalidCredentials": "Érvénytelen e-mail vagy jelszó.",
+        "configuration": "Bejelentkezési konfigurációs hiba. Lépjen kapcsolatba a rendszergazdával.",
+        "oauthFailed": "A Google bejelentkezés sikertelen. Próbálja újra.",
+        "rateLimitedMinutes": "Túl sok bejelentkezési kísérlet. Próbálja újra {minutes} perc múlva.",
+        "rateLimitedSeconds": "Túl sok bejelentkezési kísérlet. Próbálja újra {seconds} másodperc múlva.",
+        "generic": "A bejelentkezés sikertelen. Próbálja újra."
+      },
+      "accountDeleted": {
+        "title": "Fiók törölve",
+        "body": "A fiókja törölve lett, és 7 nap múlva véglegesen eltávolításra kerül. Visszaállításához jelentkezzen be újra ugyanazzal az e-maillel."
+      }
+    },
+    "register": {
+      "title": "Regisztráció",
+      "subtitle": "Hozzon létre egy ingyenes fiókot",
+      "tagline": "Hozzon létre fiókot, és kezdje el kezelni a projektjeit",
+      "nameLabel": "Név (opcionális)",
+      "namePlaceholder": "Kovács János",
+      "submitting": "Fiók létrehozása…",
+      "submit": "Fiók létrehozása",
+      "hasAccount": "Már van fiókja?",
+      "errors": {
+        "generic": "A regisztráció sikertelen. Próbálja újra."
+      }
+    },
+    "forgotPassword": {
+      "title": "Elfelejtett jelszó",
+      "subtitle": "Adja meg e-mail címét, és küldünk egy jelszó-visszaállító linket.",
+      "submitting": "Küldés…",
+      "submit": "Visszaállító link küldése",
+      "remember": "Emlékszik a jelszavára?",
+      "success": {
+        "title": "Ellenőrizze az e-mailjeit",
+        "body": "Ha létezik {email} címhez tartozó fiók, küldtünk egy jelszó-visszaállító linket. A link 1 óráig érvényes."
+      },
+      "errors": {
+        "generic": "A kérés sikertelen. Próbálja újra."
+      }
+    },
+    "resetPassword": {
+      "title": "Új jelszó",
+      "subtitle": "Állítsa be új jelszavát",
+      "newPasswordLabel": "Új jelszó",
+      "submitting": "Jelszó módosítása…",
+      "submit": "Jelszó módosítása",
+      "checking": "Hivatkozás ellenőrzése…",
+      "invalidTitle": "Érvénytelen hivatkozás",
+      "invalidBody": "Ez a jelszó-visszaállító hivatkozás érvénytelen vagy lejárt (1 óráig érvényes). Kérjen újat.",
+      "newLink": "Új hivatkozás",
+      "successTitle": "Jelszó módosítva",
+      "successBody": "A jelszava sikeresen módosítva. Átirányítás a bejelentkezéshez…",
+      "successToast": "A jelszó sikeresen módosítva.",
+      "errors": {
+        "generic": "A jelszó-visszaállítás sikertelen. Próbálja újra."
+      }
+    },
+    "verifyEmail": {
+      "validTitle": "E-mail hitelesítve!",
+      "validBody": "Az e-mail címe sikeresen megerősítve. Most már bejelentkezhet, és elkezdheti kezelni a projektjeit.",
+      "alreadyTitle": "Az e-mail már hitelesítve van",
+      "alreadyBody": "Az e-mail címét korábban már hitelesítették. Bejelentkezhet a fiókjába.",
+      "expiredTitle": "A hivatkozás lejárt",
+      "expiredBody": "Ez a hivatkozás lejárt (24 óráig érvényes). Jelentkezzen be, és kérjen új hitelesítő e-mailt.",
+      "invalidTitle": "Érvénytelen hivatkozás",
+      "invalidBody": "Ez a hivatkozás érvénytelen vagy már felhasználták. Jelentkezzen be, és kérjen új hitelesítő e-mailt.",
+      "errorTitle": "Hitelesítési hiba",
+      "errorBody": "Valami elromlott. Próbálja újra később, vagy lépjen kapcsolatba velünk.",
+      "checking": "Hitelesítés…"
+    },
+    "verifyPending": {
+      "title": "Hitelessze az e-mail címét",
+      "body": "A projektjei eléréséhez igazolnia kell az e-mail címét. Ellenőrizze a postafiókját, a spam mappát is beleértve.",
+      "sentTo": "E-mail elküldve a következő címre:",
+      "resendLabel": "Nem kapta meg az e-mailt?",
+      "resendButton": "Hivatkozás újraküldése",
+      "resendSubmitting": "Küldés…",
+      "checkButton": "Hitelesítettem — frissítés",
+      "checkSubmitting": "Ellenőrzés…",
+      "signOut": "Kijelentkezés",
+      "footer": "Az e-mail hitelesítése után automatikusan a kezdőlapra lesz átirányítva.",
+      "toasts": {
+        "resent": "A hitelesítő e-mail újra el lett küldve. Ellenőrizze a postafiókját.",
+        "sendFailed": "A küldés sikertelen. Próbálja újra."
+      }
+    },
+    "profile": {
+      "tagline": "Kezelje fiókját, jelszavát és munkameneteit",
+      "title": "Profil",
+      "subtitle": "Itt szerkesztheti adatait, módosíthatja a jelszavát, és kezelheti az aktív munkameneteket.",
+      "sections": {
+        "profile": "Profil",
+        "password": "Jelszó módosítása",
+        "sessions": "Munkamenetek",
+        "signOut": "Kijelentkezés"
+      },
+      "fields": {
+        "name": "Név",
+        "namePlaceholder": "Kovács János",
+        "currentPassword": "Jelenlegi jelszó",
+        "currentPasswordPlaceholder": "••••••••",
+        "newPassword": "Új jelszó",
+        "confirmNewPassword": "Új jelszó megerősítése",
+        "confirmNewPasswordPlaceholder": "Új jelszó ismétlése"
+      },
+      "emailReadOnlyNote": "Az e-mail nem módosítható. A módosításhoz lépjen kapcsolatba az ügyfélszolgálattal.",
+      "passwordChangeNote": "A jelszó módosítása után az összes többi munkamenet (más eszközökön) ki lesz jelentkeztetve.",
+      "sessionsDescription": "Kijelentkezteti az összes többi bejelentkezett munkamenetet (más eszközökön). Ez a munkamenet aktív marad.",
+      "notifications": {
+        "title": "Értesítési beállítások",
+        "description": "Állítsa be, mikor szeretne e-mail értesítéseket kapni.",
+        "toggle": {
+          "onMemberAssigned": {
+            "label": "E-mail tag kinevezésekor",
+            "description": "Értesítés, amikor valaki projekttagként hozzáadja Önt."
+          },
+          "onItemDelayed": {
+            "label": "E-mail tétel késésnél",
+            "description": "Értesítés, amikor egy költségvetési tétel túllépi a tervezett határidőt."
+          },
+          "onOwnerChanged": {
+            "label": "E-mail kezelőváltáskor",
+            "description": "Értesítés, amikor valaki megváltoztatja egy olyan projekt kezelőjét, amelynek tagja."
+          }
+        },
+        "toasts": {
+          "saved": "Beállítás elmentve",
+          "saveError": "Nem sikerült elmenteni a beállítást"
+        }
+      },
+      "buttons": {
+        "saveProfile": "Változtatások mentése",
+        "savingProfile": "Mentés…",
+        "changePassword": "Jelszó módosítása",
+        "changingPassword": "Jelszó módosítása…",
+        "revokeSessions": "Összes többi munkamenet kijelentkeztetése",
+        "revokingSessions": "Kijelentkeztetés…",
+        "signOutThisDevice": "Kijelentkezés erről az eszközről"
+      },
+      "toasts": {
+        "saveSuccess": "Profil elmentve.",
+        "saveError": "A profil mentése sikertelen.",
+        "saveErrorException": "A profil mentése sikertelen. Próbálja újra.",
+        "passwordSuccess": "Jelszó módosítva.",
+        "passwordError": "A jelszó módosítása sikertelen.",
+        "passwordErrorException": "A jelszó módosítása sikertelen. Próbálja újra.",
+        "revokeSuccess": "Az összes többi munkamenet kijelentkeztetve.",
+        "revokeError": "A többi munkamenet kijelentkeztetése sikertelen.",
+        "revokeErrorException": "A többi munkamenet kijelentkeztetése sikertelen. Próbálja újra."
+      },
+      "deleteAccount": {
+        "sectionTitle": "Fiók törlése",
+        "sectionDescription": "A fiókja 7 nap múlva törlésre kerül. Ezen idő alatt visszaállíthatja bejelentkezéssel. 7 nap után a fiók véglegesen eltávolításra kerül.",
+        "button": "Fiók törlése",
+        "title": "Biztosan törli a fiókot?",
+        "description": "Ez a művelet 7 nap múlva törli a fiókját. Ezen idő alatt visszaállíthatja bejelentkezéssel.",
+        "warningTitle": "Figyelmeztetés",
+        "warningBody": "A projekt-tagságai visszavonásra kerülnek. Az Ön által kezelt projektek láthatóak maradnak a többi tag számára, de kezelő nélkül. 7 nap után a fiók véglegesen törlésre kerül, és az e-mail anonimizálásra.",
+        "passwordLabel": "Adja meg a jelszavát a megerősítéshez",
+        "emailConfirmLabel": "Adja meg az e-mail címét a megerősítéshez",
+        "emailConfirmHint": "Írja be pontos e-mail címét a személyazonossága megerősítéséhez.",
+        "acknowledge": "Megértettem, hogy a projektjeim láthatóak maradnak a többi tag számára, és a fiók 7 nap múlva törlésre kerül.",
+        "cancel": "Mégse",
+        "confirm": "Fiók törlése",
+        "deleting": "Törlés…",
+        "success": "Fiók törlésre ütemezve. 7 nap múlva véglegesen eltávolításra kerül.",
+        "error": "A fiók törlése sikertelen. Próbálja újra."
+      }
+    },
+    "settings": {
+      "tagline": "Globális alkalmazásbeállítások",
+      "sections": {
+        "appearance": "Megjelenés",
+        "hiddenProjects": "Rejtett projektek",
+        "activity": "Tevékenységem statisztikája",
+        "about": "Névjegy"
+      },
+      "appearance": {
+        "description": "Módosítsa a felület megjelenését és nyelvét.",
+        "theme": "Téma",
+        "themeHint": "Váltás a világos és sötét téma között.",
+        "themeLight": "Világos téma",
+        "themeDark": "Sötét téma",
+        "language": "Nyelv",
+        "languageHint": "A nyelv változtatásai azonnal érvénybe lépnek."
+      },
+      "hiddenProjects": {
+        "description": "A rejtett projektek nem jelennek meg a felső sáv projektváltójában. Közvetlen hivatkozáson keresztül továbbra is elérhetők.",
+        "empty": "Még nincs egyetlen projektje sem.",
+        "toggleHint": "Bekapcsolt állás = projekt rejtett. A változtatások automatikusan mentve.",
+        "aria": {
+          "show": "{name} projekt megjelenítése",
+          "hide": "{name} projekt elrejtése"
+        }
+      },
+      "activity": {
+        "description": "Az alkalmazásban végzett tevékenységeinek áttekintése az összes idő és projekt szerint."
+      },
+      "about": {
+        "body": "A <brand>Stavba</brand> alkalmazás átfogó költségvetés-, költség-, idő- és anyagkezelést biztosít építkezésekhez és felújításokhoz.",
+        "version": "Verzió",
+        "commit": "Commit",
+        "buildDate": "Build dátuma",
+        "branch": "Ág",
+        "label": "Címke",
+        "githubLink": "Forráskód a GitHubon"
+      },
+      "accountProfileLink": "Fiók profilja"
+    }
+  },
+  "topbar": {
+    "account": "Fiók",
+    "loading": "Betöltés…",
+    "selectProject": "Projekt kiválasztása",
+    "searchProject": "Projekt keresése…",
+    "search": "Keresés",
+    "toggleSidebar": {
+      "open": "Panel megnyitása",
+      "close": "Panel bezárása"
+    },
+    "menu": {
+      "profile": "Profil",
+      "settings": "Beállítások",
+      "admin": "Adminisztráció",
+      "signOut": "Kijelentkezés",
+      "theme": {
+        "light": "Világos téma",
+        "dark": "Sötét téma"
+      }
+    },
+    "star": {
+      "add": "Csillagozás",
+      "remove": "Csillag eltávolítása"
+    },
+    "toasts": {
+      "projectUpdateFailed": "Nem sikerült frissíteni a projektet"
+    },
+    "noOwner": "Nincs kezelő — lépjen kapcsolatba a rendszergazdákkal",
+    "noProjectsFound": "Nem találhatók projektek.",
+    "addProject": "Projekt hozzáadása",
+    "searchInProject": "Keresés a projektben…",
+    "budgetChip": "Felhasználás üteme: {actual} / {plan}",
+    "budgetChipPercent": "Költségvetés felhasználás üteme: {percent} százalék"
+  },
+  "sidebar": {
+    "settings": "Beállítások"
+  },
+  "analytics": {
+    "eventTypes": {
+      "page_view": "Oldalmegtekintés",
+      "add_payment": "Fizetés hozzáadása",
+      "add_time_entry": "Időbejegyzés hozzáadása",
+      "edit_time_entry": "Időbejegyzés szerkesztése",
+      "edit_payment": "Fizetés szerkesztése",
+      "delete_payment": "Fizetés törlése",
+      "add_contact": "Kapcsolat hozzáadása",
+      "add_note": "Jegyzet hozzáadása",
+      "edit_note": "Jegyzet szerkesztése",
+      "add_budget_item": "Költségvetési tétel hozzáadása",
+      "edit_budget_item": "Költségvetési tétel szerkesztése",
+      "download_data": "Adatok letöltése",
+      "login": "Bejelentkezés",
+      "logout": "Kijelentkezés",
+      "project_share": "Projekt megosztása",
+      "auth_login": "Bejelentkezés",
+      "auth_logout": "Kijelentkezés",
+      "auth_register": "Regisztráció",
+      "auth_password_change": "Jelszó módosítása",
+      "auth_password_reset": "Jelszó visszaállítása",
+      "auth_email_verify": "E-mail hitelesítés",
+      "auth_session_revoke": "Munkamenet visszavonása",
+      "auth_oauth_login": "Google bejelentkezés"
+    }
+  },
+  "relativeTime": {
+    "justNow": "épp most",
+    "minute": "{n, plural, one {egy perce} other {{n} perce}}",
+    "hour": "{n, plural, one {egy órája} other {{n} órája}}",
+    "yesterday": "tegnap",
+    "days": "{n, plural, one {tegnap} other {{n} napja}}"
+  },
+  "tabs": {
+    "portfolio": {
+      "title": "Portfólió",
+      "subtitle": "Az összes projekt áttekintése — aggregált KPI-k a projektjei között.",
+      "kpi": {
+        "projects": {
+          "label": "Projektek",
+          "subValue": "{count, plural, one {# költségvetési tétel} other {# költségvetési tétel}}"
+        },
+        "plan": {
+          "label": "Összes terv",
+          "subValue": "Projektek között aggregálva"
+        },
+        "actual": {
+          "label": "Elköltött",
+          "subValue": "{percent} a tervből"
+        },
+        "remaining": {
+          "label": "Maradvány",
+          "subValue": "Terv − tényleges"
+        }
+      },
+      "table": {
+        "title": "Projektek összehasonlítása",
+        "description": "Rendezhető összehasonlítás a terv, a tényleges és a költségvetés-felhasználás között.",
+        "column": {
+          "project": "Projekt",
+          "plan": "Terv",
+          "actual": "Tényleges",
+          "burn": "Felhasználás",
+          "remaining": "Maradvány",
+          "status": "Állapot"
+        },
+        "row": {
+          "total": "Összesen",
+          "projectCount": "{count, plural, one {# projekt} other {# projekt}}"
+        }
+      },
+      "chart": {
+        "title": "Terv vs. tényleges projektenként",
+        "description": "A 10 legnagyobb projekt a tervezett költségvetés alapján.",
+        "empty": "Még nincsenek adatok a diagramhoz.",
+        "series": {
+          "plan": "Terv",
+          "actual": "Tényleges"
+        }
+      },
+      "empty": {
+        "noProjects": {
+          "title": "Még nincsenek projektjei",
+          "description": "Hozza létre az első projektjét a költségvetés, az idő és az anyagok nyomon követéséhez."
+        },
+        "oneProject": {
+          "title": "A portfólió 2 projektől érhető el",
+          "description": "Amint létrehoz vagy csatlakozik egy második projekthez, itt megjelenik egy aggregált projektátkelés áttekintés."
+        }
+      },
+      "aria": {
+        "openProject": "Projekt megnyitása"
+      }
+    },
+    "admin": {
+      "nav": {
+        "label": "Adminisztráció",
+        "title": "Fiókbeállítások"
+      },
+      "subtitle": "Profil, projektek, statisztikák és beállítások.",
+      "section": {
+        "projects": "Projektjeim",
+        "users": "Felhasználókezelés",
+        "export": "Exportálás",
+        "notifications": "Értesítések",
+        "danger": "Veszélyzóna"
+      },
+      "profile": {
+        "title": "Profilom",
+        "description": "A megjelenítendő név és e-mail, amelyet más felhasználók látnak a projektek megosztásakor.",
+        "button": {
+          "edit": "Szerkesztés",
+          "save": "Mentés"
+        },
+        "field": {
+          "displayName": "Megjelenítendő név"
+        },
+        "placeholder": {
+          "name": "pl. Kovács János"
+        },
+        "hint": {
+          "nameChange": "A változtatás minden olyan projektre vonatkozik, amelynek tagja."
+        },
+        "label": {
+          "accountCreated": "Fiók létrehozva: {date}"
+        },
+        "toasts": {
+          "emptyName": "A név nem lehet üres",
+          "saved": "Profil elmentve",
+          "saveError": "Nem sikerült frissíteni a profilt"
+        }
+      },
+      "projects": {
+        "title": "Projektjeim",
+        "description": "Projektek, amelyeket kezel vagy amelynek tagja. Csak azokat a projekteket hagyhatja el, amelyeket nem kezel.",
+        "button": {
+          "leave": "Kilépés",
+          "leaveConfirm": "Kilépés"
+        },
+        "leave": {
+          "confirmTitle": "Kilép a(z) „{name}” projektből?",
+          "confirmBody": "Elveszíti a projekt összes adatához való hozzáférését. Ez a művelet visszafordíthatatlan.",
+          "cancel": "Mégse"
+        },
+        "badge": {
+          "cannotLeave": "Nem lehet kilépni"
+        },
+        "empty": "Még egyetlen projektnek sem tagja.",
+        "toasts": {
+          "left": "Kilépett a(z) „{name}” projektből",
+          "leaveError": "Nem sikerült kilépni a projektből"
+        }
+      },
+      "users": {
+        "title": "Felhasználókezelés",
+        "description": "A példány összes felhasználójának és rendszergazdai jogosultságaiknak áttekintése. A változtatások azonnal életbe lépnek.",
+        "badge": {
+          "admin": "Rendszergazda",
+          "user": "Felhasználó",
+          "pendingDeletion": "Törlésre vár"
+        },
+        "aria": {
+          "adminToggleSelf": "{name} felhasználó rendszergazdai jogosultságai (nem módosítható)",
+          "adminToggleOther": "{name} felhasználó rendszergazdai jogosultságainak váltása"
+        },
+        "tooltip": {
+          "noSelfDemote": "Saját rendszergazdai jogosultság nem vonható vissza"
+        },
+        "hint": {
+          "selfExcluded": "A saját fiókja ({email}) ki van hagyva a listából — nem vonhatja vissza a saját rendszergazdai jogosultságát."
+        },
+        "empty": "Nincs több kezelhető felhasználó.",
+        "toasts": {
+          "cannotDemoteSelf": "Saját rendszergazdai jogosultság nem vonható vissza",
+          "promoted": "{name} felhasználó mostantól rendszergazda",
+          "demoted": "{name} felhasználó már nem rendszergazda",
+          "toggleError": "Nem sikerült megváltoztatni a rendszergazdai jogosultságokat"
+        }
+      },
+      "stats": {
+        "title": "Tevékenységem statisztikája",
+        "description": "Az alkalmazásban végzett tevékenységeinek áttekintése az összes időre.",
+        "filter": {
+          "allProjects": "Összes projekt"
+        },
+        "button": {
+          "refresh": "Frissítés"
+        },
+        "kpi": {
+          "totalActions": "Összes művelet",
+          "pageViews": "Oldalmegtekintések",
+          "totalTime": "Összes idő az oldalakon",
+          "lastActive": "Utolsó tevékenység"
+        },
+        "chart": {
+          "byType": {
+            "title": "Események típus szerint",
+            "empty": "Még nem lett tevékenység rögzítve."
+          }
+        },
+        "topPages": {
+          "title": "Legaktívabb oldalaim",
+          "empty": "Nincs oldal-idő adat.",
+          "column": {
+            "page": "Oldal",
+            "views": "Megtekintések",
+            "totalTime": "Összes idő"
+          }
+        }
+      },
+      "export": {
+        "title": "Adataim exportálása",
+        "description": "Töltse le az összes alkalmazásadatot JSON vagy CSV formátumban biztonsági mentéshez és elemzéshez.",
+        "button": {
+          "json": "Összes adat letöltése (JSON)",
+          "csv": "Összes projekt letöltése CSV"
+        },
+        "hint": "A JSON tartalmazza az összes projekt teljes állapotát (költségvetés, fizetések, idő, kapcsolatok). A CSV projektenként 4 fájlt tölt le (költségvetés, fizetések, idő, kapcsolatok).",
+        "toasts": {
+          "jsonSuccess": "Adatok exportálva",
+          "jsonError": "Az exportálás sikertelen",
+          "csvNoProjects": "Nincsenek exportálható projektek",
+          "csvSuccess": "Adatok exportálva ({count, plural, one {# fájl} other {# fájl}})",
+          "csvAllFailed": "A CSV exportálás sikertelen",
+          "csvPartialSuccess": "{success} fájl exportálva, {failed} sikertelen"
+        }
+      },
+      "notifications": {
+        "title": "Értesítési beállítások",
+        "description": "Amíg a Google hitelesítés aktív, a beállításokat helyileg tároljuk a böngészőjében.",
+        "toggle": {
+          "onMemberAssigned": {
+            "label": "E-mail tag kinevezésekor",
+            "description": "Értesítés, amikor valaki projekttagként hozzáadja Önt."
+          },
+          "onItemDelayed": {
+            "label": "E-mail tétel késésnél",
+            "description": "Értesítés, amikor egy költségvetési tétel túllépi a tervezett határidőt."
+          },
+          "onOwnerChanged": {
+            "label": "E-mail kezelőváltáskor",
+            "description": "Értesítés, amikor valaki megváltoztatja egy olyan projekt kezelőjét, amelynek tagja."
+          }
+        },
+        "toasts": {
+          "saved": "Beállítás elmentve",
+          "saveError": "Nem sikerült elmenteni a beállítást"
+        }
+      },
+      "danger": {
+        "title": "Veszélyzóna",
+        "description": "Az ebben a szakaszban lévő műveletek visszafordíthatatlanok. Kifejezett megerősítést igényelnek egy párbeszédpanelen.",
+        "deleteNotes": {
+          "title": "Összes jegyzetem törlése",
+          "description": "Véglegesen törli az összes jegyzetet, amelyet az összes projektben létrehozott.",
+          "button": "Törlés",
+          "confirmTitle": "Törli az összes jegyzetét?",
+          "confirmBody": "Ez a művelet visszafordíthatatlan. Az összes létrehozott jegyzet véglegesen törlésre kerül az összes projektből.",
+          "confirmButton": "Összes jegyzet törlése",
+          "toasts": {
+            "none": "Nincs törlendő jegyzet",
+            "success": "{count, plural, one {# jegyzet törölve} other {# jegyzet törölve}}",
+            "partial": "{deleted} törölve, {failed} sikertelen",
+            "error": "Nem sikerült törölni a jegyzeteket"
+          }
+        },
+        "leaveAll": {
+          "title": "Összes projekt elhagyása",
+          "description": "Eltávolítja Önt az összes olyan projektből, amelynek tagja (nem kezelője). Elveszíti ezen projektek összes adatához való hozzáférését.",
+          "button": "Összes elhagyása",
+          "confirmTitle": "Elhagyja az összes projektet?",
+          "confirmBody": "Elveszíti az összes olyan projekt adatához való hozzáférését, amelynek tagja. A kezelt projektek érintetlenek maradnak. Ez a művelet visszafordíthatatlan.",
+          "confirmButton": "Összes elhagyása",
+          "toasts": {
+            "none": "Egyetlen projektnek sem tagja (amelyet elhagyhatna)",
+            "success": "{count, plural, one {# projekt elhagyva} other {# projekt elhagyva}}",
+            "partial": "{left} elhagyva, {failed} sikertelen",
+            "error": "Nem sikerült elhagyni a projekteket"
+          }
+        }
+      }
+    },
+    "budget": {
+      "completion": {
+        "all": "Összes",
+        "active": "Aktív",
+        "done": "Befejezve",
+        "rejected": "Elutasítva"
+      },
+      "filter": {
+        "phase": "Fázis:"
+      },
+      "toolbar": {
+        "search": "Keresés a költségvetésben…",
+        "add": "Tétel hozzáadása",
+        "selectionMode": "Kiválasztási mód",
+        "selected": "Kiválasztva: {count, plural, one {# tétel} other {# tétel}}",
+        "bulkComplete": "Megjelölés befejezettként",
+        "bulkIncomplete": "Megjelölés befejezetlenként",
+        "bulkReject": "Elutasítás",
+        "bulkUnreject": "Elutasítás visszavonása",
+        "bulkDelete": "Kiválasztottak törlése",
+        "cancelSelection": "Kiválasztás megszüntetése",
+        "bulkSuccess": "{count, plural, one {# tétel frissítve} other {# tétel frissítve}}",
+        "bulkDeleteSuccess": "{count, plural, one {# tétel törölve} other {# tétel törölve}}",
+        "bulkPartialError": "{count} / {total} sikertelen",
+        "bulkError": "A tömeges művelet sikertelen",
+        "bulkDeleteTitle": "Törli a kiválasztott tételeket?",
+        "bulkDeleteDescription": "{count, plural, one {Biztosan törli a # kiválasztott tételt? Ez a művelet nem visszavonható.} other {Biztosan törli a # kiválasztott tételt? Ez a művelet nem visszavonható.}}"
+      },
+      "empty": {
+        "title": "Nincs a szűrőnek megfelelő tétel",
+        "description": "Próbálja megváltoztatni a fázist, állapotot vagy keresési szűrőt. Vagy törölje a szűrőt az összes tétel megtekintéséhez.",
+        "categoryRow": "Nincs tétel ebben a kategóriában."
+      },
+      "column": {
+        "item": "Tétel",
+        "phase": "Fázis",
+        "plan": "Terv (CZK)",
+        "days": "Napok",
+        "dateFrom": "Dátumtól",
+        "dateTo": "Dátumig",
+        "actual": "Tényleges (CZK)",
+        "hours": "Óra",
+        "status": "Állapot"
+      },
+      "category": {
+        "aria": {
+          "drag": "Kategória húzása"
+        },
+        "addItem": {
+          "aria": "Tétel hozzáadása",
+          "title": "Tétel hozzáadása a(z) „{name}” kategóriához"
+        },
+        "totals": "{actual} / {plan}"
+      },
+      "row": {
+        "aria": {
+          "drag": "Feladat húzása",
+          "expand": "Kibontás",
+          "collapse": "Összecsukás",
+          "selectRow": "„{name}” tétel kiválasztása",
+          "selectAllInCategory": "Összes tétel kiválasztása a kategóriában",
+          "editRow": "„{name}” tétel szerkesztése"
+        },
+        "childCount": "{count, plural, one {# feladat} other {# feladat}}",
+        "addTask": "Feladat hozzáadása",
+        "required": {
+          "title": "Kötelező (szükséges a projekt befejezéséhez)",
+          "aria": "Kötelező",
+          "ariaRequired": "Kötelező megjelölés eltávolítása",
+          "ariaOptional": "Megjelölés kötelezőként",
+          "titleRequired": "Kötelező — kattintson az opcionálisra módosításhoz",
+          "titleOptional": "Opcionális — kattintson a kötelezőre módosításhoz (szükséges a projekt befejezéséhez)"
+        },
+        "placeholder": {
+          "noName": "(névtelen)"
+        },
+        "badge": {
+          "rejected": "Elutasítva",
+          "done": "Befejezve",
+          "subsidy": "Támogatás",
+          "subsidyTitleWithAmount": "Lehetséges támogatás: {amount}",
+          "subsidyTitleNoAmount": "Lehetséges támogatás (nincs összeg megadva)",
+          "addTaskTitle": "Feladat hozzáadása ez alá a tétel alá",
+          "addTaskAria": "Feladat hozzáadása"
+        },
+        "paymentsCount": "{count, plural, one {# fizetés} other {# fizetés}}",
+        "timeCount": "{count, plural, one {# időbejegyzés} other {# időbejegyzés}}",
+        "tooltip": {
+          "planTotal": "Összesen: saját {own} + feladatok {children}",
+          "actualTotal": "Összesen: saját {own} + feladatok {children}"
+        },
+        "completed": {
+          "ariaDone": "Megjelölés befejezetlenként",
+          "ariaTodo": "Megjelölés befejezettként",
+          "titleDone": "Megjelölés befejezetlenként",
+          "titleTodo": "Megjelölés befejezettként"
+        },
+        "rejected": {
+          "ariaRejected": "Elutasítás visszavonása",
+          "ariaNotRejected": "Elutasítás",
+          "titleRejected": "Elutasítás visszavonása",
+          "titleNotRejected": "Tétel elutasítása"
+        },
+        "actions": {
+          "ariaMore": "További műveletek",
+          "titleMore": "További műveletek"
+        },
+        "menu": {
+          "editDetail": "Részletek szerkesztése",
+          "markRequired": "Megjelölés kötelezőként",
+          "markOptional": "Megjelölés opcionálisként",
+          "subsidyAdd": "Megjelölés támogathatóként",
+          "subsidyRemove": "Támogatás eltávolítása",
+          "markDone": "Megjelölés befejezettként",
+          "markNotDone": "Megjelölés befejezetlenként",
+          "reject": "Elutasítás",
+          "unreject": "Elutasítás visszavonása",
+          "move": "Áthelyezés másik tétel alá…",
+          "duplicate": "Duplikálás",
+          "delete": "Törlés"
+        },
+        "delete": {
+          "title": "Törli a tételt?",
+          "body": "Biztosan törli: **{name}**? A kapcsolódó fizetések és időbejegyzések is törlésre kerülnek.",
+          "cancel": "Mégse",
+          "confirm": "Törlés"
+        },
+        "toasts": {
+          "duplicateSuccess": "Tétel duplikálva",
+          "duplicateError": "Nem sikerült duplikálni",
+          "deleteSuccess": "Tétel törölve",
+          "deleteError": "Nem sikerült törölni"
+        }
+      },
+      "detail": {
+        "label": {
+          "note": "Jegyzet",
+          "contact": "Kapcsolat",
+          "links": "Hivatkozások",
+          "linksFromTasks": "Feladatokból"
+        },
+        "placeholder": {
+          "note": "További információk, egységárak, folyamat…",
+          "noName": "(névtelen)"
+        },
+        "contact": {
+          "unassigned": "Nincs hozzárendelve — kattintson a tételre a szerkesztéshez"
+        }
+      },
+      "moveDialog": {
+        "title": "Feladat áthelyezése",
+        "description": "**{name}** áthelyezése másik tétel alá. A kategória az új szülőtől öröklődik.",
+        "currentParent": "Jelenlegi szülő: {name}",
+        "empty": "Nincsenek más tételek a projektben, amelyek alá a feladat áthelyezhető lenne.",
+        "placeholder": {
+          "select": "Céltétel kiválasztása",
+          "noName": "(névtelen)"
+        },
+        "topLevel": "Felső szint (nincs szülő)",
+        "cancel": "Mégse",
+        "confirm": "Áthelyezés",
+        "toasts": {
+          "movedToParent": "Feladat új tétel alá helyezve",
+          "movedToTop": "Feladat felső szintre helyezve",
+          "error": "Az áthelyezés sikertelen"
+        }
+      }
+    },
+    "management": {
+      "button": {
+        "editProject": "Projekt szerkesztése",
+        "reportPdf": "PDF jelentés",
+        "auditHistory": "Változtatások előzménye"
+      },
+      "data": {
+        "title": "Adatok és exportok",
+        "description": "Projektszerkesztés, jelentések és adatexportok különböző formátumokban",
+        "export": {
+          "label": "Adatexport",
+          "json": "JSON exportálás",
+          "import": "JSON importálás (csak kezelő)"
+        },
+        "csv": {
+          "label": "CSV exportok (jelenlegi projekt)",
+          "budget": "Költségvetés CSV",
+          "payments": "Fizetések CSV",
+          "time": "Idő CSV",
+          "contacts": "Kapcsolatok CSV"
+        },
+        "toasts": {
+          "exportSuccess": "Állapot exportálva",
+          "exportError": "Az exportálás sikertelen",
+          "importSuccess": "Állapot importálva",
+          "importError": "Az importálás sikertelen",
+          "csvSuccess": "{type} exportálva CSV-be",
+          "csvError": "A CSV exportálás sikertelen"
+        }
+      },
+      "audit": {
+        "title": "Változásnapló — legutóbbi változtatások",
+        "description": "A projekt legutóbbi műveleteinek áttekintése"
+      },
+      "danger": {
+        "title": "Projektkezelés",
+        "duplicate": {
+          "title": "Projekt duplikálása",
+          "description": "Másolatot készít költségvetéssel (fizetések és idő nélkül)",
+          "button": "Duplikálás",
+          "suffix": " (másolat)"
+        },
+        "delete": {
+          "title": "Projekt törlése",
+          "description": "Véglegesen törli az összes adatot",
+          "adminOnlyHint": "Csak a projekt kezelésére jogosult törölheti",
+          "editorHint": "Csak a projekt kezelésére jogosult törölheti a projektet"
+        },
+        "toasts": {
+          "duplicateSuccess": "Projekt duplikálva: „{name}”",
+          "duplicateError": "Nem sikerült duplikálni a projektet"
+        }
+      },
+      "info": {
+        "roleBadge": {
+          "editor": "Szerkesztő",
+          "admin": "Rendszergazda",
+          "viewer": "Megtekintő"
+        },
+        "lockHint": "Csak a projekt kezelésére jogosult szerkesztheti a projekt adatait",
+        "label": {
+          "address": "Cím",
+          "status": "Állapot",
+          "startDate": "Kezdés dátuma",
+          "endDate": "Befejezés dátuma",
+          "description": "Leírás"
+        },
+        "placeholder": {
+          "address": "pl. Budapest - II. kerület",
+          "description": "Rövid projektleírás…"
+        },
+        "created": "Létrehozva: {date}",
+        "button": {
+          "save": "Mentés",
+          "edit": "Szerkesztés"
+        },
+        "toasts": {
+          "saveSuccess": "Projekt frissítve",
+          "saveError": "Nem sikerült frissíteni a projektet"
+        }
+      },
+      "property": {
+        "title": "Ingatlaninformációk",
+        "description": "Pontos cím, energetikai besorolás és projekt dokumentáció",
+        "button": {
+          "edit": "Szerkesztés",
+          "save": "Mentés"
+        },
+        "label": {
+          "fullAddress": "Pontos cím",
+          "floorArea": "Beépített terület (m²)",
+          "floors": "Szintek száma",
+          "heatLoss": "Hőveszteség (W/K)",
+          "energyRating": "Energetikai besorolás",
+          "studyUrl": "Építészeti tanulmány hivatkozása",
+          "documentationUrl": "Projektdokumentáció hivatkozása",
+          "note": "Jegyzet"
+        },
+        "placeholder": {
+          "fullAddress": "pl. 12 Példa utca, 1000 Budapest",
+          "floorArea": "pl. 120",
+          "floors": "pl. 2",
+          "heatLoss": "pl. 85",
+          "note": "Szabad formátumú jegyzet az ingatlanról…"
+        },
+        "error": {
+          "url": "Adjon meg érvényes URL-t (http:// vagy https://)."
+        },
+        "lockHint": "Csak a projekt kezelésére jogosult szerkesztheti az ingatlaninformációkat",
+        "readOnly": {
+          "fullAddress": "Pontos cím",
+          "floorArea": "Beépített terület",
+          "floorAreaValue": "{value} m²",
+          "floors": "Szintek száma",
+          "heatLoss": "Hőveszteség",
+          "heatLossValue": "{value} W/K",
+          "energyRating": "Energetikai besorolás",
+          "studyUrl": "Építészeti tanulmány",
+          "documentationUrl": "Projektdokumentáció",
+          "note": "Jegyzet"
+        },
+        "toasts": {
+          "urlError": "A hivatkozások érvényes URL-ek kell legyenek (http:// vagy https://).",
+          "saveSuccess": "Ingatlaninformációk elmentve",
+          "saveError": "Nem sikerült elmenteni az ingatlaninformációkat"
+        }
+      },
+      "sharing": {
+        "title": "Megosztás és hozzáférési jogok",
+        "description": "Projekt láthatóságának, kezelőjének, tagjainak és meghívóinak kezelése",
+        "button": {
+          "share": "Megosztás",
+          "shareTitle": "Nyilvános megtekintési hivatkozás másolása",
+          "transferOwnership": "Átruházás"
+        },
+        "toggle": {
+          "publicProject": {
+            "label": "Nyilvános projekt",
+            "description": "Bárki, aki a hivatkozást birtokolja, megtekintheti a projektet (csak olvasható)"
+          }
+        },
+        "aria": {
+          "publicToggle": "Projekt láthatóságának váltása",
+          "removeMember": "Tag eltávolítása",
+          "leaveProject": "Projekt elhagyása",
+          "revokeInvitation": "Meghívó visszavonása"
+        },
+        "lockHint": "Csak a kezelő módosíthatja a projekt láthatóságát",
+        "publicInfo": "Nyilvános projekt: Bárki, aki a hivatkozást birtokolja, megtekintheti a projektet (csak olvasható). Kapcsolja ki a magánszféra védelméhez.",
+        "badge": {
+          "owner": "Kezelő"
+        },
+        "role": {
+          "viewer": "Megtekintő",
+          "editor": "Szerkesztő"
+        },
+        "roleSelect": {
+          "viewer": "Megtekintő (csak olvasás)",
+          "editor": "Szerkesztő (szerkesztés)"
+        },
+        "empty": {
+          "members": "Még nem adtak hozzá tagokat."
+        },
+        "pending": {
+          "title": "Függőben lévő meghívók",
+          "role": "Szerep: {role} · Érvényes: {date}"
+        },
+        "invitationHistory": {
+          "title": "Meghívók előzménye ({count})",
+          "role": "Szerep: {role} · Létrehozva: {date}"
+        },
+        "invitationStatus": {
+          "pending": "Függőben",
+          "accepted": "Elfogadva",
+          "rejected": "Elutasítva",
+          "revoked": "Visszavonva",
+          "expired": "Lejárt"
+        },
+        "inviteForm": {
+          "title": "Meghívás e-mailben",
+          "placeholderEmail": "email@example.com",
+          "button": "Meghívás e-mailben",
+          "hint": {
+            "existingMember": "Ez a felhasználó már tagja a projektnek",
+            "newUser": "Új felhasználó — e-mail meghívót kap, és regisztráció után hozzáférhet",
+            "editor": "Szerkesztőként csak Megtekintőket vagy Szerkesztőket adhat hozzá",
+            "noInvite": "Csak a projekt kezelésére jogosult hívhat meg új felhasználókat"
+          }
+        },
+        "qr": {
+          "title": "Projekt QR-kódja",
+          "description": "Olvassa le a QR-kódot a projekt mobilos megnyitásához.",
+          "aria": "QR-kód a(z) {name} projekthez",
+          "button": {
+            "copyLink": "Hivatkozás másolása",
+            "copyLinkCopied": "Másolva",
+            "downloadPng": "PNG letöltése"
+          },
+          "toasts": {
+            "copySuccess": "Hivatkozás a vágólapra másolva",
+            "copyError": "A másolás sikertelen — másolja a hivatkozást kézzel",
+            "qrNotReady": "A QR-kód még nem lett generálva",
+            "downloadSuccess": "QR-kód letöltve PNG-ként",
+            "generateError": "Nem sikerült generálni a QR-kódot"
+          }
+        },
+        "confirmRemove": {
+          "title": "Biztosan eltávolítja a tagot?",
+          "body": "Biztosan eltávolítja a(z) „{name}” felhasználót ebből a projektből? Elveszíti a projekt összes adatához való hozzáférését. Ez visszavonható a tag újbóli hozzáadásával.",
+          "cancel": "Mégse",
+          "confirm": "Tag eltávolítása"
+        },
+        "toasts": {
+          "shareLinkCopied": "Projekt hivatkozás a vágólapra másolva",
+          "shareLinkPrivate": "A projekt nem nyilvános — a hivatkozás a bejelentkezéshez irányít",
+          "shareLinkError": "Nem sikerült másolni a hivatkozást",
+          "madePublic": "A projekt mostantól nyilvános — bárki megtekintheti a hivatkozással",
+          "madePrivate": "A projekt mostantól magán",
+          "publicToggleError": "Nem sikerült megváltoztatni a projekt láthatóságát",
+          "alreadyMember": "Ez a felhasználó már tagja a projektnek",
+          "inviteSent": "Meghívó elküldve a következőnek: {email}",
+          "inviteError": "Nem sikerült elküldeni a meghívót",
+          "inviteRevoked": "{email} meghívója visszavonva",
+          "inviteRevokeError": "Nem sikerült visszavonni a meghívót",
+          "roleChanged": "Szerep frissítve",
+          "roleChangeError": "Nem sikerült frissíteni a szerepet",
+          "memberRemoved": "Tag eltávolítva: „{name}”",
+          "memberRemoveError": "Nem sikerült eltávolítani a tagot — a tag visszaállítva",
+          "ownerChanged": "Kezelő megváltoztatva",
+          "ownerChangeError": "Nem sikerült megváltoztatni a kezelőt"
+        }
+      },
+      "auditLog": {
+        "search": {
+          "placeholder": "Keresés a változásnaplóban…",
+          "aria": "Keresés a változásnaplóban",
+          "clearAria": "Keresés törlése"
+        },
+        "polling": "Betöltés...",
+        "filter": {
+          "action": "Művelet",
+          "entity": "Entitás",
+          "user": "Szerző",
+          "from": "Ettől",
+          "to": "Eddig",
+          "sort": "Rendezés",
+          "pageSize": "Laponként",
+          "fromAria": "Dátumtól szűrő",
+          "toAria": "Dátumig szűrő",
+          "all": "Összes"
+        },
+        "action": {
+          "create": "Létrehozva",
+          "update": "Szerkesztve",
+          "delete": "Törölve",
+          "export": "Exportálva"
+        },
+        "sort": {
+          "desc": "Legújabb",
+          "asc": "Legrégibb"
+        },
+        "empty": "Nincsenek rekordok a kiválasztott szűrőkhöz.",
+        "column": {
+          "action": "Művelet",
+          "detail": "Változás részlete",
+          "author": "Szerző",
+          "date": "Dátum",
+          "time": "Idő"
+        },
+        "author": {
+          "unknown": "Ismeretlen"
+        },
+        "pagination": {
+          "summary": "{from}–{to} / {total} megjelenítve",
+          "prev": "Előző",
+          "next": "Következő",
+          "pageOf": "{page} / {totalPages}"
+        },
+        "tooltip": {
+          "goToTab": "Ugrás a(z) {name} fülre"
+        },
+        "actions": {
+          "create": "Létrehozva",
+          "update": "Szerkesztve",
+          "delete": "Törölve",
+          "export": "Exportálva"
+        },
+        "entities": {
+          "BudgetItem": "Költségvetési tétel",
+          "Payment": "Fizetés",
+          "TimeEntry": "Idő",
+          "Contact": "Kapcsolat",
+          "Project": "Projekt",
+          "Note": "Jegyzet",
+          "ContactPerson": "Kapcsolattartó személy",
+          "ProjectMember": "Tag",
+          "Export": "Exportálás"
+        },
+        "fields": {
+          "required": "Kötelező",
+          "completed": "Befejezve",
+          "rejected": "Elutasítás",
+          "starred": "Kedvenc",
+          "status": "Állapot",
+          "role": "Szerep",
+          "phase": "Fázis",
+          "category": "Kategória",
+          "subcategory": "Név",
+          "planCost": "Terv (CZK)",
+          "actualCost": "Tényleges (CZK)",
+          "planDays": "Terv (nap)",
+          "flexibilityPercent": "Rugalmasság (%)",
+          "dateFrom": "Dátumtól",
+          "dateTo": "Dátumig",
+          "note": "Jegyzet",
+          "name": "Név",
+          "email": "E-mail",
+          "phone": "Telefonszám",
+          "address": "Cím",
+          "description": "Leírás",
+          "currency": "Pénznem",
+          "ownerId": "Tulajdonos",
+          "contactId": "Kapcsolat",
+          "workerName": "Dolgozó",
+          "workerType": "Dolgozó típusa",
+          "workerCount": "Dolgozók száma",
+          "hours": "Órák",
+          "amount": "Összeg",
+          "type": "Típus",
+          "vendor": "Cég",
+          "invoiceNumber": "Számla száma",
+          "vatRate": "ÁFA kulcs",
+          "vatAmount": "ÁFA összege",
+          "website": "Weboldal",
+          "company": "Cég",
+          "ico": "Adószám",
+          "dic": "Közösségi adószám",
+          "rating": "Értékelés",
+          "sortOrder": "Sorrend",
+          "text": "Szöveg",
+          "author": "Szerző",
+          "userEmail": "Tag e-mailje"
+        },
+        "describe": {
+          "memberAdded": "Tag hozzáadva ({role}): {email}",
+          "memberRemoved": "Tag eltávolítva ({role}): {email}",
+          "created": "Létrehozva: {name}",
+          "deleted": "Törölve: {name}",
+          "fieldRemoved": "{field}: eltávolítva ({value})"
+        }
+      },
+      "deleteProject": {
+        "button": "Törlés",
+        "confirmTitle": "Törli a(z) „{name}” projektet?",
+        "confirmBody": "Ez a művelet visszafordíthatatlan. Az összes adat véglegesen törlésre kerül. A megerősítéshez írja be a projekt nevét:",
+        "confirmButton": "Projekt törlése",
+        "cancel": "Mégse",
+        "toasts": {
+          "nameMismatch": "A projekt neve nem egyezik",
+          "success": "Projekt törölve",
+          "error": "Nem sikerült törölni a projektet"
+        }
+      }
+    },
+    "notes": {
+      "title": {
+        "new": "Új jegyzet"
+      },
+      "field": {
+        "author": "Szerző neve",
+        "text": "Jegyzet szövege"
+      },
+      "placeholder": {
+        "author": "pl. Pál",
+        "text": "Ide írja a projekthez tartozó jegyzetet — döntések, ötletek, feladatok, üzenetek… (Ctrl+Enter = hozzáadás)"
+      },
+      "count": "{count, plural, one {# jegyzet} other {# jegyzet}}",
+      "anonymousAuthor": "Névtelen",
+      "empty": {
+        "title": "Még nincsenek jegyzetek",
+        "description": "Írja meg az első jegyzetét a fenti mezőben. A jegyzetek rövid megjegyzések, hivatkozások és emlékeztetők számára szolgálnak."
+      },
+      "badge": {
+        "editing": "szerkesztés"
+      },
+      "hint": {
+        "editShortcuts": "Enter = mentés · Shift+Enter = új sor · Esc = mégse"
+      },
+      "clickToEdit": "Kattintson a szerkesztéshez",
+      "aria": {
+        "edit": "Jegyzet szerkesztése",
+        "save": "Változtatások mentése",
+        "cancel": "Szerkesztés megszüntetése",
+        "delete": "Jegyzet törlése"
+      },
+      "toasts": {
+        "createError": "Nem sikerült hozzáadni a jegyzetet",
+        "deleteSuccess": "Jegyzet törölve",
+        "deleteError": "Nem sikerült törölni a jegyzetet",
+        "updateEmptyError": "A jegyzet szövege nem lehet üres",
+        "updateSuccess": "Jegyzet frissítve",
+        "updateError": "Nem sikerült frissíteni a jegyzetet"
+      }
+    },
+    "timeline": {
+      "empty": {
+        "title": "Nincsenek dátummal rendelkező tételek",
+        "description": "Rendeljen dátumokat a költségvetési táblázatban, és a tételek megjelennek az idővonalon.",
+        "upcoming": "Nincsenek közelgő határidők",
+        "overdue": "Nincsenek lejárt tételek",
+        "unscheduled": "Mind beütemezve"
+      },
+      "label": {
+        "range": "{start} — {end}",
+        "count": "{count, plural, one {# tétel} other {# tétel}}",
+        "zoom": "Nagyítás:"
+      },
+      "zoom": {
+        "days": "Napok",
+        "months": "Hónapok",
+        "quarters": "Negyedévek",
+        "years": "Évek"
+      },
+      "legend": {
+        "today": "Ma",
+        "doubleClickHint": "Dupla kattintás = dátumok szerkesztése",
+        "dependencies": "Függőségek",
+        "criticalPath": "Kritikus út",
+        "milestone": "Mérföldkő"
+      },
+      "title": {
+        "gantt": "Építkezési ütemterv",
+        "upcoming": "Közelgő",
+        "overdue": "Lejárt",
+        "unscheduled": "Ütemezendő"
+      },
+      "columnHeader": {
+        "item": "Tétel"
+      },
+      "suffix": {
+        "completed": " · Befejezve"
+      },
+      "dialog": {
+        "title": "Dátumok szerkesztése",
+        "description": "Állítsa be a pontos kezdési és befejezési dátumokat.",
+        "label": {
+          "dateFrom": "Dátumtól",
+          "dateTo": "Dátumig"
+        }
+      }
+    },
+    "time": {
+      "sort": {
+        "date": "Dátum (legújabb)",
+        "worker": "Dolgozó (A→Z)",
+        "hours": "Órák (csökkenő)",
+        "workerType": "Dolgozó típusa"
+      },
+      "stats": {
+        "entries": "{count, plural, one {# bejegyzés} other {# bejegyzés}}",
+        "empty": "Még nincsenek időbejegyzések"
+      },
+      "filter": {
+        "allTypes": "Összes típus",
+        "allCategories": "Összes kategória"
+      },
+      "toolbar": {
+        "add": "Időbejegyzés hozzáadása"
+      },
+      "total": {
+        "label": "Összesen ({count})"
+      },
+      "column": {
+        "date": "Dátum",
+        "budgetItem": "Költségvetési tétel",
+        "description": "Leírás",
+        "type": "Típus",
+        "contact": "Kapcsolat",
+        "hours": "Órák"
+      },
+      "toasts": {
+        "deleteSuccess": "Bejegyzés törölve",
+        "deleteError": "Nem sikerült törölni",
+        "createSuccess": "Idő rögzítve",
+        "createSuccessWithItem": "Idő rögzítve, tétel befejezettként megjelölve",
+        "createSuccessItemFail": "Idő rögzítve (nem sikerült a tételt befejezettként megjelölni)",
+        "updateSuccess": "Bejegyzés frissítve",
+        "updateSuccessWithItem": "Bejegyzés frissítve, tétel befejezettként megjelölve",
+        "updateSuccessItemFail": "Bejegyzés frissítve (nem sikerült a tételt befejezettként megjelölni)",
+        "updateError": "Nem sikerült frissíteni a bejegyzést",
+        "createError": "Nem sikerült rögzíteni az időt"
+      },
+      "aria": {
+        "rowClick": "Kattintson a bejegyzés szerkesztéséhez",
+        "workersCount": "{count, plural, one {# dolgozó} other {# dolgozó}}",
+        "editRow": "{workerName} bejegyzés szerkesztése"
+      },
+      "dialog": {
+        "delete": {
+          "title": "Törli az időbejegyzést?",
+          "body": "Biztosan törli a bejegyzést: <strong>{workerName}</strong> · {hours}?"
+        }
+      },
+      "form": {
+        "titlePlaceholder": "Dolgozó…",
+        "descriptionPlaceholder": "Munka leírása…",
+        "submitLabel": {
+          "edit": "Bejegyzés frissítése",
+          "create": "Idő rögzítése"
+        },
+        "label": {
+          "budgetItem": "Költségvetési tétel *",
+          "hours": "Órák *",
+          "workerCount": "Dolgozók száma",
+          "dateFrom": "Dátumtól *",
+          "workerType": "Dolgozó típusa",
+          "dateTo": "Dátumig (több napos)",
+          "contact": "Kapcsolat (opcionális)"
+        },
+        "placeholder": {
+          "budgetItem": "Válasszon tételt…",
+          "hours": "8",
+          "workerCount": "1",
+          "dateTo": "(opcionális)",
+          "contact": "Nincs kapcsolat"
+        },
+        "search": {
+          "budgetItem": "Tétel keresése…",
+          "contact": "Kapcsolat keresése…"
+        },
+        "empty": {
+          "budgetItem": "Nem találhatók tételek",
+          "contact": "Nem találhatók kapcsolatok"
+        },
+        "error": {
+          "budgetItem": "Válasszon költségvetési tételt",
+          "workerName": "Adja meg a dolgozó nevét",
+          "hours": "Adjon meg érvényes óraszámot"
+        },
+        "hint": {
+          "hoursPerDay": "≈ {hours} óra/nap × {days} nap",
+          "personHours": "Összesen {total} munkaóra",
+          "daySpan": "A munka {days, plural, one {# napot} other {# napot}} ölel fel}"
+        },
+        "section": {
+          "details": "Részletek (opcionális)"
+        },
+        "markCompleted": {
+          "label": "Költségvetési tétel megjelölése befejezettként",
+          "alreadyCompleted": "A tétel már meg van jelölve befejezettként.",
+          "hint": "A bejegyzés mentése után a költségvetési tételhez egy PATCH kérés lesz küldve completed: true értékkel. Az időbejegyzést a tétel befejezéséhez kapcsolja."
+        }
+      },
+      "empty": {
+        "title": {
+          "noRecords": "Még nincsenek időbejegyzések",
+          "noMatch": "Nincsenek a szűrőnek megfelelő bejegyzések"
+        },
+        "description": {
+          "noRecords": "Rögzítse a munkával töltött időt — cég, kézműves vagy saját munka. Több napos bejegyzéseket támogat.",
+          "noMatch": "Próbálja megváltoztatni a szűrőt vagy keresést."
+        },
+        "button": {
+          "firstRecord": "Első idő rögzítése"
+        }
+      },
+      "weekly": {
+        "title": "Heti áttekintés",
+        "viewTable": "Táblázatos nézet",
+        "viewWeekly": "Heti áttekintés",
+        "week": "Hét",
+        "prevWeek": "Előző hét",
+        "nextWeek": "Következő hét",
+        "today": "Ma",
+        "total": "Összesen",
+        "worker": "Dolgozó",
+        "hours": "Órák",
+        "noEntries": "Ezen a héten nincs rögzített óra.",
+        "dayShort": {
+          "mon": "Hé",
+          "tue": "Ke",
+          "wed": "Sze",
+          "thu": "Cs",
+          "fri": "Pé",
+          "sat": "Szo",
+          "sun": "Va"
+        }
+      },
+      "loadMore": "{count} további megjelenítése"
+    },
+    "dashboard": {
+      "button": {
+        "clearFilters": "Szűrők törlése"
+      },
+      "kpi": {
+        "burn": {
+          "label": "Költségvetés-felhasználás",
+          "subValue": "{actual} / {plan}"
+        },
+        "remaining": {
+          "label": "Maradék költségvetés",
+          "subValue": "{planTotal} -ból"
+        },
+        "completedItems": {
+          "label": "Befejezett tételek",
+          "subValue": {
+            "done": "{percent} % befejezve",
+            "empty": "Nincsenek tételek"
+          }
+        },
+        "hours": {
+          "label": "Rögzített órák",
+          "subValue": "Terv: {days, plural, one {# nap} other {# nap}}"
+        },
+        "completed": {
+          "allDone": "Minden befejezve"
+        }
+      },
+      "plan": {
+        "byStart": {
+          "title": "Terv — kezdés szerint",
+          "description": "Tételek kezdési dátum szerint rendezve"
+        },
+        "byEnd": {
+          "title": "Terv — befejezés szerint",
+          "description": "Legközelebbi befejezési határidők"
+        },
+        "bucket": {
+          "activeNow": "Most aktív",
+          "nextWeek": "Következő hét",
+          "nextMonth": "Következő hónap",
+          "next3Months": "Következő 3 hónap",
+          "later": "Később",
+          "unscheduled": "Nem ütemezett"
+        },
+        "empty": {
+          "upcoming": "Nincsenek közelgő határidők."
+        },
+        "tag": {
+          "overdue": "lejárt"
+        }
+      },
+      "cashflow": {
+        "title": "Pénzforgalmi előrejelzés",
+        "description": "A becsült végső költségvetés a jelenlegi felhasználás alapján",
+        "projectedFinal": "Becsült végső",
+        "overrun": "Túllépés",
+        "percentOfPlan": "% a tervből",
+        "remainingEstimate": "Maradék (becslés)",
+        "spent": "Elköltött: {actual}",
+        "estimate": "Becslés: {projected}"
+      },
+      "chart": {
+        "phase": {
+          "title": "Terv vs. tényleges fázisonként"
+        },
+        "category": {
+          "title": "Költségvetés kategóriánként"
+        },
+        "trend": {
+          "title": "Költségvetés-felhasználás trendje",
+          "description": "Havi költés és rögzített órák időben",
+          "empty": "Még nincsenek trendadatok."
+        },
+        "series": {
+          "plan": "Terv",
+          "actual": "Tényleges",
+          "spend": "Költés",
+          "hours": "Órák"
+        }
+      },
+      "contacts": {
+        "title": "Munka kapcsolatonként",
+        "description": "Költségvetés és rögzített órák hozzárendelt kapcsolatonként",
+        "empty": "Nincsenek hozzárendelt tételekkel rendelkező kapcsolatok.",
+        "noRole": "Nincs szerep",
+        "itemsCount": "{count, plural, one {# tétel} other {# tétel}}",
+        "ofPlan": "{plan} -ból",
+        "overBudget": "költségvetés felett"
+      },
+      "phases": {
+        "title": "Projektfázisok",
+        "column": {
+          "phase": "Fázis",
+          "items": "Tételek",
+          "plan": "Terv",
+          "actual": "Tényleges",
+          "hours": "Órák",
+          "burn": "Felhasználás",
+          "status": "Állapot"
+        },
+        "status": {
+          "done": "Befejezve",
+          "inProgress": "Folyamatban",
+          "startingSoon": "Hamarosan",
+          "waiting": "Várakozik"
+        }
+      },
+      "recent": {
+        "payments": {
+          "title": "Legutóbbi fizetések",
+          "description": "Legújabb pénzügyi tranzakciók",
+          "empty": "Még nincsenek fizetések.",
+          "fallback": "Fizetés"
+        },
+        "time": {
+          "title": "Legutóbbi időbejegyzések",
+          "description": "Legújabb rögzített órák",
+          "empty": "Még nincsenek időbejegyzések.",
+          "fallback": "Munka"
+        }
+      }
+    },
+    "contacts": {
+      "header": {
+        "count": "{count, plural, one {# kapcsolat a projektben} other {# kapcsolat a projektben}}"
+      },
+      "empty": {
+        "title": "Még nincsenek kapcsolatok",
+        "description": "Adjon hozzá cégeket, kézműveseket, beszállítókat és építészeket. Fizetéseket és időbejegyzéseket rendelhet hozzájuk.",
+        "button": {
+          "first": "Első kapcsolat hozzáadása"
+        }
+      },
+      "menu": {
+        "edit": "Szerkesztés",
+        "delete": "Törlés"
+      },
+      "delete": {
+        "title": "Törli a kapcsolatot?",
+        "body": "Biztosan törli a kapcsolatot: <strong>{name}</strong>?",
+        "cancel": "Mégse",
+        "confirm": "Törlés"
+      },
+      "stat": {
+        "paid": "Fizetve",
+        "hours": "Órák",
+        "payments": "Fizetések",
+        "times": "Idő"
+      },
+      "persons": {
+        "title": "Kapcsolattartó személyek",
+        "deleteTitle": "Személy törlése",
+        "button": {
+          "add": "Hozzáadás",
+          "addPerson": "Személy hozzáadása"
+        },
+        "field": {
+          "firstName": "Keresztnév *",
+          "lastName": "Vezetéknév *",
+          "phone": "Telefonszám",
+          "email": "E-mail",
+          "role": "Beosztás / pozíció"
+        },
+        "placeholder": {
+          "firstName": "János",
+          "lastName": "Kovács",
+          "phone": "+36 1 234 5678",
+          "email": "janos@ceg.hu",
+          "role": "Igazgató, Könyvelő, ..."
+        },
+        "empty": "Nincsenek kapcsolattartó személyek. Kattintson a „Hozzáadás” gombra egy hozzáadásához.",
+        "aria": {
+          "delete": "{firstName} {lastName} törlése"
+        }
+      },
+      "toasts": {
+        "deleteSuccess": "Kapcsolat törölve",
+        "deleteError": "Nem sikerült törölni",
+        "personAddError": "Kereszt- és vezetéknév is kötelező",
+        "personAddSuccess": "Személy hozzáadva",
+        "personAddErrorFallback": "Nem sikerült hozzáadni a személyt",
+        "personDeleteSuccess": "„{name}” személy törölve",
+        "personDeleteError": "Nem sikerült törölni a személyt",
+        "updateError": "A név kötelező",
+        "updateSuccess": "Kapcsolat frissítve",
+        "createSuccess": "Kapcsolat hozzáadva",
+        "saveErrorFallback": "Nem sikerült elmenteni a kapcsolatot"
+      },
+      "detail": {
+        "button": {
+          "edit": "Szerkesztés",
+          "close": "Bezárás"
+        },
+        "section": {
+          "contact": "Kapcsolat",
+          "summary": "Idő- és pénzügyi összesítő"
+        },
+        "field": {
+          "company": "Cég",
+          "ico": "Adószám",
+          "dic": "Közösségi adószám",
+          "phone": "Telefonszám",
+          "email": "E-mail",
+          "web": "Web",
+          "lastActivity": "Utolsó tevékenység"
+        },
+        "stat": {
+          "totalPaid": "Összesen fizetve",
+          "totalHours": "Összes óra",
+          "paymentCount": "Fizetések száma",
+          "timeEntryCount": "Időbejegyzések"
+        }
+      },
+      "form": {
+        "placeholder": {
+          "role": "pl. Kőműves, Villanyszerelő",
+          "company": "pl. ACME Kft.",
+          "ico": "pl. 12345678",
+          "dic": "pl. HU12345678",
+          "phone": "+36 …",
+          "email": "email@domain.hu",
+          "web": "pl. www.ceg.hu",
+          "notes": "Tapasztalat, referenciák, munkamódszer…"
+        },
+        "submitLabel": {
+          "edit": "Kapcsolat frissítése",
+          "create": "Kapcsolat hozzáadása"
+        },
+        "ares": {
+          "label": "Betöltés az ARES nyilvántartásból",
+          "hint": "Keressen céget adószám vagy név alapján, és töltse ki előre a mezőket.",
+          "addressPrefix": "Cím (ARES): {address}"
+        },
+        "field": {
+          "type": "Típus",
+          "role": "Szerep / Szakma",
+          "company": "Cég (opcionális)",
+          "ico": "Adószám",
+          "dic": "Közösségi adószám",
+          "phone": "Telefonszám",
+          "email": "E-mail",
+          "web": "Web",
+          "rating": "Értékelés",
+          "notes": "Jegyzetek"
+        },
+        "section": {
+          "details": "Részletek (opcionális)"
+        },
+        "rating": {
+          "clear": "Törlés"
+        }
+      }
+    },
+    "telemetry": {
+      "title": "Telemetria",
+      "description": "A felhasználói műveletek belső analitikája.",
+      "button": {
+        "refresh": "Frissítés",
+        "retry": "Újrapróbálás"
+      },
+      "error": {
+        "loadFailed": "Nem sikerült betölteni a telemetria adatokat."
+      },
+      "kpi": {
+        "totalEvents": "Összes esemény",
+        "totalPageViews": "Összes oldalmegtekintés",
+        "totalTimeSpent": "Összes idő az oldalakon",
+        "uniqueUsers": "Egyedi felhasználók"
+      },
+      "chart": {
+        "byType": {
+          "title": "Események típus szerint",
+          "description": "Egyes eseménytípusok száma"
+        },
+        "byDay": {
+          "title": "Napi tevékenység",
+          "description": "Utolsó 30 nap"
+        },
+        "byHour": {
+          "title": "Mai óránkénti tevékenység",
+          "description": "Eseményszám óránként ma"
+        }
+      },
+      "empty": {
+        "byType": "Nincs adat.",
+        "byHour": "Ma még nem lett tevékenység rögzítve."
+      },
+      "topPages": {
+        "title": "Legnépszerűbb oldalak",
+        "description": "Megtekintések száma és átlagos idő az egyes oldalakon",
+        "empty": "Nincs oldalmegtekintés adat.",
+        "column": {
+          "page": "Oldal",
+          "views": "Megtekintések",
+          "avgTime": "Átl. idő"
+        }
+      },
+      "timeOverview": {
+        "title": "Idő áttekintés",
+        "description": "Az alkalmazásban töltött idő összefoglaló statisztikája",
+        "totalOnPages": "Összes idő az oldalakon",
+        "totalOnPagesHint": "megtekítések száma: {count}",
+        "avgPerPage": "Átlagos idő oldalanként",
+        "avgPerPageHint": "átlag az összes page_view eseményből",
+        "longest": "Leghosszabb látogatás",
+        "longestHint": "egy munkamenet maximális timeSpent értéke"
+      },
+      "timeByPage": {
+        "title": "Látogatás időtartama",
+        "description": "Egyes oldalakon töltött összes idő",
+        "total": "Összesen: {time}",
+        "rowSuffix": "{views}× · átl. {avgTime}",
+        "empty": "Nincs oldalon-töltött-idő adat."
+      },
+      "topUsers": {
+        "title": "Felhasználói tevékenység",
+        "description": "Legaktívabb felhasználók műveletszám szerint",
+        "empty": "Nincs felhasználói tevékenységi adat.",
+        "column": {
+          "user": "Felhasználó",
+          "eventCount": "Műveletek száma",
+          "lastActive": "Utolsó tevékenység"
+        },
+        "crown": {
+          "title": "Legaktívabb"
+        }
+      },
+      "recent": {
+        "title": "Legutóbbi események",
+        "description": "Utolsó {shown} a {total} összes eseményből",
+        "empty": "Nincsenek események a kiválasztott szűrőhöz.",
+        "column": {
+          "date": "Dátum",
+          "time": "Idő",
+          "user": "Felhasználó",
+          "eventType": "Esemény típusa",
+          "page": "Oldal",
+          "project": "Projekt"
+        },
+        "unknownUser": "Ismeretlen",
+        "unknownProject": "{id} projekt",
+        "tooltipHour": "{hour}:00 — {count, plural, one {# esemény} other {# esemény}}",
+        "tooltipDay": "{day}: {count}"
+      },
+      "filter": {
+        "label": "Szűrők:",
+        "type": "Típus",
+        "all": "Összes",
+        "user": "Felhasználó",
+        "allUsers": "Összes felhasználó",
+        "page": "Oldal",
+        "allPages": "Összes oldal",
+        "project": "Projekt",
+        "allProjects": "Összes projekt",
+        "button": {
+          "reset": "Szűrők törlése"
+        }
+      },
+      "pagination": {
+        "summary": "{from}–{to} / {total} megjelenítve",
+        "prev": "Előző",
+        "next": "Következő",
+        "pageOf": "{page} / {totalPages}"
+      },
+      "relativeTime": {
+        "justNow": "épp most",
+        "minute": "{n, plural, one {egy perce} other {{n} perce}}",
+        "hour": "{n, plural, one {egy órája} other {{n} órája}}",
+        "day": "{n, plural, one {tegnap} other {{n} napja}}",
+        "yesterday": "tegnap"
+      }
+    },
+    "payments": {
+      "sort": {
+        "dateDesc": "Dátum (legújabb)",
+        "dateAsc": "Dátum (legrégibb)",
+        "amountDesc": "Összeg (csökkenő)",
+        "amountAsc": "Összeg (növekvő)",
+        "type": "Típus",
+        "contact": "Kapcsolat (A→Z)",
+        "vendor": "Beszállító (A→Z)"
+      },
+      "filter": {
+        "allTypes": "Összes típus"
+      },
+      "toolbar": {
+        "sum": "Összeg ({count})",
+        "vatIncluded": "ÁFA-val",
+        "search": "Fizetések keresése…",
+        "add": "Fizetés hozzáadása"
+      },
+      "empty": {
+        "title": {
+          "noRecords": "Még nincsenek fizetések",
+          "noMatch": "Nincsenek a szűrőnek megfelelő fizetések"
+        },
+        "description": {
+          "noRecords": "Kezdje el rögzíteni a fizetéseket — nyugták, számlák vagy bérkifizetések. Részletekre is bonthatja őket.",
+          "noMatch": "Próbálja megváltoztatni a szűrőt vagy keresést."
+        },
+        "button": {
+          "first": "Első fizetés hozzáadása"
+        }
+      },
+      "column": {
+        "date": "Dátum",
+        "budgetItem": "Költségvetési tétel",
+        "description": "Leírás",
+        "type": "Típus",
+        "contact": "Kapcsolat",
+        "amount": "Összeg"
+      },
+      "row": {
+        "aria": {
+          "clickToEdit": "Kattintson a fizetés szerkesztéséhez",
+          "editRow": "{description} fizetés szerkesztése"
+        },
+        "installment": {
+          "title": "Részletszámla: {invoiceTotal} — fizetve {paidTotal} ({percent} %), maradék {remaining}",
+          "fallbackTitle": "Részletszámla",
+          "label": "{n}. részlet",
+          "labelWithTotal": "{n}. részlet / {total}",
+          "titleShort": "{n}. részlet / {total}"
+        },
+        "firstInstallment": "1. részlet",
+        "vatRateSuffix": "ÁFA {rate}%",
+        "ofInvoiceTotal": "{invoiceTotal} -ból",
+        "menu": {
+          "edit": "Szerkesztés",
+          "delete": "Törlés"
+        },
+        "delete": {
+          "title": "Törli a fizetést?",
+          "body": "Biztosan törli a fizetést: <strong>{amount}</strong>?",
+          "cancel": "Mégse",
+          "confirm": "Törlés"
+        },
+        "addInstallment": "Részlet hozzáadása",
+        "addInstallmentTitle": "Újabb részlet hozzáadása a(z) {vendor} számlához"
+      },
+      "invoices": {
+        "badge": {
+          "installmentCount": "{count, plural, one {# részlet} other {# részlet}}"
+        },
+        "label": {
+          "invoice": "Számla",
+          "paid": "Fizetve",
+          "remaining": "Maradék",
+          "percent": "{percent} %",
+          "invoiceNumber": "sz. {number}"
+        },
+        "button": {
+          "show": "Megjelenítés",
+          "showTitle": "Részletek megjelenítése a táblázatban",
+          "addInstallment": "Részlet hozzáadása",
+          "addInstallmentTitle": "Újabb részlet hozzáadása ehhez a számlához"
+        },
+        "fallbackTitle": "Számla"
+      },
+      "dialog": {
+        "titlePlaceholder": "Mit vásároltak / fizettek…",
+        "submitLabel": {
+          "edit": {
+            "installment": "Részlet szerkesztése",
+            "payment": "Fizetés szerkesztése"
+          },
+          "create": {
+            "installment": "Részlet hozzáadása",
+            "invoice": "Számla létrehozása",
+            "payment": "Fizetés hozzáadása"
+          }
+        },
+        "label": {
+          "budgetItem": "Költségvetési tétel *",
+          "invoiceTotal": "Számla végösszege (Kč) *",
+          "firstInstallment": "1. részlet (Kč) *",
+          "amount": "Összeg (Kč) *",
+          "date": "Dátum *",
+          "invoiceDate": "Számla dátuma *",
+          "type": "Típus",
+          "contact": "Kapcsolat (opcionális)",
+          "vendor": "Beszállító / Bolt",
+          "invoiceNumber": "Számla/nyugta sorszáma",
+          "vatRate": "ÁFA kulcs (%)",
+          "vatCalculation": "ÁFA számítás",
+          "recurring": "Ismétlődés"
+        },
+        "placeholder": {
+          "budgetItem": "Válasszon tételt…",
+          "invoiceTotal": "150000",
+          "firstInstallment": "50000",
+          "amount": "25000",
+          "contact": "Nincs kapcsolat",
+          "vendor": "pl. Bauhaus",
+          "invoiceNumber": "2024-001"
+        },
+        "search": {
+          "budgetItem": "Tétel keresése…",
+          "contact": "Kapcsolat keresése…"
+        },
+        "empty": {
+          "budgetItem": "Nem találhatók tételek",
+          "contact": "Nem találhatók kapcsolatok"
+        },
+        "error": {
+          "budgetItem": "Válasszon költségvetési tételt",
+          "invoiceTotal": "Adjon meg érvényes számla végösszeget",
+          "amount": "Adjon meg érvényes összeget"
+        },
+        "prefill": {
+          "title": "Új részlet a számlához",
+          "subtitle": "{vendor} · {amount} összesen",
+          "fallback": "Számla"
+        },
+        "existingInvoice": {
+          "title": "Ez a tétel már rendelkezik számlával: {vendor}",
+          "subtitle": "{paid} / {invoiceTotal} ({percent} %)",
+          "fallback": "Számla",
+          "button": "Részlet hozzáadása ehhez a számlához"
+        },
+        "parentWarning": {
+          "title": "Ez egy részletszámla",
+          "body": "Számla végösszege {invoiceTotal}. Visszaalakíthatja normál fizetéssé — a részletek önálló fizetésként megmaradnak.",
+          "button": "Átalakítás normál fizetéssé"
+        },
+        "convertDialog": {
+          "title": "Átalakítja a számlát normál fizetéssé?",
+          "body": "Ez átalakítja a számlát normál fizetéssé. Az összes részlet ({count}) önálló fizetésként megmarad. Folytatja?",
+          "cancel": "Mégse",
+          "confirm": "Átalakítás normál fizetéssé",
+          "confirming": "Átalakítás…"
+        },
+        "section": {
+          "details": "Részletek (opcionális)"
+        },
+        "isInvoice": {
+          "label": "Részletfizetés (számla több fizetéssel)"
+        },
+        "installmentOf": {
+          "label": "Számlához kapcsolás (részletként)",
+          "placeholder": "Önálló fizetés (nincs számla)",
+          "noneLabel": "Önálló fizetés (nincs számla)",
+          "hint": "Ez a fizetés a kiválasztott számla következő részleteként fog megjelenni. A módosítás frissíti a számla fizetési végösszegét."
+        },
+        "vatRate": {
+          "placeholder": "ÁFA nélkül",
+          "none": "ÁFA nélkül",
+          "21": "21 % (általános)",
+          "12": "12 % (csökkentett 1)",
+          "10": "10 % (csökkentett 2)",
+          "0": "0 %"
+        },
+        "vatCalc": {
+          "label": {
+            "vat": "ÁFA:",
+            "base": "Nettó:"
+          },
+          "empty": "Adjon meg összeget és ÁFA kulcsot"
+        },
+        "markCompleted": {
+          "label": "Tétel megjelölése befejezettként",
+          "alreadyCompleted": "A tétel már meg van jelölve befejezettként.",
+          "hint": "A tétel befejezettként lesz megjelölve"
+        },
+        "recurring": {
+          "none": "Egyszeri",
+          "weekly": "Hetente",
+          "monthly": "Havonta",
+          "quarterly": "Negyedévente",
+          "yearly": "Évente",
+          "nextDate": "Következő automatikus fizetés: {date}",
+          "badge": "Ismétlődő"
+        }
+      },
+      "toasts": {
+        "deleteSuccess": "Fizetés törölve",
+        "deleteError": "Nem sikerült törölni",
+        "updateSuccess": "Fizetés frissítve",
+        "updateSuccessWithItem": "Fizetés frissítve, tétel befejezettként megjelölve",
+        "updateSuccessItemFail": "Fizetés frissítve (nem sikerült a tételt befejezettként megjelölni)",
+        "invoiceCreateSuccess": "Részletszámla létrehozva",
+        "invoiceCreateSuccessWithItem": "Számla létrehozva, tétel befejezettként megjelölve",
+        "invoiceCreateSuccessItemFail": "Számla létrehozva (nem sikerült a tételt befejezettként megjelölni)",
+        "paymentCreateSuccess": "Fizetés hozzáadva",
+        "paymentCreateSuccessWithItem": "Fizetés hozzáadva, tétel befejezettként megjelölve",
+        "paymentCreateSuccessItemFail": "Fizetés hozzáadva (nem sikerült a tételt befejezettként megjelölni)",
+        "installmentAdded": "Részlet hozzáadva a számlához",
+        "convertSuccess": "Számla átalakítva normál fizetéssé",
+        "convertSuccessWithChildren": "Számla átalakítva normál fizetéssé, {count, plural, one {# részlet leválasztva} other {# részlet leválasztva}}",
+        "convertError": "Nem sikerült a számlát normál fizetéssé alakítani",
+        "updateError": "Nem sikerült frissíteni a fizetést",
+        "createError": "Nem sikerült hozzáadni a fizetést"
+      },
+      "loadMore": "{count} további megjelenítése"
+    }
+  },
+  "components": {
+    "emptyState": {
+      "welcome": "Üdvözli a Stavba",
+      "description": "Válasszon egy projektet az oldalsávban, vagy hozzon létre új projektet a költségvetés, költségek, idő és anyagok nyomon követéséhez az építkezésein és felújításain.",
+      "button": "Első projekt létrehozása"
+    },
+    "contextualFab": {
+      "actions": {
+        "addItem": "Tétel hozzáadása",
+        "addPayment": "Fizetés hozzáadása",
+        "addTime": "Idő hozzáadása",
+        "addContact": "Kapcsolat hozzáadása"
+      }
+    },
+    "aresSearch": {
+      "placeholder": "Cég keresése (adószám vagy név)…",
+      "needsApiKey": {
+        "title": "Az ARES API-kulcs nincs konfigurálva.",
+        "hint": "A céget alább kézzel is megadhatja."
+      },
+      "noResults": "Nem található cég a következőre: „{query}”",
+      "result": {
+        "ico": "Adószám: {ico}",
+        "dic": "ÁFA: {dic}"
+      }
+    },
+    "sessionTimeoutWarning": {
+      "message": "A munkamenete {minutesLeft, plural, one {# perc} other {# perc}} múlva lejár. Hosszabbítsa meg a munkamenetet az adatvesztés elkerüléséhez.",
+      "description": "Lejárat után automatikusan ki lesz jelentkeztetve.",
+      "action": {
+        "extend": "Hosszabbítás",
+        "signOut": "Kijelentkezés"
+      },
+      "success": "Munkamenet meghosszabbítva."
+    }
+  },
+  "dialogs": {
+    "budgetItem": {
+      "toasts": {
+        "dateFromSetByRef": "Kezdés dátuma beállítva a következőből: „{name}\"",
+        "dateFromAlreadySet": "A kezdés dátuma már ki volt töltve — nem módosult.",
+        "dateFromNotChanged": "„{name}\"-nek nincs befejezési dátuma — a kezdés dátuma nem módosult.",
+        "categoryRequired": "A kategória kötelező",
+        "taskUpdated": "Feladat frissítve",
+        "itemUpdated": "Tétel frissítve",
+        "taskAdded": "Feladat hozzáadva",
+        "itemAdded": "Tétel hozzáadva",
+        "saveError": "Nem sikerült elmenteni a tételt"
+      },
+      "submit": {
+        "editTask": "Feladat szerkesztése",
+        "editItem": "Tétel szerkesztése",
+        "addTask": "Feladat hozzáadása",
+        "addItem": "Tétel hozzáadása"
+      },
+      "placeholder": {
+        "taskName": "Feladat neve…",
+        "itemName": "Tétel neve…",
+        "note": "Jegyzet…",
+        "newCategory": "Új kategória",
+        "selectCategory": "Kategória kiválasztása",
+        "subsidyAmount": "pl. 15000",
+        "linkLabel": "Név",
+        "linkUrl": "https://…",
+        "searchItem": "Tétel keresése…",
+        "searchContact": "Kapcsolat keresése…"
+      },
+      "context": {
+        "taskUnderItem": "Feladat a(z) „{name}\" tétel alatt"
+      },
+      "label": {
+        "category": "Kategória *",
+        "phase": "Fázis",
+        "required": "Kötelező",
+        "completed": "Befejezve",
+        "rejected": "Elutasítva",
+        "subsidy": "Támogatás",
+        "subsidyAmount": "Támogatás összege (CZK)",
+        "dateFrom": "Dátumtól",
+        "dateTo": "Dátumig",
+        "planDays": "Terv (nap)",
+        "dependsOn": "Függőségek",
+        "planCost": "Terv (CZK)",
+        "flexibility": "Rugalmasság (%)",
+        "contactHint": "Felelős személy / cég",
+        "links": "Hivatkozások",
+        "noDependency": "— nincs függőség —",
+        "noContact": "— nincs kapcsolat —",
+        "selectExisting": "Létező kiválasztása",
+        "addNewCategory": "+ Új kategória"
+      },
+      "title": {
+        "requiredHint": "A tétel szükséges a projekt befejezéséhez",
+        "subsidyHint": "Ez a tétel támogatásra jogosult",
+        "openInNewWindow": "Megnyitás új ablakban",
+        "deleteLink": "Hivatkozás törlése"
+      },
+      "section": {
+        "date": "Dátum (opcionális)",
+        "money": "Pénz (opcionális)",
+        "contact": "Kapcsolat (opcionális)",
+        "links": "Hivatkozások (opcionális)"
+      },
+      "empty": {
+        "items": "Nem találhatók tételek",
+        "contacts": "Nem találhatók kapcsolatok",
+        "noContactsHint": "Még nincsenek kapcsolatok. Adja hozzá őket a Kapcsolatok fülon."
+      },
+      "button": {
+        "add": "Hozzáadás"
+      }
+    },
+    "newProject": {
+      "toasts": {
+        "createSuccess": "Projekt létrehozva",
+        "createError": "Nem sikerült létrehozni a projektet",
+        "templateCreateSuccess": "Projekt létrehozva tételes sablonnal",
+        "sourceNotFound": "A forrásprojekt nem található",
+        "copyPartial": "Projekt létrehozva a következőből: „{sourceName}\" — {copied, plural, one {# tétel másolva} other {# tétel másolva}}, {failed, plural, one {# másolás sikertelen} other {# másolás sikertelen}}.",
+        "copyAllFailed": "Projekt létrehozva, de egyetlen költségvetési tételt sem sikerült másolni ({failed} hiba).",
+        "copySuccess": "Projekt létrehozva ({copied, plural, one {# tétel másolva} other {# tétel másolva}} innen: „{sourceName}\")",
+        "copyError": "Nem sikerült másolni a projektet",
+        "nameRequired": "A projekt neve kötelező",
+        "typeRequired": "Válassza ki az építkezés típusát",
+        "scopeRequired": "Válassza ki a felújítás hatókörét",
+        "sourceRequired": "Válassza ki a forrásprojektet"
+      },
+      "submit": {
+        "selectType": "Projekttípus kiválasztása",
+        "createBlank": "Projekt létrehozása",
+        "createFromTemplate": "Létrehozás sablonnal",
+        "copyExisting": "Projekt másolása"
+      },
+      "placeholder": {
+        "projectName": "Projekt neve…",
+        "selectTypeHint": "Új projekt — válasszon típust alább",
+        "description": "Rövid projektleírás…",
+        "selectProjectCopy": "Válassza ki a másolandó projektet…",
+        "address": "pl. Budapest - II. kerület"
+      },
+      "context": {
+        "blank": "Üres projekt",
+        "template": "Sablonból",
+        "copy": "Létező másolata",
+        "new": "Új projekt"
+      },
+      "mode": {
+        "blank": {
+          "title": "Üres projekt",
+          "description": "Indulás tiszta lappal, költségvetés hozzáadása később"
+        },
+        "template": {
+          "title": "Sablonból",
+          "description": "Felújítás, új építés, belső tér vagy bővítés"
+        },
+        "copy": {
+          "title": "Projekt másolása",
+          "description": "A költségvetést egy meglévő projektből másolja"
+        }
+      },
+      "back": "← Vissza a típusválasztáshoz",
+      "template": {
+        "typeLabel": "Építkezés típusa",
+        "scopeLabel": "Felújítás hatóköre",
+        "preview": "Előnézet kategóriánként",
+        "itemsCount": "{count, plural, one {# tétel} other {# tétel}}",
+        "itemsPlan": "{count, plural, one {# tétel} other {# tétel}} · {sum} CZK terv",
+        "total": "Összesen: {count, plural, one {# tétel} other {# tétel}}, {sum} CZK"
+      },
+      "copy": {
+        "sourceLabel": "Forrásprojekt *",
+        "description": "Az összes költségvetési tétel (kategóriák, tervek, rugalmasság, fázisok) másolásra kerül. A tényleges értékek, befejezési és elutasítási állapotok visszaállnak. A fizetések, időbejegyzések és kapcsolatok nem kerülnek másolásra."
+      },
+      "field": {
+        "address": "Cím",
+        "startDate": "Kezdés dátuma",
+        "endDate": "Befejezés dátuma"
+      },
+      "templates": {
+        "reconstruction": {
+          "label": "Felújítás",
+          "description": "Meglévő ház, lakás vagy nyaraló felújítása.",
+          "scopeOptions": {
+            "partial": {
+              "label": "Részleges felújítás",
+              "description": "Csak kiválasztott szobák vagy rendszerek (pl. fürdőszoba, konyha, elektromos)"
+            },
+            "complete": {
+              "label": "Komplett felújítás",
+              "description": "Teljes épület, beleértve a vázszerkezetet, szerelvényeket és befejező munkákat"
+            },
+            "structural": {
+              "label": "Szerkezeti felújítás",
+              "description": "Beavatkozás a teherhordó szerkezetekben, átalakítások, bővítések"
+            }
+          }
+        },
+        "new_build": {
+          "label": "Új építés",
+          "description": "Új ház építése a alapoktól."
+        },
+        "interior": {
+          "label": "Belső tér",
+          "description": "Belsőépítészeti berendezés és befejezés (festés, padlók, szerelvények)."
+        },
+        "extension": {
+          "label": "Bővítés",
+          "description": "Meglévő épület bővítése (hozzáépítés, garázsbővítés, téli kert)."
+        },
+        "apartment_2plus1": {
+          "label": "2+1-es lakás felújítása",
+          "description": "Egy 2+1-es lakás (~70 m²) komplett felújítása — bontás, huzalozás, fürdőszoba, konyha, padlók, festés."
+        },
+        "bathroom": {
+          "label": "Fürdőszoba felújítása",
+          "description": "Fürdőszoba komplett felújítása (~5 m²) — bontás, vízvezeték-szerelés, csempe, szerelvények, elektromos."
+        },
+        "roof": {
+          "label": "Tető felújítása",
+          "description": "Teljes tetőcsere — bontás, szerkezet, szigetelés, fedés, bádogozás."
+        }
+      }
+    },
+    "project": {
+      "toasts": {
+        "nameRequired": "A projekt neve kötelező",
+        "updateSuccess": "Projekt frissítve",
+        "createSuccess": "Projekt létrehozva",
+        "updateError": "Nem sikerült frissíteni a projektet",
+        "createError": "Nem sikerült létrehozni a projektet"
+      },
+      "placeholder": {
+        "name": "Projekt neve…",
+        "description": "Rövid projektleírás…",
+        "address": "pl. Budapest - II. kerület"
+      },
+      "context": {
+        "edit": "Projekt szerkesztése",
+        "new": "Új projekt"
+      },
+      "submit": {
+        "saveChanges": "Változtatások mentése",
+        "create": "Projekt létrehozása"
+      },
+      "label": {
+        "address": "Cím",
+        "status": "Állapot"
+      },
+      "section": {
+        "dates": "Dátumok (opcionális)"
+      },
+      "field": {
+        "startDate": "Kezdés dátuma",
+        "endDate": "Befejezés dátuma"
+      }
+    },
+    "printReport": {
+      "toasts": {
+        "dataNotLoaded": "A jelentés adatai nincsenek betöltve.",
+        "mobileExportHint": "Nyissa meg az alkalmazást asztali böngészőben a PDF exportálásához.",
+        "printFailed": "A nyomtatás sikertelen. Próbálja újra."
+      },
+      "title": "Projektjelentés — PDF előnézet",
+      "description": "Jelentés előnézete PDF exportáláshoz. Kattintson a „PDF letöltése” gombra — a böngésző nyomtatási párbeszédpanelén válassza a „Mentés PDF-ként” lehetőséget célként.",
+      "mobileWarning": "Mobil böngészőben nem lehet közvetlenül PDF-et exportálni — nyissa meg az alkalmazást asztali böngészőben.",
+      "note": {
+        "useDesktop": "A legjobb eredményhez asztali böngészőt használjon"
+      },
+      "button": {
+        "close": "Bezárás",
+        "exportDesktop": "Exportálás asztali gépen",
+        "downloadPdf": "PDF letöltése"
+      },
+      "header": {
+        "generated": "Generálva:",
+        "start": "Kezdet:",
+        "end": "Vége:"
+      },
+      "section": {
+        "summary": "Költségvetési összefoglaló",
+        "alerts": "Riasztások",
+        "projection": "Előrejelzés becslése",
+        "phases": "Bontás fázisonként",
+        "categories": "Bontás kategóriánként {top}",
+        "categoriesTop": "(top 15)",
+        "budgetItems": "Költségvetési tételek ({count})",
+        "payments": "Fizetések (utolsó {count})"
+      },
+      "kpi": {
+        "plan": "Terv",
+        "actual": "Tényleges",
+        "remaining": "Maradék",
+        "saved": "Megtakarítás",
+        "completed": "Befejezve",
+        "hours": "Órák",
+        "avgOverrun": "Átl. túllépés",
+        "predictedFinal": "Becsült végső költség",
+        "estimatedOverrun": "Becsült túllépés",
+        "planRatio": "Terv aránya"
+      },
+      "alert": {
+        "overdue": "Lejárt ({count})",
+        "upcoming": "Közelgő ({count})",
+        "overBudget": "Költségvetés felett ({count})"
+      },
+      "projection": {
+        "empty": "Nincsenek befejezett tételek — a végső költség előrejelzése nem érhető el. Az első tételek befejezése után itt megjelenik egy becslés a terv átlagos túllépése alapján."
+      },
+      "column": {
+        "phase": "Fázis",
+        "plan": "Terv",
+        "actual": "Tényleges",
+        "percent": "%",
+        "hours": "Órák",
+        "category": "Kategória",
+        "name": "Név",
+        "actualShort": "Tén.",
+        "from": "Ettől",
+        "to": "Eddig",
+        "status": "Állapot",
+        "date": "Dátum",
+        "item": "Tétel",
+        "vendor": "Beszállító",
+        "amount": "Összeg",
+        "type": "Típus"
+      },
+      "empty": {
+        "phases": "Nincsenek megjeleníthető fázisok.",
+        "categories": "Nincsenek megjeleníthető kategóriák.",
+        "budgetItems": "Nincsenek költségvetési tételek.",
+        "payments": "Nincsenek megjeleníthető fizetések."
+      },
+      "fallback": {
+        "noName": "(nincs név)",
+        "noItem": "(nincs tétel)"
+      },
+      "status": {
+        "rejected": "Elutasítva",
+        "completed": "Befejezve",
+        "active": "Aktív",
+        "plan": "Terv"
+      },
+      "footer": "A jelentést a Rozpočet Stavby készítette {date} — {projectName}."
+    },
+    "auditLog": {
+      "title": "Változtatások előzménye",
+      "description": "A projekt legutóbbi {count} változtatása (szerkesztések, létrehozások, törlések).",
+      "empty": "Még nincsenek rögzített változtatások.",
+      "emptyValue": "(üres)",
+      "action": {
+        "fallback": "{action}"
+      },
+      "field": {
+        "element": "Elem",
+        "actualHours": "Órák",
+        "date": "Dátum"
+      }
+    },
+    "globalSearch": {
+      "title": "Globális keresés",
+      "placeholder": "Projektek, tételek, kapcsolatok, fizetések, jegyzetek keresése…",
+      "initialHint": "Kezdjen el gépelni az alkalmazásban való kereséshez",
+      "noResults": "Nincs találat a következőre: „{query}\"",
+      "group": {
+        "projects": "Projektek",
+        "items": "Költségvetési tételek",
+        "contacts": "Kapcsolatok",
+        "payments": "Fizetések",
+        "notes": "Jegyzetek"
+      },
+      "footer": {
+        "navigation": "Navigáció",
+        "select": "Kiválasztás"
+      }
+    }
+  },
+  "errors": {
+    "title": "Valami elromlott",
+    "description": "Az alkalmazás váratlan hibába ütközött, és nem folytatható. Próbálja újra. Ha a probléma fennáll, frissítse az oldalt, vagy lépjen vissza a kezdőlapra.",
+    "tryAgain": "Újrapróbálás",
+    "home": "Kezdőlap",
+    "copyError": "Hiba másolása",
+    "copied": "Másolva",
+    "copySuccessToast": "A hiba a vágólapra másolva",
+    "copyFailedToast": "Nem sikerült másolni a hibát",
+    "technicalDetails": "Technikai részletek",
+    "errorCode": "Hibakód:",
+    "message": "Üzenet:",
+    "stackTrace": "Veremkiírás:",
+    "noMessage": "(nincs üzenet)",
+    "noStack": "(nem érhető el)",
+    "report": {
+      "subject": "Stavba — hibajelentés",
+      "time": "Idő: {time}",
+      "code": "Hibakód: {code}",
+      "message": "Üzenet: {message}",
+      "stackHeader": "Veremkiírás:"
+    },
+    "notFound": {
+      "code": "404",
+      "title": "Az oldal nem található",
+      "description": "A keresett oldal nem létezik vagy áthelyezték. Lépjen vissza a Rozpočet Stavby kezdőlapjára, és folytassa a költségvetés kezelését.",
+      "homeButton": "Vissza a kezdőlapra"
+    },
+    "global": {
+      "title": "Valami elromlott",
+      "description": "Az alkalmazás váratlan hibába ütközött.",
+      "tryAgain": "Újrapróbálás"
+    }
+  },
+  "public": {
+    "project": {
+      "header": {
+        "publicBadge": "Nyilvános projekt — csak olvasható",
+        "publicView": "Nyilvános nézet"
+      },
+      "actions": {
+        "requestAccess": "Hozzáférés kérése",
+        "openInApp": "Megnyitás az alkalmazásban"
+      },
+      "kpi": {
+        "burnRate": "Költségvetés-felhasználás",
+        "remaining": "Maradék költségvetés",
+        "remainingSub": "{total} -ból",
+        "itemsCompleted": "Befejezett tételek",
+        "hoursLogged": "Rögzített órák",
+        "noItems": "Nincsenek tételek",
+        "completedPercent": "{percent}% befejezve",
+        "plannedHours": "Terv: {hours} nap",
+        "allCompleted": "Minden befejezve"
+      },
+      "phases": {
+        "title": "Projektfázisok",
+        "description": "Költségvetés áttekintése fázisonként — csak olvasható",
+        "column": {
+          "phase": "Fázis",
+          "items": "Tételek",
+          "plan": "Terv",
+          "actual": "Tényleges",
+          "hours": "Órák",
+          "burn": "Felhasználás",
+          "status": "Állapot"
+        },
+        "empty": "Nincsenek megjeleníthető fázisok.",
+        "status": {
+          "done": "Befejezve",
+          "inProgress": "Folyamatban",
+          "soon": "Hamarosan",
+          "waiting": "Várakozik"
+        }
+      },
+      "footer": "Ez egy nyilvános projekt egyszerűsített, csak olvasható nézete. A szerkesztéshez és a teljes funkciók eléréséhez jelentkezzen be, vagy nyissa meg a projektet az alkalmazásban.",
+      "notFound": {
+        "title": "A projekt nem érhető el nyilvánosan",
+        "redirecting": "Átirányítás a bejelentkezéshez…"
+      },
+      "toasts": {
+        "loadFailed": "Nem sikerült betölteni a projekt adatait.",
+        "notPublic": "A projekt nem érhető el nyilvánosan",
+        "accessGranted": "Hozzáférés megadva — átirányítás a projekthez",
+        "accessFailed": "Nem sikerült hozzáférést adni"
+      }
+    },
+    "invite": {
+      "loading": "Meghívó betöltése…",
+      "unauthenticated": {
+        "title": "Jelentkezzen be a meghívó megtekintéséhez",
+        "redirecting": "Átirányítás a bejelentkezéshez…",
+        "goToLogin": "Bejelentkezés"
+      },
+      "error": {
+        "title": "A meghívó nem érhető el"
+      },
+      "status": {
+        "accepted": "A meghívót már elfogadták",
+        "rejected": "A meghívót elutasították",
+        "revoked": "A meghívót visszavonták",
+        "expired": "A meghívó lejárt",
+        "invalid": "A meghívó már nem érvényes"
+      },
+      "title": "Projekt meghívó",
+      "description": "Meghívták a(z) <strong>{name}</strong> projektbe <badge>{role}</badge> szerepkörrel.",
+      "field": {
+        "project": "Projekt:",
+        "owner": "Tulajdonos:",
+        "inviter": "Meghívta:",
+        "role": "Szerep:",
+        "expiresAt": "Érvényes:"
+      },
+      "roleDescription": {
+        "viewer": "Megtekintheti a költségvetést, fizetéseket és időbejegyzéseket (csak olvasható).",
+        "editor": "Megtekintheti és szerkesztheti a költségvetést, fizetéseket, időbejegyzéseket és kapcsolatokat.",
+        "owner": "Teljes kontrollal rendelkezik a projekt felett — szerkesztések, fizetések, időbejegyzések, kapcsolatok és tagkezelés.",
+        "admin": "Teljes kontrollal rendelkezik a projekt felett, beleértve a tagkezelést és beállításokat."
+      },
+      "emailNotice": {
+        "title": "Ez a meghívó a következő e-mailhez szól:",
+        "hint": "Az elfogadásához ezzel az e-maillel kell bejelentkeznie."
+      },
+      "actions": {
+        "accept": "Meghívó elfogadása",
+        "reject": "Elutasítás",
+        "openProject": "Projekt megnyitása"
+      },
+      "footer": "Ha nem számított erre a meghívóra, nyugodtan figyelmen kívül hagyhatja ezt az e-mailt.",
+      "toasts": {
+        "loadFailed": "Nem sikerült betölteni a meghívót.",
+        "acceptSuccess": "Meghívó elfogadva — átirányítás a projekthez",
+        "acceptFailed": "Nem sikerült elfogadni a meghívót.",
+        "rejectSuccess": "Meghívó elutasítva",
+        "rejectFailed": "Nem sikerült elutasítani a meghívót."
+      }
+    }
+  },
+  "api": {
+    "errors": {
+      "auth": {
+        "notAuthenticated": "Nincs hitelesítve.",
+        "emailAndPasswordRequired": "Az e-mail és jelszó kötelező.",
+        "accountExists": "Ezzel az e-maillel már létezik fiók. Jelentkezzen be, vagy állítsa vissza a jelszavát.",
+        "registerWarningEmailFailed": "A regisztráció sikerült, de a hitelesítő e-mailt nem sikerült elküldeni. Kérhet újat.",
+        "registerSuccess": "A regisztráció sikeres. Ellenőrizze az e-mailjeit a fiók hitelesítéséhez.",
+        "registerFailed": "A regisztráció sikertelen. Próbálja újra.",
+        "emailRequired": "Az e-mail kötelező.",
+        "emailAlreadyVerified": "Az e-mailje már hitelesítve van. Bejelentkezhet.",
+        "verifyEmailFailed": "Nem sikerült elküldeni a hitelesítő e-mailt.",
+        "forgotPasswordSent": "Ha a fiók létezik, egy visszaállító linket tartalmazó e-mailt küldtünk.",
+        "tokenAndPasswordRequired": "A token és az új jelszó kötelező.",
+        "invalidResetLink": "Érvénytelen jelszó-visszaállító hivatkozás.",
+        "resetLinkExpired": "Ez a jelszó-visszaállító hivatkozás lejárt. Kérjen újat.",
+        "resetLinkUsed": "Ezt a jelszó-visszaállító hivatkozást már használták. Kérjen újat.",
+        "resetSuccess": "A jelszava sikeresen módosítva. Bejelentkezhet.",
+        "resetFailed": "A jelszó-visszaállítás sikertelen.",
+        "typeAndTokenRequired": "a típus és a token kötelező.",
+        "invalidTokenType": "Érvénytelen token típus.",
+        "unknownAuthAction": "Ismeretlen hitelesítési művelet.",
+        "successMustBeBoolean": "A `success` értéknek boolean-nak kell lennie.",
+        "rateLimit": {
+          "register": "Túl sok regisztráció. Próbálja újra {minutes} perc múlva.",
+          "requests": "Túl sok kérés. Próbálja újra {minutes} perc múlva.",
+          "attempts": "Túl sok kísérlet. Próbálja újra {minutes} perc múlva."
+        }
+      },
+      "invitations": {
+        "notFound": "A meghívó nem található.",
+        "alreadyUsed": "A meghívót már felhasználták.",
+        "expired": "A meghívó lejárt.",
+        "notYourEmail": "Ez a meghívó nem az Ön e-mailje számára szól.",
+        "acceptFailed": "Nem sikerült elfogadni a meghívót.",
+        "rejectFailed": "Nem sikerült elutasítani a meghívót.",
+        "loadFailed": "Nem sikerült betölteni a meghívókat.",
+        "invalidRequestJson": "Érvénytelen kérés — JSON objektum várva.",
+        "invalidEmailFormat": "Érvénytelen e-mail formátum.",
+        "alreadyOwner": "Ez a felhasználó már a projekt tulajdonosa.",
+        "alreadyMember": "Ez a felhasználó már tagja a projektnek.",
+        "createFailed": "Nem sikerült létrehozni a meghívót.",
+        "cancelFailed": "Nem sikerült visszavonni a meghívót."
+      },
+      "budget": {
+        "cannotMoveToSelf": "Egy tétel nem helyezhető át önmaga alá.",
+        "targetNotFound": "A céltétel nem létezik.",
+        "cannotMoveAcrossProjects": "Egy feladat nem helyezhető át másik projektbe.",
+        "cycleDetected": "Egy tétel nem helyezhető át a saját leszármazottja alá (ciklus)."
+      },
+      "users": {
+        "adminOnly": "Csak rendszergazda módosíthatja a rendszergazdai jogosultságokat.",
+        "cannotEditOtherProfile": "Más felhasználó profiljának szerkesztése nem engedélyezett.",
+        "userNotFound": "A felhasználó nem található.",
+        "noPasswordSet": "A fiókjához nincs jelszó beállítva (Google bejelentkezést használ). Beállíthatja a „Elfelejtett jelszó” funkcióval.",
+        "cannotDemoteSelf": "Saját rendszergazdai jogosultság nem vonható vissza."
+      },
+      "password": {
+        "currentRequired": "A jelenlegi jelszó kötelező.",
+        "newRequired": "Az új jelszó kötelező.",
+        "incorrectCurrent": "A jelenlegi jelszó helytelen.",
+        "changeFailed": "A jelszó módosítása sikertelen. Próbálja újra.",
+        "changed": "A jelszó módosítva."
+      },
+      "sessions": {
+        "revokeFailed": "Nem sikerült visszavonni a többi munkamenetet. Próbálja újra.",
+        "allRevoked": "Az összes többi munkamenet kijelentkeztetve."
+      },
+      "project": {
+        "notFoundOrNotPublic": "A projekt nem található vagy nem nyilvános.",
+        "publicLoadFailed": "Nem sikerült betölteni a nyilvános projekt adatait."
+      },
+      "ares": {
+        "apiUnavailable": "Az ARES API nem érhető el.",
+        "searchError": "Keresési hiba.",
+        "apiKeyMissing": "Az ARES API-kulcs nincs konfigurálva. A céges adatokat kézzel is megadhatja."
+      },
+      "notes": {
+        "cannotEditOthers": "Csak a saját jegyzeteit szerkesztheti.",
+        "cannotDeleteOthers": "Csak a saját jegyzeteit törölheti."
+      },
+      "generic": {
+        "invalidRequest": "Érvénytelen kérés."
+      },
+      "account": {
+        "mustAcknowledge": "Meg kell erősítenie, hogy megértette a következményeket.",
+        "notFound": "A felhasználó nem található.",
+        "alreadyDeleted": "A fiók már törlésre vár.",
+        "passwordRequired": "A személyazonosság hitelesítéséhez jelszó szükséges.",
+        "passwordIncorrect": "A megadott jelszó helytelen.",
+        "emailConfirmRequired": "Adja meg e-mail címét a megerősítéshez.",
+        "emailConfirmMismatch": "A megadott e-mail nem egyezik a fiókjával.",
+        "emailRequired": "Az e-mail kötelező.",
+        "notDeleted": "Ez a fiók nincs törölve.",
+        "permanentlyDeleted": "A fiók helyreállítási ideje lejárt. A fiók véglegesen törölve lett.",
+        "useOAuth": "Ez a fiók nem rendelkezik beállított jelszóval. Jelentkezzen be Google-lal."
+      }
+    }
+  },
+  "currency": {
+    "default": "alapértelmezett",
+    "unavailable": "árfolyam függőben",
+    "loadingRate": "Árfolyam betöltése…",
+    "conversionPreview": "{fromAmount} → {toAmount} (árfolyam {rate})",
+    "label": "Pénznem",
+    "projectCurrency": "Projekt pénzneme",
+    "projectCurrencyHint": "Minden összeg és diagram ebben a pénznemben jelenik meg.",
+    "paymentCurrency": "Fizetés pénzneme",
+    "paymentCurrencyHint": "Ha eltér a projekt pénznemétől, az összeg automatikusan konvertálásra kerül a napi ČNB árfolyam alapján.",
+    "budgetItemCurrency": "Tétel pénzneme",
+    "converted": "konvertálva",
+    "rateUnavailable": "A pénznem árfolyama még nem érhető el. Mentse a fizetést egyelőre a projekt pénznemében.",
+    "currencies": {
+      "CZK": "Cseh korona",
+      "EUR": "Euro",
+      "USD": "Amerikai dollár",
+      "GBP": "Brit font",
+      "HUF": "Magyar forint",
+      "PLN": "Lengyel złoty",
+      "AUD": "Ausztrál dollár",
+      "VND": "Vietnámi đồng"
+    }
+  },
+  "help": {
+    "title": "Súgó",
+    "description": "Gyors tippek az alkalmazás használatához.",
+    "sections": {
+      "dashboard": {
+        "title": "Műszerfal",
+        "tip1": "A főoldal KPI kártyákat, dátum alapú tervet és fázis/kategória diagramokat mutat.",
+        "tip2": "Az előrejelzés a befejezett tételek átlagos költségvetés-túllépése alapján becsüli a végső költségeket."
+      },
+      "budget": {
+        "title": "Költségvetés",
+        "tip1": "Kattintson bármelyik cellára a táblázatban a beágyazott szerkesztéshez (Enter = mentés, Escape = mégse).",
+        "tip2": "Húzza és ejtse a tételek átrendezéséhez. Mozgassa a feladatokat másik szülő alá a ⋯ menün keresztül.",
+        "tip3": "Szűrjön fázis vagy állapot szerint az eszköztár gombjaival."
+      },
+      "payments": {
+        "title": "Fizetések",
+        "tip1": "Részletes számlák: hozzon létre egy számlát végösszeggel, majd adjon hozzá részleteket.",
+        "tip2": "A külföldi pénznemű fizetések automatikusan konvertálásra kerülnek a napi ČNB árfolyamok alapján."
+      },
+      "time": {
+        "title": "Idő",
+        "tip1": "Adja meg a dolgozót, az órákat és a dátumot. Az utolsó dolgozó és típus megjegyzésre kerül a gyorsabb bevitelhez."
+      },
+      "contacts": {
+        "title": "Kapcsolatok",
+        "tip1": "Keressen céget adószám alapján (ARES) — az adatok automatikusan kitöltésre kerülnek."
+      },
+      "timeline": {
+        "title": "Idővonal",
+        "tip1": "Váltsa a nagyítást (napok/hónapok/negyedévek/évek) a különböző részletességhez.",
+        "tip2": "Kattintson duplán egy sávra a dátumok szerkesztéséhez."
+      },
+      "shortcuts": {
+        "title": "Billentyűparancsok",
+        "tip1": "Ctrl+K — globális keresés az alkalmazásban.",
+        "tip2": "Ctrl+N — új projekt létrehozása.",
+        "tip3": "Ctrl+B — oldalsáv váltása."
+      }
+    }
+  }
+}

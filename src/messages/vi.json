@@ -1,0 +1,2710 @@
+{
+  "Meta": {
+    "appName": "Build Budget",
+    "description": "Quản lý toàn diện ngân sách, chi phí và thời gian cho xây dựng và cải tạo. Tổng quan dự án, thanh toán, nhân công và vật tư tại một nơi.",
+    "keywords": [
+      "xây dựng",
+      "cải tạo",
+      "ngân sách",
+      "chi phí",
+      "dự án",
+      "quản lý"
+    ]
+  },
+  "common": {
+    "appName": "Build Budget",
+    "loading": "Đang tải…",
+    "cancel": "Hủy",
+    "save": "Lưu",
+    "delete": "Xóa",
+    "edit": "Chỉnh sửa",
+    "close": "Đóng",
+    "search": "Tìm kiếm",
+    "yes": "Có",
+    "no": "Không",
+    "all": "Tất cả",
+    "none": "Không",
+    "add": "Thêm",
+    "select": {
+      "placeholder": "Chọn…",
+      "search": "Tìm kiếm…",
+      "noResults": "Không có kết quả"
+    }
+  },
+  "nav": {
+    "sections": {
+      "main": "Chính",
+      "work": "Công việc",
+      "organization": "Tổ chức"
+    },
+    "items": {
+      "portfolio": "Danh mục dự án",
+      "dashboard": "Tổng quan",
+      "budget": "Ngân sách",
+      "payments": "Thanh toán",
+      "time": "Thời gian",
+      "contacts": "Liên hệ",
+      "timeline": "Tiến độ",
+      "notes": "Ghi chú",
+      "management": "Quản lý dự án",
+      "telemetry": "Telemetry",
+      "admin": "Quản trị"
+    }
+  },
+  "phases": {
+    "preparation": "Chuẩn bị",
+    "demolition": "Phá dỡ",
+    "earthworks": "San nền",
+    "foundation": "Nền móng",
+    "shell": "Thô",
+    "installations": "Lắp đặt",
+    "finishing": "Hoàn thiện",
+    "facade": "Mặt tiền",
+    "roof": "Mái nhà",
+    "interior": "Nội thất",
+    "exterior": "Ngoại thất/Cảnh quan",
+    "final_inspection": "Nghiệm thu",
+    "future": "Tương lai",
+    "unspecified": "Chưa xác định"
+  },
+  "statuses": {
+    "active": "Đang tiến hành",
+    "planning": "Đang lập kế hoạch",
+    "completed": "Hoàn thành",
+    "paused": "Tạm dừng"
+  },
+  "contactTypes": {
+    "company": "Công ty",
+    "craftsman": "Thợ thủ công",
+    "self": "Tự làm",
+    "family": "Gia đình",
+    "supplier": "Nhà cung cấp",
+    "architect": "Kiến trúc sư",
+    "office": "Cơ quan"
+  },
+  "paymentTypes": {
+    "receipt": "Biên lai",
+    "invoice": "Hóa đơn",
+    "work": "Nhân công",
+    "material": "Vật liệu",
+    "person": "Cá nhân",
+    "other": "Khác"
+  },
+  "workerTypes": {
+    "company": "Công ty",
+    "craftsman": "Thợ thủ công",
+    "self": "Tự làm",
+    "family": "Gia đình"
+  },
+  "roles": {
+    "viewer": "Người xem",
+    "editor": "Người chỉnh sửa",
+    "owner": "Quản lý",
+    "admin": "Quản trị viên"
+  },
+  "LanguageSwitcher": {
+    "language": "Ngôn ngữ",
+    "changeLanguage": "Thay đổi ngôn ngữ"
+  },
+  "auth": {
+    "common": {
+      "email": "Email",
+      "emailPlaceholder": "ban@email.com",
+      "or": "hoặc",
+      "password": "Mật khẩu",
+      "copyright": "© {year} Stavba — Build Budget",
+      "backToLogin": "Quay lại đăng nhập",
+      "signInLink": "Đăng nhập",
+      "backToHome": "Về trang chủ"
+    },
+    "validation": {
+      "passwordMismatch": "Mật khẩu không khớp.",
+      "passwordTooShort": "Mật khẩu phải có ít nhất 8 ký tự.",
+      "passwordTooWeak": "Mật khẩu phải chứa ít nhất một chữ cái và một chữ số.",
+      "passwordPlaceholder": "Tối thiểu 8 ký tự, có chữ và số",
+      "passwordConfirmLabel": "Xác nhận mật khẩu",
+      "passwordConfirmPlaceholder": "Nhập lại mật khẩu",
+      "strength": {
+        "weak": "Yếu",
+        "fair": "Trung bình",
+        "good": "Khá",
+        "strong": "Mạnh"
+      }
+    },
+    "login": {
+      "title": "Đăng nhập",
+      "subtitle": "Đăng nhập vào tài khoản của bạn",
+      "tagline": "Quản lý ngân sách, chi phí và thời gian cho xây dựng và cải tạo",
+      "registeredSuccess": "Đăng ký thành công. Vui lòng kiểm tra email để xác thực địa chỉ.",
+      "forgotPassword": "Quên mật khẩu?",
+      "submitting": "Đang đăng nhập…",
+      "submit": "Đăng nhập",
+      "googleButton": "Đăng nhập bằng Google",
+      "noAccount": "Chưa có tài khoản?",
+      "registerLink": "Đăng ký",
+      "errors": {
+        "useOAuth": "Email này đã đăng ký qua Google. Vui lòng dùng nút “Đăng nhập bằng Google”.",
+        "registerFirst": "Chưa có tài khoản cho email này. Vui lòng đăng ký.",
+        "invalidCredentials": "Email hoặc mật khẩu không đúng.",
+        "configuration": "Lỗi cấu hình đăng nhập. Vui lòng liên hệ quản trị viên.",
+        "oauthFailed": "Đăng nhập Google thất bại. Vui lòng thử lại.",
+        "rateLimitedMinutes": "Quá nhiều lần thử đăng nhập. Vui lòng thử lại sau {minutes} phút.",
+        "rateLimitedSeconds": "Quá nhiều lần thử đăng nhập. Vui lòng thử lại sau {seconds} giây.",
+        "generic": "Đăng nhập thất bại. Vui lòng thử lại."
+      },
+      "accountDeleted": {
+        "title": "Tài khoản đã bị xóa",
+        "body": "Tài khoản của bạn đã bị xóa và sẽ bị gỡ vĩnh viễn sau 7 ngày. Để khôi phục, vui lòng đăng nhập lại bằng cùng email đó."
+      }
+    },
+    "register": {
+      "title": "Đăng ký",
+      "subtitle": "Tạo tài khoản miễn phí",
+      "tagline": "Tạo tài khoản và bắt đầu quản lý dự án của bạn",
+      "nameLabel": "Tên (tùy chọn)",
+      "namePlaceholder": "Nguyễn Văn A",
+      "submitting": "Đang tạo tài khoản…",
+      "submit": "Tạo tài khoản",
+      "hasAccount": "Đã có tài khoản?",
+      "errors": {
+        "generic": "Đăng ký thất bại. Vui lòng thử lại."
+      }
+    },
+    "forgotPassword": {
+      "title": "Quên mật khẩu",
+      "subtitle": "Nhập email của bạn, chúng tôi sẽ gửi link đặt lại mật khẩu.",
+      "submitting": "Đang gửi…",
+      "submit": "Gửi link đặt lại",
+      "remember": "Nhớ mật khẩu?",
+      "success": {
+        "title": "Vui lòng kiểm tra email",
+        "body": "Nếu có tài khoản với email {email}, chúng tôi đã gửi link đặt lại mật khẩu. Link có hiệu lực trong 1 giờ."
+      },
+      "errors": {
+        "generic": "Yêu cầu thất bại. Vui lòng thử lại."
+      }
+    },
+    "resetPassword": {
+      "title": "Mật khẩu mới",
+      "subtitle": "Đặt mật khẩu mới của bạn",
+      "newPasswordLabel": "Mật khẩu mới",
+      "submitting": "Đang đổi mật khẩu…",
+      "submit": "Đổi mật khẩu",
+      "checking": "Đang xác minh link…",
+      "invalidTitle": "Link không hợp lệ",
+      "invalidBody": "Link đặt lại mật khẩu này không hợp lệ hoặc đã hết hạn (hiệu lực 1 giờ). Vui lòng yêu cầu link mới.",
+      "newLink": "Link mới",
+      "successTitle": "Đã đổi mật khẩu",
+      "successBody": "Mật khẩu của bạn đã được đổi thành công. Đang chuyển đến trang đăng nhập…",
+      "successToast": "Đổi mật khẩu thành công.",
+      "errors": {
+        "generic": "Đặt lại mật khẩu thất bại. Vui lòng thử lại."
+      }
+    },
+    "verifyEmail": {
+      "validTitle": "Đã xác thực email!",
+      "validBody": "Địa chỉ email của bạn đã được xác nhận thành công. Bạn có thể đăng nhập và bắt đầu quản lý dự án.",
+      "alreadyTitle": "Email đã được xác thực",
+      "alreadyBody": "Địa chỉ email của bạn đã được xác thực trước đó. Bạn có thể đăng nhập vào tài khoản.",
+      "expiredTitle": "Link đã hết hạn",
+      "expiredBody": "Link này đã hết hạn (hiệu lực 24 giờ). Vui lòng đăng nhập và yêu cầu email xác thực mới.",
+      "invalidTitle": "Link không hợp lệ",
+      "invalidBody": "Link này không hợp lệ hoặc đã được sử dụng. Vui lòng đăng nhập và yêu cầu email xác thực mới.",
+      "errorTitle": "Lỗi xác thực",
+      "errorBody": "Đã xảy ra lỗi. Vui lòng thử lại sau hoặc liên hệ với chúng tôi.",
+      "checking": "Đang xác thực…"
+    },
+    "verifyPending": {
+      "title": "Xác thực email của bạn",
+      "body": "Để truy cập dự án, bạn phải xác nhận địa chỉ email. Vui lòng kiểm tra hộp thư, kể cả thư rác.",
+      "sentTo": "Email đã gửi đến:",
+      "resendLabel": "Không nhận được email?",
+      "resendButton": "Gửi lại link",
+      "resendSubmitting": "Đang gửi…",
+      "checkButton": "Tôi đã xác thực — làm mới",
+      "checkSubmitting": "Đang kiểm tra…",
+      "signOut": "Đăng xuất",
+      "footer": "Sau khi xác thực email, bạn sẽ được tự động chuyển đến trang chủ.",
+      "toasts": {
+        "resent": "Email xác thực đã được gửi lại. Vui lòng kiểm tra hộp thư.",
+        "sendFailed": "Gửi thất bại. Vui lòng thử lại."
+      }
+    },
+    "profile": {
+      "tagline": "Quản lý tài khoản, mật khẩu và phiên đăng nhập",
+      "title": "Hồ sơ",
+      "subtitle": "Chỉnh sửa thông tin, đổi mật khẩu và quản lý phiên đăng nhập tại đây.",
+      "sections": {
+        "profile": "Hồ sơ",
+        "password": "Đổi mật khẩu",
+        "sessions": "Phiên đăng nhập",
+        "signOut": "Đăng xuất"
+      },
+      "fields": {
+        "name": "Tên",
+        "namePlaceholder": "Nguyễn Văn A",
+        "currentPassword": "Mật khẩu hiện tại",
+        "currentPasswordPlaceholder": "••••••••",
+        "newPassword": "Mật khẩu mới",
+        "confirmNewPassword": "Xác nhận mật khẩu mới",
+        "confirmNewPasswordPlaceholder": "Nhập lại mật khẩu mới"
+      },
+      "emailReadOnlyNote": "Email không thể thay đổi. Vui lòng liên hệ hỗ trợ để thay đổi.",
+      "passwordChangeNote": "Sau khi đổi mật khẩu, tất cả phiên đăng nhập khác (trên thiết bị khác) sẽ bị đăng xuất.",
+      "sessionsDescription": "Đăng xuất tất cả phiên đăng nhập khác (trên thiết bị khác). Phiên hiện tại vẫn hoạt động.",
+      "notifications": {
+        "title": "Tùy chọn thông báo",
+        "description": "Thiết lập khi bạn muốn nhận thông báo qua email.",
+        "toggle": {
+          "onMemberAssigned": {
+            "label": "Email khi được thêm làm thành viên",
+            "description": "Thông báo khi ai đó thêm bạn làm thành viên dự án."
+          },
+          "onItemDelayed": {
+            "label": "Email khi hạng mục bị trễ",
+            "description": "Thông báo khi một hạng mục ngân sách vượt quá thời hạn dự kiến."
+          },
+          "onOwnerChanged": {
+            "label": "Email khi thay quản lý",
+            "description": "Thông báo khi ai đó thay đổi quản lý của một dự án mà bạn là thành viên."
+          }
+        },
+        "toasts": {
+          "saved": "Đã lưu tùy chọn",
+          "saveError": "Không thể lưu tùy chọn"
+        }
+      },
+      "buttons": {
+        "saveProfile": "Lưu thay đổi",
+        "savingProfile": "Đang lưu…",
+        "changePassword": "Đổi mật khẩu",
+        "changingPassword": "Đang đổi mật khẩu…",
+        "revokeSessions": "Đăng xuất tất cả phiên khác",
+        "revokingSessions": "Đang đăng xuất…",
+        "signOutThisDevice": "Đăng xuất thiết bị này"
+      },
+      "toasts": {
+        "saveSuccess": "Đã lưu hồ sơ.",
+        "saveError": "Lưu hồ sơ thất bại.",
+        "saveErrorException": "Lưu hồ sơ thất bại. Vui lòng thử lại.",
+        "passwordSuccess": "Đã đổi mật khẩu.",
+        "passwordError": "Đổi mật khẩu thất bại.",
+        "passwordErrorException": "Đổi mật khẩu thất bại. Vui lòng thử lại.",
+        "revokeSuccess": "Tất cả phiên khác đã được đăng xuất.",
+        "revokeError": "Đăng xuất các phiên khác thất bại.",
+        "revokeErrorException": "Đăng xuất các phiên khác thất bại. Vui lòng thử lại."
+      },
+      "deleteAccount": {
+        "sectionTitle": "Xóa tài khoản",
+        "sectionDescription": "Tài khoản của bạn sẽ bị xóa sau 7 ngày. Trong thời gian này bạn có thể khôi phục bằng cách đăng nhập. Sau 7 ngày, tài khoản sẽ bị gỡ vĩnh viễn.",
+        "button": "Xóa tài khoản",
+        "title": "Thực sự xóa tài khoản?",
+        "description": "Hành động này sẽ xóa tài khoản của bạn sau 7 ngày. Trong thời gian này bạn có thể khôi phục bằng cách đăng nhập.",
+        "warningTitle": "Cảnh báo",
+        "warningBody": "Tư cách thành viên dự án của bạn sẽ bị thu hồi. Các dự án bạn sở hữu vẫn hiển thị với thành viên khác, nhưng sẽ không có quản lý. Sau 7 ngày, tài khoản sẽ bị xóa vĩnh viễn và email được ẩn danh.",
+        "passwordLabel": "Nhập mật khẩu của bạn để xác nhận",
+        "emailConfirmLabel": "Nhập email của bạn để xác nhận",
+        "emailConfirmHint": "Gõ chính xác địa chỉ email để xác nhận danh tính.",
+        "acknowledge": "Tôi hiểu rằng các dự án của tôi sẽ vẫn hiển thị với thành viên khác và tài khoản sẽ bị xóa sau 7 ngày.",
+        "cancel": "Hủy",
+        "confirm": "Xóa tài khoản",
+        "deleting": "Đang xóa…",
+        "success": "Tài khoản đã lên lịch để xóa. Sẽ bị gỡ vĩnh viễn sau 7 ngày.",
+        "error": "Xóa tài khoản thất bại. Vui lòng thử lại."
+      }
+    },
+    "settings": {
+      "tagline": "Cài đặt ứng dụng",
+      "sections": {
+        "appearance": "Giao diện",
+        "hiddenProjects": "Dự án đã ẩn",
+        "activity": "Thống kê hoạt động của tôi",
+        "about": "Giới thiệu"
+      },
+      "appearance": {
+        "description": "Thay đổi giao diện và ngôn ngữ của ứng dụng.",
+        "theme": "Giao diện",
+        "themeHint": "Chuyển đổi giữa giao diện sáng và tối.",
+        "themeLight": "Giao diện sáng",
+        "themeDark": "Giao diện tối",
+        "language": "Ngôn ngữ",
+        "languageHint": "Thay đổi ngôn ngữ có hiệu lực ngay lập tức."
+      },
+      "hiddenProjects": {
+        "description": "Dự án đã ẩn sẽ không xuất hiện trong bộ chuyển đổi dự án ở thanh trên cùng. Chúng vẫn truy cập được qua liên kết trực tiếp.",
+        "empty": "Bạn chưa có dự án nào.",
+        "toggleHint": "Bật = dự án bị ẩn. Thay đổi được lưu tự động.",
+        "aria": {
+          "show": "Hiện dự án {name}",
+          "hide": "Ẩn dự án {name}"
+        }
+      },
+      "activity": {
+        "description": "Tổng quan các hành động của bạn trong ứng dụng trên tất cả thời gian và dự án."
+      },
+      "about": {
+        "body": "Ứng dụng <brand>Stavba</brand> cung cấp quản lý toàn diện ngân sách, chi phí, thời gian và vật tư cho xây dựng và cải tạo.",
+        "version": "Phiên bản",
+        "commit": "Commit",
+        "buildDate": "Ngày build",
+        "branch": "Branch",
+        "label": "Nhãn",
+        "githubLink": "Mã nguồn trên GitHub"
+      },
+      "accountProfileLink": "Hồ sơ tài khoản"
+    }
+  },
+  "topbar": {
+    "account": "Tài khoản",
+    "loading": "Đang tải…",
+    "selectProject": "Chọn dự án",
+    "searchProject": "Tìm kiếm dự án…",
+    "search": "Tìm kiếm",
+    "toggleSidebar": {
+      "open": "Mở panel",
+      "close": "Đóng panel"
+    },
+    "menu": {
+      "profile": "Hồ sơ",
+      "settings": "Cài đặt",
+      "admin": "Quản trị",
+      "signOut": "Đăng xuất",
+      "theme": {
+        "light": "Giao diện sáng",
+        "dark": "Giao diện tối"
+      }
+    },
+    "star": {
+      "add": "Đánh dấu sao",
+      "remove": "Bỏ đánh dấu sao"
+    },
+    "toasts": {
+      "projectUpdateFailed": "Không thể cập nhật dự án"
+    },
+    "noOwner": "Không có quản lý — liên hệ quản trị viên",
+    "noProjectsFound": "Không tìm thấy dự án.",
+    "addProject": "Thêm dự án",
+    "searchInProject": "Tìm trong dự án…",
+    "budgetChip": "Tỷ lệ tiêu: {actual} / {plan}",
+    "budgetChipPercent": "Tỷ lệ tiêu ngân sách: {percent} phần trăm"
+  },
+  "sidebar": {
+    "settings": "Cài đặt"
+  },
+  "analytics": {
+    "eventTypes": {
+      "page_view": "Xem trang",
+      "add_payment": "Thêm thanh toán",
+      "add_time_entry": "Thêm mục thời gian",
+      "edit_time_entry": "Sửa mục thời gian",
+      "edit_payment": "Sửa thanh toán",
+      "delete_payment": "Xóa thanh toán",
+      "add_contact": "Thêm liên hệ",
+      "add_note": "Thêm ghi chú",
+      "edit_note": "Sửa ghi chú",
+      "add_budget_item": "Thêm hạng mục ngân sách",
+      "edit_budget_item": "Sửa hạng mục ngân sách",
+      "download_data": "Tải dữ liệu",
+      "login": "Đăng nhập",
+      "logout": "Đăng xuất",
+      "project_share": "Chia sẻ dự án",
+      "auth_login": "Đăng nhập",
+      "auth_logout": "Đăng xuất",
+      "auth_register": "Đăng ký",
+      "auth_password_change": "Đổi mật khẩu",
+      "auth_password_reset": "Đặt lại mật khẩu",
+      "auth_email_verify": "Xác thực email",
+      "auth_session_revoke": "Thu hồi phiên",
+      "auth_oauth_login": "Đăng nhập Google"
+    }
+  },
+  "relativeTime": {
+    "justNow": "vừa xong",
+    "minute": "{n, plural, one {1 phút trước} other {{n} phút trước}}",
+    "hour": "{n, plural, one {1 giờ trước} other {{n} giờ trước}}",
+    "yesterday": "hôm qua",
+    "days": "{n, plural, one {1 ngày trước} other {{n} ngày trước}}"
+  },
+  "tabs": {
+    "portfolio": {
+      "title": "Danh mục dự án",
+      "subtitle": "Tổng quan tất cả dự án — KPI tổng hợp trên các dự án.",
+      "kpi": {
+        "projects": {
+          "label": "Dự án",
+          "subValue": "{count, plural, one {# hạng mục ngân sách} other {# hạng mục ngân sách}}"
+        },
+        "plan": {
+          "label": "Tổng kế hoạch",
+          "subValue": "Tổng hợp trên các dự án"
+        },
+        "actual": {
+          "label": "Đã chi",
+          "subValue": "{percent} kế hoạch"
+        },
+        "remaining": {
+          "label": "Còn lại",
+          "subValue": "Kế hoạch − thực tế"
+        }
+      },
+      "table": {
+        "title": "So sánh dự án",
+        "description": "So sánh có thể sắp xếp theo kế hoạch, thực tế và tỷ lệ tiêu ngân sách.",
+        "column": {
+          "project": "Dự án",
+          "plan": "Kế hoạch",
+          "actual": "Thực tế",
+          "burn": "Tỷ lệ tiêu",
+          "remaining": "Còn lại",
+          "status": "Trạng thái"
+        },
+        "row": {
+          "total": "Tổng cộng",
+          "projectCount": "{count, plural, one {# dự án} other {# dự án}}"
+        }
+      },
+      "chart": {
+        "title": "Kế hoạch vs Thực tế theo dự án",
+        "description": "10 dự án hàng đầu theo ngân sách kế hoạch.",
+        "empty": "Chưa có dữ liệu cho biểu đồ.",
+        "series": {
+          "plan": "Kế hoạch",
+          "actual": "Thực tế"
+        }
+      },
+      "empty": {
+        "noProjects": {
+          "title": "Bạn chưa có dự án nào",
+          "description": "Tạo dự án đầu tiên để theo dõi ngân sách, thời gian và vật tư."
+        },
+        "oneProject": {
+          "title": "Danh mục dự án khả dụng từ 2 dự án",
+          "description": "Khi bạn tạo hoặc tham gia dự án thứ hai, tổng quan tổng hợp sẽ xuất hiện tại đây."
+        }
+      },
+      "aria": {
+        "openProject": "Mở dự án"
+      }
+    },
+    "admin": {
+      "nav": {
+        "label": "Quản trị",
+        "title": "Cài đặt tài khoản"
+      },
+      "subtitle": "Hồ sơ, dự án, thống kê và tùy chọn.",
+      "section": {
+        "projects": "Dự án của tôi",
+        "users": "Quản lý người dùng",
+        "export": "Xuất dữ liệu",
+        "notifications": "Thông báo",
+        "danger": "Khu vực nguy hiểm"
+      },
+      "profile": {
+        "title": "Hồ sơ của tôi",
+        "description": "Tên hiển thị và email mà người dùng khác nhìn thấy khi chia sẻ dự án.",
+        "button": {
+          "edit": "Chỉnh sửa",
+          "save": "Lưu"
+        },
+        "field": {
+          "displayName": "Tên hiển thị"
+        },
+        "placeholder": {
+          "name": "vd. Nguyễn Văn A"
+        },
+        "hint": {
+          "nameChange": "Thay đổi sẽ áp dụng cho tất cả dự án mà bạn là thành viên."
+        },
+        "label": {
+          "accountCreated": "Ngày tạo tài khoản: {date}"
+        },
+        "toasts": {
+          "emptyName": "Tên không được để trống",
+          "saved": "Đã lưu hồ sơ",
+          "saveError": "Không thể cập nhật hồ sơ"
+        }
+      },
+      "projects": {
+        "title": "Dự án của tôi",
+        "description": "Dự án mà bạn là quản lý hoặc thành viên. Bạn chỉ có thể rời các dự án bạn không quản lý.",
+        "button": {
+          "leave": "Rời dự án",
+          "leaveConfirm": "Rời dự án"
+        },
+        "leave": {
+          "confirmTitle": "Rời dự án “{name}”?",
+          "confirmBody": "Bạn sẽ mất quyền truy cập tất cả dữ liệu dự án. Hành động này không thể hoàn tác.",
+          "cancel": "Hủy"
+        },
+        "badge": {
+          "cannotLeave": "Không thể rời"
+        },
+        "empty": "Bạn chưa là thành viên của dự án nào.",
+        "toasts": {
+          "left": "Đã rời dự án “{name}”",
+          "leaveError": "Không thể rời dự án"
+        }
+      },
+      "users": {
+        "title": "Quản lý người dùng",
+        "description": "Tổng quan tất cả người dùng và quyền quản trị. Thay đổi có hiệu lực ngay lập tức.",
+        "badge": {
+          "admin": "Quản trị viên",
+          "user": "Người dùng",
+          "pendingDeletion": "Đang chờ xóa"
+        },
+        "aria": {
+          "adminToggleSelf": "Quyền quản trị của người dùng {name} (không thể thay đổi)",
+          "adminToggleOther": "Bật/tắt quyền quản trị của người dùng {name}"
+        },
+        "tooltip": {
+          "noSelfDemote": "Không thể gỡ quyền quản trị của chính mình"
+        },
+        "hint": {
+          "selfExcluded": "Tài khoản của bạn ({email}) được loại khỏi danh sách — bạn không thể gỡ quyền quản trị của chính mình."
+        },
+        "empty": "Không có người dùng khác để quản lý.",
+        "toasts": {
+          "cannotDemoteSelf": "Không thể gỡ quyền quản trị của chính mình",
+          "promoted": "Người dùng {name} hiện là quản trị viên",
+          "demoted": "Người dùng {name} không còn là quản trị viên",
+          "toggleError": "Không thể thay đổi quyền quản trị"
+        }
+      },
+      "stats": {
+        "title": "Thống kê hoạt động của tôi",
+        "description": "Tổng quan các hành động trong ứng dụng trên mọi thời gian.",
+        "filter": {
+          "allProjects": "Tất cả dự án"
+        },
+        "button": {
+          "refresh": "Làm mới"
+        },
+        "kpi": {
+          "totalActions": "Tổng hành động",
+          "pageViews": "Lượt xem trang",
+          "totalTime": "Tổng thời gian trên trang",
+          "lastActive": "Hoạt động cuối"
+        },
+        "chart": {
+          "byType": {
+            "title": "Sự kiện theo loại",
+            "empty": "Chưa có hoạt động nào được ghi."
+          }
+        },
+        "topPages": {
+          "title": "Trang hoạt động nhiều nhất của tôi",
+          "empty": "Chưa có dữ liệu thời gian trang.",
+          "column": {
+            "page": "Trang",
+            "views": "Lượt xem",
+            "totalTime": "Tổng thời gian"
+          }
+        }
+      },
+      "export": {
+        "title": "Xuất dữ liệu của tôi",
+        "description": "Tải xuống tất cả dữ liệu ứng dụng theo định dạng JSON hoặc CSV để sao lưu và phân tích.",
+        "button": {
+          "json": "Tải tất cả dữ liệu (JSON)",
+          "csv": "Tải CSV tất cả dự án"
+        },
+        "hint": "JSON chứa trạng thái đầy đủ của tất cả dự án (ngân sách, thanh toán, thời gian, liên hệ). CSV tải 4 tệp mỗi dự án (ngân sách, thanh toán, thời gian, liên hệ).",
+        "toasts": {
+          "jsonSuccess": "Đã xuất dữ liệu",
+          "jsonError": "Xuất dữ liệu thất bại",
+          "csvNoProjects": "Không có dự án để xuất",
+          "csvSuccess": "Đã xuất dữ liệu ({count, plural, one {# tệp} other {# tệp}})",
+          "csvAllFailed": "Xuất CSV thất bại",
+          "csvPartialSuccess": "Đã xuất {success} tệp, {failed} thất bại"
+        }
+      },
+      "notifications": {
+        "title": "Tùy chọn thông báo",
+        "description": "Cho đến khi Google Auth được kích hoạt, chúng tôi lưu tùy chọn cục bộ trong trình duyệt của bạn.",
+        "toggle": {
+          "onMemberAssigned": {
+            "label": "Email khi được thêm làm thành viên",
+            "description": "Thông báo khi ai đó thêm bạn làm thành viên dự án."
+          },
+          "onItemDelayed": {
+            "label": "Email khi hạng mục bị trễ",
+            "description": "Thông báo khi một hạng mục ngân sách vượt quá thời hạn dự kiến."
+          },
+          "onOwnerChanged": {
+            "label": "Email khi thay quản lý",
+            "description": "Thông báo khi ai đó thay đổi quản lý của một dự án mà bạn là thành viên."
+          }
+        },
+        "toasts": {
+          "saved": "Đã lưu tùy chọn",
+          "saveError": "Không thể lưu tùy chọn"
+        }
+      },
+      "danger": {
+        "title": "Khu vực nguy hiểm",
+        "description": "Hành động trong phần này không thể hoàn tác. Yêu cầu xác nhận rõ ràng trong hộp thoại.",
+        "deleteNotes": {
+          "title": "Xóa tất cả ghi chú của tôi",
+          "description": "Xóa vĩnh viễn tất cả ghi chú bạn đã tạo trên mọi dự án.",
+          "button": "Xóa",
+          "confirmTitle": "Xóa tất cả ghi chú của tôi?",
+          "confirmBody": "Hành động này không thể hoàn tác. Tất cả ghi chú bạn đã tạo sẽ bị xóa vĩnh viễn khỏi mọi dự án.",
+          "confirmButton": "Xóa tất cả ghi chú",
+          "toasts": {
+            "none": "Không có ghi chú để xóa",
+            "success": "Đã xóa {count, plural, one {# ghi chú} other {# ghi chú}}",
+            "partial": "Đã xóa {deleted}, {failed} thất bại",
+            "error": "Không thể xóa ghi chú"
+          }
+        },
+        "leaveAll": {
+          "title": "Rời tất cả dự án",
+          "description": "Gỡ bạn khỏi tất cả dự án mà bạn là thành viên (không phải quản lý). Bạn sẽ mất quyền truy cập tất cả dữ liệu của các dự án đó.",
+          "button": "Rời tất cả",
+          "confirmTitle": "Rời tất cả dự án?",
+          "confirmBody": "Bạn sẽ mất quyền truy cập dữ liệu của các dự án mà bạn là thành viên. Các dự án bạn quản lý sẽ không bị ảnh hưởng. Hành động này không thể hoàn tác.",
+          "confirmButton": "Rời tất cả",
+          "toasts": {
+            "none": "Bạn không là thành viên dự án nào (có thể rời)",
+            "success": "Đã rời {count, plural, one {# dự án} other {# dự án}}",
+            "partial": "Đã rời {left}, {failed} thất bại",
+            "error": "Không thể rời dự án"
+          }
+        }
+      }
+    },
+    "budget": {
+      "completion": {
+        "all": "Tất cả",
+        "active": "Đang làm",
+        "done": "Hoàn thành",
+        "rejected": "Từ chối"
+      },
+      "filter": {
+        "phase": "Giai đoạn:"
+      },
+      "toolbar": {
+        "search": "Tìm kiếm ngân sách…",
+        "add": "Thêm hạng mục",
+        "selectionMode": "Chế độ chọn",
+        "selected": "Đã chọn: {count, plural, one {# hạng mục} other {# hạng mục}}",
+        "bulkComplete": "Đánh dấu hoàn thành",
+        "bulkIncomplete": "Đánh dấu chưa hoàn thành",
+        "bulkReject": "Từ chối",
+        "bulkUnreject": "Bỏ từ chối",
+        "bulkDelete": "Xóa đã chọn",
+        "cancelSelection": "Hủy chọn",
+        "bulkSuccess": "{count, plural, one {# hạng mục đã cập nhật} other {# hạng mục đã cập nhật}}",
+        "bulkDeleteSuccess": "{count, plural, one {# hạng mục đã xóa} other {# hạng mục đã xóa}}",
+        "bulkPartialError": "{count} trên {total} thất bại",
+        "bulkError": "Hành động hàng loạt thất bại",
+        "bulkDeleteTitle": "Xóa các hạng mục đã chọn?",
+        "bulkDeleteDescription": "{count, plural, one {Bạn có chắc muốn xóa # hạng mục đã chọn? Hành động này không thể hoàn tác.} other {Bạn có chắc muốn xóa # hạng mục đã chọn? Hành động này không thể hoàn tác.}}"
+      },
+      "empty": {
+        "title": "Không có hạng mục phù hợp với bộ lọc",
+        "description": "Thử thay đổi giai đoạn, trạng thái hoặc bộ lọc tìm kiếm. Hoặc xóa bộ lọc để xem tất cả hạng mục.",
+        "categoryRow": "Không có hạng mục trong danh mục này."
+      },
+      "column": {
+        "item": "Hạng mục",
+        "phase": "Giai đoạn",
+        "plan": "Kế hoạch (CZK)",
+        "days": "Ngày",
+        "dateFrom": "Từ ngày",
+        "dateTo": "Đến ngày",
+        "actual": "Thực tế (CZK)",
+        "hours": "Giờ",
+        "status": "Trạng thái"
+      },
+      "category": {
+        "aria": {
+          "drag": "Kéo danh mục"
+        },
+        "addItem": {
+          "aria": "Thêm hạng mục",
+          "title": "Thêm hạng mục vào danh mục “{name}”"
+        },
+        "totals": "{actual} / {plan}"
+      },
+      "row": {
+        "aria": {
+          "drag": "Kéo công việc",
+          "expand": "Mở rộng",
+          "collapse": "Thu gọn",
+          "selectRow": "Chọn hạng mục “{name}”",
+          "selectAllInCategory": "Chọn tất cả hạng mục trong danh mục",
+          "editRow": "Chỉnh sửa hạng mục “{name}”"
+        },
+        "childCount": "{count, plural, one {# công việc} other {# công việc}}",
+        "addTask": "Thêm công việc",
+        "required": {
+          "title": "Bắt buộc (cần thiết để hoàn thành dự án)",
+          "aria": "Bắt buộc",
+          "ariaRequired": "Bỏ đánh dấu bắt buộc",
+          "ariaOptional": "Đánh dấu là bắt buộc",
+          "titleRequired": "Bắt buộc — nhấp để đánh dấu là tùy chọn",
+          "titleOptional": "Tùy chọn — nhấp để đánh dấu là bắt buộc (cần thiết để hoàn thành dự án)"
+        },
+        "placeholder": {
+          "noName": "(chưa đặt tên)"
+        },
+        "badge": {
+          "rejected": "Từ chối",
+          "done": "Hoàn thành",
+          "subsidy": "Trợ cấp",
+          "subsidyTitleWithAmount": "Trợ cấp có thể có: {amount}",
+          "subsidyTitleNoAmount": "Trợ cấp có thể có (chưa đặt số tiền)",
+          "addTaskTitle": "Thêm công việc dưới hạng mục này",
+          "addTaskAria": "Thêm công việc"
+        },
+        "paymentsCount": "{count, plural, one {# thanh toán} other {# thanh toán}}",
+        "timeCount": "{count, plural, one {# mục thời gian} other {# mục thời gian}}",
+        "tooltip": {
+          "planTotal": "Tổng: riêng {own} + công việc {children}",
+          "actualTotal": "Tổng: riêng {own} + công việc {children}"
+        },
+        "completed": {
+          "ariaDone": "Đánh dấu chưa hoàn thành",
+          "ariaTodo": "Đánh dấu hoàn thành",
+          "titleDone": "Đánh dấu chưa hoàn thành",
+          "titleTodo": "Đánh dấu hoàn thành"
+        },
+        "rejected": {
+          "ariaRejected": "Bỏ từ chối",
+          "ariaNotRejected": "Từ chối",
+          "titleRejected": "Bỏ từ chối",
+          "titleNotRejected": "Từ chối hạng mục"
+        },
+        "actions": {
+          "ariaMore": "Thao tác khác",
+          "titleMore": "Thao tác khác"
+        },
+        "menu": {
+          "editDetail": "Chỉnh sửa chi tiết",
+          "markRequired": "Đánh dấu là bắt buộc",
+          "markOptional": "Đánh dấu là tùy chọn",
+          "subsidyAdd": "Đánh dấu đủ điều kiện nhận trợ cấp",
+          "subsidyRemove": "Bỏ trợ cấp",
+          "markDone": "Đánh dấu hoàn thành",
+          "markNotDone": "Đánh dấu chưa hoàn thành",
+          "reject": "Từ chối",
+          "unreject": "Bỏ từ chối",
+          "move": "Chuyển dưới hạng mục khác…",
+          "duplicate": "Nhân bản",
+          "delete": "Xóa"
+        },
+        "delete": {
+          "title": "Xóa hạng mục?",
+          "body": "Thực sự xóa **{name}**? Các thanh toán và mục thời gian liên quan cũng sẽ bị xóa.",
+          "cancel": "Hủy",
+          "confirm": "Xóa"
+        },
+        "toasts": {
+          "duplicateSuccess": "Đã nhân bản hạng mục",
+          "duplicateError": "Không thể nhân bản",
+          "deleteSuccess": "Đã xóa hạng mục",
+          "deleteError": "Không thể xóa"
+        }
+      },
+      "detail": {
+        "label": {
+          "note": "Ghi chú",
+          "contact": "Liên hệ",
+          "links": "Liên kết",
+          "linksFromTasks": "Từ công việc"
+        },
+        "placeholder": {
+          "note": "Thông tin bổ sung, đơn giá, quy trình…",
+          "noName": "(chưa đặt tên)"
+        },
+        "contact": {
+          "unassigned": "Chưa gán — nhấp vào hạng mục để chỉnh sửa"
+        }
+      },
+      "moveDialog": {
+        "title": "Di chuyển công việc",
+        "description": "Di chuyển **{name}** dưới một hạng mục khác. Danh mục sẽ được kế thừa từ hạng mục cha mới.",
+        "currentParent": "Hạng mục cha hiện tại: {name}",
+        "empty": "Không có hạng mục khác trong dự án để di chuyển công việc vào.",
+        "placeholder": {
+          "select": "Chọn hạng mục đích",
+          "noName": "(chưa đặt tên)"
+        },
+        "topLevel": "Cấp cao nhất (không có cha)",
+        "cancel": "Hủy",
+        "confirm": "Di chuyển",
+        "toasts": {
+          "movedToParent": "Đã di chuyển công việc dưới hạng mục mới",
+          "movedToTop": "Đã di chuyển công việc lên cấp cao nhất",
+          "error": "Di chuyển thất bại"
+        }
+      }
+    },
+    "management": {
+      "button": {
+        "editProject": "Chỉnh sửa dự án",
+        "reportPdf": "Báo cáo PDF",
+        "auditHistory": "Lịch sử thay đổi"
+      },
+      "data": {
+        "title": "Dữ liệu và xuất",
+        "description": "Chỉnh sửa dự án, báo cáo và xuất dữ liệu ở nhiều định dạng",
+        "export": {
+          "label": "Xuất dữ liệu",
+          "json": "Xuất JSON",
+          "import": "Nhập JSON (chỉ quản lý)"
+        },
+        "csv": {
+          "label": "Xuất CSV (dự án hiện tại)",
+          "budget": "CSV Ngân sách",
+          "payments": "CSV Thanh toán",
+          "time": "CSV Thời gian",
+          "contacts": "CSV Liên hệ"
+        },
+        "toasts": {
+          "exportSuccess": "Đã xuất trạng thái",
+          "exportError": "Xuất thất bại",
+          "importSuccess": "Đã nhập trạng thái",
+          "importError": "Nhập thất bại",
+          "csvSuccess": "Đã xuất {type} sang CSV",
+          "csvError": "Xuất CSV thất bại"
+        }
+      },
+      "audit": {
+        "title": "Nhật ký thay đổi — các thay đổi gần đây",
+        "description": "Tổng quan các hành động gần đây trong dự án"
+      },
+      "danger": {
+        "title": "Quản lý dự án",
+        "duplicate": {
+          "title": "Nhân bản dự án",
+          "description": "Tạo bản sao với ngân sách (không có thanh toán và thời gian)",
+          "button": "Nhân bản",
+          "suffix": " (bản sao)"
+        },
+        "delete": {
+          "title": "Xóa dự án",
+          "description": "Xóa vĩnh viễn tất cả dữ liệu",
+          "adminOnlyHint": "Chỉ quản lý dự án mới có thể xóa",
+          "editorHint": "Chỉ quản lý dự án mới có thể xóa dự án"
+        },
+        "toasts": {
+          "duplicateSuccess": "Đã nhân bản dự án thành “{name}”",
+          "duplicateError": "Không thể nhân bản dự án"
+        }
+      },
+      "info": {
+        "roleBadge": {
+          "editor": "Người chỉnh sửa",
+          "admin": "Quản trị viên",
+          "viewer": "Người xem"
+        },
+        "lockHint": "Chỉ quản lý dự án mới có thể chỉnh sửa thông tin dự án",
+        "label": {
+          "address": "Địa chỉ",
+          "status": "Trạng thái",
+          "startDate": "Ngày bắt đầu",
+          "endDate": "Ngày hoàn thành",
+          "description": "Mô tả"
+        },
+        "placeholder": {
+          "address": "vd. Praha - Troja",
+          "description": "Mô tả ngắn về dự án…"
+        },
+        "created": "Ngày tạo: {date}",
+        "button": {
+          "save": "Lưu",
+          "edit": "Chỉnh sửa"
+        },
+        "toasts": {
+          "saveSuccess": "Đã cập nhật dự án",
+          "saveError": "Không thể cập nhật dự án"
+        }
+      },
+      "property": {
+        "title": "Thông tin bất động sản",
+        "description": "Địa chỉ chính xác, phân cấp năng lượng và tài liệu dự án",
+        "button": {
+          "edit": "Chỉnh sửa",
+          "save": "Lưu"
+        },
+        "label": {
+          "fullAddress": "Địa chỉ chính xác",
+          "floorArea": "Diện tích xây dựng (m²)",
+          "floors": "Số tầng",
+          "heatLoss": "Tổn thất nhiệt (W/K)",
+          "energyRating": "Phân cấp năng lượng",
+          "studyUrl": "Liên kết nghiên cứu kiến trúc",
+          "documentationUrl": "Liên kết tài liệu dự án",
+          "note": "Ghi chú"
+        },
+        "placeholder": {
+          "fullAddress": "vd. 12 Pražská, 110 00 Prague 1",
+          "floorArea": "vd. 120",
+          "floors": "vd. 2",
+          "heatLoss": "vd. 85",
+          "note": "Ghi chú tự do về bất động sản…"
+        },
+        "error": {
+          "url": "Vui lòng nhập URL hợp lệ (http:// hoặc https://)."
+        },
+        "lockHint": "Chỉ quản lý dự án mới có thể chỉnh sửa thông tin bất động sản",
+        "readOnly": {
+          "fullAddress": "Địa chỉ chính xác",
+          "floorArea": "Diện tích xây dựng",
+          "floorAreaValue": "{value} m²",
+          "floors": "Số tầng",
+          "heatLoss": "Tổn thất nhiệt",
+          "heatLossValue": "{value} W/K",
+          "energyRating": "Phân cấp năng lượng",
+          "studyUrl": "Nghiên cứu kiến trúc",
+          "documentationUrl": "Tài liệu dự án",
+          "note": "Ghi chú"
+        },
+        "toasts": {
+          "urlError": "Liên kết phải là URL hợp lệ (http:// hoặc https://).",
+          "saveSuccess": "Đã lưu thông tin bất động sản",
+          "saveError": "Không thể lưu thông tin bất động sản"
+        }
+      },
+      "sharing": {
+        "title": "Chia sẻ và quyền truy cập",
+        "description": "Quản lý hiển thị dự án, quản lý, thành viên và lời mời",
+        "button": {
+          "share": "Chia sẻ",
+          "shareTitle": "Sao chép liên kết xem công khai",
+          "transferOwnership": "Chuyển quyền"
+        },
+        "toggle": {
+          "publicProject": {
+            "label": "Dự án công khai",
+            "description": "Bất kỳ ai có liên kết đều có thể xem dự án (chỉ đọc)"
+          }
+        },
+        "aria": {
+          "publicToggle": "Bật/tắt hiển thị dự án",
+          "removeMember": "Gỡ thành viên",
+          "leaveProject": "Rời dự án",
+          "revokeInvitation": "Thu hồi lời mời"
+        },
+        "lockHint": "Chỉ quản lý mới có thể thay đổi hiển thị dự án",
+        "publicInfo": "Dự án công khai: Bất kỳ ai có liên kết đều có thể xem dự án (chỉ đọc). Tắt để bảo mật.",
+        "badge": {
+          "owner": "Quản lý"
+        },
+        "role": {
+          "viewer": "Người xem",
+          "editor": "Người chỉnh sửa"
+        },
+        "roleSelect": {
+          "viewer": "Người xem (chỉ đọc)",
+          "editor": "Người chỉnh sửa (có thể sửa)"
+        },
+        "empty": {
+          "members": "Chưa thêm thành viên nào."
+        },
+        "pending": {
+          "title": "Lời mời đang chờ",
+          "role": "Vai trò: {role} · Hiệu lực đến: {date}"
+        },
+        "invitationHistory": {
+          "title": "Lịch sử lời mời ({count})",
+          "role": "Vai trò: {role} · Ngày tạo: {date}"
+        },
+        "invitationStatus": {
+          "pending": "Đang chờ",
+          "accepted": "Đã chấp nhận",
+          "rejected": "Đã từ chối",
+          "revoked": "Đã thu hồi",
+          "expired": "Đã hết hạn"
+        },
+        "inviteForm": {
+          "title": "Mời qua email",
+          "placeholderEmail": "email@example.com",
+          "button": "Mời qua email",
+          "hint": {
+            "existingMember": "Người dùng này đã là thành viên dự án",
+            "newUser": "Người dùng mới — họ sẽ nhận được email mời và có quyền truy cập sau khi đăng ký",
+            "editor": "Là người chỉnh sửa, bạn chỉ có thể thêm Người xem hoặc Người chỉnh sửa",
+            "noInvite": "Chỉ quản lý dự án mới có thể mời người dùng mới"
+          }
+        },
+        "qr": {
+          "title": "Mã QR dự án",
+          "description": "Quét mã QR để mở dự án trên thiết bị di động.",
+          "aria": "Mã QR cho dự án {name}",
+          "button": {
+            "copyLink": "Sao chép liên kết",
+            "copyLinkCopied": "Đã sao chép",
+            "downloadPng": "Tải PNG"
+          },
+          "toasts": {
+            "copySuccess": "Đã sao chép liên kết vào clipboard",
+            "copyError": "Sao chép thất bại — vui lòng sao chép liên kết thủ công",
+            "qrNotReady": "Mã QR chưa được tạo",
+            "downloadSuccess": "Đã tải mã QR dưới dạng PNG",
+            "generateError": "Không thể tạo mã QR"
+          }
+        },
+        "confirmRemove": {
+          "title": "Thực sự gỡ thành viên?",
+          "body": "Thực sự gỡ người dùng “{name}” khỏi dự án này? Họ sẽ mất quyền truy cập tất cả dữ liệu dự án. Có thể hoàn tác bằng cách thêm lại thành viên.",
+          "cancel": "Hủy",
+          "confirm": "Gỡ thành viên"
+        },
+        "toasts": {
+          "shareLinkCopied": "Đã sao chép liên kết dự án vào clipboard",
+          "shareLinkPrivate": "Dự án không công khai — liên kết chuyển hướng đến đăng nhập",
+          "shareLinkError": "Không thể sao chép liên kết",
+          "madePublic": "Dự án hiện công khai — bất kỳ ai có liên kết đều có thể xem",
+          "madePrivate": "Dự án hiện riêng tư",
+          "publicToggleError": "Không thể thay đổi hiển thị dự án",
+          "alreadyMember": "Người dùng này đã là thành viên dự án",
+          "inviteSent": "Đã gửi lời mời đến {email}",
+          "inviteError": "Không thể gửi lời mời",
+          "inviteRevoked": "Đã thu hồi lời mời cho {email}",
+          "inviteRevokeError": "Không thể thu hồi lời mời",
+          "roleChanged": "Đã cập nhật vai trò",
+          "roleChangeError": "Không thể cập nhật vai trò",
+          "memberRemoved": "Đã gỡ thành viên “{name}”",
+          "memberRemoveError": "Không thể gỡ thành viên — đã khôi phục thành viên",
+          "ownerChanged": "Đã đổi quản lý",
+          "ownerChangeError": "Không thể đổi quản lý"
+        }
+      },
+      "auditLog": {
+        "search": {
+          "placeholder": "Tìm nhật ký thay đổi…",
+          "aria": "Tìm nhật ký thay đổi",
+          "clearAria": "Xóa tìm kiếm"
+        },
+        "polling": "Đang tải...",
+        "filter": {
+          "action": "Hành động",
+          "entity": "Đối tượng",
+          "user": "Tác giả",
+          "from": "Từ",
+          "to": "Đến",
+          "sort": "Sắp xếp",
+          "pageSize": "Mỗi trang",
+          "fromAria": "Bộ lọc từ ngày",
+          "toAria": "Bộ lọc đến ngày",
+          "all": "Tất cả"
+        },
+        "action": {
+          "create": "Đã tạo",
+          "update": "Đã sửa",
+          "delete": "Đã xóa",
+          "export": "Đã xuất"
+        },
+        "sort": {
+          "desc": "Mới nhất",
+          "asc": "Cũ nhất"
+        },
+        "empty": "Không có bản ghi cho bộ lọc đã chọn.",
+        "column": {
+          "action": "Hành động",
+          "detail": "Chi tiết thay đổi",
+          "author": "Tác giả",
+          "date": "Ngày",
+          "time": "Giờ"
+        },
+        "author": {
+          "unknown": "Không xác định"
+        },
+        "pagination": {
+          "summary": "Hiển thị {from}–{to} trong {total}",
+          "prev": "Trước",
+          "next": "Sau",
+          "pageOf": "{page} / {totalPages}"
+        },
+        "tooltip": {
+          "goToTab": "Đến tab {name}"
+        },
+        "actions": {
+          "create": "Đã tạo",
+          "update": "Đã sửa",
+          "delete": "Đã xóa",
+          "export": "Đã xuất"
+        },
+        "entities": {
+          "BudgetItem": "Hạng mục ngân sách",
+          "Payment": "Thanh toán",
+          "TimeEntry": "Thời gian",
+          "Contact": "Liên hệ",
+          "Project": "Dự án",
+          "Note": "Ghi chú",
+          "ContactPerson": "Người liên hệ",
+          "ProjectMember": "Thành viên",
+          "Export": "Xuất dữ liệu"
+        },
+        "fields": {
+          "required": "Bắt buộc",
+          "completed": "Hoàn thành",
+          "rejected": "Từ chối",
+          "starred": "Yêu thích",
+          "status": "Trạng thái",
+          "role": "Vai trò",
+          "phase": "Giai đoạn",
+          "category": "Danh mục",
+          "subcategory": "Tên",
+          "planCost": "Kế hoạch (CZK)",
+          "actualCost": "Thực tế (CZK)",
+          "planDays": "Kế hoạch (ngày)",
+          "flexibilityPercent": "Linh hoạt (%)",
+          "dateFrom": "Từ ngày",
+          "dateTo": "Đến ngày",
+          "note": "Ghi chú",
+          "name": "Tên",
+          "email": "Email",
+          "phone": "Điện thoại",
+          "address": "Địa chỉ",
+          "description": "Mô tả",
+          "currency": "Tiền tệ",
+          "ownerId": "Quản lý",
+          "contactId": "Liên hệ",
+          "workerName": "Nhân công",
+          "workerType": "Loại nhân công",
+          "workerCount": "Số nhân công",
+          "hours": "Giờ",
+          "amount": "Số tiền",
+          "type": "Loại",
+          "vendor": "Công ty",
+          "invoiceNumber": "Số hóa đơn",
+          "vatRate": "Tỷ lệ VAT",
+          "vatAmount": "Số tiền VAT",
+          "website": "Trang web",
+          "company": "Công ty",
+          "ico": "Mã số DKD",
+          "dic": "Mã số thuế",
+          "rating": "Đánh giá",
+          "sortOrder": "Thứ tự",
+          "text": "Văn bản",
+          "author": "Tác giả",
+          "userEmail": "Email thành viên"
+        },
+        "describe": {
+          "memberAdded": "Đã thêm thành viên ({role}): {email}",
+          "memberRemoved": "Đã gỡ thành viên ({role}): {email}",
+          "created": "Đã tạo: {name}",
+          "deleted": "Đã xóa: {name}",
+          "fieldRemoved": "{field}: đã xóa ({value})"
+        }
+      },
+      "deleteProject": {
+        "button": "Xóa",
+        "confirmTitle": "Xóa dự án “{name}”?",
+        "confirmBody": "Hành động này không thể hoàn tác. Tất cả dữ liệu sẽ bị xóa vĩnh viễn. Để xác nhận, vui lòng gõ tên dự án:",
+        "confirmButton": "Xóa dự án",
+        "cancel": "Hủy",
+        "toasts": {
+          "nameMismatch": "Tên dự án không khớp",
+          "success": "Đã xóa dự án",
+          "error": "Không thể xóa dự án"
+        }
+      }
+    },
+    "notes": {
+      "title": {
+        "new": "Ghi chú mới"
+      },
+      "field": {
+        "author": "Tên tác giả",
+        "text": "Nội dung ghi chú"
+      },
+      "placeholder": {
+        "author": "vd. Hùng",
+        "text": "Viết ghi chú dự án tại đây — quyết định, ý tưởng, công việc, tin nhắn… (Ctrl+Enter = thêm)"
+      },
+      "count": "{count, plural, one {# ghi chú} other {# ghi chú}}",
+      "anonymousAuthor": "Ẩn danh",
+      "empty": {
+        "title": "Chưa có ghi chú",
+        "description": "Viết ghi chú đầu tiên trong ô phía trên. Ghi chú dùng để lưu nhanh đoạn văn, liên kết và nhắc nhở."
+      },
+      "badge": {
+        "editing": "đang sửa"
+      },
+      "hint": {
+        "editShortcuts": "Enter = lưu · Shift+Enter = dòng mới · Esc = hủy"
+      },
+      "clickToEdit": "Nhấp để chỉnh sửa",
+      "aria": {
+        "edit": "Sửa ghi chú",
+        "save": "Lưu thay đổi",
+        "cancel": "Hủy chỉnh sửa",
+        "delete": "Xóa ghi chú"
+      },
+      "toasts": {
+        "createError": "Không thể thêm ghi chú",
+        "deleteSuccess": "Đã xóa ghi chú",
+        "deleteError": "Không thể xóa ghi chú",
+        "updateEmptyError": "Nội dung ghi chú không được để trống",
+        "updateSuccess": "Đã cập nhật ghi chú",
+        "updateError": "Không thể cập nhật ghi chú"
+      }
+    },
+    "timeline": {
+      "empty": {
+        "title": "Không có hạng mục có ngày",
+        "description": "Gán ngày từ/đến trong bảng ngân sách để hạng mục xuất hiện trên tiến độ.",
+        "upcoming": "Không có hạn sắp tới",
+        "overdue": "Không có hạng mục quá hạn",
+        "unscheduled": "Đã lên lịch tất cả"
+      },
+      "label": {
+        "range": "{start} — {end}",
+        "count": "{count, plural, one {# hạng mục} other {# hạng mục}}",
+        "zoom": "Thu phóng:"
+      },
+      "zoom": {
+        "days": "Ngày",
+        "months": "Tháng",
+        "quarters": "Quý",
+        "years": "Năm"
+      },
+      "legend": {
+        "today": "Hôm nay",
+        "doubleClickHint": "Nhấp đúp = sửa ngày",
+        "dependencies": "Phụ thuộc",
+        "criticalPath": "Đường tới hạn",
+        "milestone": "Mốc"
+      },
+      "title": {
+        "gantt": "Lịch trình thi công",
+        "upcoming": "Sắp tới",
+        "overdue": "Quá hạn",
+        "unscheduled": "Cần lên lịch"
+      },
+      "columnHeader": {
+        "item": "Hạng mục"
+      },
+      "suffix": {
+        "completed": " · Hoàn thành"
+      },
+      "dialog": {
+        "title": "Sửa ngày",
+        "description": "Đặt ngày bắt đầu và kết thúc chính xác.",
+        "label": {
+          "dateFrom": "Từ ngày",
+          "dateTo": "Đến ngày"
+        }
+      }
+    },
+    "time": {
+      "sort": {
+        "date": "Ngày (mới nhất)",
+        "worker": "Nhân công (A→Z)",
+        "hours": "Giờ (giảm dần)",
+        "workerType": "Loại nhân công"
+      },
+      "stats": {
+        "entries": "{count, plural, one {# mục} other {# mục}}",
+        "empty": "Chưa có mục thời gian nào"
+      },
+      "filter": {
+        "allTypes": "Tất cả loại",
+        "allCategories": "Tất cả danh mục"
+      },
+      "toolbar": {
+        "add": "Thêm mục thời gian"
+      },
+      "total": {
+        "label": "Tổng ({count})"
+      },
+      "column": {
+        "date": "Ngày",
+        "budgetItem": "Hạng mục ngân sách",
+        "description": "Mô tả",
+        "type": "Loại",
+        "contact": "Liên hệ",
+        "hours": "Giờ"
+      },
+      "toasts": {
+        "deleteSuccess": "Đã xóa mục",
+        "deleteError": "Không thể xóa",
+        "createSuccess": "Đã ghi thời gian",
+        "createSuccessWithItem": "Đã ghi thời gian, hạng mục được đánh dấu hoàn thành",
+        "createSuccessItemFail": "Đã ghi thời gian (không thể đánh dấu hạng mục hoàn thành)",
+        "updateSuccess": "Đã cập nhật mục",
+        "updateSuccessWithItem": "Đã cập nhật mục, hạng mục được đánh dấu hoàn thành",
+        "updateSuccessItemFail": "Đã cập nhật mục (không thể đánh dấu hạng mục hoàn thành)",
+        "updateError": "Không thể cập nhật mục",
+        "createError": "Không thể ghi thời gian"
+      },
+      "aria": {
+        "rowClick": "Nhấp để chỉnh sửa mục",
+        "workersCount": "{count, plural, one {# nhân công} other {# nhân công}}",
+        "editRow": "Sửa mục {workerName}"
+      },
+      "dialog": {
+        "delete": {
+          "title": "Xóa mục thời gian?",
+          "body": "Thực sự xóa mục <strong>{workerName}</strong> · {hours}?"
+        }
+      },
+      "form": {
+        "titlePlaceholder": "Nhân công…",
+        "descriptionPlaceholder": "Mô tả công việc…",
+        "submitLabel": {
+          "edit": "Cập nhật mục",
+          "create": "Ghi thời gian"
+        },
+        "label": {
+          "budgetItem": "Hạng mục ngân sách *",
+          "hours": "Giờ *",
+          "workerCount": "Số nhân công",
+          "dateFrom": "Từ ngày *",
+          "workerType": "Loại nhân công",
+          "dateTo": "Đến ngày (nhiều ngày)",
+          "contact": "Liên hệ (tùy chọn)"
+        },
+        "placeholder": {
+          "budgetItem": "Chọn hạng mục…",
+          "hours": "8",
+          "workerCount": "1",
+          "dateTo": "(tùy chọn)",
+          "contact": "Không có liên hệ"
+        },
+        "search": {
+          "budgetItem": "Tìm hạng mục…",
+          "contact": "Tìm liên hệ…"
+        },
+        "empty": {
+          "budgetItem": "Không tìm thấy hạng mục",
+          "contact": "Không tìm thấy liên hệ"
+        },
+        "error": {
+          "budgetItem": "Vui lòng chọn hạng mục ngân sách",
+          "workerName": "Vui lòng nhập tên nhân công",
+          "hours": "Vui lòng nhập số giờ hợp lệ"
+        },
+        "hint": {
+          "hoursPerDay": "≈ {hours} giờ/ngày × {days} ngày",
+          "personHours": "Tổng {total} người-giờ",
+          "daySpan": "Công việc kéo dài {days, plural, one {# ngày} other {# ngày}}"
+        },
+        "section": {
+          "details": "Chi tiết (tùy chọn)"
+        },
+        "markCompleted": {
+          "label": "Đánh dấu hạng mục ngân sách đã hoàn thành",
+          "alreadyCompleted": "Hạng mục đã được đánh dấu hoàn thành.",
+          "hint": "Sau khi lưu mục, một yêu cầu PATCH sẽ được gửi đến hạng mục ngân sách với completed: true. Liên kết mục thời gian với việc hoàn thành hạng mục."
+        }
+      },
+      "empty": {
+        "title": {
+          "noRecords": "Chưa có mục thời gian nào",
+          "noMatch": "Không có mục phù hợp với bộ lọc"
+        },
+        "description": {
+          "noRecords": "Ghi thời gian làm việc — công ty, thợ thủ công, hoặc tự làm. Hỗ trợ mục nhiều ngày.",
+          "noMatch": "Thử thay đổi bộ lọc hoặc tìm kiếm."
+        },
+        "button": {
+          "firstRecord": "Ghi thời gian đầu tiên"
+        }
+      },
+      "weekly": {
+        "title": "Tổng quan theo tuần",
+        "viewTable": "Xem bảng",
+        "viewWeekly": "Tổng quan theo tuần",
+        "week": "Tuần",
+        "prevWeek": "Tuần trước",
+        "nextWeek": "Tuần sau",
+        "today": "Hôm nay",
+        "total": "Tổng",
+        "worker": "Nhân công",
+        "hours": "Giờ",
+        "noEntries": "Không có giờ nào được ghi trong tuần này.",
+        "dayShort": {
+          "mon": "T2",
+          "tue": "T3",
+          "wed": "T4",
+          "thu": "T5",
+          "fri": "T6",
+          "sat": "T7",
+          "sun": "CN"
+        }
+      },
+      "loadMore": "Hiển thị thêm {count}"
+    },
+    "dashboard": {
+      "button": {
+        "clearFilters": "Xóa bộ lọc"
+      },
+      "kpi": {
+        "burn": {
+          "label": "Tỷ lệ tiêu ngân sách",
+          "subValue": "{actual} / {plan}"
+        },
+        "remaining": {
+          "label": "Ngân sách còn lại",
+          "subValue": "trên {planTotal}"
+        },
+        "completedItems": {
+          "label": "Hạng mục hoàn thành",
+          "subValue": {
+            "done": "{percent} % hoàn thành",
+            "empty": "Không có hạng mục"
+          }
+        },
+        "hours": {
+          "label": "Giờ đã ghi",
+          "subValue": "Kế hoạch: {days, plural, one {# ngày} other {# ngày}}"
+        },
+        "completed": {
+          "allDone": "Tất cả đã hoàn thành"
+        }
+      },
+      "plan": {
+        "byStart": {
+          "title": "Kế hoạch — theo ngày bắt đầu",
+          "description": "Hạng mục sắp xếp theo ngày bắt đầu"
+        },
+        "byEnd": {
+          "title": "Kế hoạch — theo ngày kết thúc",
+          "description": "Hạn hoàn thành gần nhất"
+        },
+        "bucket": {
+          "activeNow": "Đang hoạt động",
+          "nextWeek": "Tuần tới",
+          "nextMonth": "Tháng tới",
+          "next3Months": "3 tháng tới",
+          "later": "Sau này",
+          "unscheduled": "Chưa lên lịch"
+        },
+        "empty": {
+          "upcoming": "Không có hạn sắp tới."
+        },
+        "tag": {
+          "overdue": "quá hạn"
+        }
+      },
+      "cashflow": {
+        "title": "Dự phóng dòng tiền",
+        "description": "Ngân sách cuối ước tính dựa trên tỷ lệ tiêu hiện tại",
+        "projectedFinal": "Dự phóng cuối",
+        "overrun": "Vượt ngân sách",
+        "percentOfPlan": "% kế hoạch",
+        "remainingEstimate": "Còn lại (ước tính)",
+        "spent": "Đã chi: {actual}",
+        "estimate": "Ước tính: {projected}"
+      },
+      "chart": {
+        "phase": {
+          "title": "Kế hoạch vs Thực tế theo giai đoạn"
+        },
+        "category": {
+          "title": "Ngân sách theo danh mục"
+        },
+        "trend": {
+          "title": "Xu hướng tiêu ngân sách",
+          "description": "Chi tiêu hàng tháng và giờ đã ghi theo thời gian",
+          "empty": "Chưa có dữ liệu xu hướng."
+        },
+        "series": {
+          "plan": "Kế hoạch",
+          "actual": "Thực tế",
+          "spend": "Chi tiêu",
+          "hours": "Giờ"
+        }
+      },
+      "contacts": {
+        "title": "Công việc theo liên hệ",
+        "description": "Ngân sách và giờ đã ghi theo liên hệ được gán",
+        "empty": "Không có liên hệ với hạng mục được gán.",
+        "noRole": "Không có vai trò",
+        "itemsCount": "{count, plural, one {# hạng mục} other {# hạng mục}}",
+        "ofPlan": "trên {plan}",
+        "overBudget": "vượt ngân sách"
+      },
+      "phases": {
+        "title": "Giai đoạn dự án",
+        "column": {
+          "phase": "Giai đoạn",
+          "items": "Hạng mục",
+          "plan": "Kế hoạch",
+          "actual": "Thực tế",
+          "hours": "Giờ",
+          "burn": "Tỷ lệ tiêu",
+          "status": "Trạng thái"
+        },
+        "status": {
+          "done": "Hoàn thành",
+          "inProgress": "Đang tiến hành",
+          "startingSoon": "Sắp bắt đầu",
+          "waiting": "Đang chờ"
+        }
+      },
+      "recent": {
+        "payments": {
+          "title": "Thanh toán gần đây",
+          "description": "Giao dịch tài chính mới nhất",
+          "empty": "Chưa có thanh toán.",
+          "fallback": "Thanh toán"
+        },
+        "time": {
+          "title": "Mục thời gian gần đây",
+          "description": "Giờ đã ghi mới nhất",
+          "empty": "Chưa có mục thời gian.",
+          "fallback": "Công việc"
+        }
+      }
+    },
+    "contacts": {
+      "header": {
+        "count": "{count, plural, one {# liên hệ trong dự án} other {# liên hệ trong dự án}}"
+      },
+      "empty": {
+        "title": "Chưa có liên hệ",
+        "description": "Thêm công ty, thợ thủ công, nhà cung cấp và kiến trúc sư. Bạn có thể gán thanh toán và mục thời gian cho họ.",
+        "button": {
+          "first": "Thêm liên hệ đầu tiên"
+        }
+      },
+      "menu": {
+        "edit": "Chỉnh sửa",
+        "delete": "Xóa"
+      },
+      "delete": {
+        "title": "Xóa liên hệ?",
+        "body": "Bạn có thực sự muốn xóa liên hệ <strong>{name}</strong>?",
+        "cancel": "Hủy",
+        "confirm": "Xóa"
+      },
+      "stat": {
+        "paid": "Đã thanh toán",
+        "hours": "Giờ",
+        "payments": "Thanh toán",
+        "times": "Thời gian"
+      },
+      "persons": {
+        "title": "Người liên hệ",
+        "deleteTitle": "Xóa người",
+        "button": {
+          "add": "Thêm",
+          "addPerson": "Thêm người"
+        },
+        "field": {
+          "firstName": "Tên *",
+          "lastName": "Họ *",
+          "phone": "Điện thoại",
+          "email": "Email",
+          "role": "Vai trò / chức danh"
+        },
+        "placeholder": {
+          "firstName": "Văn",
+          "lastName": "Nguyễn",
+          "phone": "+84 90 123 4567",
+          "email": "hung@congty.com",
+          "role": "Quản lý, Kế toán, ..."
+        },
+        "empty": "Chưa có người liên hệ. Nhấp “Thêm” để thêm.",
+        "aria": {
+          "delete": "Xóa {firstName} {lastName}"
+        }
+      },
+      "toasts": {
+        "deleteSuccess": "Đã xóa liên hệ",
+        "deleteError": "Không thể xóa",
+        "personAddError": "Vui lòng nhập tên và họ",
+        "personAddSuccess": "Đã thêm người",
+        "personAddErrorFallback": "Không thể thêm người",
+        "personDeleteSuccess": "Đã xóa người “{name}”",
+        "personDeleteError": "Không thể xóa người",
+        "updateError": "Tên là bắt buộc",
+        "updateSuccess": "Đã cập nhật liên hệ",
+        "createSuccess": "Đã thêm liên hệ",
+        "saveErrorFallback": "Không thể lưu liên hệ"
+      },
+      "detail": {
+        "button": {
+          "edit": "Chỉnh sửa",
+          "close": "Đóng"
+        },
+        "section": {
+          "contact": "Liên hệ",
+          "summary": "Tổng hợp thời gian và tiền"
+        },
+        "field": {
+          "company": "Công ty",
+          "ico": "Mã số DKD",
+          "dic": "Mã số thuế",
+          "phone": "Điện thoại",
+          "email": "Email",
+          "web": "Trang web",
+          "lastActivity": "Hoạt động cuối"
+        },
+        "stat": {
+          "totalPaid": "Tổng đã thanh toán",
+          "totalHours": "Tổng giờ",
+          "paymentCount": "Số thanh toán",
+          "timeEntryCount": "Mục thời gian"
+        }
+      },
+      "form": {
+        "placeholder": {
+          "role": "vd. Thợ nề, Thợ điện",
+          "company": "vd. Công ty TNHH ACME",
+          "ico": "vd. 12345678",
+          "dic": "vd. CZ12345678",
+          "phone": "+420 …",
+          "email": "email@domain.com",
+          "web": "vd. www.congty.com",
+          "notes": "Kinh nghiệm, tham chiếu, phương pháp làm việc…"
+        },
+        "submitLabel": {
+          "edit": "Cập nhật liên hệ",
+          "create": "Thêm liên hệ"
+        },
+        "ares": {
+          "label": "Tải từ sổ đăng ký ARES",
+          "hint": "Tra cứu công ty theo mã số hoặc tên và tự điền các trường.",
+          "addressPrefix": "Địa chỉ (ARES): {address}"
+        },
+        "field": {
+          "type": "Loại",
+          "role": "Vai trò / Nghề",
+          "company": "Công ty (tùy chọn)",
+          "ico": "Mã số DKD",
+          "dic": "Mã số thuế",
+          "phone": "Điện thoại",
+          "email": "Email",
+          "web": "Trang web",
+          "rating": "Đánh giá",
+          "notes": "Ghi chú"
+        },
+        "section": {
+          "details": "Chi tiết (tùy chọn)"
+        },
+        "rating": {
+          "clear": "Xóa"
+        }
+      }
+    },
+    "telemetry": {
+      "title": "Telemetry",
+      "description": "Phân tích nội bộ hành động người dùng.",
+      "button": {
+        "refresh": "Làm mới",
+        "retry": "Thử lại"
+      },
+      "error": {
+        "loadFailed": "Không thể tải dữ liệu telemetry."
+      },
+      "kpi": {
+        "totalEvents": "Tổng sự kiện",
+        "totalPageViews": "Tổng lượt xem trang",
+        "totalTimeSpent": "Tổng thời gian trên trang",
+        "uniqueUsers": "Người dùng duy nhất"
+      },
+      "chart": {
+        "byType": {
+          "title": "Sự kiện theo loại",
+          "description": "Số lượng mỗi loại sự kiện"
+        },
+        "byDay": {
+          "title": "Hoạt động theo ngày",
+          "description": "30 ngày gần nhất"
+        },
+        "byHour": {
+          "title": "Hoạt động theo giờ hôm nay",
+          "description": "Số sự kiện mỗi giờ hôm nay"
+        }
+      },
+      "empty": {
+        "byType": "Không có dữ liệu.",
+        "byHour": "Chưa có hoạt động nào được ghi hôm nay."
+      },
+      "topPages": {
+        "title": "Trang hàng đầu",
+        "description": "Số lượt xem và thời gian trung bình trên mỗi trang",
+        "empty": "Không có dữ liệu lượt xem trang.",
+        "column": {
+          "page": "Trang",
+          "views": "Lượt xem",
+          "avgTime": "Thời gian TB"
+        }
+      },
+      "timeOverview": {
+        "title": "Tổng quan thời gian",
+        "description": "Thống kê tổng hợp thời gian trong ứng dụng",
+        "totalOnPages": "Tổng thời gian trên trang",
+        "totalOnPagesHint": "số lượt xem: {count}",
+        "avgPerPage": "Thời gian trung bình mỗi trang",
+        "avgPerPageHint": "trung bình trên tất cả sự kiện page_view",
+        "longest": "Lượt truy cập dài nhất",
+        "longestHint": "thời gianSpent tối đa của một phiên"
+      },
+      "timeByPage": {
+        "title": "Thời lượng truy cập",
+        "description": "Tổng thời gian trên mỗi trang",
+        "total": "Tổng: {time}",
+        "rowSuffix": "{views}× · TB {avgTime}",
+        "empty": "Không có dữ liệu thời gian trên trang."
+      },
+      "topUsers": {
+        "title": "Hoạt động người dùng",
+        "description": "Người dùng hoạt động nhiều nhất theo số hành động",
+        "empty": "Không có dữ liệu hoạt động người dùng.",
+        "column": {
+          "user": "Người dùng",
+          "eventCount": "Số hành động",
+          "lastActive": "Hoạt động cuối"
+        },
+        "crown": {
+          "title": "Hoạt động nhiều nhất"
+        }
+      },
+      "recent": {
+        "title": "Sự kiện gần đây",
+        "description": "{shown} trên tổng số {total} sự kiện",
+        "empty": "Không có sự kiện cho bộ lọc đã chọn.",
+        "column": {
+          "date": "Ngày",
+          "time": "Giờ",
+          "user": "Người dùng",
+          "eventType": "Loại sự kiện",
+          "page": "Trang",
+          "project": "Dự án"
+        },
+        "unknownUser": "Không xác định",
+        "unknownProject": "Dự án {id}",
+        "tooltipHour": "{hour}:00 — {count, plural, one {# sự kiện} other {# sự kiện}}",
+        "tooltipDay": "{day}: {count}"
+      },
+      "filter": {
+        "label": "Bộ lọc:",
+        "type": "Loại",
+        "all": "Tất cả",
+        "user": "Người dùng",
+        "allUsers": "Tất cả người dùng",
+        "page": "Trang",
+        "allPages": "Tất cả trang",
+        "project": "Dự án",
+        "allProjects": "Tất cả dự án",
+        "button": {
+          "reset": "Xóa bộ lọc"
+        }
+      },
+      "pagination": {
+        "summary": "Hiển thị {from}–{to} trong {total}",
+        "prev": "Trước",
+        "next": "Sau",
+        "pageOf": "{page} / {totalPages}"
+      },
+      "relativeTime": {
+        "justNow": "vừa xong",
+        "minute": "{n, plural, one {1 phút trước} other {{n} phút trước}}",
+        "hour": "{n, plural, one {1 giờ trước} other {{n} giờ trước}}",
+        "day": "{n, plural, one {hôm qua} other {{n} ngày trước}}",
+        "yesterday": "hôm qua"
+      }
+    },
+    "payments": {
+      "sort": {
+        "dateDesc": "Ngày (mới nhất)",
+        "dateAsc": "Ngày (cũ nhất)",
+        "amountDesc": "Số tiền (giảm)",
+        "amountAsc": "Số tiền (tăng)",
+        "type": "Loại",
+        "contact": "Liên hệ (A→Z)",
+        "vendor": "Nhà cung cấp (A→Z)"
+      },
+      "filter": {
+        "allTypes": "Tất cả loại"
+      },
+      "toolbar": {
+        "sum": "Tổng ({count})",
+        "vatIncluded": "đã gồm VAT",
+        "search": "Tìm thanh toán…",
+        "add": "Thêm thanh toán"
+      },
+      "empty": {
+        "title": {
+          "noRecords": "Chưa có thanh toán",
+          "noMatch": "Không có thanh toán phù hợp với bộ lọc"
+        },
+        "description": {
+          "noRecords": "Bắt đầu ghi thanh toán — biên lai, hóa đơn hoặc trả lương. Bạn có thể tách thành các lần thanh toán.",
+          "noMatch": "Thử thay đổi bộ lọc hoặc tìm kiếm."
+        },
+        "button": {
+          "first": "Thêm thanh toán đầu tiên"
+        }
+      },
+      "column": {
+        "date": "Ngày",
+        "budgetItem": "Hạng mục ngân sách",
+        "description": "Mô tả",
+        "type": "Loại",
+        "contact": "Liên hệ",
+        "amount": "Số tiền"
+      },
+      "row": {
+        "aria": {
+          "clickToEdit": "Nhấp để chỉnh sửa thanh toán",
+          "editRow": "Sửa thanh toán {description}"
+        },
+        "installment": {
+          "title": "Hóa đơn trả góp: {invoiceTotal} — đã trả {paidTotal} ({percent} %), còn {remaining}",
+          "fallbackTitle": "Hóa đơn trả góp",
+          "label": "Lần trả {n}",
+          "labelWithTotal": "Lần trả {n} / {total}",
+          "titleShort": "Lần trả {n} trên {total}"
+        },
+        "firstInstallment": "Lần trả 1",
+        "vatRateSuffix": "đã gồm VAT {rate}%",
+        "ofInvoiceTotal": "trên {invoiceTotal}",
+        "menu": {
+          "edit": "Chỉnh sửa",
+          "delete": "Xóa"
+        },
+        "delete": {
+          "title": "Xóa thanh toán?",
+          "body": "Bạn có thực sự muốn xóa thanh toán <strong>{amount}</strong>?",
+          "cancel": "Hủy",
+          "confirm": "Xóa"
+        },
+        "addInstallment": "Thêm lần trả",
+        "addInstallmentTitle": "Thêm lần trả khác vào hóa đơn {vendor}"
+      },
+      "invoices": {
+        "badge": {
+          "installmentCount": "{count, plural, one {# lần trả} other {# lần trả}}"
+        },
+        "label": {
+          "invoice": "Hóa đơn",
+          "paid": "Đã trả",
+          "remaining": "Còn lại",
+          "percent": "{percent} %",
+          "invoiceNumber": "số {number}"
+        },
+        "button": {
+          "show": "Hiện",
+          "showTitle": "Hiện các lần trả trong bảng",
+          "addInstallment": "Thêm lần trả",
+          "addInstallmentTitle": "Thêm lần trả khác vào hóa đơn này"
+        },
+        "fallbackTitle": "Hóa đơn"
+      },
+      "dialog": {
+        "titlePlaceholder": "Đã mua / thanh toán gì…",
+        "submitLabel": {
+          "edit": {
+            "installment": "Sửa lần trả",
+            "payment": "Sửa thanh toán"
+          },
+          "create": {
+            "installment": "Thêm lần trả",
+            "invoice": "Tạo hóa đơn",
+            "payment": "Thêm thanh toán"
+          }
+        },
+        "label": {
+          "budgetItem": "Hạng mục ngân sách *",
+          "invoiceTotal": "Tổng hóa đơn (Kč) *",
+          "firstInstallment": "Lần trả 1 (Kč) *",
+          "amount": "Số tiền (Kč) *",
+          "date": "Ngày *",
+          "invoiceDate": "Ngày hóa đơn *",
+          "type": "Loại",
+          "contact": "Liên hệ (tùy chọn)",
+          "vendor": "Nhà cung cấp / Cửa hàng",
+          "invoiceNumber": "Số hóa đơn/chứng từ",
+          "vatRate": "Tỷ lệ VAT (%)",
+          "vatCalculation": "Tính VAT",
+          "recurring": "Lặp lại"
+        },
+        "placeholder": {
+          "budgetItem": "Chọn hạng mục…",
+          "invoiceTotal": "150000",
+          "firstInstallment": "50000",
+          "amount": "25000",
+          "contact": "Không có liên hệ",
+          "vendor": "vd. Hornbach",
+          "invoiceNumber": "2024-001"
+        },
+        "search": {
+          "budgetItem": "Tìm hạng mục…",
+          "contact": "Tìm liên hệ…"
+        },
+        "empty": {
+          "budgetItem": "Không tìm thấy hạng mục",
+          "contact": "Không tìm thấy liên hệ"
+        },
+        "error": {
+          "budgetItem": "Vui lòng chọn hạng mục ngân sách",
+          "invoiceTotal": "Vui lòng nhập tổng hóa đơn hợp lệ",
+          "amount": "Vui lòng nhập số tiền hợp lệ"
+        },
+        "prefill": {
+          "title": "Lần trả mới cho hóa đơn",
+          "subtitle": "{vendor} · {amount} tổng",
+          "fallback": "Hóa đơn"
+        },
+        "existingInvoice": {
+          "title": "Hạng mục này đã có hóa đơn: {vendor}",
+          "subtitle": "{paid} / {invoiceTotal} ({percent} %)",
+          "fallback": "Hóa đơn",
+          "button": "Thêm lần trả vào hóa đơn này"
+        },
+        "parentWarning": {
+          "title": "Đây là hóa đơn trả góp",
+          "body": "Tổng hóa đơn {invoiceTotal}. Bạn có thể chuyển lại thành thanh toán thường — các lần trả vẫn giữ thành thanh toán độc lập.",
+          "button": "Chuyển thành thanh toán thường"
+        },
+        "convertDialog": {
+          "title": "Chuyển hóa đơn thành thanh toán thường?",
+          "body": "Thao tác này chuyển hóa đơn thành thanh toán thường. Tất cả lần trả ({count}) vẫn giữ thành thanh toán độc lập. Tiếp tục?",
+          "cancel": "Hủy",
+          "confirm": "Chuyển thành thanh toán thường",
+          "confirming": "Đang chuyển…"
+        },
+        "section": {
+          "details": "Chi tiết (tùy chọn)"
+        },
+        "isInvoice": {
+          "label": "Thanh toán trả góp (hóa đơn có nhiều lần thanh toán)"
+        },
+        "installmentOf": {
+          "label": "Liên kết đến hóa đơn (như lần trả)",
+          "placeholder": "Thanh toán độc lập (không hóa đơn)",
+          "noneLabel": "Thanh toán độc lập (không hóa đơn)",
+          "hint": "Thanh toán này sẽ xuất hiện như lần trả tiếp theo của hóa đơn đã chọn. Thay đổi sẽ cập nhật tổng thanh toán của hóa đơn."
+        },
+        "vatRate": {
+          "placeholder": "Không VAT",
+          "none": "Không VAT",
+          "21": "21 % (chuẩn)",
+          "12": "12 % (giảm 1)",
+          "10": "10 % (giảm 2)",
+          "0": "0 %"
+        },
+        "vatCalc": {
+          "label": {
+            "vat": "VAT:",
+            "base": "Cơ sở:"
+          },
+          "empty": "Nhập số tiền và tỷ lệ VAT"
+        },
+        "markCompleted": {
+          "label": "Đánh dấu hạng mục hoàn thành",
+          "alreadyCompleted": "Hạng mục đã được đánh dấu hoàn thành.",
+          "hint": "Hạng mục sẽ được đánh dấu hoàn thành"
+        },
+        "recurring": {
+          "none": "Một lần",
+          "weekly": "Hàng tuần",
+          "monthly": "Hàng tháng",
+          "quarterly": "Hàng quý",
+          "yearly": "Hàng năm",
+          "nextDate": "Lần thanh toán tự động tiếp theo: {date}",
+          "badge": "Lặp lại"
+        }
+      },
+      "toasts": {
+        "deleteSuccess": "Đã xóa thanh toán",
+        "deleteError": "Không thể xóa",
+        "updateSuccess": "Đã cập nhật thanh toán",
+        "updateSuccessWithItem": "Đã cập nhật thanh toán, hạng mục được đánh dấu hoàn thành",
+        "updateSuccessItemFail": "Đã cập nhật thanh toán (không thể đánh dấu hạng mục hoàn thành)",
+        "invoiceCreateSuccess": "Đã tạo hóa đơn với các lần trả",
+        "invoiceCreateSuccessWithItem": "Đã tạo hóa đơn, hạng mục được đánh dấu hoàn thành",
+        "invoiceCreateSuccessItemFail": "Đã tạo hóa đơn (không thể đánh dấu hạng mục hoàn thành)",
+        "paymentCreateSuccess": "Đã thêm thanh toán",
+        "paymentCreateSuccessWithItem": "Đã thêm thanh toán, hạng mục được đánh dấu hoàn thành",
+        "paymentCreateSuccessItemFail": "Đã thêm thanh toán (không thể đánh dấu hạng mục hoàn thành)",
+        "installmentAdded": "Đã thêm lần trả vào hóa đơn",
+        "convertSuccess": "Đã chuyển hóa đơn thành thanh toán thường",
+        "convertSuccessWithChildren": "Đã chuyển hóa đơn thành thanh toán thường, {count, plural, one {# lần trả tách ra} other {# lần trả tách ra}}",
+        "convertError": "Không thể chuyển hóa đơn thành thanh toán thường",
+        "updateError": "Không thể cập nhật thanh toán",
+        "createError": "Không thể thêm thanh toán"
+      },
+      "loadMore": "Hiển thị thêm {count}"
+    }
+  },
+  "components": {
+    "emptyState": {
+      "welcome": "Chào mừng đến với Stavba",
+      "description": "Chọn dự án từ thanh bên, hoặc tạo dự án mới để theo dõi ngân sách, chi phí, thời gian và vật tư cho công trình xây dựng và cải tạo của bạn.",
+      "button": "Tạo dự án đầu tiên"
+    },
+    "contextualFab": {
+      "actions": {
+        "addItem": "Thêm hạng mục",
+        "addPayment": "Thêm thanh toán",
+        "addTime": "Thêm thời gian",
+        "addContact": "Thêm liên hệ"
+      }
+    },
+    "aresSearch": {
+      "placeholder": "Tìm công ty (mã số hoặc tên)…",
+      "needsApiKey": {
+        "title": "Chưa cấu hình API key ARES.",
+        "hint": "Bạn có thể nhập công ty thủ công bên dưới."
+      },
+      "noResults": "Không tìm thấy công ty nào cho “{query}”",
+      "result": {
+        "ico": "Mã số: {ico}",
+        "dic": "VAT: {dic}"
+      }
+    },
+    "sessionTimeoutWarning": {
+      "message": "Phiên đăng nhập của bạn sẽ hết hạn sau {minutesLeft, plural, one {# phút} other {# phút}}. Vui lòng gia hạn để tránh mất dữ liệu.",
+      "description": "Bạn sẽ được tự động đăng xuất khi hết hạn.",
+      "action": {
+        "extend": "Gia hạn",
+        "signOut": "Đăng xuất"
+      },
+      "success": "Đã gia hạn phiên."
+    }
+  },
+  "dialogs": {
+    "budgetItem": {
+      "toasts": {
+        "dateFromSetByRef": "Ngày bắt đầu được đặt từ “{name}”",
+        "dateFromAlreadySet": "Ngày bắt đầu đã được điền — không thay đổi.",
+        "dateFromNotChanged": "“{name}” không có ngày kết thúc — ngày bắt đầu không thay đổi.",
+        "categoryRequired": "Danh mục là bắt buộc",
+        "taskUpdated": "Đã cập nhật công việc",
+        "itemUpdated": "Đã cập nhật hạng mục",
+        "taskAdded": "Đã thêm công việc",
+        "itemAdded": "Đã thêm hạng mục",
+        "saveError": "Không thể lưu hạng mục"
+      },
+      "submit": {
+        "editTask": "Sửa công việc",
+        "editItem": "Sửa hạng mục",
+        "addTask": "Thêm công việc",
+        "addItem": "Thêm hạng mục"
+      },
+      "placeholder": {
+        "taskName": "Tên công việc…",
+        "itemName": "Tên hạng mục…",
+        "note": "Ghi chú…",
+        "newCategory": "Danh mục mới",
+        "selectCategory": "Chọn danh mục",
+        "subsidyAmount": "vd. 15000",
+        "linkLabel": "Tên",
+        "linkUrl": "https://…",
+        "searchItem": "Tìm hạng mục…",
+        "searchContact": "Tìm liên hệ…"
+      },
+      "context": {
+        "taskUnderItem": "Công việc dưới hạng mục “{name}”"
+      },
+      "label": {
+        "category": "Danh mục *",
+        "phase": "Giai đoạn",
+        "required": "Bắt buộc",
+        "completed": "Hoàn thành",
+        "rejected": "Từ chối",
+        "subsidy": "Trợ cấp",
+        "subsidyAmount": "Số tiền trợ cấp (CZK)",
+        "dateFrom": "Từ ngày",
+        "dateTo": "Đến ngày",
+        "planDays": "Kế hoạch (ngày)",
+        "dependsOn": "Phụ thuộc vào",
+        "planCost": "Kế hoạch (CZK)",
+        "flexibility": "Linh hoạt (%)",
+        "contactHint": "Người phụ trách / công ty",
+        "links": "Liên kết",
+        "noDependency": "— không phụ thuộc —",
+        "noContact": "— không liên hệ —",
+        "selectExisting": "Chọn có sẵn",
+        "addNewCategory": "+ Danh mục mới"
+      },
+      "title": {
+        "requiredHint": "Hạng mục cần thiết để hoàn thành dự án",
+        "subsidyHint": "Có thể xin trợ cấp cho hạng mục này",
+        "openInNewWindow": "Mở trong cửa sổ mới",
+        "deleteLink": "Xóa liên kết"
+      },
+      "section": {
+        "date": "Ngày (tùy chọn)",
+        "money": "Tiền (tùy chọn)",
+        "contact": "Liên hệ (tùy chọn)",
+        "links": "Liên kết (tùy chọn)"
+      },
+      "empty": {
+        "items": "Không tìm thấy hạng mục",
+        "contacts": "Không tìm thấy liên hệ",
+        "noContactsHint": "Chưa có liên hệ. Thêm trong tab Liên hệ."
+      },
+      "button": {
+        "add": "Thêm"
+      }
+    },
+    "newProject": {
+      "toasts": {
+        "createSuccess": "Đã tạo dự án",
+        "createError": "Không thể tạo dự án",
+        "templateCreateSuccess": "Đã tạo dự án với mẫu hạng mục",
+        "sourceNotFound": "Không tìm thấy dự án nguồn",
+        "copyPartial": "Đã tạo dự án từ “{sourceName}” — {copied, plural, one {# hạng mục đã sao chép} other {# hạng mục đã sao chép}}, {failed, plural, one {# thất bại khi sao chép} other {# thất bại khi sao chép}}.",
+        "copyAllFailed": "Đã tạo dự án, nhưng không thể sao chép hạng mục ngân sách nào ({failed} lần thất bại).",
+        "copySuccess": "Đã tạo dự án ({copied, plural, one {# hạng mục đã sao chép} other {# hạng mục đã sao chép}} từ “{sourceName}”)",
+        "copyError": "Không thể sao chép dự án",
+        "nameRequired": "Tên dự án là bắt buộc",
+        "typeRequired": "Vui lòng chọn loại xây dựng",
+        "scopeRequired": "Vui lòng chọn phạm vi cải tạo",
+        "sourceRequired": "Vui lòng chọn dự án nguồn"
+      },
+      "submit": {
+        "selectType": "Chọn loại dự án",
+        "createBlank": "Tạo dự án",
+        "createFromTemplate": "Tạo với mẫu",
+        "copyExisting": "Sao chép dự án"
+      },
+      "placeholder": {
+        "projectName": "Tên dự án…",
+        "selectTypeHint": "Dự án mới — chọn loại bên dưới",
+        "description": "Mô tả ngắn về dự án…",
+        "selectProjectCopy": "Chọn dự án để sao chép…",
+        "address": "vd. Praha - Troja"
+      },
+      "context": {
+        "blank": "Dự án trắng",
+        "template": "Từ mẫu",
+        "copy": "Sao chép từ có sẵn",
+        "new": "Dự án mới"
+      },
+      "mode": {
+        "blank": {
+          "title": "Dự án trắng",
+          "description": "Bắt đầu từ trang trắng, thêm ngân sách sau"
+        },
+        "template": {
+          "title": "Từ mẫu",
+          "description": "Cải tạo, xây mới, nội thất hoặc mở rộng"
+        },
+        "copy": {
+          "title": "Sao chép dự án",
+          "description": "Sao chép ngân sách từ một dự án có sẵn"
+        }
+      },
+      "back": "← Quay lại chọn loại",
+      "template": {
+        "typeLabel": "Loại xây dựng",
+        "scopeLabel": "Phạm vi cải tạo",
+        "preview": "Xem trước theo danh mục",
+        "itemsCount": "{count, plural, one {# hạng mục} other {# hạng mục}}",
+        "itemsPlan": "{count, plural, one {# hạng mục} other {# hạng mục}} · {sum} CZK kế hoạch",
+        "total": "Tổng cộng: {count, plural, one {# hạng mục} other {# hạng mục}}, {sum} CZK"
+      },
+      "copy": {
+        "sourceLabel": "Dự án nguồn *",
+        "description": "Tất cả hạng mục ngân sách (danh mục, kế hoạch, linh hoạt, giai đoạn) sẽ được sao chép. Giá trị thực tế, trạng thái hoàn thành và từ chối được đặt lại. Thanh toán, mục thời gian và liên hệ không được sao chép."
+      },
+      "field": {
+        "address": "Địa chỉ",
+        "startDate": "Ngày bắt đầu",
+        "endDate": "Ngày kết thúc"
+      },
+      "templates": {
+        "reconstruction": {
+          "label": "Cải tạo",
+          "description": "Cải tạo nhà, căn hộ hoặc nhà nghỉ hiện có.",
+          "scopeOptions": {
+            "partial": {
+              "label": "Cải tạo một phần",
+              "description": "Chỉ một số phòng hoặc hệ thống (vd. phòng tắm, bếp, điện)"
+            },
+            "complete": {
+              "label": "Cải tạo toàn bộ",
+              "description": "Toàn bộ tòa nhà bao gồm phần thô, lắp đặt và hoàn thiện"
+            },
+            "structural": {
+              "label": "Cải tạo kết cấu",
+              "description": "Can thiệp vào kết cấu chịu lực, chuyển đổi, bổ sung"
+            }
+          }
+        },
+        "new_build": {
+          "label": "Xây mới",
+          "description": "Xây nhà mới từ móng lên."
+        },
+        "interior": {
+          "label": "Nội thất",
+          "description": "Trang trí và hoàn thiện nội thất (sơn, sàn, phụ kiện)."
+        },
+        "extension": {
+          "label": "Mở rộng",
+          "description": "Phần mở rộng thêm vào tòa nhà (phụ trợ, mở rộng gara, vườn mùa đông)."
+        },
+        "apartment_2plus1": {
+          "label": "Cải tạo căn hộ 2+1",
+          "description": "Cải tạo toàn bộ căn hộ 2+1 (~70 m²) — phá dỡ, đi dây, phòng tắm, bếp, sàn, sơn."
+        },
+        "bathroom": {
+          "label": "Cải tạo phòng tắm",
+          "description": "Cải tạo toàn bộ phòng tắm (~5 m²) — phá dỡ, ống nước, gạch, phụ kiện, điện."
+        },
+        "roof": {
+          "label": "Cải tạo mái",
+          "description": "Thay toàn bộ mái — phá dỡ, khung, cách nhiệt, lợp ngói, tôn kim loại."
+        }
+      }
+    },
+    "project": {
+      "toasts": {
+        "nameRequired": "Tên dự án là bắt buộc",
+        "updateSuccess": "Đã cập nhật dự án",
+        "createSuccess": "Đã tạo dự án",
+        "updateError": "Không thể cập nhật dự án",
+        "createError": "Không thể tạo dự án"
+      },
+      "placeholder": {
+        "name": "Tên dự án…",
+        "description": "Mô tả ngắn về dự án…",
+        "address": "vd. Praha - Troja"
+      },
+      "context": {
+        "edit": "Đang sửa dự án",
+        "new": "Dự án mới"
+      },
+      "submit": {
+        "saveChanges": "Lưu thay đổi",
+        "create": "Tạo dự án"
+      },
+      "label": {
+        "address": "Địa chỉ",
+        "status": "Trạng thái"
+      },
+      "section": {
+        "dates": "Ngày (tùy chọn)"
+      },
+      "field": {
+        "startDate": "Ngày bắt đầu",
+        "endDate": "Ngày kết thúc"
+      }
+    },
+    "printReport": {
+      "toasts": {
+        "dataNotLoaded": "Dữ liệu báo cáo chưa được tải.",
+        "mobileExportHint": "Mở ứng dụng trong trình duyệt máy tính để xuất PDF.",
+        "printFailed": "In thất bại. Vui lòng thử lại."
+      },
+      "title": "Báo cáo dự án — Xem trước PDF",
+      "description": "Xem trước báo cáo để xuất PDF. Nhấp “Tải PDF” — trong hộp thoại in của trình duyệt, chọn “Lưu dưới dạng PDF” làm đích.",
+      "mobileWarning": "Không thể xuất PDF trực tiếp trên trình duyệt di động — hãy mở ứng dụng trong trình duyệt máy tính.",
+      "note": {
+        "useDesktop": "Để có kết quả tốt nhất, hãy dùng trình duyệt máy tính"
+      },
+      "button": {
+        "close": "Đóng",
+        "exportDesktop": "Xuất trên máy tính",
+        "downloadPdf": "Tải PDF"
+      },
+      "header": {
+        "generated": "Tạo lúc:",
+        "start": "Bắt đầu:",
+        "end": "Kết thúc:"
+      },
+      "section": {
+        "summary": "Tổng hợp ngân sách",
+        "alerts": "Cảnh báo",
+        "projection": "Ước tính dự phóng",
+        "phases": "Phân tích theo giai đoạn",
+        "categories": "Phân tích theo danh mục {top}",
+        "categoriesTop": "(top 15)",
+        "budgetItems": "Hạng mục ngân sách ({count})",
+        "payments": "Thanh toán ({count} gần nhất)"
+      },
+      "kpi": {
+        "plan": "Kế hoạch",
+        "actual": "Thực tế",
+        "remaining": "Còn lại",
+        "saved": "Đã tiết kiệm",
+        "completed": "Hoàn thành",
+        "hours": "Giờ",
+        "avgOverrun": "Vượt TB",
+        "predictedFinal": "Chi phí cuối dự kiến",
+        "estimatedOverrun": "Vượt ước tính",
+        "planRatio": "Tỷ lệ kế hoạch"
+      },
+      "alert": {
+        "overdue": "Quá hạn ({count})",
+        "upcoming": "Sắp tới ({count})",
+        "overBudget": "Vượt ngân sách ({count})"
+      },
+      "projection": {
+        "empty": "Chưa có hạng mục hoàn thành — không thể dự phóng chi phí cuối. Sau khi hoàn thành các hạng mục đầu tiên, ước tính dựa trên tỷ lệ vượt kế hoạch trung bình sẽ xuất hiện tại đây."
+      },
+      "column": {
+        "phase": "Giai đoạn",
+        "plan": "Kế hoạch",
+        "actual": "Thực tế",
+        "percent": "%",
+        "hours": "Giờ",
+        "category": "Danh mục",
+        "name": "Tên",
+        "actualShort": "TT",
+        "from": "Từ",
+        "to": "Đến",
+        "status": "Trạng thái",
+        "date": "Ngày",
+        "item": "Hạng mục",
+        "vendor": "Nhà cung cấp",
+        "amount": "Số tiền",
+        "type": "Loại"
+      },
+      "empty": {
+        "phases": "Không có giai đoạn để hiển thị.",
+        "categories": "Không có danh mục để hiển thị.",
+        "budgetItems": "Không có hạng mục ngân sách.",
+        "payments": "Không có thanh toán để hiển thị."
+      },
+      "fallback": {
+        "noName": "(không tên)",
+        "noItem": "(không hạng mục)"
+      },
+      "status": {
+        "rejected": "Từ chối",
+        "completed": "Hoàn thành",
+        "active": "Đang hoạt động",
+        "plan": "Kế hoạch"
+      },
+      "footer": "Báo cáo được tạo bởi Rozpočet Stavby vào {date} — {projectName}."
+    },
+    "auditLog": {
+      "title": "Lịch sử thay đổi",
+      "description": "{count} thay đổi gần nhất trong dự án (sửa, tạo, xóa).",
+      "empty": "Chưa có thay đổi nào được ghi.",
+      "emptyValue": "(trống)",
+      "action": {
+        "fallback": "{action}"
+      },
+      "field": {
+        "element": "Phần tử",
+        "actualHours": "Giờ",
+        "date": "Ngày"
+      }
+    },
+    "globalSearch": {
+      "title": "Tìm kiếm toàn cục",
+      "placeholder": "Tìm dự án, hạng mục, liên hệ, thanh toán, ghi chú…",
+      "initialHint": "Bắt đầu gõ để tìm kiếm trong toàn ứng dụng",
+      "noResults": "Không có kết quả cho “{query}”",
+      "group": {
+        "projects": "Dự án",
+        "items": "Hạng mục ngân sách",
+        "contacts": "Liên hệ",
+        "payments": "Thanh toán",
+        "notes": "Ghi chú"
+      },
+      "footer": {
+        "navigation": "Điều hướng",
+        "select": "Chọn"
+      }
+    }
+  },
+  "errors": {
+    "title": "Đã xảy ra lỗi",
+    "description": "Ứng dụng gặp lỗi không mong muốn và không thể tiếp tục. Vui lòng thử lại. Nếu vấn đề vẫn tiếp diễn, tải lại trang hoặc quay lại trang chủ.",
+    "tryAgain": "Thử lại",
+    "home": "Trang chủ",
+    "copyError": "Sao chép lỗi",
+    "copied": "Đã sao chép",
+    "copySuccessToast": "Đã sao chép lỗi vào clipboard",
+    "copyFailedToast": "Không thể sao chép lỗi",
+    "technicalDetails": "Chi tiết kỹ thuật",
+    "errorCode": "Mã lỗi:",
+    "message": "Thông điệp:",
+    "stackTrace": "Stack trace:",
+    "noMessage": "(không có thông điệp)",
+    "noStack": "(không có)",
+    "report": {
+      "subject": "Stavba — báo cáo lỗi",
+      "time": "Thời gian: {time}",
+      "code": "Mã lỗi: {code}",
+      "message": "Thông điệp: {message}",
+      "stackHeader": "Stack trace:"
+    },
+    "notFound": {
+      "code": "404",
+      "title": "Không tìm thấy trang",
+      "description": "Trang bạn đang tìm không tồn tại hoặc đã được di chuyển. Quay lại trang chủ của Rozpočet Stavby và tiếp tục quản lý ngân sách.",
+      "homeButton": "Về trang chủ"
+    },
+    "global": {
+      "title": "Đã xảy ra lỗi",
+      "description": "Ứng dụng gặp lỗi không mong muốn.",
+      "tryAgain": "Thử lại"
+    }
+  },
+  "public": {
+    "project": {
+      "header": {
+        "publicBadge": "Dự án công khai — chỉ đọc",
+        "publicView": "Xem công khai"
+      },
+      "actions": {
+        "requestAccess": "Yêu cầu truy cập",
+        "openInApp": "Mở trong ứng dụng"
+      },
+      "kpi": {
+        "burnRate": "Tỷ lệ tiêu ngân sách",
+        "remaining": "Ngân sách còn lại",
+        "remainingSub": "trên {total}",
+        "itemsCompleted": "Hạng mục hoàn thành",
+        "hoursLogged": "Giờ đã ghi",
+        "noItems": "Không có hạng mục",
+        "completedPercent": "{percent}% hoàn thành",
+        "plannedHours": "Kế hoạch: {hours} ngày",
+        "allCompleted": "Tất cả đã hoàn thành"
+      },
+      "phases": {
+        "title": "Giai đoạn dự án",
+        "description": "Tổng quan ngân sách theo giai đoạn — chỉ đọc",
+        "column": {
+          "phase": "Giai đoạn",
+          "items": "Hạng mục",
+          "plan": "Kế hoạch",
+          "actual": "Thực tế",
+          "hours": "Giờ",
+          "burn": "Tỷ lệ tiêu",
+          "status": "Trạng thái"
+        },
+        "empty": "Không có giai đoạn để hiển thị.",
+        "status": {
+          "done": "Hoàn thành",
+          "inProgress": "Đang tiến hành",
+          "soon": "Sắp tới",
+          "waiting": "Đang chờ"
+        }
+      },
+      "footer": "Đây là chế độ xem rút gọn, chỉ đọc của dự án công khai. Để chỉnh sửa và truy cập đầy đủ tính năng, vui lòng đăng nhập hoặc mở dự án trong ứng dụng.",
+      "notFound": {
+        "title": "Dự án không công khai",
+        "redirecting": "Đang chuyển đến đăng nhập…"
+      },
+      "toasts": {
+        "loadFailed": "Không thể tải dữ liệu dự án.",
+        "notPublic": "Dự án không công khai",
+        "accessGranted": "Đã cấp quyền truy cập — đang chuyển đến dự án",
+        "accessFailed": "Không thể cấp quyền truy cập"
+      }
+    },
+    "invite": {
+      "loading": "Đang tải lời mời…",
+      "unauthenticated": {
+        "title": "Đăng nhập để xem lời mời",
+        "redirecting": "Đang chuyển đến đăng nhập…",
+        "goToLogin": "Đến đăng nhập"
+      },
+      "error": {
+        "title": "Lời mời không khả dụng"
+      },
+      "status": {
+        "accepted": "Lời mời đã được chấp nhận",
+        "rejected": "Lời mời đã bị từ chối",
+        "revoked": "Lời mời đã bị thu hồi bởi quản trị viên",
+        "expired": "Lời mời đã hết hạn",
+        "invalid": "Lời mời không còn hợp lệ"
+      },
+      "title": "Lời mời dự án",
+      "description": "Bạn đã được mời vào dự án <strong>{name}</strong> với vai trò <badge>{role}</badge>.",
+      "field": {
+        "project": "Dự án:",
+        "owner": "Quản lý:",
+        "inviter": "Người mời:",
+        "role": "Vai trò:",
+        "expiresAt": "Hiệu lực đến:"
+      },
+      "roleDescription": {
+        "viewer": "Bạn có thể xem ngân sách, thanh toán và mục thời gian (chỉ đọc).",
+        "editor": "Bạn có thể xem và chỉnh sửa ngân sách, thanh toán, mục thời gian và liên hệ.",
+        "owner": "Bạn có toàn quyền kiểm soát dự án — chỉnh sửa, thanh toán, mục thời gian, liên hệ và quản lý thành viên.",
+        "admin": "Bạn có toàn quyền kiểm soát dự án, bao gồm quản lý thành viên và cài đặt."
+      },
+      "emailNotice": {
+        "title": "Lời mời này dành cho email:",
+        "hint": "Bạn phải đăng nhập bằng email này để chấp nhận."
+      },
+      "actions": {
+        "accept": "Chấp nhận lời mời",
+        "reject": "Từ chối",
+        "openProject": "Mở dự án"
+      },
+      "footer": "Nếu bạn không mong đợi lời mời này, bạn có thể bỏ qua email này một cách an toàn.",
+      "toasts": {
+        "loadFailed": "Không thể tải lời mời.",
+        "acceptSuccess": "Đã chấp nhận lời mời — đang chuyển đến dự án",
+        "acceptFailed": "Không thể chấp nhận lời mời.",
+        "rejectSuccess": "Đã từ chối lời mời",
+        "rejectFailed": "Không thể từ chối lời mời."
+      }
+    }
+  },
+  "api": {
+    "errors": {
+      "auth": {
+        "notAuthenticated": "Chưa xác thực.",
+        "emailAndPasswordRequired": "Email và mật khẩu là bắt buộc.",
+        "accountExists": "Đã có tài khoản với email này. Vui lòng đăng nhập hoặc đặt lại mật khẩu.",
+        "registerWarningEmailFailed": "Đăng ký thành công, nhưng không thể gửi email xác thực. Bạn có thể yêu cầu email mới.",
+        "registerSuccess": "Đăng ký thành công. Vui lòng kiểm tra email để xác thực tài khoản.",
+        "registerFailed": "Đăng ký thất bại. Vui lòng thử lại.",
+        "emailRequired": "Email là bắt buộc.",
+        "emailAlreadyVerified": "Email của bạn đã được xác thực. Bạn có thể đăng nhập.",
+        "verifyEmailFailed": "Không thể gửi email xác thực.",
+        "forgotPasswordSent": "Nếu tài khoản tồn tại, email với link đặt lại đã được gửi.",
+        "tokenAndPasswordRequired": "Token và mật khẩu mới là bắt buộc.",
+        "invalidResetLink": "Link đặt lại mật khẩu không hợp lệ.",
+        "resetLinkExpired": "Link đặt lại mật khẩu này đã hết hạn. Vui lòng yêu cầu link mới.",
+        "resetLinkUsed": "Link đặt lại mật khẩu này đã được sử dụng. Vui lòng yêu cầu link mới.",
+        "resetSuccess": "Mật khẩu của bạn đã được đổi thành công. Bạn có thể đăng nhập.",
+        "resetFailed": "Đặt lại mật khẩu thất bại.",
+        "typeAndTokenRequired": "type và token là bắt buộc.",
+        "invalidTokenType": "Loại token không hợp lệ.",
+        "unknownAuthAction": "Hành động xác thực không xác định.",
+        "successMustBeBoolean": "`success` phải là boolean.",
+        "rateLimit": {
+          "register": "Quá nhiều lần đăng ký. Vui lòng thử lại sau {minutes} phút.",
+          "requests": "Quá nhiều yêu cầu. Vui lòng thử lại sau {minutes} phút.",
+          "attempts": "Quá nhiều lần thử. Vui lòng thử lại sau {minutes} phút."
+        }
+      },
+      "invitations": {
+        "notFound": "Không tìm thấy lời mời.",
+        "alreadyUsed": "Lời mời đã được sử dụng.",
+        "expired": "Lời mời đã hết hạn.",
+        "notYourEmail": "Lời mời này không dành cho email của bạn.",
+        "acceptFailed": "Không thể chấp nhận lời mời.",
+        "rejectFailed": "Không thể từ chối lời mời.",
+        "loadFailed": "Không thể tải lời mời.",
+        "invalidRequestJson": "Yêu cầu không hợp lệ — cần một đối tượng JSON.",
+        "invalidEmailFormat": "Định dạng email không hợp lệ.",
+        "alreadyOwner": "Người dùng này đã là quản lý dự án.",
+        "alreadyMember": "Người dùng này đã là thành viên của dự án.",
+        "createFailed": "Không thể tạo lời mời.",
+        "cancelFailed": "Không thể thu hồi lời mời."
+      },
+      "budget": {
+        "cannotMoveToSelf": "Một hạng mục không thể được di chuyển dưới chính nó.",
+        "targetNotFound": "Hạng mục đích không tồn tại.",
+        "cannotMoveAcrossProjects": "Một công việc không thể được di chuyển sang dự án khác.",
+        "cycleDetected": "Một hạng mục không thể được di chuyển dưới hậu duệ của chính nó (vòng lặp)."
+      },
+      "users": {
+        "adminOnly": "Chỉ quản trị viên mới có thể thay đổi quyền quản trị.",
+        "cannotEditOtherProfile": "Không được phép chỉnh sửa hồ sơ người dùng khác.",
+        "userNotFound": "Không tìm thấy người dùng.",
+        "noPasswordSet": "Tài khoản của bạn không có mật khẩu (bạn đăng nhập qua Google). Bạn có thể đặt mật khẩu qua tính năng “Quên mật khẩu”.",
+        "cannotDemoteSelf": "Bạn không thể gỡ quyền quản trị của chính mình."
+      },
+      "password": {
+        "currentRequired": "Mật khẩu hiện tại là bắt buộc.",
+        "newRequired": "Mật khẩu mới là bắt buộc.",
+        "incorrectCurrent": "Mật khẩu hiện tại không đúng.",
+        "changeFailed": "Đổi mật khẩu thất bại. Vui lòng thử lại.",
+        "changed": "Đã đổi mật khẩu."
+      },
+      "sessions": {
+        "revokeFailed": "Không thể thu hồi các phiên khác. Vui lòng thử lại.",
+        "allRevoked": "Tất cả phiên khác đã được đăng xuất."
+      },
+      "project": {
+        "notFoundOrNotPublic": "Không tìm thấy dự án hoặc không công khai.",
+        "publicLoadFailed": "Không thể tải dữ liệu dự án công khai."
+      },
+      "ares": {
+        "apiUnavailable": "API ARES không khả dụng.",
+        "searchError": "Lỗi tìm kiếm.",
+        "apiKeyMissing": "Chưa cấu hình API key ARES. Bạn có thể nhập chi tiết công ty thủ công."
+      },
+      "notes": {
+        "cannotEditOthers": "Bạn chỉ có thể chỉnh sửa ghi chú của mình.",
+        "cannotDeleteOthers": "Bạn chỉ có thể xóa ghi chú của mình."
+      },
+      "generic": {
+        "invalidRequest": "Yêu cầu không hợp lệ."
+      },
+      "account": {
+        "mustAcknowledge": "Bạn phải xác nhận rằng bạn hiểu các hậu quả.",
+        "notFound": "Không tìm thấy người dùng.",
+        "alreadyDeleted": "Tài khoản đã lên lịch xóa.",
+        "passwordRequired": "Mật khẩu là bắt buộc để xác minh danh tính.",
+        "passwordIncorrect": "Mật khẩu bạn nhập không đúng.",
+        "emailConfirmRequired": "Vui lòng nhập địa chỉ email để xác nhận.",
+        "emailConfirmMismatch": "Email bạn nhập không khớp với tài khoản của bạn.",
+        "emailRequired": "Email là bắt buộc.",
+        "notDeleted": "Tài khoản này chưa bị xóa.",
+        "permanentlyDeleted": "Thời gian khôi phục tài khoản đã hết. Tài khoản đã bị xóa vĩnh viễn.",
+        "useOAuth": "Tài khoản này không có mật khẩu. Vui lòng đăng nhập bằng Google."
+      }
+    }
+  },
+  "currency": {
+    "default": "mặc định",
+    "unavailable": "đang chờ tỷ giá",
+    "loadingRate": "Đang tải tỷ giá…",
+    "conversionPreview": "{fromAmount} → {toAmount} (tỷ giá {rate})",
+    "label": "Tiền tệ",
+    "projectCurrency": "Tiền tệ dự án",
+    "projectCurrencyHint": "Tất cả tổng và biểu đồ hiển thị bằng tiền tệ này.",
+    "paymentCurrency": "Tiền tệ thanh toán",
+    "paymentCurrencyHint": "Nếu khác với tiền tệ dự án, số tiền sẽ được tự động quy đổi bằng tỷ giá hàng ngày của ČNB.",
+    "budgetItemCurrency": "Tiền tệ hạng mục",
+    "converted": "đã quy đổi",
+    "rateUnavailable": "Tỷ giá cho tiền tệ này chưa khả dụng. Vui lòng lưu thanh toán bằng tiền tệ dự án trước.",
+    "currencies": {
+      "CZK": "Koruna Séc",
+      "EUR": "Euro",
+      "USD": "Đô la Mỹ",
+      "GBP": "Bảng Anh",
+      "HUF": "Forint Hungary",
+      "PLN": "Złoty Ba Lan",
+      "AUD": "Đô la Úc",
+      "VND": "Đồng Việt Nam"
+    }
+  },
+  "help": {
+    "title": "Trợ giúp",
+    "description": "Mẹo nhanh để sử dụng ứng dụng.",
+    "sections": {
+      "dashboard": {
+        "title": "Tổng quan",
+        "tip1": "Trang chính hiển thị thẻ KPI, kế hoạch theo ngày và biểu đồ theo giai đoạn/danh mục.",
+        "tip2": "Dự phóng ước tính chi phí cuối dựa trên tỷ lệ vượt ngân sách trung bình của các hạng mục hoàn thành."
+      },
+      "budget": {
+        "title": "Ngân sách",
+        "tip1": "Nhấp vào bất kỳ ô nào trong bảng để chỉnh sửa nội tuyến (Enter = lưu, Escape = hủy).",
+        "tip2": "Kéo & thả để sắp xếp lại hạng mục. Di chuyển công việc dưới hạng mục cha khác qua menu ⋯.",
+        "tip3": "Lọc theo giai đoạn hoặc trạng thái bằng các nút trên thanh công cụ."
+      },
+      "payments": {
+        "title": "Thanh toán",
+        "tip1": "Hóa đơn trả góp: tạo hóa đơn với tổng số tiền, sau đó thêm các lần trả.",
+        "tip2": "Thanh toán ngoại tệ được tự động quy đổi bằng tỷ giá hàng ngày của ČNB."
+      },
+      "time": {
+        "title": "Thời gian",
+        "tip1": "Nhập nhân công, giờ và ngày. Nhân công và loại cuối cùng được nhớ để nhập nhanh hơn."
+      },
+      "contacts": {
+        "title": "Liên hệ",
+        "tip1": "Tra cứu công ty theo mã số thuế (ARES) — chi tiết được tự động điền."
+      },
+      "timeline": {
+        "title": "Tiến độ",
+        "tip1": "Chuyển đổi thu phóng (ngày/tháng/quý/năm) cho các mức chi tiết khác nhau.",
+        "tip2": "Nhấp đúp vào thanh để sửa ngày."
+      },
+      "shortcuts": {
+        "title": "Phím tắt",
+        "tip1": "Ctrl+K — tìm kiếm toàn cục trong ứng dụng.",
+        "tip2": "Ctrl+N — tạo dự án mới.",
+        "tip3": "Ctrl+B — bật/tắt thanh bên."
+      }
+    }
+  }
+}

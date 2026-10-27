@@ -187,6 +187,38 @@ export function FlagVN({ className }: FlagProps) {
   );
 }
 
+// Spain flag (3:2, ratio 900x600)
+export function FlagES({ className }: FlagProps) {
+  return (
+    <svg
+      viewBox="0 0 900 600"
+      className={className}
+      role="img"
+      aria-label="Spain"
+    >
+      <rect width="900" height="150" fill="#aa151b" />
+      <rect width="900" height="300" y="150" fill="#f1bf00" />
+      <rect width="900" height="150" y="450" fill="#aa151b" />
+    </svg>
+  );
+}
+
+// Italy flag (3:2, ratio 900x600)
+export function FlagIT({ className }: FlagProps) {
+  return (
+    <svg
+      viewBox="0 0 900 600"
+      className={className}
+      role="img"
+      aria-label="Italy"
+    >
+      <rect width="300" height="600" fill="#009246" />
+      <rect width="300" height="600" x="300" fill="#ffffff" />
+      <rect width="300" height="600" x="600" fill="#ce2b37" />
+    </svg>
+  );
+}
+
 // =====================================================================
 // Flag component — maps currency/locale code to the right SVG
 // =====================================================================
@@ -194,6 +226,11 @@ export function FlagVN({ className }: FlagProps) {
 const FLAG_MAP: Record<string, React.FC<FlagProps>> = {
   cs: FlagCZ,
   en: FlagGB,
+  pl: FlagPL,
+  vi: FlagVN,
+  hu: FlagHU,
+  es: FlagES,
+  it: FlagIT,
   CZK: FlagCZ,
   EUR: FlagEU,
   USD: FlagUS,
