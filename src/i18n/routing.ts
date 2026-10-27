@@ -1,4 +1,5 @@
 import { defineRouting } from "next-intl/routing";
+import { createNavigation } from "next-intl/navigation";
 import { locales, defaultLocale } from "./config";
 
 // =====================================================================
@@ -23,3 +24,19 @@ export const routing = defineRouting({
   localePrefix: "as-needed",
   localeDetection: true,
 });
+
+// =====================================================================
+// next-intl navigation — useRouter, usePathname, Link, redirect, etc.
+// ---------------------------------------------------------------------
+// These are locale-aware versions of next/navigation's hooks. When you
+// call `router.replace("/auth/login", { locale: "cs" })`, next-intl
+// automatically:
+//   1. Sets the NEXT_LOCALE cookie to the target locale
+//   2. Builds the correct URL (with or without prefix based on as-needed)
+//   3. Preserves the current path
+//
+// Use these instead of `next/navigation`'s useRouter/usePathname in
+// components that need locale-aware navigation (e.g. LanguageSwitcher).
+// =====================================================================
+export const { Link, redirect, usePathname, useRouter, getPathname } =
+  createNavigation(routing);

@@ -2,7 +2,8 @@
 
 import { useTransition } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { useRouter, usePathname, useSearchParams } from "next/navigation";
+import { useRouter, usePathname } from "@/i18n/routing";
+import { useSearchParams } from "next/navigation";
 import { Check, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,23 +14,27 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { locales, LOCALE_META, defaultLocale, type Locale } from "@/i18n/config";
+import { locales, LOCALE_META, type Locale } from "@/i18n/config";
 import { Flag } from "@/components/ui/flags";
 import { cn } from "@/lib/utils";
+
 // =====================================================================
 // LanguageSwitcher — flag-based locale dropdown
 // ---------------------------------------------------------------------
-// Renders the current locale's SVG flag + a dropdown to switch.
-// Uses inline SVG flags (not emoji) because emoji flags don't render
-// on Windows. The SVG component (`@/components/ui/flags`) maps locale
-// codes (cs, en) to the correct flag.
+// Uses next-intl's locale-aware `useRouter` and `usePathname` from
+// `@/i18n/routing`. When switching locales, next-intl automatically:
+//   1. Sets the NEXT_LOCALE cookie to the target locale
+//   2. Builds the correct URL (with or without prefix based on as-needed)
+//   3. Preserves the current path + search params
 //
-// Visible on ALL screen sizes (mobile + desktop) — previously hidden
-// on mobile, but the user requested it be available everywhere.
+// This fixes the bug where switching from EN → CS would redirect back
+// to EN because the middleware saw the stale NEXT_LOCALE cookie.
 // =====================================================================
 
 export function LanguageSwitcher({ className }: { className?: string }) {
+  // next-intl's useRouter — locale-aware (sets cookie + builds correct URL)
   const router = useRouter();
+  // next-intl's usePathname — returns path WITHOUT locale prefix
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const currentLocale = useLocale() as Locale;
@@ -39,27 +44,15 @@ export function LanguageSwitcher({ className }: { className?: string }) {
   const switchTo = (next: Locale) => {
     if (next === currentLocale) return;
 
-    // `usePathname()` from next/navigation returns the FULL path including
-    // the locale prefix (e.g. "/en/auth/login"). Strip it so we can rebuild
-    // the URL for the target locale.
-    let strippedPath = pathname;
-    for (const loc of locales) {
-      if (strippedPath === `/${loc}` || strippedPath.startsWith(`/${loc}/`)) {
-        strippedPath = strippedPath.slice(`/${loc}`.length) || "/";
-        break;
-      }
-    }
-
+    // next-intl's useRouter.replace() with { locale } option automatically:
+    //   - Sets NEXT_LOCALE cookie to `next`
+    //   - Builds the URL with correct prefix (no prefix for cs, /en/ for en)
+    //   - Preserves the pathname
     const query = searchParams.toString();
-    const pathWithQuery = query ? `${strippedPath}?${query}` : strippedPath;
-
-    const targetPath =
-      next === defaultLocale
-        ? pathWithQuery
-        : `/${next}${pathWithQuery === "/" ? "" : pathWithQuery}`;
+    const pathWithQuery = query ? `${pathname}?${query}` : pathname;
 
     startTransition(() => {
-      router.replace(targetPath);
+      router.replace(pathWithQuery, { locale: next });
       router.refresh();
     });
   };
