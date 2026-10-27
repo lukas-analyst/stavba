@@ -33,6 +33,7 @@ import {
 } from "lucide-react";
 import {
   formatCzk,
+  formatCurrency,
   formatNumber,
   formatDate,
   PHASE_COLORS,
@@ -97,12 +98,14 @@ type TimelineItem = {
 export function DashboardTab({ projectId }: { projectId: string }) {
   const { data, isLoading } = useDashboard(projectId);
   const { data: trend } = useSpendingTrend(projectId);
+  const { data: projects } = useProjects();
   const setActiveTab = useAppStore((s) => s.setActiveTab);
   const setBudgetFilter = useAppStore((s) => s.setBudgetFilter);
   const t = useTranslations("tabs.dashboard");
   const tStatuses = useTranslations("statuses");
   const tPhases = useTranslations("phases");
   const locale = useLocale() as Locale;
+  const projectCurrency = projects?.find((p) => p.id === projectId)?.currency ?? "CZK";
 
   const goToBudget = (filter: Parameters<typeof setBudgetFilter>[0]) => {
     setBudgetFilter(filter);
@@ -266,7 +269,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
           icon={Wallet}
           label={t("kpi.burn.label")}
           value={`${burnRate.toFixed(0)}%`}
-          subValue={t("kpi.burn.subValue", { actual: formatCzk(totals.actualTotal, locale), plan: formatCzk(totals.planTotal, locale) })}
+          subValue={t("kpi.burn.subValue", { actual: formatCurrency(totals.actualTotal, projectCurrency, locale), plan: formatCurrency(totals.planTotal, projectCurrency, locale) })}
           accent={burnAccent}
           progress={burnRate}
           completed={totals.itemCount > 0 && totals.completedCount === totals.itemCount}
@@ -274,8 +277,8 @@ export function DashboardTab({ projectId }: { projectId: string }) {
         <HeroKpiCard
           icon={Wallet}
           label={t("kpi.remaining.label")}
-          value={formatCzk(totals.remaining, locale)}
-          subValue={t("kpi.remaining.subValue", { planTotal: formatCzk(totals.planTotal, locale) })}
+          value={formatCurrency(totals.remaining, projectCurrency, locale)}
+          subValue={t("kpi.remaining.subValue", { planTotal: formatCurrency(totals.planTotal, projectCurrency, locale) })}
           accent="primary"
         />
         <HeroKpiCard
@@ -400,7 +403,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
                         {isTask && item.parentSubcategory
                           ? `${item.parentSubcategory} · ${tPhases(item.phase)}`
                           : tPhases(item.phase)}
-                        {item.planCost && ` · ${formatCzk(item.planCost, locale)}`}
+                        {item.planCost && ` · ${formatCurrency(item.planCost, projectCurrency, locale)}`}
                       </p>
                     </div>
                     <div className="text-right">
@@ -446,7 +449,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
                 "text-xl font-bold tabular-nums",
                 totals.projectedOverrun > 0 ? "text-danger" : "text-success",
               )}>
-                {formatCzk(totals.projectedFinal, locale)}
+                {formatCurrency(totals.projectedFinal, projectCurrency, locale)}
               </p>
             </div>
             <div className="space-y-1">
@@ -458,7 +461,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
                 totals.projectedOverrun > 0 ? "text-danger" : "text-success",
               )}>
                 {totals.projectedOverrun > 0 ? "+" : ""}
-                {formatCzk(totals.projectedOverrun, locale)}
+                {formatCurrency(totals.projectedOverrun, projectCurrency, locale)}
               </p>
             </div>
             <div className="space-y-1">
@@ -480,15 +483,15 @@ export function DashboardTab({ projectId }: { projectId: string }) {
                 {t("cashflow.remainingEstimate")}
               </p>
               <p className="text-xl font-bold tabular-nums">
-                {formatCzk(totals.projectedFinal - totals.actualTotal, locale)}
+                {formatCurrency(totals.projectedFinal - totals.actualTotal, projectCurrency, locale)}
               </p>
             </div>
           </div>
           {/* Progress bar: actual vs projected */}
           <div className="mt-4 space-y-1">
             <div className="flex justify-between text-xs text-on-surface-variant">
-              <span>{t("cashflow.spent", { actual: formatCzk(totals.actualTotal, locale) })}</span>
-              <span>{t("cashflow.estimate", { projected: formatCzk(totals.projectedFinal, locale) })}</span>
+              <span>{t("cashflow.spent", { actual: formatCurrency(totals.actualTotal, projectCurrency, locale) })}</span>
+              <span>{t("cashflow.estimate", { projected: formatCurrency(totals.projectedFinal, projectCurrency, locale) })}</span>
             </div>
             <div className="flex h-3 w-full overflow-hidden rounded-full bg-muted">
               <div
@@ -540,7 +543,14 @@ export function DashboardTab({ projectId }: { projectId: string }) {
                   />
                   <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
                   <Tooltip
-                    formatter={(v: number) => formatCzk(v, locale)}
+                    formatter={(v: number, name: string) => {
+                      const label = name === "plan" ? t("chart.series.plan") : t("chart.series.actual");
+                      return [formatCurrency(v, projectCurrency, locale), label];
+                    }}
+                    labelFormatter={(_, payload) => {
+                      const item = payload?.[0]?.payload as { phase?: string } | undefined;
+                      return item?.phase ? tPhases(item.phase) : "";
+                    }}
                     contentStyle={{
                       backgroundColor: "var(--popover)",
                       border: "1px solid var(--border)",
@@ -596,7 +606,10 @@ export function DashboardTab({ projectId }: { projectId: string }) {
                     width={100}
                   />
                   <Tooltip
-                    formatter={(v: number) => formatCzk(v, locale)}
+                    formatter={(v: number, name: string) => {
+                      const label = name === "plan" ? t("chart.series.plan") : t("chart.series.actual");
+                      return [formatCurrency(v, projectCurrency, locale), label];
+                    }}
                     labelFormatter={(_, payload) => {
                       const item = payload?.[0]?.payload as { fullName?: string } | undefined;
                       return item?.fullName ?? "";
@@ -679,7 +692,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
                   />
                   <Tooltip
                     formatter={(v: number, name: string) => {
-                      if (name === "spend") return [formatCzk(v, locale), t("chart.series.spend")];
+                      if (name === "spend") return [formatCurrency(v, projectCurrency, locale), t("chart.series.spend")];
                       return [formatNumber(v, " h", locale), t("chart.series.hours")];
                     }}
                     contentStyle={{
@@ -764,10 +777,10 @@ export function DashboardTab({ projectId }: { projectId: string }) {
                     </div>
                     <div className="text-right">
                       <p className="text-sm font-semibold tabular-nums">
-                        {formatCzk(c.actual, locale)}
+                        {formatCurrency(c.actual, projectCurrency, locale)}
                       </p>
                       <p className="text-xs text-muted-foreground tabular-nums">
-                        {t("contacts.ofPlan", { plan: formatCzk(c.plan, locale) })}
+                        {t("contacts.ofPlan", { plan: formatCurrency(c.plan, projectCurrency, locale) })}
                       </p>
                     </div>
                     <div className="text-right">
@@ -831,9 +844,9 @@ export function DashboardTab({ projectId }: { projectId: string }) {
                       <td className="px-4 py-3 text-right tabular-nums">
                         {p.completedCount}/{p.count}
                       </td>
-                      <td className="px-4 py-3 text-right tabular-nums">{formatCzk(p.plan, locale)}</td>
+                      <td className="px-4 py-3 text-right tabular-nums">{formatCurrency(p.plan, projectCurrency, locale)}</td>
                       <td className={cn("px-4 py-3 text-right font-semibold tabular-nums", burn > 100 && "text-danger")}>
-                        {formatCzk(p.actual, locale)}
+                        {formatCurrency(p.actual, projectCurrency, locale)}
                       </td>
                       <td className="px-4 py-3 text-right tabular-nums">{formatNumber(p.hours, " h", locale)}</td>
                       <td className={cn("px-4 py-3 text-right font-semibold tabular-nums", burnCls)}>
@@ -896,7 +909,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
                       </p>
                     </div>
                   </div>
-                  <span className="font-semibold tabular-nums">{formatCzk(payment.amount, locale)}</span>
+                  <span className="font-semibold tabular-nums">{formatCurrency(payment.amount, projectCurrency, locale)}</span>
                 </div>
               ))
             )}

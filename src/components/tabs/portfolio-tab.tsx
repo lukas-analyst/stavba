@@ -43,6 +43,7 @@ import {
 } from "recharts";
 import {
   formatCzk,
+  formatCurrency,
   formatPercent,
   STATUS_COLORS,
   type StatusId,
@@ -444,7 +445,10 @@ export function PortfolioTab() {
                     }
                   />
                   <Tooltip
-                    formatter={(v: number) => formatCzk(v, locale)}
+                    formatter={(v: number, name: string) => {
+                      const label = name === "plan" ? t("chart.series.plan") : t("chart.series.actual");
+                      return [formatCurrency(v, "CZK", locale), label];
+                    }}
                     labelFormatter={(_label: string, payload) => {
                       const item = payload?.[0];
                       if (!item) return "";
