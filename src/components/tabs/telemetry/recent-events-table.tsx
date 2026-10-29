@@ -220,9 +220,30 @@ export function RecentEventsTable({
         if (projectFilter) params.set("projectId", projectFilter);
         params.set("page", String(p));
         params.set("pageSize", String(PAGE_SIZE));
-        const res = await fetch(`/api/analytics/events?${params.toString()}`);
+        const url = `/api/analytics/events?${params.toString()}`;
+        // DEBUG (temporary): log the exact request + response so we can
+        // diagnose the "only 3 entries" issue from the browser console.
+        // Remove this console.info after the bug is fixed.
+        console.info("[RecentEventsTable] fetch:", {
+          url,
+          filters: { typeFilter, userFilter, pageFilter, projectFilter },
+          page: p,
+        });
+        const res = await fetch(url);
         if (!res.ok) throw new Error("Failed to fetch events");
         const json: EventsResponse = await res.json();
+        console.info("[RecentEventsTable] response:", {
+          entriesCount: json.entries?.length,
+          total: json.total,
+          totalPages: json.totalPages,
+          firstEntry: json.entries?.[0]
+            ? {
+                eventType: json.entries[0].eventType,
+                createdAt: json.entries[0].createdAt,
+                user: json.entries[0].user?.email,
+              }
+            : null,
+        });
         setData(json);
       } catch {
         setError(t("error.loadFailed"));
