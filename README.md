@@ -102,9 +102,11 @@ V sekci **„Environment Variables"** přidejte:
 
 | Name | Value |
 |------|-------|
-| `DATABASE_URL` | `postgresql://neondb_owner:npg_tjaDHGg7ms3c@ep-quiet-breeze-b1x58rmg-pooler.c-5.eu-central-1.aws.neon.tech/neondb?sslmode=require` |
+| `DATABASE_URL` | `postgresql://USER:PASSWORD@HOST/DATABASE?sslmode=require` (z Neon dashboardu) |
+| `NEXTAUTH_SECRET` | náhodný base64 string (např. `openssl rand -base64 32`) |
+| `NEXTAUTH_URL` | `https://VAŠE-PRODUKČNÍ-URL.vercel.app` |
 
-**⚠️ Toto je jediná env proměnná, kterou aplikace potřebuje.**
+**⚠️ Nikdy necommitujte skutečné credentials do gitu.** Pro lokální vývoj si vytvořte `.env.local` (gitignored) s těmito proměnnými.
 
 #### 2d. Deploy!
 
