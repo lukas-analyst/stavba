@@ -15,7 +15,7 @@ import { SUPPORTED_CURRENCIES, type CurrencyCode } from "@/lib/currency-config";
 // =====================================================================
 
 const CNB_API_URL =
-  "https://www.cnb.cz/cs/financni_trhy/devizovy_trh/denni_kurz_jnp.txt";
+  "https://www.cnb.cz/cs/financni-trhy/devizovy-trh/kurzy-devizoveho-trhu/kurzy-devizoveho-trhu/denni_kurz.txt";
 
 type CnbRate = {
   currency: string;     // e.g. "euro"

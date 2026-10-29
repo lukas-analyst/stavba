@@ -13,7 +13,7 @@
 // Other currencies are fetched from ČNB daily by the cron job.
 // =====================================================================
 
-export type CurrencyCode = "CZK" | "EUR" | "USD" | "GBP" | "HUF" | "PLN" | "AUD" | "VND";
+export type CurrencyCode = "CZK" | "EUR" | "USD" | "GBP" | "HUF" | "PLN" | "AUD";
 
 export type CurrencyMeta = {
   code: CurrencyCode;
@@ -32,7 +32,8 @@ export const SUPPORTED_CURRENCIES: CurrencyMeta[] = [
   { code: "HUF", flagCode: "HUF", symbol: "Ft",  cnbCode: "HUF", cnbAmount: 100, decimals: 0 },
   { code: "PLN", flagCode: "PLN", symbol: "zł",  cnbCode: "PLN", cnbAmount: 1,   decimals: 2 },
   { code: "AUD", flagCode: "AUD", symbol: "A$",  cnbCode: "AUD", cnbAmount: 1,   decimals: 2 },
-  { code: "VND", flagCode: "VND", symbol: "₫",   cnbCode: "VND", cnbAmount: 100, decimals: 0 },
+  // VND (Vietnamese dong) is NOT published by ČNB — removed.
+  // To add it later, use a different exchange rate source (ECB, Fixer.io).
 ];
 
 export const CURRENCY_MAP: Record<string, CurrencyMeta> = Object.fromEntries(
