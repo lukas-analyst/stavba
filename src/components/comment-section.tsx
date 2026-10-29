@@ -48,7 +48,7 @@ export function CommentSection({ budgetItemId }: { budgetItemId: string }) {
     <div className="space-y-3 rounded-lg border bg-muted/20 p-3">
       <div className="flex items-center gap-1.5">
         <MessageSquare className="h-4 w-4 text-muted-foreground" />
-        <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+        <span className="type-overline text-muted-foreground">
           Komentáře ({comments?.length ?? 0})
         </span>
       </div>
@@ -68,12 +68,12 @@ export function CommentSection({ budgetItemId }: { budgetItemId: string }) {
           {comments.map((c) => (
             <div
               key={c.id}
-              className="group rounded-md border bg-background p-2 text-xs"
+              className="group rounded-md border bg-background p-2 type-label"
             >
               <div className="flex items-center justify-between gap-2">
                 <span className="font-semibold text-foreground">{c.author}</span>
                 <div className="flex items-center gap-1">
-                  <span className="text-[10px] text-muted-foreground">
+                  <span className="type-label-sm text-muted-foreground">
                     {formatDate(c.createdAt)}
                   </span>
                   <button
@@ -90,7 +90,7 @@ export function CommentSection({ budgetItemId }: { budgetItemId: string }) {
           ))}
         </div>
       ) : (
-        <p className="py-3 text-center text-[11px] text-muted-foreground">
+        <p className="py-3 text-center type-label text-muted-foreground">
           Zatím žádné komentáře. Přidejte poznámku nebo dotaz.
         </p>
       )}
@@ -102,13 +102,13 @@ export function CommentSection({ budgetItemId }: { budgetItemId: string }) {
             value={author}
             onChange={(e) => setAuthor(e.target.value)}
             placeholder="Jméno (volitelné)"
-            className="h-7 w-32 text-xs"
+            className="h-7 w-32 type-label"
           />
           <Input
             value={text}
             onChange={(e) => setText(e.target.value)}
             placeholder="Napište komentář…"
-            className="h-7 flex-1 text-xs"
+            className="h-7 flex-1 type-label"
           />
           <Button
             type="submit"

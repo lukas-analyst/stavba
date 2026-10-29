@@ -50,7 +50,7 @@ export default function ForgotPasswordPage() {
         {/* Logo */}
         <div className="mb-8 text-center">
           <Link href="/" className="inline-flex items-center gap-2">
-            <span className="text-2xl font-bold tracking-tight">
+            <span className="type-display tracking-tight">
               <img src="/logo.svg" alt="Logo" className="h-16 w-16 rounded-xl" />
             </span>
           </Link>
@@ -63,8 +63,8 @@ export default function ForgotPasswordPage() {
               <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-success/10">
                 <CheckCircle2 className="h-8 w-8 text-success" />
               </div>
-              <h1 className="mb-2 text-xl font-semibold">{t("success.title")}</h1>
-              <p className="mb-6 text-sm text-muted-foreground">
+              <h1 className="mb-2 type-headline">{t("success.title")}</h1>
+              <p className="mb-6 type-body text-muted-foreground">
                 {t("success.body", { email })}
               </p>
               <Button asChild variant="outline" className="w-full" size="lg">
@@ -73,8 +73,8 @@ export default function ForgotPasswordPage() {
             </div>
           ) : (
             <>
-              <h1 className="mb-1 text-xl font-semibold">{t("title")}</h1>
-              <p className="mb-6 text-sm text-muted-foreground">
+              <h1 className="mb-1 type-headline">{t("title")}</h1>
+              <p className="mb-6 type-body text-muted-foreground">
                 {t("subtitle")}
               </p>
 
@@ -82,7 +82,7 @@ export default function ForgotPasswordPage() {
                 <div
                   id="error-form"
                   role="alert"
-                  className="mb-4 flex items-start gap-2 rounded-lg border border-destructive/20 bg-destructive/10 p-3 text-sm text-destructive"
+                  className="mb-4 flex items-start gap-2 rounded-lg border border-destructive/20 bg-destructive/10 p-3 type-body text-destructive"
                 >
                   <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
                   <span>{error}</span>
@@ -127,7 +127,7 @@ export default function ForgotPasswordPage() {
                 </Button>
               </form>
 
-              <p className="mt-6 text-center text-sm text-muted-foreground">
+              <p className="mt-6 text-center type-body text-muted-foreground">
                 {t("remember")}{" "}
                 <Link
                   href="/auth/login"

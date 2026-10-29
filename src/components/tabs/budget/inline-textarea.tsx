@@ -41,7 +41,7 @@ export function InlineTextarea({
       }}
       placeholder={placeholder}
       rows={3}
-      className="text-xs"
+      className="type-label"
     />
   );
 }

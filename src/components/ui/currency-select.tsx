@@ -94,12 +94,12 @@ export function CurrencySelect({
                 {c.code} {c.symbol}
               </span>
               {isDefault && (
-                <span className="text-[10px] text-muted-foreground/70 ml-1">
+                <span className="type-label-sm text-muted-foreground/70 ml-1">
                   ({t("default")})
                 </span>
               )}
               {isUnavailable && (
-                <span className="text-[10px] text-muted-foreground/50 ml-auto italic">
+                <span className="type-label-sm text-muted-foreground/50 ml-auto italic">
                   {t("unavailable")}
                 </span>
               )}

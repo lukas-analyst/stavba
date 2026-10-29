@@ -361,8 +361,8 @@ export function NewProjectDialog({ open, onOpenChange }: Props) {
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
                 <FileText className="h-6 w-6 text-primary" />
               </div>
-              <div className="text-sm font-semibold">{t("mode.blank.title")}</div>
-              <p className="text-[11px] text-muted-foreground">
+              <div className="type-title">{t("mode.blank.title")}</div>
+              <p className="type-label text-muted-foreground">
                 {t("mode.blank.description")}
               </p>
             </button>
@@ -375,8 +375,8 @@ export function NewProjectDialog({ open, onOpenChange }: Props) {
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
                 <Home className="h-6 w-6 text-primary" />
               </div>
-              <div className="text-sm font-semibold">{t("mode.template.title")}</div>
-              <p className="text-[11px] text-muted-foreground">
+              <div className="type-title">{t("mode.template.title")}</div>
+              <p className="type-label text-muted-foreground">
                 {t("mode.template.description")}
               </p>
             </button>
@@ -390,8 +390,8 @@ export function NewProjectDialog({ open, onOpenChange }: Props) {
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
                 <Copy className="h-6 w-6 text-primary" />
               </div>
-              <div className="text-sm font-semibold">{t("mode.copy.title")}</div>
-              <p className="text-[11px] text-muted-foreground">
+              <div className="type-title">{t("mode.copy.title")}</div>
+              <p className="type-label text-muted-foreground">
                 {t("mode.copy.description")}
               </p>
             </button>
@@ -403,7 +403,7 @@ export function NewProjectDialog({ open, onOpenChange }: Props) {
           <>
             <button
               onClick={() => setMode(null)}
-              className="flex items-center gap-1 text-xs text-muted-foreground transition-colors hover:text-foreground"
+              className="flex items-center gap-1 type-label text-muted-foreground transition-colors hover:text-foreground"
             >
               {t("back")}
             </button>
@@ -432,9 +432,9 @@ export function NewProjectDialog({ open, onOpenChange }: Props) {
                         >
                           <Icon className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
                           <div className="min-w-0">
-                            <div className="text-sm font-semibold">{t(`templates.${tpl.type}.label`)}</div>
-                            <p className="text-[11px] text-muted-foreground">{t(`templates.${tpl.type}.description`)}</p>
-                            <p className="mt-1 text-[10px] text-muted-foreground">
+                            <div className="type-title">{t(`templates.${tpl.type}.label`)}</div>
+                            <p className="type-label text-muted-foreground">{t(`templates.${tpl.type}.description`)}</p>
+                            <p className="mt-1 type-label-sm text-muted-foreground">
                               {t("template.itemsPlan", {
                                 count: tpl.items.length,
                                 sum: tpl.items.reduce((s, i) => s + (i.planCost || 0), 0).toLocaleString(locale === "cs" ? "cs-CZ" : "en-US"),
@@ -464,8 +464,8 @@ export function NewProjectDialog({ open, onOpenChange }: Props) {
                           )}
                         >
                           <div className="min-w-0">
-                            <div className="text-sm font-semibold">{t(`templates.${templateType}.scopeOptions.${opt.id}.label`)}</div>
-                            <p className="text-[11px] text-muted-foreground">{t(`templates.${templateType}.scopeOptions.${opt.id}.description`)}</p>
+                            <div className="type-title">{t(`templates.${templateType}.scopeOptions.${opt.id}.label`)}</div>
+                            <p className="type-label text-muted-foreground">{t(`templates.${templateType}.scopeOptions.${opt.id}.description`)}</p>
                           </div>
                         </button>
                       ))}
@@ -477,13 +477,13 @@ export function NewProjectDialog({ open, onOpenChange }: Props) {
                 {templateType && selectedTemplate && (!needsScope || scope) && previewTemplate && (
                   <div className="rounded-lg border bg-muted/20 p-3">
                     <div className="mb-2 flex items-center justify-between">
-                      <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                      <span className="type-overline text-muted-foreground">
                         {t("template.preview")}
                       </span>
                     </div>
                     <div className="space-y-1">
                       {categoryGroups.map(({ category, count, sum }) => (
-                        <div key={category} className="flex items-center gap-2 text-[11px]">
+                        <div key={category} className="flex items-center gap-2 type-label">
                           <Badge variant="secondary" className="font-medium">{category}</Badge>
                           <span className="text-muted-foreground">
                             {t("template.itemsCount", { count })}
@@ -494,7 +494,7 @@ export function NewProjectDialog({ open, onOpenChange }: Props) {
                         </div>
                       ))}
                     </div>
-                    <div className="mt-2 border-t pt-2 text-[11px] font-semibold">
+                    <div className="mt-2 border-t pt-2 type-label font-semibold">
                       {t("template.total", {
                         count: previewTemplate.items.length,
                         sum: formatCzk(totalPlanSum, locale),
@@ -525,7 +525,7 @@ export function NewProjectDialog({ open, onOpenChange }: Props) {
                 </div>
                 {copyFromId && (
                   <div className="rounded-lg border bg-muted/20 p-3">
-                    <p className="text-[11px] text-muted-foreground">
+                    <p className="type-label text-muted-foreground">
                       {t("copy.description")}
                     </p>
                   </div>

@@ -160,7 +160,7 @@ export function NotesTab({ projectId }: { projectId: string }) {
               value={author}
               onChange={(e) => persistAuthor(e.target.value)}
               placeholder={t("placeholder.author")}
-              className="h-9 text-sm"
+              className="h-9 type-body"
               maxLength={100}
             />
           </div>
@@ -175,7 +175,7 @@ export function NotesTab({ projectId }: { projectId: string }) {
               onKeyDown={handleTextKeyDown}
               placeholder={t("placeholder.text")}
               rows={3}
-              className="resize-y text-sm"
+              className="resize-y type-body"
             />
           </div>
         </div>
@@ -345,7 +345,7 @@ function NoteCard({
                 onKeyDown={handleKeyDown}
                 onBlur={commitEdit}
                 rows={Math.min(8, Math.max(2, draft.split("\n").length + 1))}
-                className="resize-y text-sm leading-relaxed"
+                className="resize-y type-body leading-relaxed"
                 disabled={isSaving}
                 maxLength={5000}
               />

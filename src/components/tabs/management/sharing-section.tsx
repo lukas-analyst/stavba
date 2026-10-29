@@ -503,7 +503,7 @@ export function SharingSection({
               <Shield className="h-4 w-4 text-primary" />
               {t("title")}
             </CardTitle>
-            <CardDescription className="mt-1 text-sm text-on-surface-variant">{t("description")}</CardDescription>
+            <CardDescription className="mt-1 type-body text-on-surface-variant">{t("description")}</CardDescription>
           </div>
           <Button
             variant="outline"
@@ -746,7 +746,7 @@ export function SharingSection({
                 return (
                   <div
                     key={inv.id}
-                    className="flex items-center gap-3 rounded-lg border border-outline-variant bg-surface-container-low p-2.5 text-sm"
+                    className="flex items-center gap-3 rounded-lg border border-outline-variant bg-surface-container-low p-2.5 type-body"
                   >
                     <div className="min-w-0 flex-1">
                       <div className="type-body font-medium truncate">{inv.inviteeEmail}</div>

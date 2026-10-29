@@ -209,7 +209,7 @@ export function PropertyMetadataCard({
               <Building2 className="h-4 w-4 text-primary" />
               {t("title")}
             </CardTitle>
-            <CardDescription className="mt-1 text-sm text-on-surface-variant">
+            <CardDescription className="mt-1 type-body text-on-surface-variant">
               {t("description")}
             </CardDescription>
           </div>
@@ -434,7 +434,7 @@ export function PropertyMetadataCard({
                 {project.energyRating ? (
                   <Badge
                     variant="secondary"
-                    className={cn("text-xs font-semibold", energyBadgeClass)}
+                    className={cn("type-label font-semibold", energyBadgeClass)}
                   >
                     {project.energyRating}
                   </Badge>

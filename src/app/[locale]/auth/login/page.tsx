@@ -157,35 +157,35 @@ export default function LoginPage() {
         {/* Logo */}
         <div className="mb-8 text-center">
           <Link href="/" className="inline-flex items-center gap-2">
-            <span className="text-2xl font-bold tracking-tight">
+            <span className="type-display tracking-tight">
               <img src="/logo.svg" alt="Logo" className="h-16 w-16 rounded-xl" />
             </span>
           </Link>
-          <p className="mt-2 text-sm text-muted-foreground">
+          <p className="mt-2 type-body text-muted-foreground">
             {t("tagline")}
           </p>
         </div>
 
         {/* Card */}
         <div className="rounded-2xl border bg-card p-6 shadow-sm sm:p-8">
-          <h1 className="mb-1 text-xl font-semibold">{t("title")}</h1>
-          <p className="mb-6 text-sm text-muted-foreground">
+          <h1 className="mb-1 type-headline">{t("title")}</h1>
+          <p className="mb-6 type-body text-muted-foreground">
             {t("subtitle")}
           </p>
 
           {registeredParam === "1" && (
-            <div className="mb-4 flex items-start gap-2 rounded-lg border border-success/20 bg-success/10 p-3 text-sm text-success">
+            <div className="mb-4 flex items-start gap-2 rounded-lg border border-success/20 bg-success/10 p-3 type-body text-success">
               <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
               <span>{t("registeredSuccess")}</span>
             </div>
           )}
 
           {(errorParam === "account-deleted" || deletedParam === "1") && (
-            <div className="mb-4 flex items-start gap-2 rounded-lg border border-warning/30 bg-warning/10 p-3 text-sm text-warning">
+            <div className="mb-4 flex items-start gap-2 rounded-lg border border-warning/30 bg-warning/10 p-3 type-body text-warning">
               <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
               <div className="space-y-1">
                 <p className="font-medium">{t("accountDeleted.title")}</p>
-                <p className="text-xs text-muted-foreground">{t("accountDeleted.body")}</p>
+                <p className="type-label text-muted-foreground">{t("accountDeleted.body")}</p>
               </div>
             </div>
           )}
@@ -194,7 +194,7 @@ export default function LoginPage() {
             <div
               id="error-form"
               role="alert"
-              className="mb-4 flex items-start gap-2 rounded-lg border border-destructive/20 bg-destructive/10 p-3 text-sm text-destructive"
+              className="mb-4 flex items-start gap-2 rounded-lg border border-destructive/20 bg-destructive/10 p-3 type-body text-destructive"
             >
               <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
               <span>{error}</span>
@@ -226,7 +226,7 @@ export default function LoginPage() {
                 <Label htmlFor="password">{tc("password")}</Label>
                 <Link
                   href="/auth/forgot-password"
-                  className="text-xs text-muted-foreground hover:text-foreground hover:underline"
+                  className="type-label text-muted-foreground hover:text-foreground hover:underline"
                 >
                   {t("forgotPassword")}
                 </Link>
@@ -269,7 +269,7 @@ export default function LoginPage() {
           {/* Divider */}
           <div className="my-6 flex items-center gap-3">
             <div className="h-px flex-1 bg-border" />
-            <span className="text-xs text-muted-foreground">{tc("or")}</span>
+            <span className="type-label text-muted-foreground">{tc("or")}</span>
             <div className="h-px flex-1 bg-border" />
           </div>
 
@@ -290,7 +290,7 @@ export default function LoginPage() {
             {googleLoading ? t("submitting") : t("googleButton")}
           </Button>
 
-          <p className="mt-6 text-center text-sm text-muted-foreground">
+          <p className="mt-6 text-center type-body text-muted-foreground">
             {t("noAccount")}{" "}
             <Link
               href="/auth/register"
@@ -301,7 +301,7 @@ export default function LoginPage() {
           </p>
         </div>
 
-        <p className="mt-6 text-center text-xs text-muted-foreground">
+        <p className="mt-6 text-center type-label text-muted-foreground">
           {tc("copyright", { year: new Date().getFullYear() })}
         </p>
       </div>

@@ -124,9 +124,9 @@ export function DeleteAccountDialog({
 
         <div className="space-y-4 py-2">
           {/* Warning box */}
-          <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm">
+          <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 type-body">
             <p className="font-medium text-destructive mb-1">{t("warningTitle")}</p>
-            <p className="text-muted-foreground text-xs">{t("warningBody")}</p>
+            <p className="text-muted-foreground type-label">{t("warningBody")}</p>
           </div>
 
           {/* Identity verification */}
@@ -141,7 +141,7 @@ export function DeleteAccountDialog({
                 placeholder={session?.user?.email ?? ""}
                 autoComplete="email"
               />
-              <p className="text-xs text-muted-foreground">{t("emailConfirmHint")}</p>
+              <p className="type-label text-muted-foreground">{t("emailConfirmHint")}</p>
             </div>
           ) : (
             <div className="space-y-2">
@@ -165,7 +165,7 @@ export function DeleteAccountDialog({
               onCheckedChange={(v) => setAcknowledged(v === true)}
               className="mt-0.5"
             />
-            <Label htmlFor="acknowledge" className="cursor-pointer text-sm leading-tight">
+            <Label htmlFor="acknowledge" className="cursor-pointer type-body leading-tight">
               {t("acknowledge")}
             </Label>
           </div>

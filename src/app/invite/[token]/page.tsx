@@ -197,7 +197,7 @@ export default function InvitationPage({
         <div className="w-full max-w-md space-y-4">
           <div className="text-center">
             <Loader2 className="mx-auto h-8 w-8 animate-spin text-muted-foreground" />
-            <p className="mt-3 text-sm text-muted-foreground">{t("loading")}</p>
+            <p className="mt-3 type-body text-muted-foreground">{t("loading")}</p>
           </div>
           <Skeleton className="h-48" />
         </div>
@@ -210,8 +210,8 @@ export default function InvitationPage({
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-background px-4 text-center">
         <LogIn className="h-12 w-12 text-muted-foreground" />
-        <p className="text-lg font-medium">{t("unauthenticated.title")}</p>
-        <p className="text-sm text-muted-foreground">{t("unauthenticated.redirecting")}</p>
+        <p className="type-title-lg font-medium">{t("unauthenticated.title")}</p>
+        <p className="type-body text-muted-foreground">{t("unauthenticated.redirecting")}</p>
         <Button asChild className="mt-2">
           <Link href={token ? `/auth/login?callbackUrl=/invite/${token}` : "/auth/login"}>
             {t("unauthenticated.goToLogin")}
@@ -228,8 +228,8 @@ export default function InvitationPage({
         <div className="w-full max-w-md space-y-4">
           <div className="flex flex-col items-center gap-2">
             <AlertTriangle className="h-12 w-12 text-warning" />
-            <h1 className="text-xl font-semibold">{t("error.title")}</h1>
-            <p className="text-sm text-muted-foreground">{error}</p>
+            <h1 className="type-headline">{t("error.title")}</h1>
+            <p className="type-body text-muted-foreground">{error}</p>
           </div>
           <Button asChild className="w-full">
             <Link href="/">{tAuthCommon("backToHome")}</Link>
@@ -266,8 +266,8 @@ export default function InvitationPage({
         <div className="w-full max-w-md space-y-4">
           <div className="flex flex-col items-center gap-2">
             <AlertTriangle className="h-12 w-12 text-warning" />
-            <h1 className="text-xl font-semibold">{statusLabel}</h1>
-            <p className="text-sm text-muted-foreground">
+            <h1 className="type-headline">{statusLabel}</h1>
+            <p className="type-body text-muted-foreground">
               {t("field.project")} <strong>{info.project.name}</strong>
             </p>
           </div>
@@ -290,7 +290,7 @@ export default function InvitationPage({
         {/* Logo */}
         <div className="mb-6 text-center">
           <Link href="/" className="inline-flex items-center gap-2">
-            <span className="text-2xl font-bold tracking-tight">
+            <span className="type-display tracking-tight">
               <img src="/logo.svg" alt="Logo" className="h-16 w-16 rounded-xl" />
             </span>
           </Link>
@@ -302,7 +302,7 @@ export default function InvitationPage({
             <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
               <UserPlus className="h-7 w-7 text-primary" />
             </div>
-            <CardTitle className="text-xl">{t("title")}</CardTitle>
+            <CardTitle className="type-headline">{t("title")}</CardTitle>
             <CardDescription>
               {t.rich("description", {
                 name: info.project.name,
@@ -320,7 +320,7 @@ export default function InvitationPage({
           </CardHeader>
           <CardContent className="space-y-4">
             {/* Project + inviter details */}
-            <div className="space-y-2 rounded-lg border bg-surface-container-low p-3 text-sm">
+            <div className="space-y-2 rounded-lg border bg-surface-container-low p-3 type-body">
               <div className="flex items-start justify-between gap-2">
                 <span className="text-on-surface-variant">{t("field.project")}</span>
                 <span className="font-medium text-right">{info.project.name}</span>
@@ -357,15 +357,15 @@ export default function InvitationPage({
             </div>
 
             {/* Role description */}
-            <p className="text-sm text-on-surface-variant">{roleDesc}</p>
+            <p className="type-body text-on-surface-variant">{roleDesc}</p>
 
             {/* Recipient email notice */}
-            <div className="flex items-start gap-2 rounded-lg border border-info/30 bg-info/5 p-3 text-sm">
+            <div className="flex items-start gap-2 rounded-lg border border-info/30 bg-info/5 p-3 type-body">
               <Mail className="mt-0.5 h-4 w-4 shrink-0 text-info" />
               <div>
                 <p>{t("emailNotice.title")}</p>
                 <p className="font-medium">{info.inviteeEmail}</p>
-                <p className="mt-1 text-xs text-on-surface-variant">
+                <p className="mt-1 type-label text-on-surface-variant">
                   {t("emailNotice.hint")}
                 </p>
               </div>
@@ -404,7 +404,7 @@ export default function InvitationPage({
           </CardContent>
         </Card>
 
-        <p className="mt-6 text-center text-xs text-muted-foreground">
+        <p className="mt-6 text-center type-label text-muted-foreground">
           {t("footer")}
         </p>
       </div>

@@ -76,7 +76,7 @@ export function PasswordStrength({ password }: { password: string }) {
         ))}
       </div>
       {/* Label */}
-      <span className={cn("text-[11px] font-medium tabular-nums shrink-0", strength.color)}>
+      <span className={cn("type-label font-medium tabular-nums shrink-0", strength.color)}>
         {strength.label}
       </span>
     </div>

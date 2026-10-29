@@ -127,7 +127,7 @@ export function SortableCategoryCard({
             ) : (
               <ChevronDown className="h-4 w-4" />
             )}
-            <span className="text-sm font-bold">{categoryName}</span>
+            <span className="type-body font-bold">{categoryName}</span>
             <Badge variant="secondary" className="type-label-sm">
               {totals.count}
             </Badge>
@@ -161,7 +161,7 @@ export function SortableCategoryCard({
                 <Plus className="h-4 w-4 sm:h-3.5 sm:w-3.5" />
               </span>
             )}
-            <div className="ml-auto flex items-center gap-4 text-xs">
+            <div className="ml-auto flex items-center gap-4 type-label">
               <span className="text-muted-foreground">
                 {formatCurrency(totals.actual, projectCurrency, locale)} / {formatCurrency(totals.plan, projectCurrency, locale)}
               </span>

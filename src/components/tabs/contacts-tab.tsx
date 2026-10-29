@@ -261,7 +261,7 @@ function ContactCard({
             </div>
             <div className="min-w-0">
               <h3 className="type-title truncate">{contact.name}</h3>
-              <Badge variant="outline" className="mt-0.5 text-[10px]">
+              <Badge variant="outline" className="mt-0.5 type-label-sm">
                 {contactTypeLabelStr}
               </Badge>
             </div>
@@ -310,7 +310,7 @@ function ContactCard({
           </div>
         )}
         {(contact.ico || contact.dic) && (
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] text-on-surface-variant">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 type-label text-on-surface-variant">
             {contact.ico && (
               <span className="tabular-nums">
                 {t("detail.field.ico")}: <span className="font-medium text-foreground/80">{contact.ico}</span>
@@ -560,7 +560,7 @@ function ContactPersonsSection({
         <Button
           variant="outline"
           size="sm"
-          className="h-7 gap-1 rounded-full px-2 text-xs"
+          className="h-7 gap-1 rounded-full px-2 type-label"
           onClick={() => setShowAddForm(!showAddForm)}
         >
           {showAddForm ? <X className="h-3 w-3" /> : <Plus className="h-3 w-3" />} {showAddForm ? tCommon("cancel") : t("persons.button.add")}
@@ -653,7 +653,7 @@ function ContactPersonsSection({
                 className="group flex items-center gap-2 rounded-lg border border-outline-variant bg-surface-container-low px-2.5 py-2"
               >
                 {/* Avatar initials */}
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-secondary-container text-xs font-bold text-secondary-container-foreground">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-secondary-container type-label font-bold text-secondary-container-foreground">
                   {(p.firstName[0] ?? "") + (p.lastName[0] ?? "")}
                 </div>
                 <div className="min-w-0 flex-1">
@@ -751,11 +751,11 @@ function ContactDetailDialog({
                 {contactTypeEmoji}
               </div>
               <div className="min-w-0 flex-1">
-                <DialogTitle className="truncate text-lg">{contact.name}</DialogTitle>
+                <DialogTitle className="truncate type-title-lg">{contact.name}</DialogTitle>
                 <div className="mt-1 flex flex-wrap items-center gap-1.5">
-                  <Badge variant="outline" className="text-[10px]">{contactTypeLabelStr}</Badge>
+                  <Badge variant="outline" className="type-label-sm">{contactTypeLabelStr}</Badge>
                   {contact.role && (
-                    <span className="text-xs text-muted-foreground">{contact.role}</span>
+                    <span className="type-label text-muted-foreground">{contact.role}</span>
                   )}
                   {contact.rating && (
                     <div className="flex items-center gap-0.5">
@@ -784,7 +784,7 @@ function ContactDetailDialog({
             <div className="space-y-5 px-6 py-5">
               {/* Kontakt info */}
               <section className="space-y-2">
-                <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                <h4 className="type-overline text-muted-foreground">
                   {t("detail.section.contact")}
                 </h4>
                 <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
@@ -844,7 +844,7 @@ function ContactDetailDialog({
                   )}
                 </div>
                 {contact.notes && (
-                  <div className="rounded-md border bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
+                  <div className="rounded-md border bg-muted/30 px-3 py-2 type-label text-muted-foreground">
                     {contact.notes}
                   </div>
                 )}
@@ -857,7 +857,7 @@ function ContactDetailDialog({
 
               {/* Souhrn času a financí */}
               <section className="space-y-2">
-                <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                <h4 className="type-overline text-muted-foreground">
                   {t("detail.section.summary")}
                 </h4>
                 <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
@@ -920,8 +920,8 @@ function DetailRow({
     <div className="flex items-center gap-2 rounded-md border bg-card px-2.5 py-1.5">
       <span className="text-muted-foreground">{icon}</span>
       <div className="min-w-0">
-        <div className="text-[10px] uppercase tracking-wide text-muted-foreground">{label}</div>
-        <div className="truncate text-xs font-medium">
+        <div className="type-overline text-muted-foreground">{label}</div>
+        <div className="truncate type-label font-medium">
           {prefix && <span className="mr-1" aria-hidden>{prefix}</span>}
           {value}
         </div>
@@ -961,9 +961,9 @@ function DetailStat({
     <div className={cn("rounded-md border px-3 py-2", toneClasses)}>
       <div className="flex items-center gap-1.5">
         {icon}
-        <span className="text-[10px] uppercase tracking-wide opacity-80">{label}</span>
+        <span className="type-overline opacity-80">{label}</span>
       </div>
-      <div className="mt-1 text-sm font-bold tabular-nums">{value}</div>
+      <div className="mt-1 type-body font-bold tabular-nums">{value}</div>
     </div>
   );
 }
@@ -1096,11 +1096,11 @@ function ContactForm({
         {/* ARES search — načte data firmy z registru */}
         {!contact && (
           <div className="space-y-1.5 rounded-md border bg-muted/30 p-3">
-            <Label className="flex items-center gap-1.5 text-xs">
+            <Label className="flex items-center gap-1.5 type-label">
               <Search className="h-3 w-3" />
               {t("form.ares.label")}
             </Label>
-            <p className="text-[11px] text-muted-foreground">
+            <p className="type-label text-muted-foreground">
               {t("form.ares.hint")}
             </p>
             <AresSearch onSelect={handleAresSelect} />
@@ -1232,7 +1232,7 @@ function ContactForm({
                   type="button"
                   variant="ghost"
                   size="sm"
-                  className="ml-2 h-6 text-xs"
+                  className="ml-2 h-6 type-label"
                   onClick={() => setRating(null)}
                 >
                   {tCommon("cancel")}

@@ -32,8 +32,8 @@ export default async function NotFound() {
       </div>
       <div className="space-y-2">
         <h1 className="text-5xl font-bold tracking-tight md:text-7xl">{t("code")}</h1>
-        <p className="text-lg font-semibold md:text-xl">{t("title")}</p>
-        <p className="mx-auto max-w-md text-sm text-muted-foreground">{t("description")}</p>
+        <p className="type-headline">{t("title")}</p>
+        <p className="mx-auto max-w-md type-body text-muted-foreground">{t("description")}</p>
       </div>
       <Link href="/">
         <Button size="lg">

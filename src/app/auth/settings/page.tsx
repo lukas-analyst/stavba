@@ -65,11 +65,11 @@ export default function SettingsPage() {
         {/* Logo */}
         <div className="mb-8 text-center">
           <Link href="/" className="inline-flex items-center gap-2">
-            <span className="text-2xl font-bold tracking-tight">
+            <span className="type-display tracking-tight">
               Stavba<span className="text-primary">.</span>
             </span>
           </Link>
-          <p className="mt-2 text-sm text-muted-foreground">
+          <p className="mt-2 type-body text-muted-foreground">
             Globální nastavení aplikace
           </p>
         </div>
@@ -79,9 +79,9 @@ export default function SettingsPage() {
           <div className="rounded-2xl border bg-card p-6 shadow-sm">
             <div className="flex items-center gap-2 mb-4">
               <EyeOff className="h-5 w-5 text-muted-foreground" />
-              <h2 className="text-lg font-semibold">Skryté projekty</h2>
+              <h2 className="type-title-lg">Skryté projekty</h2>
             </div>
-            <p className="mb-4 text-sm text-muted-foreground">
+            <p className="mb-4 type-body text-muted-foreground">
               Skryté projekty se nezobrazují v přepínači projektů v horní liště.
               Stále jsou přístupné přes přímý odkaz.
             </p>
@@ -101,20 +101,20 @@ export default function SettingsPage() {
                     >
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-1.5">
-                          <span className="truncate text-sm font-medium">
+                          <span className="truncate type-body font-medium">
                             {p.name}
                           </span>
                           {p.starred && (
                             <Badge
                               variant="secondary"
-                              className="shrink-0 text-[10px] bg-warning-soft text-warning-strong"
+                              className="shrink-0 type-label-sm bg-warning-soft text-warning-strong"
                             >
                               ★
                             </Badge>
                           )}
                         </div>
                         {p.address && (
-                          <p className="truncate text-xs text-muted-foreground">
+                          <p className="truncate type-label text-muted-foreground">
                             {p.address}
                           </p>
                         )}
@@ -133,12 +133,12 @@ export default function SettingsPage() {
                 })}
               </ul>
             ) : (
-              <p className="rounded-lg border bg-surface-container-low p-3 text-sm text-muted-foreground">
+              <p className="rounded-lg border bg-surface-container-low p-3 type-body text-muted-foreground">
                 Zatím nemáte žádné projekty.
               </p>
             )}
 
-            <p className="mt-3 text-xs text-muted-foreground">
+            <p className="mt-3 type-label text-muted-foreground">
               Zapnutý přepínač = projekt je skrytý. Změny se ukládají automaticky.
             </p>
           </div>
@@ -149,9 +149,9 @@ export default function SettingsPage() {
               <div className="p-6 pb-0">
                 <div className="flex items-center gap-2 mb-2">
                   <Activity className="h-5 w-5 text-primary" />
-                  <h2 className="text-lg font-semibold">Statistiky mé aktivity</h2>
+                  <h2 className="type-title-lg">Statistiky mé aktivity</h2>
                 </div>
-                <p className="text-sm text-muted-foreground">
+                <p className="type-body text-muted-foreground">
                   Přehled vašich akcí v aplikaci za celé období napříč všemi projekty.
                 </p>
               </div>
@@ -165,16 +165,16 @@ export default function SettingsPage() {
           <div className="rounded-2xl border bg-card p-6 shadow-sm">
             <div className="flex items-center gap-2 mb-4">
               <Info className="h-5 w-5 text-muted-foreground" />
-              <h2 className="text-lg font-semibold">O aplikaci</h2>
+              <h2 className="type-title-lg">O aplikaci</h2>
             </div>
 
-            <p className="mb-4 text-sm text-muted-foreground">
+            <p className="mb-4 type-body text-muted-foreground">
               Aplikace <strong className="text-foreground">Stavba</strong> slouží
               ke komplexní správě rozpočtu, nákladů, času a materiálu pro stavby
               a rekonstrukce.
             </p>
 
-            <div className="space-y-1.5 rounded-lg border bg-surface-container-low p-3 text-xs">
+            <div className="space-y-1.5 rounded-lg border bg-surface-container-low p-3 type-label">
               <div className="flex justify-between gap-2">
                 <span className="text-muted-foreground">Verze</span>
                 <span className="font-mono font-medium">{APP_VERSION}</span>
@@ -245,7 +245,7 @@ export default function SettingsPage() {
               <Link href="/auth/profile">Profil účtu</Link>
             </Button>
           </div>
-          <p className="text-center text-xs text-muted-foreground">
+          <p className="text-center type-label text-muted-foreground">
             © {new Date().getFullYear()} Stavba — Rozpočet Stavby
           </p>
         </div>

@@ -482,7 +482,7 @@ function PaymentDialogInner({
           className={cn(errors.budgetItemId && "border-destructive")}
         />
         {errors.budgetItemId && (
-          <p className="text-xs text-destructive mt-1">{errors.budgetItemId}</p>
+          <p className="type-label text-destructive mt-1">{errors.budgetItemId}</p>
         )}
       </div>
 
@@ -493,7 +493,7 @@ function PaymentDialogInner({
       {isAddingInstallment && prefillParent && (
         <div className="flex flex-wrap items-center gap-2 rounded-md border border-warning/40 bg-warning-soft/40 p-2.5 dark:border-warning-strong/40 dark:bg-warning-soft/30">
           <Layers className="h-4 w-4 shrink-0 text-warning-strong dark:text-warning" />
-          <div className="flex-1 text-xs leading-tight">
+          <div className="flex-1 type-label leading-tight">
             <div className="font-semibold text-warning-strong dark:text-warning">
               {t("dialog.prefill.title")}
             </div>
@@ -513,7 +513,7 @@ function PaymentDialogInner({
       {existingInvoiceForBudgetItem && !isAddingInstallment && (
         <div className="flex flex-wrap items-center gap-2 rounded-md border border-info/30 bg-info-soft/40 p-2.5 dark:border-info/40 dark:bg-info-soft/20">
           <CircleDollarSign className="h-4 w-4 shrink-0 text-info" />
-          <div className="flex-1 text-xs leading-tight">
+          <div className="flex-1 type-label leading-tight">
             <div className="font-medium">
               {t("dialog.existingInvoice.title", {
                 vendor:
@@ -564,7 +564,7 @@ function PaymentDialogInner({
         <>
           <div className="flex flex-wrap items-center gap-2 rounded-md border border-warning/30 bg-warning-soft/50 p-2.5 dark:border-warning-strong/60 dark:bg-warning-soft/40">
             <AlertTriangle className="h-4 w-4 shrink-0 text-warning-strong dark:text-warning" />
-            <div className="flex-1 text-xs leading-tight">
+            <div className="flex-1 type-label leading-tight">
               <div className="font-medium text-warning-strong dark:text-warning">
                 {t("dialog.parentWarning.title")}
               </div>
@@ -639,7 +639,7 @@ function PaymentDialogInner({
               className={cn(errors.invoiceTotal && "border-destructive")}
             />
             {errors.invoiceTotal && (
-              <p className="text-xs text-destructive mt-1">{errors.invoiceTotal}</p>
+              <p className="type-label text-destructive mt-1">{errors.invoiceTotal}</p>
             )}
             <CurrencyConversionPreview
               amountStr={invoiceTotal}
@@ -707,7 +707,7 @@ function PaymentDialogInner({
               />
             </div>
             {errors.amount && (
-              <p className="text-xs text-destructive mt-1">{errors.amount}</p>
+              <p className="type-label text-destructive mt-1">{errors.amount}</p>
             )}
             <CurrencyConversionPreview
               amountStr={amount}
@@ -770,7 +770,7 @@ function PaymentDialogInner({
               checked={isInvoice}
               onCheckedChange={(v) => setIsInvoice(v === true)}
             />
-            <Label htmlFor="isInvoice" className="cursor-pointer text-xs">
+            <Label htmlFor="isInvoice" className="cursor-pointer type-label">
               <CircleDollarSign className="mr-1 inline h-3.5 w-3.5" />
               {t("dialog.isInvoice.label")}
             </Label>
@@ -815,7 +815,7 @@ function PaymentDialogInner({
                 })}
               </SelectContent>
             </Select>
-            <p className="text-[11px] text-muted-foreground">
+            <p className="type-label text-muted-foreground">
               {t("dialog.installmentOf.hint")}
             </p>
           </div>
@@ -881,7 +881,7 @@ function PaymentDialogInner({
             </div>
             <div className="space-y-2">
               <Label>{t("dialog.label.vatCalculation")}</Label>
-              <div className="flex h-9 items-center rounded-md border bg-muted/30 px-3 text-xs text-muted-foreground">
+              <div className="flex h-9 items-center rounded-md border bg-muted/30 px-3 type-label text-muted-foreground">
                 {vatRate && amount ? (
                   <>
                     {t("dialog.vatCalc.label.vat")}{" "}
@@ -943,7 +943,7 @@ function PaymentDialogInner({
             </SelectContent>
           </Select>
           {recurringInterval !== "none" && (
-            <p className="text-[11px] text-muted-foreground tabular-nums">
+            <p className="type-label text-muted-foreground tabular-nums">
               {(() => {
                 // Compute the next recurring date locally for the live
                 // preview. The server re-computes on save using the same
@@ -972,12 +972,12 @@ function PaymentDialogInner({
               onCheckedChange={(v) => setMarkCompleted(v === true)}
               className="mt-0.5"
             />
-            <Label htmlFor="markCompleted" className="cursor-pointer text-sm font-medium leading-tight">
+            <Label htmlFor="markCompleted" className="cursor-pointer type-body font-medium leading-tight">
               {t("dialog.markCompleted.label")}
             </Label>
           </div>
           {alreadyCompleted && (
-            <p className="ml-6 text-[11px] text-muted-foreground">
+            <p className="ml-6 type-label text-muted-foreground">
               {t("dialog.markCompleted.alreadyCompleted")}
             </p>
           )}

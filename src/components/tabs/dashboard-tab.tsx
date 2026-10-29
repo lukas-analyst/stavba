@@ -249,17 +249,17 @@ export function DashboardTab({ projectId }: { projectId: string }) {
       {/* === Hero Header === */}
       <div className="space-y-3">
         <div className="flex flex-wrap items-center gap-3">
-          <h1 className="text-2xl font-bold tracking-tight">{project.name}</h1>
+          <h1 className="type-display tracking-tight">{project.name}</h1>
           <Badge variant="secondary" className={cn("gap-1.5", statusColors.color)}>
             <span className={cn("h-2 w-2 rounded-full", statusColors.dot)} />
             {tStatuses(project.status)}
           </Badge>
         </div>
         {project.description && (
-          <p className="text-sm text-on-surface-variant">{project.description}</p>
+          <p className="type-body text-on-surface-variant">{project.description}</p>
         )}
         {project.address && (
-          <p className="text-xs text-muted-foreground">{project.address}</p>
+          <p className="type-label text-muted-foreground">{project.address}</p>
         )}
       </div>
 
@@ -371,7 +371,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
             {itemsByEndDate.length === 0 ? (
               <div className="flex flex-col items-center gap-2 py-8 text-center">
                 <CheckCircle2 className="h-10 w-10 text-success" />
-                <p className="text-sm text-muted-foreground">
+                <p className="type-body text-muted-foreground">
                   {t("plan.empty.upcoming")}
                 </p>
               </div>
@@ -395,11 +395,11 @@ export function DashboardTab({ projectId }: { projectId: string }) {
                   >
                     <span className={cn("h-2 w-2 shrink-0 rounded-full", PHASE_DOT_COLORS[item.phase] ?? "bg-muted-foreground")} />
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">
+                      <p className="type-body font-medium truncate">
                         {isTask && <span className="text-muted-foreground/60">↳ </span>}
                         {name}
                       </p>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="type-label text-muted-foreground">
                         {isTask && item.parentSubcategory
                           ? `${item.parentSubcategory} · ${tPhases(item.phase)}`
                           : tPhases(item.phase)}
@@ -408,13 +408,13 @@ export function DashboardTab({ projectId }: { projectId: string }) {
                     </div>
                     <div className="text-right">
                       <p className={cn(
-                        "text-xs font-semibold tabular-nums",
+                        "type-label font-semibold tabular-nums",
                         isOverdue ? "text-danger" : "text-on-surface-variant",
                       )}>
                         {endDate ? formatDate(endDate.toISOString(), undefined, locale) : "—"}
                       </p>
                       {isOverdue && (
-                        <p className="text-[10px] text-danger">{t("plan.tag.overdue")}</p>
+                        <p className="type-label-sm text-danger">{t("plan.tag.overdue")}</p>
                       )}
                     </div>
                   </button>
@@ -442,22 +442,22 @@ export function DashboardTab({ projectId }: { projectId: string }) {
         <CardContent>
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
             <div className="space-y-1">
-              <p className="text-xs font-medium uppercase tracking-wide text-on-surface-variant">
+              <p className="type-overline text-on-surface-variant">
                 {t("cashflow.projectedFinal")}
               </p>
               <p className={cn(
-                "text-xl font-bold tabular-nums",
+                "type-headline tabular-nums",
                 totals.projectedOverrun > 0 ? "text-danger" : "text-success",
               )}>
                 {formatCurrency(totals.projectedFinal, projectCurrency, locale)}
               </p>
             </div>
             <div className="space-y-1">
-              <p className="text-xs font-medium uppercase tracking-wide text-on-surface-variant">
+              <p className="type-overline text-on-surface-variant">
                 {t("cashflow.overrun")}
               </p>
               <p className={cn(
-                "text-xl font-bold tabular-nums",
+                "type-headline tabular-nums",
                 totals.projectedOverrun > 0 ? "text-danger" : "text-success",
               )}>
                 {totals.projectedOverrun > 0 ? "+" : ""}
@@ -465,11 +465,11 @@ export function DashboardTab({ projectId }: { projectId: string }) {
               </p>
             </div>
             <div className="space-y-1">
-              <p className="text-xs font-medium uppercase tracking-wide text-on-surface-variant">
+              <p className="type-overline text-on-surface-variant">
                 {t("cashflow.percentOfPlan")}
               </p>
               <p className={cn(
-                "text-xl font-bold tabular-nums",
+                "type-headline tabular-nums",
                 totals.projectedOverrun > 0 ? "text-danger" : "text-success",
               )}>
                 {totals.planTotal > 0
@@ -479,17 +479,17 @@ export function DashboardTab({ projectId }: { projectId: string }) {
               </p>
             </div>
             <div className="space-y-1">
-              <p className="text-xs font-medium uppercase tracking-wide text-on-surface-variant">
+              <p className="type-overline text-on-surface-variant">
                 {t("cashflow.remainingEstimate")}
               </p>
-              <p className="text-xl font-bold tabular-nums">
+              <p className="type-headline tabular-nums">
                 {formatCurrency(totals.projectedFinal - totals.actualTotal, projectCurrency, locale)}
               </p>
             </div>
           </div>
           {/* Progress bar: actual vs projected */}
           <div className="mt-4 space-y-1">
-            <div className="flex justify-between text-xs text-on-surface-variant">
+            <div className="flex justify-between type-label text-on-surface-variant">
               <span>{t("cashflow.spent", { actual: formatCurrency(totals.actualTotal, projectCurrency, locale) })}</span>
               <span>{t("cashflow.estimate", { projected: formatCurrency(totals.projectedFinal, projectCurrency, locale) })}</span>
             </div>
@@ -726,7 +726,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
                 </ComposedChart>
               </ResponsiveContainer>
             ) : (
-              <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
+              <div className="flex h-full items-center justify-center type-body text-muted-foreground">
                 {t("chart.trend.empty")}
               </div>
             )}
@@ -749,7 +749,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
           {contactData.length === 0 ? (
             <div className="flex flex-col items-center gap-2 py-8 text-center">
               <Users2 className="h-10 w-10 text-muted-foreground" />
-              <p className="text-sm text-muted-foreground">
+              <p className="type-body text-muted-foreground">
                 {t("contacts.empty")}
               </p>
             </div>
@@ -770,28 +770,28 @@ export function DashboardTab({ projectId }: { projectId: string }) {
                       <Users2 className={cn("h-5 w-5", ACCENT_TEXT[burnAccent])} />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">{c.name}</p>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="type-body font-medium truncate">{c.name}</p>
+                      <p className="type-label text-muted-foreground">
                         {c.role || t("contacts.noRole")} · {t("contacts.itemsCount", { count: c.count })}
                       </p>
                     </div>
                     <div className="text-right">
-                      <p className="text-sm font-semibold tabular-nums">
+                      <p className="type-body font-semibold tabular-nums">
                         {formatCurrency(c.actual, projectCurrency, locale)}
                       </p>
-                      <p className="text-xs text-muted-foreground tabular-nums">
+                      <p className="type-label text-muted-foreground tabular-nums">
                         {t("contacts.ofPlan", { plan: formatCurrency(c.plan, projectCurrency, locale) })}
                       </p>
                     </div>
                     <div className="text-right">
                       <p className={cn(
-                        "text-sm font-bold tabular-nums",
+                        "type-body font-bold tabular-nums",
                         ACCENT_TEXT[burnAccent],
                       )}>
                         {burn.toFixed(0)}%
                       </p>
                       {burn > 100 && (
-                        <p className="text-[10px] text-danger">{t("contacts.overBudget")}</p>
+                        <p className="type-label-sm text-danger">{t("contacts.overBudget")}</p>
                       )}
                     </div>
                   </div>
@@ -812,7 +812,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
         </CardHeader>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full type-body">
               <thead>
                 <tr className="border-b bg-surface-container-low">
                   <th className="px-4 py-3 text-left font-medium text-on-surface-variant">{t("phases.column.phase")}</th>
@@ -887,7 +887,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
             {recent.payments.length === 0 ? (
               <div className="flex flex-col items-center gap-2 py-8 text-center">
                 <Receipt className="h-10 w-10 text-muted-foreground" />
-                <p className="text-sm text-muted-foreground">{t("recent.payments.empty")}</p>
+                <p className="type-body text-muted-foreground">{t("recent.payments.empty")}</p>
               </div>
             ) : (
               recent.payments.slice(0, 8).map((payment) => (
@@ -900,10 +900,10 @@ export function DashboardTab({ projectId }: { projectId: string }) {
                       <Receipt className="h-4 w-4 text-warning" />
                     </div>
                     <div>
-                      <p className="text-sm font-medium">
+                      <p className="type-body font-medium">
                         {payment.vendor || payment.description || t("recent.payments.fallback")}
                       </p>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="type-label text-muted-foreground">
                         {formatDate(payment.date, undefined, locale)}
                         {payment.budgetItem?.subcategory && ` · ${payment.budgetItem.subcategory}`}
                       </p>
@@ -929,7 +929,7 @@ export function DashboardTab({ projectId }: { projectId: string }) {
             {recent.timeEntries.length === 0 ? (
               <div className="flex flex-col items-center gap-2 py-8 text-center">
                 <Clock className="h-10 w-10 text-muted-foreground" />
-                <p className="text-sm text-muted-foreground">{t("recent.time.empty")}</p>
+                <p className="type-body text-muted-foreground">{t("recent.time.empty")}</p>
               </div>
             ) : (
               recent.timeEntries.slice(0, 8).map((entry) => (
@@ -942,10 +942,10 @@ export function DashboardTab({ projectId }: { projectId: string }) {
                       <Clock className="h-4 w-4 text-time" />
                     </div>
                     <div>
-                      <p className="text-sm font-medium">
+                      <p className="type-body font-medium">
                         {entry.workerName || t("recent.time.fallback")}
                       </p>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="type-label text-muted-foreground">
                         {formatDate(entry.date, undefined, locale)}
                         {entry.budgetItem?.subcategory && ` · ${entry.budgetItem.subcategory}`}
                       </p>
@@ -1018,12 +1018,12 @@ function HeroKpiCard({
       <CardContent className="p-4">
         <div className="flex items-start justify-between">
           <div className="space-y-1">
-            <p className="text-xs font-medium uppercase tracking-wide text-on-surface-variant">
+            <p className="type-overline text-on-surface-variant">
               {label}
             </p>
-            <p className="text-2xl font-bold tracking-tight">{value}</p>
+            <p className="type-display tracking-tight">{value}</p>
             {subValue && (
-              <p className="text-xs text-muted-foreground">{subValue}</p>
+              <p className="type-label text-muted-foreground">{subValue}</p>
             )}
           </div>
           <div className={cn("flex h-10 w-10 items-center justify-center rounded-xl", ACCENT_BG[accent])}>
@@ -1039,7 +1039,7 @@ function HeroKpiCard({
           </div>
         )}
         {completed && (
-          <div className="mt-2 flex items-center gap-1 text-xs text-success">
+          <div className="mt-2 flex items-center gap-1 type-label text-success">
             <CheckCircle2 className="h-3.5 w-3.5" />
             {t("kpi.completed.allDone")}
           </div>
@@ -1074,10 +1074,10 @@ function PlanBucket({
     <div className={cn("rounded-lg border p-2", accent === "muted" ? "border-border bg-muted/20" : "border-border")}>
       <div className="flex items-center gap-2 px-2 py-1">
         <span className={cn("h-2 w-2 rounded-full", accent === "muted" ? "bg-muted-foreground" : ACCENT_BAR[accent as AccentColor])} />
-        <p className="text-xs font-semibold uppercase tracking-wide text-on-surface-variant">
+        <p className="type-overline text-on-surface-variant">
           {title}
         </p>
-        <Badge variant="secondary" className="ml-auto text-[10px]">
+        <Badge variant="secondary" className="ml-auto type-label-sm">
           {items.length}
         </Badge>
       </div>
@@ -1091,19 +1091,19 @@ function PlanBucket({
             <button
               key={item.id}
               onClick={() => onNavigate({ type: "category", value: item.category })}
-              className="flex w-full items-center gap-2 rounded-md p-1.5 text-left text-sm transition-colors hover:bg-surface-container-high"
+              className="flex w-full items-center gap-2 rounded-md p-1.5 text-left type-body transition-colors hover:bg-surface-container-high"
             >
               <span className={cn("h-1.5 w-1.5 shrink-0 rounded-full", PHASE_DOT_COLORS[item.phase] ?? "bg-muted-foreground")} />
               <span className="flex-1 truncate">
                 {isTask && <span className="text-muted-foreground/60">↳ </span>}
                 <span className="font-medium">{name}</span>
                 {isTask && item.parentSubcategory && (
-                  <span className="ml-1.5 text-[10px] text-muted-foreground/70">
+                  <span className="ml-1.5 type-label-sm text-muted-foreground/70">
                     ({item.parentSubcategory})
                   </span>
                 )}
               </span>
-              <span className="text-xs text-muted-foreground tabular-nums">
+              <span className="type-label text-muted-foreground tabular-nums">
                 {item.dateFrom ? formatDate(item.dateFrom, undefined, locale) : "—"}
               </span>
             </button>

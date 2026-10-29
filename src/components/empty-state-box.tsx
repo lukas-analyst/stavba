@@ -22,9 +22,9 @@ export function EmptyStateBox({ icon: Icon, title, description, action, classNam
         <Icon className="h-7 w-7" />
       </div>
       <div className="space-y-1">
-        <h3 className="text-sm font-semibold">{title}</h3>
+        <h3 className="type-title">{title}</h3>
         {description && (
-          <p className="mx-auto max-w-sm text-xs text-muted-foreground">
+          <p className="mx-auto max-w-sm type-label text-muted-foreground">
             {description}
           </p>
         )}

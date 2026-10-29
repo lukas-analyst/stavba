@@ -20,7 +20,7 @@ export function DragPreviewItem({ activeDrag }: { activeDrag: Active }) {
     return (
       <div className="flex items-center gap-2 rounded-lg border bg-card px-4 py-2.5 shadow-lg">
         <GripVertical className="h-4 w-4 text-muted-foreground" />
-        <span className="text-sm font-bold">{data.categoryName}</span>
+        <span className="type-body font-bold">{data.categoryName}</span>
       </div>
     );
   }
@@ -28,7 +28,7 @@ export function DragPreviewItem({ activeDrag }: { activeDrag: Active }) {
   return (
     <div className="flex items-center gap-2 rounded-md border bg-card px-3 py-2 shadow-lg">
       <GripVertical className="h-4 w-4 text-muted-foreground" />
-      <span className="text-sm font-medium">{data.label}</span>
+      <span className="type-body font-medium">{data.label}</span>
     </div>
   );
 }

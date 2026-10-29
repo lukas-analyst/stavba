@@ -67,19 +67,19 @@ export default function RegisterPage() {
         {/* Logo */}
         <div className="mb-8 text-center">
           <Link href="/" className="inline-flex items-center gap-2">
-            <span className="text-2xl font-bold tracking-tight">
+            <span className="type-display tracking-tight">
               Stavba<span className="text-primary">.</span>
             </span>
           </Link>
-          <p className="mt-2 text-sm text-muted-foreground">
+          <p className="mt-2 type-body text-muted-foreground">
             Vytvořte si účet a začněte spravovat své projekty
           </p>
         </div>
 
         {/* Card */}
         <div className="rounded-2xl border bg-card p-6 shadow-sm sm:p-8">
-          <h1 className="mb-1 text-xl font-semibold">Registrace</h1>
-          <p className="mb-6 text-sm text-muted-foreground">
+          <h1 className="mb-1 type-headline">Registrace</h1>
+          <p className="mb-6 type-body text-muted-foreground">
             Založte si nový účet zdarma
           </p>
 
@@ -87,7 +87,7 @@ export default function RegisterPage() {
             <div
               id="error-form"
               role="alert"
-              className="mb-4 flex items-start gap-2 rounded-lg border border-destructive/20 bg-destructive/10 p-3 text-sm text-destructive"
+              className="mb-4 flex items-start gap-2 rounded-lg border border-destructive/20 bg-destructive/10 p-3 type-body text-destructive"
             >
               <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
               <span>{error}</span>
@@ -186,7 +186,7 @@ export default function RegisterPage() {
             </Button>
           </form>
 
-          <p className="mt-6 text-center text-sm text-muted-foreground">
+          <p className="mt-6 text-center type-body text-muted-foreground">
             Už máte účet?{" "}
             <Link
               href="/auth/login"
@@ -197,7 +197,7 @@ export default function RegisterPage() {
           </p>
         </div>
 
-        <p className="mt-6 text-center text-xs text-muted-foreground">
+        <p className="mt-6 text-center type-label text-muted-foreground">
           © {new Date().getFullYear()} Stavba — Rozpočet Stavby
         </p>
       </div>

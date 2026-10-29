@@ -738,7 +738,7 @@ function BudgetTab({ projectId, dragEndHandlerRef }: { projectId: string; dragEn
           hasActiveFilters={phaseFilter.size > 0}
           onClear={() => setPhaseFilter(new Set())}
         >
-          <span className="mr-1 text-xs font-medium text-on-surface-variant">{t("filter.phase")}</span>
+          <span className="mr-1 type-label font-medium text-on-surface-variant">{t("filter.phase")}</span>
           {PHASES.map((phase) => (
             <FilterChip
               key={phase}
@@ -852,7 +852,7 @@ function BudgetTab({ projectId, dragEndHandlerRef }: { projectId: string; dragEn
                     <TableBody>
                       {catItems.length === 0 && (
                         <TableRow>
-                          <TableCell colSpan={selectionMode ? 13 : 12} className="py-8 text-center text-sm text-muted-foreground">
+                          <TableCell colSpan={selectionMode ? 13 : 12} className="py-8 text-center type-body text-muted-foreground">
                             {t("empty.categoryRow")}
                           </TableCell>
                         </TableRow>
@@ -904,7 +904,7 @@ function BudgetTab({ projectId, dragEndHandlerRef }: { projectId: string; dragEn
       {selectionMode && selectedIds.size > 0 && (
         <div className="sticky bottom-4 z-40 rounded-lg border border-outline-variant bg-surface-container-high p-3 shadow-lg">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-sm font-medium">
+            <span className="type-body font-medium">
               {t("toolbar.selected", { count: selectedIds.size })}
             </span>
             <div className="ml-auto flex flex-wrap items-center gap-2">

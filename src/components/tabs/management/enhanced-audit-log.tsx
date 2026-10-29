@@ -484,7 +484,7 @@ export function EnhancedAuditLog({ projectId }: EnhancedAuditLogProps) {
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
             placeholder={t("search.placeholder")}
-            className="h-9 rounded-md pl-8 pr-8 text-xs"
+            className="h-9 rounded-md pl-8 pr-8 type-label"
             aria-label={t("search.aria")}
           />
           {searchInput && (
@@ -505,7 +505,7 @@ export function EnhancedAuditLog({ projectId }: EnhancedAuditLogProps) {
         <div className="space-y-1">
           <Label className="type-label font-medium text-on-surface-variant">{t("filter.action")}</Label>
           <Select value={actionFilter} onValueChange={handleActionFilterChange}>
-            <SelectTrigger className="h-9 rounded-md text-xs"><SelectValue /></SelectTrigger>
+            <SelectTrigger className="h-9 rounded-md type-label"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">{tCommon("all")}</SelectItem>
               <SelectItem value="create">{t("action.create")}</SelectItem>
@@ -518,7 +518,7 @@ export function EnhancedAuditLog({ projectId }: EnhancedAuditLogProps) {
         <div className="space-y-1">
           <Label className="type-label font-medium text-on-surface-variant">{t("filter.entity")}</Label>
           <Select value={entityFilter} onValueChange={handleEntityFilterChange}>
-            <SelectTrigger className="h-9 rounded-md text-xs"><SelectValue /></SelectTrigger>
+            <SelectTrigger className="h-9 rounded-md type-label"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">{tCommon("all")}</SelectItem>
               <SelectItem value="BudgetItem">{t("entities.BudgetItem")}</SelectItem>
@@ -536,7 +536,7 @@ export function EnhancedAuditLog({ projectId }: EnhancedAuditLogProps) {
         <div className="space-y-1">
           <Label className="type-label font-medium text-on-surface-variant">{t("filter.user")}</Label>
           <Select value={userFilter} onValueChange={handleUserFilterChange}>
-            <SelectTrigger className="h-9 rounded-md text-xs"><SelectValue /></SelectTrigger>
+            <SelectTrigger className="h-9 rounded-md type-label"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">{tCommon("all")}</SelectItem>
               {users.map((u) => (
@@ -554,7 +554,7 @@ export function EnhancedAuditLog({ projectId }: EnhancedAuditLogProps) {
             type="date"
             value={fromDate}
             onChange={(e) => handleFromDateChange(e.target.value)}
-            className="h-9 rounded-md text-xs"
+            className="h-9 rounded-md type-label"
             aria-label={t("filter.fromAria")}
           />
         </div>
@@ -565,14 +565,14 @@ export function EnhancedAuditLog({ projectId }: EnhancedAuditLogProps) {
             type="date"
             value={toDate}
             onChange={(e) => handleToDateChange(e.target.value)}
-            className="h-9 rounded-md text-xs"
+            className="h-9 rounded-md type-label"
             aria-label={t("filter.toAria")}
           />
         </div>
         <div className="space-y-1">
           <Label className="type-label font-medium text-on-surface-variant">{t("filter.sort")}</Label>
           <Select value={sortBy} onValueChange={handleSortChange}>
-            <SelectTrigger className="h-9 rounded-md text-xs"><SelectValue /></SelectTrigger>
+            <SelectTrigger className="h-9 rounded-md type-label"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="desc">{t("sort.desc")}</SelectItem>
               <SelectItem value="asc">{t("sort.asc")}</SelectItem>
@@ -582,7 +582,7 @@ export function EnhancedAuditLog({ projectId }: EnhancedAuditLogProps) {
         <div className="space-y-1">
           <Label className="type-label font-medium text-on-surface-variant">{t("filter.pageSize")}</Label>
           <Select value={String(pageSize)} onValueChange={handlePageSizeChange}>
-            <SelectTrigger className="h-9 rounded-md text-xs"><SelectValue /></SelectTrigger>
+            <SelectTrigger className="h-9 rounded-md type-label"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="10">10</SelectItem>
               <SelectItem value="50">50</SelectItem>
@@ -643,7 +643,7 @@ export function EnhancedAuditLog({ projectId }: EnhancedAuditLogProps) {
                       <div className="flex flex-col gap-1">
                         <Badge
                           variant="secondary"
-                          className={cn("text-xs font-semibold w-fit", ACTION_COLORS[entry.action] ?? "bg-muted text-muted-foreground")}
+                          className={cn("type-label font-semibold w-fit", ACTION_COLORS[entry.action] ?? "bg-muted text-muted-foreground")}
                         >
                           {actionLabel(entry.action)}
                         </Badge>

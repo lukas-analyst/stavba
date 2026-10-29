@@ -322,12 +322,12 @@ export function PaymentsTab({ projectId }: { projectId: string }) {
             ))}
           </SelectContent>
         </Select>
-        <div className="flex items-center gap-3 text-sm">
+        <div className="flex items-center gap-3 type-body">
           <div className="text-right">
-            <div className="text-xs text-muted-foreground">
+            <div className="type-label text-muted-foreground">
               {t("toolbar.sum", { count: filteredStandalone.length + filteredGroups.length })}
             </div>
-            <div className="text-lg font-bold text-warning tabular-nums">{formatCzk(totalAmount, locale)}</div>
+            <div className="type-title-lg font-bold text-warning tabular-nums">{formatCzk(totalAmount, locale)}</div>
           </div>
           {/* VAT summary */}
           {(() => {
@@ -336,8 +336,8 @@ export function PaymentsTab({ projectId }: { projectId: string }) {
             const hasVat = allPayments.some((p) => p.vatAmount !== null && p.vatAmount !== undefined);
             return hasVat ? (
               <div className="text-right">
-                <div className="text-xs text-muted-foreground">{t("toolbar.vatIncluded")}</div>
-                <div className="text-sm font-semibold text-info tabular-nums">{formatCzk(totalVat, locale)}</div>
+                <div className="type-label text-muted-foreground">{t("toolbar.vatIncluded")}</div>
+                <div className="type-body font-semibold text-info tabular-nums">{formatCzk(totalVat, locale)}</div>
               </div>
             ) : null;
           })()}

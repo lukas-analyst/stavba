@@ -44,7 +44,7 @@ export function FilterChip({
       disabled={disabled}
       aria-pressed={selected}
       className={cn(
-        "inline-flex h-8 items-center gap-1.5 rounded-full border px-3 text-xs font-medium transition-all duration-150",
+        "inline-flex h-8 items-center gap-1.5 rounded-full border px-3 type-label transition-all duration-150",
         selected
           ? // MD3 selected: tonal fill (secondary-container) + checkmark
             "border-secondary-container bg-secondary-container text-secondary-container-foreground"
@@ -92,7 +92,7 @@ export function FilterChipGroup({
         <button
           type="button"
           onClick={onClear}
-          className="inline-flex h-8 items-center gap-1 px-2 text-xs font-medium text-primary hover:underline state-layer-on-surface rounded-full"
+          className="inline-flex h-8 items-center gap-1 px-2 type-label text-primary hover:underline state-layer-on-surface rounded-full"
         >
           <X className="h-3 w-3" />
           {clearLabel}

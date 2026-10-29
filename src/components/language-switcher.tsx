@@ -81,7 +81,7 @@ export function LanguageSwitcher({ className }: { className?: string }) {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48">
-        <DropdownMenuLabel className="flex items-center gap-1.5 text-xs uppercase tracking-wide text-muted-foreground">
+        <DropdownMenuLabel className="flex items-center gap-1.5 type-overline text-muted-foreground">
           <Globe className="h-3 w-3" />
           {t("language")}
         </DropdownMenuLabel>

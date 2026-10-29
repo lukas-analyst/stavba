@@ -55,7 +55,7 @@ export function AuditLogDialog({ open, onOpenChange, projectId }: Props) {
             ))}
           </div>
         ) : !logs || logs.length === 0 ? (
-          <div className="py-12 text-center text-sm text-muted-foreground">
+          <div className="py-12 text-center type-body text-muted-foreground">
             <History className="mx-auto mb-2 h-8 w-8 opacity-40" />
             {t("empty")}
           </div>
@@ -114,11 +114,11 @@ function AuditLogEntry({ log }: { log: AuditLog }) {
     : null;
 
   return (
-    <div className={cn("flex items-start gap-3 rounded-lg border p-2.5 text-xs", actionConfig.bg)}>
+    <div className={cn("flex items-start gap-3 rounded-lg border p-2.5 type-label", actionConfig.bg)}>
       <Icon className={cn("mt-0.5 h-3.5 w-3.5 shrink-0", actionConfig.color)} />
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-1.5">
-          <Badge variant="outline" className="h-4 px-1.5 text-[10px]">
+          <Badge variant="outline" className="h-4 px-1.5 type-label-sm">
             {entityLabel}
           </Badge>
           <span className="font-medium">{actionConfig.label}</span>
@@ -139,7 +139,7 @@ function AuditLogEntry({ log }: { log: AuditLog }) {
           </span>
         </div>
         {log.action === "update" && log.oldValue !== null && log.newValue !== null && (
-          <div className="mt-1 flex items-center gap-2 font-mono text-[11px]">
+          <div className="mt-1 flex items-center gap-2 font-mono type-label">
             <span className="rounded bg-danger-soft/50 px-1.5 py-0.5 text-danger-strong line-through dark:bg-danger-soft/70 dark:text-danger-strong">
               {/* B28: Translation happens here in the UI — DB stores raw values. */}
               {getFieldValue(log.field ?? "", log.oldValue) || t("emptyValue")}
@@ -151,7 +151,7 @@ function AuditLogEntry({ log }: { log: AuditLog }) {
           </div>
         )}
         {log.action === "delete" && log.oldValue && (
-          <div className="mt-1 truncate font-mono text-[11px] text-muted-foreground">
+          <div className="mt-1 truncate font-mono type-label text-muted-foreground">
             {log.oldValue.substring(0, 100)}
             {log.oldValue.length > 100 ? "…" : ""}
           </div>

@@ -78,7 +78,7 @@ export function SettingsTab() {
       {/* ====== Section 1: Vzhled (Appearance) ====== */}
       <Card className="bg-surface-container-low shadow-sm">
         <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-lg font-semibold">
+          <CardTitle className="flex items-center gap-2 type-title-lg">
             <Palette className="h-5 w-5 text-primary" />
             {t("sections.appearance")}
           </CardTitle>
@@ -103,7 +103,7 @@ export function SettingsTab() {
                 <div className="type-body font-medium truncate">
                   {t("appearance.theme")}
                 </div>
-                <p className="text-xs text-muted-foreground truncate">
+                <p className="type-label text-muted-foreground truncate">
                   {t("appearance.themeHint")}
                 </p>
               </div>
@@ -143,7 +143,7 @@ export function SettingsTab() {
                 <div className="type-body font-medium truncate">
                   {t("appearance.language")}
                 </div>
-                <p className="text-xs text-muted-foreground truncate">
+                <p className="type-label text-muted-foreground truncate">
                   {t("appearance.languageHint")}
                 </p>
               </div>
@@ -156,7 +156,7 @@ export function SettingsTab() {
       {/* ====== Section 2: Skryté projekty ====== */}
       <Card className="bg-surface-container-low shadow-sm">
         <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-lg font-semibold">
+          <CardTitle className="flex items-center gap-2 type-title-lg">
             <EyeOff className="h-5 w-5 text-muted-foreground" />
             {t("sections.hiddenProjects")}
           </CardTitle>
@@ -180,20 +180,20 @@ export function SettingsTab() {
                   >
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-1.5">
-                        <span className="truncate text-sm font-medium">
+                        <span className="truncate type-body font-medium">
                           {p.name}
                         </span>
                         {p.starred && (
                           <Badge
                             variant="secondary"
-                            className="shrink-0 text-[10px] bg-warning-soft text-warning-strong"
+                            className="shrink-0 type-label-sm bg-warning-soft text-warning-strong"
                           >
                             ★
                           </Badge>
                         )}
                       </div>
                       {p.address && (
-                        <p className="truncate text-xs text-muted-foreground">
+                        <p className="truncate type-label text-muted-foreground">
                           {p.address}
                         </p>
                       )}
@@ -212,12 +212,12 @@ export function SettingsTab() {
               })}
             </ul>
           ) : (
-            <p className="rounded-lg border bg-card p-3 text-sm text-muted-foreground">
+            <p className="rounded-lg border bg-card p-3 type-body text-muted-foreground">
               {t("hiddenProjects.empty")}
             </p>
           )}
 
-          <p className="mt-3 text-xs text-muted-foreground">
+          <p className="mt-3 type-label text-muted-foreground">
             {t("hiddenProjects.toggleHint")}
           </p>
         </CardContent>
@@ -227,7 +227,7 @@ export function SettingsTab() {
       {profile ? (
         <Card className="bg-surface-container-low shadow-sm overflow-hidden">
           <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-lg font-semibold">
+            <CardTitle className="flex items-center gap-2 type-title-lg">
               <Activity className="h-5 w-5 text-primary" />
               {t("sections.activity")}
             </CardTitle>
@@ -246,13 +246,13 @@ export function SettingsTab() {
       {/* ====== Section 4: O aplikaci ====== */}
       <Card className="bg-surface-container-low shadow-sm">
         <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-lg font-semibold">
+          <CardTitle className="flex items-center gap-2 type-title-lg">
             <Info className="h-5 w-5 text-muted-foreground" />
             {t("sections.about")}
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="mb-4 text-sm text-muted-foreground">
+          <p className="mb-4 type-body text-muted-foreground">
             {t.rich("about.body", {
               brand: (chunks) => (
                 <strong className="text-foreground">{chunks}</strong>
@@ -260,7 +260,7 @@ export function SettingsTab() {
             })}
           </p>
 
-          <div className="space-y-1.5 rounded-lg border bg-card p-3 text-xs">
+          <div className="space-y-1.5 rounded-lg border bg-card p-3 type-label">
             <div className="flex justify-between gap-2">
               <span className="text-muted-foreground">{t("about.version")}</span>
               <span className="font-mono font-medium">{APP_VERSION}</span>

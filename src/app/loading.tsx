@@ -13,7 +13,7 @@ export default function Loading() {
     <div className="flex min-h-screen w-full items-center justify-center bg-muted/30">
       <div className="flex flex-col items-center gap-3">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-        <p className="text-sm text-muted-foreground">Načítám aplikaci…</p>
+        <p className="type-body text-muted-foreground">Načítám aplikaci…</p>
       </div>
     </div>
   );

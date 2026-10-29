@@ -348,7 +348,7 @@ export function AdminTab() {
                     onClick={() => handleSectionClick(link.id)}
                     aria-current={isActive ? "page" : undefined}
                     className={cn(
-                      "flex w-full items-center gap-2.5 rounded-full px-3 py-2.5 text-left text-sm font-medium transition-all duration-150",
+                      "flex w-full items-center gap-2.5 rounded-full px-3 py-2.5 text-left type-body font-medium transition-all duration-150",
                       isActive
                         ? "bg-primary-container text-primary-container-foreground font-semibold shadow-sm"
                         : "text-on-surface-variant hover:bg-surface-container-high",
@@ -385,7 +385,7 @@ export function AdminTab() {
                   onClick={() => handleSectionClick(link.id)}
                   aria-current={isActive ? "page" : undefined}
                   className={cn(
-                    "flex h-11 shrink-0 items-center gap-1.5 rounded-full px-3 py-2 text-sm font-medium transition-colors",
+                    "flex h-11 shrink-0 items-center gap-1.5 rounded-full px-3 py-2 type-body font-medium transition-colors",
                     isActive
                       ? "bg-primary-container text-primary-container-foreground"
                       : "bg-surface-container-low text-on-surface-variant hover:bg-surface-container-high",
@@ -919,7 +919,7 @@ function UsersSection({
     >
       <Card className="bg-surface-container-low shadow-sm border-outline-variant">
         <CardHeader className="pb-3">
-          <CardTitle className="text-lg font-semibold flex items-center gap-2">
+          <CardTitle className="type-title-lg flex items-center gap-2">
             <Users className="h-4 w-4 text-primary" />
             {t("title")}
           </CardTitle>
@@ -955,7 +955,7 @@ function UsersSection({
                         {u.image ? (
                           <AvatarImage src={u.image} alt={u.name ?? u.email} />
                         ) : null}
-                        <AvatarFallback className="bg-secondary-container text-secondary-container-foreground text-sm font-semibold">
+                        <AvatarFallback className="bg-secondary-container text-secondary-container-foreground type-body font-semibold">
                           {initials}
                         </AvatarFallback>
                       </Avatar>

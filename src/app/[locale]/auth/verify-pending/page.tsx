@@ -104,7 +104,7 @@ export default function VerifyPendingPage() {
         {/* Logo */}
         <div className="mb-8 text-center">
           <Link href="/" className="inline-flex items-center gap-2">
-            <span className="text-2xl font-bold tracking-tight">
+            <span className="type-display tracking-tight">
               <img src="/logo.svg" alt="Logo" className="h-16 w-16 rounded-xl" />
             </span>
           </Link>
@@ -116,14 +116,14 @@ export default function VerifyPendingPage() {
             <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-warning/10">
               <MailCheck className="h-8 w-8 text-warning" />
             </div>
-            <h1 className="mb-2 text-xl font-semibold">{t("title")}</h1>
-            <p className="text-sm text-muted-foreground">
+            <h1 className="mb-2 type-headline">{t("title")}</h1>
+            <p className="type-body text-muted-foreground">
               {t("body")}
             </p>
           </div>
 
           {session?.user?.email && (
-            <div className="mb-4 rounded-lg bg-muted/50 p-3 text-center text-sm">
+            <div className="mb-4 rounded-lg bg-muted/50 p-3 text-center type-body">
               <span className="text-muted-foreground">{t("sentTo")} </span>
               <span className="font-medium">{session.user.email}</span>
             </div>
@@ -204,7 +204,7 @@ export default function VerifyPendingPage() {
           </div>
         </div>
 
-        <p className="mt-6 text-center text-xs text-muted-foreground">
+        <p className="mt-6 text-center type-label text-muted-foreground">
           {t("footer")}
         </p>
       </div>

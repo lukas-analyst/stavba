@@ -91,7 +91,7 @@ export function InvoicesOverview({
           <Card key={c.parent.id} className="gap-3 rounded-lg p-3 shadow-sm">
             <CardHeader className="gap-1 px-0 pb-0">
               <div className="flex items-start justify-between gap-2">
-                <CardTitle className="flex items-center gap-1.5 text-sm font-semibold leading-tight">
+                <CardTitle className="flex items-center gap-1.5 type-title leading-tight">
                   <Receipt className="h-3.5 w-3.5 shrink-0 text-on-surface-variant" />
                   <span className="truncate">{c.title}</span>
                   {c.parent.recurringInterval && (

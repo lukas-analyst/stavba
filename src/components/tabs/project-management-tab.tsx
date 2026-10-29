@@ -246,11 +246,11 @@ export function ProjectManagementTab({ projectId }: { projectId: string }) {
             endpoint `POST /api/import`, který vyžaduje admin session). */}
       <Card className="bg-surface-container-low shadow-sm">
         <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-lg font-semibold">
+          <CardTitle className="flex items-center gap-2 type-title-lg">
             <Download className="h-4 w-4 text-primary" />
             {t("data.title")}
           </CardTitle>
-          <CardDescription className="text-sm text-on-surface-variant">
+          <CardDescription className="mt-1 type-body text-on-surface-variant">
             {t("data.description")}
           </CardDescription>
         </CardHeader>
@@ -396,11 +396,11 @@ export function ProjectManagementTab({ projectId }: { projectId: string }) {
       {/* ===== Enhanced Audit Log ===== */}
       <Card className="bg-surface-container-low shadow-sm">
         <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-lg font-semibold">
+          <CardTitle className="flex items-center gap-2 type-title-lg">
             <History className="h-4 w-4 text-primary" />
             {t("audit.title")}
           </CardTitle>
-          <CardDescription className="text-sm text-on-surface-variant">{t("audit.description")}</CardDescription>
+          <CardDescription className="mt-1 type-body text-on-surface-variant">{t("audit.description")}</CardDescription>
         </CardHeader>
         <CardContent>
           <EnhancedAuditLog projectId={projectId} />
@@ -410,7 +410,7 @@ export function ProjectManagementTab({ projectId }: { projectId: string }) {
       {/* ===== Danger Zone ===== */}
       <Card className="border-danger/20 bg-surface-container-low shadow-sm">
         <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-lg font-semibold text-danger">
+          <CardTitle className="flex items-center gap-2 type-title-lg text-danger">
             <AlertTriangle className="h-4 w-4" />
             {t("danger.title")}
           </CardTitle>
@@ -453,7 +453,7 @@ export function ProjectManagementTab({ projectId }: { projectId: string }) {
                 <Trash2 className="h-4 w-4 text-muted-foreground" />
                 <div>
                   <div className="type-body font-medium">{t("danger.delete.title")}</div>
-                  <div className="text-xs text-muted-foreground">
+                  <div className="type-label text-muted-foreground">
                     {isAdmin
                       ? t("danger.delete.adminOnlyHint")
                       : t("danger.delete.editorHint")}

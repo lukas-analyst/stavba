@@ -39,12 +39,12 @@ export function CollapsibleSection({
         <CollapsibleTrigger asChild>
           <button
             type="button"
-            className="flex w-full items-center justify-between px-4 py-2.5 text-sm font-medium hover:bg-muted/40 rounded-2xl"
+            className="flex w-full items-center justify-between px-4 py-2.5 type-body font-medium hover:bg-muted/40 rounded-2xl"
           >
             <span className="flex items-center gap-1.5">
               {title}
               {badge != null && badge > 0 && (
-                <span className="rounded bg-muted-foreground/15 px-1.5 py-0.5 text-[10px] font-semibold tabular-nums">
+                <span className="rounded bg-muted-foreground/15 px-1.5 py-0.5 type-label-sm tabular-nums">
                   {badge}
                 </span>
               )}

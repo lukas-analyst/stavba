@@ -231,8 +231,8 @@ export default function PublicProjectPage({
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-background px-6 text-center">
         <AlertTriangle className="h-12 w-12 text-muted-foreground" />
-        <p className="text-lg font-medium">{t("notFound.title")}</p>
-        <p className="text-sm text-muted-foreground">{t("notFound.redirecting")}</p>
+        <p className="type-title-lg font-medium">{t("notFound.title")}</p>
+        <p className="type-body text-muted-foreground">{t("notFound.redirecting")}</p>
         <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
       </div>
     );
@@ -252,7 +252,7 @@ export default function PublicProjectPage({
         {/* === Hero header === */}
         <div className="space-y-3 pb-6">
           <div className="flex flex-wrap items-center gap-3">
-            <h1 className="text-2xl font-bold tracking-tight">{project.name}</h1>
+            <h1 className="type-display tracking-tight">{project.name}</h1>
             <Badge variant="secondary" className={cn("gap-1.5", statusColors.color)}>
               <span className={cn("h-2 w-2 rounded-full", statusColors.dot)} />
               {tStatuses(statusId)}
@@ -263,10 +263,10 @@ export default function PublicProjectPage({
             </Badge>
           </div>
           {project.description && (
-            <p className="text-sm text-on-surface-variant">{project.description}</p>
+            <p className="type-body text-on-surface-variant">{project.description}</p>
           )}
           {project.address && (
-            <p className="text-xs text-muted-foreground">{project.address}</p>
+            <p className="type-label text-muted-foreground">{project.address}</p>
           )}
 
           {/* Action buttons */}
@@ -372,7 +372,7 @@ export default function PublicProjectPage({
           </CardHeader>
           <CardContent className="p-0">
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className="w-full type-body">
                 <thead>
                   <tr className="border-b bg-surface-container-low">
                     <th className="px-4 py-3 text-left font-medium text-on-surface-variant">{t("phases.column.phase")}</th>
@@ -439,7 +439,7 @@ export default function PublicProjectPage({
         </Card>
 
         {/* Footer note */}
-        <p className="mt-6 text-center text-xs text-muted-foreground">
+        <p className="mt-6 text-center type-label text-muted-foreground">
           {t("footer")}
         </p>
       </main>
@@ -456,11 +456,11 @@ function PublicHeader() {
     <header className="sticky top-0 z-10 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4 sm:px-6 lg:px-8">
         <Link href="/" className="inline-flex items-center gap-2">
-          <span className="text-lg font-bold tracking-tight">
+          <span className="type-title-lg">
             <img src="/logo.svg" alt="Logo" className="h-16 w-16 rounded-xl" />
           </span>
         </Link>
-        <Badge variant="outline" className="gap-1.5 text-xs">
+        <Badge variant="outline" className="gap-1.5 type-label">
           <Eye className="h-3 w-3" />
           {t("header.publicView")}
         </Badge>
@@ -528,12 +528,12 @@ function PublicKpiCard({
       <CardContent className="p-4">
         <div className="flex items-start justify-between">
           <div className="space-y-1">
-            <p className="text-xs font-medium uppercase tracking-wide text-on-surface-variant">
+            <p className="type-overline text-on-surface-variant">
               {label}
             </p>
-            <p className="text-2xl font-bold tracking-tight">{value}</p>
+            <p className="type-display tracking-tight">{value}</p>
             {subValue && (
-              <p className="text-xs text-muted-foreground">{subValue}</p>
+              <p className="type-label text-muted-foreground">{subValue}</p>
             )}
           </div>
           <div className={cn("flex h-10 w-10 items-center justify-center rounded-xl", ACCENT_BG[accent])}>
@@ -549,7 +549,7 @@ function PublicKpiCard({
           </div>
         )}
         {completed && completedLabel && (
-          <div className="mt-2 flex items-center gap-1 text-xs text-success">
+          <div className="mt-2 flex items-center gap-1 type-label text-success">
             <CheckCircle2 className="h-3.5 w-3.5" />
             {completedLabel}
           </div>

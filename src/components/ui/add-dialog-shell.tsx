@@ -101,7 +101,7 @@ export function AddDialogShell({
       onChange={(e) => onTitleChange(e.target.value)}
       placeholder={titlePlaceholder}
       autoFocus
-      className="w-full border-0 bg-transparent px-0 text-xl font-bold text-foreground outline-none placeholder:text-muted-foreground/40 focus:outline-none"
+      className="w-full border-0 bg-transparent px-0 type-headline text-foreground outline-none placeholder:text-muted-foreground/40 focus:outline-none"
     />
   );
 
@@ -111,7 +111,7 @@ export function AddDialogShell({
       onChange={(e) => onDescriptionChange(e.target.value)}
       placeholder={descriptionPlaceholder}
       rows={1}
-      className="w-full resize-none border-0 bg-transparent px-0 text-sm text-muted-foreground outline-none placeholder:text-muted-foreground/40 focus:outline-none"
+      className="w-full resize-none border-0 bg-transparent px-0 type-body text-muted-foreground outline-none placeholder:text-muted-foreground/40 focus:outline-none"
     />
   ) : null;
 
@@ -119,7 +119,7 @@ export function AddDialogShell({
   const header = (
     <div className="space-y-2 px-4 pt-4 pb-4 shrink-0">
       {contextText && (
-        <p className="text-xs text-muted-foreground">{contextText}</p>
+        <p className="type-label text-muted-foreground">{contextText}</p>
       )}
       {titleInput}
       {descriptionTextarea}

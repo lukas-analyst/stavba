@@ -151,8 +151,8 @@ export function ProjectInfoCard({
             <div className="min-w-0 flex-1">
               <CardTitle className="flex flex-wrap items-center gap-2 type-title-lg font-semibold">
                 {project.name}
-                <Badge variant="outline" className={cn("text-xs", statusInfo.color)}>{statusLabel}</Badge>
-                <Badge variant="secondary" className="text-xs gap-1">
+                <Badge variant="outline" className={cn("type-label", statusInfo.color)}>{statusLabel}</Badge>
+                <Badge variant="secondary" className="type-label gap-1">
                   {userRole === "editor" ? (
                     <>
                       <Edit3 className="h-3 w-3" /> {t("roleBadge.editor")}
@@ -165,7 +165,7 @@ export function ProjectInfoCard({
                 </Badge>
               </CardTitle>
               {project.description && (
-                <CardDescription className="mt-1 text-sm text-on-surface-variant">{project.description}</CardDescription>
+                <CardDescription className="mt-1 type-body text-on-surface-variant">{project.description}</CardDescription>
               )}
             </div>
           </div>
@@ -192,16 +192,16 @@ export function ProjectInfoCard({
           <div className="min-w-0 flex-1">
             <CardTitle className="flex items-center gap-2 type-title-lg font-semibold">
               {editing ? (
-                <Input value={name} onChange={(e) => setName(e.target.value)} className="h-8 max-w-md text-lg font-bold" autoFocus />
+                <Input value={name} onChange={(e) => setName(e.target.value)} className="h-8 max-w-md type-title-lg font-bold" autoFocus />
               ) : (
                 <>
                   {project.name}
-                  <Badge variant="outline" className={cn("text-xs", statusInfo.color)}>{statusLabel}</Badge>
+                  <Badge variant="outline" className={cn("type-label", statusInfo.color)}>{statusLabel}</Badge>
                 </>
               )}
             </CardTitle>
             {!editing && project.description && (
-              <CardDescription className="mt-1 text-sm text-on-surface-variant">{project.description}</CardDescription>
+              <CardDescription className="mt-1 type-body text-on-surface-variant">{project.description}</CardDescription>
             )}
           </div>
           {editing ? (

@@ -137,7 +137,7 @@ function ToggleChip({
       title={title}
       aria-pressed={active}
       className={cn(
-        "flex h-10 items-center justify-center gap-1.5 rounded-2xl border px-3 text-xs font-medium transition-all",
+        "flex h-10 items-center justify-center gap-1.5 rounded-2xl border px-3 type-label transition-all",
         active
           ? activeClasses[token]
           : cn("border-border text-muted-foreground", hoverClasses[token]),
@@ -421,7 +421,7 @@ function BudgetItemForm({
                 type="button"
                 variant="link"
                 size="sm"
-                className="h-auto p-0 text-xs"
+                className="h-auto p-0 type-label"
                 onClick={() => setIsCustomCat(!isCustomCat)}
               >
                 {isCustomCat ? t("label.selectExisting") : t("label.addNewCategory")}
@@ -570,7 +570,7 @@ function BudgetItemForm({
 
         {/* ===== KONTAKT (volitelné) — přiřazená osoba/firma ===== */}
         <CollapsibleSection title={t("section.contact")}>
-          <Label className="flex items-center gap-1.5 text-xs">
+          <Label className="flex items-center gap-1.5 type-label">
             <User className="h-3.5 w-3.5 text-muted-foreground" />
             {t("label.contactHint")}
           </Label>
@@ -590,7 +590,7 @@ function BudgetItemForm({
             emptyText={t("empty.contacts")}
           />
           {(contacts ?? []).length === 0 && (
-            <p className="text-[10px] text-muted-foreground">
+            <p className="type-label-sm text-muted-foreground">
               {t("empty.noContactsHint")}
             </p>
           )}
@@ -599,7 +599,7 @@ function BudgetItemForm({
         {/* ===== ODKAZY (volitelné) — MD3 tonal section ===== */}
         <CollapsibleSection title={t("section.links")} badge={links.length}>
           <div className="flex items-center justify-between">
-            <Label className="flex items-center gap-1.5 text-xs">
+            <Label className="flex items-center gap-1.5 type-label">
               <LinkIcon className="h-3.5 w-3.5 text-muted-foreground" />
               {t("label.links")}
             </Label>
@@ -607,7 +607,7 @@ function BudgetItemForm({
               type="button"
               variant="outline"
               size="sm"
-              className="h-7 gap-1 px-2 text-[11px]"
+              className="h-7 gap-1 px-2 type-label"
               onClick={() => setLinks((prev) => [...prev, { id: undefined, label: "", url: "" }])}
             >
               <Plus className="h-3 w-3" /> {t("button.add")}
@@ -628,14 +628,14 @@ function BudgetItemForm({
                       )
                     }
                     placeholder={t("placeholder.linkLabel")}
-                    className="h-7 flex-1 min-w-[120px] text-xs"
+                    className="h-7 flex-1 min-w-[120px] type-label"
                   />
                   <div className="relative flex-1 min-w-[140px]">
                     <Input
                       value={link.url}
                       onChange={(e) => handleUrlChange(idx, e.target.value)}
                       placeholder={t("placeholder.linkUrl")}
-                      className="h-7 pr-7 text-xs"
+                      className="h-7 pr-7 type-label"
                       inputMode="url"
                     />
                     {link.url.trim() !== "" && (

@@ -139,13 +139,13 @@ export function MoveItemDialog({
 
         <div className="space-y-3 py-2">
           {currentParent && (
-            <div className="rounded-md border border-muted bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
+            <div className="rounded-md border border-muted bg-muted/40 px-3 py-2 type-label text-muted-foreground">
               {t("currentParent", { name: currentParent.subcategory || currentParent.category })}
             </div>
           )}
 
           {candidates.length === 0 ? (
-            <p className="rounded-md border border-dashed border-muted px-3 py-4 text-center text-sm text-muted-foreground">
+            <p className="rounded-md border border-dashed border-muted px-3 py-4 text-center type-body text-muted-foreground">
               {t("empty")}
             </p>
           ) : (

@@ -111,7 +111,7 @@ function ErrorContent({
       </div>
       <div className="space-y-2">
         <h1 className="type-display tracking-tight">{t("title")}</h1>
-        <p className="mx-auto max-w-md text-sm text-muted-foreground">
+        <p className="mx-auto max-w-md type-body text-muted-foreground">
           {t("description")}
         </p>
       </div>
@@ -158,25 +158,25 @@ function ErrorContent({
         <CollapsibleContent className="mt-3">
           <div className="rounded-lg border bg-muted/30 p-4 text-left">
             {error.digest && (
-              <div className="mb-2 flex items-center gap-2 text-xs">
+              <div className="mb-2 flex items-center gap-2 type-label">
                 <span className="font-medium text-muted-foreground">{t("errorCode")}</span>
-                <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-[11px]">
+                <code className="rounded bg-muted px-1.5 py-0.5 font-mono type-label">
                   {error.digest}
                 </code>
               </div>
             )}
             <div className="mb-2">
-              <span className="text-xs font-medium text-muted-foreground">{t("message")}</span>
-              <p className="mt-1 break-words font-mono text-xs text-foreground">
+              <span className="type-label font-medium text-muted-foreground">{t("message")}</span>
+              <p className="mt-1 break-words font-mono type-body text-foreground">
                 {error.message || t("noMessage")}
               </p>
             </div>
             {error.stack && (
               <div className="mt-3">
-                <span className="text-xs font-medium text-muted-foreground">
+                <span className="type-label font-medium text-muted-foreground">
                   {t("stackTrace")}
                 </span>
-                <pre className="mt-1 max-h-48 overflow-auto rounded bg-muted/50 p-2 font-mono text-[10px] leading-relaxed text-muted-foreground">
+                <pre className="mt-1 max-h-48 overflow-auto rounded bg-muted/50 p-2 font-mono type-label-sm leading-relaxed text-muted-foreground">
                   {error.stack}
                 </pre>
               </div>

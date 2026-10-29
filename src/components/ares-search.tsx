@@ -109,7 +109,7 @@ export function AresSearch({ onSelect }: Props) {
             onKeyDown={handleKeyDown}
             onFocus={() => results.length > 0 && setShowResults(true)}
             placeholder={t("placeholder")}
-            className="h-8 pl-8 text-xs"
+            className="h-8 pl-8 type-label"
           />
           {isLoading && (
             <Loader2 className="absolute right-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 animate-spin text-muted-foreground" />
@@ -121,12 +121,12 @@ export function AresSearch({ onSelect }: Props) {
       {showResults && (results.length > 0 || needsApiKey) && (
         <div className="absolute z-50 mt-1 max-h-64 w-full overflow-y-auto scrollbar-thin rounded-md border bg-popover shadow-md">
           {needsApiKey ? (
-            <div className="p-3 text-center text-[11px] text-muted-foreground">
+            <div className="p-3 text-center type-label text-muted-foreground">
               {t("needsApiKey.title")}<br />
               {t("needsApiKey.hint")}
             </div>
           ) : results.length === 0 && !isLoading ? (
-            <div className="p-3 text-center text-[11px] text-muted-foreground">
+            <div className="p-3 text-center type-label text-muted-foreground">
               {t("noResults", { query })}
             </div>
           ) : (
@@ -138,14 +138,14 @@ export function AresSearch({ onSelect }: Props) {
                     onClick={() => handleSelect(company)}
                     onMouseEnter={() => setSelectedIndex(idx)}
                     className={cn(
-                      "flex w-full items-start gap-2 px-3 py-2 text-left text-xs transition-colors",
+                      "flex w-full items-start gap-2 px-3 py-2 text-left type-label transition-colors",
                       selectedIndex === idx ? "bg-accent" : "hover:bg-muted/50",
                     )}
                   >
                     <Building2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                     <div className="min-w-0 flex-1">
                       <div className="truncate font-medium">{company.name}</div>
-                      <div className="truncate text-[10px] text-muted-foreground">
+                      <div className="truncate type-label-sm text-muted-foreground">
                         {t("result.ico", { ico: company.ico })}
                         {company.dic && ` · ${t("result.dic", { dic: company.dic })}`}
                         {company.address && ` · ${company.address}`}

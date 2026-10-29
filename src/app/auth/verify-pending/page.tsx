@@ -100,7 +100,7 @@ export default function VerifyPendingPage() {
         {/* Logo */}
         <div className="mb-8 text-center">
           <Link href="/" className="inline-flex items-center gap-2">
-            <span className="text-2xl font-bold tracking-tight">
+            <span className="type-display tracking-tight">
               Stavba<span className="text-primary">.</span>
             </span>
           </Link>
@@ -112,15 +112,15 @@ export default function VerifyPendingPage() {
             <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-warning/10">
               <MailCheck className="h-8 w-8 text-warning" />
             </div>
-            <h1 className="mb-2 text-xl font-semibold">Ověřte svůj e-mail</h1>
-            <p className="text-sm text-muted-foreground">
+            <h1 className="mb-2 type-headline">Ověřte svůj e-mail</h1>
+            <p className="type-body text-muted-foreground">
               Pro přístup k vašim projektům musíte potvrdit svou e-mailovou adresu.
               Zkontrolujte svou schránku včetně složky spam.
             </p>
           </div>
 
           {session?.user?.email && (
-            <div className="mb-4 rounded-lg bg-muted/50 p-3 text-center text-sm">
+            <div className="mb-4 rounded-lg bg-muted/50 p-3 text-center type-body">
               <span className="text-muted-foreground">E-mail odeslán na: </span>
               <span className="font-medium">{session.user.email}</span>
             </div>
@@ -201,7 +201,7 @@ export default function VerifyPendingPage() {
           </div>
         </div>
 
-        <p className="mt-6 text-center text-xs text-muted-foreground">
+        <p className="mt-6 text-center type-label text-muted-foreground">
           Po ověření e-mailu budete automaticky přesměrováni na hlavní stránku.
         </p>
       </div>

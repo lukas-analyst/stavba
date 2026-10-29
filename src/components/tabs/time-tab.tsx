@@ -222,23 +222,23 @@ export function TimeTab({ projectId }: { projectId: string }) {
           const w = workerTypeLabel(info.type, tAll);
           return (
             <Card key={name} className="p-3">
-              <div className="flex items-center gap-1 text-xs text-muted-foreground">
+              <div className="flex items-center gap-1 type-label text-muted-foreground">
                 <span>{w.emoji}</span> {w.label}
               </div>
-              <div className="mt-1 truncate text-sm font-bold" title={name}>
+              <div className="mt-1 truncate type-body font-bold" title={name}>
                 {name}
               </div>
-              <div className="mt-1 text-lg font-bold text-time">
+              <div className="mt-1 type-title-lg font-bold text-time">
                 {formatNumber(info.hours, " h", activeLocale)}
               </div>
-              <div className="text-xs text-muted-foreground">
+              <div className="type-label text-muted-foreground">
                 {t("stats.entries", { count: info.entries })}
               </div>
             </Card>
           );
         })}
         {byWorker.length === 0 && (
-          <Card className="col-span-full p-4 text-center text-sm text-muted-foreground">
+          <Card className="col-span-full p-4 text-center type-body text-muted-foreground">
             {t("stats.empty")}
           </Card>
         )}
@@ -296,17 +296,17 @@ export function TimeTab({ projectId }: { projectId: string }) {
                 ))}
               </SelectContent>
             </Select>
-            <div className="flex items-center gap-3 text-sm">
+            <div className="flex items-center gap-3 type-body">
               <div className="text-right">
-                <div className="text-xs text-muted-foreground">{t("total.label", { count: filtered.length })}</div>
-                <div className="text-lg font-bold text-time">
+                <div className="type-label text-muted-foreground">{t("total.label", { count: filtered.length })}</div>
+                <div className="type-title-lg font-bold text-time">
                   {formatNumber(totalHours, " h", activeLocale)}
                 </div>
               </div>
             </div>
           </>
         ) : (
-          <span className="text-xs text-muted-foreground">
+          <span className="type-label text-muted-foreground">
             {t("weekly.title")}
           </span>
         )}
@@ -712,14 +712,14 @@ function WeeklyTimesheet({
           <ChevronRight className="h-4 w-4" />
           <span className="sr-only">{t("weekly.nextWeek")}</span>
         </Button>
-        <div className="flex items-center gap-2 text-sm">
+        <div className="flex items-center gap-2 type-body">
           <span className="font-medium">{t("weekly.week")}</span>
           <span className="tabular-nums">{rangeLabel}</span>
         </div>
-        <div className="ml-auto flex items-center gap-3 text-sm">
+        <div className="ml-auto flex items-center gap-3 type-body">
           <div className="text-right">
-            <div className="text-xs text-muted-foreground">{t("weekly.total")}</div>
-            <div className="text-lg font-bold text-time tabular-nums">
+            <div className="type-label text-muted-foreground">{t("weekly.total")}</div>
+            <div className="type-title-lg font-bold text-time tabular-nums">
               {formatNumber(grid.grandTotal, " h", activeLocale)}
             </div>
           </div>
@@ -752,8 +752,8 @@ function WeeklyTimesheet({
                       )}
                     >
                       <div className="flex flex-col items-center">
-                        <span className="text-xs">{t(`weekly.dayShort.${dk}`)}</span>
-                        <span className="text-[11px] text-muted-foreground tabular-nums">
+                        <span className="type-label">{t(`weekly.dayShort.${dk}`)}</span>
+                        <span className="type-label text-muted-foreground tabular-nums">
                           {dateLabel}
                         </span>
                       </div>
@@ -791,7 +791,7 @@ function WeeklyTimesheet({
                       >
                         <span
                           className={cn(
-                            "inline-flex h-8 min-w-[3rem] items-center justify-center rounded-md px-2 text-sm font-medium",
+                            "inline-flex h-8 min-w-[3rem] items-center justify-center rounded-md px-2 type-body font-medium",
                             cellColorClass(cell.hours),
                             isToday && hasHours && "ring-1 ring-primary",
                           )}
@@ -825,7 +825,7 @@ function WeeklyTimesheet({
                     >
                       <span
                         className={cn(
-                          "inline-flex h-8 min-w-[3rem] items-center justify-center rounded-md px-2 text-sm",
+                          "inline-flex h-8 min-w-[3rem] items-center justify-center rounded-md px-2 type-body",
                           cellColorClass(total),
                         )}
                       >
@@ -854,7 +854,7 @@ function WeeklyTimesheet({
       )}
 
       {/* Legend for the cell color bands — small, discreet */}
-      <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+      <div className="flex flex-wrap items-center gap-3 type-label text-muted-foreground">
         <LegendChip
           className="bg-muted/20"
           label={t("weekly.hours") + ": 0"}
@@ -1242,7 +1242,7 @@ function TimeDialogInner({
       maxWidth="max-w-3xl"
     >
       {errors.workerName && (
-        <p className="text-xs text-destructive">{errors.workerName}</p>
+        <p className="type-label text-destructive">{errors.workerName}</p>
       )}
 
       {/* ===== ZÁKLAD ===== */}
@@ -1282,7 +1282,7 @@ function TimeDialogInner({
           className={cn(errors.budgetItemId && "border-destructive ring-destructive")}
         />
         {errors.budgetItemId && (
-          <p className="text-xs text-destructive mt-1">{errors.budgetItemId}</p>
+          <p className="type-label text-destructive mt-1">{errors.budgetItemId}</p>
         )}
       </div>
 
@@ -1309,10 +1309,10 @@ function TimeDialogInner({
             required
           />
           {errors.hours && (
-            <p className="text-xs text-destructive mt-1">{errors.hours}</p>
+            <p className="type-label text-destructive mt-1">{errors.hours}</p>
           )}
           {daySpan > 1 && hoursPerDay && (
-            <p className="text-[11px] text-muted-foreground">
+            <p className="type-label text-muted-foreground">
               {t("form.hint.hoursPerDay", { hours: hoursPerDay, days: daySpan })}
             </p>
           )}
@@ -1329,7 +1329,7 @@ function TimeDialogInner({
             placeholder={t("form.placeholder.workerCount")}
           />
           {workerCount && Number(workerCount) > 1 && (
-            <p className="text-[11px] text-muted-foreground">
+            <p className="type-label text-muted-foreground">
               {t("form.hint.personHours", {
                 total: formatNumber(Number(hours || 0) * Number(workerCount), " h", activeLocale),
               })}
@@ -1379,7 +1379,7 @@ function TimeDialogInner({
             placeholder={t("form.placeholder.dateTo")}
           />
           {dateTo && (
-            <p className="text-[11px] text-muted-foreground">
+            <p className="type-label text-muted-foreground">
               {t("form.hint.daySpan", { days: daySpan })}
             </p>
           )}
@@ -1429,12 +1429,12 @@ function TimeDialogInner({
               onCheckedChange={(v) => setMarkCompleted(v === true)}
               className="mt-0.5"
             />
-            <Label htmlFor="markCompleted" className="cursor-pointer text-sm font-medium leading-tight">
+            <Label htmlFor="markCompleted" className="cursor-pointer type-body font-medium leading-tight">
               {t("form.markCompleted.label")}
             </Label>
           </div>
           {alreadyCompleted && (
-            <p className="ml-6 text-[11px] text-muted-foreground">
+            <p className="ml-6 type-label text-muted-foreground">
               {t("form.markCompleted.alreadyCompleted")}
             </p>
           )}

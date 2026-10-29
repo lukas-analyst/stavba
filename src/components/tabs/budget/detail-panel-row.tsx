@@ -100,7 +100,7 @@ export function DetailPanelRow({
               {t("label.contact")}
             </div>
             {item.contact ? (
-              <div className="flex items-center gap-1.5 text-xs">
+              <div className="flex items-center gap-1.5 type-label">
                 <span className="font-medium text-foreground">{item.contact.name}</span>
                 {item.contact.role && (
                   <span className="text-muted-foreground">· {item.contact.role}</span>
@@ -133,7 +133,7 @@ export function DetailPanelRow({
                       target="_blank"
                       rel="noopener noreferrer"
                       title={link.url}
-                      className="inline-flex items-center gap-1 text-xs font-medium text-primary underline-offset-2 hover:underline"
+                      className="inline-flex items-center gap-1 type-label font-medium text-primary underline-offset-2 hover:underline"
                     >
                       <ExternalLink className="h-3 w-3 shrink-0 opacity-60" />
                       {link.label}
@@ -164,7 +164,7 @@ export function DetailPanelRow({
                               target="_blank"
                               rel="noopener noreferrer"
                               title={link.url}
-                              className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground underline-offset-2 hover:underline"
+                              className="inline-flex items-center gap-1 type-label text-muted-foreground hover:text-foreground underline-offset-2 hover:underline"
                             >
                               <ExternalLink className="h-3 w-3 shrink-0 opacity-40" />
                               {link.label}

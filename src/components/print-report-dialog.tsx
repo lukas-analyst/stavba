@@ -137,7 +137,7 @@ export function PrintReportDialog({
           </Button>
           {/* Mobile-only hint shown below the print button. Hidden on
               desktop where window.print() works reliably. */}
-          <p className="basis-full text-center text-xs text-muted-foreground sm:hidden">
+          <p className="basis-full text-center type-label text-muted-foreground sm:hidden">
             {t("note.useDesktop")}
           </p>
         </DialogFooter>
@@ -178,17 +178,17 @@ function ReportBody({
       <header className="border-b border-border pb-4">
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0">
-            <h1 className="text-2xl font-bold leading-tight">{projectName}</h1>
+            <h1 className="type-display leading-tight">{projectName}</h1>
             {project.address && (
-              <p className="mt-1 text-sm text-muted-foreground">{project.address}</p>
+              <p className="mt-1 type-body text-muted-foreground">{project.address}</p>
             )}
             {project.description && (
-              <p className="mt-2 max-w-prose text-xs text-muted-foreground">
+              <p className="mt-2 max-w-prose type-label text-muted-foreground">
                 {project.description}
               </p>
             )}
           </div>
-          <div className="shrink-0 text-right text-xs text-muted-foreground">
+          <div className="shrink-0 text-right type-label text-muted-foreground">
             <div>
               <span className="font-medium text-foreground">{t("header.generated")}</span>{" "}
               {formatDate(new Date(), { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" }, locale)}
@@ -205,7 +205,7 @@ function ReportBody({
 
       {/* ===== KPI souhrn ===== */}
       <section className="print-section">
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+        <h2 className="mb-3 type-overline text-muted-foreground">
           {t("section.summary")}
         </h2>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
@@ -237,10 +237,10 @@ function ReportBody({
         alerts.upcoming.length > 0 ||
         alerts.overBudget.length > 0) && (
         <section className="print-section">
-          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+          <h2 className="mb-3 type-overline text-muted-foreground">
             {t("section.alerts")}
           </h2>
-          <div className="space-y-1.5 text-xs">
+          <div className="space-y-1.5 type-label">
             {alerts.overdue.length > 0 && (
               <AlertLine
                 tone="danger"
@@ -268,7 +268,7 @@ function ReportBody({
 
       {/* ===== Projekční odhad ===== */}
       <section className="print-section">
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+        <h2 className="mb-3 type-overline text-muted-foreground">
           {t("section.projection")}
         </h2>
         {hasCompleted ? (
@@ -295,7 +295,7 @@ function ReportBody({
             />
           </div>
         ) : (
-          <p className="text-xs text-muted-foreground">
+          <p className="type-label text-muted-foreground">
             {t("projection.empty")}
           </p>
         )}
@@ -303,10 +303,10 @@ function ReportBody({
 
       {/* ===== Fáze ===== */}
       <section className="print-section print-break-before">
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+        <h2 className="mb-3 type-overline text-muted-foreground">
           {t("section.phases")}
         </h2>
-        <table className="w-full border-collapse text-sm">
+        <table className="w-full border-collapse type-body">
           <thead>
             <tr className="border-b border-border text-left">
               <th className="py-1.5 pr-2 font-medium">{t("column.phase")}</th>
@@ -325,7 +325,7 @@ function ReportBody({
                   <td className="py-1.5 pr-2">
                     <Badge
                       variant="outline"
-                      className={cn("text-[10px]", PHASE_COLORS[phaseId] ?? "")}
+                      className={cn("type-label-sm", PHASE_COLORS[phaseId] ?? "")}
                     >
                       {tPhases(phaseId)}
                     </Badge>
@@ -352,7 +352,7 @@ function ReportBody({
             })}
             {byPhase.length === 0 && (
               <tr>
-                <td colSpan={5} className="py-3 text-center text-xs text-muted-foreground">
+                <td colSpan={5} className="py-3 text-center type-label text-muted-foreground">
                   {t("empty.phases")}
                 </td>
               </tr>
@@ -363,10 +363,10 @@ function ReportBody({
 
       {/* ===== Kategorie (top 15) ===== */}
       <section className="print-section">
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+        <h2 className="mb-3 type-overline text-muted-foreground">
           {t("section.categories", { top: byCategory.length > 15 ? t("section.categoriesTop") : "" })}
         </h2>
-        <table className="w-full border-collapse text-sm">
+        <table className="w-full border-collapse type-body">
           <thead>
             <tr className="border-b border-border text-left">
               <th className="py-1.5 pr-2 font-medium">{t("column.category")}</th>
@@ -396,7 +396,7 @@ function ReportBody({
             })}
             {byCategory.length === 0 && (
               <tr>
-                <td colSpan={4} className="py-3 text-center text-xs text-muted-foreground">
+                <td colSpan={4} className="py-3 text-center type-label text-muted-foreground">
                   {t("empty.categories")}
                 </td>
               </tr>
@@ -407,10 +407,10 @@ function ReportBody({
 
       {/* ===== Položky rozpočtu ===== */}
       <section className="print-section print-break-before">
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+        <h2 className="mb-3 type-overline text-muted-foreground">
           {t("section.budgetItems", { count: budgetItems.length })}
         </h2>
-        <table className="w-full border-collapse text-xs">
+        <table className="w-full border-collapse type-label">
           <thead>
             <tr className="border-b border-border text-left">
               <th className="py-1.5 pr-2 font-medium">{t("column.category")}</th>
@@ -456,7 +456,7 @@ function ReportBody({
                     {formatDate(it.dateTo, undefined, locale)}
                   </td>
                   <td className="py-1 pl-2 align-top">
-                    <Badge variant="outline" className={cn("text-[10px]", statusTone)}>
+                    <Badge variant="outline" className={cn("type-label-sm", statusTone)}>
                       {status}
                     </Badge>
                   </td>
@@ -465,7 +465,7 @@ function ReportBody({
             })}
             {budgetItems.length === 0 && (
               <tr>
-                <td colSpan={7} className="py-3 text-center text-xs text-muted-foreground">
+                <td colSpan={7} className="py-3 text-center type-label text-muted-foreground">
                   {t("empty.budgetItems")}
                 </td>
               </tr>
@@ -476,10 +476,10 @@ function ReportBody({
 
       {/* ===== Platby (posledních 10) ===== */}
       <section className="print-section print-break-before">
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+        <h2 className="mb-3 type-overline text-muted-foreground">
           {t("section.payments", { count: payments.length })}
         </h2>
-        <table className="w-full border-collapse text-xs">
+        <table className="w-full border-collapse type-label">
           <thead>
             <tr className="border-b border-border text-left">
               <th className="py-1.5 pr-2 font-medium">{t("column.date")}</th>
@@ -512,7 +512,7 @@ function ReportBody({
             })}
             {payments.length === 0 && (
               <tr>
-                <td colSpan={5} className="py-3 text-center text-xs text-muted-foreground">
+                <td colSpan={5} className="py-3 text-center type-label text-muted-foreground">
                   {t("empty.payments")}
                 </td>
               </tr>
@@ -522,7 +522,7 @@ function ReportBody({
       </section>
 
       {/* ===== Patička ===== */}
-      <footer className="border-t border-border pt-3 text-[10px] text-muted-foreground">
+      <footer className="border-t border-border pt-3 type-label-sm text-muted-foreground">
         {t("footer", {
           date: formatDate(new Date(), { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" }, locale),
           projectName,
@@ -547,7 +547,7 @@ function KpiCard({
 }) {
   return (
     <div className="rounded-md border border-border bg-card p-2">
-      <div className="text-[10px] uppercase tracking-wide text-muted-foreground">
+      <div className="type-label-sm uppercase tracking-wide text-muted-foreground">
         {label}
       </div>
       <div

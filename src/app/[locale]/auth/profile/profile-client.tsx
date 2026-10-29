@@ -305,19 +305,19 @@ export function ProfileClient() {
         {/* Logo */}
         <div className="mb-8 text-center">
           <Link href="/" className="inline-flex items-center gap-2">
-            <span className="text-2xl font-bold tracking-tight">
+            <span className="type-display tracking-tight">
               <img src="/logo.svg" alt="Logo" className="h-16 w-16 rounded-xl" />
             </span>
           </Link>
-          <p className="mt-2 text-sm text-muted-foreground">
+          <p className="mt-2 type-body text-muted-foreground">
             {t("tagline")}
           </p>
         </div>
 
         {/* Card */}
         <div className="rounded-2xl border bg-card p-6 shadow-sm sm:p-8">
-          <h1 className="mb-1 text-xl font-semibold">{t("title")}</h1>
-          <p className="mb-6 text-sm text-muted-foreground">
+          <h1 className="mb-1 type-headline">{t("title")}</h1>
+          <p className="mb-6 type-body text-muted-foreground">
             {t("subtitle")}
           </p>
 
@@ -329,7 +329,7 @@ export function ProfileClient() {
             <div className="space-y-8">
               {/* ====== Section 1: Profil ====== */}
               <form onSubmit={handleSaveProfile} className="space-y-4">
-                <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                <div className="flex items-center gap-2 type-body font-medium text-muted-foreground">
                   <UserIcon className="h-4 w-4" />
                   <span>{t("sections.profile")}</span>
                 </div>
@@ -363,7 +363,7 @@ export function ProfileClient() {
                       className="pl-9 cursor-not-allowed opacity-70"
                     />
                   </div>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="type-label text-muted-foreground">
                     {t("emailReadOnlyNote")}
                   </p>
                 </div>
@@ -389,7 +389,7 @@ export function ProfileClient() {
 
               {/* ====== Section 2: Změnit heslo ====== */}
               <form onSubmit={handleChangePassword} className="space-y-4">
-                <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                <div className="flex items-center gap-2 type-body font-medium text-muted-foreground">
                   <KeyRound className="h-4 w-4" />
                   <span>{t("sections.password")}</span>
                 </div>
@@ -463,7 +463,7 @@ export function ProfileClient() {
                   )}
                 </Button>
 
-                <p className="text-xs text-muted-foreground">
+                <p className="type-label text-muted-foreground">
                   {t("passwordChangeNote")}
                 </p>
               </form>
@@ -472,11 +472,11 @@ export function ProfileClient() {
 
               {/* ====== Section 3: Relace ====== */}
               <div className="space-y-3">
-                <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                <div className="flex items-center gap-2 type-body font-medium text-muted-foreground">
                   <MonitorSmartphone className="h-4 w-4" />
                   <span>{t("sections.sessions")}</span>
                 </div>
-                <p className="text-sm text-muted-foreground">
+                <p className="type-body text-muted-foreground">
                   {t("sessionsDescription")}
                 </p>
                 <Button
@@ -505,11 +505,11 @@ export function ProfileClient() {
 
               {/* ====== Section 4: Notifikační preference ====== */}
               <div className="space-y-3">
-                <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                <div className="flex items-center gap-2 type-body font-medium text-muted-foreground">
                   <Bell className="h-4 w-4" />
                   <span>{tn("title")}</span>
                 </div>
-                <p className="text-sm text-muted-foreground">
+                <p className="type-body text-muted-foreground">
                   {tn("description")}
                 </p>
                 <ul className="space-y-1">
@@ -522,8 +522,8 @@ export function ProfileClient() {
                         className="flex items-start justify-between gap-4 rounded-lg border bg-surface-container-low p-3"
                       >
                         <div className="min-w-0 flex-1">
-                          <div className="text-sm font-medium">{label}</div>
-                          <div className="mt-0.5 text-xs text-muted-foreground">
+                          <div className="type-body font-medium">{label}</div>
+                          <div className="mt-0.5 type-label text-muted-foreground">
                             {description}
                           </div>
                         </div>
@@ -546,7 +546,7 @@ export function ProfileClient() {
 
               {/* ====== Section 5: Odhlásit se ====== */}
               <div className="space-y-3">
-                <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                <div className="flex items-center gap-2 type-body font-medium text-muted-foreground">
                   <LogOut className="h-4 w-4" />
                   <span>{t("sections.signOut")}</span>
                 </div>
@@ -568,11 +568,11 @@ export function ProfileClient() {
         <div className="mt-8 rounded-lg border border-destructive/30 bg-destructive/5 p-4 sm:p-6">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="space-y-1">
-              <h2 className="flex items-center gap-2 text-base font-semibold text-destructive">
+              <h2 className="flex items-center gap-2 type-title text-destructive">
                 <Trash2 className="h-4 w-4" />
                 {t("deleteAccount.sectionTitle")}
               </h2>
-              <p className="text-xs text-muted-foreground">
+              <p className="type-label text-muted-foreground">
                 {t("deleteAccount.sectionDescription")}
               </p>
             </div>
@@ -607,7 +607,7 @@ export function ProfileClient() {
               {tc("backToHome")}
             </Link>
           </Button>
-          <p className="text-center text-xs text-muted-foreground">
+          <p className="text-center type-label text-muted-foreground">
             {tc("copyright", { year: new Date().getFullYear() })}
           </p>
         </div>

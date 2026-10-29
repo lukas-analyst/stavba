@@ -30,7 +30,7 @@ export function HelpButton() {
       <Button
         variant="ghost"
         onClick={() => setOpen(true)}
-        className="w-full min-h-[44px] justify-start gap-2.5 px-3 text-sm font-medium state-layer-on-surface rounded-full sm:min-h-9"
+        className="w-full min-h-[44px] justify-start gap-2.5 px-3 type-body font-medium state-layer-on-surface rounded-full sm:min-h-9"
         aria-label={t("title")}
       >
         <HelpCircle className="h-4 w-4 shrink-0" />
@@ -123,13 +123,13 @@ function HelpSection({
 }) {
   return (
     <div className="space-y-1.5">
-      <h3 className="flex items-center gap-2 text-sm font-semibold">
+      <h3 className="flex items-center gap-2 type-title">
         <span className="text-base">{icon}</span>
         {title}
       </h3>
       <ul className="space-y-1 pl-7">
         {items.map((item, i) => (
-          <li key={i} className="text-xs text-muted-foreground">
+          <li key={i} className="type-label text-muted-foreground">
             • {item}
           </li>
         ))}

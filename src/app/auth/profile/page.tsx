@@ -213,19 +213,19 @@ export default function ProfilePage() {
         {/* Logo */}
         <div className="mb-8 text-center">
           <Link href="/" className="inline-flex items-center gap-2">
-            <span className="text-2xl font-bold tracking-tight">
+            <span className="type-display tracking-tight">
               Stavba<span className="text-primary">.</span>
             </span>
           </Link>
-          <p className="mt-2 text-sm text-muted-foreground">
+          <p className="mt-2 type-body text-muted-foreground">
             Spravujte svůj účet, heslo a relace
           </p>
         </div>
 
         {/* Card */}
         <div className="rounded-2xl border bg-card p-6 shadow-sm sm:p-8">
-          <h1 className="mb-1 text-xl font-semibold">Profil</h1>
-          <p className="mb-6 text-sm text-muted-foreground">
+          <h1 className="mb-1 type-headline">Profil</h1>
+          <p className="mb-6 type-body text-muted-foreground">
             Zde můžete upravit své údaje, změnit heslo a spravovat aktivní relace.
           </p>
 
@@ -237,7 +237,7 @@ export default function ProfilePage() {
             <div className="space-y-8">
               {/* ====== Section 1: Profil ====== */}
               <form onSubmit={handleSaveProfile} className="space-y-4">
-                <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                <div className="flex items-center gap-2 type-body font-medium text-muted-foreground">
                   <UserIcon className="h-4 w-4" />
                   <span>Profil</span>
                 </div>
@@ -271,7 +271,7 @@ export default function ProfilePage() {
                       className="pl-9 cursor-not-allowed opacity-70"
                     />
                   </div>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="type-label text-muted-foreground">
                     E-mail nelze změnit. Pro změnu kontaktujte podporu.
                   </p>
                 </div>
@@ -297,7 +297,7 @@ export default function ProfilePage() {
 
               {/* ====== Section 2: Změnit heslo ====== */}
               <form onSubmit={handleChangePassword} className="space-y-4">
-                <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                <div className="flex items-center gap-2 type-body font-medium text-muted-foreground">
                   <KeyRound className="h-4 w-4" />
                   <span>Změnit heslo</span>
                 </div>
@@ -370,7 +370,7 @@ export default function ProfilePage() {
                   )}
                 </Button>
 
-                <p className="text-xs text-muted-foreground">
+                <p className="type-label text-muted-foreground">
                   Po změně hesla budou odhlášeny všechny ostatní relace
                   (na jiných zařízeních).
                 </p>
@@ -380,11 +380,11 @@ export default function ProfilePage() {
 
               {/* ====== Section 3: Relace ====== */}
               <div className="space-y-3">
-                <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                <div className="flex items-center gap-2 type-body font-medium text-muted-foreground">
                   <MonitorSmartphone className="h-4 w-4" />
                   <span>Relace</span>
                 </div>
-                <p className="text-sm text-muted-foreground">
+                <p className="type-body text-muted-foreground">
                   Odhlásí všechny ostatní přihlášené relace (na jiných
                   zařízeních). Tato relace zůstane aktivní.
                 </p>
@@ -414,7 +414,7 @@ export default function ProfilePage() {
 
               {/* ====== Section 4: Odhlásit se ====== */}
               <div className="space-y-3">
-                <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                <div className="flex items-center gap-2 type-body font-medium text-muted-foreground">
                   <LogOut className="h-4 w-4" />
                   <span>Odhlásit se</span>
                 </div>
@@ -445,7 +445,7 @@ export default function ProfilePage() {
               Zpět na hlavní stránku
             </Link>
           </Button>
-          <p className="text-center text-xs text-muted-foreground">
+          <p className="text-center type-label text-muted-foreground">
             © {new Date().getFullYear()} Stavba — Rozpočet Stavby
           </p>
         </div>

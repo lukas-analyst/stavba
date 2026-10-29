@@ -56,7 +56,7 @@ export function CurrencyConversionPreview({
   // so the user knows a preview is coming.
   if (!rates || isLoading) {
     return (
-      <p className="text-[11px] text-muted-foreground/70 italic">
+      <p className="type-label text-muted-foreground/70 italic">
         {t("loadingRate")}
       </p>
     );
@@ -69,7 +69,7 @@ export function CurrencyConversionPreview({
     // Rate missing — show the "rate unavailable" message so the user
     // knows to either switch currency or proceed anyway.
     return (
-      <p className="text-[11px] text-warning-strong italic dark:text-warning">
+      <p className="type-label text-warning-strong italic dark:text-warning">
         {t("rateUnavailable")}
       </p>
     );
@@ -88,7 +88,7 @@ export function CurrencyConversionPreview({
   }).format(crossRate);
 
   return (
-    <p className="text-[11px] text-muted-foreground tabular-nums">
+    <p className="type-label text-muted-foreground tabular-nums">
       {t("conversionPreview", {
         fromAmount: fromFormatted,
         toAmount: toFormatted,

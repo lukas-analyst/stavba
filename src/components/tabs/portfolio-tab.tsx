@@ -314,7 +314,7 @@ export function PortfolioTab() {
                         <div className="flex flex-col">
                           <span className="truncate">{p.name}</span>
                           {p.address && (
-                            <span className="text-xs text-muted-foreground truncate">
+                            <span className="type-label text-muted-foreground truncate">
                               {p.address}
                             </span>
                           )}
@@ -329,7 +329,7 @@ export function PortfolioTab() {
                       <TableCell className="text-right tabular-nums whitespace-nowrap">
                         <span
                           className={cn(
-                            "inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-semibold",
+                            "inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 type-label font-semibold",
                             BURN_ACCENT_CLASSES[accent],
                           )}
                         >
@@ -377,7 +377,7 @@ export function PortfolioTab() {
                   <td className="p-3 text-right tabular-nums">
                     <span
                       className={cn(
-                        "inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-semibold",
+                        "inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 type-label font-semibold",
                         BURN_ACCENT_CLASSES[burnAccent],
                       )}
                     >
@@ -392,7 +392,7 @@ export function PortfolioTab() {
                   >
                     {formatCzk(totals.remaining, locale)}
                   </td>
-                  <td className="p-3 text-right text-xs text-muted-foreground">
+                  <td className="p-3 text-right type-label text-muted-foreground">
                     {t("table.row.projectCount", { count: totals.projectCount })}
                   </td>
                 </tr>
@@ -496,8 +496,8 @@ function PortfolioHeader() {
   const t = useTranslations("tabs.portfolio");
   return (
     <div className="space-y-1">
-      <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
-      <p className="text-sm text-on-surface-variant">{t("subtitle")}</p>
+      <h1 className="type-display tracking-tight">{t("title")}</h1>
+      <p className="type-body text-on-surface-variant">{t("subtitle")}</p>
     </div>
   );
 }
@@ -538,12 +538,12 @@ function PortfolioKpiCard({
           <Icon className="h-5 w-5" />
         </span>
         <div className="min-w-0 flex-1 space-y-0.5">
-          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+          <p className="type-overline text-muted-foreground">
             {label}
           </p>
-          <p className="truncate text-xl font-bold tabular-nums">{value}</p>
+          <p className="truncate type-headline tabular-nums">{value}</p>
           {subValue && (
-            <p className="text-xs text-muted-foreground truncate">{subValue}</p>
+            <p className="type-label text-muted-foreground truncate">{subValue}</p>
           )}
         </div>
       </CardContent>

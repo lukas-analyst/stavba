@@ -184,7 +184,7 @@ export function SearchableSelect({
           onTouchMove={(e) => e.stopPropagation()}
         >
           {filtered.length === 0 ? (
-            <p className="py-4 text-center text-xs text-muted-foreground">{finalEmptyText}</p>
+            <p className="py-4 text-center type-label text-muted-foreground">{finalEmptyText}</p>
           ) : (
             filtered.map((option, idx) => (
               <button
@@ -198,7 +198,7 @@ export function SearchableSelect({
                 onMouseEnter={() => setActiveIndex(idx)}
                 onClick={() => choose(option.value)}
                 className={cn(
-                  "flex w-full items-start gap-2 rounded-sm px-2 py-1.5 text-left text-sm transition-colors",
+                  "flex w-full items-start gap-2 rounded-sm px-2 py-1.5 text-left type-body transition-colors",
                   idx === safeActiveIndex ? "bg-accent" : "hover:bg-accent/60",
                   value === option.value && "bg-accent/70",
                 )}
@@ -212,7 +212,7 @@ export function SearchableSelect({
                 <div className="min-w-0 flex-1">
                   <div className="truncate">{option.label}</div>
                   {option.hint && (
-                    <div className="truncate text-[10px] text-muted-foreground">{option.hint}</div>
+                    <div className="truncate type-label-sm text-muted-foreground">{option.hint}</div>
                   )}
                 </div>
               </button>

@@ -179,9 +179,9 @@ function GlobalSearchInner({ onOpenChange }: { onOpenChange: (open: boolean) => 
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder={t("placeholder")}
-          className="h-8 border-0 px-0 text-sm shadow-none focus-visible:ring-0"
+          className="h-8 border-0 px-0 type-body shadow-none focus-visible:ring-0"
           />
-          <kbd className="shrink-0 rounded border bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground">
+          <kbd className="shrink-0 rounded border bg-muted px-1.5 py-0.5 type-label-sm text-muted-foreground">
             ESC
           </kbd>
         </div>
@@ -189,10 +189,10 @@ function GlobalSearchInner({ onOpenChange }: { onOpenChange: (open: boolean) => 
         {/* Results */}
         <div className="max-h-[400px] overflow-y-auto scrollbar-thin">
           {debouncedQuery.length < 2 ? (
-            <div className="py-12 text-center text-sm text-muted-foreground">
+            <div className="py-12 text-center type-body text-muted-foreground">
               <Search className="mx-auto mb-2 h-8 w-8 opacity-30" />
               {t("initialHint")}
-              <div className="mt-3 flex flex-wrap justify-center gap-2 text-[11px]">
+              <div className="mt-3 flex flex-wrap justify-center gap-2 type-label">
                 <span className="rounded-md border bg-muted/50 px-2 py-1">
                   {t("group.projects")}
                 </span>
@@ -217,7 +217,7 @@ function GlobalSearchInner({ onOpenChange }: { onOpenChange: (open: boolean) => 
               ))}
             </div>
           ) : !hasResults ? (
-            <div className="py-12 text-center text-sm text-muted-foreground">
+            <div className="py-12 text-center type-body text-muted-foreground">
               {t("noResults", { query: debouncedQuery })}
             </div>
           ) : (
@@ -348,7 +348,7 @@ function GlobalSearchInner({ onOpenChange }: { onOpenChange: (open: boolean) => 
               )}
 
               {/* Footer hint */}
-              <div className="mt-2 flex items-center justify-end gap-2 px-2 pb-1 text-[10px] text-muted-foreground">
+              <div className="mt-2 flex items-center justify-end gap-2 px-2 pb-1 type-label-sm text-muted-foreground">
                 <span>{t("footer.navigation")}</span>
                 <kbd className="rounded border bg-muted px-1 py-0.5">↑↓</kbd>
                 <kbd className="flex items-center gap-0.5 rounded border bg-muted px-1 py-0.5">
@@ -373,7 +373,7 @@ function ResultGroup({
 }) {
   return (
     <div className="mb-2">
-      <div className="flex items-center gap-1.5 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+      <div className="flex items-center gap-1.5 px-2 py-1 type-overline text-muted-foreground">
         {icon}
         {label}
       </div>
@@ -410,7 +410,7 @@ function ResultItem({
       onClick={onClick}
       onMouseEnter={() => onHover(flatIdx)}
       className={cn(
-        "flex w-full items-center gap-3 rounded-md px-2 py-2 text-left text-sm transition-colors",
+        "flex w-full items-center gap-3 rounded-md px-2 py-2 text-left type-body transition-colors",
         selected ? "bg-accent text-accent-foreground" : "hover:bg-muted/50",
       )}
     >
@@ -418,7 +418,7 @@ function ResultItem({
       <div className="min-w-0 flex-1">
         <div className="truncate font-medium">{title}</div>
         {subtitle && (
-          <div className="truncate text-[11px] text-muted-foreground">
+          <div className="truncate type-label text-muted-foreground">
             {subtitle}
           </div>
         )}
@@ -426,7 +426,7 @@ function ResultItem({
       {phaseBadge && (
         <span
           className={cn(
-            "shrink-0 rounded px-1.5 py-0.5 text-[10px]",
+            "shrink-0 rounded px-1.5 py-0.5 type-label-sm",
             PHASE_COLORS[phaseBadge as keyof typeof PHASE_COLORS] ?? "",
           )}
         >
@@ -434,7 +434,7 @@ function ResultItem({
         </span>
       )}
       {badge && (
-        <span className="shrink-0 text-[11px] font-medium text-muted-foreground tabular-nums">
+        <span className="shrink-0 type-label font-medium text-muted-foreground tabular-nums">
           {badge}
         </span>
       )}

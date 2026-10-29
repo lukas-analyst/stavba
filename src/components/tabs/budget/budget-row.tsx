@@ -342,7 +342,7 @@ export const BudgetRow = memo(function BudgetRow({
                 e.stopPropagation();
                 onToggleExpand();
               }}
-              className="flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+              className="flex items-center gap-1 rounded-lg px-2 py-1 type-label font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
               aria-label={isExpanded ? t("aria.collapse") : t("aria.expand")}
             >
               {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}

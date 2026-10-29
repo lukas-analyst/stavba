@@ -268,7 +268,7 @@ export function TopBar() {
           <Popover open={projectOpen} onOpenChange={setProjectOpen}>
             <PopoverTrigger asChild>
               <button
-                className="flex h-9 items-center gap-1 rounded-full px-2 text-sm font-semibold leading-none state-layer-on-surface sm:h-7 sm:px-1.5"
+                className="flex h-9 items-center gap-1 rounded-full px-2 type-title leading-none state-layer-on-surface sm:h-7 sm:px-1.5"
               >
                 <span className="max-w-[120px] truncate sm:max-w-[180px]">
                   {selectedProject ? selectedProject.name : t("selectProject")}
@@ -287,7 +287,7 @@ export function TopBar() {
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder={t("searchProject")}
-                  className="h-8 text-sm"
+                  className="h-8 type-body"
                   autoFocus
                 />
               </div>
@@ -326,7 +326,7 @@ export function TopBar() {
                   />
                 ))}
                 {filtered?.length === 0 && (
-                  <div className="px-3 py-6 text-center text-xs text-muted-foreground">
+                  <div className="px-3 py-6 text-center type-label text-muted-foreground">
                     {t("noProjectsFound")}
                   </div>
                 )}
@@ -365,7 +365,7 @@ export function TopBar() {
         <button
           onClick={() => setGlobalSearchOpen(true)}
           aria-label={t("search")}
-          className="hidden h-9 max-w-md flex-1 items-center gap-2 rounded-full border border-outline-variant bg-surface-container-low px-3 text-sm text-on-surface-variant/60 transition-colors hover:bg-surface-container-high md:flex"
+          className="hidden h-9 max-w-md flex-1 items-center gap-2 rounded-full border border-outline-variant bg-surface-container-low px-3 type-body text-on-surface-variant/60 transition-colors hover:bg-surface-container-high md:flex"
         >
           <Search className="h-4 w-4 shrink-0" />
           <span className="truncate">{t("searchInProject")}</span>
@@ -396,7 +396,7 @@ export function TopBar() {
           <button
             onClick={() => setActiveTab("dashboard")}
             className={cn(
-              "ml-auto md:ml-0 flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-2 text-xs transition-colors state-layer-on-surface sm:px-3 sm:py-1.5",
+              "ml-auto md:ml-0 flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-2 type-label transition-colors state-layer-on-surface sm:px-3 sm:py-1.5",
               isScrolled
                 ? "bg-surface-container-high"
                 : "bg-surface-container",
@@ -624,12 +624,12 @@ function ProjectDropdownItem({
       {/* Project info */}
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-1.5">
-          <span className="truncate text-sm font-medium">{project.name}</span>
+          <span className="truncate type-body font-medium">{project.name}</span>
           {isSelected && (
             <Check className="h-3.5 w-3.5 shrink-0 text-primary" />
           )}
         </div>
-        <div className="flex items-center gap-1.5 text-[11px] text-on-surface-variant">
+        <div className="flex items-center gap-1.5 type-label text-on-surface-variant">
           {project.address && (
             <span className="truncate">{project.address}</span>
           )}
@@ -640,7 +640,7 @@ function ProjectDropdownItem({
           )}
         </div>
         {ownerDeleted && (
-          <div className="mt-0.5 flex items-center gap-1 text-[10px] text-warning">
+          <div className="mt-0.5 flex items-center gap-1 type-label-sm text-warning">
             <AlertTriangle className="h-2.5 w-2.5" />
             <span className="truncate">{t("noOwner")}</span>
           </div>
@@ -650,7 +650,7 @@ function ProjectDropdownItem({
       {/* Status badge */}
       <Badge
         variant="secondary"
-        className={cn("shrink-0 text-[10px]", status.color)}
+        className={cn("shrink-0 type-label-sm", status.color)}
       >
         {status.label}
       </Badge>

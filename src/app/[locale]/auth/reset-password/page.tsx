@@ -124,7 +124,7 @@ export default function ResetPasswordPage() {
         <div className="w-full max-w-sm">
           <div className="mb-8 text-center">
             <Link href="/" className="inline-flex items-center gap-2">
-              <span className="text-2xl font-bold tracking-tight">
+              <span className="type-display tracking-tight">
                 <img src="/logo.svg" alt="Logo" className="h-16 w-16 rounded-xl" />
               </span>
             </Link>
@@ -132,7 +132,7 @@ export default function ResetPasswordPage() {
           <div className="rounded-2xl border bg-card p-6 shadow-sm sm:p-8">
             <div className="flex flex-col items-center text-center">
               <Loader2 className="mb-4 h-8 w-8 animate-spin text-muted-foreground" />
-              <p className="text-sm text-muted-foreground">{t("checking")}</p>
+              <p className="type-body text-muted-foreground">{t("checking")}</p>
             </div>
           </div>
         </div>
@@ -147,7 +147,7 @@ export default function ResetPasswordPage() {
         <div className="w-full max-w-sm">
           <div className="mb-8 text-center">
             <Link href="/" className="inline-flex items-center gap-2">
-              <span className="text-2xl font-bold tracking-tight">
+              <span className="type-display tracking-tight">
                 <img src="/logo.svg" alt="Logo" className="h-16 w-16 rounded-xl" />
               </span>
             </Link>
@@ -157,8 +157,8 @@ export default function ResetPasswordPage() {
               <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10">
                 <XCircle className="h-8 w-8 text-destructive" />
               </div>
-              <h1 className="mb-2 text-xl font-semibold">{t("invalidTitle")}</h1>
-              <p className="mb-6 text-sm text-muted-foreground">
+              <h1 className="mb-2 type-headline">{t("invalidTitle")}</h1>
+              <p className="mb-6 type-body text-muted-foreground">
                 {t("invalidBody")}
               </p>
               <Button asChild className="w-full" size="lg">
@@ -178,7 +178,7 @@ export default function ResetPasswordPage() {
         <div className="w-full max-w-sm">
           <div className="mb-8 text-center">
             <Link href="/" className="inline-flex items-center gap-2">
-              <span className="text-2xl font-bold tracking-tight">
+              <span className="type-display tracking-tight">
                 <img src="/logo.svg" alt="Logo" className="h-16 w-16 rounded-xl" />
               </span>
             </Link>
@@ -188,8 +188,8 @@ export default function ResetPasswordPage() {
               <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-success/10">
                 <CheckCircle2 className="h-8 w-8 text-success" />
               </div>
-              <h1 className="mb-2 text-xl font-semibold">{t("successTitle")}</h1>
-              <p className="mb-6 text-sm text-muted-foreground">
+              <h1 className="mb-2 type-headline">{t("successTitle")}</h1>
+              <p className="mb-6 type-body text-muted-foreground">
                 {t("successBody")}
               </p>
               <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
@@ -207,7 +207,7 @@ export default function ResetPasswordPage() {
         {/* Logo */}
         <div className="mb-8 text-center">
           <Link href="/" className="inline-flex items-center gap-2">
-            <span className="text-2xl font-bold tracking-tight">
+            <span className="type-display tracking-tight">
               <img src="/logo.svg" alt="Logo" className="h-16 w-16 rounded-xl" />
             </span>
           </Link>
@@ -215,8 +215,8 @@ export default function ResetPasswordPage() {
 
         {/* Card */}
         <div className="rounded-2xl border bg-card p-6 shadow-sm sm:p-8">
-          <h1 className="mb-1 text-xl font-semibold">{t("title")}</h1>
-          <p className="mb-6 text-sm text-muted-foreground">
+          <h1 className="mb-1 type-headline">{t("title")}</h1>
+          <p className="mb-6 type-body text-muted-foreground">
             {t("subtitle")}
           </p>
 
@@ -224,7 +224,7 @@ export default function ResetPasswordPage() {
             <div
               id="error-form"
               role="alert"
-              className="mb-4 flex items-start gap-2 rounded-lg border border-destructive/20 bg-destructive/10 p-3 text-sm text-destructive"
+              className="mb-4 flex items-start gap-2 rounded-lg border border-destructive/20 bg-destructive/10 p-3 type-body text-destructive"
             >
               <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
               <span>{error}</span>
