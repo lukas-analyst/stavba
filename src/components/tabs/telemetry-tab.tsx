@@ -374,12 +374,12 @@ export function TelemetryTab({ projectId: _projectId }: { projectId: string }) {
   }
 
   const summary = data?.summary;
-  // Filter out page_view events from the entries list — they are
-  // high-volume and clutter the "Recent events" table. Users can still
-  // see them by explicitly selecting "Zobrazení stránky" in the type filter.
-  const entries = (data?.entries ?? []).filter(
-    (e) => typeFilter || e.eventType !== "page_view",
-  );
+  // Note: `page_view` events are already filtered out server-side (in
+  // /api/analytics GET) when no explicit `typeFilter` is set. The server
+  // also adjusts the `total` count accordingly so pagination math is
+  // correct. We use the entries + total directly here without further
+  // client-side filtering.
+  const entries = data?.entries ?? [];
   const total = data?.total ?? 0;
   const totalPages = data?.totalPages ?? 1;
   const projects = data?.projects ?? [];

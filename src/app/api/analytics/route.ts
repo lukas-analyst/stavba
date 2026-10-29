@@ -148,10 +148,31 @@ export async function GET(request: Request) {
       }
     }
 
-    // Run paginated fetch + total count in parallel
+    // The Recent Events table excludes high-volume `page_view` events by
+    // default (they drown out meaningful interactions). When no explicit
+    // `type` filter is set, we exclude `page_view` from the ENTRIES query
+    // AND from the total count so pagination math is correct.
+    //
+    // Summary stats (topPages, eventsByType, totalTimeSpent, …) still
+    // include `page_view` because those aggregations are explicitly
+    // about page-view behaviour. The `entriesWhere` below is only used
+    // for the paginated entries list + its total count.
+    //
+    // When the user explicitly selects a `type` filter (including
+    // "page_view"), we honor it verbatim — no exclusion is applied.
+    const entriesWhere: Prisma.AnalyticsEventWhereInput = { ...where };
+    if (!typeFilter) {
+      entriesWhere.eventType = { not: "page_view" };
+    }
+
+    // Run paginated fetch + total count in parallel.
+    // NOTE: entries + total use `entriesWhere` (excludes page_view by
+    // default). All summary aggregations below use `where` (full data,
+    // including page_view) because page views are part of the analytics
+    // summary (topPages, totalTimeSpent, avgTimePerPage, …).
     const [entries, total] = await Promise.all([
       dbRead.analyticsEvent.findMany({
-        where,
+        where: entriesWhere,
         orderBy: { createdAt: "desc" },
         skip: (page - 1) * pageSize,
         take: pageSize,
@@ -161,7 +182,7 @@ export async function GET(request: Request) {
           },
         },
       }),
-      dbRead.analyticsEvent.count({ where }),
+      dbRead.analyticsEvent.count({ where: entriesWhere }),
     ]);
 
     // === Compute summary (always over the full filtered range, ignoring pagination) ===
