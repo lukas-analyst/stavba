@@ -264,6 +264,10 @@ export function TelemetryTab({ projectId: _projectId }: { projectId: string }) {
   const t = useTranslations("tabs.telemetry");
   const tNav = useTranslations("nav.items");
   const tEventTypes = useTranslations("analytics.eventTypes");
+  // Separate translator for the relativeTime sub-namespace — used by
+  // formatRelativeTime() which expects keys rooted at
+  // `tabs.telemetry.relativeTime` (justNow, minute, hour, day, yesterday).
+  const tRelative = useTranslations("tabs.telemetry.relativeTime");
 
   // Fetch ONLY the summary (KPI cards, charts, filter dropdowns).
   // The paginated "Poslední události" table is handled by the
@@ -809,7 +813,7 @@ export function TelemetryTab({ projectId: _projectId }: { projectId: string }) {
                         </td>
                         <td className="px-3 py-2 text-right">
                           <span className="type-label text-on-surface-variant tabular-nums">
-                            {formatRelativeTime(u.lastActive, t)}
+                            {formatRelativeTime(u.lastActive, tRelative)}
                           </span>
                         </td>
                       </tr>
