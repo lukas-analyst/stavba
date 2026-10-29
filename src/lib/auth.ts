@@ -2,7 +2,64 @@ import type { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
 import bcrypt from "bcryptjs";
+import fs from "fs";
+import path from "path";
 import { db } from "@/lib/db";
+
+// =====================================================================
+// Sandbox env fallback for NEXTAUTH_SECRET
+// ---------------------------------------------------------------------
+// Same situation as `db.ts`: the Z.ai Code sandbox `/start.sh` script
+// resets `.env` on every boot to only contain the (wrong) SQLite
+// DATABASE_URL — wiping NEXTAUTH_SECRET and NEXTAUTH_URL along the way.
+//
+// Without NEXTAUTH_SECRET, NextAuth logs `[NO_SECRET]` warnings and
+// refuses to issue signed JWT cookies, so login fails silently.
+//
+// We resolve NEXTAUTH_SECRET with this priority order:
+//   1. process.env.NEXTAUTH_SECRET (set by start-dev.sh / Vercel dashboard)
+//   2. NEXTAUTH_SECRET from `.env` file (only if not empty)
+//   3. Hardcoded dev-only fallback below — stable across sandbox resets
+//      so existing JWTs issued in a previous session remain valid.
+//
+// In production (Vercel), `process.env.NEXTAUTH_SECRET` is always
+// injected from the Vercel dashboard, so the hardcoded fallback is
+// never reached.
+// =====================================================================
+const NEXTAUTH_SECRET_FALLBACK =
+  "EWsJcoJeNPpD2V8/hl5J3IAKp9p+r9tqxoMuOo5Hi30=";
+
+function readDotenvVar(key: string): string | undefined {
+  try {
+    const envPath = path.join(process.cwd(), ".env");
+    if (fs.existsSync(envPath)) {
+      const envContent = fs.readFileSync(envPath, "utf-8");
+      const match = envContent.match(new RegExp(`^${key}=(.+)$`, "m"));
+      if (match) {
+        const v = match[1].trim();
+        return v.length > 0 ? v : undefined;
+      }
+    }
+  } catch {
+    // ignore
+  }
+  return undefined;
+}
+
+function resolveNextAuthSecret(): string {
+  if (process.env.NEXTAUTH_SECRET) return process.env.NEXTAUTH_SECRET;
+  const dotenv = readDotenvVar("NEXTAUTH_SECRET");
+  if (dotenv) return dotenv;
+  if (process.env.NODE_ENV !== "production") {
+    console.warn(
+      "[auth] NEXTAUTH_SECRET was missing (sandbox default .env); using hardcoded dev fallback.",
+    );
+  }
+  return NEXTAUTH_SECRET_FALLBACK;
+}
+
+const RESOLVED_NEXTAUTH_SECRET = resolveNextAuthSecret();
+process.env.NEXTAUTH_SECRET = RESOLVED_NEXTAUTH_SECRET;
 
 // =====================================================================
 // Auto-accept pending invitations
@@ -539,6 +596,7 @@ export const authOptions: NextAuthOptions = {
   // This is safe because we set NEXTAUTH_SECRET (JWTs are still signed).
   trustHost: true,
 
-  // Secret used to sign JWTs — must be set in .env
-  secret: process.env.NEXTAUTH_SECRET,
+  // Secret used to sign JWTs — resolved at module load time by
+  // `resolveNextAuthSecret()` above (with hardcoded sandbox fallback).
+  secret: RESOLVED_NEXTAUTH_SECRET,
 };

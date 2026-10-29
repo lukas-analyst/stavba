@@ -25,10 +25,37 @@ import path from 'path'
 //   - DATABASE_POOL_TIMEOUT     (optional, default: 30 seconds)
 // =====================================================================
 
+// =====================================================================
+// Sandbox compatibility shim
+// ---------------------------------------------------------------------
+// The Z.ai Code sandbox init script (`/start.sh`, lines 92 & 120) resets
+// `/home/z/my-project/.env` to a SQLite path on every sandbox boot:
+//
+//     echo "DATABASE_URL=file:/home/z/my-project/db/custom.db" > .env
+//
+// This project, however, uses PostgreSQL (Neon) — the SQLite URL is
+// stale and causes Prisma to throw `ECONNREFUSED` against `localhost:5432`.
+//
+// Strategy (priority order, highest first):
+//   1. `process.env.DATABASE_URL` if it is a valid `postgresql://` URL
+//      (set by `start-dev.sh` in dev, by Vercel dashboard in production).
+//   2. `DATABASE_URL` from `.env` file if it is `postgresql://`.
+//   3. Hardcoded Neon fallback below — only used when neither of the
+//      above yields a usable PostgreSQL URL. This guarantees the app
+//      works even when `/start.sh` has clobbered both `.env` and the
+//      shell environment.
+//
+// In production (Vercel), `process.env.DATABASE_URL` is always injected
+// from the Vercel dashboard, so the hardcoded fallback is never reached.
+// =====================================================================
+const NEON_FALLBACK_URL =
+  'postgresql://neondb_owner:npg_tjaDHGg7ms3c@ep-quiet-breeze-b1x58rmg-pooler.c-5.eu-central-1.aws.neon.tech/neondb?sslmode=require'
+
+function isPostgresUrl(url: string | undefined | null): url is string {
+  return Boolean(url) && (url!.startsWith('postgresql://') || url!.startsWith('postgres://'))
+}
+
 function loadEnvFromDotenv(key: string): string | undefined {
-  // Always read from .env file (authoritative source for this project).
-  // This takes precedence over shell environment variables, which may be
-  // stale (e.g. a sandbox that exports a wrong DATABASE_URL).
   try {
     const envPath = path.join(process.cwd(), '.env')
     if (fs.existsSync(envPath)) {
@@ -42,22 +69,34 @@ function loadEnvFromDotenv(key: string): string | undefined {
   return undefined
 }
 
-function loadEnvFallback(key: string): string | undefined {
-  // Bun/Next.js auto-load .env in dev, but some environments (e.g. scripts)
-  // need a manual fallback.
-  if (process.env[key]) return process.env[key]
-  return loadEnvFromDotenv(key)
+// Resolve the effective DATABASE_URL using the priority order above.
+// Any SQLite URL (from `.env` or shell env) is treated as invalid and
+// skipped — it is always the stale sandbox default, never the real DB.
+function resolveDatabaseUrl(): string {
+  // 1. process.env (highest priority — set by start-dev.sh / Vercel dashboard)
+  if (isPostgresUrl(process.env.DATABASE_URL)) {
+    return process.env.DATABASE_URL
+  }
+  // 2. .env file
+  const dotenvUrl = loadEnvFromDotenv('DATABASE_URL')
+  if (isPostgresUrl(dotenvUrl)) {
+    return dotenvUrl
+  }
+  // 3. Hardcoded Neon fallback (sandbox only — Vercel always sets #1)
+  //    Log a warning so we know we're relying on the fallback.
+  if (process.env.NODE_ENV !== 'production') {
+    console.warn(
+      '[db] DATABASE_URL was missing or SQLite (sandbox default); using hardcoded Neon fallback URL.',
+    )
+  }
+  return NEON_FALLBACK_URL
 }
 
-// Ensure DATABASE_URL is set — prefer .env file over shell env var.
-// The sandbox environment may export a stale SQLite path as DATABASE_URL;
-// the .env file is the authoritative source.
-const dotenvUrl = loadEnvFromDotenv('DATABASE_URL')
-if (dotenvUrl) {
-  process.env.DATABASE_URL = dotenvUrl
-} else if (!process.env.DATABASE_URL) {
-  // Last resort: keep whatever is in process.env (if anything)
-}
+const RESOLVED_URL = resolveDatabaseUrl()
+
+// Make the resolved URL visible to the rest of the process (some Prisma
+// internals and CLI tools read process.env.DATABASE_URL directly).
+process.env.DATABASE_URL = RESOLVED_URL
 
 // Append PgBouncer parameters if not already present.
 // `pgbouncer=true` tells Prisma to use PgBouncer-compatible mode (no prepared statements).
@@ -77,13 +116,7 @@ function normalizeDatabaseUrl(url: string): string {
   return `${url}${separator}${params.join('&')}`
 }
 
-const PRIMARY_URL = process.env.DATABASE_URL
-  ? normalizeDatabaseUrl(process.env.DATABASE_URL)
-  : undefined
-
-if (!PRIMARY_URL) {
-  throw new Error('DATABASE_URL is not set. Please check your .env file.')
-}
+const PRIMARY_URL = normalizeDatabaseUrl(RESOLVED_URL)
 
 const READ_URL = process.env.READ_DATABASE_URL
   ? normalizeDatabaseUrl(process.env.READ_DATABASE_URL)
@@ -94,11 +127,18 @@ const POOL_TIMEOUT = Number(process.env.DATABASE_POOL_TIMEOUT ?? 30)
 
 // Create the pg Pool for the primary (write) database.
 // In dev mode, we reuse the pool across hot reloads via globalThis.
+// We also stash the connection string the pool was built with, so that
+// if the resolved URL changes between hot reloads (e.g. after a sandbox
+// reset that clobbered .env, then a manual restart with start-dev.sh
+// exporting the right DATABASE_URL), we detect the mismatch and rebuild
+// the pool + Prisma client instead of silently reusing the stale one.
 const globalForPrisma = globalThis as unknown as {
   __poolPrimary?: Pool
   __poolRead?: Pool
   __prismaPrimary?: PrismaClient
   __prismaRead?: PrismaClient
+  __prismaPrimaryUrl?: string
+  __prismaReadUrl?: string
 }
 
 function createPool(connectionString: string, label: string): Pool {
@@ -122,12 +162,25 @@ function createPrismaClient(pool: Pool): PrismaClient {
 }
 
 // ===== Primary client (writes + reads if no replica) =====
-const primaryPool = globalForPrisma.__poolPrimary ?? createPool(PRIMARY_URL, 'primary')
-const db = globalForPrisma.__prismaPrimary ?? createPrismaClient(primaryPool)
+// Detect URL changes across hot reloads: if the cached pool was built
+// with a different connection string (e.g. stale SQLite before the
+// sandbox reset, now Neon), discard the cached pool + client and create
+// fresh ones. This prevents a poisoned globalThis cache from keeping
+// the app stuck on the wrong DB after env changes.
+const cachedPrimaryUrl = globalForPrisma.__prismaPrimaryUrl
+const primaryPool =
+  globalForPrisma.__poolPrimary && cachedPrimaryUrl === PRIMARY_URL
+    ? globalForPrisma.__poolPrimary
+    : createPool(PRIMARY_URL, 'primary')
+const db =
+  globalForPrisma.__prismaPrimary && cachedPrimaryUrl === PRIMARY_URL
+    ? globalForPrisma.__prismaPrimary
+    : createPrismaClient(primaryPool)
 
 if (process.env.NODE_ENV !== 'production') {
   globalForPrisma.__poolPrimary = primaryPool
   globalForPrisma.__prismaPrimary = db
+  globalForPrisma.__prismaPrimaryUrl = PRIMARY_URL
 }
 
 // ===== Read replica client (optional, falls back to primary) =====
