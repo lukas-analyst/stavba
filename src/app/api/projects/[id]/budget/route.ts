@@ -3,10 +3,9 @@ import { db, dbRead } from "@/lib/db";
 import { logChanges } from "@/lib/audit";
 import { recalcParentDates } from "@/lib/recalc-parent-dates";
 import { requireProjectAccess } from "@/lib/authz";
+import { convertAmount } from "@/lib/currency";
 
 // Explicit field selection — only fetch what the frontend actually uses.
-// This reduces DB payload by ~40% compared to `include` (which fetches
-// every column of related tables even if only 2-3 fields are needed).
 const BUDGET_ITEM_SELECT = {
   id: true,
   category: true,
@@ -15,6 +14,7 @@ const BUDGET_ITEM_SELECT = {
   phase: true,
   required: true,
   completed: true,
+  completedAt: true,
   rejected: true,
   note: true,
   unitPrice: true,
@@ -32,8 +32,6 @@ const BUDGET_ITEM_SELECT = {
   subsidyEligible: true,
   subsidyAmount: true,
   contactId: true,
-  // Primary contact assigned to this item (optional). Only the fields
-  // needed by the UI are selected to keep the payload small.
   contact: {
     select: { id: true, name: true, role: true, phone: true },
   },
@@ -41,8 +39,6 @@ const BUDGET_ITEM_SELECT = {
   createdAt: true,
   updatedAt: true,
   _count: { select: { payments: true, timeEntries: true, comments: true } },
-  // External hyperlinks (1:N) — only id/label/url/sortOrder needed by UI.
-  // Ordered by sortOrder for stable display in the detail panel.
   links: {
     orderBy: { sortOrder: "asc" },
     select: { id: true, label: true, url: true, sortOrder: true },
@@ -71,7 +67,46 @@ export async function GET(
       orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
       select: BUDGET_ITEM_SELECT,
     });
-    return NextResponse.json(items);
+
+    // === On-the-fly currency conversion for incomplete items ===
+    // For items with a foreign planCostCurrency that are NOT completed,
+    // we recompute planCostConverted using today's exchange rate.
+    // Completed items keep their frozen planCostConverted (set when
+    // completed=true was saved).
+    const project = await dbRead.project.findUnique({
+      where: { id },
+      select: { currency: true },
+    });
+    const projectCurrency = project?.currency ?? "CZK";
+
+    const convertedItems = await Promise.all(
+      items.map(async (item) => {
+        // No foreign currency → no conversion needed
+        if (!item.planCostCurrency || item.planCostCurrency === projectCurrency) {
+          return { ...item, planCostConverted: item.planCost };
+        }
+        // Completed items → use frozen value (already stored)
+        if (item.completed && item.completedAt) {
+          return item;
+        }
+        // Incomplete items → recompute with today's rate
+        if (item.planCost != null) {
+          const conversion = await convertAmount(
+            item.planCost,
+            item.planCostCurrency,
+            projectCurrency,
+            new Date(),
+          );
+          if (conversion) {
+            return { ...item, planCostConverted: conversion.converted };
+          }
+        }
+        // Fallback: return as-is
+        return item;
+      }),
+    );
+
+    return NextResponse.json(convertedItems);
   } catch (error) {
     console.error("GET budget error:", error);
     return NextResponse.json({ error: "Failed to fetch budget items" }, { status: 500 });
@@ -181,6 +216,16 @@ export async function POST(
         dependsOnId: dependsOnId || null,
         planCost: planCost !== undefined && planCost !== null && planCost !== "" ? Number(planCost) : null,
         planCostCurrency: planCostCurrency || null,
+        // Compute planCostConverted at creation time
+        planCostConverted: await (async () => {
+          const numPlanCost = planCost !== undefined && planCost !== null && planCost !== "" ? Number(planCost) : null;
+          if (numPlanCost == null) return null;
+          const proj = await dbRead.project.findUnique({ where: { id }, select: { currency: true } });
+          const projCurrency = proj?.currency ?? "CZK";
+          if (!planCostCurrency || planCostCurrency === projCurrency) return numPlanCost;
+          const conversion = await convertAmount(numPlanCost, planCostCurrency, projCurrency, new Date());
+          return conversion?.converted ?? numPlanCost;
+        })(),
         flexibilityPercent:
           flexibilityPercent !== undefined && flexibilityPercent !== null && flexibilityPercent !== ""
             ? Number(flexibilityPercent)

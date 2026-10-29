@@ -439,6 +439,10 @@ model BudgetItem {
   required           Boolean      @default(false)
   /// Whether this item is marked as completed ("Hotovo" in UI)
   completed          Boolean      @default(false)
+  /// When the item was marked as completed. Used to "freeze" the exchange
+  /// rate — once completed, planCostConverted is calculated with the rate
+  /// from this date and no longer changes. Null = not completed.
+  completedAt        DateTime?
   /// Whether this item was rejected/cancelled ("Zavrženo" in UI)
   rejected           Boolean      @default(false)
   /// Free-form note attached to this item

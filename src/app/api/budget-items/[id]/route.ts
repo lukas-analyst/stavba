@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
 import { getTranslations } from "next-intl/server";
-import { db } from "@/lib/db";
+import { db, dbRead } from "@/lib/db";
 import { logChanges } from "@/lib/audit";
 import { recalcParentDates } from "@/lib/recalc-parent-dates";
 import { requireProjectAccess } from "@/lib/authz";
+import { convertAmount } from "@/lib/currency";
 
 // PATCH /api/budget-items/[id]
 export async function PATCH(
@@ -120,7 +121,29 @@ export async function PATCH(
     if (body.element !== undefined) updateData.element = body.element?.trim() || null;
     if (body.phase !== undefined) updateData.phase = body.phase;
     if (body.required !== undefined) updateData.required = Boolean(body.required);
-    if (body.completed !== undefined) updateData.completed = Boolean(body.completed);
+    if (body.completed !== undefined) {
+      updateData.completed = Boolean(body.completed);
+      // When marking as completed → set completedAt + freeze the exchange rate
+      if (body.completed && !existing.completed) {
+        updateData.completedAt = new Date();
+        // Freeze planCostConverted using today's rate
+        if (existing.planCostCurrency && existing.planCostCurrency !== (await dbRead.project.findUnique({ where: { id: existing.projectId }, select: { currency: true } }))?.currency) {
+          const project = await dbRead.project.findUnique({ where: { id: existing.projectId }, select: { currency: true } });
+          const projectCurrency = project?.currency ?? "CZK";
+          if (existing.planCostCurrency && existing.planCostCurrency !== projectCurrency && existing.planCost != null) {
+            const conversion = await convertAmount(existing.planCost, existing.planCostCurrency, projectCurrency, new Date());
+            if (conversion) {
+              updateData.planCostConverted = conversion.converted;
+            }
+          }
+        }
+      }
+      // When un-completing → clear completedAt (planCostConverted will be
+      // recomputed on-the-fly on next GET)
+      if (!body.completed && existing.completed) {
+        updateData.completedAt = null;
+      }
+    }
     if (body.rejected !== undefined) updateData.rejected = Boolean(body.rejected);
     if (body.parentId !== undefined) updateData.parentId = body.parentId || null;
     if (body.dependsOnId !== undefined) updateData.dependsOnId = body.dependsOnId || null;
@@ -128,6 +151,31 @@ export async function PATCH(
     if (body.unitPrice !== undefined) updateData.unitPrice = body.unitPrice?.trim() || null;
     if (body.planCost !== undefined) updateData.planCost = numOrUndef(body.planCost);
     if (body.planCostCurrency !== undefined) updateData.planCostCurrency = body.planCostCurrency || null;
+
+    // If planCost or planCostCurrency changed, recompute planCostConverted
+    // using the appropriate rate (today for incomplete, completedAt for complete)
+    if (body.planCost !== undefined || body.planCostCurrency !== undefined) {
+      const effectiveCurrency = body.planCostCurrency !== undefined
+        ? (body.planCostCurrency || null)
+        : existing.planCostCurrency;
+      const effectiveCost = body.planCost !== undefined
+        ? numOrUndef(body.planCost)
+        : existing.planCost;
+      const project = await dbRead.project.findUnique({ where: { id: existing.projectId }, select: { currency: true } });
+      const projectCurrency = project?.currency ?? "CZK";
+
+      if (effectiveCurrency && effectiveCurrency !== projectCurrency && effectiveCost != null) {
+        // If completed → use completedAt date for the rate; else today
+        const rateDate = existing.completedAt ?? new Date();
+        const conversion = await convertAmount(effectiveCost, effectiveCurrency, projectCurrency, rateDate);
+        if (conversion) {
+          updateData.planCostConverted = conversion.converted;
+        }
+      } else {
+        // Same currency or no currency → planCostConverted = planCost
+        updateData.planCostConverted = effectiveCost;
+      }
+    }
     if (body.flexibilityPercent !== undefined) updateData.flexibilityPercent = numOrUndef(body.flexibilityPercent);
     if (body.planDays !== undefined) updateData.planDays = numOrUndef(body.planDays);
     if (body.dateFrom !== undefined) updateData.dateFrom = body.dateFrom ? new Date(body.dateFrom) : null;
