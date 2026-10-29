@@ -25,10 +25,10 @@ import path from 'path'
 //   - DATABASE_POOL_TIMEOUT     (optional, default: 30 seconds)
 // =====================================================================
 
-function loadEnvFallback(key: string): string | undefined {
-  // Bun/Next.js auto-load .env in dev, but some environments (e.g. scripts)
-  // need a manual fallback.
-  if (process.env[key]) return process.env[key]
+function loadEnvFromDotenv(key: string): string | undefined {
+  // Always read from .env file (authoritative source for this project).
+  // This takes precedence over shell environment variables, which may be
+  // stale (e.g. a sandbox that exports a wrong DATABASE_URL).
   try {
     const envPath = path.join(process.cwd(), '.env')
     if (fs.existsSync(envPath)) {
@@ -42,10 +42,21 @@ function loadEnvFallback(key: string): string | undefined {
   return undefined
 }
 
-// Ensure DATABASE_URL is set
-if (!process.env.DATABASE_URL) {
-  const fallback = loadEnvFallback('DATABASE_URL')
-  if (fallback) process.env.DATABASE_URL = fallback
+function loadEnvFallback(key: string): string | undefined {
+  // Bun/Next.js auto-load .env in dev, but some environments (e.g. scripts)
+  // need a manual fallback.
+  if (process.env[key]) return process.env[key]
+  return loadEnvFromDotenv(key)
+}
+
+// Ensure DATABASE_URL is set — prefer .env file over shell env var.
+// The sandbox environment may export a stale SQLite path as DATABASE_URL;
+// the .env file is the authoritative source.
+const dotenvUrl = loadEnvFromDotenv('DATABASE_URL')
+if (dotenvUrl) {
+  process.env.DATABASE_URL = dotenvUrl
+} else if (!process.env.DATABASE_URL) {
+  // Last resort: keep whatever is in process.env (if anything)
 }
 
 // Append PgBouncer parameters if not already present.
