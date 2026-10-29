@@ -12,25 +12,28 @@
 #   directly inherits the stale shell env, so the app fails with
 #   ECONNREFUSED (Prisma → SQLite) and [NO_SECRET] (NextAuth).
 #
-#   This script explicitly exports the correct env vars before starting
-#   `next dev`, so the server always boots with a working PostgreSQL
-#   connection + a stable JWT secret.
-#
-#   The values must match the hardcoded fallbacks in src/lib/db.ts and
-#   src/lib/auth.ts — those fallbacks catch the case where this script
-#   isn't used (e.g. `bun run dev` invoked directly).
+#   This script loads credentials from .env.local (NOT committed to git,
+#   survives sandbox resets) and exports them before starting `next dev`,
+#   so the server always boots with a working PostgreSQL connection +
+#   a stable JWT secret.
 #
 # In production (Vercel), these env vars come from the Vercel dashboard
 # and this script is not used.
 cd /home/z/my-project
 
-# ===== Database (Neon PostgreSQL) =====
-export DATABASE_URL="postgresql://neondb_owner:npg_tjaDHGg7ms3c@ep-quiet-breeze-b1x58rmg-pooler.c-5.eu-central-1.aws.neon.tech/neondb?sslmode=require"
-
-# ===== NextAuth =====
-# Must match NEXTAUTH_SECRET_FALLBACK in src/lib/auth.ts.
-export NEXTAUTH_SECRET="EWsJcoJeNPpD2V8/hl5J3IAKp9p+r9tqxoMuOo5Hi30="
-export NEXTAUTH_URL="http://localhost:3000"
+# ===== Load credentials from .env.local (gitignored, sandbox-safe) =====
+if [ -f .env.local ]; then
+  set -a
+  . ./.env.local
+  set +a
+  echo "[start-dev] Loaded credentials from .env.local"
+else
+  echo "[start-dev] ERROR: .env.local not found. Create it with:"
+  echo "  DATABASE_URL=postgresql://..."
+  echo "  NEXTAUTH_SECRET=..."
+  echo "  NEXTAUTH_URL=http://localhost:3000"
+  exit 1
+fi
 
 # Truncate the log so each run starts fresh (easier to debug).
 : > /home/z/my-project/dev.log

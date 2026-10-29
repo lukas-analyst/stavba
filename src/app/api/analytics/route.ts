@@ -113,6 +113,16 @@ export async function POST(request: Request) {
 //     }
 //   }
 export async function GET(request: Request) {
+  // Auth — analytics summary contains data about ALL users + projects,
+  // so it must be gated behind authentication. Previously this endpoint
+  // was public, which leaked user e-mails, Google profile images, and
+  // project IDs to anyone who knew the URL.
+  const { user, response } = await requireUser();
+  if (response) return response;
+  if (!user) {
+    return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+  }
+
   try {
     const { searchParams } = new URL(request.url);
 

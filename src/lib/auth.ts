@@ -7,27 +7,17 @@ import path from "path";
 import { db } from "@/lib/db";
 
 // =====================================================================
-// Sandbox env fallback for NEXTAUTH_SECRET
+// NextAuth secret resolution
 // ---------------------------------------------------------------------
-// Same situation as `db.ts`: the Z.ai Code sandbox `/start.sh` script
-// resets `.env` on every boot to only contain the (wrong) SQLite
-// DATABASE_URL — wiping NEXTAUTH_SECRET and NEXTAUTH_URL along the way.
-//
-// Without NEXTAUTH_SECRET, NextAuth logs `[NO_SECRET]` warnings and
-// refuses to issue signed JWT cookies, so login fails silently.
-//
-// We resolve NEXTAUTH_SECRET with this priority order:
-//   1. process.env.NEXTAUTH_SECRET (set by start-dev.sh / Vercel dashboard)
-//   2. NEXTAUTH_SECRET from `.env` file (only if not empty)
-//   3. Hardcoded dev-only fallback below — stable across sandbox resets
-//      so existing JWTs issued in a previous session remain valid.
+// Priority order (highest first):
+//   1. `process.env.NEXTAUTH_SECRET` (set by `start-dev.sh` in dev,
+//      by Vercel dashboard in production).
+//   2. `NEXTAUTH_SECRET` from `.env` file.
 //
 // In production (Vercel), `process.env.NEXTAUTH_SECRET` is always
-// injected from the Vercel dashboard, so the hardcoded fallback is
-// never reached.
+// injected from the dashboard. Without it, NextAuth refuses to issue
+// signed JWT cookies and login fails silently.
 // =====================================================================
-const NEXTAUTH_SECRET_FALLBACK =
-  "EWsJcoJeNPpD2V8/hl5J3IAKp9p+r9tqxoMuOo5Hi30=";
 
 function readDotenvVar(key: string): string | undefined {
   try {
@@ -50,12 +40,9 @@ function resolveNextAuthSecret(): string {
   if (process.env.NEXTAUTH_SECRET) return process.env.NEXTAUTH_SECRET;
   const dotenv = readDotenvVar("NEXTAUTH_SECRET");
   if (dotenv) return dotenv;
-  if (process.env.NODE_ENV !== "production") {
-    console.warn(
-      "[auth] NEXTAUTH_SECRET was missing (sandbox default .env); using hardcoded dev fallback.",
-    );
-  }
-  return NEXTAUTH_SECRET_FALLBACK;
+  throw new Error(
+    "NEXTAUTH_SECRET is not set. Set it in .env (dev) or in the Vercel dashboard (production).",
+  );
 }
 
 const RESOLVED_NEXTAUTH_SECRET = resolveNextAuthSecret();

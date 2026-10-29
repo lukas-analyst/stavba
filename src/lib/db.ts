@@ -26,30 +26,17 @@ import path from 'path'
 // =====================================================================
 
 // =====================================================================
-// Sandbox compatibility shim
+// Database URL resolution
 // ---------------------------------------------------------------------
-// The Z.ai Code sandbox init script (`/start.sh`, lines 92 & 120) resets
-// `/home/z/my-project/.env` to a SQLite path on every sandbox boot:
-//
-//     echo "DATABASE_URL=file:/home/z/my-project/db/custom.db" > .env
-//
-// This project, however, uses PostgreSQL (Neon) — the SQLite URL is
-// stale and causes Prisma to throw `ECONNREFUSED` against `localhost:5432`.
-//
-// Strategy (priority order, highest first):
+// Priority order (highest first):
 //   1. `process.env.DATABASE_URL` if it is a valid `postgresql://` URL
 //      (set by `start-dev.sh` in dev, by Vercel dashboard in production).
 //   2. `DATABASE_URL` from `.env` file if it is `postgresql://`.
-//   3. Hardcoded Neon fallback below — only used when neither of the
-//      above yields a usable PostgreSQL URL. This guarantees the app
-//      works even when `/start.sh` has clobbered both `.env` and the
-//      shell environment.
 //
-// In production (Vercel), `process.env.DATABASE_URL` is always injected
-// from the Vercel dashboard, so the hardcoded fallback is never reached.
+// Any SQLite URL (`file:`) is treated as invalid and skipped — it's the
+// stale sandbox default, never the real DB. In production (Vercel),
+// `process.env.DATABASE_URL` is always injected from the dashboard.
 // =====================================================================
-const NEON_FALLBACK_URL =
-  'postgresql://neondb_owner:npg_tjaDHGg7ms3c@ep-quiet-breeze-b1x58rmg-pooler.c-5.eu-central-1.aws.neon.tech/neondb?sslmode=require'
 
 function isPostgresUrl(url: string | undefined | null): url is string {
   return Boolean(url) && (url!.startsWith('postgresql://') || url!.startsWith('postgres://'))
@@ -82,14 +69,11 @@ function resolveDatabaseUrl(): string {
   if (isPostgresUrl(dotenvUrl)) {
     return dotenvUrl
   }
-  // 3. Hardcoded Neon fallback (sandbox only — Vercel always sets #1)
-  //    Log a warning so we know we're relying on the fallback.
-  if (process.env.NODE_ENV !== 'production') {
-    console.warn(
-      '[db] DATABASE_URL was missing or SQLite (sandbox default); using hardcoded Neon fallback URL.',
-    )
-  }
-  return NEON_FALLBACK_URL
+  // No valid PostgreSQL URL found — fail fast with a clear error.
+  throw new Error(
+    'DATABASE_URL is not set or is not a valid PostgreSQL URL. ' +
+      'Set it in .env (dev) or in the Vercel dashboard (production).'
+  )
 }
 
 const RESOLVED_URL = resolveDatabaseUrl()
