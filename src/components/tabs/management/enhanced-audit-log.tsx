@@ -471,7 +471,7 @@ export function EnhancedAuditLog({ projectId }: EnhancedAuditLogProps) {
       {/* Row 1: Polling indicator + search input */}
       <div className="flex flex-wrap items-center gap-2">
         {polling && (
-          <span className="flex items-center gap-1 text-xs text-on-surface-variant">
+          <span className="flex items-center gap-1 type-label text-on-surface-variant">
             <Loader2 className="h-3 w-3 animate-spin" />
             {t("polling")}
           </span>
@@ -503,7 +503,7 @@ export function EnhancedAuditLog({ projectId }: EnhancedAuditLogProps) {
       {/* Row 2: Filter dropdowns + date range + page size + sort */}
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-7">
         <div className="space-y-1">
-          <Label className="text-xs font-medium text-on-surface-variant">{t("filter.action")}</Label>
+          <Label className="type-label font-medium text-on-surface-variant">{t("filter.action")}</Label>
           <Select value={actionFilter} onValueChange={handleActionFilterChange}>
             <SelectTrigger className="h-9 rounded-md text-xs"><SelectValue /></SelectTrigger>
             <SelectContent>
@@ -516,7 +516,7 @@ export function EnhancedAuditLog({ projectId }: EnhancedAuditLogProps) {
           </Select>
         </div>
         <div className="space-y-1">
-          <Label className="text-xs font-medium text-on-surface-variant">{t("filter.entity")}</Label>
+          <Label className="type-label font-medium text-on-surface-variant">{t("filter.entity")}</Label>
           <Select value={entityFilter} onValueChange={handleEntityFilterChange}>
             <SelectTrigger className="h-9 rounded-md text-xs"><SelectValue /></SelectTrigger>
             <SelectContent>
@@ -534,7 +534,7 @@ export function EnhancedAuditLog({ projectId }: EnhancedAuditLogProps) {
         </div>
         {/* B7: User filter — populated from the `users` array in the API response */}
         <div className="space-y-1">
-          <Label className="text-xs font-medium text-on-surface-variant">{t("filter.user")}</Label>
+          <Label className="type-label font-medium text-on-surface-variant">{t("filter.user")}</Label>
           <Select value={userFilter} onValueChange={handleUserFilterChange}>
             <SelectTrigger className="h-9 rounded-md text-xs"><SelectValue /></SelectTrigger>
             <SelectContent>
@@ -549,7 +549,7 @@ export function EnhancedAuditLog({ projectId }: EnhancedAuditLogProps) {
         </div>
         {/* B2: Date range — Od */}
         <div className="space-y-1">
-          <Label className="text-xs font-medium text-on-surface-variant">{t("filter.from")}</Label>
+          <Label className="type-label font-medium text-on-surface-variant">{t("filter.from")}</Label>
           <Input
             type="date"
             value={fromDate}
@@ -560,7 +560,7 @@ export function EnhancedAuditLog({ projectId }: EnhancedAuditLogProps) {
         </div>
         {/* B2: Date range — Do */}
         <div className="space-y-1">
-          <Label className="text-xs font-medium text-on-surface-variant">{t("filter.to")}</Label>
+          <Label className="type-label font-medium text-on-surface-variant">{t("filter.to")}</Label>
           <Input
             type="date"
             value={toDate}
@@ -570,7 +570,7 @@ export function EnhancedAuditLog({ projectId }: EnhancedAuditLogProps) {
           />
         </div>
         <div className="space-y-1">
-          <Label className="text-xs font-medium text-on-surface-variant">{t("filter.sort")}</Label>
+          <Label className="type-label font-medium text-on-surface-variant">{t("filter.sort")}</Label>
           <Select value={sortBy} onValueChange={handleSortChange}>
             <SelectTrigger className="h-9 rounded-md text-xs"><SelectValue /></SelectTrigger>
             <SelectContent>
@@ -580,7 +580,7 @@ export function EnhancedAuditLog({ projectId }: EnhancedAuditLogProps) {
           </Select>
         </div>
         <div className="space-y-1">
-          <Label className="text-xs font-medium text-on-surface-variant">{t("filter.pageSize")}</Label>
+          <Label className="type-label font-medium text-on-surface-variant">{t("filter.pageSize")}</Label>
           <Select value={String(pageSize)} onValueChange={handlePageSizeChange}>
             <SelectTrigger className="h-9 rounded-md text-xs"><SelectValue /></SelectTrigger>
             <SelectContent>
@@ -601,7 +601,7 @@ export function EnhancedAuditLog({ projectId }: EnhancedAuditLogProps) {
           <Skeleton className="h-12" />
         </div>
       ) : entries.length === 0 ? (
-        <p className="py-6 text-center text-sm text-on-surface-variant">
+        <p className="py-6 text-center type-body text-on-surface-variant">
           {t("empty")}
         </p>
       ) : (
@@ -609,11 +609,11 @@ export function EnhancedAuditLog({ projectId }: EnhancedAuditLogProps) {
           <table className="w-full">
             <thead>
               <tr className="border-b border-outline-variant bg-surface-container-low">
-                <th className="text-xs font-medium text-on-surface-variant uppercase tracking-wide px-3 py-2 text-left">{t("column.action")}</th>
-                <th className="text-xs font-medium text-on-surface-variant uppercase tracking-wide px-3 py-2 text-left">{t("column.detail")}</th>
-                <th className="text-xs font-medium text-on-surface-variant uppercase tracking-wide px-3 py-2 text-left">{t("column.author")}</th>
-                <th className="text-xs font-medium text-on-surface-variant uppercase tracking-wide px-3 py-2 text-left whitespace-nowrap">{t("column.date")}</th>
-                <th className="text-xs font-medium text-on-surface-variant uppercase tracking-wide px-3 py-2 text-left whitespace-nowrap">{t("column.time")}</th>
+                <th className="type-label font-medium text-on-surface-variant uppercase tracking-wide px-3 py-2 text-left">{t("column.action")}</th>
+                <th className="type-label font-medium text-on-surface-variant uppercase tracking-wide px-3 py-2 text-left">{t("column.detail")}</th>
+                <th className="type-label font-medium text-on-surface-variant uppercase tracking-wide px-3 py-2 text-left">{t("column.author")}</th>
+                <th className="type-label font-medium text-on-surface-variant uppercase tracking-wide px-3 py-2 text-left whitespace-nowrap">{t("column.date")}</th>
+                <th className="type-label font-medium text-on-surface-variant uppercase tracking-wide px-3 py-2 text-left whitespace-nowrap">{t("column.time")}</th>
               </tr>
             </thead>
             <tbody>
@@ -637,7 +637,7 @@ export function EnhancedAuditLog({ projectId }: EnhancedAuditLogProps) {
                 // C6: deep-link target tab (if any)
                 const entityTab = ENTITY_TAB_MAP[entry.entityType];
                 return (
-                  <tr key={entry.id} className="border-b border-outline-variant last:border-0 text-sm hover:bg-surface-container-high">
+                  <tr key={entry.id} className="border-b border-outline-variant last:border-0 type-body hover:bg-surface-container-high">
                     {/* Úkon — action badge + entity type label */}
                     <td className="px-3 py-2 align-top">
                       <div className="flex flex-col gap-1">
@@ -647,7 +647,7 @@ export function EnhancedAuditLog({ projectId }: EnhancedAuditLogProps) {
                         >
                           {actionLabel(entry.action)}
                         </Badge>
-                        <span className="text-xs text-on-surface-variant">
+                        <span className="type-label text-on-surface-variant">
                           {entityLabel(entry.entityType)}
                         </span>
                       </div>
@@ -661,32 +661,32 @@ export function EnhancedAuditLog({ projectId }: EnhancedAuditLogProps) {
                             <button
                               type="button"
                               onClick={() => setActiveTab(entityTab)}
-                              className="text-sm text-left font-medium text-primary hover:underline"
+                              className="type-body text-left font-medium text-primary hover:underline"
                               title={t("tooltip.goToTab", { name: entityLabel(entry.entityType) })}
                             >
                               {entry.entityLabel}
                             </button>
                           ) : (
-                            <span className="text-sm font-medium">{entry.entityLabel}</span>
+                            <span className="type-body font-medium">{entry.entityLabel}</span>
                           )
                         )}
                         {/* B4: Diff viewer for update entries with both old & new values */}
                         {hasDiff && entry.field ? (
                           <div className="flex flex-wrap items-center gap-1.5">
-                            <span className="text-xs text-on-surface-variant/70">
+                            <span className="type-label text-on-surface-variant/70">
                               {fieldLabel(entry.field)}:
                             </span>
-                            <span className="text-sm text-danger/70 line-through">
+                            <span className="type-body text-danger/70 line-through">
                               {/* B28: DB stores raw values; translate via getFieldValue. */}
                               {getFieldValue(entry.field, entry.oldValue)}
                             </span>
                             <ArrowRight className="h-3 w-3 text-on-surface-variant/40" />
-                            <span className="text-sm text-success/80">
+                            <span className="type-body text-success/80">
                               {getFieldValue(entry.field, entry.newValue)}
                             </span>
                           </div>
                         ) : (
-                          <span className="text-sm text-on-surface-variant">{description}</span>
+                          <span className="type-body text-on-surface-variant">{description}</span>
                         )}
                       </div>
                     </td>
@@ -701,13 +701,13 @@ export function EnhancedAuditLog({ projectId }: EnhancedAuditLogProps) {
                             {authorInitials}
                           </AvatarFallback>
                         </Avatar>
-                        <span className="text-sm font-medium truncate">{authorName}</span>
+                        <span className="type-body font-medium truncate">{authorName}</span>
                       </div>
                     </td>
                     {/* Datum */}
-                    <td className="px-3 py-2 align-top text-xs text-on-surface-variant tabular-nums whitespace-nowrap">{date}</td>
+                    <td className="px-3 py-2 align-top type-label text-on-surface-variant tabular-nums whitespace-nowrap">{date}</td>
                     {/* Čas */}
-                    <td className="px-3 py-2 align-top text-xs text-on-surface-variant tabular-nums whitespace-nowrap">{time}</td>
+                    <td className="px-3 py-2 align-top type-label text-on-surface-variant tabular-nums whitespace-nowrap">{time}</td>
                   </tr>
                 );
               })}
@@ -719,7 +719,7 @@ export function EnhancedAuditLog({ projectId }: EnhancedAuditLogProps) {
       {/* Pagination */}
       {!loading && total > 0 && (
         <div className="flex flex-wrap items-center justify-between gap-2 border-t border-outline-variant pt-3">
-          <div className="text-xs text-on-surface-variant tabular-nums">
+          <div className="type-label text-on-surface-variant tabular-nums">
             {t("pagination.summary", {
               from: (page - 1) * pageSize + 1,
               to: Math.min(page * pageSize, total),
@@ -736,7 +736,7 @@ export function EnhancedAuditLog({ projectId }: EnhancedAuditLogProps) {
             >
               <ChevronLeft className="h-3.5 w-3.5" /> {t("pagination.prev")}
             </Button>
-            <span className="text-xs tabular-nums px-2">
+            <span className="type-label tabular-nums px-2">
               {t("pagination.pageOf", { page, totalPages })}
             </span>
             <Button

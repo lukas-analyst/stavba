@@ -149,7 +149,7 @@ export function ProjectInfoCard({
         <CardHeader className="pb-3">
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0 flex-1">
-              <CardTitle className="flex flex-wrap items-center gap-2 text-lg font-semibold">
+              <CardTitle className="flex flex-wrap items-center gap-2 type-title-lg font-semibold">
                 {project.name}
                 <Badge variant="outline" className={cn("text-xs", statusInfo.color)}>{statusLabel}</Badge>
                 <Badge variant="secondary" className="text-xs gap-1">
@@ -171,13 +171,13 @@ export function ProjectInfoCard({
           </div>
         </CardHeader>
         <CardContent className="pt-0">
-          <div className="flex flex-wrap gap-4 text-xs text-on-surface-variant">
+          <div className="flex flex-wrap gap-4 type-label text-on-surface-variant">
             {project.address && (<span className="flex items-center gap-1"><MapPin className="h-3 w-3" /> {project.address}</span>)}
             {project.startDate && (<span className="flex items-center gap-1 tabular-nums"><Calendar className="h-3 w-3" /> {formatDate(project.startDate)}{project.endDate && ` — ${formatDate(project.endDate)}`}</span>)}
             <span className="flex items-center gap-1"><Building2 className="h-3 w-3" /> {project.currency}</span>
-            <span className="text-xs text-on-surface-variant/60 tabular-nums">{t("created", { date: formatDate(project.createdAt) })}</span>
+            <span className="type-label text-on-surface-variant/60 tabular-nums">{t("created", { date: formatDate(project.createdAt) })}</span>
           </div>
-          <div className="mt-3 flex items-center gap-1.5 text-xs text-muted-foreground">
+          <div className="mt-3 flex items-center gap-1.5 type-label text-muted-foreground">
             <Lock className="h-3 w-3" /> {t("lockHint")}
           </div>
         </CardContent>
@@ -190,7 +190,7 @@ export function ProjectInfoCard({
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div className="min-w-0 flex-1">
-            <CardTitle className="flex items-center gap-2 text-lg font-semibold">
+            <CardTitle className="flex items-center gap-2 type-title-lg font-semibold">
               {editing ? (
                 <Input value={name} onChange={(e) => setName(e.target.value)} className="h-8 max-w-md text-lg font-bold" autoFocus />
               ) : (
@@ -225,11 +225,11 @@ export function ProjectInfoCard({
         <CardContent className="space-y-3">
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="space-y-1">
-              <Label htmlFor="mgmt-address" className="text-xs font-medium text-on-surface-variant">{t("label.address")}</Label>
+              <Label htmlFor="mgmt-address" className="type-label font-medium text-on-surface-variant">{t("label.address")}</Label>
               <Input id="mgmt-address" value={address} onChange={(e) => setAddress(e.target.value)} placeholder={t("placeholder.address")} className="h-9 rounded-md border-outline-variant bg-surface-container-low" />
             </div>
             <div className="space-y-1">
-              <Label htmlFor="mgmt-status" className="text-xs font-medium text-on-surface-variant">{t("label.status")}</Label>
+              <Label htmlFor="mgmt-status" className="type-label font-medium text-on-surface-variant">{t("label.status")}</Label>
               <Select value={status} onValueChange={setStatus}>
                 <SelectTrigger id="mgmt-status" className="h-9 rounded-md border-outline-variant bg-surface-container-low"><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -241,7 +241,7 @@ export function ProjectInfoCard({
               </Select>
             </div>
             <div className="space-y-1">
-              <Label htmlFor="mgmt-currency" className="text-xs font-medium text-on-surface-variant">{tCurrency("projectCurrency")}</Label>
+              <Label htmlFor="mgmt-currency" className="type-label font-medium text-on-surface-variant">{tCurrency("projectCurrency")}</Label>
               <CurrencySelect
                 id="mgmt-currency"
                 value={currency}
@@ -253,27 +253,27 @@ export function ProjectInfoCard({
           </div>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="space-y-1">
-              <Label htmlFor="mgmt-start" className="text-xs font-medium text-on-surface-variant">{t("label.startDate")}</Label>
+              <Label htmlFor="mgmt-start" className="type-label font-medium text-on-surface-variant">{t("label.startDate")}</Label>
               <Input id="mgmt-start" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="h-9 rounded-md border-outline-variant bg-surface-container-low" />
             </div>
             <div className="space-y-1">
-              <Label htmlFor="mgmt-end" className="text-xs font-medium text-on-surface-variant">{t("label.endDate")}</Label>
+              <Label htmlFor="mgmt-end" className="type-label font-medium text-on-surface-variant">{t("label.endDate")}</Label>
               <Input id="mgmt-end" type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="h-9 rounded-md border-outline-variant bg-surface-container-low" />
             </div>
           </div>
           <div className="space-y-1">
-            <Label htmlFor="mgmt-desc" className="text-xs font-medium text-on-surface-variant">{t("label.description")}</Label>
+            <Label htmlFor="mgmt-desc" className="type-label font-medium text-on-surface-variant">{t("label.description")}</Label>
             <Textarea id="mgmt-desc" value={description} onChange={(e) => setDescription(e.target.value)} placeholder={t("placeholder.description")} rows={2} className="resize-y rounded-md border-outline-variant bg-surface-container-low" />
           </div>
         </CardContent>
       )}
       {!editing && (
         <CardContent className="pt-0">
-          <div className="flex flex-wrap gap-4 text-xs text-on-surface-variant">
+          <div className="flex flex-wrap gap-4 type-label text-on-surface-variant">
             {project.address && (<span className="flex items-center gap-1"><MapPin className="h-3 w-3" /> {project.address}</span>)}
             {project.startDate && (<span className="flex items-center gap-1 tabular-nums"><Calendar className="h-3 w-3" /> {formatDate(project.startDate)}{project.endDate && ` — ${formatDate(project.endDate)}`}</span>)}
             <span className="flex items-center gap-1"><Building2 className="h-3 w-3" /> {project.currency}</span>
-            <span className="text-xs text-on-surface-variant/60 tabular-nums">{t("created", { date: formatDate(project.createdAt) })}</span>
+            <span className="type-label text-on-surface-variant/60 tabular-nums">{t("created", { date: formatDate(project.createdAt) })}</span>
           </div>
         </CardContent>
       )}

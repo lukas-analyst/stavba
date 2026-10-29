@@ -205,7 +205,7 @@ export function PropertyMetadataCard({
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0 flex-1">
-            <CardTitle className="flex items-center gap-2 text-lg font-semibold">
+            <CardTitle className="flex items-center gap-2 type-title-lg font-semibold">
               <Building2 className="h-4 w-4 text-primary" />
               {t("title")}
             </CardTitle>
@@ -254,7 +254,7 @@ export function PropertyMetadataCard({
         {editing && canEdit ? (
           <>
             <div className="space-y-1">
-              <Label htmlFor="mgmt-fulladdress" className="text-xs font-medium text-on-surface-variant">
+              <Label htmlFor="mgmt-fulladdress" className="type-label font-medium text-on-surface-variant">
                 {t("label.fullAddress")}
               </Label>
               <Input
@@ -267,7 +267,7 @@ export function PropertyMetadataCard({
             </div>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div className="space-y-1">
-                <Label htmlFor="mgmt-floorarea" className="text-xs font-medium text-on-surface-variant">
+                <Label htmlFor="mgmt-floorarea" className="type-label font-medium text-on-surface-variant">
                   {t("label.floorArea")}
                 </Label>
                 <Input
@@ -283,7 +283,7 @@ export function PropertyMetadataCard({
                 />
               </div>
               <div className="space-y-1">
-                <Label htmlFor="mgmt-floors" className="text-xs font-medium text-on-surface-variant">
+                <Label htmlFor="mgmt-floors" className="type-label font-medium text-on-surface-variant">
                   {t("label.floors")}
                 </Label>
                 <Input
@@ -301,7 +301,7 @@ export function PropertyMetadataCard({
             </div>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div className="space-y-1">
-                <Label htmlFor="mgmt-heatloss" className="text-xs font-medium text-on-surface-variant">
+                <Label htmlFor="mgmt-heatloss" className="type-label font-medium text-on-surface-variant">
                   {t("label.heatLoss")}
                 </Label>
                 <Input
@@ -317,7 +317,7 @@ export function PropertyMetadataCard({
                 />
               </div>
               <div className="space-y-1">
-                <Label htmlFor="mgmt-energy" className="text-xs font-medium text-on-surface-variant">
+                <Label htmlFor="mgmt-energy" className="type-label font-medium text-on-surface-variant">
                   {t("label.energyRating")}
                 </Label>
                 <Select value={energyRating} onValueChange={setEnergyRating}>
@@ -337,7 +337,7 @@ export function PropertyMetadataCard({
               </div>
             </div>
             <div className="space-y-1">
-              <Label htmlFor="mgmt-studyurl" className="text-xs font-medium text-on-surface-variant">
+              <Label htmlFor="mgmt-studyurl" className="type-label font-medium text-on-surface-variant">
                 {t("label.studyUrl")}
               </Label>
               <div className="relative">
@@ -352,13 +352,13 @@ export function PropertyMetadataCard({
                 <ExternalLink className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
               </div>
               {!studyUrlValid && (
-                <p className="text-xs text-danger">
+                <p className="type-label text-danger">
                   {t("error.url")}
                 </p>
               )}
             </div>
             <div className="space-y-1">
-              <Label htmlFor="mgmt-docurl" className="text-xs font-medium text-on-surface-variant">
+              <Label htmlFor="mgmt-docurl" className="type-label font-medium text-on-surface-variant">
                 {t("label.documentationUrl")}
               </Label>
               <div className="relative">
@@ -373,13 +373,13 @@ export function PropertyMetadataCard({
                 <ExternalLink className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
               </div>
               {!docUrlValid && (
-                <p className="text-xs text-danger">
+                <p className="type-label text-danger">
                   {t("error.url")}
                 </p>
               )}
             </div>
             <div className="space-y-1">
-              <Label htmlFor="mgmt-propnote" className="text-xs font-medium text-on-surface-variant">
+              <Label htmlFor="mgmt-propnote" className="type-label font-medium text-on-surface-variant">
                 {t("label.note")}
               </Label>
               <Textarea
@@ -427,7 +427,7 @@ export function PropertyMetadataCard({
             />
             {/* Energetický štítek — badge A–G s MD3 soft barvou. */}
             <div className="space-y-2">
-              <dt className="flex items-center gap-1 text-xs font-medium text-on-surface-variant">
+              <dt className="flex items-center gap-1 type-label font-medium text-on-surface-variant">
                 <Gauge className="h-3 w-3" /> {t("readOnly.energyRating")}
               </dt>
               <dd>
@@ -439,7 +439,7 @@ export function PropertyMetadataCard({
                     {project.energyRating}
                   </Badge>
                 ) : (
-                  <span className="text-sm text-muted-foreground">—</span>
+                  <span className="type-body text-muted-foreground">—</span>
                 )}
               </dd>
             </div>
@@ -456,10 +456,10 @@ export function PropertyMetadataCard({
               href={project.documentationUrl}
             />
             <div className="sm:col-span-2 space-y-2">
-              <dt className="flex items-center gap-1 text-xs font-medium text-on-surface-variant">
+              <dt className="flex items-center gap-1 type-label font-medium text-on-surface-variant">
                 <StickyNote className="h-3 w-3" /> {t("readOnly.note")}
               </dt>
-              <dd className="text-sm whitespace-pre-wrap">
+              <dd className="type-body whitespace-pre-wrap">
                 {project.propertyNote || (
                   <span className="text-muted-foreground">—</span>
                 )}
@@ -468,7 +468,7 @@ export function PropertyMetadataCard({
           </dl>
         )}
         {!canEdit && (
-          <div className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
+          <div className="mt-2 flex items-center gap-1.5 type-label text-muted-foreground">
             <Lock className="h-3 w-3" /> {t("lockHint")}
           </div>
         )}
@@ -495,10 +495,10 @@ export function PropertyMetadataItem({
 }: PropertyMetadataItemProps) {
   return (
     <div className="space-y-2">
-      <dt className="flex items-center gap-1 text-xs font-medium text-on-surface-variant">
+      <dt className="flex items-center gap-1 type-label font-medium text-on-surface-variant">
         <Icon className="h-3 w-3" /> {label}
       </dt>
-      <dd className="text-sm font-medium">
+      <dd className="type-body font-medium">
         {value ? (
           href && isValidUrl(href) ? (
             <a

@@ -499,7 +499,7 @@ export function SharingSection({
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
-            <CardTitle className="flex items-center gap-2 text-lg font-semibold">
+            <CardTitle className="flex items-center gap-2 type-title-lg font-semibold">
               <Shield className="h-4 w-4 text-primary" />
               {t("title")}
             </CardTitle>
@@ -537,11 +537,11 @@ export function SharingSection({
         {/* Editors see a "Pouze správce" hint explaining why the Switch
             is disabled. Owners / admins don't need this. */}
         {!canManage && (
-          <div className="-mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
+          <div className="-mt-2 flex items-center gap-1.5 type-label text-muted-foreground">
             <Lock className="h-3 w-3" /> {t("lockHint")}
           </div>
         )}
-        <div className="flex items-start gap-2 rounded-lg bg-info/5 p-2.5 text-xs text-on-surface-variant">
+        <div className="flex items-start gap-2 rounded-lg bg-info/5 p-2.5 type-label text-on-surface-variant">
           <Info className="h-3.5 w-3.5 shrink-0 mt-0.5 text-info" />
           <span>
             {t("publicInfo")}
@@ -749,7 +749,7 @@ export function SharingSection({
                     className="flex items-center gap-3 rounded-lg border border-outline-variant bg-surface-container-low p-2.5 text-sm"
                   >
                     <div className="min-w-0 flex-1">
-                      <div className="truncate font-medium">{inv.inviteeEmail}</div>
+                      <div className="type-body font-medium truncate">{inv.inviteeEmail}</div>
                       <div className="type-label text-on-surface-variant truncate">
                         {t("invitationHistory.role", { role: roleLabel, date: formatDate(inv.createdAt) })}
                       </div>
@@ -807,12 +807,12 @@ export function SharingSection({
           </div>
           {/* Hints */}
           {isExistingMember && (
-            <div className="mt-2 flex items-center gap-1.5 text-xs text-warning">
+            <div className="mt-2 flex items-center gap-1.5 type-label text-warning">
               <AlertTriangle className="h-3 w-3" /> {t("inviteForm.hint.existingMember")}
             </div>
           )}
           {isNewUserHint && !isExistingMember && (
-            <div className="mt-2 flex items-center gap-1.5 text-xs text-info">
+            <div className="mt-2 flex items-center gap-1.5 type-label text-info">
               <Info className="h-3 w-3" /> {t("inviteForm.hint.newUser")}
             </div>
           )}
@@ -821,12 +821,12 @@ export function SharingSection({
               "owner-only" lock hint (they never reach this tab through the
               sidebar, but the gate also covers direct deep-links). */}
           {userRole === "editor" && (
-            <div className="mt-2 flex items-center gap-1.5 text-xs text-info">
+            <div className="mt-2 flex items-center gap-1.5 type-label text-info">
               <Info className="h-3 w-3" /> {t("inviteForm.hint.editor")}
             </div>
           )}
           {!canInvite && (
-            <div className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
+            <div className="mt-2 flex items-center gap-1.5 type-label text-muted-foreground">
               <Lock className="h-3 w-3" /> {t("inviteForm.hint.noInvite")}
             </div>
           )}
