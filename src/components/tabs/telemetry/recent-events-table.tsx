@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import {
   Card,
@@ -234,14 +234,23 @@ export function RecentEventsTable({
     [page, typeFilter, userFilter, pageFilter, projectFilter, t],
   );
 
-  // Initial state: null (no data yet → skeleton), then fetch on every
-  // filter/page change. The first call shows the full skeleton because
-  // `data === null`; subsequent calls use `silent: true` to preserve
-  // the previous data while fetching (avoids fl:// empty flash).
-  const isFirstLoad = data === null;
+  // Fetch on every filter/page change. We do NOT include `data` in the
+  // dependency list (that would cause a loop: fetch → setData → data
+  // changes → useEffect re-fires → ...). Instead we use a ref to track
+  // whether this is the very first load (controls skeleton vs silent
+  // refresh behavior) — refs don't trigger re-renders.
+  const isFirstLoadRef = useRef(true);
   useEffect(() => {
-    void fetchEvents({ silent: !isFirstLoad });
-  }, [page, typeFilter, userFilter, pageFilter, projectFilter, fetchEvents, isFirstLoad]);
+    const isFirst = isFirstLoadRef.current;
+    if (isFirst) {
+      isFirstLoadRef.current = false;
+    }
+    void fetchEvents({ silent: !isFirst });
+    // NOTE: `fetchEvents` is a useCallback whose deps include the filter
+    // state values, so it changes identity when filters change — which
+    // correctly triggers a refetch here. We intentionally do NOT add
+    // `data` (would loop) or `isFirstLoadRef` (refs are stable).
+  }, [page, typeFilter, userFilter, pageFilter, projectFilter, fetchEvents]);
 
   // Filter change handlers — reset to page 1
   const handleTypeFilterChange = (value: string) => {
