@@ -1763,7 +1763,8 @@
       "recent": {
         "title": "Recent events",
         "description": "Last {shown} of {total} total events",
-        "empty": "No events for the selected filter.",
+        "empty": "No events recorded yet.",
+        "emptyFiltered": "No events match the selected filters.",
         "column": {
           "date": "Date",
           "time": "Time",

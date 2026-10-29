@@ -36,6 +36,7 @@ import {
   Filter,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { RecentEventsTable } from "@/components/tabs/telemetry/recent-events-table";
 
 // =====================================================================
 // TelemetryTab — internal analytics dashboard
@@ -260,49 +261,25 @@ export function TelemetryTab({ projectId: _projectId }: { projectId: string }) {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [page, setPage] = useState(1);
-  const [typeFilter, setTypeFilter] = useState<string>("");
-  const [userFilter, setUserFilter] = useState<string>("");
-  const [pageFilter, setPageFilter] = useState<string>("");
-  const [projectFilter, setProjectFilter] = useState<string>("");
   const t = useTranslations("tabs.telemetry");
   const tNav = useTranslations("nav.items");
   const tEventTypes = useTranslations("analytics.eventTypes");
 
+  // Fetch ONLY the summary (KPI cards, charts, filter dropdowns).
+  // The paginated "Poslední události" table is handled by the
+  // <RecentEventsTable> child component via /api/analytics/events,
+  // so we no longer pass page/type/user/pageUrl/project filters here.
   const fetchData = useCallback(
-    async (opts: {
-      silent?: boolean;
-      pageArg?: number;
-      typeArg?: string;
-      userArg?: string;
-      pageUrlArg?: string;
-      projectArg?: string;
-    } = {}) => {
-      const {
-        silent = false,
-        pageArg,
-        typeArg,
-        userArg,
-        pageUrlArg,
-        projectArg,
-      } = opts;
+    async (opts: { silent?: boolean } = {}) => {
+      const { silent = false } = opts;
       if (!silent) setLoading(true);
       else setRefreshing(true);
       setError(null);
       try {
-        const params = new URLSearchParams();
-        const p = pageArg ?? page;
-        const t = typeArg ?? typeFilter;
-        const u = userArg ?? userFilter;
-        const pg = pageUrlArg ?? pageFilter;
-        const pj = projectArg ?? projectFilter;
-        if (t) params.set("type", t);
-        if (u) params.set("userId", u);
-        if (pg) params.set("pageUrl", pg);
-        if (pj) params.set("projectId", pj);
-        params.set("page", String(p));
-        params.set("pageSize", "20");
-        const res = await fetch(`/api/analytics?${params.toString()}`);
+        // Request page 1 with pageSize 1 — we only need the summary +
+        // filter dropdown data (users, pages, projects). The actual
+        // entries are fetched separately by <RecentEventsTable>.
+        const res = await fetch(`/api/analytics?page=1&pageSize=1`);
         if (!res.ok) throw new Error("Failed to fetch analytics");
         const json: AnalyticsResponse = await res.json();
         setData(json);
@@ -313,39 +290,13 @@ export function TelemetryTab({ projectId: _projectId }: { projectId: string }) {
         setRefreshing(false);
       }
     },
-    [page, typeFilter, userFilter, pageFilter, projectFilter, t],
+    [t],
   );
-
-  // Initial fetch + refetch on filter/page change
-  useEffect(() => {
-    void fetchData({ silent: true });
-  }, [page, typeFilter, userFilter, pageFilter, projectFilter, fetchData]);
 
   // Initial mount fetch (with skeleton)
   useEffect(() => {
     void fetchData();
   }, [fetchData]);
-
-  const handleTypeFilterChange = (value: string) => {
-    setTypeFilter(value);
-    setPage(1);
-  };
-
-  const handleUserFilterChange = (value: string) => {
-    // Select uses placeholder value "__all__" for "all users"
-    setUserFilter(value === "__all__" ? "" : value);
-    setPage(1);
-  };
-
-  const handlePageFilterChange = (value: string) => {
-    setPageFilter(value === "__all__" ? "" : value);
-    setPage(1);
-  };
-
-  const handleProjectFilterChange = (value: string) => {
-    setProjectFilter(value === "__all__" ? "" : value);
-    setPage(1);
-  };
 
   const handleRefresh = () => {
     void fetchData({ silent: true });
@@ -374,14 +325,9 @@ export function TelemetryTab({ projectId: _projectId }: { projectId: string }) {
   }
 
   const summary = data?.summary;
-  // Note: `page_view` events are already filtered out server-side (in
-  // /api/analytics GET) when no explicit `typeFilter` is set. The server
-  // also adjusts the `total` count accordingly so pagination math is
-  // correct. We use the entries + total directly here without further
-  // client-side filtering.
-  const entries = data?.entries ?? [];
-  const total = data?.total ?? 0;
-  const totalPages = data?.totalPages ?? 1;
+  // Filter dropdown data — passed to <RecentEventsTable> as props.
+  // The paginated entries themselves are fetched by the child component
+  // via /api/analytics/events, so we don't read `data.entries` here.
   const projects = data?.projects ?? [];
   const users = data?.users ?? [];
   const pages = data?.pages ?? [];
@@ -951,289 +897,13 @@ export function TelemetryTab({ projectId: _projectId }: { projectId: string }) {
         </CardContent>
       </Card>
 
-      {/* ===== 9. Recent events — with filter row ===== */}
-      <Card id="telemetry-recent" className="bg-card shadow-sm">
-        <CardHeader className="pb-3">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <div>
-              <CardTitle className="type-title-lg flex items-center gap-2">
-                <Activity className="h-4 w-4 text-primary" />
-                {t("recent.title")}
-              </CardTitle>
-              <CardDescription>
-                {t("recent.description", { shown: Math.min(20, total), total })}
-              </CardDescription>
-            </div>
-            {/* Type filter */}
-            <div className="flex items-center gap-1.5">
-              <label
-                htmlFor="telemetry-type-filter"
-                className="type-label text-on-surface-variant"
-              >
-                {t("filter.type")}
-              </label>
-              <select
-                id="telemetry-type-filter"
-                value={typeFilter}
-                onChange={(e) => handleTypeFilterChange(e.target.value)}
-                className="h-8 rounded-full border border-outline-variant bg-card px-3 type-label hover:bg-surface-container-high focus:outline-none focus:ring-2 focus:ring-primary/30"
-              >
-                <option value="">{t("filter.all")}</option>
-                {availableTypes.map((eventType) => {
-                  let label;
-                  try {
-                    label = tEventTypes(eventType);
-                  } catch {
-                    label = eventType;
-                  }
-                  return (
-                    <option key={eventType} value={eventType}>
-                      {label}
-                    </option>
-                  );
-                })}
-              </select>
-            </div>
-          </div>
-        </CardHeader>
-
-        {/* ===== Filter row (User / Page / Project) ===== */}
-        <div className="border-t border-outline-variant bg-surface-container-low/50 px-4 py-3 sm:px-6">
-          <div className="flex flex-wrap items-center gap-2">
-            <div className="flex items-center gap-1.5 type-label text-on-surface-variant">
-              <Filter className="h-3.5 w-3.5" />
-              {t("filter.label")}
-            </div>
-            {/* User filter */}
-            <div className="flex items-center gap-1.5">
-              <span className="type-label-sm text-on-surface-variant">{t("filter.user")}</span>
-              <Select
-                value={userFilter || "__all__"}
-                onValueChange={handleUserFilterChange}
-              >
-                <SelectTrigger className="h-8 w-[180px] rounded-full type-label-sm">
-                  <SelectValue placeholder={t("filter.allUsers")} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="__all__">{t("filter.allUsers")}</SelectItem>
-                  {users.map((u) => (
-                    <SelectItem key={u.id} value={u.id}>
-                      {u.name || u.email}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            {/* Page filter */}
-            <div className="flex items-center gap-1.5">
-              <span className="type-label-sm text-on-surface-variant">{t("filter.page")}</span>
-              <Select
-                value={pageFilter || "__all__"}
-                onValueChange={handlePageFilterChange}
-              >
-                <SelectTrigger className="h-8 w-[160px] rounded-full type-label-sm">
-                  <SelectValue placeholder={t("filter.allPages")} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="__all__">{t("filter.allPages")}</SelectItem>
-                  {pages.map((p) => (
-                    <SelectItem key={p} value={p}>
-                      {formatPageLabel(p, tNav)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            {/* Project filter */}
-            <div className="flex items-center gap-1.5">
-              <span className="type-label-sm text-on-surface-variant">{t("filter.project")}</span>
-              <Select
-                value={projectFilter || "__all__"}
-                onValueChange={handleProjectFilterChange}
-              >
-                <SelectTrigger className="h-8 w-[200px] rounded-full type-label-sm">
-                  <SelectValue placeholder={t("filter.allProjects")} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="__all__">{t("filter.allProjects")}</SelectItem>
-                  {projects.map((p) => (
-                    <SelectItem key={p.id} value={p.id}>
-                      {p.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            {/* Reset filters button — shown when any active */}
-            {(userFilter || pageFilter || projectFilter) && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-8 rounded-full gap-1.5 type-label-sm"
-                onClick={() => {
-                  setUserFilter("");
-                  setPageFilter("");
-                  setProjectFilter("");
-                  setTypeFilter("");
-                  setPage(1);
-                }}
-              >
-                {t("filter.button.reset")}
-              </Button>
-            )}
-          </div>
-        </div>
-
-        <CardContent>
-          {entries.length === 0 ? (
-            <p className="type-body text-on-surface-variant py-6 text-center">
-              {t("recent.empty")}
-            </p>
-          ) : (
-            <>
-              <div className="overflow-x-auto rounded-lg border border-outline-variant">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-outline-variant bg-surface-container-high">
-                      <th className="type-overline text-on-surface-variant px-3 py-2 text-left whitespace-nowrap">
-                        {t("recent.column.date")}
-                      </th>
-                      <th className="type-overline text-on-surface-variant px-3 py-2 text-left whitespace-nowrap">
-                        {t("recent.column.time")}
-                      </th>
-                      <th className="type-overline text-on-surface-variant px-3 py-2 text-left">
-                        {t("recent.column.user")}
-                      </th>
-                      <th className="type-overline text-on-surface-variant px-3 py-2 text-left">
-                        {t("recent.column.eventType")}
-                      </th>
-                      <th className="type-overline text-on-surface-variant px-3 py-2 text-left">
-                        {t("recent.column.page")}
-                      </th>
-                      <th className="type-overline text-on-surface-variant px-3 py-2 text-left">
-                        {t("recent.column.project")}
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {entries.map((entry) => {
-                      const { date, time } = formatEventTimestamp(entry.createdAt);
-                      const userName =
-                        entry.user?.name || entry.user?.email || t("recent.unknownUser");
-                      const initials =
-                        userName
-                          .split(/\s+/)
-                          .slice(0, 2)
-                          .map((s) => s[0]?.toUpperCase() ?? "")
-                          .join("") || "?";
-                      const project = lookupProjectName(
-                        entry.metadata,
-                        projects,
-                        (id) => t("recent.unknownProject", { id }),
-                      );
-                      return (
-                        <tr
-                          key={entry.id}
-                          className="border-b border-outline-variant last:border-0 hover:bg-surface-container-high/60"
-                        >
-                          <td className="px-3 py-2 type-label text-on-surface-variant tabular-nums whitespace-nowrap">
-                            {date}
-                          </td>
-                          <td className="px-3 py-2 type-label text-on-surface-variant tabular-nums whitespace-nowrap">
-                            {time}
-                          </td>
-                          <td className="px-3 py-2">
-                            <div className="flex items-center gap-1.5">
-                              <Avatar className="h-6 w-6 shrink-0">
-                                {entry.user?.image ? (
-                                  <AvatarImage
-                                    src={entry.user.image}
-                                    alt={userName}
-                                  />
-                                ) : null}
-                                <AvatarFallback className="bg-secondary-container text-[9px] font-bold text-secondary-container-foreground">
-                                  {initials}
-                                </AvatarFallback>
-                              </Avatar>
-                              <span className="type-label text-on-surface-variant truncate">
-                                {userName}
-                              </span>
-                            </div>
-                          </td>
-                          <td className="px-3 py-2">
-                            <Badge
-                              variant="secondary"
-                              className="type-label-sm rounded-full"
-                            >
-                              {(() => {
-                                try {
-                                  return tEventTypes(entry.eventType);
-                                } catch {
-                                  return entry.eventType;
-                                }
-                              })()}
-                            </Badge>
-                          </td>
-                          <td className="px-3 py-2">
-                            <span className="type-body">
-                              {formatPageLabel(entry.pageUrl, tNav)}
-                            </span>
-                            {entry.timeSpent !== null &&
-                              entry.timeSpent > 0 && (
-                                <span className="type-label text-on-surface-variant ml-2">
-                                  · {formatTimeSpent(entry.timeSpent)}
-                                </span>
-                              )}
-                          </td>
-                          <td className="px-3 py-2">
-                            <span className="type-label text-on-surface-variant">
-                              {project.name}
-                            </span>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-
-              {/* Pagination */}
-              {total > 0 && (
-                <div className="flex flex-wrap items-center justify-between gap-2 border-t border-outline-variant pt-3">
-                  <span className="type-label-sm text-on-surface-variant tabular-nums">
-                    {t("pagination.summary", { from: (page - 1) * 20 + 1, to: Math.min(page * 20, total), total })}
-                  </span>
-                  <div className="flex items-center gap-1">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="rounded-full gap-1.5"
-                      onClick={() => setPage((p) => Math.max(1, p - 1))}
-                      disabled={page <= 1}
-                    >
-                      <ChevronLeft className="h-3.5 w-3.5" /> {t("pagination.prev")}
-                    </Button>
-                    <span className="type-label-sm px-2 tabular-nums">
-                      {t("pagination.pageOf", { page, totalPages })}
-                    </span>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="rounded-full gap-1.5"
-                      onClick={() =>
-                        setPage((p) => Math.min(totalPages, p + 1))
-                      }
-                      disabled={page >= totalPages}
-                    >
-                      {t("pagination.next")} <ChevronRight className="h-3.5 w-3.5" />
-                    </Button>
-                  </div>
-                </div>
-              )}
-            </>
-          )}
-        </CardContent>
-      </Card>
+      {/* ===== 9. Recent events — paginated table (self-contained component) ===== */}
+      <RecentEventsTable
+        users={users}
+        pages={pages}
+        projects={projects}
+        availableTypes={availableTypes}
+      />
     </div>
   );
 }

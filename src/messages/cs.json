@@ -1763,7 +1763,8 @@
       "recent": {
         "title": "Poslední události",
         "description": "Posledních {shown} z celkem {total} událostí",
-        "empty": "Žádné události pro vybraný filtr.",
+        "empty": "Zatím nebyly zaznamenány žádné události.",
+        "emptyFiltered": "Žádné události neodpovídají vybraným filtrům.",
         "column": {
           "date": "Datum",
           "time": "Čas",
