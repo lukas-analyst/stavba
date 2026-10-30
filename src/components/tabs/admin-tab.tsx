@@ -1075,7 +1075,9 @@ export function StatsSection({ currentUser }: { currentUser: CurrentUser }) {
       if (selectedProjectId !== "all") {
         params.set("projectId", selectedProjectId);
       }
-      const res = await fetch(`/api/analytics?${params.toString()}`);
+      const res = await fetch(`/api/analytics?${params.toString()}`, {
+        cache: "no-store",
+      });
       if (!res.ok) throw new Error("Failed to fetch analytics");
       return (await res.json()) as AnalyticsResponse;
     },

@@ -18,6 +18,17 @@ import { requireUser } from "@/lib/require-user";
 // POST /api/analytics
 // Body: { eventType, pageUrl?, timeSpent?, metadata? }
 // Returns: 201 { id } on success, 400 if `eventType` is missing.
+// =====================================================================
+// Route configuration
+// ---------------------------------------------------------------------
+// `force-dynamic` ensures the response is never cached. Without this,
+// Next.js may cache a 401 (unauthenticated) response and serve it even
+// after the user logs in, causing "Failed to fetch analytics" errors.
+// Analytics data changes on every request (new events are logged
+// continuously), so caching would be incorrect anyway.
+// =====================================================================
+export const dynamic = "force-dynamic";
+
 export async function POST(request: Request) {
   const t = await getTranslations("api.errors");
   try {

@@ -283,7 +283,15 @@ export function TelemetryTab({ projectId: _projectId }: { projectId: string }) {
         // Request page 1 with pageSize 1 — we only need the summary +
         // filter dropdown data (users, pages, projects). The actual
         // entries are fetched separately by <RecentEventsTable>.
-        const res = await fetch(`/api/analytics?page=1&pageSize=1`);
+        //
+        // `cache: "no-store"` ensures we always get fresh data (the
+        // summary changes on every event log). Combined with the
+        // route's `export const dynamic = "force-dynamic"`, this
+        // prevents Next.js from serving a stale cached 401 response
+        // after the user logs in.
+        const res = await fetch(`/api/analytics?page=1&pageSize=1`, {
+          cache: "no-store",
+        });
         if (!res.ok) throw new Error("Failed to fetch analytics");
         const json: AnalyticsResponse = await res.json();
         setData(json);
