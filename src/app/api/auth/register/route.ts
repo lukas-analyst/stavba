@@ -9,6 +9,7 @@ import {
   normalizeEmail,
 } from "@/lib/auth-helpers";
 import { sendVerificationEmail } from "@/lib/email";
+import { logAuthEvent } from "@/lib/auth-audit";
 import { checkRateLimit, getClientIp, REGISTER_RATE_LIMIT } from "@/lib/rate-limit";
 
 // =====================================================================
@@ -107,6 +108,12 @@ export async function POST(request: Request) {
     // --- Hash the password ---
     const passwordHash = await hashPassword(password);
 
+    // Track the registered user ID so we can log the auth_register event
+    // after the transaction succeeds. Both the "account claiming" branch
+    // and the "new user" branch set this.
+    let registeredUserId: string | null = null;
+    let isClaimingExisting = false;
+
     try {
       if (existing) {
         // Scenario 2: account claiming
@@ -143,16 +150,21 @@ export async function POST(request: Request) {
             { status: 409 },
           );
         }
+
+        registeredUserId = existing.id;
+        isClaimingExisting = true;
       } else {
         // Scenario 1: new user — use create with catch for P2002
         // (race condition: another request created the same e-mail)
-        await db.user.create({
+        const newUser = await db.user.create({
           data: {
             email: normalizedEmail,
             name: name?.trim() || null,
             password: passwordHash,
           },
+          select: { id: true },
         });
+        registeredUserId = newUser.id;
       }
     } catch (error: unknown) {
       // Prisma P2002 = unique constraint violation (concurrent registration)
@@ -164,6 +176,21 @@ export async function POST(request: Request) {
         );
       }
       throw error; // re-throw to be caught by outer catch
+    }
+
+    // --- Log the auth_register event (telemetry, fire-and-forget) ---
+    // We log AFTER the DB transaction succeeds so we never record a
+    // registration that didn't actually happen. Failures here must
+    // never break the flow (the user is already registered).
+    if (registeredUserId) {
+      try {
+        await logAuthEvent(registeredUserId, "register", true, {
+          email: normalizedEmail,
+          claimedExisting: isClaimingExisting,
+        });
+      } catch (logErr) {
+        console.error("[register] logAuthEvent failed:", logErr);
+      }
     }
 
     // --- Send verification e-mail (async, non-blocking) ---

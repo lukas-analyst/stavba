@@ -5,6 +5,7 @@ import bcrypt from "bcryptjs";
 import fs from "fs";
 import path from "path";
 import { db } from "@/lib/db";
+import { logAuthEvent } from "@/lib/auth-audit";
 
 // =====================================================================
 // NextAuth secret resolution
@@ -465,6 +466,27 @@ export const authOptions: NextAuthOptions = {
           await autoAcceptPendingInvitations(user.email, user.id);
         } catch (err) {
           console.error("[auth] autoAcceptPendingInvitations failed:", err);
+        }
+      }
+
+      // ===== Log Google OAuth login (telemetry) =====
+      // Credentials login is logged client-side from the login page
+      // (POST /api/auth/audit-log with action: "login"). Google OAuth
+      // can't be logged client-side because the browser navigates away
+      // to Google and back — sendBeacon may not survive. So we log it
+      // here, server-side, after the user record is resolved.
+      //
+      // We use action "oauth_login" to distinguish from Credentials
+      // "login" events, so the Telemetry tab can show how each user
+      // authenticated.
+      if (account?.provider === "google" && user.id) {
+        try {
+          await logAuthEvent(user.id, "oauth_login", true, {
+            provider: "google",
+            email: user.email,
+          });
+        } catch (logErr) {
+          console.error("[auth] logAuthEvent (oauth_login) failed:", logErr);
         }
       }
 

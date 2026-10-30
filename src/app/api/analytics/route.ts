@@ -181,16 +181,22 @@ export async function GET(request: Request) {
     //
     // When the user explicitly selects a `type` filter (including
     // "page_view"), we honor it verbatim — no exclusion is applied.
+    //
+    // TEMPORARY: The default exclusion of `page_view` has been removed
+    // so we can verify page_view events are being recorded for all
+    // users (including Google OAuth users). Restore the `else` branch
+    // below once verification is complete.
     const entriesWhere: Prisma.AnalyticsEventWhereInput = { ...where };
-    if (!typeFilter) {
-      entriesWhere.eventType = { not: "page_view" };
-    }
+    // if (!typeFilter) {
+    //   entriesWhere.eventType = { not: "page_view" };
+    // }
 
     // Run paginated fetch + total count in parallel.
-    // NOTE: entries + total use `entriesWhere` (excludes page_view by
-    // default). All summary aggregations below use `where` (full data,
-    // including page_view) because page views are part of the analytics
-    // summary (topPages, totalTimeSpent, avgTimePerPage, …).
+    // NOTE: entries + total use `entriesWhere` (TEMPORARILY includes
+    // page_view — see comment above). All summary aggregations below
+    // use `where` (full data, including page_view) because page views
+    // are part of the analytics summary (topPages, totalTimeSpent,
+    // avgTimePerPage, …).
     const [entries, total] = await Promise.all([
       dbRead.analyticsEvent.findMany({
         where: entriesWhere,

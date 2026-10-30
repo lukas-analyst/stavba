@@ -345,10 +345,11 @@ export function TelemetryTab({ projectId: _projectId }: { projectId: string }) {
   const pages = data?.pages ?? [];
 
   // Sort event types by count (descending) for the bar chart
-  // Filter out page_view — it's high-volume and drowns out other events
+  // TEMPORARY: The page_view filter has been removed so the chart shows
+  // all event types (including page_view) for verification purposes.
+  // Restore `.filter(([type]) => type !== "page_view")` once done.
   const eventTypeRows = summary
     ? Object.entries(summary.eventsByType)
-        .filter(([type]) => type !== "page_view")
         .sort((a, b) => b[1] - a[1])
     : [];
   const maxEventCount = eventTypeRows.length > 0 ? eventTypeRows[0][1] : 1;

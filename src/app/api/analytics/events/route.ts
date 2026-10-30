@@ -86,14 +86,17 @@ export async function GET(request: Request) {
     // Event type filter.
     // - If the user explicitly picked a type (including "page_view"),
     //   honor it verbatim.
-    // - If no type filter is set, exclude `page_view` by default —
-    //   it's high-volume and clutters the table with noise. This
-    //   exclusion applies to BOTH entries and total, so pagination
-    //   math is consistent.
+    // - If no type filter is set, return ALL event types (including
+    //   page_view). The default exclusion was removed temporarily so we
+    //   can verify that page_view events are being recorded correctly
+    //   for all users (including Google OAuth users).
+    //
+    // TODO: Once verification is done, restore the default exclusion:
+    //   } else {
+    //     where.eventType = { not: "page_view" };
+    //   }
     if (typeFilter) {
       where.eventType = typeFilter;
-    } else {
-      where.eventType = { not: "page_view" };
     }
 
     if (userIdFilter) where.userId = userIdFilter;
