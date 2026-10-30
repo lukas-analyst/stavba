@@ -205,7 +205,7 @@ export function PropertyMetadataCard({
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0 flex-1">
-            <CardTitle className="flex items-center gap-2 type-title-lg font-semibold">
+            <CardTitle className="flex items-center gap-2 type-title-lg">
               <Building2 className="h-4 w-4 text-primary" />
               {t("title")}
             </CardTitle>

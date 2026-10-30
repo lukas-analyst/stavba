@@ -149,7 +149,7 @@ export function ProjectInfoCard({
         <CardHeader className="pb-3">
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0 flex-1">
-              <CardTitle className="flex flex-wrap items-center gap-2 type-title-lg font-semibold">
+              <CardTitle className="flex flex-wrap items-center gap-2 type-title-lg">
                 {project.name}
                 <Badge variant="outline" className={cn("type-label", statusInfo.color)}>{statusLabel}</Badge>
                 <Badge variant="secondary" className="type-label gap-1">
@@ -190,7 +190,7 @@ export function ProjectInfoCard({
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div className="min-w-0 flex-1">
-            <CardTitle className="flex items-center gap-2 type-title-lg font-semibold">
+            <CardTitle className="flex items-center gap-2 type-title-lg">
               {editing ? (
                 <Input value={name} onChange={(e) => setName(e.target.value)} className="h-8 max-w-md type-title-lg font-bold" autoFocus />
               ) : (
