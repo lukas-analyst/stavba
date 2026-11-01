@@ -48,6 +48,7 @@
       "notes": "Notes",
       "management": "Project management",
       "telemetry": "Telemetry",
+      "floorplan": "Floorplan",
       "admin": "Administration"
     }
   },
@@ -1805,6 +1806,11 @@
         "day": "{n, plural, one {yesterday} other {{n} days ago}}",
         "yesterday": "yesterday"
       }
+    },
+    "floorplan": {
+      "title": "Floorplan",
+      "description": "Visual floorplan of the property linked to budget items.",
+      "comingSoon": "The Floorplan module is under development. Soon you'll be able to upload a DXF file, view the floorplan, and link elements to budget items."
     },
     "payments": {
       "sort": {

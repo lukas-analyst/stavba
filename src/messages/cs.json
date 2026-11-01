@@ -48,6 +48,7 @@
       "notes": "Poznámky",
       "management": "Správa projektu",
       "telemetry": "Telemetrie",
+      "floorplan": "Půdorys",
       "admin": "Administrace"
     }
   },
@@ -1805,6 +1806,11 @@
         "day": "před {n, plural, one {dnem} other {{n} dny}}",
         "yesterday": "včera"
       }
+    },
+    "floorplan": {
+      "title": "Půdorys objektu",
+      "description": "Vizuální půdorys nemovitosti s propojením na položky rozpočtu.",
+      "comingSoon": "Modul Půdorys je ve vývoji. Brzy zde budete moci nahrát DXF soubor, zobrazit půdorys a propojit prvky s položkami rozpočtu."
     },
     "payments": {
       "sort": {

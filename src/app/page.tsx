@@ -26,6 +26,7 @@ const VALID_TABS: ReadonlySet<TabId> = new Set<TabId>([
   "notes",
   "management",
   "telemetry",
+  "floorplan",
   "settings",
   "admin",
 ]);

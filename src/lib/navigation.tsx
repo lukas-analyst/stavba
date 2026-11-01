@@ -11,6 +11,7 @@ import {
   Settings,
   Activity,
   Briefcase,
+  Ruler,
 } from "lucide-react";
 import type { TabId } from "@/lib/store";
 import { useTranslations } from "next-intl";
@@ -62,6 +63,7 @@ export const NAV_ITEMS: NavItem[] = [
   { id: "notes", labelKey: "notes", icon: FileText, section: "organization" },
   { id: "management", labelKey: "management", icon: Settings, section: "main", minRole: "editor" },
   { id: "telemetry", labelKey: "telemetry", icon: Activity, section: "organization", minRole: "owner" },
+  { id: "floorplan", labelKey: "floorplan", icon: Ruler, section: "organization", minRole: "owner" },
 ];
 
 // Section metadata (id + i18n key + order) — used for rendering section headings.
