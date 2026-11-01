@@ -1810,7 +1810,51 @@
     "floorplan": {
       "title": "Půdorys objektu",
       "description": "Vizuální půdorys nemovitosti s propojením na položky rozpočtu.",
-      "comingSoon": "Modul Půdorys je ve vývoji. Brzy zde budete moci nahrát DXF soubor, zobrazit půdorys a propojit prvky s položkami rozpočtu."
+      "comingSoon": "Modul Půdorys je ve vývoji. Brzy zde budete moci nahrát DXF soubor, zobrazit půdorys a propojit prvky s položkami rozpočtu.",
+      "label": {
+        "plan": "Půdorys",
+        "elevation": "Nárys",
+        "selectedElement": "Vybraný prvek"
+      },
+      "mode": {
+        "geometry": "Geometrie",
+        "status": "Stav"
+      },
+      "button": {
+        "import": "Importovat DXF",
+        "retry": "Zkusit znovu"
+      },
+      "empty": {
+        "description": "Zatím nebyl nahrán žádný půdorys. Importujte DXF soubor z CAD programu pro zobrazení vizuálního půdorysu."
+      },
+      "error": {
+        "loadFailed": "Nepodařilo se načíst data půdorysu."
+      },
+      "layers": {
+        "title": "Vrstvy",
+        "structural": "Konstrukce",
+        "electrical": "Elektro",
+        "data": "Data",
+        "plumbing": "Voda",
+        "gas": "Plyn",
+        "drainage": "Odpady",
+        "terrain": "Terén",
+        "annotation": "Popisky"
+      },
+      "import": {
+        "title": "Importovat DXF",
+        "description": "Nahrajte DXF soubor z CAD programu (AutoCAD, Archicad, LibreCAD).",
+        "fileLabel": "DXF soubor",
+        "dropzone": "Klikněte pro výběr .dxf souboru",
+        "floorNameLabel": "Název patra",
+        "floorNamePlaceholder": "Přízemí, 1. patro, Sklep...",
+        "viewTypeLabel": "Typ pohledu",
+        "viewTypePlan": "Půdorys (shora)",
+        "viewTypeElevation": "Nárys (zboku)",
+        "import": "Importovat",
+        "importing": "Importuji...",
+        "cancel": "Zrušit"
+      }
     },
     "payments": {
       "sort": {
