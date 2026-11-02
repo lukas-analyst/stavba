@@ -85,7 +85,7 @@ function convertEntity(
   const base = {
     type: mapped.type as string,
     layer: mapped.layer as string,
-    dxfHandle: (entity as { handle?: string }).handle ?? null,
+    dxfHandle: (entity as unknown as { handle?: string }).handle ?? null,
     dxfLayer: dxfLayerName,
     rotation: 0,
     metadata: null as Record<string, unknown> | null,
