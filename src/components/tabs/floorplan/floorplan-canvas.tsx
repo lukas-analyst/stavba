@@ -1,11 +1,7 @@
 "use client";
 
 import { useMemo, useState, useRef, useCallback } from "react";
-<<<<<<< HEAD
 import type { FloorplanElement, FloorplanLayer } from "@/lib/floorplan/types";
-=======
-import type { FloorplanElement, FloorplanLayer } from "@/lib/floorplan";
->>>>>>> origin/main
 import { LAYER_META } from "@/lib/floorplan/layer-mapping";
 import { cn } from "@/lib/utils";
 
@@ -45,25 +41,44 @@ export function FloorplanCanvas({
   // Compute bounding box of all visible elements
   const bounds = useMemo(() => {
     const visible = elements.filter(
-      (e) => visibleLayers.has(e.layer) && e.layer !== "annotation" || visibleLayers.has(e.layer),
+      (e) => visibleLayers.has(e.layer),
     );
     if (visible.length === 0) return null;
 
     let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
     for (const el of visible) {
-      const xs = el.points ? JSON.parse(el.points).map((p: number[]) => p[0]) : [el.x, el.x + (el.width || 0)];
-      const ys = el.points ? JSON.parse(el.points).map((p: number[]) => p[1]) : [el.y, el.y + (el.height || 0)];
+      let xs: number[];
+      let ys: number[];
+      if (el.points) {
+        try {
+          const pts = JSON.parse(el.points) as number[][];
+          xs = pts.map((p) => p[0]);
+          ys = pts.map((p) => p[1]);
+        } catch {
+          xs = [el.x, el.x + (el.width ?? 1)];
+          ys = [el.y, el.y + (el.height ?? 1)];
+        }
+      } else {
+        // No points — use bounding box
+        const w = el.width ?? 1;
+        const h = el.height ?? 1;
+        xs = [el.x, el.x + w];
+        ys = [el.y, el.y + h];
+      }
       minX = Math.min(minX, ...xs);
       minY = Math.min(minY, ...ys);
       maxX = Math.max(maxX, ...xs);
       maxY = Math.max(maxY, ...ys);
     }
-    const padding = 20;
+    // Handle case where all points are at the same coordinate (degenerate)
+    const width = maxX - minX || 100;
+    const height = maxY - minY || 100;
+    const padding = Math.max(width, height) * 0.05; // 5% padding
     return {
       x: minX - padding,
       y: minY - padding,
-      width: (maxX - minX) + padding * 2,
-      height: (maxY - minY) + padding * 2,
+      width: width + padding * 2,
+      height: height + padding * 2,
     };
   }, [elements, visibleLayers]);
 
@@ -128,7 +143,9 @@ export function FloorplanCanvas({
     };
     const color = fillMap[fillColor] || "#9ca3af";
     const strokeColor = isSelected ? "#2563eb" : color;
-    const strokeWidth = isSelected ? 2 : 1;
+    // Scale stroke width with bounds — DXF coordinates are in cm (thousands),
+    // so a strokeWidth of 1 would be invisible. Use a fraction of bounds.
+    const strokeWidth = (isSelected ? 3 : 2) * (bounds.width / 1000);
 
     // Render based on element type / points
     if (el.points) {
@@ -196,7 +213,7 @@ export function FloorplanCanvas({
         className="cursor-pointer"
       />
     );
-  }, [viewMode, selectedElementId, onSelectElement, getStatusColor]);
+  }, [viewMode, selectedElementId, onSelectElement, getStatusColor, bounds]);
 
   if (!bounds) {
     return (
@@ -208,7 +225,13 @@ export function FloorplanCanvas({
     );
   }
 
-  const viewBox = `${bounds.x} ${bounds.y} ${bounds.width} ${bounds.height}`;
+  // Apply zoom by adjusting viewBox dimensions
+  const zoomedWidth = bounds.width / zoom;
+  const zoomedHeight = bounds.height / zoom;
+  // Center the viewBox (apply pan)
+  const viewBoxX = bounds.x - (zoomedWidth - bounds.width) / 2 + pan.x / zoom;
+  const viewBoxY = bounds.y - (zoomedHeight - bounds.height) / 2 + pan.y / zoom;
+  const viewBox = `${viewBoxX} ${viewBoxY} ${zoomedWidth} ${zoomedHeight}`;
 
   return (
     <div className={cn("relative overflow-hidden rounded-lg border border-outline-variant bg-background", className)}>
@@ -216,16 +239,13 @@ export function FloorplanCanvas({
         ref={svgRef}
         viewBox={viewBox}
         className="w-full h-full cursor-grab active:cursor-grabbing"
-        style={{
-          transform: `scale(${zoom}) translate(${pan.x / zoom}px, ${pan.y / zoom}px)`,
-          transformOrigin: "center",
-        }}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
         onWheel={handleWheel}
         onClick={() => onSelectElement?.(null)}
+        preserveAspectRatio="xMidYMid meet"
       >
         {/* Render elements by layer (structural first, annotations last) */}
         {visibleElements
