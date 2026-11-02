@@ -125,9 +125,18 @@ export function FloorplanCanvas({
   // Render element to SVG shape
   const renderElement = useCallback((el: FloorplanElement) => {
     const layerMeta = LAYER_META[el.layer as FloorplanLayer];
-    const fillColor = viewMode === "status"
-      ? getStatusColor(el)
-      : layerMeta?.color?.replace("bg-", "") || "muted";
+    // In "geometry" mode, use the layer color. In "status" mode, use
+    // the BudgetItem status color.
+    // IMPORTANT: "annotation" layer has color "bg-background" (#ffffff),
+    // which is invisible on white canvas. Override to a visible gray.
+    let fillColor: string;
+    if (viewMode === "status") {
+      fillColor = getStatusColor(el);
+    } else {
+      // Geometry mode — use layer color, but never "background" (invisible)
+      const raw = layerMeta?.color?.replace("bg-", "") || "muted";
+      fillColor = raw === "background" ? "muted" : raw;
+    }
     const isSelected = el.id === selectedElementId;
 
     // Map tailwind bg-* to fill color (simplified for SVG)
@@ -139,7 +148,8 @@ export function FloorplanCanvas({
       "warning-soft": "#fbbf24",
       "muted-foreground": "#6b7280",
       "success": "#22c55e",
-      "background": "#ffffff",
+      "background": "#e5e7eb", // light gray (not pure white)
+      "danger": "#ef4444",
     };
     const color = fillMap[fillColor] || "#9ca3af";
     const strokeColor = isSelected ? "#2563eb" : color;
