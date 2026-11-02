@@ -1,7 +1,11 @@
 "use client";
 
 import { useMemo, useState, useRef, useCallback } from "react";
+<<<<<<< HEAD
 import type { FloorplanElement, FloorplanLayer } from "@/lib/floorplan/types";
+=======
+import type { FloorplanElement, FloorplanLayer } from "@/lib/floorplan";
+>>>>>>> origin/main
 import { LAYER_META } from "@/lib/floorplan/layer-mapping";
 import { cn } from "@/lib/utils";
 
