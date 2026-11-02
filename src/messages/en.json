@@ -1854,6 +1854,23 @@
         "import": "Import",
         "importing": "Importing...",
         "cancel": "Cancel"
+      },
+      "panel": {
+        "elementDetail": "Element detail",
+        "type": "Type",
+        "layer": "Layer",
+        "dxfLayer": "DXF layer",
+        "linkedItems": "Linked items",
+        "noLinks": "No linked items",
+        "addLink": "Add link",
+        "selectItem": "Select item...",
+        "link": "Link",
+        "role": {
+          "primary": "Primary",
+          "layer": "Layer",
+          "appliance": "Appliance",
+          "connection": "Connection"
+        }
       }
     },
     "payments": {

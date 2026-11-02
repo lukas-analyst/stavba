@@ -1854,6 +1854,23 @@
         "import": "Importovat",
         "importing": "Importuji...",
         "cancel": "Zrušit"
+      },
+      "panel": {
+        "elementDetail": "Detail prvku",
+        "type": "Typ",
+        "layer": "Vrstva",
+        "dxfLayer": "DXF vrstva",
+        "linkedItems": "Propojené položky",
+        "noLinks": "Žádné propojené položky",
+        "addLink": "Přidat propojení",
+        "selectItem": "Vyberte položku...",
+        "link": "Propojit",
+        "role": {
+          "primary": "Hlavní",
+          "layer": "Vrstva",
+          "appliance": "Spotřebič",
+          "connection": "Rozvod"
+        }
       }
     },
     "payments": {

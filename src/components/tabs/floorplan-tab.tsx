@@ -24,6 +24,7 @@ import { useFloorplan, useImportFloorplan } from "@/lib/floorplan/api";
 import { FloorplanCanvas } from "@/components/tabs/floorplan/floorplan-canvas";
 import { FloorplanImportDialog } from "@/components/tabs/floorplan/floorplan-import-dialog";
 import { FloorplanLayerFilter } from "@/components/tabs/floorplan/floorplan-layer-filter";
+import { FloorplanSidePanel } from "@/components/tabs/floorplan/floorplan-side-panel";
 import { LAYER_META } from "@/lib/floorplan/layer-mapping";
 import type { FloorplanViewType } from "@/lib/floorplan/types";
 import { cn } from "@/lib/utils";
@@ -291,33 +292,18 @@ export function FloorplanTab({ projectId }: { projectId: string }) {
         </Card>
       )}
 
-      {/* Selected element detail (mini panel) */}
-      {selectedElementId && (
-        <Card className="border-primary/30">
-          <CardContent className="py-3">
-            {(() => {
-              const el = data.elements.find((e) => e.id === selectedElementId);
-              if (!el) return null;
-              return (
-                <div className="flex flex-wrap items-center gap-3 type-body">
-                  <span className="type-label-sm text-on-surface-variant">
-                    {t("label.selectedElement")}:
-                  </span>
-                  <span className="font-medium">{el.type}</span>
-                  <span className="type-label-sm text-on-surface-variant">
-                    ({el.dxfLayer || el.layer})
-                  </span>
-                  {el.budgetItemLinks && el.budgetItemLinks.length > 0 && (
-                    <span className="type-label-sm text-success">
-                      ✓ {el.budgetItemLinks.length}× BudgetItem
-                    </span>
-                  )}
-                </div>
-              );
-            })()}
-          </CardContent>
-        </Card>
-      )}
+      {/* Side panel — detail elementu + BudgetItem propojení */}
+      {selectedElementId && (() => {
+        const el = data.elements.find((e) => e.id === selectedElementId);
+        if (!el) return null;
+        return (
+          <FloorplanSidePanel
+            element={el}
+            projectId={projectId}
+            onClose={() => setSelectedElementId(null)}
+          />
+        );
+      })()}
 
       {/* Import dialog */}
       <FloorplanImportDialog
