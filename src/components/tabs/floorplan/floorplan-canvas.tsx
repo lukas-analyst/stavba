@@ -79,6 +79,8 @@ export function FloorplanCanvas({
       y: minY - padding,
       width: width + padding * 2,
       height: height + padding * 2,
+      // Store maxY for Y-axis flip (DXF Y-up → SVG Y-down)
+      maxY: maxY + padding,
     };
   }, [elements, visibleLayers]);
 
@@ -86,6 +88,12 @@ export function FloorplanCanvas({
   const visibleElements = useMemo(() => {
     return elements.filter((e) => visibleLayers.has(e.layer));
   }, [elements, visibleLayers]);
+
+  // Flip Y coordinate: DXF has Y-up, SVG has Y-down.
+  // We flip by: svgY = bounds.maxY - dxfY
+  const flipY = useCallback((y: number): number => {
+    return bounds.maxY - y;
+  }, [bounds]);
 
   // Pan handlers
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
@@ -162,12 +170,12 @@ export function FloorplanCanvas({
       try {
         const pts = JSON.parse(el.points) as number[][];
         if (pts.length === 2) {
-          // Line
+          // Line — flip Y coordinates
           return (
             <line
               key={el.id}
-              x1={pts[0][0]} y1={pts[0][1]}
-              x2={pts[1][0]} y2={pts[1][1]}
+              x1={pts[0][0]} y1={flipY(pts[0][1])}
+              x2={pts[1][0]} y2={flipY(pts[1][1])}
               stroke={strokeColor}
               strokeWidth={strokeWidth}
               onClick={(e) => { e.stopPropagation(); onSelectElement?.(el.id); }}
@@ -175,8 +183,8 @@ export function FloorplanCanvas({
             />
           );
         } else if (pts.length >= 3) {
-          // Polyline / polygon
-          const path = pts.map((p, i) => `${i === 0 ? "M" : "L"} ${p[0]} ${p[1]}`).join(" ");
+          // Polyline / polygon — flip all Y coordinates
+          const path = pts.map((p, i) => `${i === 0 ? "M" : "L"} ${p[0]} ${flipY(p[1])}`).join(" ");
           const isClosed = pts.length >= 3;
           return (
             <path
@@ -195,12 +203,12 @@ export function FloorplanCanvas({
       }
     }
 
-    // Fallback: render as bounding box rectangle
+    // Fallback: render as bounding box rectangle — flip Y
     if (el.width != null && el.height != null) {
       return (
         <rect
           key={el.id}
-          x={el.x} y={el.y}
+          x={el.x} y={flipY(el.y) - el.height}
           width={el.width} height={el.height}
           fill={`${color}33`}
           stroke={strokeColor}
@@ -212,18 +220,18 @@ export function FloorplanCanvas({
       );
     }
 
-    // Point or unknown — render as circle
+    // Point or unknown — render as circle (flip Y)
     return (
       <circle
         key={el.id}
-        cx={el.x} cy={el.y}
+        cx={el.x} cy={flipY(el.y)}
         r={2}
         fill={strokeColor}
         onClick={(e) => { e.stopPropagation(); onSelectElement?.(el.id); }}
         className="cursor-pointer"
       />
     );
-  }, [viewMode, selectedElementId, onSelectElement, getStatusColor, bounds]);
+  }, [viewMode, selectedElementId, onSelectElement, getStatusColor, bounds, flipY]);
 
   if (!bounds) {
     return (
