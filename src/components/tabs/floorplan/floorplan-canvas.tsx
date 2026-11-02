@@ -95,17 +95,28 @@ export function FloorplanCanvas({
     return bounds.maxY - y;
   }, [bounds]);
 
-  // Pan handlers
+  // Pan handlers — track if we actually panned (to avoid deselect on click)
+  const didPanRef = useRef(false);
+
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     if (e.button !== 0) return;
     isPanning.current = true;
+    didPanRef.current = false;
     panStart.current = { x: e.clientX - pan.x, y: e.clientY - pan.y };
   }, [pan]);
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
     if (!isPanning.current) return;
-    setPan({ x: e.clientX - panStart.current.x, y: e.clientY - panStart.current.y });
-  }, []);
+    // Multiply by 1.5 for higher pan sensitivity (T2 fix from testing)
+    const SENSITIVITY = 1.5;
+    const newX = (e.clientX - panStart.current.x) * SENSITIVITY;
+    const newY = (e.clientY - panStart.current.y) * SENSITIVITY;
+    // Mark as panned if movement is more than 3px (avoid micro-jitter)
+    if (Math.abs(newX - pan.x) > 3 || Math.abs(newY - pan.y) > 3) {
+      didPanRef.current = true;
+    }
+    setPan({ x: newX, y: newY });
+  }, [pan]);
 
   const handleMouseUp = useCallback(() => {
     isPanning.current = false;
@@ -262,7 +273,12 @@ export function FloorplanCanvas({
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
         onWheel={handleWheel}
-        onClick={() => onSelectElement?.(null)}
+        onClick={() => {
+          // Only deselect if we didn't just pan (avoid deselect after drag)
+          if (!didPanRef.current) {
+            onSelectElement?.(null);
+          }
+        }}
         preserveAspectRatio="xMidYMid meet"
       >
         {/* Render elements by layer (structural first, annotations last) */}

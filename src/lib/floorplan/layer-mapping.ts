@@ -61,10 +61,16 @@ export const DEFAULT_LAYER_MAPPING: LayerMapping = {
   "Q-TREE": { layer: "terrain", type: "tree" },
 };
 
-// Default fallback for unmapped DXF layers
+// Default fallback for unmapped DXF layers.
+// IMPORTANT: Most DXF files (especially from Czech architects) do NOT use
+// AIA naming conventions (A-WALL, E-LITE, ...). They use generic layer
+// names like "0", "Hladina 1", "Zdivo", "Stěny", etc. We default unmapped
+// layers to "structural" (not "annotation") because the vast majority of
+// DXF entities are walls, doors, windows, etc. — not text annotations.
+// TEXT/MTEXT entities are explicitly mapped to "annotation" in dxf-parser.ts.
 export const DEFAULT_UNMAPPED_LAYER: LayerMappingEntry = {
-  layer: "annotation",
-  type: "annotation",
+  layer: "structural",
+  type: "wall",
 };
 
 // Layer display metadata — colors and labels for the UI
