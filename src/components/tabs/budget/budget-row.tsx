@@ -39,6 +39,7 @@ import {
   AlertTriangle,
   Loader2,
   CheckCircle2,
+  CircleSlash,
   Copy,
   X,
   GripVertical,
@@ -722,11 +723,13 @@ export const BudgetRow = memo(function BudgetRow({
               <DropdownMenuItem
                 onClick={() => update("completed", !item.completed)}
               >
+                <CheckCircle2 className="mr-2 h-3.5 w-3.5 text-success" />
                 {item.completed ? t("menu.markNotDone") : t("menu.markDone")}
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => update("rejected", !item.rejected)}
               >
+                <CircleSlash className="mr-2 h-3.5 w-3.5 text-danger" />
                 {item.rejected ? t("menu.unreject") : t("menu.reject")}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setMoveOpen(true)}>

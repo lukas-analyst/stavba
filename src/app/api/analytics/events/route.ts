@@ -131,13 +131,19 @@ export async function GET(request: Request) {
       dbRead.analyticsEvent.count({ where }),
     ]);
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       entries,
       total,
       page,
       pageSize,
       totalPages: Math.max(1, Math.ceil(total / pageSize)),
     });
+    // Explicit cache-control headers for browsers that don't fully
+    // respect fetch cache: "no-store" (e.g., Opera mobile).
+    response.headers.set("Cache-Control", "no-store, no-cache, must-revalidate");
+    response.headers.set("Pragma", "no-cache");
+    response.headers.set("Expires", "0");
+    return response;
   } catch (error) {
     console.error("GET /api/analytics/events error:", error);
     return NextResponse.json(

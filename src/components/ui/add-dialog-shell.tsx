@@ -163,7 +163,7 @@ export function AddDialogShell({
   if (isMobile) {
     return (
       <Drawer open={open} onOpenChange={onOpenChange}>
-        <DrawerContent className={cn("flex max-h-[92vh] flex-col", maxWidth)}>
+        <DrawerContent className={cn("flex max-h-[92dvh] flex-col", maxWidth)}>
           {header}
           {body}
           {footer}

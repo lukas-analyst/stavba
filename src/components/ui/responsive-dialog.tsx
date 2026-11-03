@@ -45,7 +45,7 @@ export function ResponsiveDialog({
   if (isMobile) {
     return (
       <Drawer open={open} onOpenChange={onOpenChange}>
-        <DrawerContent className={cn("max-h-[92vh] flex flex-col", className)}>
+        <DrawerContent className={cn("max-h-[92dvh] flex flex-col", className)}>
           {children}
         </DrawerContent>
       </Drawer>
