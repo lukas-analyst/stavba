@@ -11,39 +11,62 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Ruler,
   Upload,
   Layers,
   Grid3x3,
   Building,
-  Construction,
-  Loader2,
   RefreshCw,
+  MoreVertical,
+  Trash2,
+  Copy,
+  Pencil,
+  Check,
+  FileText,
 } from "lucide-react";
-import { useFloorplan, useImportFloorplan } from "@/lib/floorplan/api";
+import { useFloorplan, useImportFloorplan, useDeleteFloor, useDuplicateFloor, useUpdateElementGeometry } from "@/lib/floorplan/api";
 import { FloorplanCanvas } from "@/components/tabs/floorplan/floorplan-canvas";
 import { FloorplanImportDialog } from "@/components/tabs/floorplan/floorplan-import-dialog";
 import { FloorplanLayerFilter } from "@/components/tabs/floorplan/floorplan-layer-filter";
 import { FloorplanSidePanel } from "@/components/tabs/floorplan/floorplan-side-panel";
 import { LAYER_META } from "@/lib/floorplan/layer-mapping";
-import type { FloorplanViewType } from "@/lib/floorplan/types";
+import type { FloorplanViewType, FloorplanElement } from "@/lib/floorplan/types";
 import { cn } from "@/lib/utils";
 
 export function FloorplanTab({ projectId }: { projectId: string }) {
   const t = useTranslations("tabs.floorplan");
 
-  // Fetch floorplan data
   const { data, isLoading, error, refetch } = useFloorplan(projectId);
   const importMutation = useImportFloorplan(projectId);
+  const deleteFloorMutation = useDeleteFloor(projectId);
+  const duplicateFloorMutation = useDuplicateFloor(projectId);
+  const updateGeometryMutation = useUpdateElementGeometry(projectId);
 
   // UI state
   const [importOpen, setImportOpen] = useState(false);
   const [selectedFloorId, setSelectedFloorId] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<"geometry" | "status">("geometry");
   const [selectedElementId, setSelectedElementId] = useState<string | null>(null);
+  const [editMode, setEditMode] = useState(false);
   const [visibleLayers, setVisibleLayers] = useState<Set<string>>(
     new Set(Object.entries(LAYER_META).filter(([, m]) => m.defaultVisible).map(([k]) => k)),
   );
+  // Local element state for smooth drag/resize (updated immediately, synced to API on release)
+  const [localElements, setLocalElements] = useState<Record<string, FloorplanElement>>({});
 
   // Separate floors by view type
   const planFloors = useMemo(
@@ -55,7 +78,7 @@ export function FloorplanTab({ projectId }: { projectId: string }) {
     [data],
   );
 
-  // Selected floor — default to first plan floor
+  // Selected floor
   const selectedFloor = useMemo(() => {
     if (selectedFloorId) {
       return data?.floors.find((f) => f.id === selectedFloorId) ?? null;
@@ -63,21 +86,20 @@ export function FloorplanTab({ projectId }: { projectId: string }) {
     return planFloors[0] ?? null;
   }, [data, selectedFloorId, planFloors]);
 
-  // Elements for selected floor
+  // Elements for selected floor (with local overrides for drag/resize)
   const floorElements = useMemo(() => {
     if (!selectedFloor) return [];
-    return data?.elements.filter((e) => e.floorId === selectedFloor.id) ?? [];
-  }, [data, selectedFloor]);
+    const base = data?.elements.filter((e) => e.floorId === selectedFloor.id) ?? [];
+    // Apply local overrides (from drag/resize)
+    return base.map((e) => localElements[e.id] ?? e);
+  }, [data, selectedFloor, localElements]);
 
   // Layer toggle
   const handleToggleLayer = useCallback((layer: string) => {
     setVisibleLayers((prev) => {
       const next = new Set(prev);
-      if (next.has(layer)) {
-        next.delete(layer);
-      } else {
-        next.add(layer);
-      }
+      if (next.has(layer)) next.delete(layer);
+      else next.add(layer);
       return next;
     });
   }, []);
@@ -85,23 +107,61 @@ export function FloorplanTab({ projectId }: { projectId: string }) {
   // Handle import
   const handleImport = useCallback(
     (file: File, floorName: string, viewType: FloorplanViewType) => {
-      importMutation.mutate(
-        { file, floorName, viewType },
-        {
-          onSuccess: () => {
-            setImportOpen(false);
-          },
-        },
-      );
+      importMutation.mutate({ file, floorName, viewType }, {
+        onSuccess: () => setImportOpen(false),
+      });
     },
     [importMutation],
   );
+
+  // Handle element move (drag) — update local state immediately, sync to API
+  const handleElementMove = useCallback((elementId: string, x: number, y: number) => {
+    setLocalElements((prev) => {
+      const original = data?.elements.find((e) => e.id === elementId);
+      if (!original) return prev;
+      return { ...prev, [elementId]: { ...original, x, y } };
+    });
+  }, [data]);
+
+  // Handle element resize — update local state immediately
+  const handleElementResize = useCallback((elementId: string, x: number, y: number, width: number, height: number) => {
+    setLocalElements((prev) => {
+      const original = data?.elements.find((e) => e.id === elementId);
+      if (!original) return prev;
+      return { ...prev, [elementId]: { ...original, x, y, width, height } };
+    });
+  }, [data]);
+
+  // Save changes (exit edit mode) — sync local state to API
+  const handleSaveEdit = useCallback(() => {
+    // Save all changed elements
+    Object.entries(localElements).forEach(([id, el]) => {
+      updateGeometryMutation.mutate({
+        elementId: id,
+        data: { x: el.x, y: el.y, width: el.width ?? undefined, height: el.height ?? undefined },
+      });
+    });
+    setLocalElements({});
+    setEditMode(false);
+  }, [localElements, updateGeometryMutation]);
+
+  // Delete floor handler
+  const handleDeleteFloor = useCallback((floorId: string, floorName: string) => {
+    if (confirm(t("manage.deleteConfirm", { name: floorName }))) {
+      deleteFloorMutation.mutate({ floorId, confirm: true });
+    }
+  }, [deleteFloorMutation, t]);
+
+  // Duplicate floor handler
+  const handleDuplicateFloor = useCallback((floorId: string) => {
+    duplicateFloorMutation.mutate({ floorId });
+  }, [duplicateFloorMutation]);
 
   // Loading state
   if (isLoading) {
     return (
       <div className="space-y-3">
-        <div className="h-9 w-full animate-pulse rounded-md bg-muted/50" />
+        <div className="h-12 w-full animate-pulse rounded-lg bg-muted/50" />
         <div className="h-[500px] w-full animate-pulse rounded-lg bg-muted/30" />
       </div>
     );
@@ -113,12 +173,7 @@ export function FloorplanTab({ projectId }: { projectId: string }) {
       <Card className="border-danger/30 bg-danger-soft/10">
         <CardContent className="flex flex-col items-center gap-3 py-10 text-center">
           <p className="type-body text-danger">{t("error.loadFailed")}</p>
-          <Button
-            variant="outline"
-            size="sm"
-            className="rounded-full gap-1.5"
-            onClick={() => refetch()}
-          >
+          <Button variant="outline" size="sm" className="rounded-full gap-1.5" onClick={() => refetch()}>
             <RefreshCw className="h-3.5 w-3.5" /> {t("button.retry")}
           </Button>
         </CardContent>
@@ -126,7 +181,7 @@ export function FloorplanTab({ projectId }: { projectId: string }) {
     );
   }
 
-  // Empty state — no floors
+  // Empty state
   if (!data || data.floors.length === 0) {
     return (
       <div id="floorplan-root" className="space-y-4">
@@ -142,176 +197,245 @@ export function FloorplanTab({ projectId }: { projectId: string }) {
           </CardHeader>
           <CardContent>
             <div className="flex flex-col items-center gap-3 py-12 text-center">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-surface-container-high">
-                <Upload className="h-6 w-6 text-on-surface-variant" />
+              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-surface-container-high">
+                <Upload className="h-7 w-7 text-on-surface-variant" />
               </div>
               <p className="type-body text-on-surface-variant max-w-md">
                 {t("empty.description")}
               </p>
-              <Button
-                onClick={() => setImportOpen(true)}
-                className="rounded-full gap-2"
-              >
+              <Button onClick={() => setImportOpen(true)} className="rounded-full gap-2">
                 <Upload className="h-4 w-4" />
                 {t("button.import")}
               </Button>
             </div>
           </CardContent>
         </Card>
-
-        <FloorplanImportDialog
-          open={importOpen}
-          onOpenChange={setImportOpen}
-          onImport={handleImport}
-          isLoading={importMutation.isPending}
-        />
+        <FloorplanImportDialog open={importOpen} onOpenChange={setImportOpen} onImport={handleImport} isLoading={importMutation.isPending} />
       </div>
     );
   }
 
-  // Main render — floors exist
+  const selectedElement = selectedElementId
+    ? floorElements.find((e) => e.id === selectedElementId) ?? null
+    : null;
+
   return (
     <div id="floorplan-root" className="space-y-4">
-      {/* Toolbar */}
+      {/* ===== Toolbar ===== */}
       <Card>
         <CardContent className="flex flex-wrap items-center gap-3 py-3">
-          {/* Floor switcher */}
-          <div className="flex items-center gap-2">
-            <Building className="h-4 w-4 text-primary shrink-0" />
-            <select
-              value={selectedFloor?.id ?? ""}
-              onChange={(e) => setSelectedFloorId(e.target.value || null)}
-              className="h-8 rounded-full border border-outline-variant bg-card px-3 type-label hover:bg-surface-container-high focus:outline-none focus:ring-2 focus:ring-primary/30"
-            >
+          {/* Floor switcher — shadcn Select */}
+          <Select
+            value={selectedFloor?.id ?? ""}
+            onValueChange={(v) => setSelectedFloorId(v || null)}
+          >
+            <SelectTrigger className="h-9 w-auto min-w-[160px] gap-2 type-body">
+              <Building className="h-4 w-4 text-primary shrink-0" />
+              <SelectValue placeholder={t("manage.selectFloor")} />
+            </SelectTrigger>
+            <SelectContent>
               {planFloors.map((f) => (
-                <option key={f.id} value={f.id}>
+                <SelectItem key={f.id} value={f.id}>
                   {f.name} ({f._count?.elements ?? 0})
-                </option>
+                </SelectItem>
               ))}
               {elevationFloors.length > 0 && (
-                <optgroup label={t("label.elevation")}>
+                <>
+                  <DropdownMenuSeparator />
                   {elevationFloors.map((f) => (
-                    <option key={f.id} value={f.id}>
+                    <SelectItem key={f.id} value={f.id}>
                       {f.name} ({f._count?.elements ?? 0})
-                    </option>
+                    </SelectItem>
                   ))}
-                </optgroup>
+                </>
               )}
-            </select>
-          </div>
+            </SelectContent>
+          </Select>
+
+          {/* Floor management dropdown */}
+          {selectedFloor && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className="h-9 w-9 p-0">
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start">
+                <DropdownMenuItem onClick={() => handleDuplicateFloor(selectedFloor.id)}>
+                  <Copy className="h-4 w-4 mr-2" />
+                  {t("manage.duplicate")}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={() => handleDeleteFloor(selectedFloor.id, selectedFloor.name)}
+                  className="text-danger focus:text-danger"
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  {t("manage.delete")}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+
+          {/* Divider */}
+          <div className="h-6 w-px bg-outline-variant" />
 
           {/* View mode toggle */}
           <div className="flex items-center gap-1 rounded-full border border-outline-variant p-0.5">
             <button
               onClick={() => setViewMode("geometry")}
               className={cn(
-                "flex items-center gap-1.5 rounded-full px-3 py-1 type-label-sm transition-colors",
+                "flex items-center gap-1.5 rounded-full px-3 py-1.5 type-label-sm transition-colors",
                 viewMode === "geometry"
                   ? "bg-primary text-primary-foreground"
                   : "text-on-surface-variant hover:bg-surface-container-high",
               )}
             >
-              <Grid3x3 className="h-3 w-3" />
+              <Grid3x3 className="h-3.5 w-3.5" />
               {t("mode.geometry")}
             </button>
             <button
               onClick={() => setViewMode("status")}
               className={cn(
-                "flex items-center gap-1.5 rounded-full px-3 py-1 type-label-sm transition-colors",
+                "flex items-center gap-1.5 rounded-full px-3 py-1.5 type-label-sm transition-colors",
                 viewMode === "status"
                   ? "bg-primary text-primary-foreground"
                   : "text-on-surface-variant hover:bg-surface-container-high",
               )}
             >
-              <Layers className="h-3 w-3" />
+              <Layers className="h-3.5 w-3.5" />
               {t("mode.status")}
             </button>
           </div>
 
           {/* Layer filter */}
-          <FloorplanLayerFilter
-            visibleLayers={visibleLayers}
-            onToggleLayer={handleToggleLayer}
-          />
+          <FloorplanLayerFilter visibleLayers={visibleLayers} onToggleLayer={handleToggleLayer} />
 
-          {/* Import button */}
-          <Button
-            variant="outline"
-            size="sm"
-            className="ml-auto rounded-full gap-1.5"
-            onClick={() => setImportOpen(true)}
-          >
-            <Upload className="h-3.5 w-3.5" />
-            {t("button.import")}
-          </Button>
+          {/* Right side actions */}
+          <div className="ml-auto flex items-center gap-2">
+            {/* Edit mode toggle */}
+            {editMode ? (
+              <Button size="sm" className="rounded-full gap-1.5" onClick={handleSaveEdit}>
+                <Check className="h-3.5 w-3.5" />
+                {t("button.save")}
+              </Button>
+            ) : (
+              <Button
+                variant="outline"
+                size="sm"
+                className="rounded-full gap-1.5"
+                onClick={() => setEditMode(true)}
+              >
+                <Pencil className="h-3.5 w-3.5" />
+                {t("button.edit")}
+              </Button>
+            )}
+
+            {/* Import button */}
+            <Button variant="outline" size="sm" className="rounded-full gap-1.5" onClick={() => setImportOpen(true)}>
+              <Upload className="h-3.5 w-3.5" />
+              {t("button.import")}
+            </Button>
+          </div>
         </CardContent>
       </Card>
 
-      {/* Section 1: Plan (top view) */}
-      {selectedFloor && selectedFloor.viewType === "plan" && (
+      {/* ===== Main content: canvas + side panel (desktop side-by-side) ===== */}
+      <div className="flex flex-col gap-4 lg:flex-row">
+        {/* Canvas section */}
+        <div className="flex-1 min-w-0 space-y-4">
+          {selectedFloor && (
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="type-title flex items-center gap-2">
+                  <Ruler className="h-4 w-4 text-primary" />
+                  {selectedFloor.name} — {selectedFloor.viewType === "plan" ? t("label.plan") : t("label.elevation")}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <FloorplanCanvas
+                  elements={floorElements}
+                  visibleLayers={visibleLayers}
+                  viewMode={viewMode}
+                  selectedElementId={selectedElementId}
+                  onSelectElement={setSelectedElementId}
+                  onElementMove={handleElementMove}
+                  onElementResize={handleElementResize}
+                  editMode={editMode}
+                  className="h-[500px]"
+                />
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Elevation section (if exists) */}
+          {selectedFloor?.viewType === "plan" && elevationFloors.length > 0 && (
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="type-title flex items-center gap-2">
+                  <Building className="h-4 w-4 text-info" />
+                  {elevationFloors[0].name} — {t("label.elevation")}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <FloorplanCanvas
+                  elements={data.elements.filter((e) => e.floorId === elevationFloors[0].id)}
+                  visibleLayers={visibleLayers}
+                  viewMode={viewMode}
+                  selectedElementId={selectedElementId}
+                  onSelectElement={setSelectedElementId}
+                  className="h-[300px]"
+                />
+              </CardContent>
+            </Card>
+          )}
+        </div>
+
+        {/* Side panel (desktop: sticky right column, mobile: below) */}
+        {selectedElement && (
+          <div className="lg:w-[340px] lg:shrink-0">
+            <div className="lg:sticky lg:top-4">
+              <FloorplanSidePanel
+                element={selectedElement}
+                projectId={projectId}
+                onClose={() => setSelectedElementId(null)}
+              />
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* ===== DXF sources list ===== */}
+      {data.sources.length > 0 && (
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="type-title flex items-center gap-2">
-              <Ruler className="h-4 w-4 text-primary" />
-              {selectedFloor.name} — {t("label.plan")}
+              <FileText className="h-4 w-4 text-on-surface-variant" />
+              {t("manage.sourcesTitle")}
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <FloorplanCanvas
-              elements={floorElements}
-              visibleLayers={visibleLayers}
-              viewMode={viewMode}
-              selectedElementId={selectedElementId}
-              onSelectElement={setSelectedElementId}
-              className="h-[500px]"
-            />
+            <div className="space-y-1.5">
+              {data.sources.map((source) => (
+                <div
+                  key={source.id}
+                  className="flex items-center gap-3 rounded-lg border border-outline-variant bg-surface-container-low p-2.5"
+                >
+                  <FileText className="h-4 w-4 text-on-surface-variant shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <div className="type-body font-medium truncate">{source.fileName}</div>
+                    <div className="type-label-sm text-on-surface-variant">
+                      {(source.fileSize / 1024).toFixed(1)} KB · {source.entityCount} prvků · {new Date(source.importedAt).toLocaleDateString("cs-CZ")}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </CardContent>
         </Card>
       )}
 
-      {/* Section 2: Elevation (side view) — if a plan floor is selected,
-          show the first elevation floor (independent, Q40) */}
-      {selectedFloor?.viewType === "plan" && elevationFloors.length > 0 && (
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="type-title flex items-center gap-2">
-              <Building className="h-4 w-4 text-info" />
-              {elevationFloors[0].name} — {t("label.elevation")}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <FloorplanCanvas
-              elements={data.elements.filter((e) => e.floorId === elevationFloors[0].id)}
-              visibleLayers={visibleLayers}
-              viewMode={viewMode}
-              selectedElementId={selectedElementId}
-              onSelectElement={setSelectedElementId}
-              className="h-[300px]"
-            />
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Side panel — detail elementu + BudgetItem propojení */}
-      {selectedElementId && (() => {
-        const el = data.elements.find((e) => e.id === selectedElementId);
-        if (!el) return null;
-        return (
-          <FloorplanSidePanel
-            element={el}
-            projectId={projectId}
-            onClose={() => setSelectedElementId(null)}
-          />
-        );
-      })()}
-
-      {/* Import dialog */}
-      <FloorplanImportDialog
-        open={importOpen}
-        onOpenChange={setImportOpen}
-        onImport={handleImport}
-        isLoading={importMutation.isPending}
-      />
+      <FloorplanImportDialog open={importOpen} onOpenChange={setImportOpen} onImport={handleImport} isLoading={importMutation.isPending} />
     </div>
   );
 }

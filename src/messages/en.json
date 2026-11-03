@@ -1822,7 +1822,9 @@
       },
       "button": {
         "import": "Import DXF",
-        "retry": "Retry"
+        "retry": "Retry",
+        "edit": "Edit",
+        "save": "Save"
       },
       "empty": {
         "description": "No floorplan has been uploaded yet. Import a DXF file from a CAD program to display the visual floorplan."
@@ -1871,6 +1873,13 @@
           "appliance": "Appliance",
           "connection": "Connection"
         }
+      },
+      "manage": {
+        "selectFloor": "Select floor",
+        "duplicate": "Duplicate",
+        "delete": "Delete",
+        "deleteConfirm": "Are you sure you want to delete floor \"{name}\"? All elements and linked files will be removed.",
+        "sourcesTitle": "Imported files"
       }
     },
     "payments": {

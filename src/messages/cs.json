@@ -1822,7 +1822,9 @@
       },
       "button": {
         "import": "Importovat DXF",
-        "retry": "Zkusit znovu"
+        "retry": "Zkusit znovu",
+        "edit": "Upravit",
+        "save": "Uložit"
       },
       "empty": {
         "description": "Zatím nebyl nahrán žádný půdorys. Importujte DXF soubor z CAD programu pro zobrazení vizuálního půdorysu."
@@ -1871,6 +1873,13 @@
           "appliance": "Spotřebič",
           "connection": "Rozvod"
         }
+      },
+      "manage": {
+        "selectFloor": "Vyberte patro",
+        "duplicate": "Duplikovat",
+        "delete": "Smazat",
+        "deleteConfirm": "Opravdu chcete smazat patro \"{name}\"? Všechny prvky a propojené soubory budou odstraněny.",
+        "sourcesTitle": "Importované soubory"
       }
     },
     "payments": {

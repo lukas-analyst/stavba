@@ -238,3 +238,73 @@ export function useReleaseEditLock(projectId: string) {
     },
   });
 }
+
+// Delete a floor (with double-opt-in)
+export function useDeleteFloor(projectId: string) {
+  const qc = useQueryClient();
+  return useMutation<
+    { deleted?: boolean; requiresConfirmation?: boolean; floor?: { name: string; elementsCount: number; sourcesCount: number } },
+    Error,
+    { floorId: string; confirm?: boolean }
+  >({
+    mutationFn: async ({ floorId, confirm }) => {
+      const params = confirm ? "?confirm=true" : "";
+      const res = await fetch(
+        `/api/projects/${projectId}/floorplan/floors/${floorId}${params}`,
+        { method: "DELETE" },
+      );
+      if (!res.ok) throw new Error("Failed to delete floor");
+      return res.json();
+    },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: floorplanKeys.all(projectId) });
+    },
+  });
+}
+
+// Duplicate a floor
+export function useDuplicateFloor(projectId: string) {
+  const qc = useQueryClient();
+  return useMutation<
+    { id: string; name: string; viewType: string },
+    Error,
+    { floorId: string }
+  >({
+    mutationFn: async ({ floorId }) => {
+      const res = await fetch(
+        `/api/projects/${projectId}/floorplan/floors/${floorId}/duplicate`,
+        { method: "POST" },
+      );
+      if (!res.ok) throw new Error("Failed to duplicate floor");
+      return res.json();
+    },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: floorplanKeys.all(projectId) });
+    },
+  });
+}
+
+// Update element geometry (drag/resize)
+export function useUpdateElementGeometry(projectId: string) {
+  const qc = useQueryClient();
+  return useMutation<
+    unknown,
+    Error,
+    { elementId: string; data: { x?: number; y?: number; width?: number; height?: number } }
+  >({
+    mutationFn: async ({ elementId, data }) => {
+      const res = await fetch(
+        `/api/projects/${projectId}/floorplan/elements/${elementId}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data),
+        },
+      );
+      if (!res.ok) throw new Error("Failed to update element");
+      return res.json();
+    },
+    // No onSuccess invalidation — we update local state for smooth UX
+    // (the parent component handles state update)
+  });
+}
