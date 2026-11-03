@@ -682,7 +682,9 @@
         "rejected": "Rejected"
       },
       "filter": {
-        "phase": "Phase:"
+        "phase": "Phase",
+        "all": "All",
+        "clear": "Clear filter"
       },
       "toolbar": {
         "search": "Search budget…",

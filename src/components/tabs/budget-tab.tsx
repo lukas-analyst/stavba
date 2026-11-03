@@ -21,6 +21,8 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 import {
   Select,
   SelectContent,
@@ -28,6 +30,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+  DropdownMenuLabel,
+} from "@/components/ui/dropdown-menu";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -49,13 +59,14 @@ import {
   ListChecks,
   CircleSlash,
   Ban,
+  Layers,
+  Check,
 } from "lucide-react";
-import { PHASES } from "@/lib/format";
+import { PHASES, PHASE_BG_COLORS } from "@/lib/format";
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";
 import { BudgetItemDialog } from "@/components/budget-item-dialog";
 import { EmptyStateBox } from "@/components/empty-state-box";
-import { FilterChip, FilterChipGroup } from "@/components/ui/filter-chip";
 import { SegmentedButton } from "@/components/ui/segmented-button";
 import { useAppStore } from "@/lib/store";
 import {
@@ -731,31 +742,72 @@ function BudgetTab({ projectId, dragEndHandlerRef }: { projectId: string; dragEn
           />
         </div>
 
-        {/* Phase filter chips (multi-select) — wraps naturally inside its
-            FilterChipGroup container; the group itself acts as a single
-            flex item in the wrapping toolbar. */}
-        <FilterChipGroup
-          hasActiveFilters={phaseFilter.size > 0}
-          onClear={() => setPhaseFilter(new Set())}
-        >
-          <span className="mr-1 type-label font-medium text-on-surface-variant">{t("filter.phase")}</span>
-          {PHASES.map((phase) => (
-            <FilterChip
-              key={phase}
-              label={tPhases(phase)}
-              selected={phaseFilter.has(phase)}
-              onClick={() => {
-                const next = new Set(phaseFilter);
-                if (next.has(phase)) {
-                  next.delete(phase);
-                } else {
-                  next.add(phase);
-                }
-                setPhaseFilter(next);
-              }}
-            />
-          ))}
-        </FilterChipGroup>
+        {/* Phase filter dropdown (multi-select with checkboxes) */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-1.5 rounded-full"
+            >
+              <Layers className="h-3.5 w-3.5" />
+              <span className="type-label">{t("filter.phase")}</span>
+              {phaseFilter.size > 0 && (
+                <Badge variant="secondary" className="type-label-sm rounded-full px-1.5 py-0">
+                  {phaseFilter.size}
+                </Badge>
+              )}
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="min-w-[200px]">
+            {/* Select All / Clear */}
+            <DropdownMenuItem
+              onClick={() => setPhaseFilter(new Set())}
+              className="gap-2"
+            >
+              <Check className={cn("h-3.5 w-3.5", phaseFilter.size === 0 ? "opacity-100" : "opacity-0")} />
+              {t("filter.all")}
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            {/* Phase checkboxes */}
+            {PHASES.map((phase) => (
+              <DropdownMenuItem
+                key={phase}
+                onClick={() => {
+                  const next = new Set(phaseFilter);
+                  if (next.has(phase)) {
+                    next.delete(phase);
+                  } else {
+                    next.add(phase);
+                  }
+                  setPhaseFilter(next);
+                }}
+                className="gap-2"
+              >
+                <Check className={cn("h-3.5 w-3.5", phaseFilter.has(phase) ? "opacity-100" : "opacity-0")} />
+                <span
+                  className={cn(
+                    "h-2 w-2 rounded-full shrink-0",
+                    PHASE_BG_COLORS[phase as keyof typeof PHASE_BG_COLORS] || "bg-muted",
+                  )}
+                />
+                {tPhases(phase)}
+              </DropdownMenuItem>
+            ))}
+            {phaseFilter.size > 0 && (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={() => setPhaseFilter(new Set())}
+                  className="gap-2 text-muted-foreground"
+                >
+                  <Ban className="h-3.5 w-3.5" />
+                  {t("filter.clear")}
+                </DropdownMenuItem>
+              </>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
 
         {/* Desktop "Add item" button — hidden on mobile (mobile uses the FAB).
             Pushed to the end of the toolbar with ml-auto so it sits at the

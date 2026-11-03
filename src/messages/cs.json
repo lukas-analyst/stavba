@@ -682,7 +682,9 @@
         "rejected": "Zavrženo"
       },
       "filter": {
-        "phase": "Fáze:"
+        "phase": "Fáze",
+        "all": "Vše",
+        "clear": "Zrušit filtr"
       },
       "toolbar": {
         "search": "Hledat v rozpočtu…",
