@@ -451,7 +451,6 @@ export function FloorplanCanvas({
         viewBox={viewBox}
         className="w-full h-full"
         style={{ cursor: editMode ? "default" : "grab" }}
-        data-panning={isPanning.current ? "true" : undefined}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
