@@ -53,8 +53,9 @@ export function FloorplanSidePanel({ element, projectId, onClose }: Props) {
         cache: "no-store",
       });
       if (!res.ok) throw new Error("Failed to fetch budget items");
+      // API returns a flat array of items (not wrapped in { items: [...] })
       const json = await res.json();
-      return json.items ?? [];
+      return Array.isArray(json) ? json : (json.items ?? []);
     },
     enabled: !!projectId,
   });
