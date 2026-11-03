@@ -97,11 +97,13 @@ export function FloorplanCanvas({
 
   // Pan handlers — track if we actually panned (to avoid deselect on click)
   const didPanRef = useRef(false);
+  const mouseDownPosRef = useRef({ x: 0, y: 0 });
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     if (e.button !== 0) return;
     isPanning.current = true;
     didPanRef.current = false;
+    mouseDownPosRef.current = { x: e.clientX, y: e.clientY };
     panStart.current = { x: e.clientX - pan.x, y: e.clientY - pan.y };
   }, [pan]);
 
@@ -111,8 +113,10 @@ export function FloorplanCanvas({
     const SENSITIVITY = 1.5;
     const newX = (e.clientX - panStart.current.x) * SENSITIVITY;
     const newY = (e.clientY - panStart.current.y) * SENSITIVITY;
-    // Mark as panned if movement is more than 3px (avoid micro-jitter)
-    if (Math.abs(newX - pan.x) > 3 || Math.abs(newY - pan.y) > 3) {
+    // Mark as panned if mouse moved more than 3px from original position
+    const movedX = Math.abs(e.clientX - mouseDownPosRef.current.x);
+    const movedY = Math.abs(e.clientY - mouseDownPosRef.current.y);
+    if (movedX > 3 || movedY > 3) {
       didPanRef.current = true;
     }
     setPan({ x: newX, y: newY });
@@ -178,11 +182,15 @@ export function FloorplanCanvas({
     // Wider invisible stroke for easier click detection (hit area)
     const hitWidth = strokeWidth + bounds.width / 200;
 
-    // Click handler — stop propagation so SVG onClick (deselect) doesn't fire
-    const handleClick = (e: React.MouseEvent) => {
+    // Click handler — called on mouseup to select element.
+    // Uses onMouseUp instead of onClick because onClick on SVG <g> can be
+    // unreliable when pan handlers are also on the SVG element.
+    const handleSelect = (e: React.MouseEvent) => {
       e.stopPropagation();
-      e.preventDefault();
-      onSelectElement?.(el.id);
+      // Only select if this was a click, not a drag-pan
+      if (!didPanRef.current) {
+        onSelectElement?.(el.id);
+      }
     };
 
     // Render based on element type / points
@@ -192,7 +200,7 @@ export function FloorplanCanvas({
         if (pts.length === 2) {
           // Line — flip Y coordinates
           return (
-            <g key={el.id} className="cursor-pointer" onClick={handleClick}>
+            <g key={el.id} className="cursor-pointer" onMouseUp={handleSelect}>
               {/* Invisible wide stroke for click hit area */}
               <line
                 x1={pts[0][0]} y1={flipY(pts[0][1])}
@@ -216,7 +224,7 @@ export function FloorplanCanvas({
           const path = pts.map((p, i) => `${i === 0 ? "M" : "L"} ${p[0]} ${flipY(p[1])}`).join(" ");
           const isClosed = pts.length >= 3;
           return (
-            <g key={el.id} className="cursor-pointer" onClick={handleClick}>
+            <g key={el.id} className="cursor-pointer" onMouseUp={handleSelect}>
               {/* Invisible wide stroke for click hit area */}
               <path
                 d={path}
@@ -244,7 +252,7 @@ export function FloorplanCanvas({
     // Fallback: render as bounding box rectangle — flip Y
     if (el.width != null && el.height != null) {
       return (
-        <g key={el.id} className="cursor-pointer" onClick={handleClick}>
+        <g key={el.id} className="cursor-pointer" onMouseUp={handleSelect}>
           {/* Visible rect */}
           <rect
             x={el.x} y={flipY(el.y) - el.height}
@@ -260,7 +268,7 @@ export function FloorplanCanvas({
 
     // Point or unknown — render as circle (flip Y)
     return (
-      <g key={el.id} className="cursor-pointer" onClick={handleClick}>
+      <g key={el.id} className="cursor-pointer" onMouseUp={handleSelect}>
         {/* Invisible wider circle for hit area */}
         <circle
           cx={el.x} cy={flipY(el.y)}
@@ -306,15 +314,20 @@ export function FloorplanCanvas({
         className="w-full h-full cursor-grab active:cursor-grabbing"
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseUp}
-        onWheel={handleWheel}
-        onClick={() => {
-          // Only deselect if we didn't just pan (avoid deselect after drag)
+        onMouseUp={(e) => {
+          handleMouseUp();
+          // Deselect when clicking on empty SVG (not on an element)
+          // Elements use onMouseUp with stopPropagation, so this only
+          // fires when user clicks empty space.
           if (!didPanRef.current) {
-            onSelectElement?.(null);
+            // Check if the target is the SVG itself (not a child element)
+            if (e.target === e.currentTarget) {
+              onSelectElement?.(null);
+            }
           }
         }}
+        onMouseLeave={handleMouseUp}
+        onWheel={handleWheel}
         preserveAspectRatio="xMidYMid meet"
       >
         {/* Render elements by layer (structural first, annotations last) */}
