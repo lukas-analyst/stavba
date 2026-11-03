@@ -48,7 +48,6 @@
       "notes": "Poznámky",
       "management": "Správa projektu",
       "telemetry": "Telemetrie",
-      "floorplan": "Půdorys",
       "admin": "Administrace"
     }
   },
@@ -1805,81 +1804,6 @@
         "hour": "před {n, plural, one {hodinou} other {{n} hodinami}}",
         "day": "před {n, plural, one {dnem} other {{n} dny}}",
         "yesterday": "včera"
-      }
-    },
-    "floorplan": {
-      "title": "Půdorys objektu",
-      "description": "Vizuální půdorys nemovitosti s propojením na položky rozpočtu.",
-      "comingSoon": "Modul Půdorys je ve vývoji. Brzy zde budete moci nahrát DXF soubor, zobrazit půdorys a propojit prvky s položkami rozpočtu.",
-      "label": {
-        "plan": "Půdorys",
-        "elevation": "Nárys",
-        "selectedElement": "Vybraný prvek"
-      },
-      "mode": {
-        "geometry": "Geometrie",
-        "status": "Stav"
-      },
-      "button": {
-        "import": "Importovat DXF",
-        "retry": "Zkusit znovu",
-        "edit": "Upravit",
-        "save": "Uložit"
-      },
-      "empty": {
-        "description": "Zatím nebyl nahrán žádný půdorys. Importujte DXF soubor z CAD programu pro zobrazení vizuálního půdorysu."
-      },
-      "error": {
-        "loadFailed": "Nepodařilo se načíst data půdorysu."
-      },
-      "layers": {
-        "title": "Vrstvy",
-        "structural": "Konstrukce",
-        "electrical": "Elektro",
-        "data": "Data",
-        "plumbing": "Voda",
-        "gas": "Plyn",
-        "drainage": "Odpady",
-        "terrain": "Terén",
-        "annotation": "Popisky"
-      },
-      "import": {
-        "title": "Importovat DXF",
-        "description": "Nahrajte DXF soubor z CAD programu (AutoCAD, Archicad, LibreCAD).",
-        "fileLabel": "DXF soubor",
-        "dropzone": "Klikněte pro výběr .dxf souboru",
-        "floorNameLabel": "Název patra",
-        "floorNamePlaceholder": "Přízemí, 1. patro, Sklep...",
-        "viewTypeLabel": "Typ pohledu",
-        "viewTypePlan": "Půdorys (shora)",
-        "viewTypeElevation": "Nárys (zboku)",
-        "import": "Importovat",
-        "importing": "Importuji...",
-        "cancel": "Zrušit"
-      },
-      "panel": {
-        "elementDetail": "Detail prvku",
-        "type": "Typ",
-        "layer": "Vrstva",
-        "dxfLayer": "DXF vrstva",
-        "linkedItems": "Propojené položky",
-        "noLinks": "Žádné propojené položky",
-        "addLink": "Přidat propojení",
-        "selectItem": "Vyberte položku...",
-        "link": "Propojit",
-        "role": {
-          "primary": "Hlavní",
-          "layer": "Vrstva",
-          "appliance": "Spotřebič",
-          "connection": "Rozvod"
-        }
-      },
-      "manage": {
-        "selectFloor": "Vyberte patro",
-        "duplicate": "Duplikovat",
-        "delete": "Smazat",
-        "deleteConfirm": "Opravdu chcete smazat patro \"{name}\"? Všechny prvky a propojené soubory budou odstraněny.",
-        "sourcesTitle": "Importované soubory"
       }
     },
     "payments": {

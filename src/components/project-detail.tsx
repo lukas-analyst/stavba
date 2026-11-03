@@ -50,10 +50,6 @@ const TelemetryTab = dynamic(() => import("@/components/tabs/telemetry-tab").the
   ssr: false,
   loading: () => <TabSkeleton />,
 });
-const FloorplanTab = dynamic(() => import("@/components/tabs/floorplan-tab").then(m => m.FloorplanTab), {
-  ssr: false,
-  loading: () => <TabSkeleton />,
-});
 const AdminTab = dynamic(() => import("@/components/tabs/admin-tab").then(m => m.AdminTab), {
   ssr: false,
   loading: () => <TabSkeleton />,
@@ -229,7 +225,6 @@ export function ProjectDetail({ project }: { project: Project }) {
         {activeTab === "notes" && <NotesTab projectId={project.id} />}
         {activeTab === "management" && <ProjectManagementTab projectId={project.id} />}
         {activeTab === "telemetry" && <TelemetryTab projectId={project.id} />}
-        {activeTab === "floorplan" && <FloorplanTab projectId={project.id} />}
         {activeTab === "admin" && <AdminTab />}
       </div>
 

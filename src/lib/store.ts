@@ -13,7 +13,6 @@ export type TabId =
   | "notes"
   | "management"
   | "telemetry"
-  | "floorplan"
   | "settings"
   | "admin";
 
