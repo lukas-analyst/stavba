@@ -175,6 +175,15 @@ export function FloorplanCanvas({
     // Scale stroke width with bounds — DXF coordinates are in cm (thousands),
     // so a strokeWidth of 1 would be invisible. Use a fraction of bounds.
     const strokeWidth = (isSelected ? 3 : 2) * (bounds.width / 1000);
+    // Wider invisible stroke for easier click detection (hit area)
+    const hitWidth = strokeWidth + bounds.width / 200;
+
+    // Click handler — stop propagation so SVG onClick (deselect) doesn't fire
+    const handleClick = (e: React.MouseEvent) => {
+      e.stopPropagation();
+      e.preventDefault();
+      onSelectElement?.(el.id);
+    };
 
     // Render based on element type / points
     if (el.points) {
@@ -183,30 +192,48 @@ export function FloorplanCanvas({
         if (pts.length === 2) {
           // Line — flip Y coordinates
           return (
-            <line
-              key={el.id}
-              x1={pts[0][0]} y1={flipY(pts[0][1])}
-              x2={pts[1][0]} y2={flipY(pts[1][1])}
-              stroke={strokeColor}
-              strokeWidth={strokeWidth}
-              onClick={(e) => { e.stopPropagation(); onSelectElement?.(el.id); }}
-              className="cursor-pointer"
-            />
+            <g key={el.id} className="cursor-pointer" onClick={handleClick}>
+              {/* Invisible wide stroke for click hit area */}
+              <line
+                x1={pts[0][0]} y1={flipY(pts[0][1])}
+                x2={pts[1][0]} y2={flipY(pts[1][1])}
+                stroke="transparent"
+                strokeWidth={hitWidth}
+                pointerEvents="stroke"
+              />
+              {/* Visible line */}
+              <line
+                x1={pts[0][0]} y1={flipY(pts[0][1])}
+                x2={pts[1][0]} y2={flipY(pts[1][1])}
+                stroke={strokeColor}
+                strokeWidth={strokeWidth}
+                pointerEvents="none"
+              />
+            </g>
           );
         } else if (pts.length >= 3) {
           // Polyline / polygon — flip all Y coordinates
           const path = pts.map((p, i) => `${i === 0 ? "M" : "L"} ${p[0]} ${flipY(p[1])}`).join(" ");
           const isClosed = pts.length >= 3;
           return (
-            <path
-              key={el.id}
-              d={path}
-              fill={isClosed ? `${color}33` : "none"}
-              stroke={strokeColor}
-              strokeWidth={strokeWidth}
-              onClick={(e) => { e.stopPropagation(); onSelectElement?.(el.id); }}
-              className="cursor-pointer"
-            />
+            <g key={el.id} className="cursor-pointer" onClick={handleClick}>
+              {/* Invisible wide stroke for click hit area */}
+              <path
+                d={path}
+                fill="none"
+                stroke="transparent"
+                strokeWidth={hitWidth}
+                pointerEvents="stroke"
+              />
+              {/* Visible path */}
+              <path
+                d={path}
+                fill={isClosed ? `${color}33` : "none"}
+                stroke={strokeColor}
+                strokeWidth={strokeWidth}
+                pointerEvents="none"
+              />
+            </g>
           );
         }
       } catch {
@@ -217,30 +244,39 @@ export function FloorplanCanvas({
     // Fallback: render as bounding box rectangle — flip Y
     if (el.width != null && el.height != null) {
       return (
-        <rect
-          key={el.id}
-          x={el.x} y={flipY(el.y) - el.height}
-          width={el.width} height={el.height}
-          fill={`${color}33`}
-          stroke={strokeColor}
-          strokeWidth={strokeWidth}
-          rx={el.type === "outlet" || el.type === "light" ? 999 : 0}
-          onClick={(e) => { e.stopPropagation(); onSelectElement?.(el.id); }}
-          className="cursor-pointer"
-        />
+        <g key={el.id} className="cursor-pointer" onClick={handleClick}>
+          {/* Visible rect */}
+          <rect
+            x={el.x} y={flipY(el.y) - el.height}
+            width={el.width} height={el.height}
+            fill={`${color}33`}
+            stroke={strokeColor}
+            strokeWidth={strokeWidth}
+            rx={el.type === "outlet" || el.type === "light" ? 999 : 0}
+          />
+        </g>
       );
     }
 
     // Point or unknown — render as circle (flip Y)
     return (
-      <circle
-        key={el.id}
-        cx={el.x} cy={flipY(el.y)}
-        r={2}
-        fill={strokeColor}
-        onClick={(e) => { e.stopPropagation(); onSelectElement?.(el.id); }}
-        className="cursor-pointer"
-      />
+      <g key={el.id} className="cursor-pointer" onClick={handleClick}>
+        {/* Invisible wider circle for hit area */}
+        <circle
+          cx={el.x} cy={flipY(el.y)}
+          r={strokeWidth * 2}
+          fill="transparent"
+          stroke="transparent"
+          pointerEvents="all"
+        />
+        {/* Visible circle */}
+        <circle
+          cx={el.x} cy={flipY(el.y)}
+          r={strokeWidth}
+          fill={strokeColor}
+          pointerEvents="none"
+        />
+      </g>
     );
   }, [viewMode, selectedElementId, onSelectElement, getStatusColor, bounds, flipY]);
 
