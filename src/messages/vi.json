@@ -2435,7 +2435,10 @@
         "auditDesc": "Các thay đổi gần đây trong dự án",
         "trend": "Xu hướng chi tiêu",
         "trendDesc": "Biểu đồ chi tiêu theo thời gian",
-        "comingSoon": "Sắp ra mắt"
+        "comingSoon": "Sắp ra mắt",
+        "sections.planCost": "Chi phí kế hoạch",
+        "sections.actualCost": "Chi phí thực tế",
+        "sections.phase": "Giai đoạn"
       },
       "locale": {
         "title": "Ngôn ngữ và tiền tệ",

@@ -8,8 +8,10 @@ export type PdfSectionId =
   | "summary"
   | "budget_items"
   | "status"
-  | "costs"
+  | "plan_cost"
+  | "actual_cost"
   | "dates"
+  | "phase"
   | "property"
   | "alerts"
   | "projection"
@@ -25,8 +27,10 @@ export const ALL_SECTIONS: { id: PdfSectionId; labelKey: string; enabled: boolea
   { id: "summary", labelKey: "sections.summary", enabled: true },
   { id: "budget_items", labelKey: "sections.budgetItems", enabled: true },
   { id: "status", labelKey: "sections.status", enabled: true },
-  { id: "costs", labelKey: "sections.costs", enabled: true },
+  { id: "plan_cost", labelKey: "sections.planCost", enabled: true },
+  { id: "actual_cost", labelKey: "sections.actualCost", enabled: true },
   { id: "dates", labelKey: "sections.dates", enabled: true },
+  { id: "phase", labelKey: "sections.phase", enabled: true },
   { id: "property", labelKey: "sections.property", enabled: true },
   { id: "alerts", labelKey: "sections.alerts", enabled: true },
   { id: "projection", labelKey: "sections.projection", enabled: true },
@@ -38,7 +42,7 @@ export const ALL_SECTIONS: { id: PdfSectionId; labelKey: string; enabled: boolea
 ];
 
 export const SUB_SECTIONS: Record<string, PdfSectionId[]> = {
-  budget_items: ["status", "costs", "dates"],
+  budget_items: ["status", "plan_cost", "actual_cost", "dates", "phase"],
 };
 
 export type PdfExportOptions = {

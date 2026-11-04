@@ -2435,7 +2435,10 @@
         "auditDesc": "Modifiche recenti al progetto",
         "trend": "Trend di spesa",
         "trendDesc": "Grafico della spesa nel tempo",
-        "comingSoon": "Prossimamente"
+        "comingSoon": "Prossimamente",
+        "sections.planCost": "Costi pianificati",
+        "sections.actualCost": "Costi effettivi",
+        "sections.phase": "Fase"
       },
       "locale": {
         "title": "Lingua e valuta",

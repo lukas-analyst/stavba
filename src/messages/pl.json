@@ -2435,7 +2435,10 @@
         "auditDesc": "Ostatnie zmiany w projekcie",
         "trend": "Trend wydatków",
         "trendDesc": "Wykres wydatków w czasie",
-        "comingSoon": "Wkrótce"
+        "comingSoon": "Wkrótce",
+        "sections.planCost": "Koszty planowane",
+        "sections.actualCost": "Koszty rzeczywiste",
+        "sections.phase": "Faza"
       },
       "locale": {
         "title": "Język i waluta",

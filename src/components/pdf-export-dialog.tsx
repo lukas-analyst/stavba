@@ -30,7 +30,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Flag } from "@/components/ui/flags";
 import {
   Loader2,
   FileDown,
@@ -102,8 +101,10 @@ const DEFAULT_SECTIONS: PdfSectionId[] = [
   "summary",
   "budget_items",
   "status",
-  "costs",
+  "plan_cost",
+  "actual_cost",
   "dates",
+  "phase",
   "property",
   "alerts",
   "projection",
@@ -577,10 +578,7 @@ function PdfExportBody({
             </Label>
             <Select value={locale} onValueChange={onLocaleChange}>
               <SelectTrigger id="pdf-locale" className="w-full gap-2">
-                <Flag
-                  code={locale}
-                  className="h-3.5 w-5 rounded-[2px] overflow-hidden shrink-0"
-                />
+                <Globe className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -588,10 +586,6 @@ function PdfExportBody({
                   const meta = LOCALE_META[loc];
                   return (
                     <SelectItem key={loc} value={loc} textValue={meta.name}>
-                      <Flag
-                        code={loc}
-                        className="h-3.5 w-5 rounded-[2px] overflow-hidden shrink-0"
-                      />
                       <span>{meta.name}</span>
                     </SelectItem>
                   );
@@ -613,10 +607,6 @@ function PdfExportBody({
               <SelectContent>
                 {COMMON_CURRENCIES.map((c) => (
                   <SelectItem key={c.code} value={c.code} textValue={c.label}>
-                    <Flag
-                      code={c.code}
-                      className="h-3.5 w-5 rounded-[2px] overflow-hidden shrink-0"
-                    />
                     <span>{c.label}</span>
                   </SelectItem>
                 ))}

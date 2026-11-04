@@ -2438,7 +2438,10 @@
         "auditDesc": "Recent changes made to the project",
         "trend": "Spending trend",
         "trendDesc": "Spending over time chart",
-        "comingSoon": "Coming soon"
+        "comingSoon": "Coming soon",
+        "sections.planCost": "Planned costs",
+        "sections.actualCost": "Actual costs",
+        "sections.phase": "Phase"
       },
       "locale": {
         "title": "Language and currency",

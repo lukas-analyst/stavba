@@ -2438,7 +2438,10 @@
         "auditDesc": "Poslední změny provedené v projektu",
         "trend": "Trend utrácení",
         "trendDesc": "Graf utrácení v čase",
-        "comingSoon": "Brzy dostupné"
+        "comingSoon": "Brzy dostupné",
+        "sections.planCost": "Plánované náklady",
+        "sections.actualCost": "Skutečné náklady",
+        "sections.phase": "Fáze"
       },
       "locale": {
         "title": "Jazyk a měna",

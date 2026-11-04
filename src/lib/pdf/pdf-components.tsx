@@ -18,7 +18,9 @@ import {
   View,
   Text,
   StyleSheet,
+  Font,
 } from "@react-pdf/renderer";
+import path from "path";
 import type {
   PdfReportData,
   PdfSectionId,
@@ -26,6 +28,29 @@ import type {
   PdfAlertItem,
   PdfExportOptions,
 } from "./pdf-types";
+
+// =====================================================================
+// Font registration — Roboto (Unicode, supports Czech diacritics)
+// ---------------------------------------------------------------------
+// The built-in Helvetica font only supports Latin-1 (WinAnsi encoding),
+// which does NOT include Czech characters like ě, š, č, ř, ž, ý, á, í, é, ů.
+// Roboto is a free Google font with full Unicode coverage. We load it
+// from the local src/lib/pdf/fonts/ directory for server-side rendering.
+// On Vercel, the files are bundled by the standalone build.
+// =====================================================================
+Font.register({
+  family: "Roboto",
+  fonts: [
+    {
+      src: path.join(process.cwd(), "src/lib/pdf/fonts/Roboto-Regular.woff"),
+      fontWeight: "normal",
+    },
+    {
+      src: path.join(process.cwd(), "src/lib/pdf/fonts/Roboto-Bold.woff"),
+      fontWeight: "bold",
+    },
+  ],
+});
 
 // =====================================================================
 // Locale helpers
@@ -144,7 +169,7 @@ const styles = StyleSheet.create({
   // ----- Page chrome -----
   page: {
     fontSize: 10,
-    fontFamily: "Helvetica",
+    fontFamily: "Roboto",
     color: "#333333",
     backgroundColor: "#ffffff",
     paddingTop: 40,
@@ -160,7 +185,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 12,
-    fontFamily: "Helvetica-Bold",
+    fontFamily: "Roboto", fontWeight: "bold",
     color: "#333333",
     marginBottom: 6,
     paddingBottom: 4,
@@ -179,7 +204,7 @@ const styles = StyleSheet.create({
   },
   headerName: {
     fontSize: 18,
-    fontFamily: "Helvetica-Bold",
+    fontFamily: "Roboto", fontWeight: "bold",
     color: "#333333",
     marginBottom: 4,
   },
@@ -198,7 +223,7 @@ const styles = StyleSheet.create({
   },
   kpiMain: {
     fontSize: 24,
-    fontFamily: "Helvetica-Bold",
+    fontFamily: "Roboto", fontWeight: "bold",
     color: "#333333",
     marginBottom: 8,
   },
@@ -216,7 +241,7 @@ const styles = StyleSheet.create({
   },
   kpiSubValue: {
     fontSize: 12,
-    fontFamily: "Helvetica-Bold",
+    fontFamily: "Roboto", fontWeight: "bold",
     color: "#333333",
   },
 
@@ -260,7 +285,7 @@ const styles = StyleSheet.create({
   },
   tableHeaderText: {
     fontSize: 8,
-    fontFamily: "Helvetica-Bold",
+    fontFamily: "Roboto", fontWeight: "bold",
     color: "#333333",
   },
   tableCellText: {
@@ -288,7 +313,7 @@ const styles = StyleSheet.create({
   },
   alertGroupTitle: {
     fontSize: 10,
-    fontFamily: "Helvetica-Bold",
+    fontFamily: "Roboto", fontWeight: "bold",
     color: "#333333",
     marginBottom: 3,
   },
@@ -320,7 +345,7 @@ const styles = StyleSheet.create({
   },
   projectionValue: {
     fontSize: 12,
-    fontFamily: "Helvetica-Bold",
+    fontFamily: "Roboto", fontWeight: "bold",
     color: "#333333",
   },
   projectionValuePositive: {
@@ -520,9 +545,11 @@ export function BudgetTable({
   currency: string;
   locale: string;
 }) {
-  const showCosts = sections.includes("costs");
+  const showPlanCost = sections.includes("plan_cost");
+  const showActualCost = sections.includes("actual_cost");
   const showStatus = sections.includes("status");
   const showDates = sections.includes("dates");
+  const showPhase = sections.includes("phase");
 
   // Effective plan cost (in target currency) for display.
   const planCostOf = (item: PdfBudgetItem) =>
@@ -540,14 +567,14 @@ export function BudgetTable({
           Kategorie
         </Text>
         <Text style={[styles.tableHeaderText, styles.colName]}>Název</Text>
-        <Text style={[styles.tableHeaderText, styles.colPhase]}>Fáze</Text>
-        {showCosts ? (
-          <>
-            <Text style={[styles.tableHeaderText, styles.colCost]}>Plán</Text>
-            <Text style={[styles.tableHeaderText, styles.colCost]}>
-              Skut.
-            </Text>
-          </>
+        {showPhase ? (
+          <Text style={[styles.tableHeaderText, styles.colPhase]}>Fáze</Text>
+        ) : null}
+        {showPlanCost ? (
+          <Text style={[styles.tableHeaderText, styles.colCost]}>Plán</Text>
+        ) : null}
+        {showActualCost ? (
+          <Text style={[styles.tableHeaderText, styles.colCost]}>Skut.</Text>
         ) : null}
         {showStatus ? (
           <Text style={[styles.tableHeaderText, styles.colStatus]}>Stav</Text>
@@ -571,18 +598,20 @@ export function BudgetTable({
             <Text style={[styles.tableCellText, styles.colName]}>
               {item.subcategory || item.category}
             </Text>
-            <Text style={[styles.tableCellText, styles.colPhase]}>
-              {item.phase}
-            </Text>
-            {showCosts ? (
-              <>
-                <Text style={[styles.tableCellText, styles.colCost]}>
-                  {formatCurrency(planCostOf(item), currency, locale)}
-                </Text>
-                <Text style={[styles.tableCellText, styles.colCost]}>
-                  {formatCurrency(item.actualCost, currency, locale)}
-                </Text>
-              </>
+            {showPhase ? (
+              <Text style={[styles.tableCellText, styles.colPhase]}>
+                {item.phase}
+              </Text>
+            ) : null}
+            {showPlanCost ? (
+              <Text style={[styles.tableCellText, styles.colCost]}>
+                {formatCurrency(planCostOf(item), currency, locale)}
+              </Text>
+            ) : null}
+            {showActualCost ? (
+              <Text style={[styles.tableCellText, styles.colCost]}>
+                {formatCurrency(item.actualCost, currency, locale)}
+              </Text>
             ) : null}
             {showStatus ? (
               <Text style={[styles.tableCellText, styles.colStatus]}>

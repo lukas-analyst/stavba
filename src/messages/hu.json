@@ -2435,7 +2435,10 @@
         "auditDesc": "A projekt legutóbbi módosításai",
         "trend": "Költési trend",
         "trendDesc": "Költés időbeli alakulása grafikonon",
-        "comingSoon": "Hamarosan"
+        "comingSoon": "Hamarosan",
+        "sections.planCost": "Tervezett költségek",
+        "sections.actualCost": "Tényleges költségek",
+        "sections.phase": "Fázis"
       },
       "locale": {
         "title": "Nyelv és pénznem",
