@@ -2638,8 +2638,8 @@
         "missingDigit": "A jelszónak legalább egy számjegyet kell tartalmaznia."
       },
       "sessions": {
-        "revokeFailed": "Nem sikerült visszavonni a többi munkamenetet. Próbálja újra.",
-        "allRevoked": "Az összes többi munkamenet kijelentkeztetve."
+        "revokeFailed": "A többi munkamenet visszavonása sikertelen. Próbálja újra.",
+        "allRevoked": "Minden másik munkamenet visszavonva."
       },
       "project": {
         "notFoundOrNotPublic": "A projekt nem található vagy nem nyilvános.",
@@ -2757,7 +2757,10 @@
         "textRequired": "A szöveg kötelező.",
         "budgetItemNotFound": "A költségkeret elem nem található.",
         "createFailed": "A megjegyzés létrehozása sikertelen.",
-        "fetchFailed": "A megjegyzések lekérése sikertelen."
+        "fetchFailed": "A megjegyzések lekérése sikertelen.",
+        "notFound": "A megjegyzés nem található.",
+        "cannotDeleteOthers": "Csak a saját megjegyzéseit törölheti.",
+        "deleteFailed": "A megjegyzés törlése sikertelen."
       },
       "audit": {
         "entityTypeAndActionRequired": "Az entitástípus és a művelet kötelező.",
@@ -2792,6 +2795,20 @@
         "member.updateFailed": "A tag frissítése sikertelen.",
         "member.deleteFailed": "A tag eltávolítása sikertelen.",
         "member.fetchFailed": "A tagok lekérése sikertelen."
+      },
+      "revalidate": {
+        "noTagsProvided": "Nincsenek megadva tag-ek.",
+        "tagNotAllowed": "Tag nem engedélyezett: {tag}.",
+        "failed": "Revalidáció sikertelen."
+      },
+      "analytics": {
+        "eventTypeRequired": "Az esemény típusa kötelező.",
+        "createFailed": "Az analitikai esemény naplózása sikertelen.",
+        "fetchFailed": "Az analitika lekérése sikertelen."
+      },
+      "admin": {
+        "backfillFailed": "Backfill sikertelen.",
+        "adminOnly": "Csak rendszergazda."
       }
     }
   },

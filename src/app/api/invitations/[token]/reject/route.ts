@@ -3,26 +3,7 @@ import { getTranslations } from "next-intl/server";
 import { db } from "@/lib/db";
 import { logChanges } from "@/lib/audit";
 import { requireUser } from "@/lib/authz";
-
-// =====================================================================
-// POST /api/invitations/[token]/reject
-// ---------------------------------------------------------------------
-// Rejects a project invitation. The signed-in user explicitly declines
-// the invitation — no ProjectMember is created.
-//
-// Rules:
-//   1. Must be signed in (requireUser)
-//   2. Invitation must exist (by token) → else 404
-//   3. Invitation status must be "pending" → else 400
-//   4. Invitation must not be expired → else 400
-//   5. The signed-in user's e-mail must match invitation.inviteeEmail
-//      → else 403
-//
-// On success:
-//   - Marks invitation as rejected (status="rejected")
-//   - Audit log
-//   - Returns 200 { ok: true }
-// =====================================================================
+import { parseParam, tokenSchema } from "@/lib/api-validation";
 
 export async function POST(
   _request: Request,
@@ -33,7 +14,10 @@ export async function POST(
 
   const t = await getTranslations("api.errors");
   try {
-    const { token } = await params;
+    const { token: rawToken } = await params;
+    const tokenResult = parseParam(tokenSchema, rawToken, t);
+    if (!tokenResult.success) return tokenResult.response;
+    const token = tokenResult.data;
 
     const invitation = await db.projectInvitation.findUnique({
       where: { token },

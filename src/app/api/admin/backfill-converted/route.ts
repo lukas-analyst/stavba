@@ -1,25 +1,18 @@
 import { NextResponse } from "next/server";
+import { getTranslations } from "next-intl/server";
 import { db } from "@/lib/db";
 import { revalidateTag } from "next/cache";
 import { requireUser } from "@/lib/authz";
 
-// =====================================================================
-// POST /api/admin/backfill-converted
-// ---------------------------------------------------------------------
-// One-time maintenance endpoint: backfills amountConverted + planCostConverted
-// for existing records that were created before multi-currency was added.
-//
-// After the DB update, busts all server-side caches so the dashboard
-// immediately reflects the corrected data.
-//
-// Admin-only (requires isAdmin).
-// =====================================================================
-
 export async function POST() {
+  const t = await getTranslations("api.errors");
   const { user, response } = await requireUser();
   if (response) return response;
   if (!user?.isAdmin) {
-    return NextResponse.json({ error: "Admin only" }, { status: 403 });
+    return NextResponse.json(
+      { error: t("admin.adminOnly") },
+      { status: 403 },
+    );
   }
 
   try {
@@ -32,7 +25,7 @@ export async function POST() {
       data: { amountConverted: db.payment.fields.amount },
     });
 
-    // 2. Backfill budget items: planCostConverted = planCost (no foreign currency)
+    // 2. Backfill budget items: planCostConverted = planCost
     const budgetResult = await db.budgetItem.updateMany({
       where: {
         planCostConverted: null,
@@ -56,6 +49,9 @@ export async function POST() {
     });
   } catch (error) {
     console.error("Backfill error:", error);
-    return NextResponse.json({ error: "Backfill failed" }, { status: 500 });
+    return NextResponse.json(
+      { error: t("admin.backfillFailed") },
+      { status: 500 },
+    );
   }
 }

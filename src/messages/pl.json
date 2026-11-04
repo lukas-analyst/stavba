@@ -2638,8 +2638,8 @@
         "missingDigit": "Hasło musi zawierać co najmniej jedną cyfrę."
       },
       "sessions": {
-        "revokeFailed": "Nie udało się cofnąć innych sesji. Spróbuj ponownie.",
-        "allRevoked": "Wszystkie inne sesje zostały wylogowane."
+        "revokeFailed": "Odwołanie innych sesji nie powiodło się. Spróbuj ponownie.",
+        "allRevoked": "Wszystkie inne sesje zostały odwołane."
       },
       "project": {
         "notFoundOrNotPublic": "Nie znaleziono projektu lub nie jest publiczny.",
@@ -2757,7 +2757,10 @@
         "textRequired": "Tekst jest wymagany.",
         "budgetItemNotFound": "Element budżetu nie został znaleziony.",
         "createFailed": "Utworzenie komentarza nie powiodło się.",
-        "fetchFailed": "Pobranie komentarzy nie powiodło się."
+        "fetchFailed": "Pobranie komentarzy nie powiodło się.",
+        "notFound": "Komentarz nie został znaleziony.",
+        "cannotDeleteOthers": "Możesz usuwać tylko swoje komentarze.",
+        "deleteFailed": "Usunięcie komentarza nie powiodło się."
       },
       "audit": {
         "entityTypeAndActionRequired": "Typ jednostki i akcja są wymagane.",
@@ -2792,6 +2795,20 @@
         "member.updateFailed": "Aktualizacja członka nie powiodła się.",
         "member.deleteFailed": "Usunięcie członka nie powiodło się.",
         "member.fetchFailed": "Pobranie członków nie powiodło się."
+      },
+      "revalidate": {
+        "noTagsProvided": "Nie podano tagów.",
+        "tagNotAllowed": "Tag niedozwolony: {tag}.",
+        "failed": "Rewalidacja nie powiodła się."
+      },
+      "analytics": {
+        "eventTypeRequired": "Typ zdarzenia jest wymagany.",
+        "createFailed": "Rejestrowanie zdarzenia analitycznego nie powiodło się.",
+        "fetchFailed": "Pobranie analityki nie powiodło się."
+      },
+      "admin": {
+        "backfillFailed": "Backfill nie powiódł się.",
+        "adminOnly": "Tylko administrator."
       }
     }
   },

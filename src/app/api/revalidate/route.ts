@@ -1,79 +1,83 @@
 import { NextResponse } from "next/server";
+import { getTranslations } from "next-intl/server";
+import { z } from "zod";
 import { revalidateTag } from "next/cache";
 import { refreshMaterializedViews } from "@/lib/materialized-views";
 import { requireVerifiedUser } from "@/lib/authz";
+import { parseBody } from "@/lib/api-validation";
+
+// Allowed cache tags — Next.js unstable_cache requires static strings.
+const ALLOWED_TAGS = [
+  "dashboards",
+  "spending-trends",
+  "projects",
+  "budgets",
+  "payments",
+  "time-entries",
+  "contacts",
+  "contact-stats",
+  "snapshots",
+  "notes",
+] as const;
+
+// Body schema: either `{ tags: string[] }` or `{ tag: string }`.
+// Each tag is validated against the ALLOWED_TAGS allow-list.
+const revalidateBodySchema = z
+  .object({
+    tags: z.array(z.enum(ALLOWED_TAGS)).optional(),
+    tag: z.enum(ALLOWED_TAGS).optional(),
+  })
+  .refine(
+    (data) => data.tags !== undefined || data.tag !== undefined,
+    { message: "revalidate.noTagsProvided" },
+  );
 
 // POST /api/revalidate
-// Busts the server-side cache for a given tag AND refreshes materialized
-// views. Called from the React Query mutation hooks after a successful
-// mutation so the next dashboard fetch returns fresh data.
-//
-// Body: { tags: string[] }  OR  { tag: "dashboards" }
-// Query: ?tag=dashboards
-//
-// Allowed tags: "dashboards", "spending-trends", "projects", "budgets",
-// "payments", "time-entries", "contacts", "contact-stats", "snapshots", "notes".
-// (Next.js unstable_cache requires static tag strings, so we use a small
-// set of fixed tags rather than per-project tags.)
-//
-// Materialized views are refreshed asynchronously (we don't await them
-// before responding) — the user gets an immediate response and the views
-// are updated in the background. The 60s server-side cache TTL ensures
-// the next request after 60s will see the refreshed data even if the
-// refresh is still in flight.
-//
-// SECURITY: Requires an authenticated, verified user. Cache invalidation
-// is a privileged operation (even though tags are validated against an
-// allow-list) — anonymous abuse could be used to force expensive
-// materialized-view refreshes.
+// Busts server-side cache for given tags + refreshes materialized views.
 export async function POST(request: Request) {
+  const t = await getTranslations("api.errors");
   const { response } = await requireVerifiedUser();
   if (response) return response;
 
   try {
+    // Check if tag is provided as query param (?tag=dashboards)
     const url = new URL(request.url);
     const tagParam = url.searchParams.get("tag");
 
     let tags: string[] = [];
     if (tagParam) {
+      // Validate query-param tag against allow-list
+      if (!ALLOWED_TAGS.includes(tagParam as (typeof ALLOWED_TAGS)[number])) {
+        return NextResponse.json(
+          { error: t("revalidate.tagNotAllowed", { tag: tagParam }) },
+          { status: 400 },
+        );
+      }
       tags = [tagParam];
     } else {
-      const body = await request.json().catch(() => ({}));
-      if (Array.isArray(body.tags)) {
-        tags = body.tags;
-      } else if (typeof body.tag === "string") {
-        tags = [body.tag];
+      // Parse + validate body (Zod).
+      const result = await parseBody(revalidateBodySchema, request, t);
+      if (!result.success) return result.response;
+      const { tags: bodyTags, tag: bodyTag } = result.data;
+      if (bodyTags) {
+        tags = bodyTags;
+      } else if (bodyTag) {
+        tags = [bodyTag];
       }
     }
 
     if (tags.length === 0) {
-      return NextResponse.json({ error: "No tags provided" }, { status: 400 });
+      return NextResponse.json(
+        { error: t("revalidate.noTagsProvided") },
+        { status: 400 },
+      );
     }
 
-    // Validate tag — only allow known tags to prevent abuse.
-    const ALLOWED_TAGS = [
-      "dashboards",
-      "spending-trends",
-      "projects",
-      "budgets",
-      "payments",
-      "time-entries",
-      "contacts",
-      "contact-stats",
-      "snapshots",
-      "notes",
-    ];
     for (const tag of tags) {
-      if (!ALLOWED_TAGS.includes(tag)) {
-        return NextResponse.json({ error: `Tag not allowed: ${tag}` }, { status: 400 });
-      }
       revalidateTag(tag);
     }
 
     // Fire-and-forget: refresh materialized views in the background.
-    // We don't await this so the user gets an immediate response.
-    // The views use REFRESH MATERIALIZED VIEW CONCURRENTLY so reads are
-    // not blocked while the refresh is running.
     if (tags.includes("dashboards")) {
       refreshMaterializedViews().catch((err) => {
         console.error("[revalidate] materialized view refresh failed:", err);
@@ -83,6 +87,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ revalidated: tags });
   } catch (error) {
     console.error("Revalidate error:", error);
-    return NextResponse.json({ error: "Failed to revalidate" }, { status: 500 });
+    return NextResponse.json(
+      { error: t("revalidate.failed") },
+      { status: 500 },
+    );
   }
 }

@@ -2638,8 +2638,8 @@
         "missingDigit": "Mật khẩu phải chứa ít nhất một chữ số."
       },
       "sessions": {
-        "revokeFailed": "Không thể thu hồi các phiên khác. Vui lòng thử lại.",
-        "allRevoked": "Tất cả phiên khác đã được đăng xuất."
+        "revokeFailed": "Thu hồi các phiên khác thất bại. Vui lòng thử lại.",
+        "allRevoked": "Tất cả các phiên khác đã được thu hồi."
       },
       "project": {
         "notFoundOrNotPublic": "Không tìm thấy dự án hoặc không công khai.",
@@ -2757,7 +2757,10 @@
         "textRequired": "Văn bản là bắt buộc.",
         "budgetItemNotFound": "Không tìm thấy mục ngân sách.",
         "createFailed": "Tạo bình luận thất bại.",
-        "fetchFailed": "Tải bình luận thất bại."
+        "fetchFailed": "Tải bình luận thất bại.",
+        "notFound": "Không tìm thấy bình luận.",
+        "cannotDeleteOthers": "Bạn chỉ có thể xóa bình luận của mình.",
+        "deleteFailed": "Xóa bình luận thất bại."
       },
       "audit": {
         "entityTypeAndActionRequired": "Loại thực thể và hành động là bắt buộc.",
@@ -2792,6 +2795,20 @@
         "member.updateFailed": "Cập nhật thành viên thất bại.",
         "member.deleteFailed": "Xóa thành viên thất bại.",
         "member.fetchFailed": "Tải thành viên thất bại."
+      },
+      "revalidate": {
+        "noTagsProvided": "Không có tag nào được cung cấp.",
+        "tagNotAllowed": "Tag không được phép: {tag}.",
+        "failed": "Tái xác thực thất bại."
+      },
+      "analytics": {
+        "eventTypeRequired": "Loại sự kiện là bắt buộc.",
+        "createFailed": "Ghi sự kiện phân tích thất bại.",
+        "fetchFailed": "Tải phân tích thất bại."
+      },
+      "admin": {
+        "backfillFailed": "Backfill thất bại.",
+        "adminOnly": "Chỉ quản trị viên."
       }
     }
   },

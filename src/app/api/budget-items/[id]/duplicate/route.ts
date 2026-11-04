@@ -1,25 +1,33 @@
 import { NextResponse } from "next/server";
+import { getTranslations } from "next-intl/server";
 import { db } from "@/lib/db";
 import { logChanges } from "@/lib/audit";
 import { requireProjectAccess } from "@/lib/authz";
+import { parseParam, cuidSchema } from "@/lib/api-validation";
 
 // POST /api/budget-items/[id]/duplicate
 // Creates a copy of the budget item with "(kopie)" suffix in the same project,
-// placed right after the original. Also recursively copies child tasks
-// (BudgetItems where parentId === id) so that task hierarchies are preserved.
+// placed right after the original. Also recursively copies child tasks.
 export async function POST(
   _request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const t = await getTranslations("api.errors");
   try {
-    const { id } = await params;
+    const { id: rawId } = await params;
+    const idResult = parseParam(cuidSchema, rawId, t);
+    if (!idResult.success) return idResult.response;
+    const id = idResult.data;
+
     const original = await db.budgetItem.findUnique({ where: { id } });
     if (!original) {
-      return NextResponse.json({ error: "Budget item not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: t("budget.notFound") },
+        { status: 404 },
+      );
     }
 
     // IDOR fix: duplicating an item is a write operation — require editor
-    // access to the project that owns the source item.
     const access = await requireProjectAccess(original.projectId, "editor");
     if (!access.ok) return access.response;
 
@@ -38,7 +46,7 @@ export async function POST(
         element: original.element,
         phase: original.phase,
         required: original.required,
-        completed: false, // reset completed for the duplicate
+        completed: false,
         note: original.note,
         unitPrice: original.unitPrice,
         planCost: original.planCost,
@@ -46,29 +54,25 @@ export async function POST(
         planDays: original.planDays,
         dateFrom: original.dateFrom,
         dateTo: original.dateTo,
-        actualCost: 0, // reset actuals for the duplicate
+        actualCost: 0,
         actualHours: 0,
         sortOrder: (maxOrder._max.sortOrder ?? -1) + 1,
       },
     });
 
-    // Copy child tasks (BudgetItems where parentId === id).
-    // Children are reset to defaults that imply "not yet started":
-    // completed=false, actualCost=0, actualHours=0.
-    // Their parentId points to the freshly created duplicate so the
-    // hierarchy is preserved on the copy side.
+    // Copy child tasks
     const children = await db.budgetItem.findMany({
       where: { parentId: id },
       orderBy: { sortOrder: "asc" },
     });
 
-    let nextSortOrder = (maxOrder._max.sortOrder ?? -1) + 2; // parent already used +1
+    let nextSortOrder = (maxOrder._max.sortOrder ?? -1) + 2;
     const duplicatedChildren: typeof children = [];
     for (const child of children) {
       const childCopy = await db.budgetItem.create({
         data: {
           projectId: original.projectId,
-          parentId: duplicate.id, // link to the new parent copy
+          parentId: duplicate.id,
           category: child.category,
           subcategory: child.subcategory,
           element: child.element,
@@ -90,8 +94,6 @@ export async function POST(
       duplicatedChildren.push(childCopy);
     }
 
-    // Audit log — single "create" entry for the duplicate operation.
-    // Entity label indicates this is a copy of the original item.
     await logChanges(
       original.projectId,
       "BudgetItem",
@@ -118,6 +120,9 @@ export async function POST(
     );
   } catch (error) {
     console.error("POST duplicate budget item error:", error);
-    return NextResponse.json({ error: "Failed to duplicate budget item" }, { status: 500 });
+    return NextResponse.json(
+      { error: t("budget.createFailed") },
+      { status: 500 },
+    );
   }
 }

@@ -2642,7 +2642,7 @@
       },
       "sessions": {
         "revokeFailed": "Failed to revoke other sessions. Please try again.",
-        "allRevoked": "All other sessions have been signed out."
+        "allRevoked": "All other sessions have been revoked."
       },
       "project": {
         "notFoundOrNotPublic": "Project not found or not public.",
@@ -2760,7 +2760,10 @@
         "textRequired": "Text is required.",
         "budgetItemNotFound": "Budget item not found.",
         "createFailed": "Failed to create comment.",
-        "fetchFailed": "Failed to fetch comments."
+        "fetchFailed": "Failed to fetch comments.",
+        "notFound": "Comment not found.",
+        "cannotDeleteOthers": "You can only delete your own comments.",
+        "deleteFailed": "Failed to delete comment."
       },
       "audit": {
         "entityTypeAndActionRequired": "Entity type and action are required.",
@@ -2795,6 +2798,20 @@
         "member.updateFailed": "Failed to update member.",
         "member.deleteFailed": "Failed to remove member.",
         "member.fetchFailed": "Failed to fetch members."
+      },
+      "revalidate": {
+        "noTagsProvided": "No tags provided.",
+        "tagNotAllowed": "Tag not allowed: {tag}.",
+        "failed": "Revalidation failed."
+      },
+      "analytics": {
+        "eventTypeRequired": "Event type is required.",
+        "createFailed": "Failed to log analytics event.",
+        "fetchFailed": "Failed to fetch analytics."
+      },
+      "admin": {
+        "backfillFailed": "Backfill failed.",
+        "adminOnly": "Admin only."
       }
     }
   },

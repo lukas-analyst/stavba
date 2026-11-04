@@ -4,7 +4,7 @@ import { db } from "@/lib/db";
 import { logChanges } from "@/lib/audit";
 import { requireUser } from "@/lib/authz";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
-import { isValidTokenFormat } from "@/lib/auth-helpers";
+import { parseParam, tokenSchema } from "@/lib/api-validation";
 
 // =====================================================================
 // POST /api/invitations/[token]/accept
@@ -68,18 +68,12 @@ export async function POST(
       );
     }
 
-    const { token } = await params;
-
-    // Pre-validate token format BEFORE hitting the DB. Invitation
-    // tokens are 64-char hex (256-bit). Anything else is malformed —
-    // return 404 (same as "not found") to avoid leaking whether a
-    // token exists.
-    if (!isValidTokenFormat(token)) {
-      return NextResponse.json(
-        { error: t("invitations.notFound") },
-        { status: 404 },
-      );
-    }
+    const { token: rawToken } = await params;
+    // Validate token format via Zod (64-char hex). Replaces the manual
+    // isValidTokenFormat check with parseParam.
+    const tokenResult = parseParam(tokenSchema, rawToken, t);
+    if (!tokenResult.success) return tokenResult.response;
+    const token = tokenResult.data;
 
     const invitation = await db.projectInvitation.findUnique({
       where: { token },

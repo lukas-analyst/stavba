@@ -2760,7 +2760,10 @@
         "textRequired": "Text je povinný.",
         "budgetItemNotFound": "Položka rozpočtu nebyla nalezena.",
         "createFailed": "Vytvoření komentáře selhalo.",
-        "fetchFailed": "Načtení komentářů selhalo."
+        "fetchFailed": "Načtení komentářů selhalo.",
+        "notFound": "Komentář nebyl nalezen.",
+        "cannotDeleteOthers": "Můžete mazat pouze své komentáře.",
+        "deleteFailed": "Smazání komentáře selhalo."
       },
       "audit": {
         "entityTypeAndActionRequired": "Typ entity a akce jsou povinné.",
@@ -2795,6 +2798,20 @@
         "member.updateFailed": "Aktualizace člena selhala.",
         "member.deleteFailed": "Odebrání člena selhalo.",
         "member.fetchFailed": "Načtení členů selhalo."
+      },
+      "revalidate": {
+        "noTagsProvided": "Nebyly zadány žádné tagy.",
+        "tagNotAllowed": "Tag není povolen: {tag}.",
+        "failed": "Revalidace selhala."
+      },
+      "analytics": {
+        "eventTypeRequired": "Typ události je povinný.",
+        "createFailed": "Záznam analytiky selhal.",
+        "fetchFailed": "Načtení analytiky selhalo."
+      },
+      "admin": {
+        "backfillFailed": "Backfill selhal.",
+        "adminOnly": "Pouze administrátor."
       }
     }
   },

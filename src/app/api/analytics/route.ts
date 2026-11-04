@@ -1,58 +1,32 @@
 import { NextResponse } from "next/server";
 import { getTranslations } from "next-intl/server";
+import { z } from "zod";
 import { Prisma } from "@prisma/client";
 import { db, dbRead } from "@/lib/db";
 import { requireUser } from "@/lib/require-user";
+import { parseBody } from "@/lib/api-validation";
+
+// Body schema for POST /api/analytics
+const createAnalyticsBodySchema = z.object({
+  eventType: z.string().trim().min(1, { message: "analytics.eventTypeRequired" }).max(100),
+  pageUrl: z.string().max(500).nullish(),
+  timeSpent: z.number().finite().nonnegative().nullish(),
+  metadata: z.unknown().nullish(),
+});
 
 // =====================================================================
 // /api/analytics — internal telemetry endpoint
-// ---------------------------------------------------------------------
-// POST — log an analytics event (called from the client on every
-//        tracked interaction: page_view, add_payment, …).
-// GET  — retrieve paginated analytics events + aggregated summary
-//        (used by the Telemetry tab in the UI).
-//
-// No third-party data sharing, no cookies, no PII beyond the user ID.
 // =====================================================================
 
-// POST /api/analytics
-// Body: { eventType, pageUrl?, timeSpent?, metadata? }
-// Returns: 201 { id } on success, 400 if `eventType` is missing.
-// =====================================================================
-// Route configuration
-// ---------------------------------------------------------------------
-// `force-dynamic` ensures the response is never cached. Without this,
-// Next.js may cache a 401 (unauthenticated) response and serve it even
-// after the user logs in, causing "Failed to fetch analytics" errors.
-// Analytics data changes on every request (new events are logged
-// continuously), so caching would be incorrect anyway.
-// =====================================================================
 export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
   const t = await getTranslations("api.errors");
   try {
-    const body = await request.json().catch(() => null);
-    if (!body || typeof body !== "object") {
-      return NextResponse.json(
-        { error: "Invalid JSON body" },
-        { status: 400 },
-      );
-    }
-
-    const { eventType, pageUrl, timeSpent, metadata } = body as {
-      eventType?: string;
-      pageUrl?: string;
-      timeSpent?: number;
-      metadata?: unknown;
-    };
-
-    if (!eventType || typeof eventType !== "string" || eventType.length === 0) {
-      return NextResponse.json(
-        { error: "eventType is required" },
-        { status: 400 },
-      );
-    }
+    // Parse + validate body (Zod).
+    const result = await parseBody(createAnalyticsBodySchema, request, t);
+    if (!result.success) return result.response;
+    const { eventType, pageUrl, timeSpent, metadata } = result.data;
 
     // Attribute events to the authenticated user
     const { user, response } = await requireUser();
@@ -63,12 +37,9 @@ export async function POST(request: Request) {
     const event = await db.analyticsEvent.create({
       data: {
         userId,
-        eventType: eventType.slice(0, 100), // bound length to avoid abuse
-        pageUrl: typeof pageUrl === "string" ? pageUrl.slice(0, 500) : null,
-        timeSpent:
-          typeof timeSpent === "number" && Number.isFinite(timeSpent)
-            ? Math.max(0, Math.round(timeSpent))
-            : null,
+        eventType: eventType,
+        pageUrl: pageUrl ?? null,
+        timeSpent: timeSpent != null ? Math.round(timeSpent) : null,
         metadata:
           metadata !== undefined && metadata !== null
             ? JSON.stringify(metadata).slice(0, 4000)
@@ -80,7 +51,7 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error("POST analytics error:", error);
     return NextResponse.json(
-      { error: "Failed to log analytics event" },
+      { error: t("analytics.createFailed") },
       { status: 500 },
     );
   }

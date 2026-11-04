@@ -2639,7 +2639,7 @@
       },
       "sessions": {
         "revokeFailed": "Revoca delle altre sessioni non riuscita. Riprova.",
-        "allRevoked": "Tutte le altre sessioni sono state disconnesse."
+        "allRevoked": "Tutte le altre sessioni sono state revocate."
       },
       "project": {
         "notFoundOrNotPublic": "Progetto non trovato o non pubblico.",
@@ -2757,7 +2757,10 @@
         "textRequired": "Il testo è obbligatorio.",
         "budgetItemNotFound": "Elemento di budget non trovato.",
         "createFailed": "Creazione del commento non riuscita.",
-        "fetchFailed": "Recupero dei commenti non riuscito."
+        "fetchFailed": "Recupero dei commenti non riuscito.",
+        "notFound": "Commento non trovato.",
+        "cannotDeleteOthers": "Puoi eliminare solo i tuoi commenti.",
+        "deleteFailed": "Eliminazione del commento non riuscita."
       },
       "audit": {
         "entityTypeAndActionRequired": "Il tipo di entità e l'azione sono obbligatori.",
@@ -2792,6 +2795,20 @@
         "member.updateFailed": "Aggiornamento del membro non riuscito.",
         "member.deleteFailed": "Rimozione del membro non riuscita.",
         "member.fetchFailed": "Recupero dei membri non riuscito."
+      },
+      "revalidate": {
+        "noTagsProvided": "Nessun tag fornito.",
+        "tagNotAllowed": "Tag non consentito: {tag}.",
+        "failed": "Revalidazione non riuscita."
+      },
+      "analytics": {
+        "eventTypeRequired": "Il tipo di evento è obbligatorio.",
+        "createFailed": "Registrazione dell'evento di analisi non riuscita.",
+        "fetchFailed": "Recupero dell'analisi non riuscito."
+      },
+      "admin": {
+        "backfillFailed": "Backfill non riuscito.",
+        "adminOnly": "Solo amministratore."
       }
     }
   },

@@ -2638,8 +2638,8 @@
         "missingDigit": "La contraseña debe contener al menos un dígito."
       },
       "sessions": {
-        "revokeFailed": "No se pudieron revocar las demás sesiones. Inténtalo de nuevo.",
-        "allRevoked": "Se han cerrado todas las demás sesiones."
+        "revokeFailed": "Error al revocar otras sesiones. Inténtalo de nuevo.",
+        "allRevoked": "Todas las demás sesiones han sido revocadas."
       },
       "project": {
         "notFoundOrNotPublic": "Proyecto no encontrado o no público.",
@@ -2757,7 +2757,10 @@
         "textRequired": "El texto es obligatorio.",
         "budgetItemNotFound": "Elemento de presupuesto no encontrado.",
         "createFailed": "Error al crear el comentario.",
-        "fetchFailed": "Error al obtener los comentarios."
+        "fetchFailed": "Error al obtener los comentarios.",
+        "notFound": "Comentario no encontrado.",
+        "cannotDeleteOthers": "Solo puedes eliminar tus propios comentarios.",
+        "deleteFailed": "Error al eliminar el comentario."
       },
       "audit": {
         "entityTypeAndActionRequired": "El tipo de entidad y la acción son obligatorios.",
@@ -2792,6 +2795,20 @@
         "member.updateFailed": "Error al actualizar miembro.",
         "member.deleteFailed": "Error al eliminar miembro.",
         "member.fetchFailed": "Error al obtener los miembros."
+      },
+      "revalidate": {
+        "noTagsProvided": "No se proporcionaron tags.",
+        "tagNotAllowed": "Tag no permitido: {tag}.",
+        "failed": "Revalidación fallida."
+      },
+      "analytics": {
+        "eventTypeRequired": "El tipo de evento es obligatorio.",
+        "createFailed": "Error al registrar evento de analítica.",
+        "fetchFailed": "Error al obtener analítica."
+      },
+      "admin": {
+        "backfillFailed": "Backfill fallido.",
+        "adminOnly": "Solo administrador."
       }
     }
   },
