@@ -320,21 +320,35 @@ export async function parseBody<T>(
   if (!parsed.success) {
     const issues = parsed.error.issues.map((issue) => ({
       path: issue.path.join("."),
-      // `issue.message` is either an i18n code (e.g. "password.tooShort")
-      // emitted by our `.superRefine` validators, or a Zod default
-      // message (e.g. "Invalid input: expected string, received undefined").
-      // next-intl's `t()` returns the key as-is if not found, so Zod
-      // defaults pass through untranslated (acceptable — they're rare
-      // and informative enough in English).
       message: translate(t, issue.message),
-      // Keep the raw code so clients can do their own translation.
       code: issue.message,
     }));
+
+    // Build a user-friendly top-level error message that includes the
+    // field path so the user can see WHICH field caused the error —
+    // not just "Invalid input: expected string, received null".
+    //
+    // Format: "Pole 'currency': Invalid input: expected string, received null"
+    // or if no path: just the translated message.
+    const firstIssue = issues[0];
+    let topError: string;
+    if (firstIssue) {
+      const msg = translate(t, firstIssue.code);
+      if (firstIssue.path) {
+        // Wrap field name in quotes for clarity.
+        topError = `${msg} (pole: ${firstIssue.path})`;
+      } else {
+        topError = msg;
+      }
+    } else {
+      topError = translate(t, "generic.invalidInput");
+    }
+
     return {
       success: false,
       response: NextResponse.json(
         {
-          error: issues[0] ? translate(t, issues[0].code) : translate(t, "generic.invalidInput"),
+          error: topError,
           issues,
         },
         { status: 400 },

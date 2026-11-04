@@ -30,7 +30,7 @@ const createPaymentBodySchema = z.object({
       message: "payment.amountRequired",
     }),
   ),
-  currency: z.string().regex(/^[A-Z]{3}$/).optional(),
+  currency: z.string().regex(/^[A-Z]{3}$/).nullish(),
   invoiceTotal: optionalNumOrNull,
   installmentOf: optionalCuidOrNull,
   vatRate: z.preprocess(
@@ -42,11 +42,11 @@ const createPaymentBodySchema = z.object({
     z.union([z.number().min(0).max(100), z.null()]),
   ).optional(),
   date: optionalIsoDate,
-  type: z.string().max(50).optional(),
+  type: z.string().max(50).nullish(),
   vendor: optionalNullableString.optional(),
   invoiceNumber: optionalNullableString.optional(),
   description: optionalNullableString.optional(),
-  recurringInterval: z.string().max(20).optional(),
+  recurringInterval: z.string().max(20).nullish(),
 });
 
 // Explicit field selection — fetch only what the frontend uses.

@@ -31,7 +31,7 @@ const patchBudgetItemBodySchema = z.object({
   category: nonEmptyString.max(200).optional(),
   subcategory: optionalNullableString.optional(),
   element: optionalNullableString.optional(),
-  phase: z.string().max(50).optional(),
+  phase: z.string().max(50).nullish(),
   required: z.boolean().optional(),
   completed: z.boolean().optional(),
   rejected: z.boolean().optional(),

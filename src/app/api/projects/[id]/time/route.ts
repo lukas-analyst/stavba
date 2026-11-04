@@ -18,8 +18,8 @@ import {
 const createTimeEntryBodySchema = z.object({
   budgetItemId: cuidSchema,
   contactId: optionalCuidOrNull,
-  workerName: z.string().trim().max(200).optional(),
-  workerType: z.string().max(50).optional(),
+  workerName: z.string().trim().max(200).nullish(),
+  workerType: z.string().max(50).nullish(),
   date: optionalIsoDate,
   dateTo: optionalIsoDate,
   hours: z.preprocess(

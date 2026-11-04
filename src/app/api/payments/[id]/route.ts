@@ -39,7 +39,7 @@ const patchPaymentBodySchema = z.object({
     z.union([z.number().min(0).max(100), z.null()]),
   ).optional(),
   date: optionalIsoDate,
-  type: z.string().max(50).optional(),
+  type: z.string().max(50).nullish(),
   vendor: optionalNullableString.optional(),
   invoiceNumber: optionalNullableString.optional(),
   description: optionalNullableString.optional(),
