@@ -848,7 +848,8 @@
       "button": {
         "editProject": "Upravit projekt",
         "reportPdf": "Report PDF",
-        "auditHistory": "Historie změn"
+        "auditHistory": "Historie změn",
+        "exportPdf": "Exportovat PDF"
       },
       "data": {
         "title": "Data a exporty",
@@ -2405,6 +2406,68 @@
       "footer": {
         "navigation": "Navigace",
         "select": "Vybrat"
+      }
+    },
+    "pdfExport": {
+      "title": "Exportovat PDF report",
+      "description": "Vyberte sekce, jazyk a měnu pro PDF report. Report je vhodný pro žádosti o hypotéku.",
+      "sections": {
+        "title": "Sekce reportu",
+        "header": "Hlavička projektu",
+        "headerDesc": "Název projektu, adresa a popis",
+        "summary": "Shrnutí",
+        "summaryDesc": "Celkový rozpočet, utraceno, zbývá a procento dokončení",
+        "budgetItems": "Položky rozpočtu",
+        "budgetItemsDesc": "Podrobný seznam všech položek rozpočtu seskupených podle fáze",
+        "status": "Stav",
+        "costs": "Náklady",
+        "dates": "Datumy",
+        "property": "Detaily nemovitosti",
+        "propertyDesc": "Plocha, počet podlaží, energetický štítek a ztráta tepla",
+        "alerts": "Upozornění",
+        "alertsDesc": "Zpožděné položky, nadcházející termíny a překročené rozpočty",
+        "projection": "Projekce nákladů",
+        "projectionDesc": "Odhad konečných nákladů na základě aktuálního utrácení",
+        "time": "Evidence času",
+        "timeDesc": "Odpracované hodiny u každé položky",
+        "workers": "Pracovníci",
+        "workersDesc": "Seznam pracovníků a firem s jejich hodinami",
+        "contacts": "Kontakty",
+        "contactsDesc": "Adresář kontaktů projektu",
+        "audit": "Protokol změn",
+        "auditDesc": "Poslední změny provedené v projektu",
+        "trend": "Trend utrácení",
+        "trendDesc": "Graf utrácení v čase",
+        "comingSoon": "Brzy dostupné"
+      },
+      "locale": {
+        "title": "Jazyk a měna",
+        "language": "Jazyk reportu",
+        "currency": "Měna",
+        "conversionHint": "Částky jsou přepočítány podle aktuálního kurzu České národní banky."
+      },
+      "templates": {
+        "title": "Šablony",
+        "saveAs": "Uložit aktuální výběr jako šablonu",
+        "namePlaceholder": "Název šablony…",
+        "save": "Uložit",
+        "myTemplates": "Moje šablony",
+        "load": "Načíst",
+        "delete": "Smazat",
+        "sectionsCount": "{count} sekcí",
+        "empty": "Zatím nejsou uloženy žádné šablony."
+      },
+      "button": {
+        "cancel": "Zrušit",
+        "export": "Exportovat PDF",
+        "exporting": "Generuje se…"
+      },
+      "toasts": {
+        "generating": "PDF se generuje…",
+        "success": "PDF bylo úspěšně exportováno",
+        "error": "Nepodařilo se vygenerovat PDF",
+        "templateSaved": "Šablona uložena",
+        "templateDeleted": "Šablona smazána"
       }
     }
   },

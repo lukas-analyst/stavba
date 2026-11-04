@@ -846,7 +846,8 @@
       "button": {
         "editProject": "Editar proyecto",
         "reportPdf": "Informe PDF",
-        "auditHistory": "Historial de cambios"
+        "auditHistory": "Historial de cambios",
+        "exportPdf": "Exportar PDF"
       },
       "data": {
         "title": "Datos y exportación",
@@ -2402,6 +2403,68 @@
       "footer": {
         "navigation": "Navegación",
         "select": "Seleccionar"
+      }
+    },
+    "pdfExport": {
+      "title": "Exportar informe PDF",
+      "description": "Selecciona las secciones, el idioma y la moneda del informe PDF. El informe es adecuado para solicitudes de hipoteca.",
+      "sections": {
+        "title": "Secciones del informe",
+        "header": "Encabezado del proyecto",
+        "headerDesc": "Nombre del proyecto, dirección y descripción",
+        "summary": "Resumen",
+        "summaryDesc": "Presupuesto total, gastado, restante y porcentaje de finalización",
+        "budgetItems": "Partidas del presupuesto",
+        "budgetItemsDesc": "Lista detallada de todas las partidas agrupadas por fase",
+        "status": "Estado",
+        "costs": "Costes",
+        "dates": "Fechas",
+        "property": "Detalles de la propiedad",
+        "propertyDesc": "Superficie, número de plantas, certificado energético y pérdida de calor",
+        "alerts": "Alertas",
+        "alertsDesc": "Partidas retrasadas, próximos vencimientos y partidas sobre presupuesto",
+        "projection": "Proyección de costes",
+        "projectionDesc": "Estimación del coste final basada en el gasto actual",
+        "time": "Control de tiempo",
+        "timeDesc": "Horas trabajadas por partida",
+        "workers": "Trabajadores",
+        "workersDesc": "Lista de trabajadores y empresas con sus horas",
+        "contacts": "Contactos",
+        "contactsDesc": "Directorio de contactos del proyecto",
+        "audit": "Registro de cambios",
+        "auditDesc": "Cambios recientes en el proyecto",
+        "trend": "Tendencia de gasto",
+        "trendDesc": "Gráfico de gasto a lo largo del tiempo",
+        "comingSoon": "Próximamente"
+      },
+      "locale": {
+        "title": "Idioma y moneda",
+        "language": "Idioma del informe",
+        "currency": "Moneda",
+        "conversionHint": "Los importes se convierten utilizando el tipo de cambio actual del Banco Nacional Checo."
+      },
+      "templates": {
+        "title": "Plantillas",
+        "saveAs": "Guardar selección actual como plantilla",
+        "namePlaceholder": "Nombre de la plantilla…",
+        "save": "Guardar",
+        "myTemplates": "Mis plantillas",
+        "load": "Cargar",
+        "delete": "Eliminar",
+        "sectionsCount": "{count} secciones",
+        "empty": "Aún no hay plantillas guardadas."
+      },
+      "button": {
+        "cancel": "Cancelar",
+        "export": "Exportar PDF",
+        "exporting": "Generando…"
+      },
+      "toasts": {
+        "generating": "Generando PDF…",
+        "success": "PDF exportado correctamente",
+        "error": "No se pudo generar el PDF",
+        "templateSaved": "Plantilla guardada",
+        "templateDeleted": "Plantilla eliminada"
       }
     }
   },

@@ -109,6 +109,9 @@ model User {
   // Relations — invitations sent by this user
   sentInvitations ProjectInvitation[]
 
+  // Relations — PDF export templates saved by this user
+  exportTemplates ExportTemplate[]
+
   @@map("users")
 }
 
@@ -846,5 +849,34 @@ model ExchangeRate {
   @@unique([currency, date])
   @@index([currency, date])
   @@map("exchange_rates")
+}
+
+// =====================================================================
+// ExportTemplate — saved PDF export configurations
+// ---------------------------------------------------------------------
+// Users can save their section selections + locale + currency as a
+// named template so they don't have to re-check boxes every time.
+// Scoped per user (userId) — each user has their own templates.
+// =====================================================================
+model ExportTemplate {
+  id        String   @id @default(cuid())
+  /// FK to User — the owner of this template
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// Display name (e.g., "Hypotéka", "Plný rozpočet")
+  name      String
+  /// JSON array of selected section IDs
+  /// e.g., '["header","summary","budget_items","status","costs","dates","property","alerts","projection"]'
+  sections  String
+  /// Locale code for the PDF content language (cs, en, es, hu, it, pl, vi)
+  locale    String
+  /// Target currency for amount conversion (ISO 4217: CZK, EUR, USD, ...)
+  currency  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, name])
+  @@index([userId])
+  @@map("export_templates")
 }
 

@@ -846,7 +846,8 @@
       "button": {
         "editProject": "Modifica progetto",
         "reportPdf": "Report PDF",
-        "auditHistory": "Cronologia modifiche"
+        "auditHistory": "Cronologia modifiche",
+        "exportPdf": "Esporta PDF"
       },
       "data": {
         "title": "Dati ed esportazioni",
@@ -2402,6 +2403,68 @@
       "footer": {
         "navigation": "Navigazione",
         "select": "Seleziona"
+      }
+    },
+    "pdfExport": {
+      "title": "Esporta rapporto PDF",
+      "description": "Seleziona le sezioni, la lingua e la valuta del rapporto PDF. Il rapporto è adatto per richieste di mutuo.",
+      "sections": {
+        "title": "Sezioni del rapporto",
+        "header": "Intestazione del progetto",
+        "headerDesc": "Nome del progetto, indirizzo e descrizione",
+        "summary": "Riepilogo",
+        "summaryDesc": "Budget totale, speso, rimanente e percentuale di completamento",
+        "budgetItems": "Voci di budget",
+        "budgetItemsDesc": "Elenco dettagliato di tutte le voci di budget raggruppate per fase",
+        "status": "Stato",
+        "costs": "Costi",
+        "dates": "Date",
+        "property": "Dettagli immobile",
+        "propertyDesc": "Superficie, numero di piani, certificazione energetica e dispersione termica",
+        "alerts": "Avvisi",
+        "alertsDesc": "Voci in ritardo, scadenze imminenti e voci fuori budget",
+        "projection": "Proiezione dei costi",
+        "projectionDesc": "Stima del costo finale basata sulla spesa attuale",
+        "time": "Tracciamento tempo",
+        "timeDesc": "Ore lavorate per voce",
+        "workers": "Lavoratori",
+        "workersDesc": "Elenco di lavoratori e aziende con le relative ore",
+        "contacts": "Contatti",
+        "contactsDesc": "Elenco contatti del progetto",
+        "audit": "Registro modifiche",
+        "auditDesc": "Modifiche recenti al progetto",
+        "trend": "Trend di spesa",
+        "trendDesc": "Grafico della spesa nel tempo",
+        "comingSoon": "Prossimamente"
+      },
+      "locale": {
+        "title": "Lingua e valuta",
+        "language": "Lingua del rapporto",
+        "currency": "Valuta",
+        "conversionHint": "Gli importi sono convertiti utilizzando il tasso di cambio attuale della Banca Nazionale Ceca."
+      },
+      "templates": {
+        "title": "Modelli",
+        "saveAs": "Salva selezione corrente come modello",
+        "namePlaceholder": "Nome modello…",
+        "save": "Salva",
+        "myTemplates": "I miei modelli",
+        "load": "Carica",
+        "delete": "Elimina",
+        "sectionsCount": "{count} sezioni",
+        "empty": "Nessun modello salvato."
+      },
+      "button": {
+        "cancel": "Annulla",
+        "export": "Esporta PDF",
+        "exporting": "Generazione…"
+      },
+      "toasts": {
+        "generating": "Generazione PDF…",
+        "success": "PDF esportato correttamente",
+        "error": "Impossibile generare il PDF",
+        "templateSaved": "Modello salvato",
+        "templateDeleted": "Modello eliminato"
       }
     }
   },

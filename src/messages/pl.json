@@ -846,7 +846,8 @@
       "button": {
         "editProject": "Edytuj projekt",
         "reportPdf": "Raport PDF",
-        "auditHistory": "Historia zmian"
+        "auditHistory": "Historia zmian",
+        "exportPdf": "Eksportuj PDF"
       },
       "data": {
         "title": "Dane i eksporty",
@@ -2402,6 +2403,68 @@
       "footer": {
         "navigation": "Nawigacja",
         "select": "Wybierz"
+      }
+    },
+    "pdfExport": {
+      "title": "Eksportuj raport PDF",
+      "description": "Wybierz sekcje, język i walutę raportu PDF. Raport nadaje się do wniosków o kredyt hipoteczny.",
+      "sections": {
+        "title": "Sekcje raportu",
+        "header": "Nagłówek projektu",
+        "headerDesc": "Nazwa projektu, adres i opis",
+        "summary": "Podsumowanie",
+        "summaryDesc": "Całkowity budżet, wydano, pozostało i procent ukończenia",
+        "budgetItems": "Pozycje budżetu",
+        "budgetItemsDesc": "Szczegółowa lista wszystkich pozycji budżetu pogrupowanych według fazy",
+        "status": "Status",
+        "costs": "Koszty",
+        "dates": "Daty",
+        "property": "Szczegóły nieruchomości",
+        "propertyDesc": "Powierzchnia, liczba pięter, certyfikat energetyczny i straty ciepła",
+        "alerts": "Alerty",
+        "alertsDesc": "Pozycje opóźnione, nadchodzące terminy i pozycje przekraczające budżet",
+        "projection": "Projekcja kosztów",
+        "projectionDesc": "Szacunek kosztu końcowego na podstawie obecnych wydatków",
+        "time": "Ewidencja czasu",
+        "timeDesc": "Przepracowane godziny dla każdej pozycji",
+        "workers": "Pracownicy",
+        "workersDesc": "Lista pracowników i firm wraz z ich godzinami",
+        "contacts": "Kontakty",
+        "contactsDesc": "Książka adresowa projektu",
+        "audit": "Dziennik zmian",
+        "auditDesc": "Ostatnie zmiany w projekcie",
+        "trend": "Trend wydatków",
+        "trendDesc": "Wykres wydatków w czasie",
+        "comingSoon": "Wkrótce"
+      },
+      "locale": {
+        "title": "Język i waluta",
+        "language": "Język raportu",
+        "currency": "Waluta",
+        "conversionHint": "Kwoty są przeliczane według aktualnego kursu Czeskiego Banku Narodowego."
+      },
+      "templates": {
+        "title": "Szablony",
+        "saveAs": "Zapisz bieżący wybór jako szablon",
+        "namePlaceholder": "Nazwa szablonu…",
+        "save": "Zapisz",
+        "myTemplates": "Moje szablony",
+        "load": "Wczytaj",
+        "delete": "Usuń",
+        "sectionsCount": "{count} sekcji",
+        "empty": "Brak zapisanych szablonów."
+      },
+      "button": {
+        "cancel": "Anuluj",
+        "export": "Eksportuj PDF",
+        "exporting": "Generowanie…"
+      },
+      "toasts": {
+        "generating": "Generowanie PDF…",
+        "success": "PDF wyeksportowany pomyślnie",
+        "error": "Nie udało się wygenerować pliku PDF",
+        "templateSaved": "Szablon zapisany",
+        "templateDeleted": "Szablon usunięty"
       }
     }
   },

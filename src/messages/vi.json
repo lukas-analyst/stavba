@@ -846,7 +846,8 @@
       "button": {
         "editProject": "Chỉnh sửa dự án",
         "reportPdf": "Báo cáo PDF",
-        "auditHistory": "Lịch sử thay đổi"
+        "auditHistory": "Lịch sử thay đổi",
+        "exportPdf": "Xuất PDF"
       },
       "data": {
         "title": "Dữ liệu và xuất",
@@ -2402,6 +2403,68 @@
       "footer": {
         "navigation": "Điều hướng",
         "select": "Chọn"
+      }
+    },
+    "pdfExport": {
+      "title": "Xuất báo cáo PDF",
+      "description": "Chọn các phần, ngôn ngữ và loại tiền tệ cho báo cáo PDF. Báo cáo phù hợp để nộp hồ sơ vay thế chấp.",
+      "sections": {
+        "title": "Các phần báo cáo",
+        "header": "Tiêu đề dự án",
+        "headerDesc": "Tên, địa chỉ và mô tả dự án",
+        "summary": "Tóm tắt",
+        "summaryDesc": "Tổng ngân sách, đã chi, còn lại và phần trăm hoàn thành",
+        "budgetItems": "Hạng mục ngân sách",
+        "budgetItemsDesc": "Danh sách chi tiết tất cả hạng mục ngân sách được nhóm theo giai đoạn",
+        "status": "Trạng thái",
+        "costs": "Chi phí",
+        "dates": "Ngày tháng",
+        "property": "Chi tiết bất động sản",
+        "propertyDesc": "Diện tích, số tầng, chứng nhận năng lượng và mức thất thoát nhiệt",
+        "alerts": "Cảnh báo",
+        "alertsDesc": "Hạng mục trễ hạn, hạn sắp tới và hạng mục vượt ngân sách",
+        "projection": "Dự toán chi phí",
+        "projectionDesc": "Dự báo chi phí cuối cùng dựa trên mức chi tiêu hiện tại",
+        "time": "Theo dõi thời gian",
+        "timeDesc": "Số giờ làm việc cho từng hạng mục",
+        "workers": "Nhân công",
+        "workersDesc": "Danh sách nhân công và công ty cùng số giờ của họ",
+        "contacts": "Danh bạ",
+        "contactsDesc": "Danh bạ liên hệ của dự án",
+        "audit": "Nhật ký thay đổi",
+        "auditDesc": "Các thay đổi gần đây trong dự án",
+        "trend": "Xu hướng chi tiêu",
+        "trendDesc": "Biểu đồ chi tiêu theo thời gian",
+        "comingSoon": "Sắp ra mắt"
+      },
+      "locale": {
+        "title": "Ngôn ngữ và tiền tệ",
+        "language": "Ngôn ngữ báo cáo",
+        "currency": "Tiền tệ",
+        "conversionHint": "Các khoản được quy đổi theo tỷ giá hiện tại của Ngân hàng Quốc gia Séc."
+      },
+      "templates": {
+        "title": "Mẫu",
+        "saveAs": "Lưu lựa chọn hiện tại thành mẫu",
+        "namePlaceholder": "Tên mẫu…",
+        "save": "Lưu",
+        "myTemplates": "Mẫu của tôi",
+        "load": "Tải",
+        "delete": "Xóa",
+        "sectionsCount": "{count} phần",
+        "empty": "Chưa có mẫu nào được lưu."
+      },
+      "button": {
+        "cancel": "Hủy",
+        "export": "Xuất PDF",
+        "exporting": "Đang tạo…"
+      },
+      "toasts": {
+        "generating": "Đang tạo PDF…",
+        "success": "Đã xuất PDF thành công",
+        "error": "Không thể tạo PDF",
+        "templateSaved": "Đã lưu mẫu",
+        "templateDeleted": "Đã xóa mẫu"
       }
     }
   },

@@ -6,7 +6,6 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useAppStore, type TabId } from "@/lib/store";
 import type { Project } from "@/lib/api";
 import { ProjectDialog } from "@/components/project-dialog";
-import { PrintReportDialog } from "@/components/print-report-dialog";
 import { AuditLogDialog } from "@/components/audit-log-dialog";
 import { usePageViewTracking } from "@/hooks/use-analytics";
 
@@ -73,7 +72,6 @@ function TabSkeleton() {
 export function ProjectDetail({ project }: { project: Project }) {
   const activeTab = useAppStore((s) => s.activeTab);
   const [editOpen, setEditOpen] = useState(false);
-  const [reportOpen, setReportOpen] = useState(false);
   const [auditOpen, setAuditOpen] = useState(false);
   const qc = useQueryClient();
 
@@ -86,14 +84,11 @@ export function ProjectDetail({ project }: { project: Project }) {
   // Listen for custom events from sidebar Settings menu
   useEffect(() => {
     const openAudit = () => setAuditOpen(true);
-    const openReport = () => setReportOpen(true);
     const openEdit = () => setEditOpen(true);
     window.addEventListener("stavba:open-audit", openAudit);
-    window.addEventListener("stavba:open-report", openReport);
     window.addEventListener("stavba:open-edit", openEdit);
     return () => {
       window.removeEventListener("stavba:open-audit", openAudit);
-      window.removeEventListener("stavba:open-report", openReport);
       window.removeEventListener("stavba:open-edit", openEdit);
     };
   }, []);
@@ -230,12 +225,6 @@ export function ProjectDetail({ project }: { project: Project }) {
 
       {/* Dialogs — triggered from Settings menu in sidebar */}
       <ProjectDialog open={editOpen} onOpenChange={setEditOpen} project={project} />
-      <PrintReportDialog
-        open={reportOpen}
-        onOpenChange={setReportOpen}
-        projectId={project.id}
-        projectName={project.name}
-      />
       <AuditLogDialog open={auditOpen} onOpenChange={setAuditOpen} projectId={project.id} />
     </>
   );

@@ -846,7 +846,8 @@
       "button": {
         "editProject": "Projekt szerkesztése",
         "reportPdf": "PDF jelentés",
-        "auditHistory": "Változtatások előzménye"
+        "auditHistory": "Változtatások előzménye",
+        "exportPdf": "PDF exportálása"
       },
       "data": {
         "title": "Adatok és exportok",
@@ -2402,6 +2403,68 @@
       "footer": {
         "navigation": "Navigáció",
         "select": "Kiválasztás"
+      }
+    },
+    "pdfExport": {
+      "title": "PDF jelentés exportálása",
+      "description": "Válassza ki a szekciókat, nyelvet és pénznemet a PDF jelentéshez. A jelentés alkalmas jelzáloghitelek igényléséhez.",
+      "sections": {
+        "title": "Jelentés szekciói",
+        "header": "Projekt fejléc",
+        "headerDesc": "Projekt neve, címe és leírása",
+        "summary": "Összegzés",
+        "summaryDesc": "Teljes költségvetés, költött, maradék és befejezési százalék",
+        "budgetItems": "Költségvetési tételek",
+        "budgetItemsDesc": "Az összes költségvetési tétel részletes listája fázis szerint csoportosítva",
+        "status": "Állapot",
+        "costs": "Költségek",
+        "dates": "Dátumok",
+        "property": "Ingatlan adatok",
+        "propertyDesc": "Alapterület, emeletek száma, energiatanúsítvány és hőveszteség",
+        "alerts": "Értesítések",
+        "alertsDesc": "Késésben lévő tételek, közelgő határidők és túlköltekezett tételek",
+        "projection": "Költségvetés előrejelzés",
+        "projectionDesc": "Végleges költség becslése a jelenlegi költés alapján",
+        "time": "Időkövetés",
+        "timeDesc": "Munkaórák tételenként",
+        "workers": "Dolgozók",
+        "workersDesc": "Dolgozók és cégek listája munkaórákkal",
+        "contacts": "Kapcsolatok",
+        "contactsDesc": "Projekt kapcsolati névjegyzék",
+        "audit": "Változásnapló",
+        "auditDesc": "A projekt legutóbbi módosításai",
+        "trend": "Költési trend",
+        "trendDesc": "Költés időbeli alakulása grafikonon",
+        "comingSoon": "Hamarosan"
+      },
+      "locale": {
+        "title": "Nyelv és pénznem",
+        "language": "Jelentés nyelve",
+        "currency": "Pénznem",
+        "conversionHint": "Az összegek a Cseh Nemzeti Bank aktuális árfolyama szerint kerülnek átszámításra."
+      },
+      "templates": {
+        "title": "Sablonok",
+        "saveAs": "Jelenlegi kiválasztás mentése sablonként",
+        "namePlaceholder": "Sablon neve…",
+        "save": "Mentés",
+        "myTemplates": "Saját sablonok",
+        "load": "Betöltés",
+        "delete": "Törlés",
+        "sectionsCount": "{count} szekció",
+        "empty": "Még nincsenek mentett sablonok."
+      },
+      "button": {
+        "cancel": "Mégse",
+        "export": "PDF exportálása",
+        "exporting": "Generálás…"
+      },
+      "toasts": {
+        "generating": "PDF generálása…",
+        "success": "PDF sikeresen exportálva",
+        "error": "Nem sikerült létrehozni a PDF-et",
+        "templateSaved": "Sablon mentve",
+        "templateDeleted": "Sablon törölve"
       }
     }
   },

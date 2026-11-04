@@ -33,6 +33,8 @@ import {
 import { computeUserRole, type ProjectRole } from "@/lib/roles";
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";
+import { useState } from "react";
+import { PdfExportDialog } from "@/components/pdf-export-dialog";
 import { ProjectInfoCard } from "./management/project-info-card";
 import { PropertyMetadataCard } from "./management/property-metadata-card";
 import { SharingSection } from "./management/sharing-section";
@@ -59,6 +61,7 @@ export function ProjectManagementTab({ projectId }: { projectId: string }) {
   const updateProject = useUpdateProject(projectId);
   const t = useTranslations("tabs.management");
   const tCommon = useTranslations("common");
+  const [pdfExportOpen, setPdfExportOpen] = useState(false);
 
   // Role-based UI: fetch the current user (session) + project members so we
   // can resolve the user's role within this project. Admins/owners get the
@@ -155,7 +158,6 @@ export function ProjectManagementTab({ projectId }: { projectId: string }) {
   // for `stavba:open-*` window events. We re-dispatch from here so the
   // buttons live next to the rest of the project management actions.
   const openEdit = () => window.dispatchEvent(new Event("stavba:open-edit"));
-  const openReport = () => window.dispatchEvent(new Event("stavba:open-report"));
   const openAudit = () => window.dispatchEvent(new Event("stavba:open-audit"));
 
   const handleDuplicate = async () => {
@@ -203,6 +205,7 @@ export function ProjectManagementTab({ projectId }: { projectId: string }) {
   };
 
   return (
+    <>
     <div id="management-root" className="space-y-6">
       {/* ===== Project Info Card — inline editable for owner/admin,
           read-only display for editors ===== */}
@@ -273,19 +276,19 @@ export function ProjectManagementTab({ projectId }: { projectId: string }) {
               variant="outline"
               size="sm"
               className="gap-2"
-              onClick={openReport}
-            >
-              <FileText className="h-3.5 w-3.5" />
-              {t("button.reportPdf")}
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="gap-2"
               onClick={openAudit}
             >
               <History className="h-3.5 w-3.5" />
               {t("button.auditHistory")}
+            </Button>
+            <Button
+              variant="default"
+              size="sm"
+              className="gap-2"
+              onClick={() => setPdfExportOpen(true)}
+            >
+              <FileText className="h-3.5 w-3.5" />
+              {t("button.exportPdf")}
             </Button>
           </div>
 
@@ -466,5 +469,15 @@ export function ProjectManagementTab({ projectId }: { projectId: string }) {
         </CardContent>
       </Card>
     </div>
+      {/* PDF Export Dialog */}
+      {project && (
+        <PdfExportDialog
+          open={pdfExportOpen}
+          onOpenChange={setPdfExportOpen}
+          projectId={projectId}
+          projectName={project.name}
+        />
+      )}
+    </>
   );
 }

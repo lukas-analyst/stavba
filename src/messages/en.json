@@ -848,7 +848,8 @@
       "button": {
         "editProject": "Edit project",
         "reportPdf": "PDF report",
-        "auditHistory": "Change history"
+        "auditHistory": "Change history",
+        "exportPdf": "Export PDF"
       },
       "data": {
         "title": "Data and exports",
@@ -2405,6 +2406,68 @@
       "footer": {
         "navigation": "Navigation",
         "select": "Select"
+      }
+    },
+    "pdfExport": {
+      "title": "Export PDF report",
+      "description": "Choose sections, language and currency for your PDF report. The report is suitable for mortgage applications.",
+      "sections": {
+        "title": "Report sections",
+        "header": "Project header",
+        "headerDesc": "Project name, address and description",
+        "summary": "Summary",
+        "summaryDesc": "Total budget, spent, remaining and completion percentage",
+        "budgetItems": "Budget items",
+        "budgetItemsDesc": "Detailed list of all budget items grouped by phase",
+        "status": "Status",
+        "costs": "Costs",
+        "dates": "Dates",
+        "property": "Property details",
+        "propertyDesc": "Floor area, number of floors, energy rating and heat loss",
+        "alerts": "Alerts",
+        "alertsDesc": "Overdue items, upcoming deadlines and over-budget items",
+        "projection": "Cost projection",
+        "projectionDesc": "Forecast of final cost based on current spending",
+        "time": "Time tracking",
+        "timeDesc": "Hours worked per item",
+        "workers": "Workers",
+        "workersDesc": "List of workers and companies with their hours",
+        "contacts": "Contacts",
+        "contactsDesc": "Project contact directory",
+        "audit": "Audit log",
+        "auditDesc": "Recent changes made to the project",
+        "trend": "Spending trend",
+        "trendDesc": "Spending over time chart",
+        "comingSoon": "Coming soon"
+      },
+      "locale": {
+        "title": "Language and currency",
+        "language": "Report language",
+        "currency": "Currency",
+        "conversionHint": "Amounts are converted using the current Czech National Bank exchange rate."
+      },
+      "templates": {
+        "title": "Templates",
+        "saveAs": "Save current selection as template",
+        "namePlaceholder": "Template name…",
+        "save": "Save",
+        "myTemplates": "My templates",
+        "load": "Load",
+        "delete": "Delete",
+        "sectionsCount": "{count} sections",
+        "empty": "No saved templates yet."
+      },
+      "button": {
+        "cancel": "Cancel",
+        "export": "Export PDF",
+        "exporting": "Generating…"
+      },
+      "toasts": {
+        "generating": "Generating PDF…",
+        "success": "PDF exported successfully",
+        "error": "Failed to generate PDF",
+        "templateSaved": "Template saved",
+        "templateDeleted": "Template deleted"
       }
     }
   },

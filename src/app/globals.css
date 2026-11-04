@@ -787,123 +787,30 @@
 }
 
 /* ============================================================
-   Print / PDF export styles
+   Print styles
    ------------------------------------------------------------
-   Activated only when `body.printing` class is added right
-   before `window.print()` is invoked (see PrintReportDialog).
-   When inactive, the page prints with normal browser defaults.
+   Minimal print support — the old PrintReportDialog and its
+   `body.printing` scoping have been removed. These rules remain
+   for browser-native Ctrl+P on any page (force light theme,
+   keep colors, A4 geometry).
    ============================================================ */
 @media print {
-  /* Force light theme + neutral background for the printed document */
   html,
   body {
     background: #ffffff !important;
     color: #000000 !important;
   }
 
-  /* Keep badge / phase colors in the saved PDF (Chrome honors this) */
   * {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
 
-  /* Hide every element visually by default when printing the report.
-     Scoped to `body.printing` so regular Ctrl+P on other pages still
-     works as expected — the `.printing` class is only added by the
-     PrintReportDialog immediately before calling window.print(). */
-  body.printing * {
-    visibility: hidden !important;
-  }
-
-  /* Reveal only the report subtree. The `.print-report-content`
-     class is an alias added alongside `.print-report` so the new
-     print stylesheet (added for the mobile-friendly print flow)
-     can target the same wrapper without breaking the legacy rule. */
-  body.printing .print-report,
-  body.printing .print-report *,
-  body.printing .print-report-content,
-  body.printing .print-report-content * {
-    visibility: visible !important;
-  }
-
-  /* The dialog is rendered through a Radix portal at the end of <body>.
-     Its overlay + close button would otherwise overlay the report —
-     drop them entirely. */
-  body.printing [data-slot="dialog-overlay"],
-  body.printing [data-slot="dialog-close"] {
-    display: none !important;
-  }
-
-  /* Neutralize the dialog content's fixed centering so the report can
-     flow from the top-left of the page. */
-  body.printing [data-slot="dialog-content"] {
-    position: static !important;
-    inset: auto !important;
-    transform: none !important;
-    max-height: none !important;
-    max-width: none !important;
-    width: 100% !important;
-    overflow: visible !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    border: none !important;
-    box-shadow: none !important;
-    background: #ffffff !important;
-    border-radius: 0 !important;
-  }
-
-  /* The report container takes the full page width and starts at the top.
-     Both `.print-report` and `.print-report-content` are applied to the
-     same wrapper element in the dialog; both selectors are listed here so
-     renaming either class in the future doesn't silently break print. */
-  body.printing .print-report,
-  body.printing .print-report-content {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100%;
-    border: none !important;
-    box-shadow: none !important;
-    background: #ffffff !important;
-    padding: 0 !important;
-  }
-
-  /* Hide the dialog footer (Zavřít / Stáhnout PDF buttons) in the PDF */
-  body.printing .no-print {
-    display: none !important;
-  }
-
-  /* A4 page geometry */
   @page {
     size: A4;
     margin: 15mm;
   }
 
-  /* Section page breaks (opt-in via class) */
-  .print-break-before {
-    break-before: page;
-  }
-
-  /* Avoid splitting small sections across pages */
-  body.printing .print-section {
-    break-inside: avoid;
-  }
-
-  /* Compact tables for print */
-  body.printing table {
-    font-size: 10pt;
-    border-collapse: collapse;
-  }
-  body.printing th,
-  body.printing td {
-    border-color: #cccccc !important;
-  }
-  body.printing th {
-    background: #f0f0f0 !important;
-    color: #000000 !important;
-  }
-
-  /* Legacy helper preserved for any other callers */
   [data-print-card] {
     break-inside: avoid;
   }
