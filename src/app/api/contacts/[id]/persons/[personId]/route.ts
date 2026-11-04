@@ -1,6 +1,23 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { logChanges } from "@/lib/audit";
+import { requireProjectAccess } from "@/lib/authz";
+
+// =====================================================================
+// PATCH/DELETE /api/contacts/[id]/persons/[personId]
+// ---------------------------------------------------------------------
+// SECURITY (audit fix C4): previously these two handlers had NO auth
+// check — anyone (authenticated or not, since middleware excludes
+// /api/*) could edit/delete any ContactPerson row by (contactId,
+// personId). The sibling routes `/api/contacts/[id]/persons` (POST)
+// and `/api/contacts/[id]` (PATCH/DELETE) all correctly call
+// `requireProjectAccess(existing.projectId, "editor")` — this nested
+// person route was missed.
+//
+// Fix: resolve the parent contact's `projectId`, then require `editor`
+// access to that project before mutating. Pattern mirrors
+// `/api/contacts/[id]` PATCH/DELETE.
+// =====================================================================
 
 // PATCH /api/contacts/[id]/persons/[personId] — update a person
 export async function PATCH(
@@ -27,6 +44,10 @@ export async function PATCH(
     if (!contact) {
       return NextResponse.json({ error: "Contact not found" }, { status: 404 });
     }
+
+    // IDOR fix: verify editor access to the project that owns this contact.
+    const access = await requireProjectAccess(contact.projectId, "editor");
+    if (!access.ok) return access.response;
 
     const updated = await db.contactPerson.update({
       where: { id: personId },
@@ -82,6 +103,10 @@ export async function DELETE(
     if (!contact) {
       return NextResponse.json({ error: "Contact not found" }, { status: 404 });
     }
+
+    // IDOR fix: verify editor access to the project that owns this contact.
+    const access = await requireProjectAccess(contact.projectId, "editor");
+    if (!access.ok) return access.response;
 
     // Log deletion before deleting (entity is gone after delete)
     await logChanges(

@@ -3,6 +3,8 @@ import { getTranslations } from "next-intl/server";
 import { db } from "@/lib/db";
 import { logChanges } from "@/lib/audit";
 import { requireUser } from "@/lib/authz";
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
+import { isValidTokenFormat } from "@/lib/auth-helpers";
 
 // =====================================================================
 // POST /api/invitations/[token]/accept
@@ -19,6 +21,12 @@ import { requireUser } from "@/lib/authz";
 //      → else 403 (prevents someone from accepting an invitation
 //      that was sent to a different address)
 //
+// SECURITY (audit fix H6): added rate-limit (10 / 15min per IP) +
+// pre-validation of token format (64 hex) BEFORE the Prisma lookup.
+// Without this, an attacker could hammer the endpoint with random
+// 64-char strings, each issuing a `findUnique` query — cheap DoS
+// against the DB.
+//
 // On success:
 //   - Creates a ProjectMember record (idempotent — if already a member,
 //     no error)
@@ -27,8 +35,17 @@ import { requireUser } from "@/lib/authz";
 //   - Returns 200 { ok: true, projectId }
 // =====================================================================
 
+// Rate-limit: 10 attempts / 15 min per IP. A legitimate user might
+// click the accept link a few times (browser reload, network retry);
+// 10 leaves headroom. Tokens are 256-bit, so brute-force is hopeless
+// — the rate-limit is purely DoS defense.
+const INVITE_ACCEPT_RATE_LIMIT = {
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+} as const;
+
 export async function POST(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ token: string }> },
 ) {
   const { user, response } = await requireUser();
@@ -36,7 +53,33 @@ export async function POST(
 
   const t = await getTranslations("api.errors");
   try {
+    // Rate-limit per IP (after auth, so authenticated users get the
+    // full quota regardless of how many invitation tokens they try).
+    const ip = getClientIp(request);
+    const rl = checkRateLimit(`invite-accept:${ip}`, INVITE_ACCEPT_RATE_LIMIT);
+    if (rl.limited) {
+      const minutes = Math.max(1, Math.ceil(rl.retryAfter / 60));
+      return NextResponse.json(
+        { error: t("auth.rateLimit.requests", { minutes }) },
+        {
+          status: 429,
+          headers: { "Retry-After": String(rl.retryAfter) },
+        },
+      );
+    }
+
     const { token } = await params;
+
+    // Pre-validate token format BEFORE hitting the DB. Invitation
+    // tokens are 64-char hex (256-bit). Anything else is malformed —
+    // return 404 (same as "not found") to avoid leaking whether a
+    // token exists.
+    if (!isValidTokenFormat(token)) {
+      return NextResponse.json(
+        { error: t("invitations.notFound") },
+        { status: 404 },
+      );
+    }
 
     const invitation = await db.projectInvitation.findUnique({
       where: { token },

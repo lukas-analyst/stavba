@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getTranslations } from "next-intl/server";
 import { requireVerifiedUser } from "@/lib/authz";
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 
 // GET /api/ares?q={ico nebo nazev}
 // Vyhledává české firmy v ARES (Registr ekonomických subjektů).
@@ -14,13 +15,41 @@ import { requireVerifiedUser } from "@/lib/authz";
 // SECURITY: Requires an authenticated, verified user. ARES lookups are a
 // privileged operation (we forward our API key to the ARES service on the
 // user's behalf).
+//
+// SECURITY (audit fix H6): added rate-limit (20 / minute per user+IP).
+// Without it, a single authenticated user (or attacker with stolen
+// credentials) could exhaust the ARES quota or trigger upstream
+// throttling, breaking the feature for all users.
+
+// Rate-limit: 20 lookups / minute per user+IP. A user typing in a
+// contact dialog might fire a few keystroke-debounced queries; 20/min
+// is generous for that. Keyed by user.id + IP for the same reasons
+// as `/api/projects/[id]/request-access`.
+const ARES_RATE_LIMIT = {
+  windowMs: 60 * 1000, // 1 minute
+  max: 20,
+} as const;
 
 export async function GET(request: Request) {
-  const { response } = await requireVerifiedUser();
-  if (response) return response;
+  const { user, response } = await requireVerifiedUser();
+  if (response || !user) return response;
 
   const t = await getTranslations("api.errors");
   try {
+    // Rate-limit per user + IP. Done AFTER auth so we have user.id.
+    const ip = getClientIp(request);
+    const rl = checkRateLimit(`ares:${user.id}:${ip}`, ARES_RATE_LIMIT);
+    if (rl.limited) {
+      const minutes = Math.max(1, Math.ceil(rl.retryAfter / 60));
+      return NextResponse.json(
+        { error: t("auth.rateLimit.requests", { minutes }) },
+        {
+          status: 429,
+          headers: { "Retry-After": String(rl.retryAfter) },
+        },
+      );
+    }
+
     const { searchParams } = new URL(request.url);
     const q = searchParams.get("q")?.trim() ?? "";
 

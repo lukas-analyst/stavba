@@ -2596,6 +2596,7 @@
       "users": {
         "adminOnly": "Csak rendszergazda módosíthatja a rendszergazdai jogosultságokat.",
         "cannotEditOtherProfile": "Más felhasználó profiljának szerkesztése nem engedélyezett.",
+        "cannotViewOtherProfile": "Más felhasználó profiljának megtekintése nem engedélyezett.",
         "userNotFound": "A felhasználó nem található.",
         "noPasswordSet": "A fiókjához nincs jelszó beállítva (Google bejelentkezést használ). Beállíthatja a „Elfelejtett jelszó” funkcióval.",
         "cannotDemoteSelf": "Saját rendszergazdai jogosultság nem vonható vissza."

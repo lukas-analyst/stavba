@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
+import { getTranslations } from "next-intl/server";
 import { db } from "@/lib/db";
 import { logChanges } from "@/lib/audit";
 import { requireUser } from "@/lib/authz";
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 
 // =====================================================================
 // POST /api/projects/[id]/request-access
@@ -23,17 +25,50 @@ import { requireUser } from "@/lib/authz";
 //   4. If the user is already a member → 200 (idempotent, no-op).
 //   5. Otherwise create a ProjectMember with role="viewer" + audit log.
 //
+// SECURITY (audit fix H6): added rate-limit (5 / hour per user+IP).
+// Without it, an authenticated user could iterate public project slugs
+// and auto-join every public project en masse — polluting their
+// sidebar AND appearing in audit logs of many unrelated projects.
+//
 // Returns 200 { ok: true, projectId } on success.
 // =====================================================================
 
+// Rate-limit: 5 self-joins per hour per user+IP. A legitimate user
+// might join a few public projects; 5/hour is generous. Keyed by both
+// user.id and IP so that a single attacker can't bypass by rotating
+// projects, and a shared-IP user (NAT) doesn't get blocked by another
+// user on the same IP.
+const REQUEST_ACCESS_RATE_LIMIT = {
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 5,
+} as const;
+
 export async function POST(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { user, response } = await requireUser();
   if (response || !user) return response!;
 
+  const t = await getTranslations("api.errors");
   try {
+    // Rate-limit per user + IP. Done AFTER auth so we have user.id.
+    const ip = getClientIp(request);
+    const rl = checkRateLimit(
+      `request-access:${user.id}:${ip}`,
+      REQUEST_ACCESS_RATE_LIMIT,
+    );
+    if (rl.limited) {
+      const minutes = Math.max(1, Math.ceil(rl.retryAfter / 60));
+      return NextResponse.json(
+        { error: t("auth.rateLimit.requests", { minutes }) },
+        {
+          status: 429,
+          headers: { "Retry-After": String(rl.retryAfter) },
+        },
+      );
+    }
+
     const { id: slugOrId } = await params;
 
     // Look up the project by slug first, then by ID as fallback.

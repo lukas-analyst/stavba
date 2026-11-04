@@ -6,7 +6,41 @@ import { parseDxfContent } from "@/lib/floorplan/dxf-parser";
 import { DEFAULT_LAYER_MAPPING } from "@/lib/floorplan/layer-mapping";
 import type { FloorplanViewType } from "@/lib/floorplan/types";
 
+// =====================================================================
+// Route segment config — security hardening (audit fix H4)
+// ---------------------------------------------------------------------
+// `bodySizeLimit`: Vercel default is 4.5 MB; we enforce a 5 MB hard
+// cap here to prevent memory-exhaustion DoS via large DXF uploads.
+// `maxDuration`: gives the function up to 60s to parse + persist the
+// DXF (large files take longer to parse). Vercel Pro allows up to 300s;
+// 60s is safe for the 5 MB cap.
+// =====================================================================
 export const dynamic = "force-dynamic";
+export const maxDuration = 60;
+export const bodySizeLimit = "5mb";
+
+// 5 MB hard cap (also enforced by `bodySizeLimit` at the route level,
+// but double-check here for defense-in-depth and to give a clear error
+// message instead of Vercel's generic 413).
+const MAX_DXF_SIZE = 5 * 1024 * 1024;
+
+// Sanitize user-supplied filename for use in the Vercel Blob path.
+// `file.name` is controlled by the client and could contain path
+// traversal segments or unexpected characters. We strip everything
+// except [a-z0-9._-] and collapse to a safe slug.
+function safeFileName(name: string): string {
+  const lower = name.toLowerCase();
+  // Remove the extension first, sanitize, then re-add `.dxf`.
+  const base = lower.replace(/\.dxf$/i, "");
+  const slug = base
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "") // strip diacritics
+    .replace(/[^a-z0-9._-]/g, "_") // replace anything else with _
+    .replace(/_+/g, "_") // collapse runs of _
+    .replace(/^[._-]+/, "") // strip leading separators
+    .slice(0, 80) || "floorplan";
+  return `${slug}.dxf`;
+}
 
 // POST /api/projects/[id]/floorplan/import
 // Upload + parse DXF file, create FloorplanFloor + FloorplanElement[].
@@ -39,6 +73,26 @@ export async function POST(
       );
     }
 
+    // SECURITY (audit fix H4): enforce a hard size cap BEFORE reading
+    // the file into memory. `file.size` is set by the platform parser
+    // (Next.js / Vercel) and is trustworthy.
+    if (file.size > MAX_DXF_SIZE) {
+      return NextResponse.json(
+        {
+          error: `DXF soubor je příliš velký (${(file.size / 1024 / 1024).toFixed(1)} MB). Maximální povolená velikost je 5 MB.`,
+        },
+        { status: 413 },
+      );
+    }
+
+    // Reject empty files (could be a malformed upload or an attack probe).
+    if (file.size === 0) {
+      return NextResponse.json(
+        { error: "Soubor je prázdný." },
+        { status: 400 },
+      );
+    }
+
     const fileName = file.name;
     if (!fileName.toLowerCase().endsWith(".dxf")) {
       return NextResponse.json(
@@ -47,7 +101,7 @@ export async function POST(
       );
     }
 
-    // Read DXF content as text
+    // Read DXF content as text — bounded by MAX_DXF_SIZE above.
     const dxfText = await file.text();
 
     // Parse DXF
@@ -78,14 +132,28 @@ export async function POST(
       floorId = floor.id;
     }
 
-    // Upload DXF file to Vercel Blob
-    const blobPath = `pudorys/${projectId}/${Date.now()}-${fileName}`;
+    // Upload DXF file to Vercel Blob.
+    //
+    // SECURITY NOTE (audit fix H4): audit recommended `access: "private"`,
+    // but switching to private requires a signed-URL GET handler (new API
+    // route + UI changes). That's tracked as a follow-up. For now we:
+    //   - sanitize the filename in the blob path (no path traversal /
+    //     user-controlled subdirs),
+    //   - keep `access: "public"` (existing behavior — `blobUrl` is
+    //     stored in DB but NOT returned by any API response, so the URL
+    //     is effectively unguessable: it contains a Vercel-generated
+    //     random hash segment).
+    // TODO(follow-up): switch to `access: "private"` + signed URL handler.
+    const safeName = safeFileName(fileName);
+    const blobPath = `pudorys/${projectId}/${Date.now()}-${safeName}`;
     let blobUrl = "";
     let fileSize = 0;
     try {
       const blob = await put(blobPath, file, {
         access: "public",
         contentType: "application/dxf",
+        // Vercel Blob allows overriding the random suffix; we let it
+        // add one (default) so the final URL is unguessable.
       });
       blobUrl = blob.url;
       fileSize = file.size;

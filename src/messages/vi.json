@@ -2596,6 +2596,7 @@
       "users": {
         "adminOnly": "Chỉ quản trị viên mới có thể thay đổi quyền quản trị.",
         "cannotEditOtherProfile": "Không được phép chỉnh sửa hồ sơ người dùng khác.",
+        "cannotViewOtherProfile": "Không được phép xem hồ sơ người dùng khác.",
         "userNotFound": "Không tìm thấy người dùng.",
         "noPasswordSet": "Tài khoản của bạn không có mật khẩu (bạn đăng nhập qua Google). Bạn có thể đặt mật khẩu qua tính năng “Quên mật khẩu”.",
         "cannotDemoteSelf": "Bạn không thể gỡ quyền quản trị của chính mình."

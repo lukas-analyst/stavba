@@ -2596,6 +2596,7 @@
       "users": {
         "adminOnly": "Solo un administrador puede cambiar los privilegios de administrador.",
         "cannotEditOtherProfile": "No se permite editar el perfil de otro usuario.",
+        "cannotViewOtherProfile": "No se permite ver el perfil de otro usuario.",
         "userNotFound": "Usuario no encontrado.",
         "noPasswordSet": "Tu cuenta no tiene contraseña (inicias sesión con Google). Puedes definirla mediante «Contraseña olvidada».",
         "cannotDemoteSelf": "No puedes quitarte tus propios privilegios de administrador."

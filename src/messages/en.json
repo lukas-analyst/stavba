@@ -2599,6 +2599,7 @@
       "users": {
         "adminOnly": "Only an administrator can change admin privileges.",
         "cannotEditOtherProfile": "Editing another user's profile is not allowed.",
+        "cannotViewOtherProfile": "Viewing another user's profile is not allowed.",
         "userNotFound": "User not found.",
         "noPasswordSet": "Your account does not have a password set (you sign in via Google). You can set one via the “Forgot password” feature.",
         "cannotDemoteSelf": "You cannot remove your own admin privileges."

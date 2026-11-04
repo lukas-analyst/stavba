@@ -2596,6 +2596,7 @@
       "users": {
         "adminOnly": "Tylko administrator może zmieniać uprawnienia administratora.",
         "cannotEditOtherProfile": "Edycja profilu innego użytkownika nie jest dozwolona.",
+        "cannotViewOtherProfile": "Przeglądanie profilu innego użytkownika nie jest dozwolone.",
         "userNotFound": "Nie znaleziono użytkownika.",
         "noPasswordSet": "Twoje konto nie ma ustawionego hasła (logujesz się przez Google). Możesz ustawić je przez funkcję „Nie pamiętasz hasła”.",
         "cannotDemoteSelf": "Nie możesz odebrać własnych uprawnień administratora."
