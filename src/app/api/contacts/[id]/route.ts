@@ -1,20 +1,62 @@
 import { NextResponse } from "next/server";
+import { getTranslations } from "next-intl/server";
+import { z } from "zod";
 import { db } from "@/lib/db";
 import { logChanges } from "@/lib/audit";
 import { requireProjectAccess } from "@/lib/authz";
+import {
+  parseBody,
+  parseParam,
+  cuidSchema,
+  nonEmptyString,
+  optionalNullableString,
+} from "@/lib/api-validation";
+
+// PATCH body schema — all fields optional (partial update).
+const patchContactBodySchema = z.object({
+  name: nonEmptyString.max(200).optional(),
+  type: z.string().max(50).nullish(),
+  role: optionalNullableString,
+  phone: optionalNullableString,
+  email: optionalNullableString,
+  website: optionalNullableString,
+  company: optionalNullableString,
+  ico: optionalNullableString,
+  dic: optionalNullableString,
+  notes: optionalNullableString,
+  rating: z.preprocess(
+    (v) => {
+      if (v === "" || v === null || v === undefined) return undefined;
+      if (typeof v === "string") return Number(v);
+      return v;
+    },
+    z.union([z.number().int().min(0).max(5), z.null()]).optional(),
+  ),
+});
 
 // PATCH /api/contacts/[id]
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const t = await getTranslations("api.errors");
   try {
-    const { id } = await params;
-    const body = await request.json();
+    const { id: rawId } = await params;
+    const idResult = parseParam(cuidSchema, rawId, t);
+    if (!idResult.success) return idResult.response;
+    const id = idResult.data;
+
+    // Parse + validate body (Zod).
+    const result = await parseBody(patchContactBodySchema, request, t);
+    if (!result.success) return result.response;
+    const body: Record<string, unknown> = { ...result.data };
 
     const existing = await db.contact.findUnique({ where: { id } });
     if (!existing) {
-      return NextResponse.json({ error: "Contact not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: t("contact.notFound") },
+        { status: 404 },
+      );
     }
 
     // IDOR fix: verify editor access to the project that owns this contact.
@@ -24,22 +66,17 @@ export async function PATCH(
     const updated = await db.contact.update({
       where: { id },
       data: {
-        name: body.name !== undefined ? String(body.name).trim() : undefined,
-        type: body.type !== undefined ? body.type : undefined,
-        role: body.role !== undefined ? (body.role?.trim() || null) : undefined,
-        phone: body.phone !== undefined ? (body.phone?.trim() || null) : undefined,
-        email: body.email !== undefined ? (body.email?.trim() || null) : undefined,
-        website: body.website !== undefined ? (body.website?.trim() || null) : undefined,
-        company: body.company !== undefined ? (body.company?.trim() || null) : undefined,
-        ico: body.ico !== undefined ? (body.ico?.trim() || null) : undefined,
-        dic: body.dic !== undefined ? (body.dic?.trim() || null) : undefined,
-        notes: body.notes !== undefined ? (body.notes?.trim() || null) : undefined,
-        rating:
-          body.rating !== undefined
-            ? body.rating === null
-              ? null
-              : Number(body.rating)
-            : undefined,
+        name: body.name !== undefined ? (body.name as string).trim() : undefined,
+        type: body.type !== undefined ? (body.type as string | null) ?? undefined : undefined,
+        role: body.role !== undefined ? (body.role as string | null) ?? null : undefined,
+        phone: body.phone !== undefined ? (body.phone as string | null) ?? null : undefined,
+        email: body.email !== undefined ? (body.email as string | null) ?? null : undefined,
+        website: body.website !== undefined ? (body.website as string | null) ?? null : undefined,
+        company: body.company !== undefined ? (body.company as string | null) ?? null : undefined,
+        ico: body.ico !== undefined ? (body.ico as string | null) ?? null : undefined,
+        dic: body.dic !== undefined ? (body.dic as string | null) ?? null : undefined,
+        notes: body.notes !== undefined ? (body.notes as string | null) ?? null : undefined,
+        rating: body.rating !== undefined ? (body.rating as number | null) : undefined,
       },
       include: {
         persons: {
@@ -56,19 +93,17 @@ export async function PATCH(
       id,
       "update",
       existing as unknown as Record<string, unknown>,
-      {
-        name: body.name,
-        type: body.type,
-        phone: body.phone,
-        email: body.email,
-      },
+      body as unknown as Record<string, unknown>,
       updated.name,
     );
 
     return NextResponse.json(updated);
   } catch (error) {
     console.error("PATCH contact error:", error);
-    return NextResponse.json({ error: "Failed to update contact" }, { status: 500 });
+    return NextResponse.json(
+      { error: t("contact.updateFailed") },
+      { status: 500 },
+    );
   }
 }
 
@@ -77,11 +112,19 @@ export async function DELETE(
   _request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const t = await getTranslations("api.errors");
   try {
-    const { id } = await params;
+    const { id: rawId } = await params;
+    const idResult = parseParam(cuidSchema, rawId, t);
+    if (!idResult.success) return idResult.response;
+    const id = idResult.data;
+
     const existing = await db.contact.findUnique({ where: { id } });
     if (!existing) {
-      return NextResponse.json({ error: "Contact not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: t("contact.notFound") },
+        { status: 404 },
+      );
     }
 
     // IDOR fix: verify editor access to the project that owns this contact.
@@ -103,6 +146,9 @@ export async function DELETE(
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("DELETE contact error:", error);
-    return NextResponse.json({ error: "Failed to delete contact" }, { status: 500 });
+    return NextResponse.json(
+      { error: t("contact.deleteFailed") },
+      { status: 500 },
+    );
   }
 }

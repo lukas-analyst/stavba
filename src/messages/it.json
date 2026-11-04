@@ -2763,6 +2763,22 @@
         "entityTypeAndActionRequired": "Il tipo di entità e l'azione sono obbligatori.",
         "createFailed": "Creazione della voce di audit non riuscita.",
         "fetchFailed": "Recupero del registro di audit non riuscito."
+      },
+      "contact": {
+        "contact.nameRequired": "Il nome del contatto è obbligatorio.",
+        "contact.notFound": "Contatto non trovato.",
+        "contact.createFailed": "Creazione del contatto non riuscita.",
+        "contact.updateFailed": "Aggiornamento del contatto non riuscito.",
+        "contact.deleteFailed": "Eliminazione del contatto non riuscita.",
+        "contact.fetchFailed": "Recupero dei contatti non riuscito.",
+        "contact.invalidRating": "Valutazione non valida (1-5).",
+        "contact.firstNameRequired": "Il nome è obbligatorio.",
+        "contact.lastNameRequired": "Il cognome è obbligatorio.",
+        "contact.personNotFound": "Persona di contatto non trovata.",
+        "contact.personCreateFailed": "Creazione della persona di contatto non riuscita.",
+        "contact.personUpdateFailed": "Aggiornamento della persona di contatto non riuscito.",
+        "contact.personDeleteFailed": "Eliminazione della persona di contatto non riuscita.",
+        "contact.personFetchFailed": "Recupero delle persone di contatto non riuscito."
       }
     }
   },

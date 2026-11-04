@@ -2763,6 +2763,22 @@
         "entityTypeAndActionRequired": "Typ jednostki i akcja są wymagane.",
         "createFailed": "Utworzenie wpisu audytu nie powiodło się.",
         "fetchFailed": "Pobranie dziennika audytu nie powiodło się."
+      },
+      "contact": {
+        "contact.nameRequired": "Nazwa kontaktu jest wymagana.",
+        "contact.notFound": "Kontakt nie został znaleziony.",
+        "contact.createFailed": "Utworzenie kontaktu nie powiodło się.",
+        "contact.updateFailed": "Aktualizacja kontaktu nie powiodła się.",
+        "contact.deleteFailed": "Usunięcie kontaktu nie powiodło się.",
+        "contact.fetchFailed": "Pobranie kontaktów nie powiodło się.",
+        "contact.invalidRating": "Nieprawidłowa ocena (1-5).",
+        "contact.firstNameRequired": "Imię jest wymagane.",
+        "contact.lastNameRequired": "Nazwisko jest wymagane.",
+        "contact.personNotFound": "Osoba kontaktowa nie została znaleziona.",
+        "contact.personCreateFailed": "Utworzenie osoby kontaktowej nie powiodło się.",
+        "contact.personUpdateFailed": "Aktualizacja osoby kontaktowej nie powiodła się.",
+        "contact.personDeleteFailed": "Usunięcie osoby kontaktowej nie powiodło się.",
+        "contact.personFetchFailed": "Pobranie osób kontaktowych nie powiodło się."
       }
     }
   },

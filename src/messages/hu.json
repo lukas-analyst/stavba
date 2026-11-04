@@ -2763,6 +2763,22 @@
         "entityTypeAndActionRequired": "Az entitástípus és a művelet kötelező.",
         "createFailed": "A naplóbejegyzés létrehozása sikertelen.",
         "fetchFailed": "A napló lekérése sikertelen."
+      },
+      "contact": {
+        "contact.nameRequired": "A kapcsolattartó neve kötelező.",
+        "contact.notFound": "A kapcsolattartó nem található.",
+        "contact.createFailed": "A kapcsolattartó létrehozása sikertelen.",
+        "contact.updateFailed": "A kapcsolattartó frissítése sikertelen.",
+        "contact.deleteFailed": "A kapcsolattartó törlése sikertelen.",
+        "contact.fetchFailed": "A kapcsolattartók lekérése sikertelen.",
+        "contact.invalidRating": "Érvénytelen értékelés (1-5).",
+        "contact.firstNameRequired": "A keresztnév kötelező.",
+        "contact.lastNameRequired": "A vezetéknév kötelező.",
+        "contact.personNotFound": "A kapcsolattartó személy nem található.",
+        "contact.personCreateFailed": "A kapcsolattartó személy létrehozása sikertelen.",
+        "contact.personUpdateFailed": "A kapcsolattartó személy frissítése sikertelen.",
+        "contact.personDeleteFailed": "A kapcsolattartó személy törlése sikertelen.",
+        "contact.personFetchFailed": "A kapcsolattartó személyek lekérése sikertelen."
       }
     }
   },

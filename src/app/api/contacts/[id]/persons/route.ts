@@ -1,15 +1,37 @@
 import { NextResponse } from "next/server";
+import { getTranslations } from "next-intl/server";
+import { z } from "zod";
 import { db } from "@/lib/db";
 import { logChanges } from "@/lib/audit";
 import { requireProjectAccess } from "@/lib/authz";
+import {
+  parseBody,
+  parseParam,
+  cuidSchema,
+  nonEmptyString,
+  optionalNullableString,
+} from "@/lib/api-validation";
+
+// POST body schema for creating a contact person.
+const createPersonBodySchema = z.object({
+  firstName: nonEmptyString.max(100, { message: "contact.firstNameRequired" }),
+  lastName: nonEmptyString.max(100, { message: "contact.lastNameRequired" }),
+  phone: optionalNullableString,
+  email: optionalNullableString,
+  role: optionalNullableString,
+});
 
 // GET /api/contacts/[id]/persons — list all persons for a contact
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const t = await getTranslations("api.errors");
   try {
-    const { id } = await params;
+    const { id: rawId } = await params;
+    const idResult = parseParam(cuidSchema, rawId, t);
+    if (!idResult.success) return idResult.response;
+    const id = idResult.data;
 
     // IDOR fix: resolve the contact's projectId and verify viewer access
     // before returning its persons.
@@ -18,7 +40,10 @@ export async function GET(
       select: { projectId: true },
     });
     if (!contact) {
-      return NextResponse.json({ error: "Contact not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: t("contact.notFound") },
+        { status: 404 },
+      );
     }
     const access = await requireProjectAccess(contact.projectId, "viewer");
     if (!access.ok) return access.response;
@@ -30,7 +55,10 @@ export async function GET(
     return NextResponse.json(persons);
   } catch (error) {
     console.error("GET contact persons error:", error);
-    return NextResponse.json({ error: "Failed to fetch persons" }, { status: 500 });
+    return NextResponse.json(
+      { error: t("contact.personFetchFailed") },
+      { status: 500 },
+    );
   }
 }
 
@@ -39,26 +67,30 @@ export async function POST(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const t = await getTranslations("api.errors");
   try {
-    const { id } = await params;
-    const body = await request.json();
+    const { id: rawId } = await params;
+    const idResult = parseParam(cuidSchema, rawId, t);
+    if (!idResult.success) return idResult.response;
+    const id = idResult.data;
 
     // Validate contact exists
     const contact = await db.contact.findUnique({ where: { id } });
     if (!contact) {
-      return NextResponse.json({ error: "Contact not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: t("contact.notFound") },
+        { status: 404 },
+      );
     }
 
     // IDOR fix: require editor access to the project that owns the contact.
     const access = await requireProjectAccess(contact.projectId, "editor");
     if (!access.ok) return access.response;
 
-    if (!body.firstName || typeof body.firstName !== "string" || !body.firstName.trim()) {
-      return NextResponse.json({ error: "First name is required" }, { status: 400 });
-    }
-    if (!body.lastName || typeof body.lastName !== "string" || !body.lastName.trim()) {
-      return NextResponse.json({ error: "Last name is required" }, { status: 400 });
-    }
+    // Parse + validate body (Zod).
+    const result = await parseBody(createPersonBodySchema, request, t);
+    if (!result.success) return result.response;
+    const { firstName, lastName, phone, email, role } = result.data;
 
     // Get next sortOrder
     const maxOrder = await db.contactPerson.aggregate({
@@ -69,17 +101,16 @@ export async function POST(
     const person = await db.contactPerson.create({
       data: {
         contactId: id,
-        firstName: String(body.firstName).trim(),
-        lastName: String(body.lastName).trim(),
-        phone: body.phone?.trim() || null,
-        email: body.email?.trim() || null,
-        role: body.role?.trim() || null,
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        phone: phone ?? null,
+        email: email ?? null,
+        role: role ?? null,
         sortOrder: (maxOrder._max.sortOrder ?? -1) + 1,
       },
     });
 
-    // Log creation to audit log. `contact.projectId` is the parent project
-    // (ContactPerson is a grandchild of Project: Person → Contact → Project).
+    // Log creation to audit log.
     await logChanges(
       contact.projectId,
       "ContactPerson",
@@ -97,6 +128,9 @@ export async function POST(
     return NextResponse.json(person, { status: 201 });
   } catch (error) {
     console.error("POST contact person error:", error);
-    return NextResponse.json({ error: "Failed to create person" }, { status: 500 });
+    return NextResponse.json(
+      { error: t("contact.personCreateFailed") },
+      { status: 500 },
+    );
   }
 }

@@ -2766,6 +2766,22 @@
         "entityTypeAndActionRequired": "Entity type and action are required.",
         "createFailed": "Failed to create audit entry.",
         "fetchFailed": "Failed to fetch audit log."
+      },
+      "contact": {
+        "contact.nameRequired": "Contact name is required.",
+        "contact.notFound": "Contact not found.",
+        "contact.createFailed": "Failed to create contact.",
+        "contact.updateFailed": "Failed to update contact.",
+        "contact.deleteFailed": "Failed to delete contact.",
+        "contact.fetchFailed": "Failed to fetch contacts.",
+        "contact.invalidRating": "Invalid rating (1-5).",
+        "contact.firstNameRequired": "First name is required.",
+        "contact.lastNameRequired": "Last name is required.",
+        "contact.personNotFound": "Contact person not found.",
+        "contact.personCreateFailed": "Failed to create contact person.",
+        "contact.personUpdateFailed": "Failed to update contact person.",
+        "contact.personDeleteFailed": "Failed to delete contact person.",
+        "contact.personFetchFailed": "Failed to fetch contact persons."
       }
     }
   },

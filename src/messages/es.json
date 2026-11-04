@@ -2763,6 +2763,22 @@
         "entityTypeAndActionRequired": "El tipo de entidad y la acción son obligatorios.",
         "createFailed": "Error al crear la entrada de auditoría.",
         "fetchFailed": "Error al obtener el registro de auditoría."
+      },
+      "contact": {
+        "contact.nameRequired": "El nombre del contacto es obligatorio.",
+        "contact.notFound": "Contacto no encontrado.",
+        "contact.createFailed": "Error al crear el contacto.",
+        "contact.updateFailed": "Error al actualizar el contacto.",
+        "contact.deleteFailed": "Error al eliminar el contacto.",
+        "contact.fetchFailed": "Error al obtener los contactos.",
+        "contact.invalidRating": "Valoración no válida (1-5).",
+        "contact.firstNameRequired": "El nombre es obligatorio.",
+        "contact.lastNameRequired": "El apellido es obligatorio.",
+        "contact.personNotFound": "Persona de contacto no encontrada.",
+        "contact.personCreateFailed": "Error al crear la persona de contacto.",
+        "contact.personUpdateFailed": "Error al actualizar la persona de contacto.",
+        "contact.personDeleteFailed": "Error al eliminar la persona de contacto.",
+        "contact.personFetchFailed": "Error al obtener las personas de contacto."
       }
     }
   },

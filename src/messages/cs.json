@@ -2766,6 +2766,22 @@
         "entityTypeAndActionRequired": "Typ entity a akce jsou povinné.",
         "createFailed": "Vytvoření záznamu auditu selhalo.",
         "fetchFailed": "Načtení audit logu selhalo."
+      },
+      "contact": {
+        "contact.nameRequired": "Jméno kontaktu je povinné.",
+        "contact.notFound": "Kontakt nebyl nalezen.",
+        "contact.createFailed": "Vytvoření kontaktu selhalo.",
+        "contact.updateFailed": "Aktualizace kontaktu selhala.",
+        "contact.deleteFailed": "Smazání kontaktu selhalo.",
+        "contact.fetchFailed": "Načtení kontaktů selhalo.",
+        "contact.invalidRating": "Neplatné hodnocení (1-5).",
+        "contact.firstNameRequired": "Křestní jméno je povinné.",
+        "contact.lastNameRequired": "Příjmení je povinné.",
+        "contact.personNotFound": "Kontaktní osoba nebyla nalezena.",
+        "contact.personCreateFailed": "Vytvoření kontaktní osoby selhalo.",
+        "contact.personUpdateFailed": "Aktualizace kontaktní osoby selhala.",
+        "contact.personDeleteFailed": "Smazání kontaktní osoby selhalo.",
+        "contact.personFetchFailed": "Načtení kontaktních osob selhalo."
       }
     }
   },

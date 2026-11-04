@@ -2763,6 +2763,22 @@
         "entityTypeAndActionRequired": "Loại thực thể và hành động là bắt buộc.",
         "createFailed": "Tạo mục kiểm toán thất bại.",
         "fetchFailed": "Tải nhật ký kiểm toán thất bại."
+      },
+      "contact": {
+        "contact.nameRequired": "Tên liên hệ là bắt buộc.",
+        "contact.notFound": "Không tìm thấy liên hệ.",
+        "contact.createFailed": "Tạo liên hệ thất bại.",
+        "contact.updateFailed": "Cập nhật liên hệ thất bại.",
+        "contact.deleteFailed": "Xóa liên hệ thất bại.",
+        "contact.fetchFailed": "Tải liên hệ thất bại.",
+        "contact.invalidRating": "Đánh giá không hợp lệ (1-5).",
+        "contact.firstNameRequired": "Tên là bắt buộc.",
+        "contact.lastNameRequired": "Họ là bắt buộc.",
+        "contact.personNotFound": "Không tìm thấy người liên hệ.",
+        "contact.personCreateFailed": "Tạo người liên hệ thất bại.",
+        "contact.personUpdateFailed": "Cập nhật người liên hệ thất bại.",
+        "contact.personDeleteFailed": "Xóa người liên hệ thất bại.",
+        "contact.personFetchFailed": "Tải người liên hệ thất bại."
       }
     }
   },
