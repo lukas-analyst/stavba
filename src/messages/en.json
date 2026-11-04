@@ -2608,7 +2608,10 @@
         "nameTooLong": "Name is too long (max 120 characters).",
         "nameHtmlTags": "Name must not contain HTML tags.",
         "nameInvalidChars": "Name contains invalid characters.",
-        "nameRequired": "Name must not be empty."
+        "nameRequired": "Name must not be empty.",
+        "users.noUpdatableFields": "No updatable fields provided (name, isAdmin).",
+        "users.fetchFailed": "Failed to fetch user.",
+        "users.updateFailed": "Failed to update user."
       },
       "password": {
         "currentRequired": "Current password is required.",
@@ -2626,7 +2629,32 @@
       },
       "project": {
         "notFoundOrNotPublic": "Project not found or not public.",
-        "publicLoadFailed": "Failed to load public project data."
+        "requestAccessFailed": "Failed to grant access.",
+        "publicLoadFailed": "Failed to load public project data.",
+        "project.nameRequired": "Project name is required.",
+        "project.notFound": "Project not found.",
+        "project.newOwnerNotFound": "New owner not found.",
+        "project.onlyOwnerCanDelete": "Only the project manager can delete a project.",
+        "project.templateTypeRequired": "Template type is required.",
+        "project.templateNotFound": "Template not found.",
+        "project.invalidStatus": "Invalid project status.",
+        "project.invalidCurrency": "Invalid project currency.",
+        "project.invalidStartDate": "Invalid start date.",
+        "project.invalidEndDate": "Invalid end date.",
+        "project.invalidTotalBudget": "Invalid total budget.",
+        "project.invalidHeatLoss": "Invalid heat loss value.",
+        "project.invalidFloorArea": "Invalid floor area.",
+        "project.invalidFloors": "Invalid number of floors.",
+        "project.invalidOwner": "Invalid owner identifier.",
+        "reorder.invalidItems": "Items must be an array of {id, sortOrder} objects.",
+        "reorder.invalidCategoryOrder": "Category order must be an array of strings.",
+        "reorder.failed": "Reorder failed.",
+        "project.createFailed": "Failed to create project.",
+        "project.updateFailed": "Failed to update project.",
+        "project.deleteFailed": "Failed to delete project.",
+        "project.fromTemplateFailed": "Failed to create project from template.",
+        "project.fetchFailed": "Failed to fetch project.",
+        "project.fetchAllFailed": "Failed to fetch projects."
       },
       "ares": {
         "apiUnavailable": "ARES API unavailable.",
@@ -2657,6 +2685,11 @@
         "notDeleted": "This account is not deleted.",
         "permanentlyDeleted": "The account recovery period has expired. The account has been permanently deleted.",
         "useOAuth": "This account has no password set. Sign in with Google."
+      },
+      "reorder": {
+        "invalidItems": "Items must be an array of {id, sortOrder} objects.",
+        "invalidCategoryOrder": "Category order must be an array of strings.",
+        "failed": "Reorder failed."
       }
     }
   },

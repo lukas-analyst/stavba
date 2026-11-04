@@ -2605,7 +2605,10 @@
         "nameTooLong": "El nombre es demasiado largo (máx. 120 caracteres).",
         "nameHtmlTags": "El nombre no debe contener etiquetas HTML.",
         "nameInvalidChars": "El nombre contiene caracteres no válidos.",
-        "nameRequired": "El nombre no debe estar vacío."
+        "nameRequired": "El nombre no debe estar vacío.",
+        "users.noUpdatableFields": "No se proporcionaron campos actualizables (name, isAdmin).",
+        "users.fetchFailed": "Error al obtener el usuario.",
+        "users.updateFailed": "Error al actualizar el usuario."
       },
       "password": {
         "currentRequired": "La contraseña actual es obligatoria.",
@@ -2623,7 +2626,32 @@
       },
       "project": {
         "notFoundOrNotPublic": "Proyecto no encontrado o no público.",
-        "publicLoadFailed": "No se pudieron cargar los datos del proyecto público."
+        "requestAccessFailed": "Error al conceder acceso.",
+        "publicLoadFailed": "No se pudieron cargar los datos del proyecto público.",
+        "project.nameRequired": "El nombre del proyecto es obligatorio.",
+        "project.notFound": "Proyecto no encontrado.",
+        "project.newOwnerNotFound": "Nuevo propietario no encontrado.",
+        "project.onlyOwnerCanDelete": "Solo el gestor del proyecto puede eliminarlo.",
+        "project.templateTypeRequired": "El tipo de plantilla es obligatorio.",
+        "project.templateNotFound": "Plantilla no encontrada.",
+        "project.invalidStatus": "Estado de proyecto no válido.",
+        "project.invalidCurrency": "Moneda de proyecto no válida.",
+        "project.invalidStartDate": "Fecha de inicio no válida.",
+        "project.invalidEndDate": "Fecha de finalización no válida.",
+        "project.invalidTotalBudget": "Presupuesto total no válido.",
+        "project.invalidHeatLoss": "Valor de pérdida de calor no válido.",
+        "project.invalidFloorArea": "Área de piso no válida.",
+        "project.invalidFloors": "Número de pisos no válido.",
+        "project.invalidOwner": "Identificador de propietario no válido.",
+        "reorder.invalidItems": "Los elementos deben ser un array de objetos {id, sortOrder}.",
+        "reorder.invalidCategoryOrder": "El orden de categorías debe ser un array de cadenas.",
+        "reorder.failed": "Error al reordenar.",
+        "project.createFailed": "Error al crear el proyecto.",
+        "project.updateFailed": "Error al actualizar el proyecto.",
+        "project.deleteFailed": "Error al eliminar el proyecto.",
+        "project.fromTemplateFailed": "Error al crear proyecto desde plantilla.",
+        "project.fetchFailed": "Error al obtener el proyecto.",
+        "project.fetchAllFailed": "Error al obtener los proyectos."
       },
       "ares": {
         "apiUnavailable": "API de ARES no disponible.",
@@ -2654,6 +2682,11 @@
         "notDeleted": "Esta cuenta no está eliminada.",
         "permanentlyDeleted": "El periodo de recuperación de la cuenta ha expirado. La cuenta se ha eliminado definitivamente.",
         "useOAuth": "Esta cuenta no tiene contraseña. Inicia sesión con Google."
+      },
+      "reorder": {
+        "invalidItems": "Los elementos deben ser un array de objetos {id, sortOrder}.",
+        "invalidCategoryOrder": "El orden de categorías debe ser un array de cadenas.",
+        "failed": "Error al reordenar."
       }
     }
   },

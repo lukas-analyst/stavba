@@ -1,7 +1,30 @@
 import { NextResponse } from "next/server";
 import { getTranslations } from "next-intl/server";
+import { z } from "zod";
 import { db, dbRead } from "@/lib/db";
 import { requireUser } from "@/lib/require-user";
+import { parseBody, nonEmptyString, optionalNullableString } from "@/lib/api-validation";
+
+// Status enum — kept in sync with `StatusId` in src/lib/format.ts.
+// We accept any of these; anything else is rejected with a 400.
+const projectStatusSchema = z.enum(["active", "planning", "completed", "paused"]);
+
+// Currency — ISO 4217 (3 uppercase letters). We don't validate against the
+// full ISO list (we'd have to maintain it); instead we just enforce the
+// format. The DB stores it as String and downstream code handles unknown
+// currencies gracefully (fallback to CZK formatting).
+const currencySchema = z.string().regex(/^[A-Z]{3}$/, "project.invalidCurrency");
+
+// Date string (ISO 8601) — accepted as string, parsed to Date downstream.
+// We use `z.string()` (not `z.coerce.date()`) because `coerce.date()`
+// accepts invalid dates like "2024-13-45" by converting to Invalid Date
+// which then becomes NaN — we want explicit format validation.
+const isoDateSchema = z
+  .string()
+  .refine(
+    (s) => !isNaN(Date.parse(s)),
+    { message: "project.invalidStartDate" },
+  );
 
 // GET /api/projects - list all projects
 // Performance: instead of N+1 queries (one per project to fetch budget items
@@ -148,22 +171,33 @@ export async function GET() {
   } catch (error) {
     console.error("GET /api/projects error:", error);
     return NextResponse.json(
-      { error: "Failed to fetch projects" },
+      { error: t("project.fetchAllFailed") },
       { status: 500 },
     );
   }
 }
 
+// Body schema for POST /api/projects — used by both the simple create
+// endpoint and as a partial reference for the from-template endpoint.
+const createProjectBodySchema = z.object({
+  name: nonEmptyString.max(200, { message: "project.nameRequired" }),
+  address: optionalNullableString.optional(),
+  description: optionalNullableString.optional(),
+  starred: z.boolean().optional(),
+  status: projectStatusSchema.optional(),
+  currency: currencySchema.optional(),
+  startDate: isoDateSchema.optional(),
+  endDate: isoDateSchema.optional(),
+});
+
 // POST /api/projects - create a project
 export async function POST(request: Request) {
   const t = await getTranslations("api.errors");
   try {
-    const body = await request.json();
-    const { name, address, description, starred, status, currency, startDate, endDate } = body;
-
-    if (!name || typeof name !== "string" || !name.trim()) {
-      return NextResponse.json({ error: "Name is required" }, { status: 400 });
-    }
+    // Parse + validate body (Zod).
+    const result = await parseBody(createProjectBodySchema, request, t);
+    if (!result.success) return result.response;
+    const { name, address, description, starred, status, currency, startDate, endDate } = result.data;
 
     // Generate slug from name (lowercase, kebab-case, no diacritics)
     const baseSlug = name.trim()
@@ -196,8 +230,8 @@ export async function POST(request: Request) {
         name: name.trim(),
         slug: finalSlug,
         ownerId,
-        address: address?.trim() || null,
-        description: description?.trim() || null,
+        address: address ?? null,
+        description: description ?? null,
         starred: Boolean(starred),
         status: status || "planning",
         currency: currency || "CZK",
@@ -209,6 +243,9 @@ export async function POST(request: Request) {
     return NextResponse.json(project, { status: 201 });
   } catch (error) {
     console.error("POST /api/projects error:", error);
-    return NextResponse.json({ error: "Failed to create project" }, { status: 500 });
+    return NextResponse.json(
+      { error: t("project.createFailed") },
+      { status: 500 },
+    );
   }
 }

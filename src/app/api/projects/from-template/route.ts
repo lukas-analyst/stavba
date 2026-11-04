@@ -1,37 +1,52 @@
 import { NextResponse } from "next/server";
 import { getTranslations } from "next-intl/server";
+import { z } from "zod";
 import { db } from "@/lib/db";
 import { requireUser } from "@/lib/require-user";
 import { getTemplate } from "@/lib/project-templates";
+import {
+  parseBody,
+  nonEmptyString,
+  optionalNullableString,
+} from "@/lib/api-validation";
 
 // POST /api/projects/from-template
 // Body: { name, address, description, templateType, scope?, startDate?, endDate? }
 // Creates a project with pre-filled budget items from a template.
+
+// Template type is a free-form string (validated by `getTemplate` lookup
+// which returns null for unknown types). We constrain it to non-empty
+// string + reasonable max length to prevent abuse.
+const fromTemplateBodySchema = z.object({
+  name: nonEmptyString.max(200, { message: "project.nameRequired" }),
+  address: optionalNullableString.optional(),
+  description: optionalNullableString.optional(),
+  templateType: nonEmptyString.max(50, { message: "project.templateTypeRequired" }),
+  scope: nonEmptyString.max(50).optional(),
+  startDate: z
+    .string()
+    .refine((s) => !isNaN(Date.parse(s)), { message: "project.invalidStartDate" })
+    .optional(),
+  endDate: z
+    .string()
+    .refine((s) => !isNaN(Date.parse(s)), { message: "project.invalidEndDate" })
+    .optional(),
+});
+
 export async function POST(request: Request) {
   const t = await getTranslations("api.errors");
   try {
-    const body = await request.json();
-    const {
-      name,
-      address,
-      description,
-      templateType,
-      scope,
-      startDate,
-      endDate,
-    } = body;
-
-    if (!name || typeof name !== "string" || !name.trim()) {
-      return NextResponse.json({ error: "Name is required" }, { status: 400 });
-    }
-
-    if (!templateType) {
-      return NextResponse.json({ error: "templateType is required" }, { status: 400 });
-    }
+    // Parse + validate body (Zod).
+    const result = await parseBody(fromTemplateBodySchema, request, t);
+    if (!result.success) return result.response;
+    const { name, address, description, templateType, scope, startDate, endDate } = result.data;
 
     const template = getTemplate(templateType, scope);
     if (!template) {
-      return NextResponse.json({ error: "Template not found" }, { status: 400 });
+      return NextResponse.json(
+        { error: t("project.templateNotFound") },
+        { status: 400 },
+      );
     }
 
     // Generate slug
@@ -60,8 +75,8 @@ export async function POST(request: Request) {
         name: name.trim(),
         slug,
         ownerId,
-        address: address?.trim() || null,
-        description: description?.trim() || template.description,
+        address: address ?? null,
+        description: description ?? template.description,
         starred: false,
         status: "planning",
         startDate: startDate ? new Date(startDate) : null,
@@ -96,6 +111,9 @@ export async function POST(request: Request) {
     );
   } catch (error) {
     console.error("POST from-template error:", error);
-    return NextResponse.json({ error: "Failed to create project from template" }, { status: 500 });
+    return NextResponse.json(
+      { error: t("project.fromTemplateFailed") },
+      { status: 500 },
+    );
   }
 }

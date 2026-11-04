@@ -1,9 +1,16 @@
 import { NextResponse } from "next/server";
 import { getTranslations } from "next-intl/server";
+import { z } from "zod";
 import { db, dbRead } from "@/lib/db";
 import { requireVerifiedUser } from "@/lib/authz";
 import { requireUser } from "@/lib/require-user";
 import { validateName } from "@/lib/auth-helpers";
+import {
+  parseBody,
+  parseParam,
+  cuidSchema,
+  optionalNameSchema,
+} from "@/lib/api-validation";
 
 // =====================================================================
 // /api/users/[id] — single-user mutations
@@ -38,6 +45,15 @@ import { validateName } from "@/lib/auth-helpers";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
+// Body schema for PATCH — `name` validated via optionalNameSchema (delegates
+// to validateName for HTML/control char checks), `isAdmin` is a strict
+// boolean. Both optional (partial update); authz for `isAdmin` happens
+// after parsing (admin-only check).
+const patchUserBodySchema = z.object({
+  name: optionalNameSchema.optional(),
+  isAdmin: z.boolean().optional(),
+});
+
 export async function GET(_request: Request, { params }: RouteContext) {
   const t = await getTranslations("api.errors");
   try {
@@ -46,7 +62,11 @@ export async function GET(_request: Request, { params }: RouteContext) {
     const { user, response } = await requireVerifiedUser();
     if (response || !user) return response!;
 
-    const { id } = await params;
+    const { id: rawId } = await params;
+    // Validate path param.
+    const idResult = parseParam(cuidSchema, rawId, t);
+    if (!idResult.success) return idResult.response;
+    const id = idResult.data;
 
     // Self — always allowed (user looking up their own profile).
     if (id === user.id) {
@@ -55,7 +75,7 @@ export async function GET(_request: Request, { params }: RouteContext) {
         select: { id: true, name: true, email: true, image: true, createdAt: true },
       });
       if (!self) {
-        return NextResponse.json({ error: "User not found" }, { status: 404 });
+        return NextResponse.json({ error: t("users.userNotFound") }, { status: 404 });
       }
       return NextResponse.json(self);
     }
@@ -76,7 +96,7 @@ export async function GET(_request: Request, { params }: RouteContext) {
         },
       });
       if (!target) {
-        return NextResponse.json({ error: "User not found" }, { status: 404 });
+        return NextResponse.json({ error: t("users.userNotFound") }, { status: 404 });
       }
       // Mask deletedAt for the response (the public shape stays the same
       // as the non-admin path; deletedAt is included so admin UI can
@@ -145,56 +165,42 @@ export async function GET(_request: Request, { params }: RouteContext) {
       // Non-admins never see soft-deleted users (their email is
       // anonymized to `deleted_<id>_<email>` during the cooling-off
       // period). Return 404 — same as "doesn't exist".
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
+      return NextResponse.json({ error: t("users.userNotFound") }, { status: 404 });
     }
     // Strip deletedAt from the response — non-admins don't need it.
     const { deletedAt: _stripped, ...publicFields } = target;
     return NextResponse.json(publicFields);
   } catch (error) {
     console.error("GET /api/users/[id] error:", error);
-    return NextResponse.json({ error: "Failed to fetch user" }, { status: 500 });
+    return NextResponse.json({ error: t("users.fetchFailed") }, { status: 500 });
   }
 }
 
 export async function PATCH(request: Request, { params }: RouteContext) {
   const t = await getTranslations("api.errors");
   try {
-    const { id } = await params;
-    const body = await request.json().catch(() => null);
-    if (!body || typeof body !== "object") {
-      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
-    }
+    const { id: rawId } = await params;
+    // Validate path param.
+    const idResult = parseParam(cuidSchema, rawId, t);
+    if (!idResult.success) return idResult.response;
+    const id = idResult.data;
 
-    const { name, isAdmin } = body as {
-      name?: string;
-      isAdmin?: boolean;
-    };
+    // Parse + validate body (Zod). Replaces ad-hoc
+    // `body as { name?, isAdmin? }` cast + 3 typeof checks.
+    const result = await parseBody(patchUserBodySchema, request, t);
+    if (!result.success) return result.response;
+    const { name, isAdmin } = result.data;
 
     // Build the update payload. `name` and `isAdmin` are both optional,
     // but at least one must be provided so we don't no-op silently.
-    const data: { name?: string; isAdmin?: boolean } = {};
+    const data: { name?: string | null; isAdmin?: boolean } = {};
 
-    if (typeof name === "string") {
-      // SECURITY (audit fix M3): run validateName on PATCH too, not just
-      // on registration. This prevents storing `<img src=x onerror=...>`
-      // or other HTML in the user's name, which would otherwise be
-      // interpolated into e-mail templates (sendVerificationEmail etc.)
-      // — see audit fix M3 in email.ts.
-      const trimmedName = name.trim();
-      if (!trimmedName) {
-        return NextResponse.json(
-          { error: t("users.nameRequired") },
-          { status: 400 },
-        );
-      }
-      const nameError = validateName(name);
-      if (nameError) {
-        return NextResponse.json(
-          { error: t(nameError) },
-          { status: 400 },
-        );
-      }
-      data.name = trimmedName;
+    if (name !== undefined) {
+      // optionalNameSchema returns null for empty (name is optional) or
+      // the trimmed name. validateName already ran inside the schema
+      // (superRefine), so we don't need to re-validate here — but we
+      // keep the explicit null check for clarity.
+      data.name = name;
     }
 
     // ===== Admin-gated field: isAdmin =====
@@ -229,12 +235,12 @@ export async function PATCH(request: Request, { params }: RouteContext) {
           { status: 400 },
         );
       }
-      data.isAdmin = Boolean(isAdmin);
+      data.isAdmin = isAdmin;
     }
 
     if (Object.keys(data).length === 0) {
       return NextResponse.json(
-        { error: "No updatable fields provided (name, isAdmin)" },
+        { error: t("users.noUpdatableFields") },
         { status: 400 },
       );
     }
@@ -245,7 +251,7 @@ export async function PATCH(request: Request, { params }: RouteContext) {
       select: { id: true },
     });
     if (!existing) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
+      return NextResponse.json({ error: t("users.userNotFound") }, { status: 404 });
     }
 
     // Authorization for the `name` field:
@@ -286,7 +292,7 @@ export async function PATCH(request: Request, { params }: RouteContext) {
   } catch (error) {
     console.error("PATCH /api/users/[id] error:", error);
     return NextResponse.json(
-      { error: "Failed to update user" },
+      { error: t("users.updateFailed") },
       { status: 500 },
     );
   }

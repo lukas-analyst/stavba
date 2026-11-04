@@ -2605,7 +2605,10 @@
         "nameTooLong": "Nazwa jest zbyt długa (max 120 znaków).",
         "nameHtmlTags": "Nazwa nie może zawierać tagów HTML.",
         "nameInvalidChars": "Nazwa zawiera nieprawidłowe znaki.",
-        "nameRequired": "Nazwa nie może być pusta."
+        "nameRequired": "Nazwa nie może być pusta.",
+        "users.noUpdatableFields": "Nie podano żadnych pól do aktualizacji (name, isAdmin).",
+        "users.fetchFailed": "Pobranie użytkownika nie powiodło się.",
+        "users.updateFailed": "Aktualizacja użytkownika nie powiodła się."
       },
       "password": {
         "currentRequired": "Aktualne hasło jest wymagane.",
@@ -2623,7 +2626,32 @@
       },
       "project": {
         "notFoundOrNotPublic": "Nie znaleziono projektu lub nie jest publiczny.",
-        "publicLoadFailed": "Nie udało się załadować danych publicznego projektu."
+        "requestAccessFailed": "Nie udało się nadać dostępu.",
+        "publicLoadFailed": "Nie udało się załadować danych publicznego projektu.",
+        "project.nameRequired": "Nazwa projektu jest wymagana.",
+        "project.notFound": "Projekt nie został znaleziony.",
+        "project.newOwnerNotFound": "Nowy właściciel nie został znaleziony.",
+        "project.onlyOwnerCanDelete": "Tylko zarządca projektu może go usunąć.",
+        "project.templateTypeRequired": "Typ szablonu jest wymagany.",
+        "project.templateNotFound": "Szablon nie został znaleziony.",
+        "project.invalidStatus": "Nieprawidłowy status projektu.",
+        "project.invalidCurrency": "Nieprawidłowa waluta projektu.",
+        "project.invalidStartDate": "Nieprawidłowa data rozpoczęcia.",
+        "project.invalidEndDate": "Nieprawidłowa data zakończenia.",
+        "project.invalidTotalBudget": "Nieprawidłowy całkowity budżet.",
+        "project.invalidHeatLoss": "Nieprawidłowa wartość strat ciepła.",
+        "project.invalidFloorArea": "Nieprawidłowa powierzchnia podłogi.",
+        "project.invalidFloors": "Nieprawidłowa liczba pięter.",
+        "project.invalidOwner": "Nieprawidłowy identyfikator właściciela.",
+        "reorder.invalidItems": "Elementy muszą być tablicą obiektów {id, sortOrder}.",
+        "reorder.invalidCategoryOrder": "Kolejność kategorii musi być tablicą ciągów znaków.",
+        "reorder.failed": "Zmiana kolejności nie powiodła się.",
+        "project.createFailed": "Utworzenie projektu nie powiodło się.",
+        "project.updateFailed": "Aktualizacja projektu nie powiodła się.",
+        "project.deleteFailed": "Usunięcie projektu nie powiodło się.",
+        "project.fromTemplateFailed": "Utworzenie projektu z szablonu nie powiodło się.",
+        "project.fetchFailed": "Pobranie projektu nie powiodło się.",
+        "project.fetchAllFailed": "Pobranie projektów nie powiodło się."
       },
       "ares": {
         "apiUnavailable": "API ARES niedostępne.",
@@ -2654,6 +2682,11 @@
         "notDeleted": "To konto nie jest usunięte.",
         "permanentlyDeleted": "Okres odzyskiwania konta wygasł. Konto zostało trwale usunięte.",
         "useOAuth": "To konto nie ma ustawionego hasła. Zaloguj się przez Google."
+      },
+      "reorder": {
+        "invalidItems": "Elementy muszą być tablicą obiektów {id, sortOrder}.",
+        "invalidCategoryOrder": "Kolejność kategorii musi być tablicą ciągów znaków.",
+        "failed": "Zmiana kolejności nie powiodła się."
       }
     }
   },

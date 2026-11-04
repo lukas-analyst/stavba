@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { logChanges } from "@/lib/audit";
 import { requireUser } from "@/lib/authz";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
+import { parseParam, slugOrIdSchema } from "@/lib/api-validation";
 
 // =====================================================================
 // POST /api/projects/[id]/request-access
@@ -69,7 +70,11 @@ export async function POST(
       );
     }
 
-    const { id: slugOrId } = await params;
+    const { id: rawSlugOrId } = await params;
+    // Validate path param (cuid OR slug).
+    const idResult = parseParam(slugOrIdSchema, rawSlugOrId, t);
+    if (!idResult.success) return idResult.response;
+    const slugOrId = idResult.data;
 
     // Look up the project by slug first, then by ID as fallback.
     // Only public projects can be self-joined.
@@ -87,7 +92,7 @@ export async function POST(
     // Same 404 whether missing or private — don't leak existence.
     if (!project || !project.isPublic) {
       return NextResponse.json(
-        { error: "Projekt nebyl nalezen nebo není veřejný." },
+        { error: t("project.notFoundOrNotPublic") },
         { status: 404 },
       );
     }
@@ -130,7 +135,7 @@ export async function POST(
   } catch (error) {
     console.error("POST /api/projects/[slug]/request-access error:", error);
     return NextResponse.json(
-      { error: "Nepodařilo se udělit přístup." },
+      { error: t("project.requestAccessFailed") },
       { status: 500 },
     );
   }

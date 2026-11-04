@@ -2605,7 +2605,10 @@
         "nameTooLong": "Tên quá dài (tối đa 120 ký tự).",
         "nameHtmlTags": "Tên không được chứa thẻ HTML.",
         "nameInvalidChars": "Tên chứa ký tự không hợp lệ.",
-        "nameRequired": "Tên không được để trống."
+        "nameRequired": "Tên không được để trống.",
+        "users.noUpdatableFields": "Không có trường nào có thể cập nhật (name, isAdmin).",
+        "users.fetchFailed": "Tải người dùng thất bại.",
+        "users.updateFailed": "Cập nhật người dùng thất bại."
       },
       "password": {
         "currentRequired": "Mật khẩu hiện tại là bắt buộc.",
@@ -2623,7 +2626,32 @@
       },
       "project": {
         "notFoundOrNotPublic": "Không tìm thấy dự án hoặc không công khai.",
-        "publicLoadFailed": "Không thể tải dữ liệu dự án công khai."
+        "requestAccessFailed": "Không thể cấp quyền truy cập.",
+        "publicLoadFailed": "Không thể tải dữ liệu dự án công khai.",
+        "project.nameRequired": "Tên dự án là bắt buộc.",
+        "project.notFound": "Không tìm thấy dự án.",
+        "project.newOwnerNotFound": "Không tìm thấy chủ sở hữu mới.",
+        "project.onlyOwnerCanDelete": "Chỉ quản lý dự án mới có thể xóa dự án.",
+        "project.templateTypeRequired": "Loại mẫu là bắt buộc.",
+        "project.templateNotFound": "Không tìm thấy mẫu.",
+        "project.invalidStatus": "Trạng thái dự án không hợp lệ.",
+        "project.invalidCurrency": "Loại tiền tệ dự án không hợp lệ.",
+        "project.invalidStartDate": "Ngày bắt đầu không hợp lệ.",
+        "project.invalidEndDate": "Ngày kết thúc không hợp lệ.",
+        "project.invalidTotalBudget": "Tổng ngân sách không hợp lệ.",
+        "project.invalidHeatLoss": "Giá trị tổn thất nhiệt không hợp lệ.",
+        "project.invalidFloorArea": "Diện tích sàn không hợp lệ.",
+        "project.invalidFloors": "Số tầng không hợp lệ.",
+        "project.invalidOwner": "Định danh chủ sở hữu không hợp lệ.",
+        "reorder.invalidItems": "Các mục phải là mảng các đối tượng {id, sortOrder}.",
+        "reorder.invalidCategoryOrder": "Thứ tự danh mục phải là mảng chuỗi.",
+        "reorder.failed": "Sắp xếp lại thất bại.",
+        "project.createFailed": "Tạo dự án thất bại.",
+        "project.updateFailed": "Cập nhật dự án thất bại.",
+        "project.deleteFailed": "Xóa dự án thất bại.",
+        "project.fromTemplateFailed": "Tạo dự án từ mẫu thất bại.",
+        "project.fetchFailed": "Tải dự án thất bại.",
+        "project.fetchAllFailed": "Tải danh sách dự án thất bại."
       },
       "ares": {
         "apiUnavailable": "API ARES không khả dụng.",
@@ -2654,6 +2682,11 @@
         "notDeleted": "Tài khoản này chưa bị xóa.",
         "permanentlyDeleted": "Thời gian khôi phục tài khoản đã hết. Tài khoản đã bị xóa vĩnh viễn.",
         "useOAuth": "Tài khoản này không có mật khẩu. Vui lòng đăng nhập bằng Google."
+      },
+      "reorder": {
+        "invalidItems": "Các mục phải là mảng các đối tượng {id, sortOrder}.",
+        "invalidCategoryOrder": "Thứ tự danh mục phải là mảng chuỗi.",
+        "failed": "Sắp xếp lại thất bại."
       }
     }
   },

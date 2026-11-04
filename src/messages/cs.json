@@ -2608,7 +2608,10 @@
         "nameTooLong": "Jméno je příliš dlouhé (max 120 znaků).",
         "nameHtmlTags": "Jméno nesmí obsahovat HTML tagy.",
         "nameInvalidChars": "Jméno obsahuje neplatné znaky.",
-        "nameRequired": "Jméno nesmí být prázdné."
+        "nameRequired": "Jméno nesmí být prázdné.",
+        "users.noUpdatableFields": "Nebyla poskytnuta žádná aktualizovatelná pole (name, isAdmin).",
+        "users.fetchFailed": "Načtení uživatele selhalo.",
+        "users.updateFailed": "Aktualizace uživatele selhala."
       },
       "password": {
         "currentRequired": "Aktuální heslo je povinné.",
@@ -2626,7 +2629,32 @@
       },
       "project": {
         "notFoundOrNotPublic": "Projekt nebyl nalezen nebo není veřejný.",
-        "publicLoadFailed": "Nepodařilo se načíst veřejná data projektu."
+        "requestAccessFailed": "Nepodařilo se udělit přístup.",
+        "publicLoadFailed": "Nepodařilo se načíst veřejná data projektu.",
+        "project.nameRequired": "Název projektu je povinný.",
+        "project.notFound": "Projekt nebyl nalezen.",
+        "project.newOwnerNotFound": "Nový vlastník nebyl nalezen.",
+        "project.onlyOwnerCanDelete": "Pouze správce projektu může smazat projekt.",
+        "project.templateTypeRequired": "Typ šablony je povinný.",
+        "project.templateNotFound": "Šablona nebyla nalezena.",
+        "project.invalidStatus": "Neplatný stav projektu.",
+        "project.invalidCurrency": "Neplatná měna projektu.",
+        "project.invalidStartDate": "Neplatné datum zahájení.",
+        "project.invalidEndDate": "Neplatné datum ukončení.",
+        "project.invalidTotalBudget": "Neplatný celkový rozpočet.",
+        "project.invalidHeatLoss": "Neplatná tepelná ztráta.",
+        "project.invalidFloorArea": "Neplatná podlahová plocha.",
+        "project.invalidFloors": "Neplatný počet podlaží.",
+        "project.invalidOwner": "Neplatný identifikátor vlastníka.",
+        "reorder.invalidItems": "Položky musí být pole objektů {id, sortOrder}.",
+        "reorder.invalidCategoryOrder": "Pořadí kategorií musí být pole řetězců.",
+        "reorder.failed": "Přeuspořádání selhalo.",
+        "project.createFailed": "Vytvoření projektu selhalo.",
+        "project.updateFailed": "Aktualizace projektu selhala.",
+        "project.deleteFailed": "Smazání projektu selhalo.",
+        "project.fromTemplateFailed": "Vytvoření projektu ze šablony selhalo.",
+        "project.fetchFailed": "Načtení projektu selhalo.",
+        "project.fetchAllFailed": "Načtení projektů selhalo."
       },
       "ares": {
         "apiUnavailable": "ARES API nedostupné.",
@@ -2657,6 +2685,11 @@
         "notDeleted": "Tento účet není smazán.",
         "permanentlyDeleted": "Doba pro obnovení účtu vypršela. Účet byl trvale smazán.",
         "useOAuth": "Tento účet nemá nastavené heslo. Přihlaste se přes Google."
+      },
+      "reorder": {
+        "invalidItems": "Položky musí být pole objektů {id, sortOrder}.",
+        "invalidCategoryOrder": "Pořadí kategorií musí být pole řetězců.",
+        "failed": "Přeuspořádání selhalo."
       }
     }
   },

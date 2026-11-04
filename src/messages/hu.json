@@ -2605,7 +2605,10 @@
         "nameTooLong": "A név túl hosszú (max. 120 karakter).",
         "nameHtmlTags": "A név nem tartalmazhat HTML címkéket.",
         "nameInvalidChars": "A név érvénytelen karaktereket tartalmaz.",
-        "nameRequired": "A név nem lehet üres."
+        "nameRequired": "A név nem lehet üres.",
+        "users.noUpdatableFields": "Nincsenek frissíthető mezők (name, isAdmin).",
+        "users.fetchFailed": "A felhasználó lekérése sikertelen.",
+        "users.updateFailed": "A felhasználó frissítése sikertelen."
       },
       "password": {
         "currentRequired": "A jelenlegi jelszó kötelező.",
@@ -2623,7 +2626,32 @@
       },
       "project": {
         "notFoundOrNotPublic": "A projekt nem található vagy nem nyilvános.",
-        "publicLoadFailed": "Nem sikerült betölteni a nyilvános projekt adatait."
+        "requestAccessFailed": "Nem sikerült hozzáférést biztosítani.",
+        "publicLoadFailed": "Nem sikerült betölteni a nyilvános projekt adatait.",
+        "project.nameRequired": "A projekt neve kötelező.",
+        "project.notFound": "A projekt nem található.",
+        "project.newOwnerNotFound": "Az új tulajdonos nem található.",
+        "project.onlyOwnerCanDelete": "Csak a projekt kezelésére jogosult törölheti a projektet.",
+        "project.templateTypeRequired": "A sablon típusa kötelező.",
+        "project.templateNotFound": "A sablon nem található.",
+        "project.invalidStatus": "Érvénytelen projekt állapot.",
+        "project.invalidCurrency": "Érvénytelen projekt pénznem.",
+        "project.invalidStartDate": "Érvénytelen kezdési dátum.",
+        "project.invalidEndDate": "Érvénytelen befejezési dátum.",
+        "project.invalidTotalBudget": "Érvénytelen teljes költségvetés.",
+        "project.invalidHeatLoss": "Érvénytelen hőveszteség érték.",
+        "project.invalidFloorArea": "Érvénytelen alapterület.",
+        "project.invalidFloors": "Érvénytelen szintek száma.",
+        "project.invalidOwner": "Érvénytelen tulajdonos-azonosító.",
+        "reorder.invalidItems": "Az elemek {id, sortOrder} objektumok tömbje kell legyenek.",
+        "reorder.invalidCategoryOrder": "A kategóriák sorrendje karakterláncok tömbje kell legyen.",
+        "reorder.failed": "Az átrendezés sikertelen.",
+        "project.createFailed": "A projekt létrehozása sikertelen.",
+        "project.updateFailed": "A projekt frissítése sikertelen.",
+        "project.deleteFailed": "A projekt törlése sikertelen.",
+        "project.fromTemplateFailed": "A projekt sablonból való létrehozása sikertelen.",
+        "project.fetchFailed": "A projekt lekérése sikertelen.",
+        "project.fetchAllFailed": "A projektek lekérése sikertelen."
       },
       "ares": {
         "apiUnavailable": "Az ARES API nem érhető el.",
@@ -2654,6 +2682,11 @@
         "notDeleted": "Ez a fiók nincs törölve.",
         "permanentlyDeleted": "A fiók helyreállítási ideje lejárt. A fiók véglegesen törölve lett.",
         "useOAuth": "Ez a fiók nem rendelkezik beállított jelszóval. Jelentkezzen be Google-lal."
+      },
+      "reorder": {
+        "invalidItems": "Az elemek {id, sortOrder} objektumok tömbje kell legyenek.",
+        "invalidCategoryOrder": "A kategóriák sorrendje karakterláncok tömbje kell legyen.",
+        "failed": "Az átrendezés sikertelen."
       }
     }
   },

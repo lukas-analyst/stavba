@@ -1,23 +1,52 @@
 import { NextResponse } from "next/server";
+import { getTranslations } from "next-intl/server";
+import { z } from "zod";
 import { db } from "@/lib/db";
 import { requireProjectAccess } from "@/lib/authz";
+import {
+  parseBody,
+  parseParam,
+  cuidSchema,
+  nonEmptyString,
+} from "@/lib/api-validation";
 
 // PATCH /api/projects/[id]/reorder
 // Body: { items: [{ id, sortOrder }], categoryOrder?: string[] (JSON-serializable) }
 // Updates sortOrder of items and optionally the category order stored on the project.
+
+// Each reorder item must have a valid cuid `id` and an integer `sortOrder`.
+// The previous code accepted any string `id` (passed it to Prisma
+// `where: { id: it.id, projectId }` — Prisma escaped, but malformed IDs
+// would produce unhelpful errors). Now we validate upfront.
+const reorderItemSchema = z.object({
+  id: cuidSchema,
+  sortOrder: z.number().int().nonnegative(),
+});
+
+const reorderBodySchema = z.object({
+  items: z.array(reorderItemSchema).max(500).optional(),
+  categoryOrder: z.array(nonEmptyString).max(100).optional(),
+});
+
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const t = await getTranslations("api.errors");
   try {
-    const { id } = await params;
+    const { id: rawId } = await params;
+    // Validate path param.
+    const idResult = parseParam(cuidSchema, rawId, t);
+    if (!idResult.success) return idResult.response;
+    const id = idResult.data;
+
     const access = await requireProjectAccess(id, "editor");
     if (!access.ok) return access.response;
-    const body = await request.json();
-    const { items, categoryOrder } = body as {
-      items?: { id: string; sortOrder: number }[];
-      categoryOrder?: string[];
-    };
+
+    // Parse + validate body (Zod).
+    const result = await parseBody(reorderBodySchema, request, t);
+    if (!result.success) return result.response;
+    const { items, categoryOrder } = result.data;
 
     // `requireProjectAccess` already verified the project exists, so we can
     // drop the redundant findUnique lookup here.
@@ -28,7 +57,7 @@ export async function PATCH(
         items.map((it) =>
           db.budgetItem.updateMany({
             where: { id: it.id, projectId: id },
-            data: { sortOrder: Number(it.sortOrder) },
+            data: { sortOrder: it.sortOrder },
           }),
         ),
       );
@@ -45,6 +74,9 @@ export async function PATCH(
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("PATCH reorder error:", error);
-    return NextResponse.json({ error: "Failed to reorder" }, { status: 500 });
+    return NextResponse.json(
+      { error: t("reorder.failed") },
+      { status: 500 },
+    );
   }
 }
