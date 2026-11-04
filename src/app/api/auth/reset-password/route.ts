@@ -1,13 +1,11 @@
 import { NextResponse } from "next/server";
 import { getTranslations } from "next-intl/server";
+import { z } from "zod";
 import { verifyResetToken } from "@/lib/email";
-import {
-  hashPassword,
-  validatePassword,
-  isValidTokenFormat,
-} from "@/lib/auth-helpers";
+import { hashPassword } from "@/lib/auth-helpers";
 import { db } from "@/lib/db";
 import { checkRateLimit, getClientIp, RESET_SUBMIT_RATE_LIMIT } from "@/lib/rate-limit";
+import { passwordSchema, tokenSchema, parseBody } from "@/lib/api-validation";
 
 // =====================================================================
 // POST /api/auth/reset-password
@@ -18,12 +16,14 @@ import { checkRateLimit, getClientIp, RESET_SUBMIT_RATE_LIMIT } from "@/lib/rate
 // Clears the token on success.
 // =====================================================================
 
+const resetPasswordBodySchema = z.object({
+  token: tokenSchema,
+  password: passwordSchema,
+});
+
 export async function POST(request: Request) {
   const t = await getTranslations("api.errors");
   try {
-    const body = await request.json();
-    const { token, password } = body as { token?: string; password?: string };
-
     // --- Rate limiting (IP-based: 5 per hour) ---
     const ip = getClientIp(request);
     const rl = checkRateLimit(`reset:${ip}`, RESET_SUBMIT_RATE_LIMIT);
@@ -35,25 +35,12 @@ export async function POST(request: Request) {
       );
     }
 
-    if (!token || !password) {
-      return NextResponse.json(
-        { error: t("auth.tokenAndPasswordRequired") },
-        { status: 400 },
-      );
-    }
-
-    // Validate token format (64 hex chars) — prevents unnecessary DB queries
-    if (!isValidTokenFormat(token)) {
-      return NextResponse.json(
-        { error: t("auth.invalidResetLink") },
-        { status: 400 },
-      );
-    }
-
-    const passwordError = validatePassword(password);
-    if (passwordError) {
-      return NextResponse.json({ error: passwordError }, { status: 400 });
-    }
+    // Parse + validate body. `tokenSchema` validates 64-hex format
+    // (replaces the manual `isValidTokenFormat` check) + `passwordSchema`
+    // validates password policy (replaces `validatePassword`).
+    const result = await parseBody(resetPasswordBodySchema, request);
+    if (!result.success) return result.response;
+    const { token, password } = result.data;
 
     const tokenResult = await verifyResetToken(token);
 
@@ -74,7 +61,7 @@ export async function POST(request: Request) {
     // + tokenVersion increment into a single atomic operation.
     const passwordHash = await hashPassword(password);
 
-    const result = await db.user.updateMany({
+    const result2 = await db.user.updateMany({
       where: {
         id: tokenResult.userId,
         passwordResetToken: token,
@@ -88,7 +75,7 @@ export async function POST(request: Request) {
       },
     });
 
-    if (result.count === 0) {
+    if (result2.count === 0) {
       // Token was used by another request between our verify and update
       return NextResponse.json(
         { error: t("auth.resetLinkUsed") },

@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
+import { z } from "zod";
 import { db } from "@/lib/db";
 import { requireUser } from "@/lib/authz";
 import { verifyPassword } from "@/lib/auth-helpers";
 import { getTranslations } from "next-intl/server";
+import { parseBody } from "@/lib/api-validation";
 
 // =====================================================================
 // DELETE /api/account — soft-delete the current user's account
@@ -26,9 +28,23 @@ import { getTranslations } from "next-intl/server";
 //
 // Projects owned by the user remain in the DB (orphaned). Other
 // members still see them with a "Bez vlastníka" badge.
+//
+// SECURITY (Zod refactor): body is now validated via Zod.
+//   - `acknowledged` is a required boolean (the "I understand" checkbox)
+//   - `password` is an optional string (only needed for Credentials
+//     users — verified after we look up the user)
+//   - `emailConfirm` is an optional string (only needed for OAuth
+//     users — matched against the user's stored email)
+// All other keys are rejected.
 // =====================================================================
 
 const COOLING_OFF_DAYS = 7;
+
+const deleteAccountBodySchema = z.object({
+  acknowledged: z.boolean(),
+  password: z.string().optional(),
+  emailConfirm: z.string().optional(),
+});
 
 export async function DELETE(request: Request) {
   try {
@@ -39,8 +55,11 @@ export async function DELETE(request: Request) {
     }
 
     const t = await getTranslations("api.errors.account");
-    const body = await request.json();
-    const { password, emailConfirm, acknowledged } = body;
+
+    // Parse + validate body (Zod).
+    const result = await parseBody(deleteAccountBodySchema, request);
+    if (!result.success) return result.response;
+    const { acknowledged, password, emailConfirm } = result.data;
 
     // Require the "I understand" checkbox
     if (!acknowledged) {

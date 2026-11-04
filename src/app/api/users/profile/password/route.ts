@@ -1,13 +1,14 @@
 import { NextResponse } from "next/server";
 import { getTranslations } from "next-intl/server";
+import { z } from "zod";
 import { db } from "@/lib/db";
 import { requireVerifiedUser } from "@/lib/authz";
 import {
   hashPassword,
   verifyPassword,
-  validatePassword,
 } from "@/lib/auth-helpers";
 import { logAuthEvent } from "@/lib/auth-audit";
+import { parseBody, passwordSchema } from "@/lib/api-validation";
 
 // =====================================================================
 // POST /api/users/profile/password
@@ -20,7 +21,8 @@ import { logAuthEvent } from "@/lib/auth-audit";
 //   1. requireVerifiedUser() — must be authenticated + e-mail verified
 //   2. Fetch user.password from DB
 //   3. verifyPassword(currentPassword, user.password) → 400 on mismatch
-//   4. validatePassword(newPassword) → 400 on policy violation
+//   4. validatePassword(newPassword) → 400 on policy violation (via
+//      `passwordSchema` which delegates to validatePassword)
 //   5. hashPassword(newPassword)
 //   6. Update DB: set password + increment tokenVersion (invalidates all
 //      other JWT sessions — see jwt callback in auth.ts)
@@ -32,6 +34,16 @@ import { logAuthEvent } from "@/lib/auth-audit";
 // 60s — see `STALE_MS` in auth.ts). Other sessions (different devices)
 // will be invalidated on their next jwt callback run.
 // =====================================================================
+
+// Body schema — `currentPassword` is a non-empty string (the user must
+// type their current password to prove identity), `newPassword` is
+// validated against the password policy via the shared `passwordSchema`
+// (delegates to validatePassword — same error messages as register /
+// reset-password flows).
+const changePasswordBodySchema = z.object({
+  currentPassword: z.string().min(1, { message: "Aktuální heslo je povinné." }),
+  newPassword: passwordSchema,
+});
 
 export async function POST(request: Request) {
   const t = await getTranslations("api.errors");
@@ -45,31 +57,11 @@ export async function POST(request: Request) {
       );
     }
 
-    const body = await request.json().catch(() => null);
-    if (!body || typeof body !== "object") {
-      return NextResponse.json(
-        { error: t("generic.invalidRequest") },
-        { status: 400 },
-      );
-    }
-
-    const { currentPassword, newPassword } = body as {
-      currentPassword?: string;
-      newPassword?: string;
-    };
-
-    if (typeof currentPassword !== "string" || !currentPassword) {
-      return NextResponse.json(
-        { error: t("password.currentRequired") },
-        { status: 400 },
-      );
-    }
-    if (typeof newPassword !== "string" || !newPassword) {
-      return NextResponse.json(
-        { error: t("password.newRequired") },
-        { status: 400 },
-      );
-    }
+    // Parse + validate body (Zod). `currentPassword` is required non-empty,
+    // `newPassword` is validated against the password policy.
+    const result = await parseBody(changePasswordBodySchema, request);
+    if (!result.success) return result.response;
+    const { currentPassword, newPassword } = result.data;
 
     // Fetch the current password hash
     const dbUser = await db.user.findUnique({
@@ -102,18 +94,6 @@ export async function POST(request: Request) {
       });
       return NextResponse.json(
         { error: t("password.incorrectCurrent") },
-        { status: 400 },
-      );
-    }
-
-    // Validate the new password against our policy
-    const passwordError = validatePassword(newPassword);
-    if (passwordError) {
-      await logAuthEvent(user.id, "password_change", false, {
-        reason: "weak_password",
-      });
-      return NextResponse.json(
-        { error: passwordError },
         { status: 400 },
       );
     }

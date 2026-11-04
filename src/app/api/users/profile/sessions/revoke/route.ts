@@ -9,7 +9,9 @@ import { logAuthEvent } from "@/lib/auth-audit";
 // ---------------------------------------------------------------------
 // "Odhlásit všude" — invalidate all OTHER sessions for the current user.
 //
-// No request body.
+// No request body. (Previously the route didn't read the body — that
+// was fine. CSRF middleware + the auth check are the only security
+// gates needed here.)
 //
 // Logic:
 //   1. requireVerifiedUser() — must be authenticated + e-mail verified

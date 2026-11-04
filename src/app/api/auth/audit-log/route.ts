@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
 import { getTranslations } from "next-intl/server";
+import { z } from "zod";
 import { requireUser } from "@/lib/authz";
 import { logAuthEvent, type AuthAction } from "@/lib/auth-audit";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
+import { parseBody } from "@/lib/api-validation";
 
 // =====================================================================
 // POST /api/auth/audit-log
@@ -37,11 +39,18 @@ import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 //
 //   3. For authenticated callers: all ALLOWED_ACTIONS are permitted
 //      (login success, logout, password_change, etc.).
+//
+// SECURITY (Zod refactor): the body is now validated via Zod —
+// `action` must be a string in the ALLOWED_ACTIONS enum, `success`
+// must be boolean, `metadata` (optional) must be a plain object.
+// Picking arbitrary keys from `body as { ... }` is replaced by a
+// type-safe parse.
 // =====================================================================
 
 // Allowed auth actions — kept in sync with AuthAction in auth-audit.ts.
-// We validate the input to prevent arbitrary eventType injection.
-const ALLOWED_ACTIONS: ReadonlySet<AuthAction> = new Set<AuthAction>([
+// We use a literal tuple to derive both the Zod enum and the
+// ANON_ALLOWED_ACTIONS set, so they can never drift.
+const ALLOWED_ACTIONS = [
   "login",
   "logout",
   "register",
@@ -50,13 +59,13 @@ const ALLOWED_ACTIONS: ReadonlySet<AuthAction> = new Set<AuthAction>([
   "email_verify",
   "session_revoke",
   "oauth_login",
-]);
+] as const satisfies readonly AuthAction[];
+
+const actionSchema = z.enum(ALLOWED_ACTIONS);
 
 // Actions that unauthenticated callers may log (defensive allow-list).
 // Failed-login telemetry must work before the user has a session.
-const ANON_ALLOWED_ACTIONS: ReadonlySet<AuthAction> = new Set<AuthAction>([
-  "login", // typically success=false for failed login attempts
-]);
+const ANON_ALLOWED_ACTIONS = new Set<AuthAction>(["login"]);
 
 // Rate limit: 30 events per 15 minutes per IP. A legitimate user can
 // fail login 5× per 15 min (LOGIN_RATE_LIMIT), and may also log a
@@ -66,6 +75,17 @@ const AUDIT_LOG_RATE_LIMIT = {
   windowMs: 15 * 60 * 1000,
   max: 30,
 } as const;
+
+// Zod schema for the audit-log body. `metadata` is constrained to a
+// plain object (no arrays) with string keys — this is defensive
+// (limits the surface for arbitrary JSON injection into the audit log).
+const auditLogBodySchema = z.object({
+  action: actionSchema,
+  success: z.boolean(),
+  metadata: z
+    .record(z.string(), z.unknown())
+    .optional(),
+});
 
 export async function POST(request: Request) {
   const t = await getTranslations("api.errors");
@@ -85,33 +105,12 @@ export async function POST(request: Request) {
       );
     }
 
-    const body = await request.json().catch(() => null);
-    if (!body || typeof body !== "object") {
-      return NextResponse.json(
-        { error: t("generic.invalidRequest") },
-        { status: 400 },
-      );
-    }
-
-    const { action, success, metadata } = body as {
-      action?: string;
-      success?: boolean;
-      metadata?: unknown;
-    };
-
-    if (typeof action !== "string" || !ALLOWED_ACTIONS.has(action as AuthAction)) {
-      return NextResponse.json(
-        { error: t("auth.unknownAuthAction") },
-        { status: 400 },
-      );
-    }
-
-    if (typeof success !== "boolean") {
-      return NextResponse.json(
-        { error: t("auth.successMustBeBoolean") },
-        { status: 400 },
-      );
-    }
+    // Parse + validate body (Zod). Replaces the manual
+    // `body as { action?, success?, metadata? }` cast + 3 separate
+    // typeof checks with a single type-safe parse.
+    const result = await parseBody(auditLogBodySchema, request);
+    if (!result.success) return result.response;
+    const { action, success, metadata } = result.data;
 
     // Resolve user (nullable — failed logins may have no session).
     // `requireUser` (not requireVerifiedUser) — we want to log events
@@ -123,25 +122,14 @@ export async function POST(request: Request) {
     // (typically `success=false` for failed login attempts). Any
     // other action requires a session — return 401 (NOT 403) so we
     // don't reveal which actions exist for authenticated users.
-    if (!userId && !ANON_ALLOWED_ACTIONS.has(action as AuthAction)) {
+    if (!userId && !ANON_ALLOWED_ACTIONS.has(action)) {
       return NextResponse.json(
         { error: t("auth.notAuthenticated") },
         { status: 401 },
       );
     }
 
-    // Sanitize metadata — only accept plain objects.
-    const safeMetadata =
-      metadata && typeof metadata === "object" && !Array.isArray(metadata)
-        ? (metadata as Record<string, unknown>)
-        : undefined;
-
-    await logAuthEvent(
-      userId,
-      action as AuthAction,
-      success,
-      safeMetadata,
-    );
+    await logAuthEvent(userId, action, success, metadata);
 
     return NextResponse.json({ ok: true });
   } catch (error) {

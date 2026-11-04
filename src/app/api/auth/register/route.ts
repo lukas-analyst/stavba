@@ -1,13 +1,17 @@
 import { NextResponse } from "next/server";
 import { getTranslations } from "next-intl/server";
+import { z } from "zod";
 import { db } from "@/lib/db";
 import {
   hashPassword,
-  validatePassword,
-  validateEmail,
-  validateName,
   normalizeEmail,
 } from "@/lib/auth-helpers";
+import {
+  emailSchema,
+  passwordSchema,
+  optionalNameSchema,
+  parseBody,
+} from "@/lib/api-validation";
 import { sendVerificationEmail } from "@/lib/email";
 import { logAuthEvent } from "@/lib/auth-audit";
 import { checkRateLimit, getClientIp, REGISTER_RATE_LIMIT } from "@/lib/rate-limit";
@@ -30,17 +34,23 @@ import { checkRateLimit, getClientIp, REGISTER_RATE_LIMIT } from "@/lib/rate-lim
 // This gives us better control over the flow + error handling.
 // =====================================================================
 
+// Zod schema for the registration body. Reuses emailSchema (delegates to
+// validateEmail) + passwordSchema (delegates to validatePassword) +
+// optionalNameSchema (delegates to validateName — handles HTML/control
+// char rejection). All error messages stay identical to the pre-Zod
+// implementation so the UX doesn't drift.
+const registerBodySchema = z.object({
+  email: emailSchema,
+  password: passwordSchema,
+  name: optionalNameSchema.optional(),
+});
+
 export async function POST(request: Request) {
   const t = await getTranslations("api.errors");
   try {
-    const body = await request.json();
-    const { email, password, name } = body as {
-      email?: string;
-      password?: string;
-      name?: string;
-    };
-
     // --- Rate limiting (IP-based: 3 registrations per hour) ---
+    // Done BEFORE body parsing — if the IP is rate-limited we don't
+    // even read the body, saving CPU + DB load on attack floods.
     const ip = getClientIp(request);
     const rl = checkRateLimit(`register:${ip}`, REGISTER_RATE_LIMIT);
     if (rl.limited) {
@@ -51,32 +61,13 @@ export async function POST(request: Request) {
       );
     }
 
-    // --- Validation ---
-    if (!email || !password) {
-      return NextResponse.json(
-        { error: t("auth.emailAndPasswordRequired") },
-        { status: 400 },
-      );
-    }
+    // --- Parse + validate body (Zod) ---
+    const result = await parseBody(registerBodySchema, request);
+    if (!result.success) return result.response;
+    const { email, password, name } = result.data;
 
-    const emailError = validateEmail(email);
-    if (emailError) {
-      return NextResponse.json({ error: emailError }, { status: 400 });
-    }
-
-    // Validate name if provided (optional field)
-    if (name !== undefined && name !== null && name.trim()) {
-      const nameError = validateName(name);
-      if (nameError) {
-        return NextResponse.json({ error: nameError }, { status: 400 });
-      }
-    }
-
-    const passwordError = validatePassword(password);
-    if (passwordError) {
-      return NextResponse.json({ error: passwordError }, { status: 400 });
-    }
-
+    // emailSchema already returns the normalized (trim+lowercase) email;
+    // normalizeEmail is a no-op here, kept for explicit clarity.
     const normalizedEmail = normalizeEmail(email);
 
     // --- Find existing user ---
@@ -138,7 +129,7 @@ export async function POST(request: Request) {
           data: {
             password: passwordHash,
             tokenVersion: { increment: 1 },
-            ...(existing.name ? {} : { name: name?.trim() || null }),
+            ...(existing.name ? {} : { name: name ?? null }),
           },
         });
 
@@ -159,7 +150,7 @@ export async function POST(request: Request) {
         const newUser = await db.user.create({
           data: {
             email: normalizedEmail,
-            name: name?.trim() || null,
+            name: name ?? null,
             password: passwordHash,
           },
           select: { id: true },
@@ -198,7 +189,7 @@ export async function POST(request: Request) {
     // the registration if the e-mail fails — the user can request a
     // resend from the verify-pending page.
     try {
-      await sendVerificationEmail(normalizedEmail, name?.trim() || null);
+      await sendVerificationEmail(normalizedEmail, name ?? null);
     } catch (emailError) {
       console.error("Failed to send verification e-mail:", emailError);
       // Don't fail the registration — the user can resend from the

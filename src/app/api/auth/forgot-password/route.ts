@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 import { getTranslations } from "next-intl/server";
+import { z } from "zod";
 import { sendPasswordResetEmail } from "@/lib/email";
 import { checkRateLimit, getClientIp, RESET_REQUEST_RATE_LIMIT } from "@/lib/rate-limit";
+import { emailSchema, parseBody } from "@/lib/api-validation";
 
 // =====================================================================
 // POST /api/auth/forgot-password
@@ -11,6 +13,10 @@ import { checkRateLimit, getClientIp, RESET_REQUEST_RATE_LIMIT } from "@/lib/rat
 // Sends a password-reset e-mail if the account exists. Always returns
 // 200 OK (even if the e-mail doesn't exist) to prevent enumeration.
 // =====================================================================
+
+const forgotPasswordBodySchema = z.object({
+  email: emailSchema,
+});
 
 export async function POST(request: Request) {
   const t = await getTranslations("api.errors");
@@ -26,17 +32,13 @@ export async function POST(request: Request) {
       );
     }
 
-    const body = await request.json();
-    const { email } = body as { email?: string };
+    // Parse + validate body. `emailSchema` already returns normalized
+    // (trim + lowercase) email, so no separate normalizeEmail call needed.
+    const result = await parseBody(forgotPasswordBodySchema, request);
+    if (!result.success) return result.response;
+    const { email } = result.data;
 
-    if (!email) {
-      return NextResponse.json(
-        { error: t("auth.emailRequired") },
-        { status: 400 },
-      );
-    }
-
-    await sendPasswordResetEmail(email.trim().toLowerCase());
+    await sendPasswordResetEmail(email);
 
     // Always return OK — don't reveal whether the e-mail exists
     return NextResponse.json({

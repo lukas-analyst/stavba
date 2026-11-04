@@ -1,9 +1,11 @@
 import { NextResponse } from "next/server";
 import { getTranslations } from "next-intl/server";
+import { z } from "zod";
 import { verifyEmailToken, sendVerificationEmail } from "@/lib/email";
 import { db } from "@/lib/db";
 import { checkRateLimit, getClientIp, VERIFY_RESEND_RATE_LIMIT } from "@/lib/rate-limit";
 import { isValidTokenFormat } from "@/lib/auth-helpers";
+import { emailSchema, parseBody } from "@/lib/api-validation";
 
 // =====================================================================
 // GET /api/auth/verify-email?token=...
@@ -55,23 +57,20 @@ export async function GET(request: Request) {
 // Body: { email: string }
 // =====================================================================
 
+const verifyEmailResendBodySchema = z.object({
+  email: emailSchema,
+});
+
 export async function POST(request: Request) {
   const t = await getTranslations("api.errors");
   try {
-    const body = await request.json();
-    const { email } = body as { email?: string };
-
-    if (!email) {
-      return NextResponse.json(
-        { error: t("auth.emailRequired") },
-        { status: 400 },
-      );
-    }
-
-    const normalizedEmail = email.trim().toLowerCase();
+    // Parse + validate body. emailSchema returns normalized email.
+    const result = await parseBody(verifyEmailResendBodySchema, request);
+    if (!result.success) return result.response;
+    const { email } = result.data;
 
     // Rate limit: 3 resends per hour per e-mail (prevents e-mail flooding)
-    const rl = checkRateLimit(`verify-resend:${normalizedEmail}`, VERIFY_RESEND_RATE_LIMIT);
+    const rl = checkRateLimit(`verify-resend:${email}`, VERIFY_RESEND_RATE_LIMIT);
     if (rl.limited) {
       const minutes = Math.ceil(rl.retryAfter / 60);
       return NextResponse.json(
@@ -81,7 +80,7 @@ export async function POST(request: Request) {
     }
 
     const user = await db.user.findUnique({
-      where: { email: normalizedEmail },
+      where: { email },
       select: { id: true, name: true, emailVerified: true },
     });
 
@@ -97,7 +96,7 @@ export async function POST(request: Request) {
       );
     }
 
-    await sendVerificationEmail(normalizedEmail, user.name);
+    await sendVerificationEmail(email, user.name);
 
     return NextResponse.json({ ok: true });
   } catch (error) {

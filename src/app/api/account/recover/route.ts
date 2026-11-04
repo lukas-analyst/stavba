@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
-import { db } from "@/lib/db";
 import { getTranslations } from "next-intl/server";
+import { z } from "zod";
+import { db } from "@/lib/db";
 import { normalizeEmail } from "@/lib/auth-helpers";
 import { checkRateLimit, LOGIN_RATE_LIMIT, getClientIp } from "@/lib/rate-limit";
+import { emailSchema, parseBody } from "@/lib/api-validation";
 
 // =====================================================================
 // POST /api/account/recover — recover a soft-deleted account
@@ -18,9 +20,24 @@ import { checkRateLimit, LOGIN_RATE_LIMIT, getClientIp } from "@/lib/rate-limit"
 //
 // On success: clear deletedAt, set restoredAt, return success.
 // The frontend then calls signIn() to establish a fresh session.
+//
+// SECURITY (Zod refactor): body is now validated via Zod. `email` is
+// constrained to the email-schema (returns normalized). `password` is
+// optional (only required for Credentials recovery — verified after
+// we look up the user). `provider` is constrained to the literal
+// "google" — any other value falls through to the Credentials branch.
 // =====================================================================
 
 const COOLING_OFF_DAYS = 7;
+
+const recoverBodySchema = z.object({
+  email: emailSchema,
+  // Optional — only required for Credentials recovery.
+  password: z.string().optional(),
+  // Optional — when set to "google", skips the password check (Google
+  // already verified the email during sign-in).
+  provider: z.literal("google").optional(),
+});
 
 export async function POST(request: Request) {
   try {
@@ -36,15 +53,10 @@ export async function POST(request: Request) {
       );
     }
 
-    const body = await request.json();
-    const { email, password, provider } = body;
-
-    if (!email) {
-      return NextResponse.json(
-        { error: t("emailRequired") },
-        { status: 400 },
-      );
-    }
+    // Parse + validate body. emailSchema returns the normalized email.
+    const result = await parseBody(recoverBodySchema, request);
+    if (!result.success) return result.response;
+    const { email, password, provider } = result.data;
 
     const normalizedEmail = normalizeEmail(email);
 
