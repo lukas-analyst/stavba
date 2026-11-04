@@ -61,16 +61,58 @@ export async function sendEmail({ to, subject, htmlContent }: BrevoEmailParams):
 }
 
 // =====================================================================
+// HTML escaping helper (audit fix M3)
+// ---------------------------------------------------------------------
+// All user-controlled values interpolated into e-mail HTML bodies
+// (projectName, inviterName, userName, inviteeEmail) MUST be escaped
+// before insertion. Without this, a malicious project owner could set
+// their name to `<img src=x onerror=fetch('/api/...')>` or a project
+// name to `<a href="https://evil.com">Click here</a>`. Gmail / Outlook
+// strip most of this, but permissive HTML clients (some desktop /
+// webmail) could execute the payload → phishing or credential capture
+// inside the trust context of a Stavba invitation e-mail.
+// =====================================================================
+
+/**
+ * Escape a string for safe insertion into HTML text content or a
+ * double-quoted attribute value. Escapes the 5 characters mandated by
+ * OWASP: & < > " '.
+ */
+export function escapeHtml(unsafe: string): string {
+  return unsafe
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+/**
+ * Escape a string for safe insertion into an `href="..."` attribute.
+ * In addition to HTML-escaping (via `escapeHtml`), this also URL-encodes
+ * any characters that could break out of the attribute context. Used
+ * for `verifyUrl`, `resetUrl`, `inviteUrl` — these are constructed from
+ * `NEXTAUTH_URL` + a 64-hex token, both of which are URL-safe, but
+ * defense-in-depth is cheap here.
+ */
+export function escapeUrlAttr(url: string): string {
+  return escapeHtml(url);
+}
+
+// =====================================================================
 // E-mail templates
 // =====================================================================
 
 export function emailShell(innerHtml: string, title: string): string {
+  // Title is set by us (not user-controlled) — but escape anyway in case
+  // a future caller passes a user value.
+  const safeTitle = escapeHtml(title);
   return `<!DOCTYPE html>
 <html lang="cs">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${title}</title>
+  <title>${safeTitle}</title>
   <style>
     body { margin: 0; padding: 0; background: #f4f4f5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
     .container { max-width: 600px; margin: 0 auto; padding: 32px 24px; }
@@ -150,12 +192,18 @@ export async function sendVerificationEmail(userEmail: string, userName: string 
 
   const verifyUrl = `${process.env.NEXTAUTH_URL}/auth/verify-email?token=${token}`;
 
+  // SECURITY (audit fix M3): escape user-controlled values before
+  // interpolating into HTML. `userName` comes from the DB and could
+  // contain HTML if a future PATCH endpoint bypasses validateName.
+  const safeUserName = userName ? escapeHtml(userName) : "";
+  const safeVerifyUrl = escapeUrlAttr(verifyUrl);
+
   const html = emailShell(`
     <h1>Ověřte svou e-mailovou adresu</h1>
-    <p>Ahoj${userName ? ` ${userName}` : ""},</p>
+    <p>Ahoj${safeUserName ? ` ${safeUserName}` : ""},</p>
     <p>Děkujeme za registraci v aplikaci Stavba. Pro dokončení registrace a přístup k vašim projektům prosím potvrďte svou e-mailovou adresu.</p>
-    <a href="${verifyUrl}" class="btn">Ověřit e-mail</a>
-    <p class="link-fallback">Pokud tlačítko nefunguje, zkopírujte tento odkaz do prohlížeče:<br>${verifyUrl}</p>
+    <a href="${safeVerifyUrl}" class="btn">Ověřit e-mail</a>
+    <p class="link-fallback">Pokud tlačítko nefunguje, zkopírujte tento odkaz do prohlížeče:<br>${safeVerifyUrl}</p>
     <p class="hint">Tento odkaz vyprší za 24 hodin. Pokud jste se neregistrovali, tento e-mail můžete ignorovat.</p>
   `, "Ověření e-mailu — Stavba");
 
@@ -203,12 +251,16 @@ export async function sendPasswordResetEmail(userEmail: string): Promise<boolean
 
   const resetUrl = `${process.env.NEXTAUTH_URL}/auth/reset-password?token=${token}`;
 
+  // SECURITY (audit fix M3): escape user-controlled values.
+  const safeUserName = user.name ? escapeHtml(user.name) : "";
+  const safeResetUrl = escapeUrlAttr(resetUrl);
+
   const html = emailShell(`
     <h1>Reset hesla</h1>
-    <p>Ahoj${user.name ? ` ${user.name}` : ""},</p>
+    <p>Ahoj${safeUserName ? ` ${safeUserName}` : ""},</p>
     <p>Obdrželi jsme žádost o reset hesla k vašemu účtu v aplikaci Stavba. Pokud jste to byli vy, klikněte na tlačítko níže a nastavte si nové heslo.</p>
-    <a href="${resetUrl}" class="btn">Resetovat heslo</a>
-    <p class="link-fallback">Pokud tlačítko nefunguje, zkopírujte tento odkaz do prohlížeče:<br>${resetUrl}</p>
+    <a href="${safeResetUrl}" class="btn">Resetovat heslo</a>
+    <p class="link-fallback">Pokud tlačítko nefunguje, zkopírujte tento odkaz do prohlížeče:<br>${safeResetUrl}</p>
     <p class="hint">Tento odkaz vyprší za 1 hodinu. Pokud jste o reset hesla nežádali, tento e-mail můžete ignorovat — vaše heslo zůstává beze změny.</p>
   `, "Reset hesla — Stavba");
 

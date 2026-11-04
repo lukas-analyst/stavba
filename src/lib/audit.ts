@@ -11,6 +11,62 @@ import {
 export { FIELD_LABELS, translateValue, getFieldLabel, getFieldValue };
 
 // ============================================================
+// Sensitive field redaction (audit fix L1)
+// ------------------------------------------------------------
+// Defensive allow-list of field names that MUST NEVER be persisted
+// to AuditLog.oldValue / AuditLog.newValue, even if a future entity
+// starts passing them through `logChanges`. Currently `logChanges`
+// is only called for project-scoped entities (BudgetItem, Payment,
+// TimeEntry, Contact, ContactPerson, Note, Project, ProjectMember,
+// BudgetItemLink) which don't hold secrets — but a future entity
+// with a `password`, `apiKey`, `token`, or `*_token` field would
+// otherwise have its value written to the audit log in plaintext.
+//
+// When a redacted field appears in a diff, we store the literal
+// string "[REDACTED]" instead of the actual value. This preserves
+// the audit signal "the field changed" without leaking the secret.
+// ============================================================
+const REDACTED_FIELDS = new Set([
+  "password",
+  "passwordHash",
+  "token",
+  "secret",
+  "apiKey",
+  "api_key",
+  "accessToken",
+  "access_token",
+  "refreshToken",
+  "refresh_token",
+  "idToken",
+  "id_token",
+  "emailVerifyToken",
+  "passwordResetToken",
+  "clientSecret",
+  "client_secret",
+  "cronSecret",
+  "nextauthSecret",
+  "nextauth_secret",
+  "brevoApiKey",
+  "brevo_api_key",
+]);
+
+function isRedactedField(key: string): boolean {
+  // Exact match (case-sensitive — field names in our schema are camelCase).
+  if (REDACTED_FIELDS.has(key)) return true;
+  // Heuristic: any key ending in `_token`, `_secret`, `_key`, `Token`,
+  // `Secret`, `Key` is treated as sensitive. Catches future fields
+  // without requiring an update to the set above.
+  return (
+    /Token$/.test(key) ||
+    /Secret$/.test(key) ||
+    /Key$/.test(key) ||
+    /_token$/.test(key) ||
+    /_secret$/.test(key) ||
+    /_key$/.test(key)
+  );
+}
+
+// ============================================================
 // Main audit logging function
 // ============================================================
 export async function logChanges(
@@ -82,6 +138,30 @@ export async function logChanges(
       if (key === "updatedAt" || key === "createdAt") continue;
       const oldVal = oldData[key];
       const newVal = newData[key];
+
+      // SECURITY (audit fix L1): redact sensitive fields (password,
+      // tokens, secrets, API keys) before storing in AuditLog. This
+      // is a defensive guard — currently no project-scoped entity has
+      // these fields, but a future one might.
+      if (isRedactedField(key)) {
+        const oldRedacted = oldVal === null || oldVal === undefined ? "" : "[REDACTED]";
+        const newRedacted = newVal === null || newVal === undefined ? "" : "[REDACTED]";
+        if (oldRedacted !== newRedacted) {
+          entries.push({
+            projectId,
+            userId,
+            entityType,
+            entityId,
+            entityLabel: label,
+            action: "update",
+            field: key,
+            oldValue: oldRedacted || null,
+            newValue: newRedacted || null,
+          });
+        }
+        continue;
+      }
+
       // Convert values to storable strings. Objects (e.g. Prisma relations
       // like `contact: { id, name }`) would produce "[object Object]" via
       // String() — instead, extract a readable value or JSON-stringify.

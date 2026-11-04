@@ -3,6 +3,7 @@ import { revalidateTag } from "next/cache";
 import { db } from "@/lib/db";
 import { logChanges } from "@/lib/audit";
 import { convertAmount } from "@/lib/currency";
+import { verifyCronSecret } from "@/lib/cron-auth";
 import {
   normalizeRecurringInterval,
   computeNextRecurringDate,
@@ -34,34 +35,14 @@ import {
 //      amounts) for the clone's budgetItem.
 //   4. Advance the template's `recurringNextDate` to the next interval.
 //
-// Protected by CRON_SECRET (same pattern as finalize-deletions +
-// fetch-exchange-rates). Vercel Cron calls this daily at 04:00 UTC.
+// Protected by CRON_SECRET (see `verifyCronSecret` in @/lib/cron-auth).
+// SECURITY (audit fix M1): timing-safe comparison + removed `?secret=`
+// query fallback (leaked the secret into logs).
 // =====================================================================
 
 export async function GET(request: Request) {
-  // Verify CRON_SECRET to prevent unauthorized access.
-  // Vercel Cron sends the secret in the `Authorization: Bearer <secret>`
-  // header. We also accept `?secret=<secret>` query param for manual
-  // testing / alternative cron providers.
-  const authHeader = request.headers.get("authorization");
-  const url = new URL(request.url);
-  const querySecret = url.searchParams.get("secret");
-  const cronSecret = process.env.CRON_SECRET;
-
-  if (!cronSecret) {
-    console.error(
-      "CRON_SECRET env var is not set — skipping process-recurring-payments",
-    );
-    return NextResponse.json(
-      { error: "Cron secret not configured" },
-      { status: 500 },
-    );
-  }
-
-  const isValid = authHeader === `Bearer ${cronSecret}` || querySecret === cronSecret;
-  if (!isValid) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const auth = verifyCronSecret(request);
+  if (!auth.ok) return auth.response;
 
   try {
     const now = new Date();

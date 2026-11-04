@@ -4,7 +4,8 @@ import { db, dbRead } from "@/lib/db";
 import { logChanges } from "@/lib/audit";
 import { requireProjectAccess } from "@/lib/authz";
 import { generateToken, normalizeEmail } from "@/lib/auth-helpers";
-import { sendEmail, emailShell } from "@/lib/email";
+import { sendEmail, emailShell, escapeHtml, escapeUrlAttr } from "@/lib/email";
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 
 // =====================================================================
 // /api/projects/[id]/invitations
@@ -23,7 +24,21 @@ import { sendEmail, emailShell } from "@/lib/email";
 
 const INVITATION_EXPIRY_HOURS = 24;
 
+// SECURITY (audit fix L2): rate-limit invitation sending per owner+IP.
+// Without this, an owner can spam invitations to arbitrary e-mails
+// (harassment / Brevo daily quota exhaustion). 10/hour is generous
+// enough for legitimate project onboarding (you rarely invite more
+// than 5 people at once) but tight enough to stop abuse.
+const INVITE_SEND_RATE_LIMIT = {
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 10,
+} as const;
+
 // Build the HTML body for the project-invitation e-mail.
+// SECURITY (audit fix M3): all user-controlled values are HTML-escaped
+// before interpolation to prevent HTML injection via projectName /
+// inviterName / inviteeEmail. Brevo / Gmail strip most of this, but
+// permissive HTML clients could execute the payload.
 function invitationEmailHtml(opts: {
   inviteeEmail: string;
   projectName: string;
@@ -37,13 +52,19 @@ function invitationEmailHtml(opts: {
       ? "můžete prohlížet a upravovat rozpočet, platby, časové záznamy a kontakty"
       : "můžete prohlížet rozpočet, platby a časové záznamy (pouze pro čtení)";
 
+  // Escape all user-controlled values.
+  const safeProjectName = escapeHtml(opts.projectName);
+  const safeInviterName = opts.inviterName ? escapeHtml(opts.inviterName) : "Někdo";
+  const safeInviteeEmail = escapeHtml(opts.inviteeEmail);
+  const safeInviteUrl = escapeUrlAttr(opts.inviteUrl);
+
   return emailShell(`
-    <h1>Pozvánka do projektu „${opts.projectName}"</h1>
+    <h1>Pozvánka do projektu „${safeProjectName}"</h1>
     <p>Ahoj,</p>
-    <p>${opts.inviterName ?? "Někdo"} vás zve do projektu <strong>${opts.projectName}</strong> v aplikaci Stavba s rolí <strong>${roleLabel}</strong> — ${roleDesc}.</p>
-    <p>Pozvánka je určena pro e-mail <strong>${opts.inviteeEmail}</strong>. Pro přijetí se přihlaste (nebo si založte účet) pod touto e-mailovou adresou a klikněte na tlačítko níže.</p>
-    <a href="${opts.inviteUrl}" class="btn">Přijmout pozvánku</a>
-    <p class="link-fallback">Pokud tlačítko nefunguje, zkopírujte tento odkaz do prohlížeče:<br>${opts.inviteUrl}</p>
+    <p>${safeInviterName} vás zve do projektu <strong>${safeProjectName}</strong> v aplikaci Stavba s rolí <strong>${roleLabel}</strong> — ${roleDesc}.</p>
+    <p>Pozvánka je určena pro e-mail <strong>${safeInviteeEmail}</strong>. Pro přijetí se přihlaste (nebo si založte účet) pod touto e-mailovou adresou a klikněte na tlačítko níže.</p>
+    <a href="${safeInviteUrl}" class="btn">Přijmout pozvánku</a>
+    <p class="link-fallback">Pokud tlačítko nefunguje, zkopírujte tento odkaz do prohlížeče:<br>${safeInviteUrl}</p>
     <p class="hint">Tento odkaz vyprší za 24 hodin. Pokud vás nikdo nepozval, tento e-mail můžete bezpečně ignorovat.</p>
   `, `Pozvánka do projektu — Stavba`);
 }
@@ -114,6 +135,26 @@ export async function POST(
 
   const t = await getTranslations("api.errors");
   try {
+    // SECURITY (audit fix L2): rate-limit invitation sending per
+    // owner+IP. Done AFTER auth so we have user.id. Keyed by both
+    // user.id and IP so a shared-IP user (NAT) doesn't get blocked
+    // by another user on the same IP.
+    const ip = getClientIp(request);
+    const rl = checkRateLimit(
+      `invite-send:${user.id}:${ip}`,
+      INVITE_SEND_RATE_LIMIT,
+    );
+    if (rl.limited) {
+      const minutes = Math.max(1, Math.ceil(rl.retryAfter / 60));
+      return NextResponse.json(
+        { error: t("auth.rateLimit.requests", { minutes }) },
+        {
+          status: 429,
+          headers: { "Retry-After": String(rl.retryAfter) },
+        },
+      );
+    }
+
     const body = await request.json().catch(() => null);
     if (!body || typeof body !== "object") {
       return NextResponse.json(

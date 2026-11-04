@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { verifyCronSecret } from "@/lib/cron-auth";
 
 // =====================================================================
 // GET /api/cron/finalize-deletions — permanently anonymize expired
@@ -15,34 +16,16 @@ import { db } from "@/lib/db";
 // Projects owned by the user remain in the DB (orphaned) — they're
 // accessible to other members who see a "Bez vlastníka" badge.
 //
-// CRON_SECRET: protects this endpoint from unauthorized access.
-// Set via Vercel Cron + env var.
+// Protected by CRON_SECRET (see `verifyCronSecret` in @/lib/cron-auth).
+// SECURITY (audit fix M1): timing-safe comparison + removed `?secret=`
+// query fallback (leaked the secret into logs).
 // =====================================================================
 
 const COOLING_OFF_DAYS = 7;
 
 export async function GET(request: Request) {
-  // Verify CRON_SECRET to prevent unauthorized access.
-  // Vercel Cron sends the secret in the `Authorization: Bearer <secret>`
-  // header. We also accept `?secret=<secret>` query param for manual
-  // testing / alternative cron providers.
-  const authHeader = request.headers.get("authorization");
-  const url = new URL(request.url);
-  const querySecret = url.searchParams.get("secret");
-  const cronSecret = process.env.CRON_SECRET;
-
-  if (!cronSecret) {
-    console.error("CRON_SECRET env var is not set — skipping finalize-deletions");
-    return NextResponse.json(
-      { error: "Cron secret not configured" },
-      { status: 500 },
-    );
-  }
-
-  const isValid = authHeader === `Bearer ${cronSecret}` || querySecret === cronSecret;
-  if (!isValid) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const auth = verifyCronSecret(request);
+  if (!auth.ok) return auth.response;
 
   try {
     const cutoff = new Date(

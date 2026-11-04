@@ -30,6 +30,17 @@ export async function GET() {
     // ===== Admin bypass — return ALL users with isAdmin flag =====
     // Includes soft-deleted users (deletedAt set) so admins can see
     // "pending deletion" accounts in the admin panel.
+    //
+    // SECURITY (audit fix L3): mask the e-mail of soft-deleted users.
+    // During the 7-day cooling-off period, the user's e-mail is
+    // rewritten to `deleted_<userId>_<originalEmail>` — exposing the
+    // full original e-mail in this admin response would defeat the
+    // purpose of the anonymization (PII would still be visible to
+    // admins / in the admin-tab export). We show only a truncated
+    // hint so the admin can identify the user, without exposing the
+    // full address. Once the cooling-off period expires, the cron
+    // permanently anonymizes the row and the original e-mail is
+    // irrecoverable.
     if (user.isAdmin) {
       const allUsers = await dbRead.user.findMany({
         where: { id: { not: user.id } },
@@ -44,7 +55,32 @@ export async function GET() {
         },
         orderBy: { createdAt: "desc" },
       });
-      return NextResponse.json(allUsers);
+      // Mask emails of soft-deleted users (deleted_<id>_<originalEmail>).
+      // The admin sees `<originalEmail prefix>…@<domain>` instead of the
+      // full address — enough to identify the user without leaking PII.
+      const masked = allUsers.map((u) => {
+        if (u.deletedAt && u.email.startsWith("deleted_")) {
+          // Format: `deleted_<userId>_<originalEmail>`
+          // Strip prefix, then mask the e-mail part.
+          const originalEmail = u.email.replace(/^deleted_[^_]+_/, "");
+          const atIndex = originalEmail.lastIndexOf("@");
+          if (atIndex > 0) {
+            const localPart = originalEmail.slice(0, atIndex);
+            const domain = originalEmail.slice(atIndex + 1);
+            // Show first 2 chars of local part + "…" + domain.
+            const maskedLocal =
+              localPart.length > 2 ? localPart.slice(0, 2) + "…" : localPart;
+            return {
+              ...u,
+              email: `${maskedLocal}@${domain}`,
+            };
+          }
+          // Fallback: fully redact if parsing fails.
+          return { ...u, email: "[redacted]" };
+        }
+        return u;
+      });
+      return NextResponse.json(masked);
     }
 
     // 1) Find projects the current user can see (owned + member of).

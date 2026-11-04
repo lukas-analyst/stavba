@@ -3,6 +3,7 @@ import { getTranslations } from "next-intl/server";
 import { db, dbRead } from "@/lib/db";
 import { requireVerifiedUser } from "@/lib/authz";
 import { requireUser } from "@/lib/require-user";
+import { validateName } from "@/lib/auth-helpers";
 
 // =====================================================================
 // /api/users/[id] — single-user mutations
@@ -174,13 +175,26 @@ export async function PATCH(request: Request, { params }: RouteContext) {
     const data: { name?: string; isAdmin?: boolean } = {};
 
     if (typeof name === "string") {
-      if (!name.trim()) {
+      // SECURITY (audit fix M3): run validateName on PATCH too, not just
+      // on registration. This prevents storing `<img src=x onerror=...>`
+      // or other HTML in the user's name, which would otherwise be
+      // interpolated into e-mail templates (sendVerificationEmail etc.)
+      // — see audit fix M3 in email.ts.
+      const trimmedName = name.trim();
+      if (!trimmedName) {
         return NextResponse.json(
           { error: "name must be a non-empty string" },
           { status: 400 },
         );
       }
-      data.name = name.trim().slice(0, 120);
+      const nameError = validateName(name);
+      if (nameError) {
+        return NextResponse.json(
+          { error: nameError },
+          { status: 400 },
+        );
+      }
+      data.name = trimmedName;
     }
 
     // ===== Admin-gated field: isAdmin =====

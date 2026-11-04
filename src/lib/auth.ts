@@ -160,6 +160,66 @@ export const authOptions: NextAuthOptions = {
     maxAge: 30 * 24 * 60 * 60,
   },
 
+  // =====================================================================
+  // Explicit cookie configuration (audit fix M3)
+  // ---------------------------------------------------------------------
+  // NextAuth v4 auto-detects `secure` from the request's `X-Forwarded-Proto`
+  // header, but this depends on the proxy (Vercel) forwarding it correctly.
+  // We set `secure` explicitly based on NODE_ENV so the session cookie is
+  // NEVER sent over plain HTTP in production, regardless of proxy behavior.
+  //
+  // Cookie name prefix `__Secure-` is a browser-enforced prefix: cookies
+  // with this name are REQUIRED by the browser to have `secure=true`,
+  // which is an extra safety net against accidental plaintext leakage.
+  //
+  // `sameSite: "lax"` is preserved (NextAuth default) — it allows the
+  // cookie to be sent on top-level navigations (so the user can click a
+  // link to our app from an external site and stay logged in), but
+  // blocks cross-origin POSTs (CSRF). Combined with the CSRF middleware
+  // guard, this is defense-in-depth.
+  // =====================================================================
+  cookies: {
+    sessionToken: {
+      name: process.env.NODE_ENV === "production"
+        ? "__Secure-next-auth.session-token"
+        : "next-auth.session-token",
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        // `secure: true` in production only. In dev (HTTP localhost),
+        // a Secure cookie would be rejected by the browser.
+        secure: process.env.NODE_ENV === "production",
+      },
+    },
+    // The callbackUrl cookie stores the post-login redirect target.
+    // Not sensitive (it's a URL path), but we set Secure for
+    // consistency and to avoid it being sent over HTTP in prod.
+    callbackUrl: {
+      name: process.env.NODE_ENV === "production"
+        ? "__Secure-next-auth.callback-url"
+        : "next-auth.callback-url",
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        secure: process.env.NODE_ENV === "production",
+      },
+    },
+    // The CSRF token cookie (NextAuth's own double-submit CSRF token).
+    csrfToken: {
+      name: process.env.NODE_ENV === "production"
+        ? "__Host-next-auth.csrf-token"
+        : "next-auth.csrf-token",
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        secure: process.env.NODE_ENV === "production",
+      },
+    },
+  },
+
   providers: [
     // ===== Credentials provider (e-mail + password) =====
     CredentialsProvider({

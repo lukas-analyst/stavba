@@ -83,7 +83,15 @@ function SidebarProvider({
       }
 
       // This sets the cookie to keep the sidebar state.
-      document.cookie = `${SIDEBAR_COOKIE_NAME}=${openState}; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE}`
+      // SECURITY (audit fix M4): add `SameSite=Lax; Secure` so the
+      // cookie is never sent over HTTP or on cross-site requests.
+      // `Secure` is conditional on the page being HTTPS — on localhost
+      // (dev, HTTP) a Secure cookie would be rejected, so we detect
+      // `https:` and only set Secure in that case.
+      const isSecureContext =
+        typeof window !== "undefined" &&
+        window.location.protocol === "https:";
+      document.cookie = `${SIDEBAR_COOKIE_NAME}=${openState}; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE}; SameSite=Lax${isSecureContext ? "; Secure" : ""}`
     },
     [setOpenProp, open]
   )
