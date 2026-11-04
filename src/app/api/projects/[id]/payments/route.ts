@@ -12,22 +12,36 @@ import {
   parseParam,
   cuidSchema,
   optionalNullableString,
+  optionalNumOrNull,
+  optionalIsoDate,
+  optionalCuidOrNull,
 } from "@/lib/api-validation";
 
 // POST body schema for /api/projects/[id]/payments
 const createPaymentBodySchema = z.object({
   budgetItemId: cuidSchema,
-  contactId: z.union([cuidSchema, z.null()]).optional(),
-  amount: z.number().finite().refine((n) => !isNaN(n), {
-    message: "payment.amountRequired",
-  }),
+  contactId: optionalCuidOrNull,
+  amount: z.preprocess(
+    (v) => {
+      if (typeof v === "string") return Number(v);
+      return v;
+    },
+    z.number().finite().refine((n) => !isNaN(n), {
+      message: "payment.amountRequired",
+    }),
+  ),
   currency: z.string().regex(/^[A-Z]{3}$/).optional(),
-  invoiceTotal: z.union([z.number().finite(), z.null()]).optional(),
-  installmentOf: z.union([cuidSchema, z.null()]).optional(),
-  vatRate: z.union([z.number().min(0).max(100), z.null()]).optional(),
-  date: z.string().refine((s) => !isNaN(Date.parse(s)), {
-    message: "payment.invalidDate",
-  }).optional(),
+  invoiceTotal: optionalNumOrNull,
+  installmentOf: optionalCuidOrNull,
+  vatRate: z.preprocess(
+    (v) => {
+      if (v === "" || v === null || v === undefined) return null;
+      if (typeof v === "string") return Number(v);
+      return v;
+    },
+    z.union([z.number().min(0).max(100), z.null()]),
+  ).optional(),
+  date: optionalIsoDate,
   type: z.string().max(50).optional(),
   vendor: optionalNullableString.optional(),
   invoiceNumber: optionalNullableString.optional(),

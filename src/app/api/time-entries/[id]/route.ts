@@ -9,26 +9,34 @@ import {
   parseParam,
   cuidSchema,
   optionalNullableString,
+  optionalIsoDate,
+  optionalCuidOrNull,
 } from "@/lib/api-validation";
 
 // PATCH body schema — all fields optional (partial update).
 const patchTimeEntryBodySchema = z.object({
   budgetItemId: cuidSchema.optional(),
-  contactId: z.union([cuidSchema, z.null()]).optional(),
+  contactId: optionalCuidOrNull,
   workerName: z.string().trim().max(200).optional(),
   workerType: z.string().max(50).optional(),
-  date: z
-    .string()
-    .refine((s) => !isNaN(Date.parse(s)), { message: "time.invalidDate" })
-    .optional(),
-  dateTo: z
-    .union([
-      z.string().refine((s) => !isNaN(Date.parse(s)), { message: "time.invalidDate" }),
-      z.null(),
-    ])
-    .optional(),
-  hours: z.number().positive().finite().optional(),
-  workerCount: z.number().int().min(1).optional(),
+  date: optionalIsoDate,
+  dateTo: optionalIsoDate,
+  hours: z.preprocess(
+    (v) => {
+      if (v === "" || v === null || v === undefined) return undefined;
+      if (typeof v === "string") return Number(v);
+      return v;
+    },
+    z.number().positive().finite().optional(),
+  ),
+  workerCount: z.preprocess(
+    (v) => {
+      if (v === "" || v === null || v === undefined) return undefined;
+      if (typeof v === "string") return Number(v);
+      return v;
+    },
+    z.number().int().min(1).optional(),
+  ),
   description: optionalNullableString.optional(),
 });
 

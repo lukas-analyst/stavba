@@ -143,11 +143,75 @@ export const nonEmptyString = z.string().trim().min(1);
 
 /**
  * Optional nullable string — for fields that can be null OR a string.
- * Returns the trimmed string, or `null`.
+ * Returns the trimmed string, or `null`, or `undefined` (field not sent).
+ *
+ * Also handles empty string `""` → `null` (common from form inputs).
+ *
+ * The `.optional()` makes the field itself omittable (key can be missing
+ * from the JSON body → returns `undefined`).
  */
 export const optionalNullableString = z
   .union([z.string(), z.null(), z.undefined()])
-  .transform((v) => (v == null ? null : v.trim() || null));
+  .transform((v) => (v == null ? null : v.trim() || null))
+  .optional();
+
+/**
+ * Optional number-or-null — accepts number, null, undefined, AND empty
+ * string `""` (from form inputs) or numeric strings like `"123.45"`.
+ * Returns a finite number, `null`, or `undefined` (field not sent).
+ *
+ * The `.optional()` at the end is critical: without it, Zod treats the
+ * field as REQUIRED (key must be present in the JSON body). With it,
+ * the field can be omitted entirely → returns `undefined` → handler can
+ * distinguish "not sent" (skip update) from "sent as null" (clear value).
+ *
+ * Replaces the ad-hoc `numOrUndef` / `Number(body.field)` pattern from
+ * the pre-Zod code: that pattern accepted `"abc"` (→ NaN stored in DB).
+ * This schema rejects NaN/Infinity and coerces numeric strings.
+ */
+export const optionalNumOrNull = z.preprocess(
+  (v) => {
+    if (v === "" || v === null || v === undefined) return null;
+    if (typeof v === "string") return Number(v);
+    return v;
+  },
+  z.union([z.number().finite(), z.null()]),
+).optional();
+
+/**
+ * Optional ISO date string — accepts a valid ISO 8601 date string, OR
+ * `null` / `""` / `undefined` (all converted to `undefined` so the field
+ * is treated as "not provided").
+ *
+ * Returns the string as-is (caller converts to `Date` downstream), or
+ * `undefined` if not provided.
+ *
+ * The `.optional()` on the inner schema + the `.optional()` on the outer
+ * preprocess together handle all cases:
+ *   - Field missing → `.optional()` returns `undefined`
+ *   - Field present as `null`/`""` → preprocess to `undefined` → inner
+ *     `.optional()` accepts `undefined` → output `undefined`
+ *   - Field present as valid ISO string → validate → output string
+ */
+export const optionalIsoDate = z.preprocess(
+  (v) => {
+    if (v === "" || v === null || v === undefined) return undefined;
+    return v;
+  },
+  z.string().refine((s) => !isNaN(Date.parse(s)), {
+    message: "budget.invalidDate",
+  }).optional(),
+);
+
+/**
+ * CUID-or-null — for optional fields that can be a cuid OR null (e.g.
+ * `parentId: null` when moving a budget item to top-level). Accepts
+ * string (validated as cuid), null, or undefined.
+ *
+ * The `.optional()` makes the field itself omittable (key can be missing
+ * from the JSON body → returns `undefined`).
+ */
+export const optionalCuidOrNull = z.union([cuidSchema, z.null(), z.undefined()]).optional();
 
 // ---------------------------------------------------------------------
 // Translation helper
@@ -165,13 +229,25 @@ export const optionalNullableString = z
 export type TranslateFn = (key: string, params?: Record<string, unknown>) => string;
 
 /**
- * Translate an error code via `t`, falling back to the code itself if `t`
- * is not provided. next-intl's `t()` returns the key as-is if the
- * translation is not found — so missing translations show up as the
- * raw code (visible signal that a translation key is missing).
+ * Translate an error code via `t`, but ONLY if the code looks like an i18n
+ * key (dotted notation like "password.tooShort"). Zod's built-in default
+ * messages (e.g. "Invalid input: expected string, received null") contain
+ * spaces and don't match the i18n pattern — they're passed through as-is
+ * (untranslated) so the developer/user sees the actual Zod message instead
+ * of a confusing "api.errors.Invalid input: expected string, received null".
+ *
+ * If `t` is not provided (e.g. in tests), the code itself is returned.
  */
 function translate(t: TranslateFn | undefined, code: string): string {
-  return t ? t(code) : code;
+  if (!t) return code;
+  // i18n codes look like: "section.key" or "section.subsection.key"
+  // — start with lowercase letter, contain only dots + alphanumeric,
+  // no spaces. Zod defaults like "Invalid input: ..." have spaces → skip.
+  if (/^[a-z][a-zA-Z]*(\.[a-zA-Z][a-zA-Z]*)+$/.test(code)) {
+    return t(code);
+  }
+  // Not an i18n code — return as-is (Zod default message).
+  return code;
 }
 
 // ---------------------------------------------------------------------

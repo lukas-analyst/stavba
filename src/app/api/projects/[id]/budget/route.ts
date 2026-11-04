@@ -12,19 +12,10 @@ import {
   cuidSchema,
   nonEmptyString,
   optionalNullableString,
+  optionalNumOrNull,
+  optionalIsoDate,
+  optionalCuidOrNull,
 } from "@/lib/api-validation";
-
-// Number-or-null-or-undefined schema — accepts number, null, undefined;
-// rejects strings, NaN, Infinity. Replaces the ad-hoc `numOrUndef` helper.
-const optionalNumOrNull = z
-  .union([z.number().finite(), z.null(), z.undefined()])
-  .optional();
-
-// ISO date schema — accepts string that parses to a valid Date.
-const optionalIsoDate = z
-  .string()
-  .refine((s) => !isNaN(Date.parse(s)), { message: "budget.invalidDate" })
-  .optional();
 
 // Link schema — each link must have a non-empty label + url.
 const linkSchema = z.object({
@@ -44,19 +35,33 @@ const createBudgetItemBodySchema = z.object({
   rejected: z.boolean().optional(),
   note: optionalNullableString.optional(),
   unitPrice: optionalNullableString.optional(),
-  parentId: cuidSchema.optional(),
-  dependsOnId: cuidSchema.optional(),
+  parentId: optionalCuidOrNull,
+  dependsOnId: optionalCuidOrNull,
   planCost: optionalNumOrNull,
   planCostCurrency: z.string().regex(/^[A-Z]{3}$/).optional(),
-  flexibilityPercent: z.number().min(0).max(100).nullable().optional(),
-  planDays: z.number().nonnegative().nullable().optional(),
+  flexibilityPercent: z.preprocess(
+    (v) => {
+      if (v === "" || v === null || v === undefined) return null;
+      if (typeof v === "string") return Number(v);
+      return v;
+    },
+    z.union([z.number().min(0).max(100), z.null()]),
+  ).optional(),
+  planDays: z.preprocess(
+    (v) => {
+      if (v === "" || v === null || v === undefined) return null;
+      if (typeof v === "string") return Number(v);
+      return v;
+    },
+    z.union([z.number().nonnegative(), z.null()]),
+  ).optional(),
   dateFrom: optionalIsoDate,
   dateTo: optionalIsoDate,
-  actualCost: z.number().optional(),
-  actualHours: z.number().optional(),
+  actualCost: optionalNumOrNull,
+  actualHours: optionalNumOrNull,
   subsidyEligible: z.boolean().optional(),
   subsidyAmount: optionalNumOrNull,
-  contactId: cuidSchema.nullable().optional(),
+  contactId: optionalCuidOrNull,
   links: z.array(linkSchema).max(100).optional(),
 });
 

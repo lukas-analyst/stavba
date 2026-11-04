@@ -12,20 +12,12 @@ import {
   cuidSchema,
   nonEmptyString,
   optionalNullableString,
+  optionalNumOrNull,
+  optionalIsoDate,
+  optionalCuidOrNull,
 } from "@/lib/api-validation";
 
-// Number-or-null-or-undefined schema — replaces the ad-hoc `numOrUndef`
-// helper from the original code. Accepts number, null, undefined; rejects
-// strings, NaN, Infinity.
-const optionalNumOrNull = z
-  .union([z.number().finite(), z.null(), z.undefined()])
-  .optional();
-
-const optionalIsoDate = z
-  .string()
-  .refine((s) => !isNaN(Date.parse(s)), { message: "budget.invalidDate" })
-  .optional();
-
+// Link schema — each link must have a non-empty label + url.
 const linkSchema = z.object({
   id: z.string().optional(),
   label: z.string().trim().min(1),
@@ -45,19 +37,33 @@ const patchBudgetItemBodySchema = z.object({
   rejected: z.boolean().optional(),
   note: optionalNullableString.optional(),
   unitPrice: optionalNullableString.optional(),
-  parentId: z.union([cuidSchema, z.null()]).optional(),
-  dependsOnId: z.union([cuidSchema, z.null()]).optional(),
+  parentId: optionalCuidOrNull,
+  dependsOnId: optionalCuidOrNull,
   planCost: optionalNumOrNull,
   planCostCurrency: z.union([z.string().regex(/^[A-Z]{3}$/), z.null()]).optional(),
-  flexibilityPercent: z.union([z.number().min(0).max(100), z.null()]).optional(),
-  planDays: z.union([z.number().nonnegative(), z.null()]).optional(),
-  dateFrom: z.union([optionalIsoDate, z.null()]).optional(),
-  dateTo: z.union([optionalIsoDate, z.null()]).optional(),
+  flexibilityPercent: z.preprocess(
+    (v) => {
+      if (v === "" || v === null || v === undefined) return null;
+      if (typeof v === "string") return Number(v);
+      return v;
+    },
+    z.union([z.number().min(0).max(100), z.null()]),
+  ).optional(),
+  planDays: z.preprocess(
+    (v) => {
+      if (v === "" || v === null || v === undefined) return null;
+      if (typeof v === "string") return Number(v);
+      return v;
+    },
+    z.union([z.number().nonnegative(), z.null()]),
+  ).optional(),
+  dateFrom: optionalIsoDate,
+  dateTo: optionalIsoDate,
   actualCost: optionalNumOrNull,
   actualHours: optionalNumOrNull,
   subsidyEligible: z.boolean().optional(),
   subsidyAmount: optionalNumOrNull,
-  contactId: z.union([cuidSchema, z.null()]).optional(),
+  contactId: optionalCuidOrNull,
   sortOrder: z.number().int().nonnegative().optional(),
   links: z.array(linkSchema).max(100).optional(),
 });
