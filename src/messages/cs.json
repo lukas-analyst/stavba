@@ -2729,6 +2729,43 @@
         "labelRequired": "Popisek je povinný.",
         "createFailed": "Vytvoření snímku selhalo.",
         "fetchFailed": "Načtení snímků selhalo."
+      },
+      "time": {
+        "budgetItemIdRequired": "ID položky rozpočtu je povinné.",
+        "hoursRequired": "Platný počet hodin (> 0) je povinný.",
+        "budgetItemNotFound": "Položka rozpočtu v tomto projektu nebyla nalezena.",
+        "dateToBeforeDate": "Datum ukončení musí být po datu zahájení nebo rovno.",
+        "notFound": "Časový záznam nebyl nalezen.",
+        "newBudgetItemNotFound": "Nová položka rozpočtu nebyla nalezena.",
+        "cannotMoveAcrossProjects": "Časový záznam nelze přesunout do položky rozpočtu v jiném projektu.",
+        "createFailed": "Vytvoření časového záznamu selhalo.",
+        "updateFailed": "Aktualizace časového záznamu selhala.",
+        "deleteFailed": "Smazání časového záznamu selhalo.",
+        "fetchFailed": "Načtení časových záznamů selhalo.",
+        "invalidHours": "Neplatný počet hodin.",
+        "invalidWorkerCount": "Neplatný počet pracovníků.",
+        "invalidDate": "Neplatné datum."
+      },
+      "note": {
+        "textRequired": "Text je povinný.",
+        "textEmpty": "Text nemůže být prázdný.",
+        "nothingToUpdate": "Nic k aktualizaci — poskytněte text nebo autora.",
+        "notFound": "Poznámka nebyla nalezena.",
+        "createFailed": "Vytvoření poznámky selhalo.",
+        "updateFailed": "Aktualizace poznámky selhala.",
+        "deleteFailed": "Smazání poznámky selhalo.",
+        "fetchFailed": "Načtení poznámek selhalo."
+      },
+      "comment": {
+        "textRequired": "Text je povinný.",
+        "budgetItemNotFound": "Položka rozpočtu nebyla nalezena.",
+        "createFailed": "Vytvoření komentáře selhalo.",
+        "fetchFailed": "Načtení komentářů selhalo."
+      },
+      "audit": {
+        "entityTypeAndActionRequired": "Typ entity a akce jsou povinné.",
+        "createFailed": "Vytvoření záznamu auditu selhalo.",
+        "fetchFailed": "Načtení audit logu selhalo."
       }
     }
   },

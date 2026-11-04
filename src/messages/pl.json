@@ -2726,6 +2726,43 @@
         "labelRequired": "Etykieta jest wymagana.",
         "createFailed": "Utworzenie migawki nie powiodło się.",
         "fetchFailed": "Pobranie migawek nie powiodło się."
+      },
+      "time": {
+        "budgetItemIdRequired": "ID elementu budżetu jest wymagane.",
+        "hoursRequired": "Wymagane są prawidłowe godziny (> 0).",
+        "budgetItemNotFound": "Element budżetu nie został znaleziony w tym projekcie.",
+        "dateToBeforeDate": "Data zakończenia musi być równa lub późniejsza niż data rozpoczęcia.",
+        "notFound": "Wpis czasu nie został znaleziony.",
+        "newBudgetItemNotFound": "Nowy element budżetu nie został znaleziony.",
+        "cannotMoveAcrossProjects": "Nie można przenieść wpisu czasu do elementu budżetu w innym projekcie.",
+        "createFailed": "Utworzenie wpisu czasu nie powiodło się.",
+        "updateFailed": "Aktualizacja wpisu czasu nie powiodła się.",
+        "deleteFailed": "Usunięcie wpisu czasu nie powiodło się.",
+        "fetchFailed": "Pobranie wpisów czasu nie powiodło się.",
+        "invalidHours": "Nieprawidłowe godziny.",
+        "invalidWorkerCount": "Nieprawidłowa liczba pracowników.",
+        "invalidDate": "Nieprawidłowa data."
+      },
+      "note": {
+        "textRequired": "Tekst jest wymagany.",
+        "textEmpty": "Tekst nie może być pusty.",
+        "nothingToUpdate": "Nic do aktualizacji — podaj tekst lub autora.",
+        "notFound": "Notatka nie została znaleziona.",
+        "createFailed": "Utworzenie notatki nie powiodło się.",
+        "updateFailed": "Aktualizacja notatki nie powiodła się.",
+        "deleteFailed": "Usunięcie notatki nie powiodło się.",
+        "fetchFailed": "Pobranie notatek nie powiodło się."
+      },
+      "comment": {
+        "textRequired": "Tekst jest wymagany.",
+        "budgetItemNotFound": "Element budżetu nie został znaleziony.",
+        "createFailed": "Utworzenie komentarza nie powiodło się.",
+        "fetchFailed": "Pobranie komentarzy nie powiodło się."
+      },
+      "audit": {
+        "entityTypeAndActionRequired": "Typ jednostki i akcja są wymagane.",
+        "createFailed": "Utworzenie wpisu audytu nie powiodło się.",
+        "fetchFailed": "Pobranie dziennika audytu nie powiodło się."
       }
     }
   },

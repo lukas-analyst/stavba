@@ -1,6 +1,22 @@
 import { NextResponse } from "next/server";
+import { getTranslations } from "next-intl/server";
+import { z } from "zod";
 import { db, dbRead, Prisma } from "@/lib/db";
 import { requireProjectAccess } from "@/lib/authz";
+import {
+  parseBody,
+  parseParam,
+  cuidSchema,
+  nonEmptyString,
+  optionalNullableString,
+} from "@/lib/api-validation";
+
+// Body schema for POST /api/projects/[id]/audit
+const createAuditBodySchema = z.object({
+  entityType: nonEmptyString.max(100),
+  action: nonEmptyString.max(50),
+  entityLabel: optionalNullableString.optional(),
+});
 
 // GET /api/projects/[id]/audit
 // Returns audit log entries with server-side filtering, sorting, pagination.
@@ -21,8 +37,13 @@ export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const t = await getTranslations("api.errors");
   try {
-    const { id } = await params;
+    const { id: rawId } = await params;
+    const idResult = parseParam(cuidSchema, rawId, t);
+    if (!idResult.success) return idResult.response;
+    const id = idResult.data;
+
     const access = await requireProjectAccess(id, "viewer");
     if (!access.ok) return access.response;
     const { searchParams } = new URL(request.url);
@@ -117,7 +138,10 @@ export async function GET(
     });
   } catch (error) {
     console.error("GET audit error:", error);
-    return NextResponse.json({ error: "Failed to fetch audit log" }, { status: 500 });
+    return NextResponse.json(
+      { error: t("audit.fetchFailed") },
+      { status: 500 },
+    );
   }
 }
 
@@ -128,14 +152,17 @@ export async function POST(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const t = await getTranslations("api.errors");
   try {
-    const { id } = await params;
-    const body = await request.json();
-    const { entityType, action, entityLabel } = body;
+    const { id: rawId } = await params;
+    const idResult = parseParam(cuidSchema, rawId, t);
+    if (!idResult.success) return idResult.response;
+    const id = idResult.data;
 
-    if (!entityType || !action) {
-      return NextResponse.json({ error: "entityType and action are required" }, { status: 400 });
-    }
+    // Parse + validate body (Zod).
+    const result = await parseBody(createAuditBodySchema, request, t);
+    if (!result.success) return result.response;
+    const { entityType, action, entityLabel } = result.data;
 
     // Attribute audit entry to the authenticated user with project access
     const access = await requireProjectAccess(id, "editor");
@@ -163,6 +190,9 @@ export async function POST(
     return NextResponse.json(entry, { status: 201 });
   } catch (error) {
     console.error("POST audit error:", error);
-    return NextResponse.json({ error: "Failed to create audit entry" }, { status: 500 });
+    return NextResponse.json(
+      { error: t("audit.createFailed") },
+      { status: 500 },
+    );
   }
 }

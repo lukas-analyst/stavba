@@ -2726,6 +2726,43 @@
         "labelRequired": "La etiqueta es obligatoria.",
         "createFailed": "Error al crear la instantánea.",
         "fetchFailed": "Error al obtener las instantáneas."
+      },
+      "time": {
+        "budgetItemIdRequired": "El ID del elemento de presupuesto es obligatorio.",
+        "hoursRequired": "Se requiere un número de horas válido (> 0).",
+        "budgetItemNotFound": "Elemento de presupuesto no encontrado en este proyecto.",
+        "dateToBeforeDate": "La fecha de finalización debe ser posterior o igual a la fecha de inicio.",
+        "notFound": "Entrada de tiempo no encontrada.",
+        "newBudgetItemNotFound": "Nuevo elemento de presupuesto no encontrado.",
+        "cannotMoveAcrossProjects": "No se puede mover la entrada de tiempo a un elemento de presupuesto de otro proyecto.",
+        "createFailed": "Error al crear la entrada de tiempo.",
+        "updateFailed": "Error al actualizar la entrada de tiempo.",
+        "deleteFailed": "Error al eliminar la entrada de tiempo.",
+        "fetchFailed": "Error al obtener las entradas de tiempo.",
+        "invalidHours": "Horas no válidas.",
+        "invalidWorkerCount": "Número de trabajadores no válido.",
+        "invalidDate": "Fecha no válida."
+      },
+      "note": {
+        "textRequired": "El texto es obligatorio.",
+        "textEmpty": "El texto no puede estar vacío.",
+        "nothingToUpdate": "Nada que actualizar — proporcione texto o autor.",
+        "notFound": "Nota no encontrada.",
+        "createFailed": "Error al crear la nota.",
+        "updateFailed": "Error al actualizar la nota.",
+        "deleteFailed": "Error al eliminar la nota.",
+        "fetchFailed": "Error al obtener las notas."
+      },
+      "comment": {
+        "textRequired": "El texto es obligatorio.",
+        "budgetItemNotFound": "Elemento de presupuesto no encontrado.",
+        "createFailed": "Error al crear el comentario.",
+        "fetchFailed": "Error al obtener los comentarios."
+      },
+      "audit": {
+        "entityTypeAndActionRequired": "El tipo de entidad y la acción son obligatorios.",
+        "createFailed": "Error al crear la entrada de auditoría.",
+        "fetchFailed": "Error al obtener el registro de auditoría."
       }
     }
   },

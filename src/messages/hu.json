@@ -2726,6 +2726,43 @@
         "labelRequired": "A címke kötelező.",
         "createFailed": "A pillanatkép létrehozása sikertelen.",
         "fetchFailed": "A pillanatképek lekérése sikertelen."
+      },
+      "time": {
+        "budgetItemIdRequired": "A költségkeret elem azonosítója kötelező.",
+        "hoursRequired": "Érvényes órák (> 0) szükségesek.",
+        "budgetItemNotFound": "A költségkeret elem nem található ebben a projektben.",
+        "dateToBeforeDate": "A befejezési dátumnak a kezdési dátummal egyenlőnek vagy utáannak kell lennie.",
+        "notFound": "Az időbejegyzés nem található.",
+        "newBudgetItemNotFound": "Az új költségkeret elem nem található.",
+        "cannotMoveAcrossProjects": "Az időbejegyzés nem mozgatható másik projekt költségkeret elemébe.",
+        "createFailed": "Az időbejegyzés létrehozása sikertelen.",
+        "updateFailed": "Az időbejegyzés frissítése sikertelen.",
+        "deleteFailed": "Az időbejegyzés törlése sikertelen.",
+        "fetchFailed": "Az időbejegyzések lekérése sikertelen.",
+        "invalidHours": "Érvénytelen órák.",
+        "invalidWorkerCount": "Érvénytelen munkavállalók száma.",
+        "invalidDate": "Érvénytelen dátum."
+      },
+      "note": {
+        "textRequired": "A szöveg kötelező.",
+        "textEmpty": "A szöveg nem lehet üres.",
+        "nothingToUpdate": "Nincs frissítendő — adjon meg szöveget vagy szerzőt.",
+        "notFound": "A jegyzet nem található.",
+        "createFailed": "A jegyzet létrehozása sikertelen.",
+        "updateFailed": "A jegyzet frissítése sikertelen.",
+        "deleteFailed": "A jegyzet törlése sikertelen.",
+        "fetchFailed": "A jegyzetek lekérése sikertelen."
+      },
+      "comment": {
+        "textRequired": "A szöveg kötelező.",
+        "budgetItemNotFound": "A költségkeret elem nem található.",
+        "createFailed": "A megjegyzés létrehozása sikertelen.",
+        "fetchFailed": "A megjegyzések lekérése sikertelen."
+      },
+      "audit": {
+        "entityTypeAndActionRequired": "Az entitástípus és a művelet kötelező.",
+        "createFailed": "A naplóbejegyzés létrehozása sikertelen.",
+        "fetchFailed": "A napló lekérése sikertelen."
       }
     }
   },

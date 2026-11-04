@@ -1,8 +1,25 @@
 import { NextResponse } from "next/server";
 import { getTranslations } from "next-intl/server";
+import { z } from "zod";
 import { db } from "@/lib/db";
 import { logChanges } from "@/lib/audit";
 import { requireProjectAccess } from "@/lib/authz";
+import {
+  parseBody,
+  parseParam,
+  cuidSchema,
+  optionalNullableString,
+} from "@/lib/api-validation";
+
+// PATCH body schema — both fields optional, but at least one required.
+const patchNoteBodySchema = z
+  .object({
+    text: z.string().trim().min(1).max(5000).optional(),
+    author: optionalNullableString.optional(),
+  })
+  .refine((data) => data.text !== undefined || data.author !== undefined, {
+    message: "note.nothingToUpdate",
+  });
 
 // PATCH /api/notes/[id] - update text and/or author of an existing note.
 // Body: { text?: string, author?: string }
@@ -12,27 +29,24 @@ export async function PATCH(
 ) {
   const t = await getTranslations("api.errors");
   try {
-    const { id } = await params;
-    const body = await request.json().catch(() => ({}));
-    const text = typeof body.text === "string" ? body.text.trim() : undefined;
-    const author = typeof body.author === "string" ? body.author.trim() : undefined;
+    const { id: rawId } = await params;
+    const idResult = parseParam(cuidSchema, rawId, t);
+    if (!idResult.success) return idResult.response;
+    const id = idResult.data;
 
-    // Validate: at least one field must be provided.
-    if (text === undefined && author === undefined) {
-      return NextResponse.json(
-        { error: "Nothing to update — provide text or author" },
-        { status: 400 },
-      );
-    }
-
-    // If text is provided it must not be empty.
-    if (text !== undefined && text.length === 0) {
-      return NextResponse.json({ error: "Text cannot be empty" }, { status: 400 });
-    }
+    // Parse + validate body (Zod). The `.refine()` above ensures at least
+    // one field is provided — replaces the manual
+    // `text === undefined && author === undefined` check.
+    const result = await parseBody(patchNoteBodySchema, request, t);
+    if (!result.success) return result.response;
+    const { text, author } = result.data;
 
     const existing = await db.note.findUnique({ where: { id } });
     if (!existing) {
-      return NextResponse.json({ error: "Note not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: t("note.notFound") },
+        { status: 404 },
+      );
     }
 
     // IDOR fix: require editor access to the project that owns this note.
@@ -49,9 +63,9 @@ export async function PATCH(
       );
     }
 
-    const data: { text?: string; author?: string } = {};
-    if (text !== undefined) data.text = text.slice(0, 5000);
-    if (author !== undefined) data.author = (author || "Anonym").slice(0, 100);
+    const data: { text?: string; author?: string | null } = {};
+    if (text !== undefined) data.text = text;
+    if (author !== undefined) data.author = (author ?? "Anonym").slice(0, 100);
 
     const updated = await db.note.update({
       where: { id },
@@ -65,14 +79,17 @@ export async function PATCH(
       id,
       "update",
       existing as unknown as Record<string, unknown>,
-      { text: body.text },
+      { text },
       null,
     );
 
     return NextResponse.json(updated);
   } catch (error) {
     console.error("PATCH note error:", error);
-    return NextResponse.json({ error: "Failed to update note" }, { status: 500 });
+    return NextResponse.json(
+      { error: t("note.updateFailed") },
+      { status: 500 },
+    );
   }
 }
 
@@ -83,10 +100,17 @@ export async function DELETE(
 ) {
   const t = await getTranslations("api.errors");
   try {
-    const { id } = await params;
+    const { id: rawId } = await params;
+    const idResult = parseParam(cuidSchema, rawId, t);
+    if (!idResult.success) return idResult.response;
+    const id = idResult.data;
+
     const existing = await db.note.findUnique({ where: { id } });
     if (!existing) {
-      return NextResponse.json({ error: "Note not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: t("note.notFound") },
+        { status: 404 },
+      );
     }
 
     // IDOR fix: require editor access to the project, and additionally
@@ -117,6 +141,9 @@ export async function DELETE(
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("DELETE note error:", error);
-    return NextResponse.json({ error: "Failed to delete note" }, { status: 500 });
+    return NextResponse.json(
+      { error: t("note.deleteFailed") },
+      { status: 500 },
+    );
   }
 }

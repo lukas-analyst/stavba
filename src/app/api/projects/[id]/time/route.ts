@@ -1,8 +1,35 @@
 import { NextResponse } from "next/server";
+import { getTranslations } from "next-intl/server";
+import { z } from "zod";
 import { unstable_cache } from "next/cache";
 import { db, dbRead } from "@/lib/db";
 import { logChanges } from "@/lib/audit";
 import { requireProjectAccess } from "@/lib/authz";
+import {
+  parseBody,
+  parseParam,
+  cuidSchema,
+  optionalNullableString,
+} from "@/lib/api-validation";
+
+// Body schema for POST /api/projects/[id]/time
+const createTimeEntryBodySchema = z.object({
+  budgetItemId: cuidSchema,
+  contactId: z.union([cuidSchema, z.null()]).optional(),
+  workerName: z.string().trim().max(200).optional(),
+  workerType: z.string().max(50).optional(),
+  date: z
+    .string()
+    .refine((s) => !isNaN(Date.parse(s)), { message: "time.invalidDate" })
+    .optional(),
+  dateTo: z
+    .string()
+    .refine((s) => !isNaN(Date.parse(s)), { message: "time.invalidDate" })
+    .optional(),
+  hours: z.number().positive().finite({ message: "time.hoursRequired" }),
+  workerCount: z.number().int().min(1).optional(),
+  description: optionalNullableString.optional(),
+});
 
 // Explicit field selection — fetch only what the frontend uses.
 const TIME_ENTRY_SELECT = {
@@ -48,15 +75,23 @@ export async function GET(
   _request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const t = await getTranslations("api.errors");
   try {
-    const { id } = await params;
+    const { id: rawId } = await params;
+    const idResult = parseParam(cuidSchema, rawId, t);
+    if (!idResult.success) return idResult.response;
+    const id = idResult.data;
+
     const access = await requireProjectAccess(id, "viewer");
     if (!access.ok) return access.response;
     const entries = await getCachedTimeEntries(id);
     return NextResponse.json(entries);
   } catch (error) {
     console.error("GET time entries error:", error);
-    return NextResponse.json({ error: "Failed to fetch time entries" }, { status: 500 });
+    return NextResponse.json(
+      { error: t("time.fetchFailed") },
+      { status: 500 },
+    );
   }
 }
 
@@ -65,25 +100,29 @@ export async function POST(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const t = await getTranslations("api.errors");
   try {
-    const { id } = await params;
+    const { id: rawId } = await params;
+    const idResult = parseParam(cuidSchema, rawId, t);
+    if (!idResult.success) return idResult.response;
+    const id = idResult.data;
+
     const access = await requireProjectAccess(id, "editor");
     if (!access.ok) return access.response;
-    const body = await request.json();
-    const { budgetItemId, contactId, workerName, workerType, date, dateTo, hours, workerCount, description } = body;
 
-    if (!budgetItemId) {
-      return NextResponse.json({ error: "budgetItemId is required" }, { status: 400 });
-    }
-    if (hours === undefined || hours === null || isNaN(Number(hours)) || Number(hours) <= 0) {
-      return NextResponse.json({ error: "Valid hours (> 0) is required" }, { status: 400 });
-    }
+    // Parse + validate body (Zod).
+    const result = await parseBody(createTimeEntryBodySchema, request, t);
+    if (!result.success) return result.response;
+    const { budgetItemId, contactId, workerName, workerType, date, dateTo, hours, workerCount, description } = result.data;
 
     const item = await db.budgetItem.findFirst({
       where: { id: budgetItemId, projectId: id },
     });
     if (!item) {
-      return NextResponse.json({ error: "Budget item not found in this project" }, { status: 404 });
+      return NextResponse.json(
+        { error: t("time.budgetItemNotFound") },
+        { status: 404 },
+      );
     }
 
     // Validate dateTo >= date if provided
@@ -92,7 +131,10 @@ export async function POST(
     if (dateTo) {
       endDate = new Date(dateTo);
       if (endDate < startDate) {
-        return NextResponse.json({ error: "dateTo must be on or after date" }, { status: 400 });
+        return NextResponse.json(
+          { error: t("time.dateToBeforeDate") },
+          { status: 400 },
+        );
       }
     }
 
@@ -104,9 +146,9 @@ export async function POST(
         workerType: workerType || "self",
         date: startDate,
         dateTo: endDate,
-        hours: Number(hours),
-        workerCount: workerCount ? Math.max(1, Number(workerCount)) : 1,
-        description: description?.trim() || null,
+        hours: hours,
+        workerCount: workerCount ?? 1,
+        description: description ?? null,
       },
       select: TIME_ENTRY_SELECT,
     });
@@ -121,8 +163,7 @@ export async function POST(
       data: { actualHours: agg._sum.hours ?? 0 },
     });
 
-    // Log creation to audit log. `item.projectId` is the parent project
-    // (validated above to match the URL param `id`).
+    // Log creation to audit log.
     await logChanges(
       item.projectId,
       "TimeEntry",
@@ -140,6 +181,9 @@ export async function POST(
     return NextResponse.json(entry, { status: 201 });
   } catch (error) {
     console.error("POST time entry error:", error);
-    return NextResponse.json({ error: "Failed to create time entry" }, { status: 500 });
+    return NextResponse.json(
+      { error: t("time.createFailed") },
+      { status: 500 },
+    );
   }
 }

@@ -2726,6 +2726,43 @@
         "labelRequired": "Nhãn là bắt buộc.",
         "createFailed": "Tạo ảnh chụp thất bại.",
         "fetchFailed": "Tải ảnh chụp thất bại."
+      },
+      "time": {
+        "budgetItemIdRequired": "ID mục ngân sách là bắt buộc.",
+        "hoursRequired": "Số giờ hợp lệ (> 0) là bắt buộc.",
+        "budgetItemNotFound": "Không tìm thấy mục ngân sách trong dự án này.",
+        "dateToBeforeDate": "Ngày kết thúc phải bằng hoặc sau ngày bắt đầu.",
+        "notFound": "Không tìm thấy mục thời gian.",
+        "newBudgetItemNotFound": "Không tìm thấy mục ngân sách mới.",
+        "cannotMoveAcrossProjects": "Không thể chuyển mục thời gian sang mục ngân sách của dự án khác.",
+        "createFailed": "Tạo mục thời gian thất bại.",
+        "updateFailed": "Cập nhật mục thời gian thất bại.",
+        "deleteFailed": "Xóa mục thời gian thất bại.",
+        "fetchFailed": "Tải mục thời gian thất bại.",
+        "invalidHours": "Số giờ không hợp lệ.",
+        "invalidWorkerCount": "Số nhân công không hợp lệ.",
+        "invalidDate": "Ngày không hợp lệ."
+      },
+      "note": {
+        "textRequired": "Văn bản là bắt buộc.",
+        "textEmpty": "Văn bản không được để trống.",
+        "nothingToUpdate": "Không có gì để cập nhật — cung cấp văn bản hoặc tác giả.",
+        "notFound": "Không tìm thấy ghi chú.",
+        "createFailed": "Tạo ghi chú thất bại.",
+        "updateFailed": "Cập nhật ghi chú thất bại.",
+        "deleteFailed": "Xóa ghi chú thất bại.",
+        "fetchFailed": "Tải ghi chú thất bại."
+      },
+      "comment": {
+        "textRequired": "Văn bản là bắt buộc.",
+        "budgetItemNotFound": "Không tìm thấy mục ngân sách.",
+        "createFailed": "Tạo bình luận thất bại.",
+        "fetchFailed": "Tải bình luận thất bại."
+      },
+      "audit": {
+        "entityTypeAndActionRequired": "Loại thực thể và hành động là bắt buộc.",
+        "createFailed": "Tạo mục kiểm toán thất bại.",
+        "fetchFailed": "Tải nhật ký kiểm toán thất bại."
       }
     }
   },

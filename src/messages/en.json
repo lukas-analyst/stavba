@@ -2729,6 +2729,43 @@
         "labelRequired": "Label is required.",
         "createFailed": "Failed to create snapshot.",
         "fetchFailed": "Failed to fetch snapshots."
+      },
+      "time": {
+        "budgetItemIdRequired": "Budget item ID is required.",
+        "hoursRequired": "Valid hours (> 0) is required.",
+        "budgetItemNotFound": "Budget item not found in this project.",
+        "dateToBeforeDate": "End date must be on or after start date.",
+        "notFound": "Time entry not found.",
+        "newBudgetItemNotFound": "New budget item not found.",
+        "cannotMoveAcrossProjects": "Cannot move time entry to a budget item in a different project.",
+        "createFailed": "Failed to create time entry.",
+        "updateFailed": "Failed to update time entry.",
+        "deleteFailed": "Failed to delete time entry.",
+        "fetchFailed": "Failed to fetch time entries.",
+        "invalidHours": "Invalid hours.",
+        "invalidWorkerCount": "Invalid worker count.",
+        "invalidDate": "Invalid date."
+      },
+      "note": {
+        "textRequired": "Text is required.",
+        "textEmpty": "Text cannot be empty.",
+        "nothingToUpdate": "Nothing to update — provide text or author.",
+        "notFound": "Note not found.",
+        "createFailed": "Failed to create note.",
+        "updateFailed": "Failed to update note.",
+        "deleteFailed": "Failed to delete note.",
+        "fetchFailed": "Failed to fetch notes."
+      },
+      "comment": {
+        "textRequired": "Text is required.",
+        "budgetItemNotFound": "Budget item not found.",
+        "createFailed": "Failed to create comment.",
+        "fetchFailed": "Failed to fetch comments."
+      },
+      "audit": {
+        "entityTypeAndActionRequired": "Entity type and action are required.",
+        "createFailed": "Failed to create audit entry.",
+        "fetchFailed": "Failed to fetch audit log."
       }
     }
   },

@@ -2726,6 +2726,43 @@
         "labelRequired": "L'etichetta è obbligatoria.",
         "createFailed": "Creazione dell'istantanea non riuscita.",
         "fetchFailed": "Recupero delle istantanee non riuscito."
+      },
+      "time": {
+        "budgetItemIdRequired": "L'ID dell'elemento di budget è obbligatorio.",
+        "hoursRequired": "Sono richieste ore valide (> 0).",
+        "budgetItemNotFound": "Elemento di budget non trovato in questo progetto.",
+        "dateToBeforeDate": "La data di fine deve essere uguale o successiva alla data di inizio.",
+        "notFound": "Voce di tempo non trovata.",
+        "newBudgetItemNotFound": "Nuovo elemento di budget non trovato.",
+        "cannotMoveAcrossProjects": "Impossibile spostare la voce di tempo in un elemento di budget di un altro progetto.",
+        "createFailed": "Creazione della voce di tempo non riuscita.",
+        "updateFailed": "Aggiornamento della voce di tempo non riuscito.",
+        "deleteFailed": "Eliminazione della voce di tempo non riuscita.",
+        "fetchFailed": "Recupero delle voci di tempo non riuscito.",
+        "invalidHours": "Ore non valide.",
+        "invalidWorkerCount": "Numero di lavoratori non valido.",
+        "invalidDate": "Data non valida."
+      },
+      "note": {
+        "textRequired": "Il testo è obbligatorio.",
+        "textEmpty": "Il testo non può essere vuoto.",
+        "nothingToUpdate": "Nulla da aggiornare — fornisci testo o autore.",
+        "notFound": "Nota non trovata.",
+        "createFailed": "Creazione della nota non riuscita.",
+        "updateFailed": "Aggiornamento della nota non riuscito.",
+        "deleteFailed": "Eliminazione della nota non riuscita.",
+        "fetchFailed": "Recupero delle note non riuscito."
+      },
+      "comment": {
+        "textRequired": "Il testo è obbligatorio.",
+        "budgetItemNotFound": "Elemento di budget non trovato.",
+        "createFailed": "Creazione del commento non riuscita.",
+        "fetchFailed": "Recupero dei commenti non riuscito."
+      },
+      "audit": {
+        "entityTypeAndActionRequired": "Il tipo di entità e l'azione sono obbligatori.",
+        "createFailed": "Creazione della voce di audit non riuscita.",
+        "fetchFailed": "Recupero del registro di audit non riuscito."
       }
     }
   },
