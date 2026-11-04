@@ -1,10 +1,66 @@
 import { NextResponse } from "next/server";
 import { getTranslations } from "next-intl/server";
+import { z } from "zod";
 import { db, dbRead } from "@/lib/db";
 import { logChanges } from "@/lib/audit";
 import { recalcParentDates } from "@/lib/recalc-parent-dates";
 import { requireProjectAccess } from "@/lib/authz";
 import { convertAmount } from "@/lib/currency";
+import {
+  parseBody,
+  parseParam,
+  cuidSchema,
+  nonEmptyString,
+  optionalNullableString,
+} from "@/lib/api-validation";
+
+// Number-or-null-or-undefined schema — replaces the ad-hoc `numOrUndef`
+// helper from the original code. Accepts number, null, undefined; rejects
+// strings, NaN, Infinity.
+const optionalNumOrNull = z
+  .union([z.number().finite(), z.null(), z.undefined()])
+  .optional();
+
+const optionalIsoDate = z
+  .string()
+  .refine((s) => !isNaN(Date.parse(s)), { message: "budget.invalidDate" })
+  .optional();
+
+const linkSchema = z.object({
+  id: z.string().optional(),
+  label: z.string().trim().min(1),
+  url: z.string().trim().min(1),
+});
+
+// PATCH body schema — all fields optional (partial update). Same fields
+// as POST /api/projects/[id]/budget, minus `category` which is required
+// on create. On PATCH, category is optional.
+const patchBudgetItemBodySchema = z.object({
+  category: nonEmptyString.max(200).optional(),
+  subcategory: optionalNullableString.optional(),
+  element: optionalNullableString.optional(),
+  phase: z.string().max(50).optional(),
+  required: z.boolean().optional(),
+  completed: z.boolean().optional(),
+  rejected: z.boolean().optional(),
+  note: optionalNullableString.optional(),
+  unitPrice: optionalNullableString.optional(),
+  parentId: z.union([cuidSchema, z.null()]).optional(),
+  dependsOnId: z.union([cuidSchema, z.null()]).optional(),
+  planCost: optionalNumOrNull,
+  planCostCurrency: z.union([z.string().regex(/^[A-Z]{3}$/), z.null()]).optional(),
+  flexibilityPercent: z.union([z.number().min(0).max(100), z.null()]).optional(),
+  planDays: z.union([z.number().nonnegative(), z.null()]).optional(),
+  dateFrom: z.union([optionalIsoDate, z.null()]).optional(),
+  dateTo: z.union([optionalIsoDate, z.null()]).optional(),
+  actualCost: optionalNumOrNull,
+  actualHours: optionalNumOrNull,
+  subsidyEligible: z.boolean().optional(),
+  subsidyAmount: optionalNumOrNull,
+  contactId: z.union([cuidSchema, z.null()]).optional(),
+  sortOrder: z.number().int().nonnegative().optional(),
+  links: z.array(linkSchema).max(100).optional(),
+});
 
 // PATCH /api/budget-items/[id]
 export async function PATCH(
@@ -13,12 +69,24 @@ export async function PATCH(
 ) {
   const t = await getTranslations("api.errors");
   try {
-    const { id } = await params;
-    const body = await request.json();
+    const { id: rawId } = await params;
+    const idResult = parseParam(cuidSchema, rawId, t);
+    if (!idResult.success) return idResult.response;
+    const id = idResult.data;
+
+    // Parse + validate body (Zod). `body` is a mutable copy of the
+    // parsed data — we need to be able to override `category` and
+    // `sortOrder` during re-parenting (see below).
+    const result = await parseBody(patchBudgetItemBodySchema, request, t);
+    if (!result.success) return result.response;
+    const body: Record<string, unknown> = { ...result.data };
 
     const existing = await db.budgetItem.findUnique({ where: { id } });
     if (!existing) {
-      return NextResponse.json({ error: "Budget item not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: t("budget.notFound") },
+        { status: 404 },
+      );
     }
 
     // IDOR fix: verify the caller has editor access to the project that owns
@@ -26,9 +94,6 @@ export async function PATCH(
     // URL, so we resolve it from the item itself.
     const access = await requireProjectAccess(existing.projectId, "editor");
     if (!access.ok) return access.response;
-
-    const numOrUndef = (v: unknown) =>
-      v === undefined ? undefined : v === null || v === "" ? null : Number(v);
 
     // ───────────────────────────────────────────────────────────────
     // Re-parenting: moving a task (or sub-item) under a different parent.
@@ -45,12 +110,13 @@ export async function PATCH(
     //      so the item appears in the correct category group, and bump
     //      `sortOrder` to the end of the new parent's children list.
     // ───────────────────────────────────────────────────────────────
+    const parentIdValue = body.parentId as string | null | undefined;
     const parentChanged =
-      body.parentId !== undefined &&
-      (body.parentId || null) !== (existing.parentId || null);
+      parentIdValue !== undefined &&
+      (parentIdValue || null) !== (existing.parentId || null);
 
     if (parentChanged) {
-      const newParentId = body.parentId || null;
+      const newParentId = parentIdValue || null;
 
       if (newParentId === id) {
         return NextResponse.json(
@@ -117,8 +183,8 @@ export async function PATCH(
     // Build the update data
     const updateData: Record<string, unknown> = {};
     if (body.category !== undefined) updateData.category = String(body.category).trim();
-    if (body.subcategory !== undefined) updateData.subcategory = body.subcategory?.trim() || null;
-    if (body.element !== undefined) updateData.element = body.element?.trim() || null;
+    if (body.subcategory !== undefined) updateData.subcategory = (body.subcategory as string | null) ?? null;
+    if (body.element !== undefined) updateData.element = (body.element as string | null) ?? null;
     if (body.phase !== undefined) updateData.phase = body.phase;
     if (body.required !== undefined) updateData.required = Boolean(body.required);
     if (body.completed !== undefined) {
@@ -145,21 +211,21 @@ export async function PATCH(
       }
     }
     if (body.rejected !== undefined) updateData.rejected = Boolean(body.rejected);
-    if (body.parentId !== undefined) updateData.parentId = body.parentId || null;
-    if (body.dependsOnId !== undefined) updateData.dependsOnId = body.dependsOnId || null;
-    if (body.note !== undefined) updateData.note = body.note?.trim() || null;
-    if (body.unitPrice !== undefined) updateData.unitPrice = body.unitPrice?.trim() || null;
-    if (body.planCost !== undefined) updateData.planCost = numOrUndef(body.planCost);
-    if (body.planCostCurrency !== undefined) updateData.planCostCurrency = body.planCostCurrency || null;
+    if (body.parentId !== undefined) updateData.parentId = (body.parentId as string | null) || null;
+    if (body.dependsOnId !== undefined) updateData.dependsOnId = (body.dependsOnId as string | null) || null;
+    if (body.note !== undefined) updateData.note = (body.note as string | null) ?? null;
+    if (body.unitPrice !== undefined) updateData.unitPrice = (body.unitPrice as string | null) ?? null;
+    if (body.planCost !== undefined) updateData.planCost = body.planCost;
+    if (body.planCostCurrency !== undefined) updateData.planCostCurrency = (body.planCostCurrency as string | null) ?? null;
 
     // If planCost or planCostCurrency changed, recompute planCostConverted
     // using the appropriate rate (today for incomplete, completedAt for complete)
     if (body.planCost !== undefined || body.planCostCurrency !== undefined) {
       const effectiveCurrency = body.planCostCurrency !== undefined
-        ? (body.planCostCurrency || null)
+        ? ((body.planCostCurrency as string | null) || null)
         : existing.planCostCurrency;
       const effectiveCost = body.planCost !== undefined
-        ? numOrUndef(body.planCost)
+        ? (body.planCost as number | null)
         : existing.planCost;
       const project = await dbRead.project.findUnique({ where: { id: existing.projectId }, select: { currency: true } });
       const projectCurrency = project?.currency ?? "CZK";
@@ -176,41 +242,25 @@ export async function PATCH(
         updateData.planCostConverted = effectiveCost;
       }
     }
-    if (body.flexibilityPercent !== undefined) updateData.flexibilityPercent = numOrUndef(body.flexibilityPercent);
-    if (body.planDays !== undefined) updateData.planDays = numOrUndef(body.planDays);
-    if (body.dateFrom !== undefined) updateData.dateFrom = body.dateFrom ? new Date(body.dateFrom) : null;
-    if (body.dateTo !== undefined) updateData.dateTo = body.dateTo ? new Date(body.dateTo) : null;
-    if (body.actualCost !== undefined) updateData.actualCost = numOrUndef(body.actualCost) ?? 0;
-    if (body.actualHours !== undefined) updateData.actualHours = numOrUndef(body.actualHours) ?? 0;
+    if (body.flexibilityPercent !== undefined) updateData.flexibilityPercent = body.flexibilityPercent;
+    if (body.planDays !== undefined) updateData.planDays = body.planDays;
+    if (body.dateFrom !== undefined) updateData.dateFrom = body.dateFrom ? new Date(body.dateFrom as string) : null;
+    if (body.dateTo !== undefined) updateData.dateTo = body.dateTo ? new Date(body.dateTo as string) : null;
+    if (body.actualCost !== undefined) updateData.actualCost = (body.actualCost as number | null) ?? 0;
+    if (body.actualHours !== undefined) updateData.actualHours = (body.actualHours as number | null) ?? 0;
     if (body.subsidyEligible !== undefined) updateData.subsidyEligible = Boolean(body.subsidyEligible);
-    if (body.subsidyAmount !== undefined) updateData.subsidyAmount = numOrUndef(body.subsidyAmount);
-    if (body.contactId !== undefined) updateData.contactId = body.contactId || null;
-    if (body.sortOrder !== undefined) updateData.sortOrder = Number(body.sortOrder);
+    if (body.subsidyAmount !== undefined) updateData.subsidyAmount = body.subsidyAmount;
+    if (body.contactId !== undefined) updateData.contactId = (body.contactId as string | null) || null;
+    if (body.sortOrder !== undefined) updateData.sortOrder = body.sortOrder;
 
     // Synchronize external hyperlinks (1:N) when `links` is provided.
-    // The frontend sends the FULL desired state of the links array, so we
-    // perform a replace: delete links no longer in the array, upsert
-    // (by id) the ones that are. This keeps the operation atomic with
-    // the budget item update via a single transaction.
-    //   - link.id = undefined → create new link
-    //   - link.id matches existing → update label/url
-    //   - existing link not in array → delete
-    // Validation: label + url required, url trimmed.
     let linksWereSynced = false;
     if (Array.isArray(body.links)) {
-      const incomingLinks = body.links
-        .filter((l: unknown): l is { id?: string; label: string; url: string } => {
-          if (!l || typeof l !== "object") return false;
-          const obj = l as Record<string, unknown>;
-          return (
-            typeof obj.label === "string" && obj.label.trim() !== "" &&
-            typeof obj.url === "string" && obj.url.trim() !== ""
-          );
-        })
+      const incomingLinks = (body.links as Array<{ id?: string; label: string; url: string }>)
         .map((l, idx) => ({
           id: typeof l.id === "string" ? l.id : undefined,
-          label: l.label.trim(),
-          url: l.url.trim(),
+          label: l.label,
+          url: l.url,
           sortOrder: idx,
         }));
 
@@ -245,8 +295,6 @@ export async function PATCH(
     );
 
     // If dateFrom/dateTo changed or item was re-parented, recalculate parent dates.
-    // `parentChanged` was already computed at the top of this handler (re-parenting
-    // validation block) — we reuse it here to avoid a duplicate declaration.
     const dateChanged =
       updateData.dateFrom !== undefined || updateData.dateTo !== undefined;
 
@@ -261,7 +309,10 @@ export async function PATCH(
     return NextResponse.json(updated);
   } catch (error) {
     console.error("PATCH budget item error:", error);
-    return NextResponse.json({ error: "Failed to update budget item" }, { status: 500 });
+    return NextResponse.json(
+      { error: t("budget.updateFailed") },
+      { status: 500 },
+    );
   }
 }
 
@@ -270,11 +321,19 @@ export async function DELETE(
   _request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const t = await getTranslations("api.errors");
   try {
-    const { id } = await params;
+    const { id: rawId } = await params;
+    const idResult = parseParam(cuidSchema, rawId, t);
+    if (!idResult.success) return idResult.response;
+    const id = idResult.data;
+
     const existing = await db.budgetItem.findUnique({ where: { id } });
     if (!existing) {
-      return NextResponse.json({ error: "Budget item not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: t("budget.notFound") },
+        { status: 404 },
+      );
     }
 
     // IDOR fix: verify editor access to the owning project before deleting.
@@ -301,6 +360,9 @@ export async function DELETE(
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("DELETE budget item error:", error);
-    return NextResponse.json({ error: "Failed to delete budget item" }, { status: 500 });
+    return NextResponse.json(
+      { error: t("budget.deleteFailed") },
+      { status: 500 },
+    );
   }
 }

@@ -1,10 +1,39 @@
 import { NextResponse } from "next/server";
+import { getTranslations } from "next-intl/server";
+import { z } from "zod";
 import { unstable_cache } from "next/cache";
 import { db, dbRead } from "@/lib/db";
 import { logChanges } from "@/lib/audit";
 import { requireProjectAccess } from "@/lib/authz";
 import { convertAmount } from "@/lib/currency";
 import { normalizeRecurringInterval, computeNextRecurringDate } from "@/lib/recurring";
+import {
+  parseBody,
+  parseParam,
+  cuidSchema,
+  optionalNullableString,
+} from "@/lib/api-validation";
+
+// POST body schema for /api/projects/[id]/payments
+const createPaymentBodySchema = z.object({
+  budgetItemId: cuidSchema,
+  contactId: z.union([cuidSchema, z.null()]).optional(),
+  amount: z.number().finite().refine((n) => !isNaN(n), {
+    message: "payment.amountRequired",
+  }),
+  currency: z.string().regex(/^[A-Z]{3}$/).optional(),
+  invoiceTotal: z.union([z.number().finite(), z.null()]).optional(),
+  installmentOf: z.union([cuidSchema, z.null()]).optional(),
+  vatRate: z.union([z.number().min(0).max(100), z.null()]).optional(),
+  date: z.string().refine((s) => !isNaN(Date.parse(s)), {
+    message: "payment.invalidDate",
+  }).optional(),
+  type: z.string().max(50).optional(),
+  vendor: optionalNullableString.optional(),
+  invoiceNumber: optionalNullableString.optional(),
+  description: optionalNullableString.optional(),
+  recurringInterval: z.string().max(20).optional(),
+});
 
 // Explicit field selection — fetch only what the frontend uses.
 // `include` would fetch every column of budgetItem + contact (10+ columns each);
@@ -60,32 +89,44 @@ export async function GET(
   _request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const t = await getTranslations("api.errors");
   try {
-    const { id } = await params;
+    const { id: rawId } = await params;
+    const idResult = parseParam(cuidSchema, rawId, t);
+    if (!idResult.success) return idResult.response;
+    const id = idResult.data;
+
     const access = await requireProjectAccess(id, "viewer");
     if (!access.ok) return access.response;
     const payments = await getCachedPayments(id);
     return NextResponse.json(payments);
   } catch (error) {
     console.error("GET payments error:", error);
-    return NextResponse.json({ error: "Failed to fetch payments" }, { status: 500 });
+    return NextResponse.json(
+      { error: t("payment.fetchFailed") },
+      { status: 500 },
+    );
   }
 }
 
 // POST /api/projects/[id]/payments - create a payment (or an invoice/installment)
-// Body fields:
-//   amount, budgetItemId (required)
-//   invoiceTotal (optional) - if set, this is an invoice with an expected total
-//   installmentOf (optional) - parent payment id, makes this an installment of that invoice
 export async function POST(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const t = await getTranslations("api.errors");
   try {
-    const { id } = await params;
+    const { id: rawId } = await params;
+    const idResult = parseParam(cuidSchema, rawId, t);
+    if (!idResult.success) return idResult.response;
+    const id = idResult.data;
+
     const access = await requireProjectAccess(id, "editor");
     if (!access.ok) return access.response;
-    const body = await request.json();
+
+    // Parse + validate body (Zod).
+    const result = await parseBody(createPaymentBodySchema, request, t);
+    if (!result.success) return result.response;
     const {
       budgetItemId,
       contactId,
@@ -100,20 +141,16 @@ export async function POST(
       invoiceNumber,
       description,
       recurringInterval: recurringIntervalInput,
-    } = body;
-
-    if (!budgetItemId) {
-      return NextResponse.json({ error: "budgetItemId is required" }, { status: 400 });
-    }
-    if (amount === undefined || amount === null || isNaN(Number(amount))) {
-      return NextResponse.json({ error: "Valid amount is required" }, { status: 400 });
-    }
+    } = result.data;
 
     const item = await db.budgetItem.findFirst({
       where: { id: budgetItemId, projectId: id },
     });
     if (!item) {
-      return NextResponse.json({ error: "Budget item not found in this project" }, { status: 404 });
+      return NextResponse.json(
+        { error: t("payment.budgetItemNotFound") },
+        { status: 404 },
+      );
     }
 
     // If this is an installment, validate the parent exists & belongs to same project
@@ -122,12 +159,15 @@ export async function POST(
         where: { id: installmentOf, budgetItem: { projectId: id } },
       });
       if (!parent) {
-        return NextResponse.json({ error: "Parent payment not found" }, { status: 404 });
+        return NextResponse.json(
+          { error: t("payment.parentNotFound") },
+          { status: 404 },
+        );
       }
     }
 
-    const numAmount = Number(amount);
-    const numVatRate = vatRate !== undefined && vatRate !== null && vatRate !== "" ? Number(vatRate) : null;
+    const numAmount = amount;
+    const numVatRate = vatRate ?? null;
     // Compute VAT amount: if amount includes VAT, vatAmount = amount * vatRate / (100 + vatRate)
     const numVatAmount =
       numVatRate !== null && numVatRate > 0
@@ -135,7 +175,6 @@ export async function POST(
         : null;
 
     // === Multi-currency conversion ===
-    // Resolve the project's default currency to know what to convert TO.
     const project = await dbRead.project.findUnique({
       where: { id },
       select: { currency: true },
@@ -159,12 +198,9 @@ export async function POST(
         amountConverted = conversion.converted;
         exchangeRateUsed = conversion.rate;
       }
-      // If no rate available, amountConverted stays = numAmount (fallback)
     }
 
-    // Validate + normalize recurring interval. Empty string / "none" / null
-    // means "no recurrence" — recurringInterval and recurringNextDate
-    // are both stored as NULL.
+    // Validate + normalize recurring interval.
     const recurringInterval = normalizeRecurringInterval(recurringIntervalInput);
     const recurringNextDate =
       recurringInterval !== null
@@ -179,19 +215,17 @@ export async function POST(
         currency: paymentCurrency !== projectCurrency ? paymentCurrency : null,
         amountConverted,
         exchangeRateUsed,
-        invoiceTotal: invoiceTotal !== undefined && invoiceTotal !== null && invoiceTotal !== "" ? Number(invoiceTotal) : null,
+        invoiceTotal: invoiceTotal ?? null,
         installmentOf: installmentOf || null,
         vatRate: numVatRate,
         vatAmount: numVatAmount,
         date: paymentDate,
         type: type || "other",
-        vendor: vendor?.trim() || null,
-        invoiceNumber: invoiceNumber?.trim() || null,
-        description: description?.trim() || null,
+        vendor: vendor ?? null,
+        invoiceNumber: invoiceNumber ?? null,
+        description: description ?? null,
         recurringInterval,
         recurringNextDate,
-        // New manually-created payments are NOT clones of a template — leave
-        // recurringParentId null. Only the cron job sets this on auto-clones.
         recurringParentId: null,
       },
       select: PAYMENT_SELECT,
@@ -207,8 +241,7 @@ export async function POST(
       data: { actualCost: agg._sum.amountConverted ?? 0 },
     });
 
-    // Log creation to audit log. `item.projectId` is the parent project
-    // (validated above to match the URL param `id`).
+    // Log creation to audit log.
     await logChanges(
       item.projectId,
       "Payment",
@@ -226,6 +259,9 @@ export async function POST(
     return NextResponse.json(payment, { status: 201 });
   } catch (error) {
     console.error("POST payment error:", error);
-    return NextResponse.json({ error: "Failed to create payment" }, { status: 500 });
+    return NextResponse.json(
+      { error: t("payment.createFailed") },
+      { status: 500 },
+    );
   }
 }

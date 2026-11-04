@@ -2593,7 +2593,24 @@
         "cannotMoveToSelf": "Una voce non può essere spostata sotto se stessa.",
         "targetNotFound": "La voce di destinazione non esiste.",
         "cannotMoveAcrossProjects": "Un'attività non può essere spostata in un altro progetto.",
-        "cycleDetected": "Una voce non può essere spostata sotto un proprio discendente (ciclo)."
+        "cycleDetected": "Una voce non può essere spostata sotto un proprio discendente (ciclo).",
+        "categoryRequired": "La categoria è obbligatoria.",
+        "parentNotFound": "Elemento principale non trovato in questo progetto.",
+        "dependsOnNotFound": "Elemento di riferimento (dependsOnId) non trovato in questo progetto.",
+        "notFound": "Elemento di budget non trovato.",
+        "createFailed": "Creazione dell'elemento di budget non riuscita.",
+        "updateFailed": "Aggiornamento dell'elemento di budget non riuscito.",
+        "deleteFailed": "Eliminazione dell'elemento di budget non riuscita.",
+        "fetchFailed": "Recupero degli elementi di budget non riuscito.",
+        "invalidAmount": "Importo non valido.",
+        "invalidPlanCost": "Costo pianificato non valido.",
+        "invalidFlexibilityPercent": "Percentuale di flessibilità non valida.",
+        "invalidPlanDays": "Numero di giorni pianificati non valido.",
+        "invalidActualCost": "Costo effettivo non valido.",
+        "invalidActualHours": "Ore effettive non valide.",
+        "invalidSubsidyAmount": "Importo del sussidio non valido.",
+        "invalidSortOrder": "Ordine non valido.",
+        "invalidDate": "Data non valida."
       },
       "users": {
         "adminOnly": "Solo un amministratore può modificare i privilegi di amministratore.",
@@ -2687,6 +2704,28 @@
         "invalidItems": "Gli elementi devono essere un array di oggetti {id, sortOrder}.",
         "invalidCategoryOrder": "L'ordine delle categorie deve essere un array di stringhe.",
         "failed": "Riordino non riuscito."
+      },
+      "payment": {
+        "budgetItemIdRequired": "L'ID dell'elemento di budget è obbligatorio.",
+        "amountRequired": "È richiesto un importo valido.",
+        "notFound": "Pagamento non trovato.",
+        "budgetItemNotFound": "Elemento di budget non trovato in questo progetto.",
+        "parentNotFound": "Pagamento principale non trovato.",
+        "newBudgetItemNotFound": "Nuovo elemento di budget non trovato.",
+        "cannotMoveAcrossProjects": "Impossibile spostare il pagamento in un elemento di budget di un altro progetto.",
+        "createFailed": "Creazione del pagamento non riuscita.",
+        "updateFailed": "Aggiornamento del pagamento non riuscito.",
+        "deleteFailed": "Eliminazione del pagamento non riuscita.",
+        "fetchFailed": "Recupero dei pagamenti non riuscito.",
+        "invalidAmount": "Importo non valido.",
+        "invalidVatRate": "Aliquota IVA non valida.",
+        "invalidInvoiceTotal": "Totale fattura non valido.",
+        "invalidDate": "Data non valida."
+      },
+      "snapshot": {
+        "labelRequired": "L'etichetta è obbligatoria.",
+        "createFailed": "Creazione dell'istantanea non riuscita.",
+        "fetchFailed": "Recupero delle istantanee non riuscito."
       }
     }
   },

@@ -1,9 +1,64 @@
 import { NextResponse } from "next/server";
+import { getTranslations } from "next-intl/server";
+import { z } from "zod";
 import { db, dbRead } from "@/lib/db";
 import { logChanges } from "@/lib/audit";
 import { recalcParentDates } from "@/lib/recalc-parent-dates";
 import { requireProjectAccess } from "@/lib/authz";
 import { convertAmount } from "@/lib/currency";
+import {
+  parseBody,
+  parseParam,
+  cuidSchema,
+  nonEmptyString,
+  optionalNullableString,
+} from "@/lib/api-validation";
+
+// Number-or-null-or-undefined schema — accepts number, null, undefined;
+// rejects strings, NaN, Infinity. Replaces the ad-hoc `numOrUndef` helper.
+const optionalNumOrNull = z
+  .union([z.number().finite(), z.null(), z.undefined()])
+  .optional();
+
+// ISO date schema — accepts string that parses to a valid Date.
+const optionalIsoDate = z
+  .string()
+  .refine((s) => !isNaN(Date.parse(s)), { message: "budget.invalidDate" })
+  .optional();
+
+// Link schema — each link must have a non-empty label + url.
+const linkSchema = z.object({
+  id: z.string().optional(),
+  label: z.string().trim().min(1),
+  url: z.string().trim().min(1),
+});
+
+// POST body schema for /api/projects/[id]/budget
+const createBudgetItemBodySchema = z.object({
+  category: nonEmptyString.max(200, { message: "budget.categoryRequired" }),
+  subcategory: optionalNullableString.optional(),
+  element: optionalNullableString.optional(),
+  phase: z.string().max(50).optional(),
+  required: z.boolean().optional(),
+  completed: z.boolean().optional(),
+  rejected: z.boolean().optional(),
+  note: optionalNullableString.optional(),
+  unitPrice: optionalNullableString.optional(),
+  parentId: cuidSchema.optional(),
+  dependsOnId: cuidSchema.optional(),
+  planCost: optionalNumOrNull,
+  planCostCurrency: z.string().regex(/^[A-Z]{3}$/).optional(),
+  flexibilityPercent: z.number().min(0).max(100).nullable().optional(),
+  planDays: z.number().nonnegative().nullable().optional(),
+  dateFrom: optionalIsoDate,
+  dateTo: optionalIsoDate,
+  actualCost: z.number().optional(),
+  actualHours: z.number().optional(),
+  subsidyEligible: z.boolean().optional(),
+  subsidyAmount: optionalNumOrNull,
+  contactId: cuidSchema.nullable().optional(),
+  links: z.array(linkSchema).max(100).optional(),
+});
 
 // Explicit field selection — only fetch what the frontend actually uses.
 const BUDGET_ITEM_SELECT = {
@@ -58,8 +113,13 @@ export async function GET(
   _request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const t = await getTranslations("api.errors");
   try {
-    const { id } = await params;
+    const { id: rawId } = await params;
+    const idResult = parseParam(cuidSchema, rawId, t);
+    if (!idResult.success) return idResult.response;
+    const id = idResult.data;
+
     const access = await requireProjectAccess(id, "viewer");
     if (!access.ok) return access.response;
     const items = await dbRead.budgetItem.findMany({
@@ -109,7 +169,10 @@ export async function GET(
     return NextResponse.json(convertedItems);
   } catch (error) {
     console.error("GET budget error:", error);
-    return NextResponse.json({ error: "Failed to fetch budget items" }, { status: 500 });
+    return NextResponse.json(
+      { error: t("budget.fetchFailed") },
+      { status: 500 },
+    );
   }
 }
 
@@ -118,11 +181,20 @@ export async function POST(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const t = await getTranslations("api.errors");
   try {
-    const { id } = await params;
+    const { id: rawId } = await params;
+    const idResult = parseParam(cuidSchema, rawId, t);
+    if (!idResult.success) return idResult.response;
+    const id = idResult.data;
+
     const access = await requireProjectAccess(id, "editor");
     if (!access.ok) return access.response;
-    const body = await request.json();
+
+    // Parse + validate body (Zod). Replaces the ad-hoc
+    // `body as { ... }` cast + 3 typeof checks.
+    const result = await parseBody(createBudgetItemBodySchema, request, t);
+    if (!result.success) return result.response;
     const {
       category,
       subcategory,
@@ -147,32 +219,16 @@ export async function POST(
       subsidyAmount,
       contactId,
       links,
-    } = body;
+    } = result.data;
 
-    if (!category || typeof category !== "string" || !category.trim()) {
-      return NextResponse.json({ error: "Category is required" }, { status: 400 });
-    }
-
-    // Normalize incoming links — same validation as PATCH endpoint.
-    // Drops entries without a non-empty label AND url. Assigns sortOrder
-    // based on the array order so display is stable in the detail panel.
+    // Normalize incoming links — Zod already validated shape + trimmed.
+    // We just extract label/url/sortOrder.
     const normalizedLinks = Array.isArray(links)
-      ? links
-          .filter(
-            (l: unknown): l is { id?: string; label: string; url: string } => {
-              if (!l || typeof l !== "object") return false;
-              const obj = l as Record<string, unknown>;
-              return (
-                typeof obj.label === "string" && obj.label.trim() !== "" &&
-                typeof obj.url === "string" && obj.url.trim() !== ""
-              );
-            },
-          )
-          .map((l, idx) => ({
-            label: l.label.trim(),
-            url: l.url.trim(),
-            sortOrder: idx,
-          }))
+      ? links.map((l, idx) => ({
+          label: l.label,
+          url: l.url,
+          sortOrder: idx,
+        }))
       : [];
 
     // If parentId is set, validate it belongs to this project
@@ -181,7 +237,10 @@ export async function POST(
         where: { id: parentId, projectId: id },
       });
       if (!parent) {
-        return NextResponse.json({ error: "Parent item not found in this project" }, { status: 404 });
+        return NextResponse.json(
+          { error: t("budget.parentNotFound") },
+          { status: 404 },
+        );
       }
     }
 
@@ -191,7 +250,10 @@ export async function POST(
         where: { id: dependsOnId, projectId: id, parentId: null },
       });
       if (!dep) {
-        return NextResponse.json({ error: "Referenced item (dependsOnId) not found in this project" }, { status: 404 });
+        return NextResponse.json(
+          { error: t("budget.dependsOnNotFound") },
+          { status: 404 },
+        );
       }
     }
 
@@ -204,39 +266,35 @@ export async function POST(
       data: {
         projectId: id,
         category: category.trim(),
-        subcategory: subcategory?.trim() || null,
-        element: element?.trim() || null,
+        subcategory: subcategory ?? null,
+        element: element ?? null,
         phase: phase || "Neurčeno",
         required: Boolean(required),
         completed: Boolean(completed),
         rejected: Boolean(rejected),
-        note: note?.trim() || null,
-        unitPrice: unitPrice?.trim() || null,
+        note: note ?? null,
+        unitPrice: unitPrice ?? null,
         parentId: parentId || null,
         dependsOnId: dependsOnId || null,
-        planCost: planCost !== undefined && planCost !== null && planCost !== "" ? Number(planCost) : null,
-        planCostCurrency: planCostCurrency || null,
+        planCost: planCost ?? null,
+        planCostCurrency: planCostCurrency ?? null,
         // Compute planCostConverted at creation time
         planCostConverted: await (async () => {
-          const numPlanCost = planCost !== undefined && planCost !== null && planCost !== "" ? Number(planCost) : null;
-          if (numPlanCost == null) return null;
+          if (planCost == null) return null;
           const proj = await dbRead.project.findUnique({ where: { id }, select: { currency: true } });
           const projCurrency = proj?.currency ?? "CZK";
-          if (!planCostCurrency || planCostCurrency === projCurrency) return numPlanCost;
-          const conversion = await convertAmount(numPlanCost, planCostCurrency, projCurrency, new Date());
-          return conversion?.converted ?? numPlanCost;
+          if (!planCostCurrency || planCostCurrency === projCurrency) return planCost;
+          const conversion = await convertAmount(planCost, planCostCurrency, projCurrency, new Date());
+          return conversion?.converted ?? planCost;
         })(),
-        flexibilityPercent:
-          flexibilityPercent !== undefined && flexibilityPercent !== null && flexibilityPercent !== ""
-            ? Number(flexibilityPercent)
-            : null,
-        planDays: planDays !== undefined && planDays !== null && planDays !== "" ? Number(planDays) : null,
+        flexibilityPercent: flexibilityPercent ?? null,
+        planDays: planDays ?? null,
         dateFrom: dateFrom ? new Date(dateFrom) : null,
         dateTo: dateTo ? new Date(dateTo) : null,
-        actualCost: actualCost !== undefined ? Number(actualCost) : 0,
-        actualHours: actualHours !== undefined ? Number(actualHours) : 0,
+        actualCost: actualCost ?? 0,
+        actualHours: actualHours ?? 0,
         subsidyEligible: Boolean(subsidyEligible),
-        subsidyAmount: subsidyAmount !== undefined && subsidyAmount !== null && subsidyAmount !== "" ? Number(subsidyAmount) : null,
+        subsidyAmount: subsidyAmount ?? null,
         contactId: contactId || null,
         sortOrder: (maxOrder._max.sortOrder ?? -1) + 1,
         // Persist external hyperlinks (1:N). Empty array → no rows created.
@@ -269,6 +327,9 @@ export async function POST(
     return NextResponse.json(item, { status: 201 });
   } catch (error) {
     console.error("POST budget error:", error);
-    return NextResponse.json({ error: "Failed to create budget item" }, { status: 500 });
+    return NextResponse.json(
+      { error: t("budget.createFailed") },
+      { status: 500 },
+    );
   }
 }

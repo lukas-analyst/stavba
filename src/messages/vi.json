@@ -2593,7 +2593,24 @@
         "cannotMoveToSelf": "Một hạng mục không thể được di chuyển dưới chính nó.",
         "targetNotFound": "Hạng mục đích không tồn tại.",
         "cannotMoveAcrossProjects": "Một công việc không thể được di chuyển sang dự án khác.",
-        "cycleDetected": "Một hạng mục không thể được di chuyển dưới hậu duệ của chính nó (vòng lặp)."
+        "cycleDetected": "Một hạng mục không thể được di chuyển dưới hậu duệ của chính nó (vòng lặp).",
+        "categoryRequired": "Danh mục là bắt buộc.",
+        "parentNotFound": "Không tìm thấy mục cha trong dự án này.",
+        "dependsOnNotFound": "Không tìm thấy mục tham chiếu (dependsOnId) trong dự án này.",
+        "notFound": "Không tìm thấy mục ngân sách.",
+        "createFailed": "Tạo mục ngân sách thất bại.",
+        "updateFailed": "Cập nhật mục ngân sách thất bại.",
+        "deleteFailed": "Xóa mục ngân sách thất bại.",
+        "fetchFailed": "Tải các mục ngân sách thất bại.",
+        "invalidAmount": "Số tiền không hợp lệ.",
+        "invalidPlanCost": "Chi phí kế hoạch không hợp lệ.",
+        "invalidFlexibilityPercent": "Phần trăm linh hoạt không hợp lệ.",
+        "invalidPlanDays": "Số ngày kế hoạch không hợp lệ.",
+        "invalidActualCost": "Chi phí thực tế không hợp lệ.",
+        "invalidActualHours": "Số giờ thực tế không hợp lệ.",
+        "invalidSubsidyAmount": "Số tiền trợ cấp không hợp lệ.",
+        "invalidSortOrder": "Thứ tự không hợp lệ.",
+        "invalidDate": "Ngày không hợp lệ."
       },
       "users": {
         "adminOnly": "Chỉ quản trị viên mới có thể thay đổi quyền quản trị.",
@@ -2687,6 +2704,28 @@
         "invalidItems": "Các mục phải là mảng các đối tượng {id, sortOrder}.",
         "invalidCategoryOrder": "Thứ tự danh mục phải là mảng chuỗi.",
         "failed": "Sắp xếp lại thất bại."
+      },
+      "payment": {
+        "budgetItemIdRequired": "ID mục ngân sách là bắt buộc.",
+        "amountRequired": "Số tiền hợp lệ là bắt buộc.",
+        "notFound": "Không tìm thấy khoản thanh toán.",
+        "budgetItemNotFound": "Không tìm thấy mục ngân sách trong dự án này.",
+        "parentNotFound": "Không tìm thấy khoản thanh toán gốc.",
+        "newBudgetItemNotFound": "Không tìm thấy mục ngân sách mới.",
+        "cannotMoveAcrossProjects": "Không thể chuyển thanh toán sang mục ngân sách của dự án khác.",
+        "createFailed": "Tạo khoản thanh toán thất bại.",
+        "updateFailed": "Cập nhật khoản thanh toán thất bại.",
+        "deleteFailed": "Xóa khoản thanh toán thất bại.",
+        "fetchFailed": "Tải khoản thanh toán thất bại.",
+        "invalidAmount": "Số tiền không hợp lệ.",
+        "invalidVatRate": "Tỷ lệ thuế GTGT không hợp lệ.",
+        "invalidInvoiceTotal": "Tổng hóa đơn không hợp lệ.",
+        "invalidDate": "Ngày không hợp lệ."
+      },
+      "snapshot": {
+        "labelRequired": "Nhãn là bắt buộc.",
+        "createFailed": "Tạo ảnh chụp thất bại.",
+        "fetchFailed": "Tải ảnh chụp thất bại."
       }
     }
   },

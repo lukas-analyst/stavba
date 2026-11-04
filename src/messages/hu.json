@@ -2593,7 +2593,24 @@
         "cannotMoveToSelf": "Egy tétel nem helyezhető át önmaga alá.",
         "targetNotFound": "A céltétel nem létezik.",
         "cannotMoveAcrossProjects": "Egy feladat nem helyezhető át másik projektbe.",
-        "cycleDetected": "Egy tétel nem helyezhető át a saját leszármazottja alá (ciklus)."
+        "cycleDetected": "Egy tétel nem helyezhető át a saját leszármazottja alá (ciklus).",
+        "categoryRequired": "A kategória kötelező.",
+        "parentNotFound": "A szülő elem nem található ebben a projektben.",
+        "dependsOnNotFound": "A hivatkozott elem (dependsOnId) nem található ebben a projektben.",
+        "notFound": "A költségkeret elem nem található.",
+        "createFailed": "A költségkeret elem létrehozása sikertelen.",
+        "updateFailed": "A költségkeret elem frissítése sikertelen.",
+        "deleteFailed": "A költségkeret elem törlése sikertelen.",
+        "fetchFailed": "A költségkeret elemek lekérése sikertelen.",
+        "invalidAmount": "Érvénytelen összeg.",
+        "invalidPlanCost": "Érvénytelen tervezett költség.",
+        "invalidFlexibilityPercent": "Érvénytelen rugalmassági százalék.",
+        "invalidPlanDays": "Érvénytelen tervezett napok száma.",
+        "invalidActualCost": "Érvénytelen tényleges költség.",
+        "invalidActualHours": "Érvénytelen tényleges órák.",
+        "invalidSubsidyAmount": "Érvénytelen támogatás összege.",
+        "invalidSortOrder": "Érvénytelen sorrend.",
+        "invalidDate": "Érvénytelen dátum."
       },
       "users": {
         "adminOnly": "Csak rendszergazda módosíthatja a rendszergazdai jogosultságokat.",
@@ -2687,6 +2704,28 @@
         "invalidItems": "Az elemek {id, sortOrder} objektumok tömbje kell legyenek.",
         "invalidCategoryOrder": "A kategóriák sorrendje karakterláncok tömbje kell legyen.",
         "failed": "Az átrendezés sikertelen."
+      },
+      "payment": {
+        "budgetItemIdRequired": "A költségkeret elem azonosítója kötelező.",
+        "amountRequired": "Érvényes összeg szükséges.",
+        "notFound": "A fizetés nem található.",
+        "budgetItemNotFound": "A költségkeret elem nem található ebben a projektben.",
+        "parentNotFound": "A szülő fizetés nem található.",
+        "newBudgetItemNotFound": "Az új költségkeret elem nem található.",
+        "cannotMoveAcrossProjects": "A fizetés nem mozgatható másik projekt költségkeret elemébe.",
+        "createFailed": "A fizetés létrehozása sikertelen.",
+        "updateFailed": "A fizetés frissítése sikertelen.",
+        "deleteFailed": "A fizetés törlése sikertelen.",
+        "fetchFailed": "A fizetések lekérése sikertelen.",
+        "invalidAmount": "Érvénytelen összeg.",
+        "invalidVatRate": "Érvénytelen ÁFA kulcs.",
+        "invalidInvoiceTotal": "Érvénytelen számla végösszeg.",
+        "invalidDate": "Érvénytelen dátum."
+      },
+      "snapshot": {
+        "labelRequired": "A címke kötelező.",
+        "createFailed": "A pillanatkép létrehozása sikertelen.",
+        "fetchFailed": "A pillanatképek lekérése sikertelen."
       }
     }
   },

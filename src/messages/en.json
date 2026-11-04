@@ -2596,7 +2596,24 @@
         "cannotMoveToSelf": "An item cannot be moved under itself.",
         "targetNotFound": "The target item does not exist.",
         "cannotMoveAcrossProjects": "A task cannot be moved to another project.",
-        "cycleDetected": "An item cannot be moved under its own descendant (cycle)."
+        "cycleDetected": "An item cannot be moved under its own descendant (cycle).",
+        "categoryRequired": "Category is required.",
+        "parentNotFound": "Parent item not found in this project.",
+        "dependsOnNotFound": "Referenced item (dependsOnId) not found in this project.",
+        "notFound": "Budget item not found.",
+        "createFailed": "Failed to create budget item.",
+        "updateFailed": "Failed to update budget item.",
+        "deleteFailed": "Failed to delete budget item.",
+        "fetchFailed": "Failed to fetch budget items.",
+        "invalidAmount": "Invalid amount.",
+        "invalidPlanCost": "Invalid planned cost.",
+        "invalidFlexibilityPercent": "Invalid flexibility percentage.",
+        "invalidPlanDays": "Invalid number of planned days.",
+        "invalidActualCost": "Invalid actual cost.",
+        "invalidActualHours": "Invalid actual hours.",
+        "invalidSubsidyAmount": "Invalid subsidy amount.",
+        "invalidSortOrder": "Invalid sort order.",
+        "invalidDate": "Invalid date."
       },
       "users": {
         "adminOnly": "Only an administrator can change admin privileges.",
@@ -2690,6 +2707,28 @@
         "invalidItems": "Items must be an array of {id, sortOrder} objects.",
         "invalidCategoryOrder": "Category order must be an array of strings.",
         "failed": "Reorder failed."
+      },
+      "payment": {
+        "budgetItemIdRequired": "Budget item ID is required.",
+        "amountRequired": "Valid amount is required.",
+        "notFound": "Payment not found.",
+        "budgetItemNotFound": "Budget item not found in this project.",
+        "parentNotFound": "Parent payment not found.",
+        "newBudgetItemNotFound": "New budget item not found.",
+        "cannotMoveAcrossProjects": "Cannot move payment to a budget item in a different project.",
+        "createFailed": "Failed to create payment.",
+        "updateFailed": "Failed to update payment.",
+        "deleteFailed": "Failed to delete payment.",
+        "fetchFailed": "Failed to fetch payments.",
+        "invalidAmount": "Invalid amount.",
+        "invalidVatRate": "Invalid VAT rate.",
+        "invalidInvoiceTotal": "Invalid invoice total.",
+        "invalidDate": "Invalid date."
+      },
+      "snapshot": {
+        "labelRequired": "Label is required.",
+        "createFailed": "Failed to create snapshot.",
+        "fetchFailed": "Failed to fetch snapshots."
       }
     }
   },

@@ -2596,7 +2596,24 @@
         "cannotMoveToSelf": "Položku nelze přesunout pod ni samotnou.",
         "targetNotFound": "Cílová položka neexistuje.",
         "cannotMoveAcrossProjects": "Nelze přesunout úkol do jiného projektu.",
-        "cycleDetected": "Nelze přesunout položku pod jejího vlastního potomka (cyklus)."
+        "cycleDetected": "Nelze přesunout položku pod jejího vlastního potomka (cyklus).",
+        "categoryRequired": "Kategorie je povinná.",
+        "parentNotFound": "Nadřazená položka v tomto projektu nebyla nalezena.",
+        "dependsOnNotFound": "Odkazovaná položka (dependsOnId) v tomto projektu nebyla nalezena.",
+        "notFound": "Položka rozpočtu nebyla nalezena.",
+        "createFailed": "Vytvoření položky rozpočtu selhalo.",
+        "updateFailed": "Aktualizace položky rozpočtu selhala.",
+        "deleteFailed": "Smazání položky rozpočtu selhalo.",
+        "fetchFailed": "Načtení položek rozpočtu selhalo.",
+        "invalidAmount": "Neplatná částka.",
+        "invalidPlanCost": "Neplatné plánované náklady.",
+        "invalidFlexibilityPercent": "Neplatné procento flexibility.",
+        "invalidPlanDays": "Neplatný počet plánovaných dní.",
+        "invalidActualCost": "Neplatné skutečné náklady.",
+        "invalidActualHours": "Neplatný počet skutečných hodin.",
+        "invalidSubsidyAmount": "Neplatná výše dotace.",
+        "invalidSortOrder": "Neplatné pořadí.",
+        "invalidDate": "Neplatné datum."
       },
       "users": {
         "adminOnly": "Pouze administrátor může měnit admin práva.",
@@ -2690,6 +2707,28 @@
         "invalidItems": "Položky musí být pole objektů {id, sortOrder}.",
         "invalidCategoryOrder": "Pořadí kategorií musí být pole řetězců.",
         "failed": "Přeuspořádání selhalo."
+      },
+      "payment": {
+        "budgetItemIdRequired": "ID položky rozpočtu je povinné.",
+        "amountRequired": "Platná částka je povinná.",
+        "notFound": "Platba nebyla nalezena.",
+        "budgetItemNotFound": "Položka rozpočtu v tomto projektu nebyla nalezena.",
+        "parentNotFound": "Nadřazená platba nebyla nalezena.",
+        "newBudgetItemNotFound": "Nová položka rozpočtu nebyla nalezena.",
+        "cannotMoveAcrossProjects": "Platbu nelze přesunout do položky rozpočtu v jiném projektu.",
+        "createFailed": "Vytvoření platby selhalo.",
+        "updateFailed": "Aktualizace platby selhala.",
+        "deleteFailed": "Smazání platby selhalo.",
+        "fetchFailed": "Načtení plateb selhalo.",
+        "invalidAmount": "Neplatná částka.",
+        "invalidVatRate": "Neplatná sazba DPH.",
+        "invalidInvoiceTotal": "Neplatná celková faktura.",
+        "invalidDate": "Neplatné datum."
+      },
+      "snapshot": {
+        "labelRequired": "Popisek je povinný.",
+        "createFailed": "Vytvoření snímku selhalo.",
+        "fetchFailed": "Načtení snímků selhalo."
       }
     }
   },

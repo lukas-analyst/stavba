@@ -2593,7 +2593,24 @@
         "cannotMoveToSelf": "Pozycja nie może być przeniesiona pod siebie.",
         "targetNotFound": "Pozycja docelowa nie istnieje.",
         "cannotMoveAcrossProjects": "Zadanie nie może być przeniesione do innego projektu.",
-        "cycleDetected": "Pozycja nie może być przeniesiona pod własnego potomka (cykl)."
+        "cycleDetected": "Pozycja nie może być przeniesiona pod własnego potomka (cykl).",
+        "categoryRequired": "Kategoria jest wymagana.",
+        "parentNotFound": "Element nadrzędny nie został znaleziony w tym projekcie.",
+        "dependsOnNotFound": "Element odniesienia (dependsOnId) nie został znaleziony w tym projekcie.",
+        "notFound": "Element budżetu nie został znaleziony.",
+        "createFailed": "Utworzenie elementu budżetu nie powiodło się.",
+        "updateFailed": "Aktualizacja elementu budżetu nie powiodła się.",
+        "deleteFailed": "Usunięcie elementu budżetu nie powiodło się.",
+        "fetchFailed": "Pobranie elementów budżetu nie powiodło się.",
+        "invalidAmount": "Nieprawidłowa kwota.",
+        "invalidPlanCost": "Nieprawidłowy planowany koszt.",
+        "invalidFlexibilityPercent": "Nieprawidłowy procent elastyczności.",
+        "invalidPlanDays": "Nieprawidłowa liczba planowanych dni.",
+        "invalidActualCost": "Nieprawidłowy rzeczywisty koszt.",
+        "invalidActualHours": "Nieprawidłowa liczba rzeczywistych godzin.",
+        "invalidSubsidyAmount": "Nieprawidłowa kwota dotacji.",
+        "invalidSortOrder": "Nieprawidłowa kolejność.",
+        "invalidDate": "Nieprawidłowa data."
       },
       "users": {
         "adminOnly": "Tylko administrator może zmieniać uprawnienia administratora.",
@@ -2687,6 +2704,28 @@
         "invalidItems": "Elementy muszą być tablicą obiektów {id, sortOrder}.",
         "invalidCategoryOrder": "Kolejność kategorii musi być tablicą ciągów znaków.",
         "failed": "Zmiana kolejności nie powiodła się."
+      },
+      "payment": {
+        "budgetItemIdRequired": "ID elementu budżetu jest wymagane.",
+        "amountRequired": "Wymagana jest prawidłowa kwota.",
+        "notFound": "Płatność nie została znaleziona.",
+        "budgetItemNotFound": "Element budżetu nie został znaleziony w tym projekcie.",
+        "parentNotFound": "Płatność nadrzędna nie została znaleziona.",
+        "newBudgetItemNotFound": "Nowy element budżetu nie został znaleziony.",
+        "cannotMoveAcrossProjects": "Nie można przenieść płatności do elementu budżetu w innym projekcie.",
+        "createFailed": "Utworzenie płatności nie powiodło się.",
+        "updateFailed": "Aktualizacja płatności nie powiodła się.",
+        "deleteFailed": "Usunięcie płatności nie powiodło się.",
+        "fetchFailed": "Pobranie płatności nie powiodło się.",
+        "invalidAmount": "Nieprawidłowa kwota.",
+        "invalidVatRate": "Nieprawidłowa stawka VAT.",
+        "invalidInvoiceTotal": "Nieprawidłowy całkowity wynik faktury.",
+        "invalidDate": "Nieprawidłowa data."
+      },
+      "snapshot": {
+        "labelRequired": "Etykieta jest wymagana.",
+        "createFailed": "Utworzenie migawki nie powiodło się.",
+        "fetchFailed": "Pobranie migawek nie powiodło się."
       }
     }
   },

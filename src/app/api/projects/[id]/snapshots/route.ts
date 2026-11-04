@@ -1,7 +1,15 @@
 import { NextResponse } from "next/server";
+import { getTranslations } from "next-intl/server";
+import { z } from "zod";
 import { unstable_cache } from "next/cache";
 import { db, dbRead } from "@/lib/db";
 import { requireProjectAccess } from "@/lib/authz";
+import { parseBody, parseParam, cuidSchema, nonEmptyString } from "@/lib/api-validation";
+
+// Body schema for POST /api/projects/[id]/snapshots
+const createSnapshotBodySchema = z.object({
+  label: nonEmptyString.max(200, { message: "snapshot.labelRequired" }),
+});
 
 // Cached version of the snapshots list query — keyed by projectId (passed
 // as the function argument, which Next.js includes in the cache key
@@ -29,15 +37,23 @@ export async function GET(
   _request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const t = await getTranslations("api.errors");
   try {
-    const { id } = await params;
+    const { id: rawId } = await params;
+    const idResult = parseParam(cuidSchema, rawId, t);
+    if (!idResult.success) return idResult.response;
+    const id = idResult.data;
+
     const access = await requireProjectAccess(id, "viewer");
     if (!access.ok) return access.response;
     const snapshots = await getCachedSnapshots(id);
     return NextResponse.json(snapshots);
   } catch (error) {
     console.error("GET snapshots error:", error);
-    return NextResponse.json({ error: "Failed to fetch snapshots" }, { status: 500 });
+    return NextResponse.json(
+      { error: t("snapshot.fetchFailed") },
+      { status: 500 },
+    );
   }
 }
 
@@ -47,16 +63,20 @@ export async function POST(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const t = await getTranslations("api.errors");
   try {
-    const { id } = await params;
+    const { id: rawId } = await params;
+    const idResult = parseParam(cuidSchema, rawId, t);
+    if (!idResult.success) return idResult.response;
+    const id = idResult.data;
+
     const access = await requireProjectAccess(id, "editor");
     if (!access.ok) return access.response;
-    const body = await request.json();
-    const { label } = body;
 
-    if (!label || typeof label !== "string" || !label.trim()) {
-      return NextResponse.json({ error: "Label is required" }, { status: 400 });
-    }
+    // Parse + validate body (Zod).
+    const result = await parseBody(createSnapshotBodySchema, request, t);
+    if (!result.success) return result.response;
+    const { label } = result.data;
 
     // `requireProjectAccess` already verified the project exists & user has
     // access, so we can drop the redundant findUnique lookup here.
@@ -103,6 +123,9 @@ export async function POST(
     return NextResponse.json(snapshot, { status: 201 });
   } catch (error) {
     console.error("POST snapshot error:", error);
-    return NextResponse.json({ error: "Failed to create snapshot" }, { status: 500 });
+    return NextResponse.json(
+      { error: t("snapshot.createFailed") },
+      { status: 500 },
+    );
   }
 }
