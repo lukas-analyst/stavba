@@ -65,7 +65,7 @@ export async function POST(request: Request) {
   const t = await getTranslations("api.errors");
   try {
     // Parse + validate body. emailSchema returns normalized email.
-    const result = await parseBody(verifyEmailResendBodySchema, request);
+    const result = await parseBody(verifyEmailResendBodySchema, request, t);
     if (!result.success) return result.response;
     const { email } = result.data;
 

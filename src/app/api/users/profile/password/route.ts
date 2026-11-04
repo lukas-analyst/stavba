@@ -41,7 +41,7 @@ import { parseBody, passwordSchema } from "@/lib/api-validation";
 // (delegates to validatePassword — same error messages as register /
 // reset-password flows).
 const changePasswordBodySchema = z.object({
-  currentPassword: z.string().min(1, { message: "Aktuální heslo je povinné." }),
+  currentPassword: z.string().min(1, { message: "password.currentRequired" }),
   newPassword: passwordSchema,
 });
 
@@ -59,7 +59,7 @@ export async function POST(request: Request) {
 
     // Parse + validate body (Zod). `currentPassword` is required non-empty,
     // `newPassword` is validated against the password policy.
-    const result = await parseBody(changePasswordBodySchema, request);
+    const result = await parseBody(changePasswordBodySchema, request, t);
     if (!result.success) return result.response;
     const { currentPassword, newPassword } = result.data;
 

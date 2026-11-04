@@ -2556,6 +2556,8 @@
         "registerSuccess": "Registration successful. Check your email to verify your account.",
         "registerFailed": "Registration failed. Please try again.",
         "emailRequired": "Email is required.",
+        "invalidEmailFormat": "Invalid email format.",
+        "invalidTokenFormat": "Invalid token format.",
         "emailAlreadyVerified": "Your email is already verified. You can log in.",
         "verifyEmailFailed": "Failed to send verification email.",
         "forgotPasswordSent": "If the account exists, an email with a reset link has been sent.",
@@ -2602,14 +2604,21 @@
         "cannotViewOtherProfile": "Viewing another user's profile is not allowed.",
         "userNotFound": "User not found.",
         "noPasswordSet": "Your account does not have a password set (you sign in via Google). You can set one via the “Forgot password” feature.",
-        "cannotDemoteSelf": "You cannot remove your own admin privileges."
+        "cannotDemoteSelf": "You cannot remove your own admin privileges.",
+        "nameTooLong": "Name is too long (max 120 characters).",
+        "nameHtmlTags": "Name must not contain HTML tags.",
+        "nameInvalidChars": "Name contains invalid characters.",
+        "nameRequired": "Name must not be empty."
       },
       "password": {
         "currentRequired": "Current password is required.",
         "newRequired": "New password is required.",
         "incorrectCurrent": "Current password is incorrect.",
         "changeFailed": "Password change failed. Please try again.",
-        "changed": "Password has been changed."
+        "changed": "Password has been changed.",
+        "tooShort": "Password must be at least 8 characters.",
+        "missingLetter": "Password must contain at least one letter.",
+        "missingDigit": "Password must contain at least one digit."
       },
       "sessions": {
         "revokeFailed": "Failed to revoke other sessions. Please try again.",
@@ -2629,7 +2638,12 @@
         "cannotDeleteOthers": "You can only delete your own notes."
       },
       "generic": {
-        "invalidRequest": "Invalid request."
+        "invalidRequest": "Invalid request.",
+        "invalidJsonObject": "Invalid request — expected a JSON object.",
+        "invalidInput": "Invalid input.",
+        "invalidParam": "Invalid parameter.",
+        "invalidId": "Invalid identifier.",
+        "invalidProjectId": "Invalid project identifier."
       },
       "account": {
         "mustAcknowledge": "You must confirm that you understand the consequences.",

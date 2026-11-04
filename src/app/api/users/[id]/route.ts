@@ -183,14 +183,14 @@ export async function PATCH(request: Request, { params }: RouteContext) {
       const trimmedName = name.trim();
       if (!trimmedName) {
         return NextResponse.json(
-          { error: "name must be a non-empty string" },
+          { error: t("users.nameRequired") },
           { status: 400 },
         );
       }
       const nameError = validateName(name);
       if (nameError) {
         return NextResponse.json(
-          { error: nameError },
+          { error: t(nameError) },
           { status: 400 },
         );
       }

@@ -2556,6 +2556,8 @@
         "registerSuccess": "Registrace proběhla. Zkontrolujte svůj e-mail pro ověření.",
         "registerFailed": "Registrace selhala. Zkuste to prosím znovu.",
         "emailRequired": "E-mail je povinný.",
+        "invalidEmailFormat": "Neplatný formát e-mailu.",
+        "invalidTokenFormat": "Neplatný formát tokenu.",
         "emailAlreadyVerified": "Váš e-mail je již ověřen. Můžete se přihlásit.",
         "verifyEmailFailed": "Odeslání verifikačního e-mailu selhalo.",
         "forgotPasswordSent": "Pokud účet existuje, e-mail s odkazem pro reset byl odeslán.",
@@ -2602,14 +2604,21 @@
         "cannotViewOtherProfile": "Zobrazení cizího profilu není povoleno.",
         "userNotFound": "Uživatel nebyl nalezen.",
         "noPasswordSet": "Váš účet nemá nastavené heslo (přihlašujete se přes Google). Heslo můžete nastavit přes funkci „Zapomenuté heslo\".",
-        "cannotDemoteSelf": "Nemůžete odebrat admin práva sám sobě."
+        "cannotDemoteSelf": "Nemůžete odebrat admin práva sám sobě.",
+        "nameTooLong": "Jméno je příliš dlouhé (max 120 znaků).",
+        "nameHtmlTags": "Jméno nesmí obsahovat HTML tagy.",
+        "nameInvalidChars": "Jméno obsahuje neplatné znaky.",
+        "nameRequired": "Jméno nesmí být prázdné."
       },
       "password": {
         "currentRequired": "Aktuální heslo je povinné.",
         "newRequired": "Nové heslo je povinné.",
         "incorrectCurrent": "Aktuální heslo není správné.",
         "changeFailed": "Změna hesla selhala. Zkuste to prosím znovu.",
-        "changed": "Heslo bylo změněno."
+        "changed": "Heslo bylo změněno.",
+        "tooShort": "Heslo musí mít alespoň 8 znaků.",
+        "missingLetter": "Heslo musí obsahovat alespoň jedno písmeno.",
+        "missingDigit": "Heslo musí obsahovat alespoň jednu číslici."
       },
       "sessions": {
         "revokeFailed": "Odhlášení ostatních relací selhalo. Zkuste to prosím znovu.",
@@ -2629,7 +2638,12 @@
         "cannotDeleteOthers": "Můžete mazat pouze své poznámky."
       },
       "generic": {
-        "invalidRequest": "Neplatný požadavek."
+        "invalidRequest": "Neplatný požadavek.",
+        "invalidJsonObject": "Neplatný požadavek — očekáván JSON objekt.",
+        "invalidInput": "Neplatný vstup.",
+        "invalidParam": "Neplatný parametr.",
+        "invalidId": "Neplatný identifikátor.",
+        "invalidProjectId": "Neplatný identifikátor projektu."
       },
       "account": {
         "mustAcknowledge": "Musíte potvrdit, že rozumíte následkům.",

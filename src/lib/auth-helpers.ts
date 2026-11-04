@@ -37,30 +37,39 @@ export function generateToken(): string {
  *   - At least 8 characters
  *   - At least one letter and one number
  *
- * Returns null if valid, or a Czech error message if invalid.
+ * Returns null if valid, or an i18n error CODE (e.g. "password.tooShort")
+ * if invalid. The code is translated to a localized string by the caller
+ * via next-intl's `t()` function — see `parseBody` in api-validation.ts.
+ *
+ * This separation of validation (returns code) from presentation (translates
+ * code) ensures that error messages are shown in the user's preferred
+ * language, not hardcoded in Czech.
  */
 export function validatePassword(password: string): string | null {
   if (password.length < 8) {
-    return "Heslo musí mít alespoň 8 znaků.";
+    return "password.tooShort";
   }
   if (!/[a-zA-Z]/.test(password)) {
-    return "Heslo musí obsahovat alespoň jedno písmeno.";
+    return "password.missingLetter";
   }
   if (!/[0-9]/.test(password)) {
-    return "Heslo musí obsahovat alespoň jednu číslici.";
+    return "password.missingDigit";
   }
   return null;
 }
 
 /**
  * Validate an e-mail address format.
+ *
+ * Returns null if valid, or an i18n error CODE if invalid.
+ * See `validatePassword` for the validation/presentation separation rationale.
  */
 export function validateEmail(email: string): string | null {
   const trimmed = email.trim().toLowerCase();
-  if (!trimmed) return "E-mail je povinný.";
+  if (!trimmed) return "auth.emailRequired";
   // Simple but practical RFC 5322 subset
   const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!re.test(trimmed)) return "Neplatný formát e-mailu.";
+  if (!re.test(trimmed)) return "auth.invalidEmailFormat";
   return null;
 }
 
@@ -78,21 +87,23 @@ export function normalizeEmail(email: string): string {
  *   but defense-in-depth)
  * - No control characters
  *
- * Returns null if valid, or a Czech error message if invalid.
+ * Returns null if valid (including empty — name is optional), or an i18n
+ * error CODE if invalid. See `validatePassword` for the validation/presentation
+ * separation rationale.
  */
 export function validateName(name: string): string | null {
   const trimmed = name.trim();
   if (trimmed.length === 0) return null; // name is optional
   if (trimmed.length > 120) {
-    return "Jméno je příliš dlouhé (max 120 znaků).";
+    return "users.nameTooLong";
   }
   // Reject HTML tags (basic check)
   if (/<[^>]+>/.test(trimmed)) {
-    return "Jméno nesmí obsahovat HTML tagy.";
+    return "users.nameHtmlTags";
   }
   // Reject control characters
   if (/[\x00-\x1f\x7f]/.test(trimmed)) {
-    return "Jméno obsahuje neplatné znaky.";
+    return "users.nameInvalidChars";
   }
   return null;
 }

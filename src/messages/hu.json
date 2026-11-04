@@ -2553,6 +2553,8 @@
         "registerSuccess": "A regisztráció sikeres. Ellenőrizze az e-mailjeit a fiók hitelesítéséhez.",
         "registerFailed": "A regisztráció sikertelen. Próbálja újra.",
         "emailRequired": "Az e-mail kötelező.",
+        "invalidEmailFormat": "Érvénytelen e-mail formátum.",
+        "invalidTokenFormat": "Érvénytelen token formátum.",
         "emailAlreadyVerified": "Az e-mailje már hitelesítve van. Bejelentkezhet.",
         "verifyEmailFailed": "Nem sikerült elküldeni a hitelesítő e-mailt.",
         "forgotPasswordSent": "Ha a fiók létezik, egy visszaállító linket tartalmazó e-mailt küldtünk.",
@@ -2599,14 +2601,21 @@
         "cannotViewOtherProfile": "Más felhasználó profiljának megtekintése nem engedélyezett.",
         "userNotFound": "A felhasználó nem található.",
         "noPasswordSet": "A fiókjához nincs jelszó beállítva (Google bejelentkezést használ). Beállíthatja a „Elfelejtett jelszó” funkcióval.",
-        "cannotDemoteSelf": "Saját rendszergazdai jogosultság nem vonható vissza."
+        "cannotDemoteSelf": "Saját rendszergazdai jogosultság nem vonható vissza.",
+        "nameTooLong": "A név túl hosszú (max. 120 karakter).",
+        "nameHtmlTags": "A név nem tartalmazhat HTML címkéket.",
+        "nameInvalidChars": "A név érvénytelen karaktereket tartalmaz.",
+        "nameRequired": "A név nem lehet üres."
       },
       "password": {
         "currentRequired": "A jelenlegi jelszó kötelező.",
         "newRequired": "Az új jelszó kötelező.",
         "incorrectCurrent": "A jelenlegi jelszó helytelen.",
         "changeFailed": "A jelszó módosítása sikertelen. Próbálja újra.",
-        "changed": "A jelszó módosítva."
+        "changed": "A jelszó módosítva.",
+        "tooShort": "A jelszónak legalább 8 karakter hosszúnak kell lennie.",
+        "missingLetter": "A jelszónak legalább egy betűt kell tartalmaznia.",
+        "missingDigit": "A jelszónak legalább egy számjegyet kell tartalmaznia."
       },
       "sessions": {
         "revokeFailed": "Nem sikerült visszavonni a többi munkamenetet. Próbálja újra.",
@@ -2626,7 +2635,12 @@
         "cannotDeleteOthers": "Csak a saját jegyzeteit törölheti."
       },
       "generic": {
-        "invalidRequest": "Érvénytelen kérés."
+        "invalidRequest": "Érvénytelen kérés.",
+        "invalidJsonObject": "Érvénytelen kérés — JSON objektum várható.",
+        "invalidInput": "Érvénytelen bemenet.",
+        "invalidParam": "Érvénytelen paraméter.",
+        "invalidId": "Érvénytelen azonosító.",
+        "invalidProjectId": "Érvénytelen projektazonosító."
       },
       "account": {
         "mustAcknowledge": "Meg kell erősítenie, hogy megértette a következményeket.",

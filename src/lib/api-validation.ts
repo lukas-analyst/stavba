@@ -103,7 +103,7 @@ export const optionalNameSchema = z
  * `auth-helpers.ts`.
  */
 export const tokenSchema = z.string().refine((t) => isValidTokenFormat(t), {
-  message: "Neplatný formát tokenu.",
+  message: "auth.invalidTokenFormat",
 });
 
 /**
@@ -122,7 +122,7 @@ export const cuidSchema = z
   .string()
   .min(20)
   .max(32)
-  .regex(/^[a-z0-9]+$/i, { message: "Neplatný identifikátor." });
+  .regex(/^[a-z0-9]+$/i, { message: "generic.invalidId" });
 
 /**
  * Project slug schema — kebab-case, 3-80 chars. Used for `[slug]` /
@@ -133,7 +133,7 @@ export const slugOrIdSchema = z
   .string()
   .min(3)
   .max(80)
-  .regex(/^[a-z0-9-]+$/i, { message: "Neplatný identifikátor projektu." });
+  .regex(/^[a-z0-9-]+$/i, { message: "generic.invalidProjectId" });
 
 /**
  * Non-empty trimmed string schema — for required text fields (label,
@@ -148,6 +148,31 @@ export const nonEmptyString = z.string().trim().min(1);
 export const optionalNullableString = z
   .union([z.string(), z.null(), z.undefined()])
   .transform((v) => (v == null ? null : v.trim() || null));
+
+// ---------------------------------------------------------------------
+// Translation helper
+// ---------------------------------------------------------------------
+
+/**
+ * A translation function compatible with next-intl's `t` (obtained via
+ * `getTranslations("api.errors")`). Translates an i18n error code (e.g.
+ * `"auth.invalidEmailFormat"`) to a localized string (e.g. "Neplatný
+ * formát e-mailu." in Czech, "Invalid email format." in English, etc.).
+ *
+ * If `t` is not provided (e.g. in tests or non-route contexts), the code
+ * itself is returned as the message — this is useful for debugging.
+ */
+export type TranslateFn = (key: string, params?: Record<string, unknown>) => string;
+
+/**
+ * Translate an error code via `t`, falling back to the code itself if `t`
+ * is not provided. next-intl's `t()` returns the key as-is if the
+ * translation is not found — so missing translations show up as the
+ * raw code (visible signal that a translation key is missing).
+ */
+function translate(t: TranslateFn | undefined, code: string): string {
+  return t ? t(code) : code;
+}
 
 // ---------------------------------------------------------------------
 // parseBody helper
@@ -168,7 +193,8 @@ type ParseBodyResult<T> =
  *     `result.data` to the parsed type on the success branch.
  *
  * Usage:
- *   const result = await parseBody(schema, request);
+ *   const t = await getTranslations("api.errors");
+ *   const result = await parseBody(schema, request, t);
  *   if (!result.success) return result.response;
  *   const { email, password } = result.data;
  *
@@ -176,12 +202,17 @@ type ParseBodyResult<T> =
  *   - JSON parse errors return 400 (not 500) with `generic.invalidRequest`.
  *   - Zod issues are returned as an `issues` array in the JSON body so
  *     the client can show field-specific errors. The top-level `error`
- *     is the first issue's message for backwards compatibility with
- *     existing UI code that only reads `error`.
+ *     is the first issue's translated message for backwards compatibility
+ *     with existing UI code that only reads `error`.
+ *   - Each issue also includes a `code` field (the raw i18n key) so
+ *     clients can implement their own translation if needed.
+ *   - If `t` is not provided, issue messages are the raw i18n codes
+ *     (useful for tests / non-browser contexts).
  */
 export async function parseBody<T>(
   schema: z.ZodType<T>,
   request: Request,
+  t?: TranslateFn,
 ): Promise<ParseBodyResult<T>> {
   let body: unknown;
   try {
@@ -190,7 +221,7 @@ export async function parseBody<T>(
     return {
       success: false,
       response: NextResponse.json(
-        { error: "Neplatný požadavek — očekáván JSON body." },
+        { error: translate(t, "generic.invalidRequest") },
         { status: 400 },
       ),
     };
@@ -203,7 +234,7 @@ export async function parseBody<T>(
     return {
       success: false,
       response: NextResponse.json(
-        { error: "Neplatný požadavek — očekáván JSON objekt." },
+        { error: translate(t, "generic.invalidJsonObject") },
         { status: 400 },
       ),
     };
@@ -213,13 +244,21 @@ export async function parseBody<T>(
   if (!parsed.success) {
     const issues = parsed.error.issues.map((issue) => ({
       path: issue.path.join("."),
-      message: issue.message,
+      // `issue.message` is either an i18n code (e.g. "password.tooShort")
+      // emitted by our `.superRefine` validators, or a Zod default
+      // message (e.g. "Invalid input: expected string, received undefined").
+      // next-intl's `t()` returns the key as-is if not found, so Zod
+      // defaults pass through untranslated (acceptable — they're rare
+      // and informative enough in English).
+      message: translate(t, issue.message),
+      // Keep the raw code so clients can do their own translation.
+      code: issue.message,
     }));
     return {
       success: false,
       response: NextResponse.json(
         {
-          error: issues[0]?.message ?? "Neplatný vstup.",
+          error: issues[0] ? translate(t, issues[0].code) : translate(t, "generic.invalidInput"),
           issues,
         },
         { status: 400 },
@@ -239,25 +278,28 @@ export async function parseBody<T>(
  * union — on failure, a 400 response is prepared.
  *
  * Usage:
- *   const idResult = parseParam(cuidSchema, (await params).id);
+ *   const t = await getTranslations("api.errors");
+ *   const idResult = parseParam(cuidSchema, (await params).id, t);
  *   if (!idResult.success) return idResult.response;
  *   const id = idResult.data;
  */
 export function parseParam<T>(
   schema: z.ZodType<T>,
   value: string,
+  t?: TranslateFn,
 ): ParseBodyResult<T> {
   const parsed = schema.safeParse(value);
   if (!parsed.success) {
     const issues = parsed.error.issues.map((issue) => ({
       path: issue.path.join("."),
-      message: issue.message,
+      message: translate(t, issue.message),
+      code: issue.message,
     }));
     return {
       success: false,
       response: NextResponse.json(
         {
-          error: issues[0]?.message ?? "Neplatný parametr.",
+          error: issues[0] ? translate(t, issues[0].code) : translate(t, "generic.invalidParam"),
           issues,
         },
         { status: 400 },

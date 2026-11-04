@@ -41,7 +41,7 @@ const recoverBodySchema = z.object({
 
 export async function POST(request: Request) {
   try {
-    const t = await getTranslations("api.errors.account");
+    const t = await getTranslations("api.errors");
 
     // Rate limit: same as login (5 per 15 min per IP) to prevent brute-force
     const ip = getClientIp(request);
@@ -54,7 +54,7 @@ export async function POST(request: Request) {
     }
 
     // Parse + validate body. emailSchema returns the normalized email.
-    const result = await parseBody(recoverBodySchema, request);
+    const result = await parseBody(recoverBodySchema, request, t);
     if (!result.success) return result.response;
     const { email, password, provider } = result.data;
 
@@ -75,7 +75,7 @@ export async function POST(request: Request) {
     if (!user) {
       // No account with this email — treat as "not deleted"
       return NextResponse.json(
-        { error: t("notFound") },
+        { error: t("account.notFound") },
         { status: 404 },
       );
     }
@@ -83,7 +83,7 @@ export async function POST(request: Request) {
     if (!user.deletedAt) {
       // Account is active — just redirect to login
       return NextResponse.json(
-        { error: t("notDeleted") },
+        { error: t("account.notDeleted") },
         { status: 409 },
       );
     }
@@ -96,7 +96,7 @@ export async function POST(request: Request) {
       // (email may have been anonymized by cron, so this is unlikely
       // to trigger — but we handle it defensively)
       return NextResponse.json(
-        { error: t("permanentlyDeleted") },
+        { error: t("account.permanentlyDeleted") },
         { status: 410 },
       );
     }
@@ -112,14 +112,14 @@ export async function POST(request: Request) {
       // Credentials — verify password
       if (!password) {
         return NextResponse.json(
-          { error: t("passwordRequired") },
+          { error: t("account.passwordRequired") },
           { status: 400 },
         );
       }
       if (!user.password) {
         // User has no password (OAuth-only) but tried Credentials recovery
         return NextResponse.json(
-          { error: t("useOAuth") },
+          { error: t("account.useOAuth") },
           { status: 400 },
         );
       }
@@ -127,7 +127,7 @@ export async function POST(request: Request) {
       const valid = await verifyPassword(password, user.password);
       if (!valid) {
         return NextResponse.json(
-          { error: t("passwordIncorrect") },
+          { error: t("account.passwordIncorrect") },
           { status: 403 },
         );
       }

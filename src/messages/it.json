@@ -2553,6 +2553,8 @@
         "registerSuccess": "Registrazione riuscita. Controlla la tua email per verificare l'account.",
         "registerFailed": "Registrazione non riuscita. Riprova.",
         "emailRequired": "L'email è obbligatoria.",
+        "invalidEmailFormat": "Formato email non valido.",
+        "invalidTokenFormat": "Formato token non valido.",
         "emailAlreadyVerified": "La tua email è già verificata. Puoi accedere.",
         "verifyEmailFailed": "Invio dell'email di verifica non riuscito.",
         "forgotPasswordSent": "Se l'account esiste, è stata inviata un'email con un link di reimpostamento.",
@@ -2599,14 +2601,21 @@
         "cannotViewOtherProfile": "Non è consentito visualizzare il profilo di un altro utente.",
         "userNotFound": "Utente non trovato.",
         "noPasswordSet": "Il tuo account non ha una password impostata (accedi con Google). Puoi impostarne una tramite la funzione «Password dimenticata».",
-        "cannotDemoteSelf": "Non puoi rimuovere i tuoi privilegi di amministratore."
+        "cannotDemoteSelf": "Non puoi rimuovere i tuoi privilegi di amministratore.",
+        "nameTooLong": "Il nome è troppo lungo (max 120 caratteri).",
+        "nameHtmlTags": "Il nome non deve contenere tag HTML.",
+        "nameInvalidChars": "Il nome contiene caratteri non validi.",
+        "nameRequired": "Il nome non deve essere vuoto."
       },
       "password": {
         "currentRequired": "La password attuale è obbligatoria.",
         "newRequired": "La nuova password è obbligatoria.",
         "incorrectCurrent": "La password attuale non è corretta.",
         "changeFailed": "Cambio della password non riuscito. Riprova.",
-        "changed": "La password è stata cambiata."
+        "changed": "La password è stata cambiata.",
+        "tooShort": "La password deve essere di almeno 8 caratteri.",
+        "missingLetter": "La password deve contenere almeno una lettera.",
+        "missingDigit": "La password deve contenere almeno una cifra."
       },
       "sessions": {
         "revokeFailed": "Revoca delle altre sessioni non riuscita. Riprova.",
@@ -2626,7 +2635,12 @@
         "cannotDeleteOthers": "Puoi eliminare solo le tue note."
       },
       "generic": {
-        "invalidRequest": "Richiesta non valida."
+        "invalidRequest": "Richiesta non valida.",
+        "invalidJsonObject": "Richiesta non valida — previsto oggetto JSON.",
+        "invalidInput": "Input non valido.",
+        "invalidParam": "Parametro non valido.",
+        "invalidId": "Identificatore non valido.",
+        "invalidProjectId": "Identificatore di progetto non valido."
       },
       "account": {
         "mustAcknowledge": "Devi confermare di aver compreso le conseguenze.",

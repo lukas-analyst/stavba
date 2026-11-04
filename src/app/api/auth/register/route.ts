@@ -62,7 +62,7 @@ export async function POST(request: Request) {
     }
 
     // --- Parse + validate body (Zod) ---
-    const result = await parseBody(registerBodySchema, request);
+    const result = await parseBody(registerBodySchema, request, t);
     if (!result.success) return result.response;
     const { email, password, name } = result.data;
 

@@ -34,7 +34,7 @@ export async function POST(request: Request) {
 
     // Parse + validate body. `emailSchema` already returns normalized
     // (trim + lowercase) email, so no separate normalizeEmail call needed.
-    const result = await parseBody(forgotPasswordBodySchema, request);
+    const result = await parseBody(forgotPasswordBodySchema, request, t);
     if (!result.success) return result.response;
     const { email } = result.data;
 

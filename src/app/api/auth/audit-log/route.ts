@@ -108,7 +108,7 @@ export async function POST(request: Request) {
     // Parse + validate body (Zod). Replaces the manual
     // `body as { action?, success?, metadata? }` cast + 3 separate
     // typeof checks with a single type-safe parse.
-    const result = await parseBody(auditLogBodySchema, request);
+    const result = await parseBody(auditLogBodySchema, request, t);
     if (!result.success) return result.response;
     const { action, success, metadata } = result.data;
 

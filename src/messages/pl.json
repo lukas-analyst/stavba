@@ -2553,6 +2553,8 @@
         "registerSuccess": "Rejestracja zakończona. Sprawdź e-mail, aby zweryfikować konto.",
         "registerFailed": "Rejestracja nie powiodła się. Spróbuj ponownie.",
         "emailRequired": "E-mail jest wymagany.",
+        "invalidEmailFormat": "Nieprawidłowy format e-maila.",
+        "invalidTokenFormat": "Nieprawidłowy format tokenu.",
         "emailAlreadyVerified": "Twój e-mail jest już zweryfikowany. Możesz się zalogować.",
         "verifyEmailFailed": "Nie udało się wysłać e-maila weryfikacyjnego.",
         "forgotPasswordSent": "Jeśli konto istnieje, wysłano e-mail z linkiem resetującym.",
@@ -2599,14 +2601,21 @@
         "cannotViewOtherProfile": "Przeglądanie profilu innego użytkownika nie jest dozwolone.",
         "userNotFound": "Nie znaleziono użytkownika.",
         "noPasswordSet": "Twoje konto nie ma ustawionego hasła (logujesz się przez Google). Możesz ustawić je przez funkcję „Nie pamiętasz hasła”.",
-        "cannotDemoteSelf": "Nie możesz odebrać własnych uprawnień administratora."
+        "cannotDemoteSelf": "Nie możesz odebrać własnych uprawnień administratora.",
+        "nameTooLong": "Nazwa jest zbyt długa (max 120 znaków).",
+        "nameHtmlTags": "Nazwa nie może zawierać tagów HTML.",
+        "nameInvalidChars": "Nazwa zawiera nieprawidłowe znaki.",
+        "nameRequired": "Nazwa nie może być pusta."
       },
       "password": {
         "currentRequired": "Aktualne hasło jest wymagane.",
         "newRequired": "Nowe hasło jest wymagane.",
         "incorrectCurrent": "Aktualne hasło jest nieprawidłowe.",
         "changeFailed": "Zmiana hasła nie powiodła się. Spróbuj ponownie.",
-        "changed": "Hasło zostało zmienione."
+        "changed": "Hasło zostało zmienione.",
+        "tooShort": "Hasło musi mieć co najmniej 8 znaków.",
+        "missingLetter": "Hasło musi zawierać co najmniej jedną literę.",
+        "missingDigit": "Hasło musi zawierać co najmniej jedną cyfrę."
       },
       "sessions": {
         "revokeFailed": "Nie udało się cofnąć innych sesji. Spróbuj ponownie.",
@@ -2626,7 +2635,12 @@
         "cannotDeleteOthers": "Możesz usuwać tylko własne notatki."
       },
       "generic": {
-        "invalidRequest": "Nieprawidłowe żądanie."
+        "invalidRequest": "Nieprawidłowe żądanie.",
+        "invalidJsonObject": "Nieprawidłowe żądanie — oczekiwano obiektu JSON.",
+        "invalidInput": "Nieprawidłowe dane wejściowe.",
+        "invalidParam": "Nieprawidłowy parametr.",
+        "invalidId": "Nieprawidłowy identyfikator.",
+        "invalidProjectId": "Nieprawidłowy identyfikator projektu."
       },
       "account": {
         "mustAcknowledge": "Musisz potwierdzić, że rozumiesz konsekwencje.",

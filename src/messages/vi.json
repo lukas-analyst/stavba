@@ -2553,6 +2553,8 @@
         "registerSuccess": "Đăng ký thành công. Vui lòng kiểm tra email để xác thực tài khoản.",
         "registerFailed": "Đăng ký thất bại. Vui lòng thử lại.",
         "emailRequired": "Email là bắt buộc.",
+        "invalidEmailFormat": "Định dạng email không hợp lệ.",
+        "invalidTokenFormat": "Định dạng token không hợp lệ.",
         "emailAlreadyVerified": "Email của bạn đã được xác thực. Bạn có thể đăng nhập.",
         "verifyEmailFailed": "Không thể gửi email xác thực.",
         "forgotPasswordSent": "Nếu tài khoản tồn tại, email với link đặt lại đã được gửi.",
@@ -2599,14 +2601,21 @@
         "cannotViewOtherProfile": "Không được phép xem hồ sơ người dùng khác.",
         "userNotFound": "Không tìm thấy người dùng.",
         "noPasswordSet": "Tài khoản của bạn không có mật khẩu (bạn đăng nhập qua Google). Bạn có thể đặt mật khẩu qua tính năng “Quên mật khẩu”.",
-        "cannotDemoteSelf": "Bạn không thể gỡ quyền quản trị của chính mình."
+        "cannotDemoteSelf": "Bạn không thể gỡ quyền quản trị của chính mình.",
+        "nameTooLong": "Tên quá dài (tối đa 120 ký tự).",
+        "nameHtmlTags": "Tên không được chứa thẻ HTML.",
+        "nameInvalidChars": "Tên chứa ký tự không hợp lệ.",
+        "nameRequired": "Tên không được để trống."
       },
       "password": {
         "currentRequired": "Mật khẩu hiện tại là bắt buộc.",
         "newRequired": "Mật khẩu mới là bắt buộc.",
         "incorrectCurrent": "Mật khẩu hiện tại không đúng.",
         "changeFailed": "Đổi mật khẩu thất bại. Vui lòng thử lại.",
-        "changed": "Đã đổi mật khẩu."
+        "changed": "Đã đổi mật khẩu.",
+        "tooShort": "Mật khẩu phải có ít nhất 8 ký tự.",
+        "missingLetter": "Mật khẩu phải chứa ít nhất một chữ cái.",
+        "missingDigit": "Mật khẩu phải chứa ít nhất một chữ số."
       },
       "sessions": {
         "revokeFailed": "Không thể thu hồi các phiên khác. Vui lòng thử lại.",
@@ -2626,7 +2635,12 @@
         "cannotDeleteOthers": "Bạn chỉ có thể xóa ghi chú của mình."
       },
       "generic": {
-        "invalidRequest": "Yêu cầu không hợp lệ."
+        "invalidRequest": "Yêu cầu không hợp lệ.",
+        "invalidJsonObject": "Yêu cầu không hợp lệ — cần đối tượng JSON.",
+        "invalidInput": "Dữ liệu đầu vào không hợp lệ.",
+        "invalidParam": "Tham số không hợp lệ.",
+        "invalidId": "Định danh không hợp lệ.",
+        "invalidProjectId": "Định danh dự án không hợp lệ."
       },
       "account": {
         "mustAcknowledge": "Bạn phải xác nhận rằng bạn hiểu các hậu quả.",

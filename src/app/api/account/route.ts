@@ -54,17 +54,17 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
 
-    const t = await getTranslations("api.errors.account");
+    const t = await getTranslations("api.errors");
 
     // Parse + validate body (Zod).
-    const result = await parseBody(deleteAccountBodySchema, request);
+    const result = await parseBody(deleteAccountBodySchema, request, t);
     if (!result.success) return result.response;
     const { acknowledged, password, emailConfirm } = result.data;
 
     // Require the "I understand" checkbox
     if (!acknowledged) {
       return NextResponse.json(
-        { error: t("mustAcknowledge") },
+        { error: t("account.mustAcknowledge") },
         { status: 400 },
       );
     }
@@ -82,7 +82,7 @@ export async function DELETE(request: Request) {
 
     if (!dbUser) {
       return NextResponse.json(
-        { error: t("notFound") },
+        { error: t("account.notFound") },
         { status: 404 },
       );
     }
@@ -90,7 +90,7 @@ export async function DELETE(request: Request) {
     // Already deleted?
     if (dbUser.deletedAt) {
       return NextResponse.json(
-        { error: t("alreadyDeleted") },
+        { error: t("account.alreadyDeleted") },
         { status: 409 },
       );
     }
@@ -100,14 +100,14 @@ export async function DELETE(request: Request) {
       // Credentials user — verify password
       if (!password) {
         return NextResponse.json(
-          { error: t("passwordRequired") },
+          { error: t("account.passwordRequired") },
           { status: 400 },
         );
       }
       const valid = await verifyPassword(password, dbUser.password);
       if (!valid) {
         return NextResponse.json(
-          { error: t("passwordIncorrect") },
+          { error: t("account.passwordIncorrect") },
           { status: 403 },
         );
       }
@@ -115,13 +115,13 @@ export async function DELETE(request: Request) {
       // OAuth (Google) user — verify email confirmation
       if (!emailConfirm) {
         return NextResponse.json(
-          { error: t("emailConfirmRequired") },
+          { error: t("account.emailConfirmRequired") },
           { status: 400 },
         );
       }
       if (emailConfirm.toLowerCase() !== dbUser.email.toLowerCase()) {
         return NextResponse.json(
-          { error: t("emailConfirmMismatch") },
+          { error: t("account.emailConfirmMismatch") },
           { status: 403 },
         );
       }

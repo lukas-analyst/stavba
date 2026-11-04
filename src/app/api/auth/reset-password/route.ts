@@ -38,7 +38,7 @@ export async function POST(request: Request) {
     // Parse + validate body. `tokenSchema` validates 64-hex format
     // (replaces the manual `isValidTokenFormat` check) + `passwordSchema`
     // validates password policy (replaces `validatePassword`).
-    const result = await parseBody(resetPasswordBodySchema, request);
+    const result = await parseBody(resetPasswordBodySchema, request, t);
     if (!result.success) return result.response;
     const { token, password } = result.data;
 
