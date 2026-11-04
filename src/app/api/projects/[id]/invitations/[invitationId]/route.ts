@@ -3,28 +3,31 @@ import { getTranslations } from "next-intl/server";
 import { db } from "@/lib/db";
 import { logChanges } from "@/lib/audit";
 import { requireProjectAccess } from "@/lib/authz";
+import { parseParam, cuidSchema } from "@/lib/api-validation";
 
 // =====================================================================
 // DELETE /api/projects/[id]/invitations/[invitationId]
 // ---------------------------------------------------------------------
 // Revokes a pending invitation. Only the project owner can revoke.
-//
-// We don't hard-delete the row — we mark it `status = "revoked"` so the
-// audit trail still has the record. (Hard deletion would also be fine
-// since AuditLog rows are kept independently, but marking-as-revoked
-// preserves the invitation history for the listing endpoint.)
 // =====================================================================
 
 export async function DELETE(
   _request: Request,
   { params }: { params: Promise<{ id: string; invitationId: string }> },
 ) {
-  const { id, invitationId } = await params;
-  const access = await requireProjectAccess(id, "owner");
-  if (!access.ok) return access.response;
-
   const t = await getTranslations("api.errors");
   try {
+    const { id: rawId, invitationId: rawInvitationId } = await params;
+    const idResult = parseParam(cuidSchema, rawId, t);
+    if (!idResult.success) return idResult.response;
+    const id = idResult.data;
+    const invitationIdResult = parseParam(cuidSchema, rawInvitationId, t);
+    if (!invitationIdResult.success) return invitationIdResult.response;
+    const invitationId = invitationIdResult.data;
+
+    const access = await requireProjectAccess(id, "owner");
+    if (!access.ok) return access.response;
+
     const invitation = await db.projectInvitation.findFirst({
       where: { id: invitationId, projectId: id },
     });

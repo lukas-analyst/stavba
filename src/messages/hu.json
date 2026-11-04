@@ -2779,6 +2779,19 @@
         "contact.personUpdateFailed": "A kapcsolattartó személy frissítése sikertelen.",
         "contact.personDeleteFailed": "A kapcsolattartó személy törlése sikertelen.",
         "contact.personFetchFailed": "A kapcsolattartó személyek lekérése sikertelen."
+      },
+      "member": {
+        "member.emailRequired": "Az e-mail kötelező.",
+        "member.notFound": "A tag nem található.",
+        "member.alreadyMember": "Ez a felhasználó már tagja a projektnek.",
+        "member.alreadyOwner": "Ez a felhasználó már a projekt tulajdonosa.",
+        "member.ownerRoleRequired": "Ehhez a művelethez „owner\" szerepkör szükséges.",
+        "member.pendingInvitationExists": "Már van függőben lévő meghívó ehhez az e-mailhez.",
+        "member.invitationCreated": "Még nincs regisztrált felhasználó ezzel az e-maillel. Meghívó lett elküldve — regisztráció után automatikusan projekttaggá válik.",
+        "member.createFailed": "A tag hozzáadása sikertelen.",
+        "member.updateFailed": "A tag frissítése sikertelen.",
+        "member.deleteFailed": "A tag eltávolítása sikertelen.",
+        "member.fetchFailed": "A tagok lekérése sikertelen."
       }
     }
   },

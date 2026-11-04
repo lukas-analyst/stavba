@@ -2779,6 +2779,19 @@
         "contact.personUpdateFailed": "Error al actualizar la persona de contacto.",
         "contact.personDeleteFailed": "Error al eliminar la persona de contacto.",
         "contact.personFetchFailed": "Error al obtener las personas de contacto."
+      },
+      "member": {
+        "member.emailRequired": "El email es obligatorio.",
+        "member.notFound": "Miembro no encontrado.",
+        "member.alreadyMember": "Este usuario ya es miembro del proyecto.",
+        "member.alreadyOwner": "Este usuario ya es el propietario del proyecto.",
+        "member.ownerRoleRequired": "Esta acción requiere el rol „owner\".",
+        "member.pendingInvitationExists": "Ya existe una invitación pendiente para este email.",
+        "member.invitationCreated": "Aún no hay ningún usuario registrado con este email. Se ha enviado una invitación — se convertirá automáticamente en miembro del proyecto tras registrarse.",
+        "member.createFailed": "Error al añadir miembro.",
+        "member.updateFailed": "Error al actualizar miembro.",
+        "member.deleteFailed": "Error al eliminar miembro.",
+        "member.fetchFailed": "Error al obtener los miembros."
       }
     }
   },

@@ -1,20 +1,38 @@
 import { NextResponse } from "next/server";
+import { getTranslations } from "next-intl/server";
+import { z } from "zod";
 import { db, dbRead } from "@/lib/db";
 import { logChanges } from "@/lib/audit";
 import { requireProjectAccess } from "@/lib/authz";
-import { generateToken } from "@/lib/auth-helpers";
+import { generateToken, normalizeEmail } from "@/lib/auth-helpers";
+import {
+  parseBody,
+  parseParam,
+  cuidSchema,
+  emailSchema,
+} from "@/lib/api-validation";
+
+// Body schema for POST /api/projects/[id]/members
+const createMemberBodySchema = z.object({
+  email: emailSchema,
+  role: z.enum(["viewer", "editor"]).optional(),
+});
 
 // GET /api/projects/[id]/members — list all members of a project
-// Requires at least viewer access to the project.
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const { id } = await params;
-  const access = await requireProjectAccess(id, "viewer");
-  if (!access.ok) return access.response;
-
+  const t = await getTranslations("api.errors");
   try {
+    const { id: rawId } = await params;
+    const idResult = parseParam(cuidSchema, rawId, t);
+    if (!idResult.success) return idResult.response;
+    const id = idResult.data;
+
+    const access = await requireProjectAccess(id, "viewer");
+    if (!access.ok) return access.response;
+
     // Get project owner + members
     const [project, members] = await Promise.all([
       dbRead.project.findUnique({
@@ -33,10 +51,11 @@ export async function GET(
       }),
     ]);
 
-    // `requireProjectAccess` already returned 404 if project was missing,
-    // but TypeScript doesn't know that — guard defensively.
     if (!project) {
-      return NextResponse.json({ error: "Project not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: t("project.notFound") },
+        { status: 404 },
+      );
     }
 
     return NextResponse.json({
@@ -51,7 +70,10 @@ export async function GET(
     });
   } catch (error) {
     console.error("GET members error:", error);
-    return NextResponse.json({ error: "Failed to fetch members" }, { status: 500 });
+    return NextResponse.json(
+      { error: t("member.fetchFailed") },
+      { status: 500 },
+    );
   }
 }
 
@@ -67,21 +89,22 @@ export async function POST(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const { id } = await params;
-  const access = await requireProjectAccess(id, "owner");
-  if (!access.ok) return access.response;
-  const { user } = access;
-
+  const t = await getTranslations("api.errors");
   try {
-    const body = await request.json();
-    const { email, role } = body;
+    const { id: rawId } = await params;
+    const idResult = parseParam(cuidSchema, rawId, t);
+    if (!idResult.success) return idResult.response;
+    const id = idResult.data;
 
-    if (!email || typeof email !== "string" || !email.trim()) {
-      return NextResponse.json({ error: "Email is required" }, { status: 400 });
-    }
+    const access = await requireProjectAccess(id, "owner");
+    if (!access.ok) return access.response;
+    const { user } = access;
 
-    const normalizedEmail = email.trim().toLowerCase();
-    const validRole = role === "editor" ? "editor" : "viewer";
+    // Parse + validate body (Zod). emailSchema returns normalized email.
+    const result = await parseBody(createMemberBodySchema, request, t);
+    if (!result.success) return result.response;
+    const { email: normalizedEmail, role } = result.data;
+    const validRole = role ?? "viewer";
 
     // Find existing user by email — do NOT create a ghost user.
     const existingUser = await db.user.findUnique({
@@ -97,7 +120,7 @@ export async function POST(
       });
       if (existing) {
         return NextResponse.json(
-          { error: "Tento uživatel je již členem projektu" },
+          { error: t("member.alreadyMember") },
           { status: 409 },
         );
       }
@@ -105,7 +128,7 @@ export async function POST(
       // Owner cannot be added as a member (they already have full access).
       if (access.project.ownerId === existingUser.id) {
         return NextResponse.json(
-          { error: "Tento uživatel je již správcem projektu" },
+          { error: t("member.alreadyOwner") },
           { status: 409 },
         );
       }
@@ -148,7 +171,7 @@ export async function POST(
     });
     if (existingInvitation && existingInvitation.status === "pending") {
       return NextResponse.json(
-        { error: "Na tento e-mail již čeká nepotvrzená pozvánka." },
+        { error: t("member.pendingInvitationExists") },
         { status: 409 },
       );
     }
@@ -190,11 +213,18 @@ export async function POST(
         status: invitation.status,
         expiresAt: invitation.expiresAt,
       },
-      message:
-        "Uživatel s tímto e-mailem ještě není registrován. Byla mu odeslána pozvánka — po registraci se automaticky stane členem projektu.",
+      message: t("member.invitationCreated"),
     }, { status: 202 });
   } catch (error) {
     console.error("POST member error:", error);
-    return NextResponse.json({ error: "Failed to add member" }, { status: 500 });
+    return NextResponse.json(
+      { error: t("member.createFailed") },
+      { status: 500 },
+    );
   }
 }
+
+// Note: PATCH /api/projects/[id]/members/[memberId] and
+// DELETE /api/projects/[id]/members/[memberId] are in the
+// [memberId]/route.ts file (Next.js App Router requires separate
+// files for different dynamic route segments).

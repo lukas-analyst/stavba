@@ -2782,6 +2782,19 @@
         "contact.personUpdateFailed": "Aktualizace kontaktní osoby selhala.",
         "contact.personDeleteFailed": "Smazání kontaktní osoby selhalo.",
         "contact.personFetchFailed": "Načtení kontaktních osob selhalo."
+      },
+      "member": {
+        "member.emailRequired": "E-mail je povinný.",
+        "member.notFound": "Člen nebyl nalezen.",
+        "member.alreadyMember": "Tento uživatel je již členem projektu.",
+        "member.alreadyOwner": "Tento uživatel je již správcem projektu.",
+        "member.ownerRoleRequired": "Pro tuto akci je vyžadována role „owner\".",
+        "member.pendingInvitationExists": "Na tento e-mail již čeká nepotvrzená pozvánka.",
+        "member.invitationCreated": "Uživatel s tímto e-mailem ještě není registrován. Byla mu odeslána pozvánka — po registraci se automaticky stane členem projektu.",
+        "member.createFailed": "Přidání člena selhalo.",
+        "member.updateFailed": "Aktualizace člena selhala.",
+        "member.deleteFailed": "Odebrání člena selhalo.",
+        "member.fetchFailed": "Načtení členů selhalo."
       }
     }
   },

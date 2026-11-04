@@ -1,11 +1,18 @@
 import { NextResponse } from "next/server";
 import { getTranslations } from "next-intl/server";
+import { z } from "zod";
 import { db, dbRead } from "@/lib/db";
 import { logChanges } from "@/lib/audit";
 import { requireProjectAccess } from "@/lib/authz";
-import { generateToken, normalizeEmail } from "@/lib/auth-helpers";
+import { generateToken } from "@/lib/auth-helpers";
 import { sendEmail, emailShell, escapeHtml, escapeUrlAttr } from "@/lib/email";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
+import {
+  parseBody,
+  parseParam,
+  cuidSchema,
+  emailSchema,
+} from "@/lib/api-validation";
 
 // =====================================================================
 // /api/projects/[id]/invitations
@@ -70,18 +77,28 @@ function invitationEmailHtml(opts: {
 }
 
 // ---------------------------------------------------------------------
+// Body schema for POST /api/projects/[id]/invitations
+const createInvitationBodySchema = z.object({
+  email: emailSchema,
+  role: z.enum(["viewer", "editor"]).optional(),
+});
+
 // GET /api/projects/[id]/invitations
 // ---------------------------------------------------------------------
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const { id } = await params;
-  const access = await requireProjectAccess(id, "viewer");
-  if (!access.ok) return access.response;
-
   const t = await getTranslations("api.errors");
   try {
+    const { id: rawId } = await params;
+    const idResult = parseParam(cuidSchema, rawId, t);
+    if (!idResult.success) return idResult.response;
+    const id = idResult.data;
+
+    const access = await requireProjectAccess(id, "viewer");
+    if (!access.ok) return access.response;
+
     const invitations = await dbRead.projectInvitation.findMany({
       where: { projectId: id },
       orderBy: { createdAt: "desc" },
@@ -128,13 +145,17 @@ export async function POST(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const { id } = await params;
-  const access = await requireProjectAccess(id, "owner");
-  if (!access.ok) return access.response;
-  const { user } = access;
-
   const t = await getTranslations("api.errors");
   try {
+    const { id: rawId } = await params;
+    const idResult = parseParam(cuidSchema, rawId, t);
+    if (!idResult.success) return idResult.response;
+    const id = idResult.data;
+
+    const access = await requireProjectAccess(id, "owner");
+    if (!access.ok) return access.response;
+    const { user } = access;
+
     // SECURITY (audit fix L2): rate-limit invitation sending per
     // owner+IP. Done AFTER auth so we have user.id. Keyed by both
     // user.id and IP so a shared-IP user (NAT) doesn't get blocked
@@ -155,33 +176,15 @@ export async function POST(
       );
     }
 
-    const body = await request.json().catch(() => null);
-    if (!body || typeof body !== "object") {
-      return NextResponse.json(
-        { error: t("invitations.invalidRequestJson") },
-        { status: 400 },
-      );
-    }
+    // Parse + validate body (Zod). emailSchema returns normalized email
+    // (trim + lowercase). role is constrained to "viewer" | "editor".
+    const result = await parseBody(createInvitationBodySchema, request, t);
+    if (!result.success) return result.response;
+    const { email: inviteeEmail, role } = result.data;
 
-    const { email, role } = body as { email?: unknown; role?: unknown };
-
-    if (typeof email !== "string" || !email.trim()) {
-      return NextResponse.json(
-        { error: t("auth.emailRequired") },
-        { status: 400 },
-      );
-    }
-    const inviteeEmail = normalizeEmail(email);
-
-    // Basic e-mail shape validation — same regex as auth-helpers.
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(inviteeEmail)) {
-      return NextResponse.json(
-        { error: t("invitations.invalidEmailFormat") },
-        { status: 400 },
-      );
-    }
-
-    const validRole: "viewer" | "editor" = role === "editor" ? "editor" : "viewer";
+    // emailSchema already returns the normalized email — no separate
+    // normalizeEmail call needed. role defaults to "viewer" if omitted.
+    const validRole: "viewer" | "editor" = role ?? "viewer";
 
     // 1) Is the invitee already a member of the project?
     const existingMember = await db.user.findUnique({

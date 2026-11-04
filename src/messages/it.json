@@ -2779,6 +2779,19 @@
         "contact.personUpdateFailed": "Aggiornamento della persona di contatto non riuscito.",
         "contact.personDeleteFailed": "Eliminazione della persona di contatto non riuscita.",
         "contact.personFetchFailed": "Recupero delle persone di contatto non riuscito."
+      },
+      "member": {
+        "member.emailRequired": "L'email è obbligatoria.",
+        "member.notFound": "Membro non trovato.",
+        "member.alreadyMember": "Questo utente è già membro del progetto.",
+        "member.alreadyOwner": "Questo utente è già il proprietario del progetto.",
+        "member.ownerRoleRequired": "Questa azione richiede il ruolo „owner\".",
+        "member.pendingInvitationExists": "Esiste già un invito in sospeso per questa email.",
+        "member.invitationCreated": "Nessun utente registrato con questa email. È stato inviato un invito — diventerà automaticamente membro del progetto dopo la registrazione.",
+        "member.createFailed": "Aggiunta del membro non riuscita.",
+        "member.updateFailed": "Aggiornamento del membro non riuscito.",
+        "member.deleteFailed": "Rimozione del membro non riuscita.",
+        "member.fetchFailed": "Recupero dei membri non riuscito."
       }
     }
   },

@@ -2779,6 +2779,19 @@
         "contact.personUpdateFailed": "Cập nhật người liên hệ thất bại.",
         "contact.personDeleteFailed": "Xóa người liên hệ thất bại.",
         "contact.personFetchFailed": "Tải người liên hệ thất bại."
+      },
+      "member": {
+        "member.emailRequired": "Email là bắt buộc.",
+        "member.notFound": "Không tìm thấy thành viên.",
+        "member.alreadyMember": "Người dùng này đã là thành viên của dự án.",
+        "member.alreadyOwner": "Người dùng này đã là chủ sở hữu dự án.",
+        "member.ownerRoleRequired": "Hành động này yêu cầu vai trò „owner\".",
+        "member.pendingInvitationExists": "Đã có lời mời đang chờ cho email này.",
+        "member.invitationCreated": "Chưa có người dùng đăng ký với email này. Đã gửi lời mời — họ sẽ tự động trở thành thành viên dự án sau khi đăng ký.",
+        "member.createFailed": "Thêm thành viên thất bại.",
+        "member.updateFailed": "Cập nhật thành viên thất bại.",
+        "member.deleteFailed": "Xóa thành viên thất bại.",
+        "member.fetchFailed": "Tải thành viên thất bại."
       }
     }
   },

@@ -1,7 +1,19 @@
 import { NextResponse } from "next/server";
+import { getTranslations } from "next-intl/server";
+import { z } from "zod";
 import { db } from "@/lib/db";
 import { logChanges } from "@/lib/audit";
 import { requireProjectAccess } from "@/lib/authz";
+import {
+  parseBody,
+  parseParam,
+  cuidSchema,
+} from "@/lib/api-validation";
+
+// Body schema for PATCH /api/projects/[id]/members/[memberId]
+const patchMemberBodySchema = z.object({
+  role: z.enum(["viewer", "editor"]),
+});
 
 // PATCH /api/projects/[id]/members/[memberId] — update member role
 // Body: { role: "viewer" | "editor" }
@@ -12,21 +24,32 @@ export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string; memberId: string }> },
 ) {
-  const { id, memberId } = await params;
-  const access = await requireProjectAccess(id, "owner");
-  if (!access.ok) return access.response;
-
+  const t = await getTranslations("api.errors");
   try {
-    const body = await request.json();
-    const { role } = body;
+    const { id: rawId, memberId: rawMemberId } = await params;
+    const idResult = parseParam(cuidSchema, rawId, t);
+    if (!idResult.success) return idResult.response;
+    const id = idResult.data;
+    const memberIdResult = parseParam(cuidSchema, rawMemberId, t);
+    if (!memberIdResult.success) return memberIdResult.response;
+    const memberId = memberIdResult.data;
 
-    const validRole = role === "editor" ? "editor" : "viewer";
+    const access = await requireProjectAccess(id, "owner");
+    if (!access.ok) return access.response;
+
+    // Parse + validate body (Zod). role is constrained to the enum.
+    const result = await parseBody(patchMemberBodySchema, request, t);
+    if (!result.success) return result.response;
+    const { role: validRole } = result.data;
 
     const existing = await db.projectMember.findFirst({
       where: { id: memberId, projectId: id },
     });
     if (!existing) {
-      return NextResponse.json({ error: "Member not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: t("member.notFound") },
+        { status: 404 },
+      );
     }
 
     const updated = await db.projectMember.update({
@@ -54,7 +77,10 @@ export async function PATCH(
     });
   } catch (error) {
     console.error("PATCH member error:", error);
-    return NextResponse.json({ error: "Failed to update member" }, { status: 500 });
+    return NextResponse.json(
+      { error: t("member.updateFailed") },
+      { status: 500 },
+    );
   }
 }
 
@@ -69,21 +95,31 @@ export async function DELETE(
   _request: Request,
   { params }: { params: Promise<{ id: string; memberId: string }> },
 ) {
-  const { id, memberId } = await params;
-
-  // First, require at least viewer access so we can read the project.
-  const access = await requireProjectAccess(id, "viewer");
-  if (!access.ok) return access.response;
-  const { user } = access;
-
+  const t = await getTranslations("api.errors");
   try {
+    const { id: rawId, memberId: rawMemberId } = await params;
+    const idResult = parseParam(cuidSchema, rawId, t);
+    if (!idResult.success) return idResult.response;
+    const id = idResult.data;
+    const memberIdResult = parseParam(cuidSchema, rawMemberId, t);
+    if (!memberIdResult.success) return memberIdResult.response;
+    const memberId = memberIdResult.data;
+
+    // First, require at least viewer access so we can read the project.
+    const access = await requireProjectAccess(id, "viewer");
+    if (!access.ok) return access.response;
+    const { user } = access;
+
     // Look up the member record so we can decide authorization.
     const memberWithUser = await db.projectMember.findFirst({
       where: { id: memberId, projectId: id },
       include: { user: { select: { email: true, name: true } } },
     });
     if (!memberWithUser) {
-      return NextResponse.json({ error: "Member not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: t("member.notFound") },
+        { status: 404 },
+      );
     }
 
     // Authorization: owner can delete anyone; otherwise only self-deletion
@@ -93,7 +129,7 @@ export async function DELETE(
 
     if (!isOwner && !isSelf) {
       return NextResponse.json(
-        { error: `Pro tuto akci je vyžadována role „owner".` },
+        { error: t("member.ownerRoleRequired") },
         { status: 403 },
       );
     }
@@ -110,6 +146,9 @@ export async function DELETE(
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("DELETE member error:", error);
-    return NextResponse.json({ error: "Failed to remove member" }, { status: 500 });
+    return NextResponse.json(
+      { error: t("member.deleteFailed") },
+      { status: 500 },
+    );
   }
 }

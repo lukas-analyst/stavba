@@ -2782,6 +2782,19 @@
         "contact.personUpdateFailed": "Failed to update contact person.",
         "contact.personDeleteFailed": "Failed to delete contact person.",
         "contact.personFetchFailed": "Failed to fetch contact persons."
+      },
+      "member": {
+        "member.emailRequired": "Email is required.",
+        "member.notFound": "Member not found.",
+        "member.alreadyMember": "This user is already a member of the project.",
+        "member.alreadyOwner": "This user is already the project owner.",
+        "member.ownerRoleRequired": "This action requires the „owner\" role.",
+        "member.pendingInvitationExists": "A pending invitation already exists for this email.",
+        "member.invitationCreated": "No user with this email is registered yet. An invitation has been sent — they will automatically become a project member after registering.",
+        "member.createFailed": "Failed to add member.",
+        "member.updateFailed": "Failed to update member.",
+        "member.deleteFailed": "Failed to remove member.",
+        "member.fetchFailed": "Failed to fetch members."
       }
     }
   },

@@ -2779,6 +2779,19 @@
         "contact.personUpdateFailed": "Aktualizacja osoby kontaktowej nie powiodła się.",
         "contact.personDeleteFailed": "Usunięcie osoby kontaktowej nie powiodło się.",
         "contact.personFetchFailed": "Pobranie osób kontaktowych nie powiodło się."
+      },
+      "member": {
+        "member.emailRequired": "E-mail jest wymagany.",
+        "member.notFound": "Członek nie został znaleziony.",
+        "member.alreadyMember": "Ten użytkownik jest już członkiem projektu.",
+        "member.alreadyOwner": "Ten użytkownik jest już właścicielem projektu.",
+        "member.ownerRoleRequired": "Ta akcja wymaga roli „owner\".",
+        "member.pendingInvitationExists": "Na ten e-mail czeka już oczekujące zaproszenie.",
+        "member.invitationCreated": "Nie ma jeszcze zarejestrowanego użytkownika z tym e-mailem. Wysłano zaproszenie — po rejestracji automatycznie stanie się członkiem projektu.",
+        "member.createFailed": "Dodanie członka nie powiodło się.",
+        "member.updateFailed": "Aktualizacja członka nie powiodła się.",
+        "member.deleteFailed": "Usunięcie członka nie powiodło się.",
+        "member.fetchFailed": "Pobranie członków nie powiodło się."
       }
     }
   },
