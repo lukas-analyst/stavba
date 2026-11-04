@@ -665,72 +665,154 @@ function BudgetTab({ projectId, dragEndHandlerRef }: { projectId: string; dragEn
           non-sighted users get confirmation that the reorder landed. */}
       <div aria-live="polite" className="sr-only" ref={dndAnnouncerRef} />
       {/* Toolbar — MD3 horizontal filter pattern (matches Payments / Time tabs).
-          All controls live in a single flex-wrap row that wraps naturally on
-          narrow viewports. The "Přidat položku" button is HIDDEN on mobile
-          (`hidden sm:flex`) because the ContextualFab (bottom-right FAB) already
-          triggers the same "add-item" action via the `stavba:fab-add` custom
-          event — having both on the narrow mobile viewport would be redundant.
-          On desktop the FAB is hidden, so the toolbar Add button takes over. */}
+          The "Přidat položku" button is HIDDEN on mobile (`hidden sm:flex`)
+          because the ContextualFab (bottom-right FAB) already triggers the same
+          "add-item" action via the `stavba:fab-add` custom event — having both
+          on the narrow mobile viewport would be redundant. On desktop the FAB
+          is hidden, so the toolbar Add button takes over.
+
+          Mobile (< sm) layout:
+            Row 1 — all filter controls side by side (selection-mode toggle,
+                    completion Select, phase filter). They share one row inside
+                    the `filter-group` wrapper which is `w-full` on mobile.
+            Row 2 — search input (full width, its own row).
+          Desktop (>= sm) layout:
+            Single wrapping row: [filter-group] [search w-64] [Add ml-auto]. */}
       <div id="budget-toolbar" className="flex flex-wrap items-center gap-2">
-        {/* Selection-mode toggle — switches the table into multi-select
-            mode where each row shows a Checkbox cell at the start.
-            When active, the button is rendered with the "default" variant
-            (filled) to indicate the active state; otherwise it's a soft
-            outline button. The active state also disables the row
-            onClick (edit dialog) and reveals a sticky bulk-action bar
-            at the bottom of the budget root container. */}
-        <Button
-          onClick={toggleSelectionMode}
-          variant={selectionMode ? "default" : "outline"}
-          size="icon"
-          aria-pressed={selectionMode}
-          aria-label={t("toolbar.selectionMode")}
-          title={t("toolbar.selectionMode")}
-          className="h-9 w-9 shrink-0 rounded-full"
-        >
-          <ListChecks className="h-4 w-4" />
-        </Button>
-
-        {/* MD3 Segmented Button — completion status
-            Hidden on mobile (< sm) and replaced by the compact
-            <Select> dropdown below (mobile-only) to save horizontal
-            space. */}
-        <div className="hidden sm:block">
-          <SegmentedButton
-            value={completionFilter}
-            onChange={(v) => setCompletionFilter(v as CompletionFilter)}
-            options={COMPLETION_OPTIONS.map((opt) => ({
-              value: opt.id,
-              label: t(`completion.${opt.label}`),
-            }))}
-            size="md"
-          />
-        </div>
-
-        {/* Compact Select dropdown — mobile only (< sm)
-            Replaces the SegmentedButton to save space. Same options,
-            same state, just a smaller footprint. Full-width on mobile
-            so it gets its own row in the wrapping flex toolbar. */}
-        <div className="sm:hidden w-full">
-          <Select
-            value={completionFilter}
-            onValueChange={(v) => setCompletionFilter(v as CompletionFilter)}
+        {/* Filter group — on mobile takes the full width (its own row) so the
+            selection toggle, completion Select and phase dropdown sit side by
+            side; on desktop takes natural width so all controls flow in one
+            wrapping flex row. */}
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          {/* Selection-mode toggle — switches the table into multi-select
+              mode where each row shows a Checkbox cell at the start.
+              When active, the button is rendered with the "default" variant
+              (filled) to indicate the active state; otherwise it's a soft
+              outline button. The active state also disables the row
+              onClick (edit dialog) and reveals a sticky bulk-action bar
+              at the bottom of the budget root container. */}
+          <Button
+            onClick={toggleSelectionMode}
+            variant={selectionMode ? "default" : "outline"}
+            size="icon"
+            aria-pressed={selectionMode}
+            aria-label={t("toolbar.selectionMode")}
+            title={t("toolbar.selectionMode")}
+            className="h-9 w-9 shrink-0 rounded-full"
           >
-            <SelectTrigger className="h-9 w-full rounded-full border-outline-variant bg-surface-container-low">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {COMPLETION_OPTIONS.map((opt) => (
-                <SelectItem key={opt.id} value={opt.id}>
-                  {t(`completion.${opt.label}`)}
-                </SelectItem>
+            <ListChecks className="h-4 w-4" />
+          </Button>
+
+          {/* MD3 Segmented Button — completion status
+              Hidden on mobile (< sm) and replaced by the compact
+              <Select> dropdown below (mobile-only) to save horizontal
+              space. */}
+          <div className="hidden sm:block shrink-0">
+            <SegmentedButton
+              value={completionFilter}
+              onChange={(v) => setCompletionFilter(v as CompletionFilter)}
+              options={COMPLETION_OPTIONS.map((opt) => ({
+                value: opt.id,
+                label: t(`completion.${opt.label}`),
+              }))}
+              size="md"
+            />
+          </div>
+
+          {/* Compact Select dropdown — mobile only (< sm)
+              Replaces the SegmentedButton to save space. Same options,
+              same state. `flex-1 min-w-0` so it fills the remaining
+              horizontal space between the selection toggle and the phase
+              dropdown on the shared filter row. */}
+          <div className="sm:hidden flex-1 min-w-0">
+            <Select
+              value={completionFilter}
+              onValueChange={(v) => setCompletionFilter(v as CompletionFilter)}
+            >
+              <SelectTrigger className="h-9 w-full rounded-full border-outline-variant bg-surface-container-low">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {COMPLETION_OPTIONS.map((opt) => (
+                  <SelectItem key={opt.id} value={opt.id}>
+                    {t(`completion.${opt.label}`)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Phase filter dropdown (multi-select with checkboxes) */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5 rounded-full shrink-0"
+              >
+                <Layers className="h-3.5 w-3.5" />
+                <span className="type-label">{t("filter.phase")}</span>
+                {phaseFilter.size > 0 && (
+                  <Badge variant="secondary" className="type-label-sm rounded-full px-1.5 py-0">
+                    {phaseFilter.size}
+                  </Badge>
+                )}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="min-w-[200px]">
+              {/* Select All / Clear */}
+              <DropdownMenuItem
+                onClick={() => setPhaseFilter(new Set())}
+                className="gap-2"
+              >
+                <Check className={cn("h-3.5 w-3.5", phaseFilter.size === 0 ? "opacity-100" : "opacity-0")} />
+                {t("filter.all")}
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              {/* Phase checkboxes */}
+              {PHASES.map((phase) => (
+                <DropdownMenuItem
+                  key={phase}
+                  onClick={() => {
+                    const next = new Set(phaseFilter);
+                    if (next.has(phase)) {
+                      next.delete(phase);
+                    } else {
+                      next.add(phase);
+                    }
+                    setPhaseFilter(next);
+                  }}
+                  className="gap-2"
+                >
+                  <Check className={cn("h-3.5 w-3.5", phaseFilter.has(phase) ? "opacity-100" : "opacity-0")} />
+                  <span
+                    className={cn(
+                      "h-2 w-2 rounded-full shrink-0",
+                      PHASE_BG_COLORS[phase as keyof typeof PHASE_BG_COLORS] || "bg-muted",
+                    )}
+                  />
+                  {tPhases(phase)}
+                </DropdownMenuItem>
               ))}
-            </SelectContent>
-          </Select>
+              {phaseFilter.size > 0 && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onClick={() => setPhaseFilter(new Set())}
+                    className="gap-2 text-muted-foreground"
+                  >
+                    <Ban className="h-3.5 w-3.5" />
+                    {t("filter.clear")}
+                  </DropdownMenuItem>
+                </>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
         {/* Search input — filters by item name (debounced 250ms).
-            Full-width on mobile (gets its own row), fixed w-64 on desktop. */}
+            Full-width on mobile (gets its own row below the filter group),
+            fixed w-64 on desktop. */}
         <div className="relative w-full sm:w-64">
           <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
@@ -741,73 +823,6 @@ function BudgetTab({ projectId, dragEndHandlerRef }: { projectId: string; dragEn
             className="h-9 rounded-full pl-8"
           />
         </div>
-
-        {/* Phase filter dropdown (multi-select with checkboxes) */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="outline"
-              size="sm"
-              className="gap-1.5 rounded-full"
-            >
-              <Layers className="h-3.5 w-3.5" />
-              <span className="type-label">{t("filter.phase")}</span>
-              {phaseFilter.size > 0 && (
-                <Badge variant="secondary" className="type-label-sm rounded-full px-1.5 py-0">
-                  {phaseFilter.size}
-                </Badge>
-              )}
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" className="min-w-[200px]">
-            {/* Select All / Clear */}
-            <DropdownMenuItem
-              onClick={() => setPhaseFilter(new Set())}
-              className="gap-2"
-            >
-              <Check className={cn("h-3.5 w-3.5", phaseFilter.size === 0 ? "opacity-100" : "opacity-0")} />
-              {t("filter.all")}
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            {/* Phase checkboxes */}
-            {PHASES.map((phase) => (
-              <DropdownMenuItem
-                key={phase}
-                onClick={() => {
-                  const next = new Set(phaseFilter);
-                  if (next.has(phase)) {
-                    next.delete(phase);
-                  } else {
-                    next.add(phase);
-                  }
-                  setPhaseFilter(next);
-                }}
-                className="gap-2"
-              >
-                <Check className={cn("h-3.5 w-3.5", phaseFilter.has(phase) ? "opacity-100" : "opacity-0")} />
-                <span
-                  className={cn(
-                    "h-2 w-2 rounded-full shrink-0",
-                    PHASE_BG_COLORS[phase as keyof typeof PHASE_BG_COLORS] || "bg-muted",
-                  )}
-                />
-                {tPhases(phase)}
-              </DropdownMenuItem>
-            ))}
-            {phaseFilter.size > 0 && (
-              <>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  onClick={() => setPhaseFilter(new Set())}
-                  className="gap-2 text-muted-foreground"
-                >
-                  <Ban className="h-3.5 w-3.5" />
-                  {t("filter.clear")}
-                </DropdownMenuItem>
-              </>
-            )}
-          </DropdownMenuContent>
-        </DropdownMenu>
 
         {/* Desktop "Add item" button — hidden on mobile (mobile uses the FAB).
             Pushed to the end of the toolbar with ml-auto so it sits at the
