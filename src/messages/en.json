@@ -2451,7 +2451,19 @@
         "workerType": "Worker type",
         "hours": "Hours",
         "supplier": "Supplier",
-        "supplierDesc": "Show assigned supplier/contact for each budget item"
+        "supplierDesc": "Show assigned supplier/contact for each budget item",
+        "contacts": "Contacts",
+        "contactsDesc": "Directory of project suppliers and contacts with payment/hour counts",
+        "contactType": "Contact type",
+        "contactTypeDesc": "Show type (company, craftsman, supplier, architect)",
+        "contactPhone": "Phone",
+        "contactPhoneDesc": "Show contact phone number",
+        "contactEmail": "Email",
+        "contactEmailDesc": "Show contact email address",
+        "contactIco": "Reg. No. / VAT",
+        "contactIcoDesc": "Show company registration and tax IDs",
+        "contactNotes": "Notes",
+        "contactNotesDesc": "Show free-form notes for each contact"
       },
       "locale": {
         "title": "Language and currency",
@@ -3020,6 +3032,23 @@
     "workerCount": "Workers",
     "totalHours": "Total hours",
     "noTimeEntries": "No time entries.",
-    "supplier": "Supplier"
+    "supplier": "Supplier",
+    "contacts": "Contacts",
+    "contactsCount": "contacts",
+    "noContacts": "No project contacts.",
+    "contactType": "Type",
+    "contactName": "Name / Company",
+    "company": "Company",
+    "role": "Role",
+    "phone": "Phone",
+    "email": "Email",
+    "ico": "Reg. No. / VAT",
+    "dic": "VAT ID",
+    "website": "Website",
+    "rating": "Rating",
+    "contactNotes": "Notes",
+    "paymentCount": "Payments",
+    "timeEntryCount": "Entries",
+    "totalContacts": "Total contacts"
   }
 }

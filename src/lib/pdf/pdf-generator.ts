@@ -33,6 +33,7 @@ import type {
   PdfPhaseSummary,
   PdfPayment,
   PdfTimeEntry,
+  PdfContact,
 } from "./pdf-types";
 
 // =====================================================================
@@ -347,6 +348,53 @@ export async function generatePdf(options: PdfExportOptions): Promise<Buffer> {
     budgetItemSubcategory: te.budgetItem?.subcategory ?? null,
   }));
 
+  // ─── 6.4b) Fetch contacts (suppliers / contractors) ──────────────
+  // The PDF's contacts section lists every Contact on the project with
+  // their type, role, contact details, and a denormalized count of how
+  // many payments + time entries reference them (handy for spotting the
+  // most-active suppliers at a glance).
+  const dbContacts = await dbRead.contact.findMany({
+    where: { projectId: options.projectId },
+    orderBy: [{ name: "asc" }],
+    select: {
+      id: true,
+      name: true,
+      type: true,
+      role: true,
+      company: true,
+      phone: true,
+      email: true,
+      website: true,
+      ico: true,
+      dic: true,
+      notes: true,
+      rating: true,
+      _count: {
+        select: {
+          payments: true,
+          timeEntries: true,
+        },
+      },
+    },
+  });
+
+  const contacts: PdfContact[] = dbContacts.map((c) => ({
+    id: c.id,
+    name: c.name,
+    type: c.type,
+    role: c.role,
+    company: c.company,
+    phone: c.phone,
+    email: c.email,
+    website: c.website,
+    ico: c.ico,
+    dic: c.dic,
+    notes: c.notes,
+    rating: c.rating,
+    paymentCount: c._count?.payments ?? 0,
+    timeEntryCount: c._count?.timeEntries ?? 0,
+  }));
+
   // ─── 6.5) Load i18n translations for the target locale ──────────
   // PDF components run outside of React's context system, so they can't
   // use useTranslations(). We load all needed translations server-side
@@ -368,6 +416,14 @@ export async function generatePdf(options: PdfExportOptions): Promise<Buffer> {
   const paymentTypeKeys = ["receipt", "invoice", "work", "material", "person", "other"];
   for (const key of paymentTypeKeys) {
     paymentTypeTranslations[key] = tPaymentTypes(key);
+  }
+
+  // Build contact type translation map.
+  const tContactTypes = await getTranslations({ locale: options.locale, namespace: "contactTypes" });
+  const contactTypeTranslations: Record<string, string> = {};
+  const contactTypeKeys = ["company", "craftsman", "self", "family", "supplier", "architect", "office"];
+  for (const key of contactTypeKeys) {
+    contactTypeTranslations[key] = tContactTypes(key);
   }
 
   const labels: PdfReportData["labels"] = {
@@ -435,6 +491,23 @@ export async function generatePdf(options: PdfExportOptions): Promise<Buffer> {
     totalHours: tPdf("totalHours"),
     noTimeEntries: tPdf("noTimeEntries"),
     supplier: tPdf("supplier"),
+    contacts: tPdf("contacts"),
+    contactsCount: tPdf("contactsCount"),
+    noContacts: tPdf("noContacts"),
+    contactType: tPdf("contactType"),
+    contactName: tPdf("contactName"),
+    company: tPdf("company"),
+    role: tPdf("role"),
+    phone: tPdf("phone"),
+    email: tPdf("email"),
+    ico: tPdf("ico"),
+    dic: tPdf("dic"),
+    website: tPdf("website"),
+    rating: tPdf("rating"),
+    contactNotes: tPdf("contactNotes"),
+    paymentCount: tPdf("paymentCount"),
+    timeEntryCount: tPdf("timeEntryCount"),
+    totalContacts: tPdf("totalContacts"),
   };
 
   // ─── 7) Assemble PdfReportData ───────────────────────────────────
@@ -472,8 +545,10 @@ export async function generatePdf(options: PdfExportOptions): Promise<Buffer> {
     byPhase,
     payments,
     timeEntries,
+    contacts,
     phaseTranslations,
     paymentTypeTranslations,
+    contactTypeTranslations,
     labels,
   };
 

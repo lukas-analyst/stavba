@@ -2448,7 +2448,19 @@
         "workerType": "Tipo di lavoratore",
         "hours": "Ore",
         "supplier": "Fornitore",
-        "supplierDesc": "Mostra fornitore/contatto assegnato per ogni elemento di budget"
+        "supplierDesc": "Mostra fornitore/contatto assegnato per ogni elemento di budget",
+        "contacts": "Contatti",
+        "contactsDesc": "Elenco di fornitori e contatti del progetto con conteggi di pagamenti e ore",
+        "contactType": "Tipo di contatto",
+        "contactTypeDesc": "Mostra tipo (azienda, artigiano, fornitore, architetto)",
+        "contactPhone": "Telefono",
+        "contactPhoneDesc": "Mostra numero di telefono del contatto",
+        "contactEmail": "Email",
+        "contactEmailDesc": "Mostra indirizzo email del contatto",
+        "contactIco": "Partita IVA / Codice Fiscale",
+        "contactIcoDesc": "Mostra Partita IVA e Codice Fiscale dell'azienda (per documenti fiscali)",
+        "contactNotes": "Note",
+        "contactNotesDesc": "Mostra note libere per ogni contatto"
       },
       "locale": {
         "title": "Lingua e valuta",
@@ -3017,6 +3029,23 @@
     "workerCount": "Lavoratori",
     "totalHours": "Totale ore",
     "noTimeEntries": "Nessuna registrazione di tempo.",
-    "supplier": "Fornitore"
+    "supplier": "Fornitore",
+    "contacts": "Contatti",
+    "contactsCount": "contatti",
+    "noContacts": "Nessun contatto del progetto.",
+    "contactType": "Tipo",
+    "contactName": "Nome / Azienda",
+    "company": "Azienda",
+    "role": "Ruolo",
+    "phone": "Telefono",
+    "email": "Email",
+    "ico": "Partita IVA / Codice Fiscale",
+    "dic": "Partita IVA",
+    "website": "Sito web",
+    "rating": "Valutazione",
+    "contactNotes": "Note",
+    "paymentCount": "Pagamenti",
+    "timeEntryCount": "Registrazioni",
+    "totalContacts": "Totale contatti"
   }
 }

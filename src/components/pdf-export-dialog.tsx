@@ -115,6 +115,11 @@ const DEFAULT_SECTIONS: PdfSectionId[] = [
   "time",
   "worker",
   "hours",
+  "contacts",
+  "contact_type",
+  "contact_phone",
+  "contact_email",
+  "contact_ico",
 ];
 
 export function PdfExportDialog({
@@ -589,12 +594,27 @@ function PdfExportBody({
                 </div>
               );
             }
+            // Render sub-sections only when contacts is checked.
+            if (section.id === "contacts") {
+              const showSubs = selectedSections.has("contacts");
+              return (
+                <div key={section.id}>
+                  {renderSection(section)}
+                  {showSubs &&
+                    SUB_SECTIONS.contacts.map((subId) => {
+                      const sub = ALL_SECTIONS.find((s) => s.id === subId);
+                      return sub ? renderSection(sub, true) : null;
+                    })}
+                </div>
+              );
+            }
             // Skip sub-sections — they're rendered above as children of
             // their parent (budget_items or payments).
             const isSubSection =
               SUB_SECTIONS.budget_items.includes(section.id) ||
               (SUB_SECTIONS.payments && SUB_SECTIONS.payments.includes(section.id)) ||
-              (SUB_SECTIONS.time && SUB_SECTIONS.time.includes(section.id));
+              (SUB_SECTIONS.time && SUB_SECTIONS.time.includes(section.id)) ||
+              (SUB_SECTIONS.contacts && SUB_SECTIONS.contacts.includes(section.id));
             if (isSubSection) {
               return null;
             }

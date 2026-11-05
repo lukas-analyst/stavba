@@ -27,6 +27,7 @@ import type {
   PdfBudgetItem,
   PdfAlertItem,
   PdfExportOptions,
+  PdfContact,
 } from "./pdf-types";
 
 // =====================================================================
@@ -1136,6 +1137,238 @@ export function TimeEntriesTable({
 }
 
 // =====================================================================
+// ContactsTable — directory of suppliers / contractors on the project.
+//
+// Columns (controlled by the `sections` array):
+//   - Name (always)
+//   - Type      (if "contact_type" in sections)
+//   - Phone     (if "contact_phone" in sections)
+//   - Email     (if "contact_email" in sections)
+//   - IČO/DIČ   (if "contact_ico" in sections)
+//   - Notes     (if "contact_notes" in sections)
+//
+// Each row also shows the contact's role (if any) and denormalized
+// counts of payments + time entries referencing the contact — handy
+// for spotting the most-active suppliers at a glance.
+// =====================================================================
+
+export function ContactsTable({
+  contacts,
+  sections,
+  locale: _locale,
+  labels,
+  contactTypeTranslations,
+}: {
+  contacts: PdfContact[];
+  sections: PdfSectionId[];
+  locale: string;
+  labels: PdfReportData["labels"];
+  contactTypeTranslations: Record<string, string>;
+}) {
+  const showType = sections.includes("contact_type");
+  const showPhone = sections.includes("contact_phone");
+  const showEmail = sections.includes("contact_email");
+  const showIco = sections.includes("contact_ico");
+  const showNotes = sections.includes("contact_notes");
+
+  if (!contacts || contacts.length === 0) {
+    return (
+      <View style={styles.section} wrap={false}>
+        <Text style={styles.sectionTitle}>{labels.contacts}</Text>
+        <Text style={styles.tableEmpty}>{labels.noContacts}</Text>
+      </View>
+    );
+  }
+
+  // Translate a raw DB contact type value to the localized display name.
+  const translateType = (type: string) =>
+    contactTypeTranslations[type] || type;
+
+  // Render the contact's rating as ★ characters (1-5).
+  const renderRating = (rating: number | null) => {
+    if (rating == null || rating <= 0) return "";
+    const clamped = Math.max(1, Math.min(5, Math.round(rating)));
+    return "★".repeat(clamped);
+  };
+
+  // Column widths adapt based on which columns are visible.
+  // Base: Name(2) + Role(1) + Payments(0.6) + Time(0.6) = 4.2
+  // + Type(0.9) if showType
+  // + Phone(1.2) if showPhone
+  // + Email(1.5) if showEmail
+  // + IČO/DIČ(1.2) if showIco
+  // + Notes(1.8) if showNotes
+  const colName = { flex: 2 };
+  const colRole = { flex: 1 };
+  const colType = { flex: 0.9 };
+  const colPhone = { flex: 1.2 };
+  const colEmail = { flex: 1.5 };
+  const colIco = { flex: 1.2 };
+  const colNotes = { flex: 1.8 };
+  const colCount = { flex: 0.6, textAlign: "center" as const };
+
+  return (
+    <View style={styles.section}>
+      <Text style={styles.sectionTitle}>
+        {labels.contacts} ({contacts.length} {labels.contactsCount})
+      </Text>
+
+      <View style={styles.tableHeader} fixed>
+        <Text style={[styles.tableHeaderText, colName]}>
+          {labels.contactName}
+        </Text>
+        {showType ? (
+          <Text style={[styles.tableHeaderText, colType]}>
+            {labels.contactType}
+          </Text>
+        ) : null}
+        <Text style={[styles.tableHeaderText, colRole]}>
+          {labels.role}
+        </Text>
+        {showPhone ? (
+          <Text style={[styles.tableHeaderText, colPhone]}>
+            {labels.phone}
+          </Text>
+        ) : null}
+        {showEmail ? (
+          <Text style={[styles.tableHeaderText, colEmail]}>
+            {labels.email}
+          </Text>
+        ) : null}
+        {showIco ? (
+          <Text style={[styles.tableHeaderText, colIco]}>
+            {labels.ico}
+          </Text>
+        ) : null}
+        <Text style={[styles.tableHeaderText, colCount]}>
+          {labels.paymentCount}
+        </Text>
+        <Text style={[styles.tableHeaderText, colCount]}>
+          {labels.timeEntryCount}
+        </Text>
+        {showNotes ? (
+          <Text style={[styles.tableHeaderText, colNotes]}>
+            {labels.contactNotes}
+          </Text>
+        ) : null}
+      </View>
+
+      {contacts.map((contact) => {
+        // Build the IČO/DIČ cell content. When DIČ is present it is
+        // shown on the same line, separated by " / ".
+        const icoDicParts: string[] = [];
+        if (contact.ico) icoDicParts.push(`IČO ${contact.ico}`);
+        if (contact.dic) icoDicParts.push(`DIČ ${contact.dic}`);
+        const icoDicText = icoDicParts.join("  •  ") || "-";
+
+        // For the Name column we also show the company name on a second
+        // line when the contact has one (helps distinguish "Pavel Novák"
+        // the person from "Pavel Novák — Hrázek s.r.o.").
+        const nameLine = contact.name;
+        const companyLine = contact.company || "";
+        const ratingLine = renderRating(contact.rating);
+
+        return (
+          <View key={contact.id} style={styles.tableRow} wrap={false}>
+            <Text style={[styles.tableCellText, colName]}>
+              {nameLine}
+              {companyLine ? `\n${companyLine}` : ""}
+              {ratingLine ? `\n${ratingLine}` : ""}
+            </Text>
+            {showType ? (
+              <Text style={[styles.tableCellText, colType]}>
+                {translateType(contact.type)}
+              </Text>
+            ) : null}
+            <Text style={[styles.tableCellText, colRole]}>
+              {contact.role || "-"}
+            </Text>
+            {showPhone ? (
+              <Text style={[styles.tableCellText, colPhone]}>
+                {contact.phone || "-"}
+              </Text>
+            ) : null}
+            {showEmail ? (
+              <Text style={[styles.tableCellText, colEmail]}>
+                {contact.email || "-"}
+              </Text>
+            ) : null}
+            {showIco ? (
+              <Text style={[styles.tableCellText, colIco]}>
+                {icoDicText}
+              </Text>
+            ) : null}
+            <Text style={[styles.tableCellText, colCount]}>
+              {String(contact.paymentCount)}
+            </Text>
+            <Text style={[styles.tableCellText, colCount]}>
+              {String(contact.timeEntryCount)}
+            </Text>
+            {showNotes ? (
+              <Text style={[styles.tableCellText, colNotes]}>
+                {contact.notes || "-"}
+              </Text>
+            ) : null}
+          </View>
+        );
+      })}
+
+      {/* Total row */}
+      <View
+        style={[
+          styles.tableRow,
+          {
+            borderTopWidth: 1,
+            borderTopColor: "#cccccc",
+            borderTopStyle: "solid",
+            marginTop: 2,
+          },
+        ]}
+        wrap={false}
+      >
+        <Text style={[styles.tableCellText, colName]}>
+          {labels.totalContacts}:
+        </Text>
+        {showType ? (
+          <Text style={[styles.tableCellText, colType]}> </Text>
+        ) : null}
+        <Text style={[styles.tableCellText, colRole]}> </Text>
+        {showPhone ? (
+          <Text style={[styles.tableCellText, colPhone]}> </Text>
+        ) : null}
+        {showEmail ? (
+          <Text style={[styles.tableCellText, colEmail]}> </Text>
+        ) : null}
+        {showIco ? (
+          <Text style={[styles.tableCellText, colIco]}> </Text>
+        ) : null}
+        <Text
+          style={[
+            styles.tableCellText,
+            colCount,
+            { fontFamily: "Roboto", fontWeight: "bold" },
+          ]}
+        >
+          {String(contacts.reduce((s, c) => s + c.paymentCount, 0))}
+        </Text>
+        <Text
+          style={[
+            styles.tableCellText,
+            colCount,
+            { fontFamily: "Roboto", fontWeight: "bold" },
+          ]}
+        >
+          {String(contacts.reduce((s, c) => s + c.timeEntryCount, 0))}
+        </Text>
+        {showNotes ? (
+          <Text style={[styles.tableCellText, colNotes]}> </Text>
+        ) : null}
+      </View>
+    </View>
+  );
+}
+
+// =====================================================================
 // ReportDocument — the top-level <Document> that assembles all sections
 // based on the `sections` array from `options`.
 //
@@ -1161,6 +1394,7 @@ export function ReportDocument({
   const showProjection = sections.includes("projection");
   const showPayments = sections.includes("payments");
   const showTime = sections.includes("time");
+  const showContacts = sections.includes("contacts");
 
   return (
     <Document
@@ -1241,6 +1475,16 @@ export function ReportDocument({
             sections={sections}
             locale={locale}
             labels={data.labels}
+          />
+        ) : null}
+
+        {showContacts ? (
+          <ContactsTable
+            contacts={data.contacts}
+            sections={sections}
+            locale={locale}
+            labels={data.labels}
+            contactTypeTranslations={data.contactTypeTranslations}
           />
         ) : null}
 

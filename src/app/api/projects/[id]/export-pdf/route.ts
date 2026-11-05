@@ -15,6 +15,7 @@ const validSections = [
   "header", "summary", "budget_items", "status", "plan_cost", "actual_cost",
   "dates", "phase", "property", "alerts", "projection", "payments",
   "payment_type", "invoice", "time", "worker", "hours", "supplier",
+  "contacts", "contact_type", "contact_phone", "contact_email", "contact_ico", "contact_notes",
 ] as const;
 
 // GET /api/projects/[id]/export-pdf
@@ -44,7 +45,7 @@ export async function GET(
     const { searchParams } = new URL(request.url);
     const locale = searchParams.get("locale") || "cs";
     const currency = searchParams.get("currency") || access.project.currency || "CZK";
-    const sectionsParam = searchParams.get("sections") || "header,summary,budget_items,status,plan_cost,actual_cost,dates,phase,property,alerts,projection,payments,payment_type,invoice,time,worker,hours,supplier";
+    const sectionsParam = searchParams.get("sections") || "header,summary,budget_items,status,plan_cost,actual_cost,dates,phase,property,alerts,projection,payments,payment_type,invoice,time,worker,hours,supplier,contacts,contact_type,contact_phone,contact_email,contact_ico";
 
     // Validate sections
     const requestedSections = sectionsParam

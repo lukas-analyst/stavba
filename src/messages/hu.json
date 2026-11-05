@@ -2448,7 +2448,19 @@
         "workerType": "Dolgozó típusa",
         "hours": "Órák",
         "supplier": "Beszállító",
-        "supplierDesc": "Hozzárendelt beszállító/kapcsolat megjelenítése minden tételnél"
+        "supplierDesc": "Hozzárendelt beszállító/kapcsolat megjelenítése minden tételnél",
+        "contacts": "Kapcsolatok",
+        "contactsDesc": "A projekt beszállítóinak és kapcsolatainak névjegyzéke fizetés- és óraszámokkal",
+        "contactType": "Kapcsolat típusa",
+        "contactTypeDesc": "Típus megjelenítése (cég, mesterember, beszállító, építész)",
+        "contactPhone": "Telefon",
+        "contactPhoneDesc": "Kapcsolat telefonszámának megjelenítése",
+        "contactEmail": "E-mail",
+        "contactEmailDesc": "Kapcsolat e-mail címének megjelenítése",
+        "contactIco": "Adószám",
+        "contactIcoDesc": "Cég adószámának megjelenítése (adós bizonylatokhoz)",
+        "contactNotes": "Megjegyzések",
+        "contactNotesDesc": "Egyedi megjegyzések megjelenítése minden kapcsolatnál"
       },
       "locale": {
         "title": "Nyelv és pénznem",
@@ -3017,6 +3029,23 @@
     "workerCount": "Dolgozók",
     "totalHours": "Összes óra",
     "noTimeEntries": "Nincsenek munkaidő-bejegyzések.",
-    "supplier": "Beszállító"
+    "supplier": "Beszállító",
+    "contacts": "Kapcsolatok",
+    "contactsCount": "kapcsolat",
+    "noContacts": "Nincsenek projekt kapcsolatok.",
+    "contactType": "Típus",
+    "contactName": "Név / Cég",
+    "company": "Cég",
+    "role": "Szerepkör",
+    "phone": "Telefon",
+    "email": "E-mail",
+    "ico": "Adószám",
+    "dic": "Adószám",
+    "website": "Weboldal",
+    "rating": "Értékelés",
+    "contactNotes": "Megjegyzések",
+    "paymentCount": "Fizetések",
+    "timeEntryCount": "Bejegyzések",
+    "totalContacts": "Összes kapcsolat"
   }
 }

@@ -2448,7 +2448,19 @@
         "workerType": "Typ pracownika",
         "hours": "Godziny",
         "supplier": "Dostawca",
-        "supplierDesc": "Pokaż przypisanego dostawcę/kontakt dla każdej pozycji budżetu"
+        "supplierDesc": "Pokaż przypisanego dostawcę/kontakt dla każdej pozycji budżetu",
+        "contacts": "Kontakty",
+        "contactsDesc": "Książka adresowa dostawców i kontaktów projektu z liczbą płatności i godzin",
+        "contactType": "Typ kontaktu",
+        "contactTypeDesc": "Pokaż typ (firma, rzemieślnik, dostawca, architekt)",
+        "contactPhone": "Telefon",
+        "contactPhoneDesc": "Pokaż numer telefonu kontaktu",
+        "contactEmail": "E-mail",
+        "contactEmailDesc": "Pokaż adres e-mail kontaktu",
+        "contactIco": "NIP / REGON",
+        "contactIcoDesc": "Pokaż NIP i REGON firmy (dla dokumentów podatkowych)",
+        "contactNotes": "Notatki",
+        "contactNotesDesc": "Pokaż dowolne notatki przy każdym kontakcie"
       },
       "locale": {
         "title": "Język i waluta",
@@ -3017,6 +3029,23 @@
     "workerCount": "Pracowników",
     "totalHours": "Łącznie godzin",
     "noTimeEntries": "Brak wpisów czasu.",
-    "supplier": "Dostawca"
+    "supplier": "Dostawca",
+    "contacts": "Kontakty",
+    "contactsCount": "kontaktów",
+    "noContacts": "Brak kontaktów projektu.",
+    "contactType": "Typ",
+    "contactName": "Imię / Firma",
+    "company": "Firma",
+    "role": "Rola",
+    "phone": "Telefon",
+    "email": "E-mail",
+    "ico": "NIP / REGON",
+    "dic": "NIP",
+    "website": "Strona WWW",
+    "rating": "Ocena",
+    "contactNotes": "Notatki",
+    "paymentCount": "Płatności",
+    "timeEntryCount": "Wpisy",
+    "totalContacts": "Łącznie kontaktów"
   }
 }

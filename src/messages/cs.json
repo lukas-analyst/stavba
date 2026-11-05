@@ -2451,7 +2451,19 @@
         "workerType": "Typ pracovníka",
         "hours": "Hodiny",
         "supplier": "Dodavatel",
-        "supplierDesc": "Zobrazit přiřazeného dodavatele/kontakt u položky rozpočtu"
+        "supplierDesc": "Zobrazit přiřazeného dodavatele/kontakt u položky rozpočtu",
+        "contacts": "Kontakty",
+        "contactsDesc": "Adresář dodavatelů a kontaktů projektu s počty plateb a hodin",
+        "contactType": "Typ kontaktu",
+        "contactTypeDesc": "Zobrazit typ (firma, řemeslník, dodavatel, architekt)",
+        "contactPhone": "Telefon",
+        "contactPhoneDesc": "Zobrazit telefonní číslo kontaktu",
+        "contactEmail": "E-mail",
+        "contactEmailDesc": "Zobrazit e-mail kontaktu",
+        "contactIco": "IČO / DIČ",
+        "contactIcoDesc": "Zobrazit IČO a DIČ firmy (pro daňové doklady)",
+        "contactNotes": "Poznámky",
+        "contactNotesDesc": "Zobrazit volné poznámky u každého kontaktu"
       },
       "locale": {
         "title": "Jazyk a měna",
@@ -3020,6 +3032,23 @@
     "workerCount": "Počet osob",
     "totalHours": "Celkem hodin",
     "noTimeEntries": "Žádné časové záznamy.",
-    "supplier": "Dodavatel"
+    "supplier": "Dodavatel",
+    "contacts": "Kontakty",
+    "contactsCount": "kontaktů",
+    "noContacts": "Žádné kontakty projektu.",
+    "contactType": "Typ",
+    "contactName": "Jméno / Firma",
+    "company": "Firma",
+    "role": "Role",
+    "phone": "Telefon",
+    "email": "E-mail",
+    "ico": "IČO / DIČ",
+    "dic": "DIČ",
+    "website": "Web",
+    "rating": "Hodnocení",
+    "contactNotes": "Poznámky",
+    "paymentCount": "Plateb",
+    "timeEntryCount": "Záznamů",
+    "totalContacts": "Celkem kontaktů"
   }
 }

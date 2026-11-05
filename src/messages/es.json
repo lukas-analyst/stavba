@@ -2448,7 +2448,19 @@
         "workerType": "Tipo de trabajador",
         "hours": "Horas",
         "supplier": "Proveedor",
-        "supplierDesc": "Mostrar proveedor/contacto asignado para cada elemento del presupuesto"
+        "supplierDesc": "Mostrar proveedor/contacto asignado para cada elemento del presupuesto",
+        "contacts": "Contactos",
+        "contactsDesc": "Directorio de proveedores y contactos del proyecto con recuentos de pagos y horas",
+        "contactType": "Tipo de contacto",
+        "contactTypeDesc": "Mostrar tipo (empresa, artesano, proveedor, arquitecto)",
+        "contactPhone": "Teléfono",
+        "contactPhoneDesc": "Mostrar número de teléfono del contacto",
+        "contactEmail": "Email",
+        "contactEmailDesc": "Mostrar dirección de email del contacto",
+        "contactIco": "CIF/NIF",
+        "contactIcoDesc": "Mostrar CIF y NIF de la empresa (para documentos fiscales)",
+        "contactNotes": "Notas",
+        "contactNotesDesc": "Mostrar notas libres de cada contacto"
       },
       "locale": {
         "title": "Idioma y moneda",
@@ -3017,6 +3029,23 @@
     "workerCount": "Trabajadores",
     "totalHours": "Total de horas",
     "noTimeEntries": "Sin registros de tiempo.",
-    "supplier": "Proveedor"
+    "supplier": "Proveedor",
+    "contacts": "Contactos",
+    "contactsCount": "contactos",
+    "noContacts": "Sin contactos del proyecto.",
+    "contactType": "Tipo",
+    "contactName": "Nombre / Empresa",
+    "company": "Empresa",
+    "role": "Rol",
+    "phone": "Teléfono",
+    "email": "Email",
+    "ico": "CIF/NIF",
+    "dic": "NIF",
+    "website": "Web",
+    "rating": "Valoración",
+    "contactNotes": "Notas",
+    "paymentCount": "Pagos",
+    "timeEntryCount": "Registros",
+    "totalContacts": "Total de contactos"
   }
 }

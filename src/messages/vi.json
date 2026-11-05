@@ -2448,7 +2448,19 @@
         "workerType": "Loại nhân công",
         "hours": "Giờ",
         "supplier": "Nhà cung cấp",
-        "supplierDesc": "Hiển thị nhà cung cấp/liên hệ được gán cho từng hạng mục ngân sách"
+        "supplierDesc": "Hiển thị nhà cung cấp/liên hệ được gán cho từng hạng mục ngân sách",
+        "contacts": "Liên hệ",
+        "contactsDesc": "Danh bạ nhà cung cấp và liên hệ của dự án kèm số lượng thanh toán và giờ",
+        "contactType": "Loại liên hệ",
+        "contactTypeDesc": "Hiển thị loại (công ty, thợ thủ công, nhà cung cấp, kiến trúc sư)",
+        "contactPhone": "Điện thoại",
+        "contactPhoneDesc": "Hiển thị số điện thoại liên hệ",
+        "contactEmail": "Email",
+        "contactEmailDesc": "Hiển thị địa chỉ email liên hệ",
+        "contactIco": "Mã số thuế",
+        "contactIcoDesc": "Hiển thị mã số thuế doanh nghiệp (cho chứng từ thuế)",
+        "contactNotes": "Ghi chú",
+        "contactNotesDesc": "Hiển thị ghi chú tự do cho mỗi liên hệ"
       },
       "locale": {
         "title": "Ngôn ngữ và tiền tệ",
@@ -3017,6 +3029,23 @@
     "workerCount": "Nhân công",
     "totalHours": "Tổng giờ",
     "noTimeEntries": "Không có bản ghi thời gian.",
-    "supplier": "Nhà cung cấp"
+    "supplier": "Nhà cung cấp",
+    "contacts": "Liên hệ",
+    "contactsCount": "liên hệ",
+    "noContacts": "Không có liên hệ dự án.",
+    "contactType": "Loại",
+    "contactName": "Tên / Công ty",
+    "company": "Công ty",
+    "role": "Vai trò",
+    "phone": "Điện thoại",
+    "email": "Email",
+    "ico": "Mã số thuế",
+    "dic": "Mã số thuế",
+    "website": "Website",
+    "rating": "Đánh giá",
+    "contactNotes": "Ghi chú",
+    "paymentCount": "Thanh toán",
+    "timeEntryCount": "Bản ghi",
+    "totalContacts": "Tổng liên hệ"
   }
 }
