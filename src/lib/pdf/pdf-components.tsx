@@ -42,11 +42,11 @@ Font.register({
   family: "Roboto",
   fonts: [
     {
-      src: path.join(process.cwd(), "src/lib/pdf/fonts/Roboto-Regular.woff"),
+      src: path.join(process.cwd(), "src/lib/pdf/fonts/Roboto-Regular.ttf"),
       fontWeight: "normal",
     },
     {
-      src: path.join(process.cwd(), "src/lib/pdf/fonts/Roboto-Bold.woff"),
+      src: path.join(process.cwd(), "src/lib/pdf/fonts/Roboto-Bold.ttf"),
       fontWeight: "bold",
     },
   ],
@@ -139,15 +139,16 @@ export function formatDate(
 
 /**
  * Status icon for a budget item row in the table.
- *   - "✓" — completed
- *   - "⚠" — over budget (actualCost > planCost, planCost > 0)
- *   - "○" — pending (everything else, including rejected items)
+ * Uses ASCII-safe characters that work with any font:
+ *   - "OK" — completed
+ *   - "!" — over budget (actualCost > planCost, planCost > 0)
+ *   - "-" — pending (everything else, including rejected items)
  */
 export function getStatusIcon(item: PdfBudgetItem): string {
-  if (item.completed) return "✓";
+  if (item.completed) return "OK";
   const plan = item.planCostConverted ?? item.planCost ?? 0;
-  if (plan > 0 && item.actualCost > plan) return "⚠";
-  return "○";
+  if (plan > 0 && item.actualCost > plan) return "!";
+  return "-";
 }
 
 // =====================================================================
@@ -379,9 +380,11 @@ const styles = StyleSheet.create({
 export function Header({
   project,
   locale,
+  labels,
 }: {
   project: PdfReportData["project"];
   locale: string;
+  labels: PdfReportData["labels"];
 }) {
   const generatedAt = formatDate(new Date(), locale);
   const hasStartDate = project.startDate != null;
@@ -399,14 +402,14 @@ export function Header({
       {project.description ? (
         <Text style={styles.headerMeta}>{project.description}</Text>
       ) : null}
-      <Text style={styles.headerMeta}>Vygenerováno: {generatedAt}</Text>
+      <Text style={styles.headerMeta}>{labels.generated}: {generatedAt}</Text>
       {hasStartDate || hasEndDate ? (
         <Text style={styles.headerMeta}>
           {hasStartDate
-            ? `Začátek: ${formatDate(project.startDate, locale)}`
+            ? `${labels.startDate}: ${formatDate(project.startDate, locale)}`
             : ""}
           {hasStartDate && hasEndDate ? "  •  " : ""}
-          {hasEndDate ? `Konec: ${formatDate(project.endDate, locale)}` : ""}
+          {hasEndDate ? `${labels.endDate}: ${formatDate(project.endDate, locale)}` : ""}
         </Text>
       ) : null}
     </View>
@@ -421,32 +424,34 @@ export function SummaryKPI({
   totals,
   currency,
   locale,
+  labels,
 }: {
   totals: PdfReportData["totals"];
   currency: string;
   locale: string;
+  labels: PdfReportData["labels"];
 }) {
   return (
     <View style={styles.section} wrap={false}>
-      <Text style={styles.kpiLabel}>Očekávané celkové náklady</Text>
+      <Text style={styles.kpiLabel}>{labels.expectedTotal}</Text>
       <Text style={styles.kpiMain}>
         {formatCurrency(totals.projectedFinal, currency, locale)}
       </Text>
       <View style={styles.kpiRow}>
         <View style={styles.kpiSubItem}>
-          <Text style={styles.kpiSubLabel}>Plán</Text>
+          <Text style={styles.kpiSubLabel}>{labels.plan}</Text>
           <Text style={styles.kpiSubValue}>
             {formatCurrency(totals.planTotal, currency, locale)}
           </Text>
         </View>
         <View style={styles.kpiSubItem}>
-          <Text style={styles.kpiSubLabel}>Skut.</Text>
+          <Text style={styles.kpiSubLabel}>{labels.actual}</Text>
           <Text style={styles.kpiSubValue}>
             {formatCurrency(totals.actualTotal, currency, locale)}
           </Text>
         </View>
         <View style={styles.kpiSubItem}>
-          <Text style={styles.kpiSubLabel}>Zbývá</Text>
+          <Text style={styles.kpiSubLabel}>{labels.remaining}</Text>
           <Text style={styles.kpiSubValue}>
             {formatCurrency(totals.remaining, currency, locale)}
           </Text>
@@ -464,9 +469,11 @@ export function SummaryKPI({
 export function PropertyMetadata({
   project,
   locale,
+  labels,
 }: {
   project: PdfReportData["project"];
   locale: string;
+  labels: PdfReportData["labels"];
 }) {
   // Build a list of [label, value] pairs for all non-null fields.
   // The order matches the project-info-card / property-metadata-card
@@ -474,40 +481,40 @@ export function PropertyMetadata({
   const rows: Array<{ label: string; value: string }> = [];
 
   if (project.fullAddress) {
-    rows.push({ label: "Přesná adresa", value: project.fullAddress });
+    rows.push({ label: labels.fullAddress, value: project.fullAddress });
   } else if (project.address) {
-    rows.push({ label: "Adresa", value: project.address });
+    rows.push({ label: labels.address, value: project.address });
   }
   if (project.floorArea != null) {
     rows.push({
-      label: "Zastavěná plocha",
+      label: labels.floorArea,
       value: `${project.floorArea} m²`,
     });
   }
   if (project.floors != null) {
-    rows.push({ label: "Počet podlaží", value: String(project.floors) });
+    rows.push({ label: labels.floors, value: String(project.floors) });
   }
   if (project.energyRating) {
     rows.push({
-      label: "Energetický štítek",
+      label: labels.energyRating,
       value: project.energyRating,
     });
   }
   if (project.heatLoss != null) {
     rows.push({
-      label: "Tepelná ztráta",
+      label: labels.heatLoss,
       value: `${project.heatLoss} W/K`,
     });
   }
   if (project.propertyNote) {
-    rows.push({ label: "Poznámka", value: project.propertyNote });
+    rows.push({ label: labels.propertyNote, value: project.propertyNote });
   }
 
   if (rows.length === 0) return null;
 
   return (
     <View style={styles.section} wrap={false}>
-      <Text style={styles.sectionTitle}>Informace o nemovitosti</Text>
+      <Text style={styles.sectionTitle}>{labels.propertyInfo}</Text>
       {rows.map((row, idx) => (
         <View key={idx} style={styles.metaRow}>
           <Text style={styles.metaLabel}>{row.label}</Text>
@@ -539,11 +546,15 @@ export function BudgetTable({
   sections,
   currency,
   locale,
+  labels,
+  phaseTranslations,
 }: {
   items: PdfBudgetItem[];
   sections: PdfSectionId[];
   currency: string;
   locale: string;
+  labels: PdfReportData["labels"];
+  phaseTranslations: PdfReportData["phaseTranslations"];
 }) {
   const showPlanCost = sections.includes("plan_cost");
   const showActualCost = sections.includes("actual_cost");
@@ -555,40 +566,45 @@ export function BudgetTable({
   const planCostOf = (item: PdfBudgetItem) =>
     item.planCostConverted ?? item.planCost;
 
+  // Translate a raw DB phase value to the localized display name.
+  // Falls back to the raw value if no translation is available.
+  const translatePhase = (phase: string) =>
+    phaseTranslations[phase] || phase;
+
   return (
     <View style={styles.section}>
       <Text style={styles.sectionTitle}>
-        Rozpočet ({items.length}{" "}
-        {items.length === 1 ? "položka" : "položek"})
+        {labels.budgetItems} ({items.length}{" "}
+        {items.length === 1 ? labels.item : labels.items})
       </Text>
 
       <View style={styles.tableHeader} fixed>
         <Text style={[styles.tableHeaderText, styles.colCategory]}>
-          Kategorie
+          {labels.category}
         </Text>
-        <Text style={[styles.tableHeaderText, styles.colName]}>Název</Text>
+        <Text style={[styles.tableHeaderText, styles.colName]}>{labels.name}</Text>
         {showPhase ? (
-          <Text style={[styles.tableHeaderText, styles.colPhase]}>Fáze</Text>
+          <Text style={[styles.tableHeaderText, styles.colPhase]}>{labels.phase}</Text>
         ) : null}
         {showPlanCost ? (
-          <Text style={[styles.tableHeaderText, styles.colCost]}>Plán</Text>
+          <Text style={[styles.tableHeaderText, styles.colCost]}>{labels.planCost}</Text>
         ) : null}
         {showActualCost ? (
-          <Text style={[styles.tableHeaderText, styles.colCost]}>Skut.</Text>
+          <Text style={[styles.tableHeaderText, styles.colCost]}>{labels.actualCost}</Text>
         ) : null}
         {showStatus ? (
-          <Text style={[styles.tableHeaderText, styles.colStatus]}>Stav</Text>
+          <Text style={[styles.tableHeaderText, styles.colStatus]}>{labels.status}</Text>
         ) : null}
         {showDates ? (
           <>
-            <Text style={[styles.tableHeaderText, styles.colDate]}>Od</Text>
-            <Text style={[styles.tableHeaderText, styles.colDate]}>Do</Text>
+            <Text style={[styles.tableHeaderText, styles.colDate]}>{labels.from}</Text>
+            <Text style={[styles.tableHeaderText, styles.colDate]}>{labels.to}</Text>
           </>
         ) : null}
       </View>
 
       {items.length === 0 ? (
-        <Text style={styles.tableEmpty}>Žádné položky rozpočtu.</Text>
+        <Text style={styles.tableEmpty}>{labels.noItems}</Text>
       ) : (
         items.map((item) => (
           <View key={item.id} style={styles.tableRow} wrap={false}>
@@ -600,7 +616,7 @@ export function BudgetTable({
             </Text>
             {showPhase ? (
               <Text style={[styles.tableCellText, styles.colPhase]}>
-                {item.phase}
+                {translatePhase(item.phase)}
               </Text>
             ) : null}
             {showPlanCost ? (
@@ -667,10 +683,12 @@ export function AlertsSection({
   alerts,
   currency,
   locale,
+  labels,
 }: {
   alerts: PdfReportData["alerts"];
   currency: string;
   locale: string;
+  labels: PdfReportData["labels"];
 }) {
   const total =
     alerts.overdue.length +
@@ -680,20 +698,20 @@ export function AlertsSection({
   if (total === 0) {
     return (
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Upozornění</Text>
-        <Text style={styles.alertEmpty}>Žádná aktivní upozornění.</Text>
+        <Text style={styles.sectionTitle}>{labels.alerts}</Text>
+        <Text style={styles.alertEmpty}>{labels.noAlerts}</Text>
       </View>
     );
   }
 
   return (
     <View style={styles.section}>
-      <Text style={styles.sectionTitle}>Upozornění</Text>
+      <Text style={styles.sectionTitle}>{labels.alerts}</Text>
 
       {alerts.overdue.length > 0 ? (
         <View style={styles.alertGroup}>
           <Text style={styles.alertGroupTitle}>
-            ⏰ Po termínu ({alerts.overdue.length})
+            {labels.overdue} ({alerts.overdue.length})
           </Text>
           {alerts.overdue.map((a, idx) => (
             <AlertRow
@@ -709,7 +727,7 @@ export function AlertsSection({
       {alerts.upcoming.length > 0 ? (
         <View style={styles.alertGroup}>
           <Text style={styles.alertGroupTitle}>
-            📅 Blížící se termíny ({alerts.upcoming.length})
+            {labels.upcoming} ({alerts.upcoming.length})
           </Text>
           {alerts.upcoming.map((a, idx) => (
             <AlertRow
@@ -725,7 +743,7 @@ export function AlertsSection({
       {alerts.overBudget.length > 0 ? (
         <View style={styles.alertGroup}>
           <Text style={styles.alertGroupTitle}>
-            ⚠ Nad rozpočtem ({alerts.overBudget.length})
+            {labels.overBudget} ({alerts.overBudget.length})
           </Text>
           {alerts.overBudget.map((a, idx) => (
             <AlertRow
@@ -749,15 +767,17 @@ export function ProjectionSection({
   totals,
   currency,
   locale,
+  labels,
 }: {
   totals: PdfReportData["totals"];
   currency: string;
   locale: string;
+  labels: PdfReportData["labels"];
 }) {
   const isOver = totals.projectedOverrun > 0;
   const overrunLabel = isOver
-    ? "Odhadované překročení"
-    : "Očekávaná úspora";
+    ? labels.estimatedOverrun
+    : labels.expectedSavings;
   const overrunValueStyle = isOver
     ? [styles.projectionValue, styles.projectionValuePositive]
     : [styles.projectionValue, styles.projectionValueNegative];
@@ -769,15 +789,15 @@ export function ProjectionSection({
 
   return (
     <View style={styles.section} wrap={false}>
-      <Text style={styles.sectionTitle}>Projekce nákladů</Text>
+      <Text style={styles.sectionTitle}>{labels.projection}</Text>
       <View style={styles.projectionRow}>
-        <Text style={styles.projectionLabel}>Plánovaný rozpočet</Text>
+        <Text style={styles.projectionLabel}>{labels.plannedBudget}</Text>
         <Text style={styles.projectionValue}>
           {formatCurrency(totals.planTotal, currency, locale)}
         </Text>
       </View>
       <View style={styles.projectionRow}>
-        <Text style={styles.projectionLabel}>Očekávané celkové náklady</Text>
+        <Text style={styles.projectionLabel}>{labels.expectedTotalCosts}</Text>
         <Text style={styles.projectionValue}>
           {formatCurrency(totals.projectedFinal, currency, locale)}
         </Text>
@@ -798,18 +818,20 @@ export function ProjectionSection({
 export function Footer({
   project,
   locale,
+  labels,
 }: {
   project: PdfReportData["project"];
   locale: string;
+  labels: PdfReportData["labels"];
 }) {
   const generatedDate = formatDate(new Date(), locale);
   return (
     <View style={styles.footer} fixed>
       <Text>{project.name}</Text>
-      <Text>Vygenerováno: {generatedDate}</Text>
+      <Text>{labels.generated}: {generatedDate}</Text>
       <Text
         render={({ pageNumber, totalPages }) =>
-          `Strana ${pageNumber} z ${totalPages}`
+          `${labels.page} ${pageNumber} ${labels.of} ${totalPages}`
         }
       />
     </View>
@@ -853,18 +875,25 @@ export function ReportDocument({
         style={styles.page}
         experimentalPagination
       >
-        {showHeader ? <Header project={data.project} locale={locale} /> : null}
+        {showHeader ? (
+          <Header project={data.project} locale={locale} labels={data.labels} />
+        ) : null}
 
         {showSummary ? (
           <SummaryKPI
             totals={data.totals}
             currency={currency}
             locale={locale}
+            labels={data.labels}
           />
         ) : null}
 
         {showProperty ? (
-          <PropertyMetadata project={data.project} locale={locale} />
+          <PropertyMetadata
+            project={data.project}
+            locale={locale}
+            labels={data.labels}
+          />
         ) : null}
 
         {showBudget ? (
@@ -873,6 +902,8 @@ export function ReportDocument({
             sections={sections}
             currency={currency}
             locale={locale}
+            labels={data.labels}
+            phaseTranslations={data.phaseTranslations}
           />
         ) : null}
 
@@ -881,6 +912,7 @@ export function ReportDocument({
             alerts={data.alerts}
             currency={currency}
             locale={locale}
+            labels={data.labels}
           />
         ) : null}
 
@@ -889,10 +921,11 @@ export function ReportDocument({
             totals={data.totals}
             currency={currency}
             locale={locale}
+            labels={data.labels}
           />
         ) : null}
 
-        <Footer project={data.project} locale={locale} />
+        <Footer project={data.project} locale={locale} labels={data.labels} />
       </Page>
     </Document>
   );

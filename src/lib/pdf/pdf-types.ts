@@ -87,6 +87,50 @@ export type PdfReportData = {
     overBudget: PdfAlertItem[];
   };
   byPhase: PdfPhaseSummary[];
+  /** Translated phase names keyed by the raw DB phase value. */
+  phaseTranslations: Record<string, string>;
+  /** UI labels translated to the target locale (for PDF text). */
+  labels: {
+    generated: string;
+    startDate: string;
+    endDate: string;
+    expectedTotal: string;
+    plan: string;
+    actual: string;
+    remaining: string;
+    propertyInfo: string;
+    fullAddress: string;
+    address: string;
+    floorArea: string;
+    floors: string;
+    energyRating: string;
+    heatLoss: string;
+    propertyNote: string;
+    budgetItems: string;
+    items: string;
+    item: string;
+    category: string;
+    name: string;
+    phase: string;
+    planCost: string;
+    actualCost: string;
+    status: string;
+    from: string;
+    to: string;
+    noItems: string;
+    alerts: string;
+    noAlerts: string;
+    overdue: string;
+    upcoming: string;
+    overBudget: string;
+    projection: string;
+    plannedBudget: string;
+    expectedTotalCosts: string;
+    estimatedOverrun: string;
+    expectedSavings: string;
+    page: string;
+    of: string;
+  };
 };
 
 export type PdfBudgetItem = {

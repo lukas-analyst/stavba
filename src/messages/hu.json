@@ -2417,7 +2417,6 @@
         "budgetItems": "Költségvetési tételek",
         "budgetItemsDesc": "Az összes költségvetési tétel részletes listája fázis szerint csoportosítva",
         "status": "Állapot",
-        "costs": "Költségek",
         "dates": "Dátumok",
         "property": "Ingatlan adatok",
         "propertyDesc": "Alapterület, emeletek száma, energiatanúsítvány és hőveszteség",
@@ -2436,9 +2435,9 @@
         "trend": "Költési trend",
         "trendDesc": "Költés időbeli alakulása grafikonon",
         "comingSoon": "Hamarosan",
-        "sections.planCost": "Tervezett költségek",
-        "sections.actualCost": "Tényleges költségek",
-        "sections.phase": "Fázis"
+        "planCost": "Tervezett költségek",
+        "actualCost": "Tényleges költségek",
+        "phase": "Fázis"
       },
       "locale": {
         "title": "Nyelv és pénznem",
@@ -2942,5 +2941,46 @@
         "tip3": "Ctrl+B — oldalsáv váltása."
       }
     }
+  },
+  "pdfReport": {
+    "generated": "Generálva",
+    "startDate": "Kezdet",
+    "endDate": "Vég",
+    "expectedTotal": "Várható összköltség",
+    "plan": "Terv",
+    "actual": "Tény",
+    "remaining": "Maradék",
+    "propertyInfo": "Ingatlan adatai",
+    "fullAddress": "Teljes cím",
+    "address": "Cím",
+    "floorArea": "Beépített terület",
+    "floors": "Emeletek száma",
+    "energyRating": "Energiatanúsítvány",
+    "heatLoss": "Hőveszteség",
+    "propertyNote": "Megjegyzés",
+    "budgetItems": "Költségvetés",
+    "items": "tétel",
+    "item": "tétel",
+    "category": "Kategória",
+    "name": "Név",
+    "phase": "Fázis",
+    "planCost": "Terv",
+    "actualCost": "Tény",
+    "status": "Állapot",
+    "from": "Ettől",
+    "to": "Eddig",
+    "noItems": "Nincsenek költségvetési tételek.",
+    "alerts": "Értesítések",
+    "noAlerts": "Nincsenek aktív értesítések.",
+    "overdue": "Késésben",
+    "upcoming": "Közelgő határidők",
+    "overBudget": "Túlköltekezés",
+    "projection": "Költségelőrejelzés",
+    "plannedBudget": "Tervezett költségvetés",
+    "expectedTotalCosts": "Várható összköltség",
+    "estimatedOverrun": "Becsült többletköltség",
+    "expectedSavings": "Várható megtakarítás",
+    "page": "Oldal",
+    "of": "/"
   }
 }

@@ -20,8 +20,10 @@
 
 import { createElement, type ReactElement } from "react";
 import { renderToBuffer, type DocumentProps } from "@react-pdf/renderer";
+import { getTranslations } from "next-intl/server";
 import { dbRead } from "@/lib/db";
 import { convertAmount } from "@/lib/currency";
+import { PHASES, normalizePhase } from "@/lib/format";
 import { ReportDocument } from "./pdf-components";
 import type {
   PdfExportOptions,
@@ -258,6 +260,63 @@ export async function generatePdf(options: PdfExportOptions): Promise<Buffer> {
   }
   const byPhase = Array.from(byPhaseMap.values());
 
+  // ─── 6.5) Load i18n translations for the target locale ──────────
+  // PDF components run outside of React's context system, so they can't
+  // use useTranslations(). We load all needed translations server-side
+  // via getTranslations() and pass them as plain strings.
+  const tPdf = await getTranslations({ locale: options.locale, namespace: "pdfReport" });
+  const tPhases = await getTranslations({ locale: options.locale, namespace: "phases" });
+
+  // Build phase translation map: raw DB value → localized phase name.
+  const phaseTranslations: Record<string, string> = {};
+  for (const phase of PHASES) {
+    const phaseId = normalizePhase(phase);
+    phaseTranslations[phase] = tPhases(phaseId);
+    phaseTranslations[phase.toLowerCase()] = tPhases(phaseId);
+  }
+
+  const labels: PdfReportData["labels"] = {
+    generated: tPdf("generated"),
+    startDate: tPdf("startDate"),
+    endDate: tPdf("endDate"),
+    expectedTotal: tPdf("expectedTotal"),
+    plan: tPdf("plan"),
+    actual: tPdf("actual"),
+    remaining: tPdf("remaining"),
+    propertyInfo: tPdf("propertyInfo"),
+    fullAddress: tPdf("fullAddress"),
+    address: tPdf("address"),
+    floorArea: tPdf("floorArea"),
+    floors: tPdf("floors"),
+    energyRating: tPdf("energyRating"),
+    heatLoss: tPdf("heatLoss"),
+    propertyNote: tPdf("propertyNote"),
+    budgetItems: tPdf("budgetItems"),
+    items: tPdf("items"),
+    item: tPdf("item"),
+    category: tPdf("category"),
+    name: tPdf("name"),
+    phase: tPdf("phase"),
+    planCost: tPdf("planCost"),
+    actualCost: tPdf("actualCost"),
+    status: tPdf("status"),
+    from: tPdf("from"),
+    to: tPdf("to"),
+    noItems: tPdf("noItems"),
+    alerts: tPdf("alerts"),
+    noAlerts: tPdf("noAlerts"),
+    overdue: tPdf("overdue"),
+    upcoming: tPdf("upcoming"),
+    overBudget: tPdf("overBudget"),
+    projection: tPdf("projection"),
+    plannedBudget: tPdf("plannedBudget"),
+    expectedTotalCosts: tPdf("expectedTotalCosts"),
+    estimatedOverrun: tPdf("estimatedOverrun"),
+    expectedSavings: tPdf("expectedSavings"),
+    page: tPdf("page"),
+    of: tPdf("of"),
+  };
+
   // ─── 7) Assemble PdfReportData ───────────────────────────────────
   const data: PdfReportData = {
     project: {
@@ -291,6 +350,8 @@ export async function generatePdf(options: PdfExportOptions): Promise<Buffer> {
     },
     alerts: { overdue, upcoming, overBudget },
     byPhase,
+    phaseTranslations,
+    labels,
   };
 
   // ─── 8) Render PDF to Buffer ─────────────────────────────────────

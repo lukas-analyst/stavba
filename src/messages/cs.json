@@ -2420,7 +2420,6 @@
         "budgetItems": "Položky rozpočtu",
         "budgetItemsDesc": "Podrobný seznam všech položek rozpočtu seskupených podle fáze",
         "status": "Stav",
-        "costs": "Náklady",
         "dates": "Datumy",
         "property": "Detaily nemovitosti",
         "propertyDesc": "Plocha, počet podlaží, energetický štítek a ztráta tepla",
@@ -2439,9 +2438,9 @@
         "trend": "Trend utrácení",
         "trendDesc": "Graf utrácení v čase",
         "comingSoon": "Brzy dostupné",
-        "sections.planCost": "Plánované náklady",
-        "sections.actualCost": "Skutečné náklady",
-        "sections.phase": "Fáze"
+        "planCost": "Plánované náklady",
+        "actualCost": "Skutečné náklady",
+        "phase": "Fáze"
       },
       "locale": {
         "title": "Jazyk a měna",
@@ -2945,5 +2944,46 @@
         "tip3": "Ctrl+B — otevřít/zavřít postranní panel."
       }
     }
+  },
+  "pdfReport": {
+    "generated": "Vygenerováno",
+    "startDate": "Začátek",
+    "endDate": "Konec",
+    "expectedTotal": "Očekávané celkové náklady",
+    "plan": "Plán",
+    "actual": "Skut.",
+    "remaining": "Zbývá",
+    "propertyInfo": "Informace o nemovitosti",
+    "fullAddress": "Přesná adresa",
+    "address": "Adresa",
+    "floorArea": "Zastavěná plocha",
+    "floors": "Počet podlaží",
+    "energyRating": "Energetický štítek",
+    "heatLoss": "Tepelná ztráta",
+    "propertyNote": "Poznámka",
+    "budgetItems": "Rozpočet",
+    "items": "položek",
+    "item": "položka",
+    "category": "Kategorie",
+    "name": "Název",
+    "phase": "Fáze",
+    "planCost": "Plán",
+    "actualCost": "Skut.",
+    "status": "Stav",
+    "from": "Od",
+    "to": "Do",
+    "noItems": "Žádné položky rozpočtu.",
+    "alerts": "Upozornění",
+    "noAlerts": "Žádná aktivní upozornění.",
+    "overdue": "Po termínu",
+    "upcoming": "Blížící se termíny",
+    "overBudget": "Nad rozpočtem",
+    "projection": "Projekce nákladů",
+    "plannedBudget": "Plánovaný rozpočet",
+    "expectedTotalCosts": "Očekávané celkové náklady",
+    "estimatedOverrun": "Odhadované překročení",
+    "expectedSavings": "Očekávaná úspora",
+    "page": "Strana",
+    "of": "z"
   }
 }

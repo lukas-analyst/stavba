@@ -2417,7 +2417,6 @@
         "budgetItems": "Voci di budget",
         "budgetItemsDesc": "Elenco dettagliato di tutte le voci di budget raggruppate per fase",
         "status": "Stato",
-        "costs": "Costi",
         "dates": "Date",
         "property": "Dettagli immobile",
         "propertyDesc": "Superficie, numero di piani, certificazione energetica e dispersione termica",
@@ -2436,9 +2435,9 @@
         "trend": "Trend di spesa",
         "trendDesc": "Grafico della spesa nel tempo",
         "comingSoon": "Prossimamente",
-        "sections.planCost": "Costi pianificati",
-        "sections.actualCost": "Costi effettivi",
-        "sections.phase": "Fase"
+        "planCost": "Costi pianificati",
+        "actualCost": "Costi effettivi",
+        "phase": "Fase"
       },
       "locale": {
         "title": "Lingua e valuta",
@@ -2942,5 +2941,46 @@
         "tip3": "Ctrl+B — mostra/nascondi la barra laterale."
       }
     }
+  },
+  "pdfReport": {
+    "generated": "Generato",
+    "startDate": "Inizio",
+    "endDate": "Fine",
+    "expectedTotal": "Costi totali previsti",
+    "plan": "Piano",
+    "actual": "Eff.",
+    "remaining": "Rimanente",
+    "propertyInfo": "Informazioni immobile",
+    "fullAddress": "Indirizzo completo",
+    "address": "Indirizzo",
+    "floorArea": "Superficie",
+    "floors": "Numero di piani",
+    "energyRating": "Certificazione energetica",
+    "heatLoss": "Dispersione termica",
+    "propertyNote": "Nota",
+    "budgetItems": "Budget",
+    "items": "voci",
+    "item": "voce",
+    "category": "Categoria",
+    "name": "Nome",
+    "phase": "Fase",
+    "planCost": "Piano",
+    "actualCost": "Eff.",
+    "status": "Stato",
+    "from": "Dal",
+    "to": "Al",
+    "noItems": "Nessuna voce di budget.",
+    "alerts": "Avvisi",
+    "noAlerts": "Nessun avviso attivo.",
+    "overdue": "In ritardo",
+    "upcoming": "Scadenze imminenti",
+    "overBudget": "Fuori budget",
+    "projection": "Proiezione dei costi",
+    "plannedBudget": "Budget pianificato",
+    "expectedTotalCosts": "Costi totali previsti",
+    "estimatedOverrun": "Sopraccosto stimato",
+    "expectedSavings": "Risparmio previsto",
+    "page": "Pagina",
+    "of": "di"
   }
 }

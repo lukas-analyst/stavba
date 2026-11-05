@@ -2417,7 +2417,6 @@
         "budgetItems": "Partidas del presupuesto",
         "budgetItemsDesc": "Lista detallada de todas las partidas agrupadas por fase",
         "status": "Estado",
-        "costs": "Costes",
         "dates": "Fechas",
         "property": "Detalles de la propiedad",
         "propertyDesc": "Superficie, número de plantas, certificado energético y pérdida de calor",
@@ -2436,9 +2435,9 @@
         "trend": "Tendencia de gasto",
         "trendDesc": "Gráfico de gasto a lo largo del tiempo",
         "comingSoon": "Próximamente",
-        "sections.planCost": "Costos planificados",
-        "sections.actualCost": "Costos reales",
-        "sections.phase": "Fase"
+        "planCost": "Costos planificados",
+        "actualCost": "Costos reales",
+        "phase": "Fase"
       },
       "locale": {
         "title": "Idioma y moneda",
@@ -2942,5 +2941,46 @@
         "tip3": "Ctrl+B — mostrar/ocultar la barra lateral."
       }
     }
+  },
+  "pdfReport": {
+    "generated": "Generado",
+    "startDate": "Inicio",
+    "endDate": "Fin",
+    "expectedTotal": "Costes totales previstos",
+    "plan": "Plan",
+    "actual": "Real",
+    "remaining": "Restante",
+    "propertyInfo": "Información de la propiedad",
+    "fullAddress": "Dirección completa",
+    "address": "Dirección",
+    "floorArea": "Superficie",
+    "floors": "Número de plantas",
+    "energyRating": "Certificado energético",
+    "heatLoss": "Pérdida de calor",
+    "propertyNote": "Nota",
+    "budgetItems": "Presupuesto",
+    "items": "partidas",
+    "item": "partida",
+    "category": "Categoría",
+    "name": "Nombre",
+    "phase": "Fase",
+    "planCost": "Plan",
+    "actualCost": "Real",
+    "status": "Estado",
+    "from": "Desde",
+    "to": "Hasta",
+    "noItems": "No hay partidas de presupuesto.",
+    "alerts": "Alertas",
+    "noAlerts": "No hay alertas activas.",
+    "overdue": "Vencidas",
+    "upcoming": "Próximos vencimientos",
+    "overBudget": "Sobre presupuesto",
+    "projection": "Proyección de costes",
+    "plannedBudget": "Presupuesto planificado",
+    "expectedTotalCosts": "Costes totales previstos",
+    "estimatedOverrun": "Sobrecoste estimado",
+    "expectedSavings": "Ahorro previsto",
+    "page": "Página",
+    "of": "de"
   }
 }

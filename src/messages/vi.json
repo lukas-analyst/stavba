@@ -2417,7 +2417,6 @@
         "budgetItems": "Hạng mục ngân sách",
         "budgetItemsDesc": "Danh sách chi tiết tất cả hạng mục ngân sách được nhóm theo giai đoạn",
         "status": "Trạng thái",
-        "costs": "Chi phí",
         "dates": "Ngày tháng",
         "property": "Chi tiết bất động sản",
         "propertyDesc": "Diện tích, số tầng, chứng nhận năng lượng và mức thất thoát nhiệt",
@@ -2436,9 +2435,9 @@
         "trend": "Xu hướng chi tiêu",
         "trendDesc": "Biểu đồ chi tiêu theo thời gian",
         "comingSoon": "Sắp ra mắt",
-        "sections.planCost": "Chi phí kế hoạch",
-        "sections.actualCost": "Chi phí thực tế",
-        "sections.phase": "Giai đoạn"
+        "planCost": "Chi phí kế hoạch",
+        "actualCost": "Chi phí thực tế",
+        "phase": "Giai đoạn"
       },
       "locale": {
         "title": "Ngôn ngữ và tiền tệ",
@@ -2942,5 +2941,46 @@
         "tip3": "Ctrl+B — bật/tắt thanh bên."
       }
     }
+  },
+  "pdfReport": {
+    "generated": "Đã tạo",
+    "startDate": "Bắt đầu",
+    "endDate": "Kết thúc",
+    "expectedTotal": "Chi phí dự kiến",
+    "plan": "Kế hoạch",
+    "actual": "Thực tế",
+    "remaining": "Còn lại",
+    "propertyInfo": "Thông tin bất động sản",
+    "fullAddress": "Địa chỉ đầy đủ",
+    "address": "Địa chỉ",
+    "floorArea": "Diện tích sàn",
+    "floors": "Số tầng",
+    "energyRating": "Chứng nhận năng lượng",
+    "heatLoss": "Thất thoát nhiệt",
+    "propertyNote": "Ghi chú",
+    "budgetItems": "Ngân sách",
+    "items": "hạng mục",
+    "item": "hạng mục",
+    "category": "Hạng mục",
+    "name": "Tên",
+    "phase": "Giai đoạn",
+    "planCost": "Kế hoạch",
+    "actualCost": "Thực tế",
+    "status": "Trạng thái",
+    "from": "Từ",
+    "to": "Đến",
+    "noItems": "Không có hạng mục ngân sách.",
+    "alerts": "Cảnh báo",
+    "noAlerts": "Không có cảnh báo đang hoạt động.",
+    "overdue": "Quá hạn",
+    "upcoming": "Sắp đến hạn",
+    "overBudget": "Vượt ngân sách",
+    "projection": "Dự toán chi phí",
+    "plannedBudget": "Ngân sách kế hoạch",
+    "expectedTotalCosts": "Chi phí dự kiến",
+    "estimatedOverrun": "Vượt chi phí dự kiến",
+    "expectedSavings": "Tiết kiệm dự kiến",
+    "page": "Trang",
+    "of": "/"
   }
 }

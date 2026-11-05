@@ -2417,7 +2417,6 @@
         "budgetItems": "Pozycje budżetu",
         "budgetItemsDesc": "Szczegółowa lista wszystkich pozycji budżetu pogrupowanych według fazy",
         "status": "Status",
-        "costs": "Koszty",
         "dates": "Daty",
         "property": "Szczegóły nieruchomości",
         "propertyDesc": "Powierzchnia, liczba pięter, certyfikat energetyczny i straty ciepła",
@@ -2436,9 +2435,9 @@
         "trend": "Trend wydatków",
         "trendDesc": "Wykres wydatków w czasie",
         "comingSoon": "Wkrótce",
-        "sections.planCost": "Koszty planowane",
-        "sections.actualCost": "Koszty rzeczywiste",
-        "sections.phase": "Faza"
+        "planCost": "Koszty planowane",
+        "actualCost": "Koszty rzeczywiste",
+        "phase": "Faza"
       },
       "locale": {
         "title": "Język i waluta",
@@ -2942,5 +2941,46 @@
         "tip3": "Ctrl+B — przełącz panel boczny."
       }
     }
+  },
+  "pdfReport": {
+    "generated": "Wygenerowano",
+    "startDate": "Początek",
+    "endDate": "Koniec",
+    "expectedTotal": "Szacowane koszty całkowite",
+    "plan": "Plan",
+    "actual": "Faktycz.",
+    "remaining": "Pozostało",
+    "propertyInfo": "Informacje o nieruchomości",
+    "fullAddress": "Pełny adres",
+    "address": "Adres",
+    "floorArea": "Powierzchnia zabudowy",
+    "floors": "Liczba pięter",
+    "energyRating": "Świadectwo energetyczne",
+    "heatLoss": "Straty ciepła",
+    "propertyNote": "Notatka",
+    "budgetItems": "Budżet",
+    "items": "pozycji",
+    "item": "pozycja",
+    "category": "Kategoria",
+    "name": "Nazwa",
+    "phase": "Faza",
+    "planCost": "Plan",
+    "actualCost": "Faktycz.",
+    "status": "Status",
+    "from": "Od",
+    "to": "Do",
+    "noItems": "Brak pozycji budżetu.",
+    "alerts": "Alerty",
+    "noAlerts": "Brak aktywnych alertów.",
+    "overdue": "Po terminie",
+    "upcoming": "Nadchodzące terminy",
+    "overBudget": "Ponad budżetem",
+    "projection": "Projekcja kosztów",
+    "plannedBudget": "Planowany budżet",
+    "expectedTotalCosts": "Szacowane koszty całkowite",
+    "estimatedOverrun": "Szacowane przekroczenie",
+    "expectedSavings": "Oczekiwane oszczędności",
+    "page": "Strona",
+    "of": "z"
   }
 }

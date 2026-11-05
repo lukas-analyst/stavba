@@ -2420,7 +2420,6 @@
         "budgetItems": "Budget items",
         "budgetItemsDesc": "Detailed list of all budget items grouped by phase",
         "status": "Status",
-        "costs": "Costs",
         "dates": "Dates",
         "property": "Property details",
         "propertyDesc": "Floor area, number of floors, energy rating and heat loss",
@@ -2439,9 +2438,9 @@
         "trend": "Spending trend",
         "trendDesc": "Spending over time chart",
         "comingSoon": "Coming soon",
-        "sections.planCost": "Planned costs",
-        "sections.actualCost": "Actual costs",
-        "sections.phase": "Phase"
+        "planCost": "Planned costs",
+        "actualCost": "Actual costs",
+        "phase": "Phase"
       },
       "locale": {
         "title": "Language and currency",
@@ -2945,5 +2944,46 @@
         "tip3": "Ctrl+B — toggle the sidebar."
       }
     }
+  },
+  "pdfReport": {
+    "generated": "Generated",
+    "startDate": "Start",
+    "endDate": "End",
+    "expectedTotal": "Expected total costs",
+    "plan": "Plan",
+    "actual": "Act.",
+    "remaining": "Remaining",
+    "propertyInfo": "Property information",
+    "fullAddress": "Full address",
+    "address": "Address",
+    "floorArea": "Floor area",
+    "floors": "Number of floors",
+    "energyRating": "Energy rating",
+    "heatLoss": "Heat loss",
+    "propertyNote": "Note",
+    "budgetItems": "Budget",
+    "items": "items",
+    "item": "item",
+    "category": "Category",
+    "name": "Name",
+    "phase": "Phase",
+    "planCost": "Plan",
+    "actualCost": "Act.",
+    "status": "Status",
+    "from": "From",
+    "to": "To",
+    "noItems": "No budget items.",
+    "alerts": "Alerts",
+    "noAlerts": "No active alerts.",
+    "overdue": "Overdue",
+    "upcoming": "Upcoming deadlines",
+    "overBudget": "Over budget",
+    "projection": "Cost projection",
+    "plannedBudget": "Planned budget",
+    "expectedTotalCosts": "Expected total costs",
+    "estimatedOverrun": "Estimated overrun",
+    "expectedSavings": "Expected savings",
+    "page": "Page",
+    "of": "of"
   }
 }
