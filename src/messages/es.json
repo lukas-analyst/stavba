@@ -2414,7 +2414,8 @@
         "templates": "Plantillas"
       },
       "summaryBar": {
-        "sections": "secciones"
+        "sections": "secciones",
+        "customOrientations": "{count} orientaciones personalizadas"
       },
       "categories": {
         "overview": "Resumen",
@@ -2500,6 +2501,7 @@
         "portrait": "Vertical",
         "landscape": "Horizontal",
         "perSectionTitle": "Orientación por sección",
+        "quickActions": "Orientación rápida para todas",
         "resetAll": "Todo a Auto",
         "noSections": "Selecciona las secciones del informe arriba primero.",
         "modes": {

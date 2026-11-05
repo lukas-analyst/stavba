@@ -2414,7 +2414,8 @@
         "templates": "Sablonok"
       },
       "summaryBar": {
-        "sections": "szakasz"
+        "sections": "szakasz",
+        "customOrientations": "{count} egyedi tájolás"
       },
       "categories": {
         "overview": "Áttekintés",
@@ -2500,6 +2501,7 @@
         "portrait": "Álló",
         "landscape": "Fekvő",
         "perSectionTitle": "Tájolás szekciónként",
+        "quickActions": "Gyors tájolás mindnek",
         "resetAll": "Mind Auto-ra",
         "noSections": "Először válassz jelentés szakaszokat fent.",
         "modes": {

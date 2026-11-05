@@ -2414,7 +2414,8 @@
         "templates": "Mẫu"
       },
       "summaryBar": {
-        "sections": "phần"
+        "sections": "phần",
+        "customOrientations": "{count} tùy chỉnh hướng"
       },
       "categories": {
         "overview": "Tổng quan",
@@ -2500,6 +2501,7 @@
         "portrait": "Dọc",
         "landscape": "Ngang",
         "perSectionTitle": "Hướng cho từng phần",
+        "quickActions": "Đặt nhanh hướng tất cả",
         "resetAll": "Đặt tất cả về Tự động",
         "noSections": "Trước tiên hãy chọn các phần báo cáo ở trên.",
         "modes": {

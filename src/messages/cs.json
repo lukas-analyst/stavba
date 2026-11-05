@@ -2417,7 +2417,8 @@
         "templates": "Šablony"
       },
       "summaryBar": {
-        "sections": "sekcí"
+        "sections": "sekcí",
+        "customOrientations": "{count} vlastních orientací"
       },
       "categories": {
         "overview": "Přehled",
@@ -2503,6 +2504,7 @@
         "portrait": "Na výšku",
         "landscape": "Na šířku",
         "perSectionTitle": "Orientace pro každou sekci",
+        "quickActions": "Rychlá orientace všech",
         "resetAll": "Vše na Auto",
         "noSections": "Nejdříve vyberte sekce reportu výše.",
         "modes": {

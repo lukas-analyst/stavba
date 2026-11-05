@@ -2417,7 +2417,8 @@
         "templates": "Templates"
       },
       "summaryBar": {
-        "sections": "sections"
+        "sections": "sections",
+        "customOrientations": "{count} custom orientations"
       },
       "categories": {
         "overview": "Overview",
@@ -2503,6 +2504,7 @@
         "portrait": "Portrait",
         "landscape": "Landscape",
         "perSectionTitle": "Orientation per section",
+        "quickActions": "Quick orientation for all",
         "resetAll": "Reset all to Auto",
         "noSections": "Select report sections above first.",
         "modes": {

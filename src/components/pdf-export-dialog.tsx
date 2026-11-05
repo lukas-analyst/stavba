@@ -50,15 +50,11 @@ import {
   LayoutPanelLeft,
   RectangleVertical,
   RectangleHorizontal,
-  SlidersHorizontal,
   Sparkles,
-  RotateCcw,
-  Copy,
   ListChecks,
   ListX,
   Layers,
   Palette,
-  Eye,
   Home,
   ChartColumnBig,
   Building2,
@@ -69,6 +65,7 @@ import {
   Clock,
   Users,
 } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useLocale, useTranslations } from "next-intl";
 import { toast } from "sonner";
@@ -77,7 +74,6 @@ import {
   SUB_SECTIONS,
   ORIENTABLE_SECTION_IDS,
   type PdfSectionId,
-  type PdfOrientationMode,
   type PdfReportStyle,
   type ExportTemplateData,
 } from "@/lib/pdf/pdf-types";
@@ -222,67 +218,70 @@ const TOP_LEVEL_SECTION_IDS: PdfSectionId[] = [
 ];
 
 // =====================================================================
-// Page-preview computation (Phase 3C)
+// OrientationToggle — compact 3-way icon-only segmented control
 // ---------------------------------------------------------------------
-// Mirrors the orientation logic in pdf-components.tsx's resolveOrientation.
-// Used by the PagePreview component to show portrait/landscape thumbnails
-// before the user exports the PDF.
+// Used inline next to each top-level section row in the Content tab.
+// Icons stay visible even when active (unlike SegmentedButton which
+// swaps in a Check icon), so the user always sees which orientation
+// each option represents.
+//
+//   [✨ Auto]  [▭ Portrait]  [▭ Landscape]
+//
+// The active segment gets a MD3 tonal fill (secondary-container).
 // =====================================================================
 
-const WIDE_BUDGET_THRESHOLD = 7;
-const WIDE_CONTACTS_THRESHOLD = 7;
-
-function countBudgetColumns(sections: PdfSectionId[]): number {
-  let count = 2;
-  if (sections.includes("phase")) count++;
-  if (sections.includes("plan_cost")) count++;
-  if (sections.includes("actual_cost")) count++;
-  if (sections.includes("status")) count++;
-  if (sections.includes("dates")) count += 2;
-  if (sections.includes("supplier")) count++;
-  return count;
-}
-
-function countContactsColumns(sections: PdfSectionId[]): number {
-  let count = 4;
-  if (sections.includes("contact_type")) count++;
-  if (sections.includes("contact_phone")) count++;
-  if (sections.includes("contact_email")) count++;
-  if (sections.includes("contact_ico")) count++;
-  if (sections.includes("contact_notes")) count++;
-  return count;
-}
-
-/**
- * Resolve the effective page orientation for a given section, mirroring
- * the server-side resolveOrientation logic. Returns "portrait" or "landscape".
- */
-function resolvePreviewOrientation(
-  sectionId: PdfSectionId,
-  sections: PdfSectionId[],
-  mode: PdfOrientationMode,
-  sectionOrientations: Partial<Record<string, "portrait" | "landscape">>,
-): "portrait" | "landscape" {
-  if (mode === "all-portrait") return "portrait";
-  if (mode === "all-landscape") return "landscape";
-
-  if (mode === "custom") {
-    const override = sectionOrientations[sectionId];
-    if (override === "portrait" || override === "landscape") return override;
-  }
-
-  // Auto fallback.
-  if (sectionId === "budget_items") {
-    return countBudgetColumns(sections) >= WIDE_BUDGET_THRESHOLD
-      ? "landscape"
-      : "portrait";
-  }
-  if (sectionId === "contacts") {
-    return countContactsColumns(sections) >= WIDE_CONTACTS_THRESHOLD
-      ? "landscape"
-      : "portrait";
-  }
-  return "portrait";
+function OrientationToggle({
+  value,
+  onChange,
+  labels,
+}: {
+  value: "auto" | "portrait" | "landscape";
+  onChange: (v: "auto" | "portrait" | "landscape") => void;
+  labels: {
+    auto: string;
+    portrait: string;
+    landscape: string;
+  };
+}) {
+  const options: Array<{
+    value: "auto" | "portrait" | "landscape";
+    icon: React.ComponentType<{ className?: string }>;
+    label: string;
+  }> = [
+    { value: "auto", icon: Sparkles, label: labels.auto },
+    { value: "portrait", icon: RectangleVertical, label: labels.portrait },
+    { value: "landscape", icon: RectangleHorizontal, label: labels.landscape },
+  ];
+  return (
+    <div
+      role="radiogroup"
+      aria-label={labels.auto}
+      className="inline-flex shrink-0 items-center gap-0.5 rounded-full border border-outline-variant bg-surface-container-low p-0.5"
+    >
+      {options.map((opt) => {
+        const isActive = value === opt.value;
+        const Icon = opt.icon;
+        return (
+          <button
+            key={opt.value}
+            type="button"
+            role="radio"
+            aria-checked={isActive}
+            title={opt.label}
+            onClick={() => onChange(opt.value)}
+            className={cn(
+              "inline-flex h-6 w-6 items-center justify-center rounded-full transition-colors",
+              isActive
+                ? "bg-secondary-container text-secondary-container-foreground"
+                : "text-on-surface-variant hover:bg-surface-container-high",
+            )}
+          >
+            <Icon className="h-3 w-3" />
+          </button>
+        );
+      })}
+    </div>
+  );
 }
 
 export function PdfExportDialog({
@@ -304,12 +303,30 @@ export function PdfExportDialog({
   const [customCurrency, setCustomCurrency] = useState<string>("");
   const [isCustomCurrency, setIsCustomCurrency] = useState<boolean>(false);
 
-  // Page orientation (Phase 2G+). Default = "auto" (wide-table detection).
-  // "custom" reveals per-section Portrait/Landscape toggles.
-  const [orientationMode, setOrientationMode] = useState<PdfOrientationMode>("auto");
+  // Page orientation — always "custom" mode now (Phase 3 revision).
+  // Per-section orientation toggles live inline in the Content tab.
+  // The orientationMode is sent to the API as "custom" so the server
+  // respects per-section overrides; sections without an override fall
+  // back to auto-detection (wide-table threshold).
   const [sectionOrientations, setSectionOrientations] = useState<
     Partial<Record<string, "portrait" | "landscape">>
   >({});
+
+  // Bulk set all section orientations at once (quick action buttons).
+  const setAllOrientations = useCallback(
+    (value: "auto" | "portrait" | "landscape") => {
+      if (value === "auto") {
+        setSectionOrientations({});
+      } else {
+        const next: Record<string, "portrait" | "landscape"> = {};
+        for (const id of ORIENTABLE_SECTION_IDS) {
+          next[id] = value;
+        }
+        setSectionOrientations(next);
+      }
+    },
+    [],
+  );
 
   // Report visual style (Phase 3). Default = "minimal".
   // "colorful" enables MD3-accented headers, KPI tiles, badges.
@@ -359,7 +376,6 @@ export function PdfExportDialog({
     setCurrency("CZK");
     setCustomCurrency("");
     setIsCustomCurrency(false);
-    setOrientationMode("auto");
     setSectionOrientations({});
     setReportStyle("minimal");
     setActiveTab("content");
@@ -426,13 +442,14 @@ export function PdfExportDialog({
     try {
       const sections = Array.from(selectedSections).join(",");
       const orientationParams = new URLSearchParams();
-      orientationParams.set("orientationMode", orientationMode);
-      if (orientationMode === "custom") {
-        for (const sectionId of ORIENTABLE_SECTION_IDS) {
-          const v = sectionOrientations[sectionId];
-          if (v === "portrait" || v === "landscape") {
-            orientationParams.set(`orientation-${sectionId}`, v);
-          }
+      // Always "custom" — per-section overrides are the sole UI for
+      // orientation now (Phase 3 revision). Sections without an explicit
+      // override fall back to server-side auto-detection.
+      orientationParams.set("orientationMode", "custom");
+      for (const sectionId of ORIENTABLE_SECTION_IDS) {
+        const v = sectionOrientations[sectionId];
+        if (v === "portrait" || v === "landscape") {
+          orientationParams.set(`orientation-${sectionId}`, v);
         }
       }
       const url =
@@ -467,7 +484,7 @@ export function PdfExportDialog({
       toast.error(t("toasts.error"), { id: "pdf-export" });
       setIsExporting(false);
     }
-  }, [selectedSections, projectId, locale, effectiveCurrency, orientationMode, sectionOrientations, reportStyle, t]);
+  }, [selectedSections, projectId, locale, effectiveCurrency, sectionOrientations, reportStyle, t]);
 
   // ---------------------------------------------------------------
   // Save current selection as a template
@@ -574,8 +591,6 @@ export function PdfExportDialog({
       isCustomCurrency={isCustomCurrency}
       customCurrency={customCurrency}
       onCustomCurrencyChange={setCustomCurrency}
-      orientationMode={orientationMode}
-      onOrientationModeChange={setOrientationMode}
       sectionOrientations={sectionOrientations}
       onSectionOrientationChange={(sectionId, value) => {
         if (value === "auto") {
@@ -592,6 +607,7 @@ export function PdfExportDialog({
           }));
         }
       }}
+      onSetAllOrientations={setAllOrientations}
       reportStyle={reportStyle}
       onReportStyleChange={setReportStyle}
       activeTab={activeTab}
@@ -623,14 +639,14 @@ export function PdfExportDialog({
     return (
       <Drawer open={open} onOpenChange={onOpenChange}>
         <DrawerContent className="max-h-[92dvh] flex flex-col">
-          <DrawerHeader className="shrink-0 px-4 pb-2 text-left">
+          <DrawerHeader className="shrink-0 px-5 pb-3 text-left">
             <DrawerTitle className="flex items-center gap-2">
               <FileDown className="h-5 w-5 text-primary" />
               {t("title")}
             </DrawerTitle>
             <DrawerDescription>{t("description")}</DrawerDescription>
           </DrawerHeader>
-          <div className="min-h-0 flex-1 overflow-y-auto scrollbar-thin px-4">
+          <div className="min-h-0 flex-1 overflow-y-auto scrollbar-thin px-5 py-4">
             {body}
           </div>
           <DrawerFooter className="shrink-0 border-t bg-background sticky bottom-0">
@@ -644,17 +660,17 @@ export function PdfExportDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="flex max-h-[90vh] w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-2xl">
-        <DialogHeader className="shrink-0 px-5 pt-5 pb-3">
+        <DialogHeader className="shrink-0 px-6 pt-6 pb-4">
           <DialogTitle className="flex items-center gap-2">
             <FileDown className="h-5 w-5 text-primary" />
             {t("title")}
           </DialogTitle>
           <DialogDescription>{t("description")}</DialogDescription>
         </DialogHeader>
-        <div className="min-h-0 flex-1 overflow-y-auto scrollbar-thin px-5">
+        <div className="min-h-0 flex-1 overflow-y-auto scrollbar-thin px-6 py-4">
           {body}
         </div>
-        <DialogFooter className="shrink-0 border-t bg-background px-5 py-3 sm:justify-between">
+        <DialogFooter className="shrink-0 border-t bg-background px-6 py-4 sm:justify-between">
           {footer}
         </DialogFooter>
       </DialogContent>
@@ -677,13 +693,12 @@ type BodyProps = {
   isCustomCurrency: boolean;
   customCurrency: string;
   onCustomCurrencyChange: (v: string) => void;
-  orientationMode: PdfOrientationMode;
-  onOrientationModeChange: (mode: PdfOrientationMode) => void;
   sectionOrientations: Partial<Record<string, "portrait" | "landscape">>;
   onSectionOrientationChange: (
     sectionId: string,
     value: "auto" | "portrait" | "landscape",
   ) => void;
+  onSetAllOrientations: (value: "auto" | "portrait" | "landscape") => void;
   reportStyle: PdfReportStyle;
   onReportStyleChange: (style: PdfReportStyle) => void;
   activeTab: "content" | "format" | "templates";
@@ -711,10 +726,9 @@ function PdfExportBody({
   isCustomCurrency,
   customCurrency,
   onCustomCurrencyChange,
-  orientationMode,
-  onOrientationModeChange,
   sectionOrientations,
   onSectionOrientationChange,
+  onSetAllOrientations,
   reportStyle,
   onReportStyleChange,
   activeTab,
@@ -731,28 +745,14 @@ function PdfExportBody({
 }: BodyProps) {
   const t = useTranslations("dialogs.pdfExport");
 
-  // Helper: count of selected top-level sections (excluding sub-sections,
-  // which are rendered as columns within their parent's table).
+  // Count of selected top-level sections.
   const selectedCount = useMemo(
     () => TOP_LEVEL_SECTION_IDS.filter((id) => selectedSections.has(id)).length,
     [selectedSections],
   );
 
-  // Compute the list of pages that will appear in the PDF (one per selected
-  // top-level section, in canonical order). Used by the page-preview panel.
-  const previewPages = useMemo(() => {
-    return TOP_LEVEL_SECTION_IDS.filter((id) => selectedSections.has(id)).map(
-      (id) => ({
-        id,
-        orientation: resolvePreviewOrientation(
-          id,
-          Array.from(selectedSections),
-          orientationMode,
-          sectionOrientations,
-        ),
-      }),
-    );
-  }, [selectedSections, orientationMode, sectionOrientations]);
+  // Count of sections with a non-auto orientation override.
+  const customOrientationCount = Object.keys(sectionOrientations).length;
 
   // Translate a section ID to its display label.
   const sectionLabel = (id: PdfSectionId) => {
@@ -760,79 +760,110 @@ function PdfExportBody({
     return meta ? t(meta.labelKey as never) : id;
   };
 
-  // Render a single section row (top-level or sub-section, controlled by `indent`).
+  // -----------------------------------------------------------------
+  // renderSection — one row in the section picker.
+  // Top-level sections get an inline OrientationToggle (3-way icon
+  // button) on the right. Sub-sections are indented without a toggle.
+  // -----------------------------------------------------------------
   const renderSection = (
     section: { id: PdfSectionId; labelKey: string; enabled: boolean },
     indent = false,
   ) => {
     const checked = selectedSections.has(section.id);
-    const isSubSection = indent;
+    const isTopLevel = !indent;
     const disabled = !section.enabled;
     const Icon = SECTION_ICONS[section.id] ?? Files;
+
+    // Current orientation override for this section (if any).
+    const explicit = sectionOrientations[section.id];
+    const currentOrientation: "auto" | "portrait" | "landscape" =
+      explicit === "portrait" || explicit === "landscape" ? explicit : "auto";
 
     return (
       <div
         key={section.id}
-        className={indent ? "ml-6 border-l border-outline-variant pl-3" : ""}
+        className={indent ? "ml-8 border-l border-outline-variant pl-4" : ""}
       >
-        <Label
-          htmlFor={`pdf-section-${section.id}`}
-          className="flex cursor-pointer items-start gap-3 rounded-md p-2 transition-colors hover:bg-muted/40 has-disabled:cursor-not-allowed has-disabled:hover:bg-transparent"
-        >
-          <Checkbox
-            id={`pdf-section-${section.id}`}
-            checked={checked}
-            disabled={disabled}
-            onCheckedChange={() => onToggleSection(section.id)}
-            className="mt-0.5"
-          />
-          {/* Icon — only for top-level sections (sub-sections inherit their
-              parent's icon visually, so we hide the icon for indent rows
-              to keep them compact). */}
-          {!isSubSection ? (
-            <Icon className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
-          ) : null}
-          <div className="min-w-0 flex-1 space-y-0.5">
-            <div className="flex flex-wrap items-center gap-1.5">
-              <span
-                className={
-                  isSubSection
-                    ? "type-label font-medium"
-                    : "type-body font-medium"
-                }
-              >
-                {t(section.labelKey as never)}
-              </span>
-              {disabled && (
-                <>
-                  <Lock className="h-3 w-3 text-muted-foreground" />
-                  <Badge
-                    variant="secondary"
-                    className="h-4 px-1.5 type-label-sm"
-                  >
-                    {t("sections.comingSoon")}
-                  </Badge>
-                </>
+        <div className="flex items-start gap-2 rounded-lg p-3 transition-colors hover:bg-muted/40 has-disabled:cursor-not-allowed has-disabled:hover:bg-transparent">
+          {/* Left: checkbox + icon + label — clickable to toggle the section */}
+          <Label
+            htmlFor={`pdf-section-${section.id}`}
+            className="flex flex-1 cursor-pointer items-start gap-3 has-disabled:cursor-not-allowed"
+          >
+            <Checkbox
+              id={`pdf-section-${section.id}`}
+              checked={checked}
+              disabled={disabled}
+              onCheckedChange={() => onToggleSection(section.id)}
+              className="mt-0.5"
+            />
+            {isTopLevel ? (
+              <Icon className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground" />
+            ) : null}
+            <div className="min-w-0 flex-1 space-y-0.5">
+              <div className="flex flex-wrap items-center gap-1.5">
+                <span
+                  className={
+                    isTopLevel
+                      ? "type-body font-medium"
+                      : "type-label font-medium"
+                  }
+                >
+                  {t(section.labelKey as never)}
+                </span>
+                {disabled && (
+                  <>
+                    <Lock className="h-3 w-3 text-muted-foreground" />
+                    <Badge
+                      variant="secondary"
+                      className="h-4 px-1.5 type-label-sm"
+                    >
+                      {t("sections.comingSoon")}
+                    </Badge>
+                  </>
+                )}
+              </div>
+              {isTopLevel && (
+                <p className="type-label text-muted-foreground">
+                  {t(`${section.labelKey}Desc` as never)}
+                </p>
               )}
             </div>
-            {!isSubSection && (
-              <p className="type-label text-muted-foreground">
-                {t(`${section.labelKey}Desc` as never)}
-              </p>
-            )}
-          </div>
-        </Label>
+          </Label>
+
+          {/* Right: inline orientation toggle — only for top-level,
+              enabled, checked sections. Unchecked sections don't need
+              orientation (no page = no orientation to set). */}
+          {isTopLevel && !disabled && checked ? (
+            <OrientationToggle
+              value={currentOrientation}
+              onChange={(v) => onSectionOrientationChange(section.id, v)}
+              labels={{
+                auto: t("orientation.modes.auto"),
+                portrait: t("orientation.portrait"),
+                landscape: t("orientation.landscape"),
+              }}
+            />
+          ) : null}
+        </div>
+
+        {/* Sub-sections (indented, no orientation toggle) */}
+        {isTopLevel && checked && SUB_SECTIONS[section.id]
+          ? SUB_SECTIONS[section.id].map((subId) => {
+              const sub = ALL_SECTIONS.find((s) => s.id === subId);
+              return sub ? renderSection(sub, true) : null;
+            })
+          : null}
       </div>
     );
   };
 
   // -----------------------------------------------------------------
-  // Sticky summary bar — always visible at the top of the body,
-  // shows current config at a glance.
+  // Sticky summary bar
   // -----------------------------------------------------------------
   const summaryBar = (
-    <div className="sticky top-0 z-10 -mx-5 mb-3 border-b bg-background/95 px-5 py-2 backdrop-blur supports-[backdrop-filter]:bg-background/80">
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 type-label-sm text-muted-foreground">
+    <div className="sticky top-0 z-10 -mx-5 mb-4 border-b bg-background/95 px-5 py-2.5 backdrop-blur supports-[backdrop-filter]:bg-background/80 sm:-mx-6 sm:px-6">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 type-label-sm text-muted-foreground">
         <span className="flex items-center gap-1.5">
           <Files className="h-3.5 w-3.5" />
           <span className="font-medium text-foreground">{selectedCount}</span>
@@ -854,82 +885,20 @@ function PdfExportBody({
         <span className="flex items-center gap-1.5">
           <LayoutPanelLeft className="h-3.5 w-3.5" />
           <span className="font-medium text-foreground">
-            {orientationMode === "auto" && t("orientation.modes.auto")}
-            {orientationMode === "all-portrait" && t("orientation.modes.portrait")}
-            {orientationMode === "all-landscape" && t("orientation.modes.landscape")}
-            {orientationMode === "custom" && t("orientation.modes.custom")}
+            {customOrientationCount > 0
+              ? t("summaryBar.customOrientations", { count: customOrientationCount })
+              : t("orientation.modes.auto")}
           </span>
         </span>
         <span className="flex items-center gap-1.5">
           <Palette className="h-3.5 w-3.5" />
           <span className="font-medium text-foreground">
-            {reportStyle === "minimal" ? t("style.modes.minimal") : t("style.modes.colorful")}
+            {reportStyle === "minimal"
+              ? t("style.modes.minimal")
+              : t("style.modes.colorful")}
           </span>
         </span>
       </div>
-    </div>
-  );
-
-  // -----------------------------------------------------------------
-  // Page-preview panel (Phase 3C) — thumbnails of each PDF page,
-  // portrait = narrow, landscape = wide.
-  // -----------------------------------------------------------------
-  const pagePreview = (
-    <div className="space-y-2">
-      <div className="flex items-center gap-2">
-        <Eye className="h-4 w-4 text-primary" />
-        <h3 className="type-label font-semibold uppercase tracking-wide text-muted-foreground">
-          {t("preview.title")}
-        </h3>
-      </div>
-      <p className="type-label text-muted-foreground">
-        {t("preview.description")}
-      </p>
-      {previewPages.length === 0 ? (
-        <div className="flex flex-col items-center justify-center gap-1.5 rounded-md border border-dashed py-6 text-center">
-          <FileDown className="h-5 w-5 text-muted-foreground/50" />
-          <p className="type-label text-muted-foreground">
-            {t("preview.empty")}
-          </p>
-        </div>
-      ) : (
-        <div className="flex flex-wrap gap-2 rounded-md border bg-surface p-3">
-          {previewPages.map((page, idx) => {
-            const isLandscape = page.orientation === "landscape";
-            const Icon = SECTION_ICONS[page.id] ?? Files;
-            return (
-              <div
-                key={page.id}
-                className="group flex flex-col items-center gap-1"
-                title={sectionLabel(page.id)}
-              >
-                {/* Thumbnail — aspect ratio mirrors A4 (portrait = 1:1.414,
-                    landscape = 1.414:1). Tinted with primary color and
-                    showing the section's icon as a visual hint. */}
-                <div
-                  className={
-                    "relative flex items-center justify-center rounded-sm border-2 border-muted-foreground/30 bg-muted/40 transition-colors group-hover:border-primary/50 " +
-                    (isLandscape ? "h-12 w-[42px]" : "h-[42px] w-8")
-                  }
-                >
-                  <Icon className="h-3.5 w-3.5 text-muted-foreground/70" />
-                  {/* Orientation indicator dot */}
-                  <span
-                    className={
-                      "absolute right-0.5 top-0.5 h-1.5 w-1.5 rounded-full " +
-                      (isLandscape ? "bg-amber-500" : "bg-emerald-500")
-                    }
-                    title={isLandscape ? t("orientation.landscape") : t("orientation.portrait")}
-                  />
-                </div>
-                <span className="max-w-[60px] truncate type-label-sm text-muted-foreground">
-                  {idx + 1}. {sectionLabel(page.id)}
-                </span>
-              </div>
-            );
-          })}
-        </div>
-      )}
     </div>
   );
 
@@ -940,12 +909,18 @@ function PdfExportBody({
     <div className="space-y-0 pb-2 pt-0">
       {summaryBar}
 
-      <Tabs value={activeTab} onValueChange={(v) => onActiveTabChange(v as typeof activeTab)}>
+      <Tabs
+        value={activeTab}
+        onValueChange={(v) => onActiveTabChange(v as typeof activeTab)}
+      >
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="content">
             <Files className="h-3.5 w-3.5" />
             <span className="hidden sm:inline">{t("tabs.content")}</span>
-            <Badge variant="secondary" className="ml-1 h-4 px-1.5 type-label-sm">
+            <Badge
+              variant="secondary"
+              className="ml-1 h-4 px-1.5 type-label-sm"
+            >
               {selectedCount}
             </Badge>
           </TabsTrigger>
@@ -959,10 +934,12 @@ function PdfExportBody({
           </TabsTrigger>
         </TabsList>
 
-        {/* ═══ Tab 1: Obsah (sections + categories + select all/none) ═══ */}
-        <TabsContent value="content" className="space-y-4 pt-4">
-          {/* Presets placeholder — reserved for future use (no hardcoded presets yet). */}
-          <div className="rounded-md border border-dashed border-muted-foreground/30 p-3">
+        {/* ═══════════════════════════════════════════════════════════ */}
+        {/* Tab 1: Obsah — section picker + inline orientation toggles    */}
+        {/* ═══════════════════════════════════════════════════════════ */}
+        <TabsContent value="content" className="space-y-6 pt-6">
+          {/* Presets placeholder */}
+          <div className="rounded-xl border border-dashed border-muted-foreground/30 p-4">
             <div className="flex items-center gap-2">
               <Sparkles className="h-4 w-4 text-muted-foreground" />
               <h3 className="type-label font-semibold uppercase tracking-wide text-muted-foreground">
@@ -972,93 +949,144 @@ function PdfExportBody({
                 {t("presets.comingSoon")}
               </Badge>
             </div>
-            <p className="mt-1 type-label-sm text-muted-foreground">
+            <p className="mt-1.5 type-label-sm text-muted-foreground">
               {t("presets.description")}
             </p>
           </div>
 
-          {/* Section picker — bulk actions + count + categorized list */}
-          <section className="space-y-2">
-            <div className="flex items-center justify-between gap-2">
-              <div className="flex items-center gap-2">
-                <Files className="h-4 w-4 text-primary" />
-                <h3 className="type-label font-semibold uppercase tracking-wide text-muted-foreground">
-                  {t("sections.title")}
-                </h3>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="h-7 px-2 type-label-sm"
-                  onClick={onSelectAll}
-                  disabled={selectedCount === TOP_LEVEL_SECTION_IDS.length}
-                >
-                  <ListChecks className="h-3.5 w-3.5" />
-                  <span className="hidden sm:inline">{t("sections.selectAll")}</span>
-                </Button>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="h-7 px-2 type-label-sm"
-                  onClick={onSelectNone}
-                  disabled={selectedCount === 0}
-                >
-                  <ListX className="h-3.5 w-3.5" />
-                  <span className="hidden sm:inline">{t("sections.selectNone")}</span>
-                </Button>
-              </div>
-            </div>
-
-            {/* Count badge */}
-            <div className="type-label-sm text-muted-foreground">
-              {t("sections.countSelected", {
-                selected: selectedCount,
-                total: TOP_LEVEL_SECTION_IDS.length,
-              })}
-            </div>
-
-            {/* Categorized section list — Overview + Tables */}
-            {SECTION_CATEGORIES.map((category) => (
-              <div key={category.id} className="space-y-1">
-                <div className="flex items-center gap-1.5 type-label font-semibold uppercase tracking-wide text-muted-foreground/80">
-                  <Layers className="h-3 w-3" />
-                  {t(category.labelKey as never)}
+          {/* Section picker */}
+          <section className="space-y-4">
+            {/* Header: title + count + bulk actions */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <Files className="h-4 w-4 text-primary" />
+                  <h3 className="type-label font-semibold uppercase tracking-wide text-muted-foreground">
+                    {t("sections.title")}
+                  </h3>
                 </div>
-                <div className="space-y-0.5">
-                  {category.sectionIds.map((sectionId) => {
-                    const meta = ALL_SECTIONS.find((s) => s.id === sectionId);
-                    if (!meta) return null;
-                    return (
-                      <div key={sectionId}>
-                        {renderSection(meta)}
-                        {/* Render sub-sections when parent is checked */}
-                        {selectedSections.has(sectionId) &&
-                          SUB_SECTIONS[sectionId]?.map((subId) => {
-                            const sub = ALL_SECTIONS.find((s) => s.id === subId);
-                            return sub ? renderSection(sub, true) : null;
-                          })}
-                      </div>
-                    );
+                <div className="flex items-center gap-1.5">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 px-2.5 type-label-sm"
+                    onClick={onSelectAll}
+                    disabled={
+                      selectedCount === TOP_LEVEL_SECTION_IDS.length
+                    }
+                  >
+                    <ListChecks className="h-3.5 w-3.5" />
+                    <span className="hidden sm:inline">
+                      {t("sections.selectAll")}
+                    </span>
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 px-2.5 type-label-sm"
+                    onClick={onSelectNone}
+                    disabled={selectedCount === 0}
+                  >
+                    <ListX className="h-3.5 w-3.5" />
+                    <span className="hidden sm:inline">
+                      {t("sections.selectNone")}
+                    </span>
+                  </Button>
+                </div>
+              </div>
+
+              {/* Count + quick orientation actions */}
+              <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-muted/30 px-3 py-2">
+                <span className="type-label-sm text-muted-foreground">
+                  {t("sections.countSelected", {
+                    selected: selectedCount,
+                    total: TOP_LEVEL_SECTION_IDS.length,
                   })}
+                </span>
+                {/* Quick orientation: set all at once */}
+                <div className="flex items-center gap-1">
+                  <span className="mr-1 type-label-sm text-muted-foreground">
+                    {t("orientation.quickActions")}:
+                  </span>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 px-2 type-label-sm"
+                    onClick={() => onSetAllOrientations("auto")}
+                    disabled={customOrientationCount === 0}
+                  >
+                    <Sparkles className="h-3 w-3" />
+                    <span className="hidden sm:inline">
+                      {t("orientation.modes.auto")}
+                    </span>
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 px-2 type-label-sm"
+                    onClick={() => onSetAllOrientations("portrait")}
+                  >
+                    <RectangleVertical className="h-3 w-3" />
+                    <span className="hidden sm:inline">
+                      {t("orientation.portrait")}
+                    </span>
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 px-2 type-label-sm"
+                    onClick={() => onSetAllOrientations("landscape")}
+                  >
+                    <RectangleHorizontal className="h-3 w-3" />
+                    <span className="hidden sm:inline">
+                      {t("orientation.landscape")}
+                    </span>
+                  </Button>
                 </div>
               </div>
-            ))}
+            </div>
 
-            {/* Landscape hint */}
-            <div className="flex items-start gap-2 rounded-md bg-muted/40 p-2.5 type-label-sm text-muted-foreground">
-              <Info className="mt-0.5 h-3 w-3 shrink-0" />
+            {/* Categorized section list */}
+            <div className="space-y-6">
+              {SECTION_CATEGORIES.map((category) => (
+                <div key={category.id} className="space-y-2">
+                  <div className="flex items-center gap-1.5 type-label font-semibold uppercase tracking-wide text-muted-foreground/80">
+                    <Layers className="h-3.5 w-3.5" />
+                    {t(category.labelKey as never)}
+                  </div>
+                  <div className="space-y-1 rounded-xl border bg-surface/50 p-1.5">
+                    {category.sectionIds.map((sectionId) => {
+                      const meta = ALL_SECTIONS.find(
+                        (s) => s.id === sectionId,
+                      );
+                      if (!meta) return null;
+                      return renderSection(meta);
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Orientation hint */}
+            <div className="flex items-start gap-2 rounded-lg bg-muted/40 p-3 type-label-sm text-muted-foreground">
+              <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" />
               <span>{t("sections.landscapeHint")}</span>
             </div>
           </section>
         </TabsContent>
 
-        {/* ═══ Tab 2: Formát (locale + currency + orientation + style + preview) ═══ */}
-        <TabsContent value="format" className="space-y-6 pt-4">
+        {/* ═══════════════════════════════════════════════════════════ */}
+        {/* Tab 2: Formát — language + currency + visual style           */}
+        {/* (Page orientation moved to Content tab — inline per section)  */}
+        {/* ═══════════════════════════════════════════════════════════ */}
+        <TabsContent value="format" className="space-y-8 pt-6">
           {/* Language + currency */}
-          <section className="space-y-3">
+          <section className="space-y-4">
             <div className="flex items-center gap-2">
               <Globe className="h-4 w-4 text-primary" />
               <h3 className="type-label font-semibold uppercase tracking-wide text-muted-foreground">
@@ -1066,8 +1094,8 @@ function PdfExportBody({
               </h3>
             </div>
 
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div className="space-y-1.5">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
                 <Label htmlFor="pdf-locale" className="type-label">
                   {t("locale.language")}
                 </Label>
@@ -1080,8 +1108,14 @@ function PdfExportBody({
                     {locales.map((loc) => {
                       const meta = LOCALE_META[loc];
                       return (
-                        <SelectItem key={loc} value={loc} textValue={meta.name}>
-                          <span>{meta.flag} {meta.name}</span>
+                        <SelectItem
+                          key={loc}
+                          value={loc}
+                          textValue={meta.name}
+                        >
+                          <span>
+                            {meta.flag} {meta.name}
+                          </span>
                         </SelectItem>
                       );
                     })}
@@ -1089,7 +1123,7 @@ function PdfExportBody({
                 </Select>
               </div>
 
-              <div className="space-y-1.5">
+              <div className="space-y-2">
                 <Label htmlFor="pdf-currency" className="type-label">
                   {t("locale.currency")}
                 </Label>
@@ -1100,7 +1134,11 @@ function PdfExportBody({
                   </SelectTrigger>
                   <SelectContent>
                     {COMMON_CURRENCIES.map((c) => (
-                      <SelectItem key={c.code} value={c.code} textValue={c.label}>
+                      <SelectItem
+                        key={c.code}
+                        value={c.code}
+                        textValue={c.label}
+                      >
                         <span>{c.label}</span>
                       </SelectItem>
                     ))}
@@ -1119,7 +1157,7 @@ function PdfExportBody({
             </div>
 
             {isCustomCurrency && (
-              <div className="space-y-1.5">
+              <div className="space-y-2">
                 <Label htmlFor="pdf-currency-custom" className="type-label">
                   ISO 4217
                 </Label>
@@ -1143,7 +1181,7 @@ function PdfExportBody({
               </div>
             )}
 
-            <div className="flex items-start gap-2 rounded-md bg-muted/50 p-2.5 type-label text-muted-foreground">
+            <div className="flex items-start gap-2 rounded-lg bg-muted/50 p-3 type-label text-muted-foreground">
               <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" />
               <span>{t("locale.conversionHint")}</span>
             </div>
@@ -1151,8 +1189,8 @@ function PdfExportBody({
 
           <Separator />
 
-          {/* Report visual style (Phase 3) — minimal vs colorful */}
-          <section className="space-y-3">
+          {/* Report visual style */}
+          <section className="space-y-4">
             <div className="flex items-center gap-2">
               <Palette className="h-4 w-4 text-primary" />
               <h3 className="type-label font-semibold uppercase tracking-wide text-muted-foreground">
@@ -1164,11 +1202,19 @@ function PdfExportBody({
               onChange={(v) => onReportStyleChange(v as PdfReportStyle)}
               className="w-full"
               options={[
-                { value: "minimal", label: t("style.modes.minimal"), icon: Files },
-                { value: "colorful", label: t("style.modes.colorful"), icon: Palette },
+                {
+                  value: "minimal",
+                  label: t("style.modes.minimal"),
+                  icon: Files,
+                },
+                {
+                  value: "colorful",
+                  label: t("style.modes.colorful"),
+                  icon: Palette,
+                },
               ]}
             />
-            <div className="flex items-start gap-2 rounded-md bg-muted/50 p-2.5 type-label text-muted-foreground">
+            <div className="flex items-start gap-2 rounded-lg bg-muted/50 p-3 type-label text-muted-foreground">
               <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" />
               <span>
                 {reportStyle === "minimal"
@@ -1177,114 +1223,12 @@ function PdfExportBody({
               </span>
             </div>
           </section>
-
-          <Separator />
-
-          {/* Page orientation */}
-          <section className="space-y-3">
-            <div className="flex items-center gap-2">
-              <LayoutPanelLeft className="h-4 w-4 text-primary" />
-              <h3 className="type-label font-semibold uppercase tracking-wide text-muted-foreground">
-                {t("orientation.title")}
-              </h3>
-            </div>
-            <SegmentedButton
-              value={orientationMode}
-              onChange={(v) => onOrientationModeChange(v as PdfOrientationMode)}
-              className="w-full"
-              options={[
-                { value: "auto", label: t("orientation.modes.auto"), icon: Sparkles },
-                { value: "all-portrait", label: t("orientation.modes.portrait"), icon: RectangleVertical },
-                { value: "all-landscape", label: t("orientation.modes.landscape"), icon: RectangleHorizontal },
-                { value: "custom", label: t("orientation.modes.custom"), icon: SlidersHorizontal },
-              ]}
-            />
-            <div className="flex items-start gap-2 rounded-md bg-muted/50 p-2.5 type-label text-muted-foreground">
-              <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-              <span>
-                {orientationMode === "auto" && t("orientation.hints.auto")}
-                {orientationMode === "all-portrait" && t("orientation.hints.allPortrait")}
-                {orientationMode === "all-landscape" && t("orientation.hints.allLandscape")}
-                {orientationMode === "custom" && t("orientation.hints.custom")}
-              </span>
-            </div>
-
-            {orientationMode === "custom" ? (
-              <div className="space-y-2 rounded-md border bg-surface p-3">
-                <div className="flex items-center justify-between gap-2">
-                  <div className="type-label font-medium text-muted-foreground">
-                    {t("orientation.perSectionTitle")}
-                  </div>
-                  {Object.keys(sectionOrientations).length > 0 ? (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="h-6 px-2 type-label-sm text-muted-foreground"
-                      onClick={() => {
-                        for (const id of ORIENTABLE_SECTION_IDS) {
-                          onSectionOrientationChange(id, "auto");
-                        }
-                      }}
-                    >
-                      <RotateCcw className="h-3 w-3" />
-                      {t("orientation.resetAll")}
-                    </Button>
-                  ) : null}
-                </div>
-                {ORIENTABLE_SECTION_IDS.filter((id) => selectedSections.has(id)).length === 0 ? (
-                  <div className="py-3 text-center type-label text-muted-foreground italic">
-                    {t("orientation.noSections")}
-                  </div>
-                ) : (
-                  <div className="grid gap-2 sm:grid-cols-2">
-                    {ORIENTABLE_SECTION_IDS.filter((id) => selectedSections.has(id)).map((sectionId) => {
-                      const explicit = sectionOrientations[sectionId];
-                      const currentValue: "auto" | "portrait" | "landscape" =
-                        explicit === "portrait" || explicit === "landscape"
-                          ? explicit
-                          : "auto";
-                      return (
-                        <div
-                          key={sectionId}
-                          className="flex flex-col gap-1.5 rounded-md border border-outline-variant p-2"
-                        >
-                          <Label className="type-label-sm font-medium leading-tight">
-                            {sectionLabel(sectionId)}
-                          </Label>
-                          <SegmentedButton
-                            value={currentValue}
-                            onChange={(v) =>
-                              onSectionOrientationChange(
-                                sectionId,
-                                v as "auto" | "portrait" | "landscape",
-                              )
-                            }
-                            size="sm"
-                            className="w-full"
-                            options={[
-                              { value: "auto", label: t("orientation.modes.auto"), icon: Sparkles },
-                              { value: "portrait", label: t("orientation.portrait"), icon: RectangleVertical },
-                              { value: "landscape", label: t("orientation.landscape"), icon: RectangleHorizontal },
-                            ]}
-                          />
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            ) : null}
-          </section>
-
-          <Separator />
-
-          {/* Page preview (Phase 3C) */}
-          {pagePreview}
         </TabsContent>
 
-        {/* ═══ Tab 3: Šablony ═══ */}
-        <TabsContent value="templates" className="space-y-3 pt-4">
+        {/* ═══════════════════════════════════════════════════════════ */}
+        {/* Tab 3: Šablony                                                */}
+        {/* ═══════════════════════════════════════════════════════════ */}
+        <TabsContent value="templates" className="space-y-4 pt-6">
           <div className="flex items-center gap-2">
             <Save className="h-4 w-4 text-primary" />
             <h3 className="type-label font-semibold uppercase tracking-wide text-muted-foreground">
@@ -1293,7 +1237,7 @@ function PdfExportBody({
           </div>
 
           {/* Save new template */}
-          <div className="space-y-1.5">
+          <div className="space-y-2">
             <Label htmlFor="pdf-template-name" className="type-label">
               {t("templates.saveAs")}
             </Label>
@@ -1305,7 +1249,11 @@ function PdfExportBody({
                 placeholder={t("templates.namePlaceholder")}
                 maxLength={100}
                 onKeyDown={(e) => {
-                  if (e.key === "Enter" && !isSavingTemplate && newTemplateName.trim()) {
+                  if (
+                    e.key === "Enter" &&
+                    !isSavingTemplate &&
+                    newTemplateName.trim()
+                  ) {
                     e.preventDefault();
                     onSaveTemplate();
                   }
@@ -1339,12 +1287,12 @@ function PdfExportBody({
                 {[1, 2].map((i) => (
                   <div
                     key={i}
-                    className="h-20 animate-pulse rounded-md border bg-muted/40"
+                    className="h-20 animate-pulse rounded-lg border bg-muted/40"
                   />
                 ))}
               </div>
             ) : templates.length === 0 ? (
-              <div className="flex flex-col items-center justify-center gap-1.5 rounded-md border border-dashed py-6 text-center">
+              <div className="flex flex-col items-center justify-center gap-1.5 rounded-lg border border-dashed py-8 text-center">
                 <FolderOpen className="h-5 w-5 text-muted-foreground/50" />
                 <p className="type-label text-muted-foreground">
                   {t("templates.empty")}
@@ -1355,22 +1303,30 @@ function PdfExportBody({
                 {templates.map((tpl) => (
                   <li
                     key={tpl.id}
-                    className="rounded-md border p-3 transition-colors hover:bg-muted/30"
+                    className="rounded-xl border p-3 transition-colors hover:bg-muted/30"
                   >
                     <div className="flex flex-wrap items-start justify-between gap-2">
                       <div className="min-w-0 flex-1">
                         <div className="truncate type-body font-medium">
                           {tpl.name}
                         </div>
-                        <div className="mt-1 flex flex-wrap items-center gap-1.5 type-label text-muted-foreground">
-                          <Badge variant="outline" className="h-4 px-1.5 type-label-sm">
+                        <div className="mt-1.5 flex flex-wrap items-center gap-1.5 type-label text-muted-foreground">
+                          <Badge
+                            variant="outline"
+                            className="h-4 px-1.5 type-label-sm"
+                          >
                             {tpl.locale.toUpperCase()}
                           </Badge>
-                          <Badge variant="outline" className="h-4 px-1.5 type-label-sm">
+                          <Badge
+                            variant="outline"
+                            className="h-4 px-1.5 type-label-sm"
+                          >
                             {tpl.currency}
                           </Badge>
                           <span>
-                            {t("templates.sectionsCount", { count: tpl.sections.length })}
+                            {t("templates.sectionsCount", {
+                              count: tpl.sections.length,
+                            })}
                           </span>
                         </div>
                       </div>
@@ -1411,6 +1367,7 @@ function PdfExportBody({
     </div>
   );
 }
+
 // =====================================================================
 // Footer — Cancel + Export buttons
 // =====================================================================

@@ -2414,7 +2414,8 @@
         "templates": "Szablony"
       },
       "summaryBar": {
-        "sections": "sekcji"
+        "sections": "sekcji",
+        "customOrientations": "{count} własnych orientacji"
       },
       "categories": {
         "overview": "Przegląd",
@@ -2500,6 +2501,7 @@
         "portrait": "Pionowa",
         "landscape": "Pozioma",
         "perSectionTitle": "Orientacja dla każdej sekcji",
+        "quickActions": "Szybka orientacja wszystkich",
         "resetAll": "Wszystko na Auto",
         "noSections": "Najpierw wybierz sekcje raportu powyżej.",
         "modes": {

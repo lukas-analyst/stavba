@@ -2414,7 +2414,8 @@
         "templates": "Modelli"
       },
       "summaryBar": {
-        "sections": "sezioni"
+        "sections": "sezioni",
+        "customOrientations": "{count} orientamenti personalizzati"
       },
       "categories": {
         "overview": "Panoramica",
@@ -2500,6 +2501,7 @@
         "portrait": "Verticale",
         "landscape": "Orizzontale",
         "perSectionTitle": "Orientamento per sezione",
+        "quickActions": "Orientamento rapido per tutte",
         "resetAll": "Tutto su Auto",
         "noSections": "Seleziona prima le sezioni del report sopra.",
         "modes": {
