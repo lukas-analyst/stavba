@@ -109,6 +109,8 @@ const DEFAULT_SECTIONS: PdfSectionId[] = [
   "alerts",
   "projection",
   "payments",
+  "payment_type",
+  "invoice",
 ];
 
 export function PdfExportDialog({

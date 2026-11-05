@@ -20,7 +20,9 @@ export type PdfSectionId =
   | "contacts"
   | "audit"
   | "trend"
-  | "payments";
+  | "payments"
+  | "payment_type"
+  | "invoice";
 
 /** All available sections in display order. */
 export const ALL_SECTIONS: { id: PdfSectionId; labelKey: string; enabled: boolean }[] = [
@@ -36,6 +38,8 @@ export const ALL_SECTIONS: { id: PdfSectionId; labelKey: string; enabled: boolea
   { id: "alerts", labelKey: "sections.alerts", enabled: true },
   { id: "projection", labelKey: "sections.projection", enabled: true },
   { id: "payments", labelKey: "sections.payments", enabled: true },
+  { id: "payment_type", labelKey: "sections.paymentType", enabled: true },
+  { id: "invoice", labelKey: "sections.invoice", enabled: true },
   { id: "time", labelKey: "sections.time", enabled: false },
   { id: "workers", labelKey: "sections.workers", enabled: false },
   { id: "contacts", labelKey: "sections.contacts", enabled: false },
@@ -45,6 +49,7 @@ export const ALL_SECTIONS: { id: PdfSectionId; labelKey: string; enabled: boolea
 
 export const SUB_SECTIONS: Record<string, PdfSectionId[]> = {
   budget_items: ["status", "plan_cost", "actual_cost", "dates", "phase"],
+  payments: ["payment_type", "invoice"],
 };
 
 export type PdfExportOptions = {
@@ -143,6 +148,12 @@ export type PdfReportData = {
     noPayments: string;
     vatRate: string;
     vatAmount: string;
+    paymentType: string;
+    invoice: string;
+    description: string;
+    vatSummary: string;
+    vatBase: string;
+    totalPayments: string;
   };
 };
 

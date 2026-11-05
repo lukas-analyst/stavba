@@ -2439,7 +2439,11 @@
         "actualCost": "Tényleges költségek",
         "phase": "Fázis",
         "payments": "Fizetések",
-        "paymentsDesc": "Minden fizetés és számla részletes áttekintése"
+        "paymentsDesc": "Minden fizetés és számla részletes áttekintése",
+        "paymentType": "Fizetés típusa",
+        "invoice": "Számla",
+        "paymentTypeDesc": "Fizetés típusának megjelenítése (számla, nyugta, munka, anyag)",
+        "invoiceDesc": "Számlaszám megjelenítése"
       },
       "locale": {
         "title": "Nyelv és pénznem",
@@ -2993,6 +2997,12 @@
     "invoiceNumber": "Számla",
     "noPayments": "Nincsenek fizetések.",
     "vatRate": "ÁFA %",
-    "vatAmount": "ÁFA"
+    "vatAmount": "ÁFA",
+    "paymentType": "Fizetés típusa",
+    "invoice": "Számla",
+    "description": "Leírás",
+    "vatSummary": "ÁFA összegzés",
+    "vatBase": "Adóalap",
+    "totalPayments": "Összes fizetés"
   }
 }

@@ -375,6 +375,12 @@ export async function generatePdf(options: PdfExportOptions): Promise<Buffer> {
     noPayments: tPdf("noPayments"),
     vatRate: tPdf("vatRate"),
     vatAmount: tPdf("vatAmount"),
+    paymentType: tPdf("paymentType"),
+    invoice: tPdf("invoice"),
+    description: tPdf("description"),
+    vatSummary: tPdf("vatSummary"),
+    vatBase: tPdf("vatBase"),
+    totalPayments: tPdf("totalPayments"),
   };
 
   // ─── 7) Assemble PdfReportData ───────────────────────────────────

@@ -2439,7 +2439,11 @@
         "actualCost": "Costi effettivi",
         "phase": "Fase",
         "payments": "Pagamenti",
-        "paymentsDesc": "Panoramica dettagliata di tutti i pagamenti e le fatture"
+        "paymentsDesc": "Panoramica dettagliata di tutti i pagamenti e le fatture",
+        "paymentType": "Tipo di pagamento",
+        "invoice": "Fattura",
+        "paymentTypeDesc": "Mostra tipo di pagamento (fattura, ricevuta, lavoro, materiale)",
+        "invoiceDesc": "Mostra numero fattura"
       },
       "locale": {
         "title": "Lingua e valuta",
@@ -2993,6 +2997,12 @@
     "invoiceNumber": "Fattura",
     "noPayments": "Nessun pagamento.",
     "vatRate": "IVA %",
-    "vatAmount": "IVA"
+    "vatAmount": "IVA",
+    "paymentType": "Tipo di pagamento",
+    "invoice": "Fattura",
+    "description": "Descrizione",
+    "vatSummary": "Riepilogo IVA",
+    "vatBase": "Base imponibile",
+    "totalPayments": "Totale pagamenti"
   }
 }

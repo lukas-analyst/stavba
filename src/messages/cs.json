@@ -2442,7 +2442,11 @@
         "actualCost": "Skutečné náklady",
         "phase": "Fáze",
         "payments": "Platby",
-        "paymentsDesc": "Detailní přehled všech plateb a faktur"
+        "paymentsDesc": "Detailní přehled všech plateb a faktur",
+        "paymentType": "Typ platby",
+        "invoice": "Faktura",
+        "paymentTypeDesc": "Zobrazit typ platby (faktura, účtenka, práce, materiál)",
+        "invoiceDesc": "Zobrazit číslo faktury"
       },
       "locale": {
         "title": "Jazyk a měna",
@@ -2996,6 +3000,12 @@
     "invoiceNumber": "Faktura",
     "noPayments": "Žádné platby.",
     "vatRate": "DPH %",
-    "vatAmount": "DPH"
+    "vatAmount": "DPH",
+    "paymentType": "Typ platby",
+    "invoice": "Faktura",
+    "description": "Popis",
+    "vatSummary": "Souhrn DPH",
+    "vatBase": "Základ daně",
+    "totalPayments": "Celkem plateb"
   }
 }

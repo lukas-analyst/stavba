@@ -2439,7 +2439,11 @@
         "actualCost": "Koszty rzeczywiste",
         "phase": "Faza",
         "payments": "Płatności",
-        "paymentsDesc": "Szczegółowy przegląd wszystkich płatności i faktur"
+        "paymentsDesc": "Szczegółowy przegląd wszystkich płatności i faktur",
+        "paymentType": "Typ płatności",
+        "invoice": "Faktura",
+        "paymentTypeDesc": "Pokaż typ płatności (faktura, rachunek, praca, materiał)",
+        "invoiceDesc": "Pokaż numer faktury"
       },
       "locale": {
         "title": "Język i waluta",
@@ -2993,6 +2997,12 @@
     "invoiceNumber": "Faktura",
     "noPayments": "Brak płatności.",
     "vatRate": "VAT %",
-    "vatAmount": "VAT"
+    "vatAmount": "VAT",
+    "paymentType": "Typ płatności",
+    "invoice": "Faktura",
+    "description": "Opis",
+    "vatSummary": "Podsumowanie VAT",
+    "vatBase": "Podstawa opodatkowania",
+    "totalPayments": "Razem płatności"
   }
 }

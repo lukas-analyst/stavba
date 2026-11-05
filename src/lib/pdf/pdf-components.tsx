@@ -844,15 +844,20 @@ export function Footer({
 
 export function PaymentsTable({
   payments,
+  sections,
   currency,
   locale,
   labels,
 }: {
   payments: PdfReportData["payments"];
+  sections: PdfSectionId[];
   currency: string;
   locale: string;
   labels: PdfReportData["labels"];
 }) {
+  const showPaymentType = sections.includes("payment_type");
+  const showInvoice = sections.includes("invoice");
+
   if (!payments || payments.length === 0) {
     return (
       <View style={styles.section} wrap={false}>
@@ -862,6 +867,23 @@ export function PaymentsTable({
     );
   }
 
+  // Calculate total for summary row
+  const totalAmount = payments.reduce(
+    (sum, p) => sum + (p.amountConverted || 0),
+    0,
+  );
+
+  // Column widths adapt based on which columns are visible.
+  // Base: Date(1) + Category(1.5) + Vendor(1.5) + Amount(1.2) = 5.2
+  // + Type(0.8) if showPaymentType
+  // + Invoice(1) if showInvoice
+  const colDate = { flex: 1 };
+  const colCategory = { flex: 1.5 };
+  const colVendor = { flex: 1.5 };
+  const colAmount = { flex: 1.2, textAlign: "right" as const };
+  const colType = { flex: 0.8 };
+  const colInvoice = { flex: 1 };
+
   return (
     <View style={styles.section}>
       <Text style={styles.sectionTitle}>
@@ -869,24 +891,28 @@ export function PaymentsTable({
       </Text>
 
       <View style={styles.tableHeader} fixed>
-        <Text style={[styles.tableHeaderText, { flex: 1 }]}>
+        <Text style={[styles.tableHeaderText, colDate]}>
           {labels.date}
         </Text>
-        <Text style={[styles.tableHeaderText, { flex: 1.5 }]}>
+        <Text style={[styles.tableHeaderText, colCategory]}>
           {labels.category}
         </Text>
-        <Text style={[styles.tableHeaderText, { flex: 1.5 }]}>
+        <Text style={[styles.tableHeaderText, colVendor]}>
           {labels.vendor}
         </Text>
-        <Text style={[styles.tableHeaderText, { flex: 1.1, textAlign: "right" }]}>
+        <Text style={[styles.tableHeaderText, colAmount]}>
           {labels.amount}
         </Text>
-        <Text style={[styles.tableHeaderText, { flex: 1 }]}>
-          {labels.type}
-        </Text>
-        <Text style={[styles.tableHeaderText, { flex: 1 }]}>
-          {labels.invoiceNumber}
-        </Text>
+        {showPaymentType ? (
+          <Text style={[styles.tableHeaderText, colType]}>
+            {labels.type}
+          </Text>
+        ) : null}
+        {showInvoice ? (
+          <Text style={[styles.tableHeaderText, colInvoice]}>
+            {labels.invoice}
+          </Text>
+        ) : null}
       </View>
 
       {payments.map((payment) => {
@@ -899,27 +925,66 @@ export function PaymentsTable({
         const vendor = payment.vendor || payment.contactName || "";
         return (
           <View key={payment.id} style={styles.tableRow} wrap={false}>
-            <Text style={[styles.tableCellText, { flex: 1 }]}>
+            <Text style={[styles.tableCellText, colDate]}>
               {formatDate(payment.date, locale)}
             </Text>
-            <Text style={[styles.tableCellText, { flex: 1.5 }]}>
+            <Text style={[styles.tableCellText, colCategory]}>
               {itemLabel || "-"}
             </Text>
-            <Text style={[styles.tableCellText, { flex: 1.5 }]}>
+            <Text style={[styles.tableCellText, colVendor]}>
               {vendor || "-"}
             </Text>
-            <Text style={[styles.tableCellText, { flex: 1.1, textAlign: "right" }]}>
+            <Text style={[styles.tableCellText, colAmount]}>
               {formatCurrency(payment.amountConverted, currency, locale)}
             </Text>
-            <Text style={[styles.tableCellText, { flex: 1 }]}>
-              {payment.type}
-            </Text>
-            <Text style={[styles.tableCellText, { flex: 1 }]}>
-              {payment.invoiceNumber || "-"}
-            </Text>
+            {showPaymentType ? (
+              <Text style={[styles.tableCellText, colType]}>
+                {payment.type || "-"}
+              </Text>
+            ) : null}
+            {showInvoice ? (
+              <Text style={[styles.tableCellText, colInvoice]}>
+                {payment.invoiceNumber || "-"}
+              </Text>
+            ) : null}
           </View>
         );
       })}
+
+      {/* Total row */}
+      <View
+        style={[
+          styles.tableRow,
+          {
+            borderTopWidth: 1,
+            borderTopColor: "#cccccc",
+            borderTopStyle: "solid",
+            marginTop: 2,
+          },
+        ]}
+        wrap={false}
+      >
+        <Text style={[styles.tableCellText, colDate]}>
+          {labels.totalPayments}:
+        </Text>
+        <Text style={[styles.tableCellText, colCategory]}> </Text>
+        <Text style={[styles.tableCellText, colVendor]}> </Text>
+        <Text
+          style={[
+            styles.tableCellText,
+            colAmount,
+            { fontFamily: "Roboto", fontWeight: "bold" },
+          ]}
+        >
+          {formatCurrency(totalAmount, currency, locale)}
+        </Text>
+        {showPaymentType ? (
+          <Text style={[styles.tableCellText, colType]}> </Text>
+        ) : null}
+        {showInvoice ? (
+          <Text style={[styles.tableCellText, colInvoice]}> </Text>
+        ) : null}
+      </View>
     </View>
   );
 }
@@ -1015,6 +1080,7 @@ export function ReportDocument({
         {showPayments ? (
           <PaymentsTable
             payments={data.payments}
+            sections={sections}
             currency={currency}
             locale={locale}
             labels={data.labels}
