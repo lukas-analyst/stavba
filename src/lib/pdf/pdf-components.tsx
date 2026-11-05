@@ -288,10 +288,14 @@ const styles = StyleSheet.create({
     fontSize: 8,
     fontFamily: "Roboto", fontWeight: "bold",
     color: "#333333",
+    paddingRight: 4,
   },
   tableCellText: {
     fontSize: 9,
     color: "#333333",
+    // Each cell needs padding so text doesn't bleed into the next column.
+    // Without paddingRight, flex children in a row touch edge-to-edge.
+    paddingRight: 4,
   },
   tableEmpty: {
     fontSize: 9,
