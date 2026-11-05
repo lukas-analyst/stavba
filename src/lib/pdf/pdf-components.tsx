@@ -996,6 +996,135 @@ export function PaymentsTable({
 }
 
 // =====================================================================
+// TimeEntriesTable — table of all time entries.
+// Columns: Date, Item (category/subcategory), Worker, Hours, Workers
+// Sub-sections: worker (show/hide worker name), hours (show/hide hours)
+// =====================================================================
+
+export function TimeEntriesTable({
+  timeEntries,
+  sections,
+  locale,
+  labels,
+}: {
+  timeEntries: PdfReportData["timeEntries"];
+  sections: PdfSectionId[];
+  locale: string;
+  labels: PdfReportData["labels"];
+}) {
+  const showWorker = sections.includes("worker");
+  const showHours = sections.includes("hours");
+
+  if (!timeEntries || timeEntries.length === 0) {
+    return (
+      <View style={styles.section} wrap={false}>
+        <Text style={styles.sectionTitle}>{labels.timeEntries}</Text>
+        <Text style={styles.tableEmpty}>{labels.noTimeEntries}</Text>
+      </View>
+    );
+  }
+
+  const totalHours = timeEntries.reduce(
+    (sum, te) => sum + (te.hours * (te.workerCount || 1)),
+    0,
+  );
+
+  const colDate = { flex: 1 };
+  const colItem = { flex: 1.5 };
+  const colWorker = { flex: 1.5 };
+  const colHours = { flex: 0.8, textAlign: "right" as const };
+
+  return (
+    <View style={styles.section}>
+      <Text style={styles.sectionTitle}>
+        {labels.timeEntries} ({timeEntries.length} {labels.timeEntriesCount})
+      </Text>
+
+      <View style={styles.tableHeader} fixed>
+        <Text style={[styles.tableHeaderText, colDate]}>
+          {labels.date}
+        </Text>
+        <Text style={[styles.tableHeaderText, colItem]}>
+          {labels.category}
+        </Text>
+        {showWorker ? (
+          <Text style={[styles.tableHeaderText, colWorker]}>
+            {labels.worker}
+          </Text>
+        ) : null}
+        {showHours ? (
+          <Text style={[styles.tableHeaderText, colHours]}>
+            {labels.hours}
+          </Text>
+        ) : null}
+      </View>
+
+      {timeEntries.map((te) => {
+        const itemLabel = [
+          te.budgetItemCategory,
+          te.budgetItemSubcategory,
+        ]
+          .filter(Boolean)
+          .join(" / ");
+        return (
+          <View key={te.id} style={styles.tableRow} wrap={false}>
+            <Text style={[styles.tableCellText, colDate]}>
+              {formatDate(te.date, locale)}
+            </Text>
+            <Text style={[styles.tableCellText, colItem]}>
+              {itemLabel || "-"}
+            </Text>
+            {showWorker ? (
+              <Text style={[styles.tableCellText, colWorker]}>
+                {te.workerName || "-"}
+              </Text>
+            ) : null}
+            {showHours ? (
+              <Text style={[styles.tableCellText, colHours]}>
+                {te.hours} h
+              </Text>
+            ) : null}
+          </View>
+        );
+      })}
+
+      {/* Total row */}
+      <View
+        style={[
+          styles.tableRow,
+          {
+            borderTopWidth: 1,
+            borderTopColor: "#cccccc",
+            borderTopStyle: "solid",
+            marginTop: 2,
+          },
+        ]}
+        wrap={false}
+      >
+        <Text style={[styles.tableCellText, colDate]}>
+          {labels.totalHours}:
+        </Text>
+        <Text style={[styles.tableCellText, colItem]}> </Text>
+        {showWorker ? (
+          <Text style={[styles.tableCellText, colWorker]}> </Text>
+        ) : null}
+        {showHours ? (
+          <Text
+            style={[
+              styles.tableCellText,
+              colHours,
+              { fontFamily: "Roboto", fontWeight: "bold" },
+            ]}
+          >
+            {totalHours.toFixed(1)} h
+          </Text>
+        ) : null}
+      </View>
+    </View>
+  );
+}
+
+// =====================================================================
 // ReportDocument — the top-level <Document> that assembles all sections
 // based on the `sections` array from `options`.
 //
@@ -1020,6 +1149,7 @@ export function ReportDocument({
   const showAlerts = sections.includes("alerts");
   const showProjection = sections.includes("projection");
   const showPayments = sections.includes("payments");
+  const showTime = sections.includes("time");
 
   return (
     <Document
@@ -1091,6 +1221,15 @@ export function ReportDocument({
             locale={locale}
             labels={data.labels}
             paymentTypeTranslations={data.paymentTypeTranslations}
+          />
+        ) : null}
+
+        {showTime ? (
+          <TimeEntriesTable
+            timeEntries={data.timeEntries}
+            sections={sections}
+            locale={locale}
+            labels={data.labels}
           />
         ) : null}
 

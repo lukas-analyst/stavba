@@ -22,7 +22,10 @@ export type PdfSectionId =
   | "trend"
   | "payments"
   | "payment_type"
-  | "invoice";
+  | "invoice"
+  | "time"
+  | "worker"
+  | "hours";
 
 /** All available sections in display order. */
 export const ALL_SECTIONS: { id: PdfSectionId; labelKey: string; enabled: boolean }[] = [
@@ -40,7 +43,9 @@ export const ALL_SECTIONS: { id: PdfSectionId; labelKey: string; enabled: boolea
   { id: "payments", labelKey: "sections.payments", enabled: true },
   { id: "payment_type", labelKey: "sections.paymentType", enabled: true },
   { id: "invoice", labelKey: "sections.invoice", enabled: true },
-  { id: "time", labelKey: "sections.time", enabled: false },
+  { id: "time", labelKey: "sections.time", enabled: true },
+  { id: "worker", labelKey: "sections.worker", enabled: true },
+  { id: "hours", labelKey: "sections.hours", enabled: true },
   { id: "workers", labelKey: "sections.workers", enabled: false },
   { id: "contacts", labelKey: "sections.contacts", enabled: false },
   { id: "audit", labelKey: "sections.audit", enabled: false },
@@ -50,6 +55,7 @@ export const ALL_SECTIONS: { id: PdfSectionId; labelKey: string; enabled: boolea
 export const SUB_SECTIONS: Record<string, PdfSectionId[]> = {
   budget_items: ["status", "plan_cost", "actual_cost", "dates", "phase"],
   payments: ["payment_type", "invoice"],
+  time: ["worker", "hours"],
 };
 
 export type PdfExportOptions = {
@@ -95,6 +101,7 @@ export type PdfReportData = {
   };
   byPhase: PdfPhaseSummary[];
   payments: PdfPayment[];
+  timeEntries: PdfTimeEntry[];
   /** Translated phase names keyed by the raw DB phase value. */
   phaseTranslations: Record<string, string>;
   /** Translated payment type names keyed by the raw DB value. */
@@ -156,6 +163,14 @@ export type PdfReportData = {
     vatSummary: string;
     vatBase: string;
     totalPayments: string;
+    timeEntries: string;
+    timeEntriesCount: string;
+    worker: string;
+    workerType: string;
+    hours: string;
+    workerCount: string;
+    totalHours: string;
+    noTimeEntries: string;
   };
 };
 
@@ -209,6 +224,19 @@ export type PdfPayment = {
   budgetItemCategory: string | null;
   budgetItemSubcategory: string | null;
   contactName: string | null;
+};
+
+export type PdfTimeEntry = {
+  id: string;
+  workerName: string;
+  workerType: string;
+  date: Date;
+  dateTo: Date | null;
+  hours: number;
+  workerCount: number;
+  description: string | null;
+  budgetItemCategory: string | null;
+  budgetItemSubcategory: string | null;
 };
 
 export type ExportTemplateData = {

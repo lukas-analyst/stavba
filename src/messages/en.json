@@ -2427,8 +2427,8 @@
         "alertsDesc": "Overdue items, upcoming deadlines and over-budget items",
         "projection": "Cost projection",
         "projectionDesc": "Forecast of final cost based on current spending",
-        "time": "Time tracking",
-        "timeDesc": "Hours worked per item",
+        "time": "Time entries",
+        "timeDesc": "Hours worked on each item",
         "workers": "Workers",
         "workersDesc": "List of workers and companies with their hours",
         "contacts": "Contacts",
@@ -2446,7 +2446,10 @@
         "paymentType": "Payment type",
         "invoice": "Invoice",
         "paymentTypeDesc": "Show payment type (invoice, receipt, work, material)",
-        "invoiceDesc": "Show invoice number"
+        "invoiceDesc": "Show invoice number",
+        "worker": "Worker",
+        "workerType": "Worker type",
+        "hours": "Hours"
       },
       "locale": {
         "title": "Language and currency",
@@ -3006,6 +3009,14 @@
     "description": "Description",
     "vatSummary": "VAT summary",
     "vatBase": "Tax base",
-    "totalPayments": "Total payments"
+    "totalPayments": "Total payments",
+    "timeEntries": "Time entries",
+    "timeEntriesCount": "entries",
+    "worker": "Worker",
+    "workerType": "Worker type",
+    "hours": "Hours",
+    "workerCount": "Workers",
+    "totalHours": "Total hours",
+    "noTimeEntries": "No time entries."
   }
 }

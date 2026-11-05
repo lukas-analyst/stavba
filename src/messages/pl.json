@@ -2424,8 +2424,8 @@
         "alertsDesc": "Pozycje opóźnione, nadchodzące terminy i pozycje przekraczające budżet",
         "projection": "Projekcja kosztów",
         "projectionDesc": "Szacunek kosztu końcowego na podstawie obecnych wydatków",
-        "time": "Ewidencja czasu",
-        "timeDesc": "Przepracowane godziny dla każdej pozycji",
+        "time": "Wpisy czasu",
+        "timeDesc": "Przepracowane godziny przy każdej pozycji",
         "workers": "Pracownicy",
         "workersDesc": "Lista pracowników i firm wraz z ich godzinami",
         "contacts": "Kontakty",
@@ -2443,7 +2443,10 @@
         "paymentType": "Typ płatności",
         "invoice": "Faktura",
         "paymentTypeDesc": "Pokaż typ płatności (faktura, rachunek, praca, materiał)",
-        "invoiceDesc": "Pokaż numer faktury"
+        "invoiceDesc": "Pokaż numer faktury",
+        "worker": "Pracownik",
+        "workerType": "Typ pracownika",
+        "hours": "Godziny"
       },
       "locale": {
         "title": "Język i waluta",
@@ -3003,6 +3006,14 @@
     "description": "Opis",
     "vatSummary": "Podsumowanie VAT",
     "vatBase": "Podstawa opodatkowania",
-    "totalPayments": "Razem płatności"
+    "totalPayments": "Razem płatności",
+    "timeEntries": "Wpisy czasu",
+    "timeEntriesCount": "wpisów",
+    "worker": "Pracownik",
+    "workerType": "Typ pracownika",
+    "hours": "Godziny",
+    "workerCount": "Pracowników",
+    "totalHours": "Łącznie godzin",
+    "noTimeEntries": "Brak wpisów czasu."
   }
 }

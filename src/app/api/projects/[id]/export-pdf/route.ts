@@ -14,7 +14,7 @@ export const dynamic = "force-dynamic";
 const validSections = [
   "header", "summary", "budget_items", "status", "plan_cost", "actual_cost",
   "dates", "phase", "property", "alerts", "projection", "payments",
-  "payment_type", "invoice",
+  "payment_type", "invoice", "time", "worker", "hours",
 ] as const;
 
 // GET /api/projects/[id]/export-pdf
@@ -44,7 +44,7 @@ export async function GET(
     const { searchParams } = new URL(request.url);
     const locale = searchParams.get("locale") || "cs";
     const currency = searchParams.get("currency") || access.project.currency || "CZK";
-    const sectionsParam = searchParams.get("sections") || "header,summary,budget_items,status,plan_cost,actual_cost,dates,phase,property,alerts,projection,payments,payment_type,invoice";
+    const sectionsParam = searchParams.get("sections") || "header,summary,budget_items,status,plan_cost,actual_cost,dates,phase,property,alerts,projection,payments,payment_type,invoice,time,worker,hours";
 
     // Validate sections
     const requestedSections = sectionsParam

@@ -2424,8 +2424,8 @@
         "alertsDesc": "Partidas retrasadas, próximos vencimientos y partidas sobre presupuesto",
         "projection": "Proyección de costes",
         "projectionDesc": "Estimación del coste final basada en el gasto actual",
-        "time": "Control de tiempo",
-        "timeDesc": "Horas trabajadas por partida",
+        "time": "Registros de tiempo",
+        "timeDesc": "Horas trabajadas en cada elemento",
         "workers": "Trabajadores",
         "workersDesc": "Lista de trabajadores y empresas con sus horas",
         "contacts": "Contactos",
@@ -2443,7 +2443,10 @@
         "paymentType": "Tipo de pago",
         "invoice": "Factura",
         "paymentTypeDesc": "Mostrar tipo de pago (factura, recibo, trabajo, material)",
-        "invoiceDesc": "Mostrar número de factura"
+        "invoiceDesc": "Mostrar número de factura",
+        "worker": "Trabajador",
+        "workerType": "Tipo de trabajador",
+        "hours": "Horas"
       },
       "locale": {
         "title": "Idioma y moneda",
@@ -3003,6 +3006,14 @@
     "description": "Descripción",
     "vatSummary": "Resumen de IVA",
     "vatBase": "Base imponible",
-    "totalPayments": "Total de pagos"
+    "totalPayments": "Total de pagos",
+    "timeEntries": "Registros de tiempo",
+    "timeEntriesCount": "registros",
+    "worker": "Trabajador",
+    "workerType": "Tipo de trabajador",
+    "hours": "Horas",
+    "workerCount": "Trabajadores",
+    "totalHours": "Total de horas",
+    "noTimeEntries": "Sin registros de tiempo."
   }
 }

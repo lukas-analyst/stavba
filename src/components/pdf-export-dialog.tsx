@@ -111,6 +111,9 @@ const DEFAULT_SECTIONS: PdfSectionId[] = [
   "payments",
   "payment_type",
   "invoice",
+  "time",
+  "worker",
+  "hours",
 ];
 
 export function PdfExportDialog({
@@ -571,11 +574,26 @@ function PdfExportBody({
                 </div>
               );
             }
+            // Render sub-sections only when time is checked.
+            if (section.id === "time") {
+              const showSubs = selectedSections.has("time");
+              return (
+                <div key={section.id}>
+                  {renderSection(section)}
+                  {showSubs &&
+                    SUB_SECTIONS.time.map((subId) => {
+                      const sub = ALL_SECTIONS.find((s) => s.id === subId);
+                      return sub ? renderSection(sub, true) : null;
+                    })}
+                </div>
+              );
+            }
             // Skip sub-sections — they're rendered above as children of
             // their parent (budget_items or payments).
             const isSubSection =
               SUB_SECTIONS.budget_items.includes(section.id) ||
-              (SUB_SECTIONS.payments && SUB_SECTIONS.payments.includes(section.id));
+              (SUB_SECTIONS.payments && SUB_SECTIONS.payments.includes(section.id)) ||
+              (SUB_SECTIONS.time && SUB_SECTIONS.time.includes(section.id));
             if (isSubSection) {
               return null;
             }

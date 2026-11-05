@@ -2424,7 +2424,7 @@
         "alertsDesc": "Hạng mục trễ hạn, hạn sắp tới và hạng mục vượt ngân sách",
         "projection": "Dự toán chi phí",
         "projectionDesc": "Dự báo chi phí cuối cùng dựa trên mức chi tiêu hiện tại",
-        "time": "Theo dõi thời gian",
+        "time": "Bản ghi thời gian",
         "timeDesc": "Số giờ làm việc cho từng hạng mục",
         "workers": "Nhân công",
         "workersDesc": "Danh sách nhân công và công ty cùng số giờ của họ",
@@ -2443,7 +2443,10 @@
         "paymentType": "Loại thanh toán",
         "invoice": "Hóa đơn",
         "paymentTypeDesc": "Hiển thị loại thanh toán (hóa đơn, biên lai, công việc, vật liệu)",
-        "invoiceDesc": "Hiển thị số hóa đơn"
+        "invoiceDesc": "Hiển thị số hóa đơn",
+        "worker": "Nhân công",
+        "workerType": "Loại nhân công",
+        "hours": "Giờ"
       },
       "locale": {
         "title": "Ngôn ngữ và tiền tệ",
@@ -3003,6 +3006,14 @@
     "description": "Mô tả",
     "vatSummary": "Tóm tắt VAT",
     "vatBase": "Cơ sở tính thuế",
-    "totalPayments": "Tổng thanh toán"
+    "totalPayments": "Tổng thanh toán",
+    "timeEntries": "Bản ghi thời gian",
+    "timeEntriesCount": "bản ghi",
+    "worker": "Nhân công",
+    "workerType": "Loại nhân công",
+    "hours": "Giờ",
+    "workerCount": "Nhân công",
+    "totalHours": "Tổng giờ",
+    "noTimeEntries": "Không có bản ghi thời gian."
   }
 }

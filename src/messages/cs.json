@@ -2427,7 +2427,7 @@
         "alertsDesc": "Zpožděné položky, nadcházející termíny a překročené rozpočty",
         "projection": "Projekce nákladů",
         "projectionDesc": "Odhad konečných nákladů na základě aktuálního utrácení",
-        "time": "Evidence času",
+        "time": "Časové záznamy",
         "timeDesc": "Odpracované hodiny u každé položky",
         "workers": "Pracovníci",
         "workersDesc": "Seznam pracovníků a firem s jejich hodinami",
@@ -2446,7 +2446,10 @@
         "paymentType": "Typ platby",
         "invoice": "Faktura",
         "paymentTypeDesc": "Zobrazit typ platby (faktura, účtenka, práce, materiál)",
-        "invoiceDesc": "Zobrazit číslo faktury"
+        "invoiceDesc": "Zobrazit číslo faktury",
+        "worker": "Pracovník",
+        "workerType": "Typ pracovníka",
+        "hours": "Hodiny"
       },
       "locale": {
         "title": "Jazyk a měna",
@@ -3006,6 +3009,14 @@
     "description": "Popis",
     "vatSummary": "Souhrn DPH",
     "vatBase": "Základ daně",
-    "totalPayments": "Celkem plateb"
+    "totalPayments": "Celkem plateb",
+    "timeEntries": "Časové záznamy",
+    "timeEntriesCount": "záznamů",
+    "worker": "Pracovník",
+    "workerType": "Typ pracovníka",
+    "hours": "Hodiny",
+    "workerCount": "Počet osob",
+    "totalHours": "Celkem hodin",
+    "noTimeEntries": "Žádné časové záznamy."
   }
 }

@@ -2424,8 +2424,8 @@
         "alertsDesc": "Voci in ritardo, scadenze imminenti e voci fuori budget",
         "projection": "Proiezione dei costi",
         "projectionDesc": "Stima del costo finale basata sulla spesa attuale",
-        "time": "Tracciamento tempo",
-        "timeDesc": "Ore lavorate per voce",
+        "time": "Registrazioni tempo",
+        "timeDesc": "Ore lavorate per ogni elemento",
         "workers": "Lavoratori",
         "workersDesc": "Elenco di lavoratori e aziende con le relative ore",
         "contacts": "Contatti",
@@ -2443,7 +2443,10 @@
         "paymentType": "Tipo di pagamento",
         "invoice": "Fattura",
         "paymentTypeDesc": "Mostra tipo di pagamento (fattura, ricevuta, lavoro, materiale)",
-        "invoiceDesc": "Mostra numero fattura"
+        "invoiceDesc": "Mostra numero fattura",
+        "worker": "Lavoratore",
+        "workerType": "Tipo di lavoratore",
+        "hours": "Ore"
       },
       "locale": {
         "title": "Lingua e valuta",
@@ -3003,6 +3006,14 @@
     "description": "Descrizione",
     "vatSummary": "Riepilogo IVA",
     "vatBase": "Base imponibile",
-    "totalPayments": "Totale pagamenti"
+    "totalPayments": "Totale pagamenti",
+    "timeEntries": "Registrazioni tempo",
+    "timeEntriesCount": "registrazioni",
+    "worker": "Lavoratore",
+    "workerType": "Tipo di lavoratore",
+    "hours": "Ore",
+    "workerCount": "Lavoratori",
+    "totalHours": "Totale ore",
+    "noTimeEntries": "Nessuna registrazione di tempo."
   }
 }

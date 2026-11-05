@@ -32,6 +32,7 @@ import type {
   PdfAlertItem,
   PdfPhaseSummary,
   PdfPayment,
+  PdfTimeEntry,
 } from "./pdf-types";
 
 // =====================================================================
@@ -310,6 +311,38 @@ export async function generatePdf(options: PdfExportOptions): Promise<Buffer> {
     }),
   );
 
+  // ─── 6.4) Fetch time entries ─────────────────────────────────────
+  const dbTimeEntries = await dbRead.timeEntry.findMany({
+    where: { budgetItem: { projectId: options.projectId } },
+    orderBy: [{ date: "desc" }, { createdAt: "desc" }],
+    select: {
+      id: true,
+      workerName: true,
+      workerType: true,
+      date: true,
+      dateTo: true,
+      hours: true,
+      workerCount: true,
+      description: true,
+      budgetItem: {
+        select: { category: true, subcategory: true },
+      },
+    },
+  });
+
+  const timeEntries: PdfTimeEntry[] = dbTimeEntries.map((te) => ({
+    id: te.id,
+    workerName: te.workerName,
+    workerType: te.workerType,
+    date: te.date,
+    dateTo: te.dateTo,
+    hours: te.hours,
+    workerCount: te.workerCount,
+    description: te.description,
+    budgetItemCategory: te.budgetItem?.category ?? null,
+    budgetItemSubcategory: te.budgetItem?.subcategory ?? null,
+  }));
+
   // ─── 6.5) Load i18n translations for the target locale ──────────
   // PDF components run outside of React's context system, so they can't
   // use useTranslations(). We load all needed translations server-side
@@ -389,6 +422,14 @@ export async function generatePdf(options: PdfExportOptions): Promise<Buffer> {
     vatSummary: tPdf("vatSummary"),
     vatBase: tPdf("vatBase"),
     totalPayments: tPdf("totalPayments"),
+    timeEntries: tPdf("timeEntries"),
+    timeEntriesCount: tPdf("timeEntriesCount"),
+    worker: tPdf("worker"),
+    workerType: tPdf("workerType"),
+    hours: tPdf("hours"),
+    workerCount: tPdf("workerCount"),
+    totalHours: tPdf("totalHours"),
+    noTimeEntries: tPdf("noTimeEntries"),
   };
 
   // ─── 7) Assemble PdfReportData ───────────────────────────────────
@@ -425,6 +466,7 @@ export async function generatePdf(options: PdfExportOptions): Promise<Buffer> {
     alerts: { overdue, upcoming, overBudget },
     byPhase,
     payments,
+    timeEntries,
     phaseTranslations,
     paymentTypeTranslations,
     labels,

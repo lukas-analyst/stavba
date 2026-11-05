@@ -2424,8 +2424,8 @@
         "alertsDesc": "Késésben lévő tételek, közelgő határidők és túlköltekezett tételek",
         "projection": "Költségvetés előrejelzés",
         "projectionDesc": "Végleges költség becslése a jelenlegi költés alapján",
-        "time": "Időkövetés",
-        "timeDesc": "Munkaórák tételenként",
+        "time": "Munkaidő-bejegyzések",
+        "timeDesc": "Minden tételnél ledolgozott órák",
         "workers": "Dolgozók",
         "workersDesc": "Dolgozók és cégek listája munkaórákkal",
         "contacts": "Kapcsolatok",
@@ -2443,7 +2443,10 @@
         "paymentType": "Fizetés típusa",
         "invoice": "Számla",
         "paymentTypeDesc": "Fizetés típusának megjelenítése (számla, nyugta, munka, anyag)",
-        "invoiceDesc": "Számlaszám megjelenítése"
+        "invoiceDesc": "Számlaszám megjelenítése",
+        "worker": "Dolgozó",
+        "workerType": "Dolgozó típusa",
+        "hours": "Órák"
       },
       "locale": {
         "title": "Nyelv és pénznem",
@@ -3003,6 +3006,14 @@
     "description": "Leírás",
     "vatSummary": "ÁFA összegzés",
     "vatBase": "Adóalap",
-    "totalPayments": "Összes fizetés"
+    "totalPayments": "Összes fizetés",
+    "timeEntries": "Munkaidő-bejegyzések",
+    "timeEntriesCount": "bejegyzés",
+    "worker": "Dolgozó",
+    "workerType": "Dolgozó típusa",
+    "hours": "Órák",
+    "workerCount": "Dolgozók",
+    "totalHours": "Összes óra",
+    "noTimeEntries": "Nincsenek munkaidő-bejegyzések."
   }
 }
