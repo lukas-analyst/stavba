@@ -234,7 +234,7 @@ const styles = StyleSheet.create({
     color: "#333333",
     backgroundColor: "#ffffff",
     paddingTop: 40,
-    paddingBottom: 60, // leave room for the fixed footer
+    paddingBottom: 75, // leave room for the fixed footer (bottom: 20 + ~16pt height + margin)
     paddingLeft: 40,
     paddingRight: 40,
     lineHeight: 1.4,
@@ -441,7 +441,7 @@ const styles = StyleSheet.create({
   // be visually distinct from child (Úkol) rows so the user can tell
   // which tasks belong to which item. We achieve this with:
   //   - Parent: bold text + thicker top border + light gray bg
-  //   - Child: indented with left padding + "↳" prefix + lighter text
+  //   - Child: indented with left padding + "•" prefix + lighter text
   // These styles are used in BOTH minimal and colorful modes (the
   // colorful variants override these via the style selectors below).
   minimalParentRow: {
@@ -935,7 +935,7 @@ export function BudgetTable({
     return (
       <View key={item.id} style={rowStyle} wrap={false}>
         <Text style={[cellStyle, styles.colCategory]}>
-          {isParent ? item.category : `  ↳ ${item.subcategory || item.category}`}
+          {isParent ? item.category : `• ${item.subcategory || item.category}`}
         </Text>
         <Text style={[cellStyle, styles.colName]}>
           {isParent
