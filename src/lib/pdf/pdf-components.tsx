@@ -276,18 +276,6 @@ const styles = StyleSheet.create({
   },
 
   // ----- Summary KPI -----
-  kpiLabel: {
-    fontSize: 9,
-    color: "#777777",
-    marginBottom: 4,
-    letterSpacing: 0.5,
-  },
-  kpiMain: {
-    fontSize: 24,
-    fontFamily: "Roboto", fontWeight: "bold",
-    color: "#333333",
-    marginBottom: 12,
-  },
   kpiRow: {
     flexDirection: "row",
   },
@@ -420,22 +408,6 @@ const styles = StyleSheet.create({
     color: "#1a7f37",
   },
 
-  // ----- Footer (repeats on every page) -----
-  footer: {
-    position: "absolute",
-    bottom: 20,
-    left: 40,
-    right: 40,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    fontSize: 8,
-    color: "#888888",
-    paddingTop: 4,
-    borderTopWidth: 0.5,
-    borderTopColor: "#cccccc",
-    borderTopStyle: "solid",
-  },
-
   // ----- Hierarchy (minimal mode) -----
   // Even in the monochrome minimal report, parent (Položka) rows must
   // be visually distinct from child (Úkol) rows so the user can tell
@@ -521,20 +493,6 @@ const styles = StyleSheet.create({
     paddingLeft: 16,
     paddingRight: 16,
     marginBottom: 12,
-  },
-  colorfulKpiLabel: {
-    fontSize: 9,
-    color: "#0052CC",
-    marginBottom: 4,
-    letterSpacing: 0.5,
-    textTransform: "uppercase",
-  },
-  colorfulKpiMain: {
-    fontSize: 24,
-    fontFamily: "Roboto",
-    fontWeight: "bold",
-    color: "#0052CC",
-    marginBottom: 8,
   },
   colorfulKpiSubValue: {
     fontSize: 12,
@@ -832,16 +790,12 @@ export function SummaryKPI({
 
   const wrapperStyle = isColorful ? styles.colorfulKpiCard : styles.section;
   const titleStyle = isColorful ? styles.colorfulSectionTitle : styles.sectionTitle;
-  const mainStyle = isColorful ? styles.colorfulKpiMain : styles.kpiMain;
   const subLabelStyle = isColorful ? styles.colorfulKpiSubLabel : styles.kpiSubLabel;
   const subValueStyle = isColorful ? styles.colorfulKpiSubValue : styles.kpiSubValue;
 
   return (
     <View style={wrapperStyle} wrap={false}>
       <Text style={titleStyle}>{labels.summary}</Text>
-      <Text style={mainStyle}>
-        {formatCurrency(totals.projectedFinal, currency, locale)}
-      </Text>
       <View style={styles.kpiRow}>
         <View style={styles.kpiSubItem}>
           <Text style={subLabelStyle}>{labels.plan}</Text>

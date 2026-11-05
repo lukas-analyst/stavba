@@ -25,6 +25,13 @@ export async function GET() {
       sections: JSON.parse(tpl.sections) as string[],
       locale: tpl.locale,
       currency: tpl.currency,
+      sectionOrientations: tpl.sectionOrientations
+        ? JSON.parse(tpl.sectionOrientations)
+        : null,
+      tableSorts: tpl.tableSorts
+        ? JSON.parse(tpl.tableSorts)
+        : null,
+      reportStyle: (tpl.reportStyle as "minimal" | "colorful") ?? "minimal",
       createdAt: tpl.createdAt.toISOString(),
       updatedAt: tpl.updatedAt.toISOString(),
     }));
@@ -44,9 +51,15 @@ export async function GET() {
 // Body: { name: string, sections: string[], locale: string, currency: string }
 const createTemplateBodySchema = z.object({
   name: z.string().trim().min(1).max(100),
-  sections: z.array(z.string()).min(1).max(20),
+  sections: z.array(z.string()).min(1).max(30),
   locale: z.string().min(2).max(5),
   currency: z.string().length(3),
+  sectionOrientations: z.record(z.string(), z.enum(["portrait", "landscape"])).optional(),
+  tableSorts: z.record(
+    z.string(),
+    z.object({ field: z.string(), direction: z.enum(["asc", "desc"]) }),
+  ).optional(),
+  reportStyle: z.enum(["minimal", "colorful"]).optional(),
 });
 
 export async function POST(request: Request) {
@@ -57,7 +70,7 @@ export async function POST(request: Request) {
 
     const result = await parseBody(createTemplateBodySchema, request, t);
     if (!result.success) return result.response;
-    const { name, sections, locale, currency } = result.data;
+    const { name, sections, locale, currency, sectionOrientations, tableSorts, reportStyle } = result.data;
 
     // Check for name uniqueness per user
     const existing = await dbRead.exportTemplate.findUnique({
@@ -77,6 +90,13 @@ export async function POST(request: Request) {
         sections: JSON.stringify(sections),
         locale,
         currency,
+        sectionOrientations: sectionOrientations
+          ? JSON.stringify(sectionOrientations)
+          : null,
+        tableSorts: tableSorts
+          ? JSON.stringify(tableSorts)
+          : null,
+        reportStyle: reportStyle ?? "minimal",
       },
     });
 
@@ -86,6 +106,13 @@ export async function POST(request: Request) {
       sections: JSON.parse(template.sections) as string[],
       locale: template.locale,
       currency: template.currency,
+      sectionOrientations: template.sectionOrientations
+        ? JSON.parse(template.sectionOrientations)
+        : null,
+      tableSorts: template.tableSorts
+        ? JSON.parse(template.tableSorts)
+        : null,
+      reportStyle: (template.reportStyle as "minimal" | "colorful") ?? "minimal",
       createdAt: template.createdAt.toISOString(),
       updatedAt: template.updatedAt.toISOString(),
     };

@@ -443,6 +443,12 @@ export type ExportTemplateData = {
   sections: PdfSectionId[];
   locale: string;
   currency: string;
+  /** Per-section orientation overrides (null = auto-detection) */
+  sectionOrientations?: Partial<Record<string, "portrait" | "landscape">> | null;
+  /** Per-table sort configuration (null = default sort) */
+  tableSorts?: Partial<Record<string, { field: string; direction: "asc" | "desc" }>> | null;
+  /** Report visual style */
+  reportStyle?: PdfReportStyle | null;
   createdAt: string;
   updatedAt: string;
 };

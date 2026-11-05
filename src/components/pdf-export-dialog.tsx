@@ -125,8 +125,6 @@ const COMMON_CURRENCIES = [
   { code: "VND", label: "VND · ₫" },
 ] as const;
 
-const CUSTOM_CURRENCY_VALUE = "__custom__";
-
 // =====================================================================
 // PRESETS — 3 predefined configurations for common use cases.
 // =====================================================================
@@ -395,8 +393,6 @@ export function PdfExportDialog({
   );
   const [locale, setLocale] = useState<string>(currentLocale);
   const [currency, setCurrency] = useState<string>("CZK");
-  const [customCurrency, setCustomCurrency] = useState<string>("");
-  const [isCustomCurrency, setIsCustomCurrency] = useState<boolean>(false);
 
   // Page orientation — always "custom" mode now (Phase 3 revision).
   // Per-section orientation toggles live inline in the Content tab.
@@ -479,8 +475,6 @@ export function PdfExportDialog({
       setSelectedSections(new Set(saved.sections));
       setLocale(saved.locale);
       setCurrency(saved.currency);
-      setCustomCurrency("");
-      setIsCustomCurrency(false);
       setSectionOrientations(saved.sectionOrientations ?? {});
       setReportStyle(saved.reportStyle ?? "minimal");
       setTableSorts(saved.tableSorts ?? {});
@@ -488,8 +482,6 @@ export function PdfExportDialog({
       setSelectedSections(new Set(DEFAULT_SECTIONS));
       setLocale(currentLocale);
       setCurrency("CZK");
-      setCustomCurrency("");
-      setIsCustomCurrency(false);
       setSectionOrientations({});
       setReportStyle("minimal");
       setTableSorts({});
@@ -508,13 +500,13 @@ export function PdfExportDialog({
     const settings: SavedSettings = {
       sections: Array.from(selectedSections),
       locale,
-      currency: isCustomCurrency ? (customCurrency || "CZK") : currency,
+      currency: currency,
       reportStyle,
       sectionOrientations,
       tableSorts,
     };
     saveSettings(settings);
-  }, [open, selectedSections, locale, currency, isCustomCurrency, customCurrency, reportStyle, sectionOrientations, tableSorts]);
+  }, [open, selectedSections, locale, currency, reportStyle, sectionOrientations, tableSorts]);
 
   // ---------------------------------------------------------------
   // Apply a preset configuration
@@ -565,9 +557,7 @@ export function PdfExportDialog({
 
   // The currently effective currency: either from the dropdown or the
   // custom ISO code entered by the user.
-  const effectiveCurrency = (isCustomCurrency
-    ? customCurrency.toUpperCase().trim()
-    : currency) || "CZK";
+  const effectiveCurrency = currency || "CZK";
 
   // ---------------------------------------------------------------
   // Export PDF — open the backend URL in a new tab. The browser will
@@ -612,28 +602,40 @@ export function PdfExportDialog({
         `&${orientationParams.toString()}` +
         `&${sortParams.toString()}`;
 
-      // Use a hidden iframe instead of window.open — avoids the popup
-      // blocker that triggers on some browsers (especially Safari/iOS)
-      // and prevents the "new tab" flash on desktop.
-      const iframe = document.createElement("iframe");
-      iframe.style.display = "none";
-      iframe.src = url;
-      document.body.appendChild(iframe);
+      // Use fetch() instead of hidden iframe — this lets us detect
+      // HTTP errors (500, timeout, etc.) and show appropriate toasts.
+      // On success, we create a Blob URL and trigger download.
+      const response = await fetch(url, { method: "GET" });
 
-      // Clean up the iframe after a generous delay — long enough for the
-      // server to start streaming the PDF, short enough not to litter
-      // the DOM with orphaned iframes on repeated exports.
-      window.setTimeout(() => {
-        iframe.remove();
-      }, 60_000);
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        const errorMsg = errorData?.error || `HTTP ${response.status}`;
+        throw new Error(errorMsg);
+      }
 
-      // Give the browser a beat to start the download, then notify.
-      window.setTimeout(() => {
-        toast.success(t("toasts.success"), { id: "pdf-export" });
-        setIsExporting(false);
-      }, 1500);
-    } catch {
-      toast.error(t("toasts.error"), { id: "pdf-export" });
+      // Get the PDF as a Blob and trigger download via <a> element.
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = blobUrl;
+
+      // Extract filename from Content-Disposition header, or fall back.
+      const contentDisposition = response.headers.get("Content-Disposition");
+      const filenameMatch = contentDisposition?.match(/filename="?([^"]+)"?/);
+      a.download = filenameMatch?.[1] || "report.pdf";
+
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+
+      // Clean up the Blob URL after a delay.
+      window.setTimeout(() => URL.revokeObjectURL(blobUrl), 10_000);
+
+      toast.success(t("toasts.success"), { id: "pdf-export" });
+      setIsExporting(false);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : t("toasts.error");
+      toast.error(`${t("toasts.error")} — ${message}`, { id: "pdf-export" });
       setIsExporting(false);
     }
   }, [selectedSections, projectId, locale, effectiveCurrency, sectionOrientations, reportStyle, tableSorts, t]);
@@ -659,6 +661,13 @@ export function PdfExportDialog({
           sections: Array.from(selectedSections),
           locale,
           currency: effectiveCurrency,
+          sectionOrientations: Object.keys(sectionOrientations).length > 0
+            ? sectionOrientations
+            : undefined,
+          tableSorts: Object.keys(tableSorts).length > 0
+            ? tableSorts
+            : undefined,
+          reportStyle,
         }),
       });
       if (!res.ok) {
@@ -706,17 +715,10 @@ export function PdfExportDialog({
   const handleLoadTemplate = useCallback((tpl: ExportTemplateData) => {
     setSelectedSections(new Set(tpl.sections as PdfSectionId[]));
     setLocale(tpl.locale);
-    // If the template's currency is in our common list, use the dropdown,
-    // otherwise switch to "custom" mode with the code pre-filled.
-    const isCommon = COMMON_CURRENCIES.some((c) => c.code === tpl.currency);
-    if (isCommon) {
-      setIsCustomCurrency(false);
-      setCurrency(tpl.currency);
-    } else {
-      setIsCustomCurrency(true);
-      setCurrency(CUSTOM_CURRENCY_VALUE);
-      setCustomCurrency(tpl.currency);
-    }
+    setCurrency(tpl.currency);
+    setSectionOrientations(tpl.sectionOrientations ?? {});
+    setTableSorts(tpl.tableSorts ?? {});
+    setReportStyle(tpl.reportStyle ?? "minimal");
   }, []);
 
   // ---------------------------------------------------------------
@@ -730,19 +732,8 @@ export function PdfExportDialog({
       onSelectNone={selectNoSections}
       locale={locale}
       onLocaleChange={setLocale}
+      onCurrencyChange={setCurrency}
       currency={currency}
-      onCurrencyChange={(v) => {
-        if (v === CUSTOM_CURRENCY_VALUE) {
-          setIsCustomCurrency(true);
-          setCurrency(CUSTOM_CURRENCY_VALUE);
-        } else {
-          setIsCustomCurrency(false);
-          setCurrency(v);
-        }
-      }}
-      isCustomCurrency={isCustomCurrency}
-      customCurrency={customCurrency}
-      onCustomCurrencyChange={setCustomCurrency}
       sectionOrientations={sectionOrientations}
       onSectionOrientationChange={(sectionId, value) => {
         if (value === "auto") {
@@ -857,9 +848,6 @@ type BodyProps = {
   onLocaleChange: (v: string) => void;
   currency: string;
   onCurrencyChange: (v: string) => void;
-  isCustomCurrency: boolean;
-  customCurrency: string;
-  onCustomCurrencyChange: (v: string) => void;
   sectionOrientations: Partial<Record<string, "portrait" | "landscape">>;
   onSectionOrientationChange: (
     sectionId: string,
@@ -898,9 +886,6 @@ function PdfExportBody({
   onLocaleChange,
   currency,
   onCurrencyChange,
-  isCustomCurrency,
-  customCurrency,
-  onCustomCurrencyChange,
   sectionOrientations,
   onSectionOrientationChange,
   onSetAllOrientations,
