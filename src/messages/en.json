@@ -2410,7 +2410,7 @@
     },
     "pdfExport": {
       "title": "Export PDF report",
-      "description": "Choose sections, language and currency for your PDF report. The report is suitable for mortgage applications.",
+      "description": "Choose sections, language and currency for your PDF report.",
       "tabs": {
         "content": "Content",
         "format": "Format",

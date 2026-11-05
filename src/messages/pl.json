@@ -2407,7 +2407,7 @@
     },
     "pdfExport": {
       "title": "Eksportuj raport PDF",
-      "description": "Wybierz sekcje, język i walutę raportu PDF. Raport nadaje się do wniosków o kredyt hipoteczny.",
+      "description": "Wybierz sekcje, język i walutę dla raportu PDF.",
       "tabs": {
         "content": "Treść",
         "format": "Format",

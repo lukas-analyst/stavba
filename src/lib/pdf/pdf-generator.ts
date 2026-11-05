@@ -158,6 +158,7 @@ export async function generatePdf(options: PdfExportOptions): Promise<Buffer> {
         actualHours: item.actualHours,
         sortOrder: item.sortOrder,
         contactName: item.contact?.name ?? null,
+        parentId: item.parentId,
       };
     }),
   );

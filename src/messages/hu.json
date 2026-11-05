@@ -2407,7 +2407,7 @@
     },
     "pdfExport": {
       "title": "PDF jelentés exportálása",
-      "description": "Válassza ki a szekciókat, nyelvet és pénznemet a PDF jelentéshez. A jelentés alkalmas jelzáloghitelek igényléséhez.",
+      "description": "Válassz szakaszokat, nyelvet és pénznemet a PDF jelentéshez.",
       "tabs": {
         "content": "Tartalom",
         "format": "Formátum",

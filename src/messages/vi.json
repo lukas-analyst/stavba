@@ -2407,7 +2407,7 @@
     },
     "pdfExport": {
       "title": "Xuất báo cáo PDF",
-      "description": "Chọn các phần, ngôn ngữ và loại tiền tệ cho báo cáo PDF. Báo cáo phù hợp để nộp hồ sơ vay thế chấp.",
+      "description": "Chọn các phần, ngôn ngữ và đơn vị tiền tệ cho báo cáo PDF.",
       "tabs": {
         "content": "Nội dung",
         "format": "Định dạng",

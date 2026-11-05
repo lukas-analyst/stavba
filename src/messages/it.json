@@ -2407,7 +2407,7 @@
     },
     "pdfExport": {
       "title": "Esporta rapporto PDF",
-      "description": "Seleziona le sezioni, la lingua e la valuta del rapporto PDF. Il rapporto è adatto per richieste di mutuo.",
+      "description": "Seleziona sezioni, lingua e valuta per il report PDF.",
       "tabs": {
         "content": "Contenuto",
         "format": "Formato",

@@ -29,6 +29,7 @@ import type {
   PdfExportOptions,
   PdfContact,
   PdfOrientationMode,
+  PdfReportStyle,
 } from "./pdf-types";
 
 // =====================================================================
@@ -377,7 +378,191 @@ const styles = StyleSheet.create({
     borderTopColor: "#cccccc",
     borderTopStyle: "solid",
   },
+
+  // ----- Colorful mode (Phase 4) -----
+  // MD3-inspired accent colors. Used only when reportStyle === "colorful".
+  // Minimal mode uses the monochrome styles above.
+  //
+  // Color mapping (matches the web app's semantic palette):
+  //   - Primary brand:    #0052CC (deep blue — header bar)
+  //   - Surface tint:     #EEF4FF (very light blue — parent row bg)
+  //   - Success/positive: #1A7F37 (green — completed)
+  //   - Warning:         #B45309 (amber — pending/over-budget)
+  //   - Danger:          #B00020 (red — rejected/overdue)
+  //   - Phase tints:      see PHASE_COLORS below
+  colorfulHeaderBar: {
+    backgroundColor: "#0052CC",
+    paddingBottom: 12,
+    paddingTop: 12,
+    paddingLeft: 16,
+    paddingRight: 16,
+    marginBottom: 16,
+    borderRadius: 4,
+  },
+  colorfulHeaderName: {
+    fontSize: 20,
+    fontFamily: "Roboto",
+    fontWeight: "bold",
+    color: "#FFFFFF",
+    marginBottom: 4,
+  },
+  colorfulHeaderMeta: {
+    fontSize: 10,
+    color: "#E0EFFF",
+    marginBottom: 2,
+  },
+  colorfulKpiCard: {
+    backgroundColor: "#F0F7FF",
+    borderRadius: 6,
+    paddingTop: 12,
+    paddingBottom: 12,
+    paddingLeft: 16,
+    paddingRight: 16,
+    marginBottom: 12,
+  },
+  colorfulKpiLabel: {
+    fontSize: 9,
+    color: "#0052CC",
+    marginBottom: 4,
+    letterSpacing: 0.5,
+    textTransform: "uppercase",
+  },
+  colorfulKpiMain: {
+    fontSize: 24,
+    fontFamily: "Roboto",
+    fontWeight: "bold",
+    color: "#0052CC",
+    marginBottom: 8,
+  },
+  colorfulKpiSubValue: {
+    fontSize: 12,
+    fontFamily: "Roboto",
+    fontWeight: "bold",
+    color: "#0052CC",
+  },
+  colorfulKpiSubLabel: {
+    fontSize: 8,
+    color: "#4A6FA5",
+    marginBottom: 2,
+  },
+  colorfulSectionTitle: {
+    fontSize: 13,
+    fontFamily: "Roboto",
+    fontWeight: "bold",
+    color: "#0052CC",
+    marginBottom: 6,
+    paddingBottom: 4,
+    borderBottomWidth: 2,
+    borderBottomColor: "#0052CC",
+    borderBottomStyle: "solid",
+  },
+  colorfulTableHeader: {
+    flexDirection: "row",
+    backgroundColor: "#0052CC",
+    paddingTop: 5,
+    paddingBottom: 5,
+    paddingLeft: 3,
+    paddingRight: 3,
+    borderBottomWidth: 1,
+    borderBottomColor: "#003399",
+    borderBottomStyle: "solid",
+    borderRadius: 3,
+  },
+  colorfulTableHeaderText: {
+    fontSize: 8,
+    fontFamily: "Roboto",
+    fontWeight: "bold",
+    color: "#FFFFFF",
+    paddingRight: 4,
+  },
+  // Parent row (top-level Položka) — tinted background to group children.
+  colorfulParentRow: {
+    flexDirection: "row",
+    backgroundColor: "#EEF4FF",
+    paddingTop: 4,
+    paddingBottom: 4,
+    paddingLeft: 3,
+    paddingRight: 3,
+    borderBottomWidth: 0.5,
+    borderBottomColor: "#C5D9F5",
+    borderBottomStyle: "solid",
+  },
+  colorfulParentCell: {
+    fontSize: 9,
+    fontFamily: "Roboto",
+    fontWeight: "bold",
+    color: "#003399",
+    paddingRight: 4,
+  },
+  // Child row (task) — indented, lighter background, smaller text.
+  colorfulChildRow: {
+    flexDirection: "row",
+    backgroundColor: "#F7FAFF",
+    paddingTop: 3,
+    paddingBottom: 3,
+    paddingLeft: 3,
+    paddingRight: 3,
+    borderBottomWidth: 0.5,
+    borderBottomColor: "#E0E8F5",
+    borderBottomStyle: "solid",
+  },
+  colorfulChildCell: {
+    fontSize: 8,
+    color: "#444444",
+    paddingRight: 4,
+  },
+  // Status badges (colorful mode replaces text status with colored dots).
+  colorfulStatusOk: {
+    fontSize: 9,
+    color: "#1A7F37",
+    fontWeight: "bold",
+  },
+  colorfulStatusOver: {
+    fontSize: 9,
+    color: "#B00020",
+    fontWeight: "bold",
+  },
+  colorfulStatusPending: {
+    fontSize: 9,
+    color: "#B45309",
+  },
+  colorfulAlertOverdue: {
+    fontSize: 9,
+    color: "#B00020",
+    marginBottom: 2,
+  },
+  colorfulAlertUpcoming: {
+    fontSize: 9,
+    color: "#B45309",
+    marginBottom: 2,
+  },
+  colorfulAlertOverBudget: {
+    fontSize: 9,
+    color: "#B00020",
+    marginBottom: 2,
+  },
+  colorfulProjectionValuePositive: {
+    color: "#B00020",
+  },
+  colorfulProjectionValueNegative: {
+    color: "#1A7F37",
+  },
 });
+
+// =====================================================================
+// Phase colors (colorful mode only)
+// ---------------------------------------------------------------------
+// Maps raw DB phase values to tint colors. Used to color phase badges
+// in the BudgetTable when reportStyle === "colorful".
+// =====================================================================
+const PHASE_COLORS: Record<string, string> = {
+  "Příprava": "#6B7280",      // gray
+  "Demolice": "#DC2626",      // red
+  "Hrubá stavba": "#D97706",  // amber
+  "Zabydlování": "#059669",   // emerald
+  "Do budoucna": "#7C3AED",  // violet
+  "Neurčeno": "#6B7280",      // gray
+};
 
 // =====================================================================
 // Header — project name, address, description, generated/startDate/endDate
@@ -547,6 +732,22 @@ export function PropertyMetadata({
 // The header row uses `fixed` so it repeats on every wrapped page.
 // =====================================================================
 
+// =====================================================================
+// BudgetTable — table of all budget items with hierarchy.
+//
+// Phase 4: items are grouped into a hierarchy:
+//   - Top-level items (parentId = null) = "Položky" (categories)
+//   - Child items (parentId set) = "Úkoly" (tasks) under their parent
+//
+// In the table, parents are rendered as bold header rows with a tinted
+// background, and children are indented underneath with a lighter style.
+// Items without a parent are rendered flat (no hierarchy).
+//
+// `reportStyle` controls the visual treatment:
+//   - "minimal": monochrome (existing styles, for banks/mortgages)
+//   - "colorful": MD3-accented (colored header, tinted rows, status colors)
+// =====================================================================
+
 export function BudgetTable({
   items,
   sections,
@@ -554,6 +755,7 @@ export function BudgetTable({
   locale,
   labels,
   phaseTranslations,
+  reportStyle = "minimal",
 }: {
   items: PdfBudgetItem[];
   sections: PdfSectionId[];
@@ -561,6 +763,7 @@ export function BudgetTable({
   locale: string;
   labels: PdfReportData["labels"];
   phaseTranslations: PdfReportData["phaseTranslations"];
+  reportStyle?: PdfReportStyle;
 }) {
   const showPlanCost = sections.includes("plan_cost");
   const showActualCost = sections.includes("actual_cost");
@@ -568,48 +771,136 @@ export function BudgetTable({
   const showDates = sections.includes("dates");
   const showPhase = sections.includes("phase");
   const showSupplier = sections.includes("supplier");
+  const isColorful = reportStyle === "colorful";
 
   // Effective plan cost (in target currency) for display.
   const planCostOf = (item: PdfBudgetItem) =>
     item.planCostConverted ?? item.planCost;
 
   // Translate a raw DB phase value to the localized display name.
-  // Falls back to the raw value if no translation is available.
   const translatePhase = (phase: string) =>
     phaseTranslations[phase] || phase;
 
+  // Get the phase color for colorful mode (falls back to gray).
+  const phaseColor = (phase: string) =>
+    PHASE_COLORS[phase] || PHASE_COLORS["Neurčeno"] || "#6B7280";
+
+  // ─── Build hierarchy ───────────────────────────────────────────
+  // Split items into parents (parentId = null) and children (parentId set).
+  // Then group children by their parentId for O(1) lookup.
+  const parents = items.filter((item) => !item.parentId);
+  const childrenByParentId = new Map<string, PdfBudgetItem[]>();
+  for (const item of items) {
+    if (item.parentId) {
+      const existing = childrenByParentId.get(item.parentId) ?? [];
+      existing.push(item);
+      childrenByParentId.set(item.parentId, existing);
+    }
+  }
+
+  // Style selectors based on reportStyle.
+  const sectionTitleStyle = isColorful ? styles.colorfulSectionTitle : styles.sectionTitle;
+  const tableHeaderStyle = isColorful ? styles.colorfulTableHeader : styles.tableHeader;
+  const tableHeaderTextStyle = isColorful
+    ? styles.colorfulTableHeaderText
+    : styles.tableHeaderText;
+  const parentRowStyle = isColorful ? styles.colorfulParentRow : styles.tableRow;
+  const parentCellStyle = isColorful ? styles.colorfulParentCell : styles.tableCellText;
+  const childRowStyle = isColorful ? styles.colorfulChildRow : styles.tableRow;
+  const childCellStyle = isColorful ? styles.colorfulChildCell : styles.tableCellText;
+
+  // Render a single row (parent or child) with all optional columns.
+  const renderRow = (item: PdfBudgetItem, isParent: boolean) => {
+    const rowStyle = isParent ? parentRowStyle : childRowStyle;
+    const cellStyle = isParent ? parentCellStyle : childCellStyle;
+
+    return (
+      <View key={item.id} style={rowStyle} wrap={false}>
+        <Text style={[cellStyle, styles.colCategory]}>
+          {isParent ? item.category : `  ↳ ${item.subcategory || item.category}`}
+        </Text>
+        <Text style={[cellStyle, styles.colName]}>
+          {isParent
+            ? (item.subcategory || item.category)
+            : (item.element || item.subcategory || item.category)}
+        </Text>
+        {showPhase ? (
+          <Text style={[cellStyle, styles.colPhase]}>
+            {isColorful ? (
+              <Text style={{ color: phaseColor(item.phase) }}>
+                {translatePhase(item.phase)}
+              </Text>
+            ) : (
+              translatePhase(item.phase)
+            )}
+          </Text>
+        ) : null}
+        {showPlanCost ? (
+          <Text style={[cellStyle, styles.colCost]}>
+            {formatCurrency(planCostOf(item), currency, locale)}
+          </Text>
+        ) : null}
+        {showActualCost ? (
+          <Text style={[cellStyle, styles.colCost]}>
+            {formatCurrency(item.actualCost, currency, locale)}
+          </Text>
+        ) : null}
+        {showStatus ? (
+          <Text style={[cellStyle, styles.colStatus]}>
+            {getStatusIcon(item)}
+          </Text>
+        ) : null}
+        {showDates ? (
+          <>
+            <Text style={[cellStyle, styles.colDate]}>
+              {formatDate(item.dateFrom, locale)}
+            </Text>
+            <Text style={[cellStyle, styles.colDate]}>
+              {formatDate(item.dateTo, locale)}
+            </Text>
+          </>
+        ) : null}
+        {showSupplier ? (
+          <Text style={[cellStyle, { flex: 1.2 }]}>
+            {item.contactName || "-"}
+          </Text>
+        ) : null}
+      </View>
+    );
+  };
+
   return (
     <View style={styles.section}>
-      <Text style={styles.sectionTitle}>
+      <Text style={sectionTitleStyle}>
         {labels.budgetItems} ({items.length}{" "}
         {items.length === 1 ? labels.item : labels.items})
       </Text>
 
-      <View style={styles.tableHeader} fixed>
-        <Text style={[styles.tableHeaderText, styles.colCategory]}>
+      <View style={tableHeaderStyle} fixed>
+        <Text style={[tableHeaderTextStyle, styles.colCategory]}>
           {labels.category}
         </Text>
-        <Text style={[styles.tableHeaderText, styles.colName]}>{labels.name}</Text>
+        <Text style={[tableHeaderTextStyle, styles.colName]}>{labels.name}</Text>
         {showPhase ? (
-          <Text style={[styles.tableHeaderText, styles.colPhase]}>{labels.phase}</Text>
+          <Text style={[tableHeaderTextStyle, styles.colPhase]}>{labels.phase}</Text>
         ) : null}
         {showPlanCost ? (
-          <Text style={[styles.tableHeaderText, styles.colCost]}>{labels.planCost}</Text>
+          <Text style={[tableHeaderTextStyle, styles.colCost]}>{labels.planCost}</Text>
         ) : null}
         {showActualCost ? (
-          <Text style={[styles.tableHeaderText, styles.colCost]}>{labels.actualCost}</Text>
+          <Text style={[tableHeaderTextStyle, styles.colCost]}>{labels.actualCost}</Text>
         ) : null}
         {showStatus ? (
-          <Text style={[styles.tableHeaderText, styles.colStatus]}>{labels.status}</Text>
+          <Text style={[tableHeaderTextStyle, styles.colStatus]}>{labels.status}</Text>
         ) : null}
         {showDates ? (
           <>
-            <Text style={[styles.tableHeaderText, styles.colDate]}>{labels.from}</Text>
-            <Text style={[styles.tableHeaderText, styles.colDate]}>{labels.to}</Text>
+            <Text style={[tableHeaderTextStyle, styles.colDate]}>{labels.from}</Text>
+            <Text style={[tableHeaderTextStyle, styles.colDate]}>{labels.to}</Text>
           </>
         ) : null}
         {showSupplier ? (
-          <Text style={[styles.tableHeaderText, { flex: 1.2 }]}>
+          <Text style={[tableHeaderTextStyle, { flex: 1.2 }]}>
             {labels.supplier}
           </Text>
         ) : null}
@@ -618,51 +909,16 @@ export function BudgetTable({
       {items.length === 0 ? (
         <Text style={styles.tableEmpty}>{labels.noItems}</Text>
       ) : (
-        items.map((item) => (
-          <View key={item.id} style={styles.tableRow} wrap={false}>
-            <Text style={[styles.tableCellText, styles.colCategory]}>
-              {item.category}
-            </Text>
-            <Text style={[styles.tableCellText, styles.colName]}>
-              {item.subcategory || item.category}
-            </Text>
-            {showPhase ? (
-              <Text style={[styles.tableCellText, styles.colPhase]}>
-                {translatePhase(item.phase)}
-              </Text>
-            ) : null}
-            {showPlanCost ? (
-              <Text style={[styles.tableCellText, styles.colCost]}>
-                {formatCurrency(planCostOf(item), currency, locale)}
-              </Text>
-            ) : null}
-            {showActualCost ? (
-              <Text style={[styles.tableCellText, styles.colCost]}>
-                {formatCurrency(item.actualCost, currency, locale)}
-              </Text>
-            ) : null}
-            {showStatus ? (
-              <Text style={[styles.tableCellText, styles.colStatus]}>
-                {getStatusIcon(item)}
-              </Text>
-            ) : null}
-            {showDates ? (
-              <>
-                <Text style={[styles.tableCellText, styles.colDate]}>
-                  {formatDate(item.dateFrom, locale)}
-                </Text>
-                <Text style={[styles.tableCellText, styles.colDate]}>
-                  {formatDate(item.dateTo, locale)}
-                </Text>
-              </>
-            ) : null}
-            {showSupplier ? (
-              <Text style={[styles.tableCellText, { flex: 1.2 }]}>
-                {item.contactName || "-"}
-              </Text>
-            ) : null}
-          </View>
-        ))
+        // Render hierarchy: parents with their children indented underneath.
+        parents.map((parent) => {
+          const children = childrenByParentId.get(parent.id) ?? [];
+          return (
+            <View key={parent.id}>
+              {renderRow(parent, true)}
+              {children.map((child) => renderRow(child, false))}
+            </View>
+          );
+        })
       )}
     </View>
   );
@@ -1600,6 +1856,7 @@ export function ReportDocument({
             locale={locale}
             labels={data.labels}
             phaseTranslations={data.phaseTranslations}
+            reportStyle={options.reportStyle}
           />
           <Footer project={data.project} locale={locale} labels={data.labels} />
         </Page>

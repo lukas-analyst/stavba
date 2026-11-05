@@ -282,6 +282,9 @@ export type PdfBudgetItem = {
   actualHours: number;
   sortOrder: number;
   contactName: string | null;
+  /** Parent BudgetItem ID for hierarchy (null = top-level item).
+   *  When set, this item is a "task" under a parent "Položka". */
+  parentId: string | null;
 };
 
 export type PdfAlertItem = {

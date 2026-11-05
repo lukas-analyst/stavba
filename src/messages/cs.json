@@ -2410,7 +2410,7 @@
     },
     "pdfExport": {
       "title": "Exportovat PDF report",
-      "description": "Vyberte sekce, jazyk a měnu pro PDF report. Report je vhodný pro žádosti o hypotéku.",
+      "description": "Vyberte sekce, jazyk a měnu pro PDF report.",
       "tabs": {
         "content": "Obsah",
         "format": "Formát",

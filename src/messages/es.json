@@ -2407,7 +2407,7 @@
     },
     "pdfExport": {
       "title": "Exportar informe PDF",
-      "description": "Selecciona las secciones, el idioma y la moneda del informe PDF. El informe es adecuado para solicitudes de hipoteca.",
+      "description": "Selecciona secciones, idioma y moneda para el informe PDF.",
       "tabs": {
         "content": "Contenido",
         "format": "Formato",

@@ -1017,12 +1017,6 @@ function PdfExportBody({
                 </div>
               ))}
             </div>
-
-            {/* Orientation hint */}
-            <div className="flex items-start gap-2 rounded-lg bg-muted/30 p-3 type-label-sm text-muted-foreground">
-              <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-              <span>{t("sections.landscapeHint")}</span>
-            </div>
           </section>
         </TabsContent>
 
