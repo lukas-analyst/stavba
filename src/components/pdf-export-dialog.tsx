@@ -754,12 +754,6 @@ function PdfExportBody({
   // Count of sections with a non-auto orientation override.
   const customOrientationCount = Object.keys(sectionOrientations).length;
 
-  // Translate a section ID to its display label.
-  const sectionLabel = (id: PdfSectionId) => {
-    const meta = ALL_SECTIONS.find((s) => s.id === id);
-    return meta ? t(meta.labelKey as never) : id;
-  };
-
   // -----------------------------------------------------------------
   // renderSection — one row in the section picker.
   // Top-level sections get an inline OrientationToggle (3-way icon
@@ -859,56 +853,10 @@ function PdfExportBody({
   };
 
   // -----------------------------------------------------------------
-  // Sticky summary bar
-  // -----------------------------------------------------------------
-  const summaryBar = (
-    <div className="sticky top-0 z-10 -mx-5 mb-4 border-b bg-background/95 px-5 py-2.5 backdrop-blur supports-[backdrop-filter]:bg-background/80 sm:-mx-6 sm:px-6">
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 type-label-sm text-muted-foreground">
-        <span className="flex items-center gap-1.5">
-          <Files className="h-3.5 w-3.5" />
-          <span className="font-medium text-foreground">{selectedCount}</span>
-          <span>{t("summaryBar.sections")}</span>
-        </span>
-        <span className="flex items-center gap-1.5">
-          <Globe className="h-3.5 w-3.5" />
-          <span className="font-medium text-foreground">
-            {LOCALE_META[locale as Locale]?.flag ?? "🌐"}{" "}
-            {LOCALE_META[locale as Locale]?.name ?? locale}
-          </span>
-        </span>
-        <span className="flex items-center gap-1.5">
-          <Coins className="h-3.5 w-3.5" />
-          <span className="font-medium text-foreground">
-            {isCustomCurrency ? (customCurrency || "—") : currency}
-          </span>
-        </span>
-        <span className="flex items-center gap-1.5">
-          <LayoutPanelLeft className="h-3.5 w-3.5" />
-          <span className="font-medium text-foreground">
-            {customOrientationCount > 0
-              ? t("summaryBar.customOrientations", { count: customOrientationCount })
-              : t("orientation.modes.auto")}
-          </span>
-        </span>
-        <span className="flex items-center gap-1.5">
-          <Palette className="h-3.5 w-3.5" />
-          <span className="font-medium text-foreground">
-            {reportStyle === "minimal"
-              ? t("style.modes.minimal")
-              : t("style.modes.colorful")}
-          </span>
-        </span>
-      </div>
-    </div>
-  );
-
-  // -----------------------------------------------------------------
   // Render
   // -----------------------------------------------------------------
   return (
     <div className="space-y-0 pb-2 pt-0">
-      {summaryBar}
-
       <Tabs
         value={activeTab}
         onValueChange={(v) => onActiveTabChange(v as typeof activeTab)}

@@ -1460,11 +1460,16 @@ function resolveOrientation(
 // ReportDocument — the top-level <Document> that assembles all sections
 // based on the `sections` array from `options`.
 //
-// LAYOUT (Phase 2G++):
-//   Each top-level section gets its own <Page> element. This gives the
-//   user full control over the orientation of every section — they can
-//   individually set portrait or landscape for header, summary, property,
-//   alerts, projection, budget_items, payments, time, and contacts.
+// LAYOUT (Phase 3 revision):
+//   Overview sections (header, summary, property, alerts, projection) are
+//   grouped onto a SINGLE <Page> — they're short text content that flows
+//   naturally together, so a separate page for each would waste paper.
+//   The overview page's orientation = the resolved orientation of the
+//   FIRST selected overview section (typically "header" → portrait).
+//
+//   Table sections (budget_items, payments, time, contacts) each get
+//   their OWN <Page> — tables can be long and benefit from dedicated
+//   pages with individual orientation control.
 //
 //   Sections that are disabled in `options.sections` are omitted entirely
 //   (no empty page is emitted).
@@ -1476,6 +1481,23 @@ function resolveOrientation(
 // `experimentalPagination` is enabled on every page to make `totalPages`
 // accurate in the footer.
 // =====================================================================
+
+// IDs of "overview" sections that share a single page.
+const OVERVIEW_SECTION_IDS: PdfSectionId[] = [
+  "header",
+  "summary",
+  "property",
+  "alerts",
+  "projection",
+];
+
+// IDs of "table" sections that each get their own page.
+const TABLE_SECTION_IDS: PdfSectionId[] = [
+  "budget_items",
+  "payments",
+  "time",
+  "contacts",
+];
 
 export function ReportDocument({
   data,
@@ -1490,6 +1512,21 @@ export function ReportDocument({
   const orient = (sectionId: PdfSectionId): "portrait" | "landscape" =>
     resolveOrientation(sectionId, sections, orientationMode, sectionOrientations);
 
+  // Which overview sections are actually selected? (determines whether
+  // the overview page is emitted at all)
+  const selectedOverviewSections = OVERVIEW_SECTION_IDS.filter((id) =>
+    sections.includes(id),
+  );
+  const hasOverviewContent = selectedOverviewSections.length > 0;
+
+  // The overview page's orientation = orientation of the FIRST selected
+  // overview section. This way, if the user explicitly sets "header =
+  // landscape", the whole overview page is landscape. Most users will
+  // leave overview sections on "auto" → portrait (they're text content).
+  const overviewOrientation = hasOverviewContent
+    ? orient(selectedOverviewSections[0])
+    : "portrait";
+
   return (
     <Document
       title={data.project.name}
@@ -1497,66 +1534,63 @@ export function ReportDocument({
       subject="Rozpočtová sestava projektu"
       language={locale}
     >
-      {/* ─── Header ───────────────────────────────────────────────── */}
-      {sections.includes("header") ? (
-        <Page size="A4" orientation={orient("header")} style={styles.page} experimentalPagination>
-          <Header project={data.project} locale={locale} labels={data.labels} />
+      {/* ─── Overview page (header + summary + property + alerts + projection) ───
+          All overview sections share ONE page — they're short text content
+          that flows together. react-pdf paginates automatically if the
+          content overflows to a second page. */}
+      {hasOverviewContent ? (
+        <Page
+          size="A4"
+          orientation={overviewOrientation}
+          style={styles.page}
+          experimentalPagination
+        >
+          {sections.includes("header") ? (
+            <Header project={data.project} locale={locale} labels={data.labels} />
+          ) : null}
+
+          {sections.includes("summary") ? (
+            <SummaryKPI
+              totals={data.totals}
+              currency={currency}
+              locale={locale}
+              labels={data.labels}
+            />
+          ) : null}
+
+          {sections.includes("property") ? (
+            <PropertyMetadata
+              project={data.project}
+              locale={locale}
+              labels={data.labels}
+            />
+          ) : null}
+
+          {sections.includes("alerts") ? (
+            <AlertsSection
+              alerts={data.alerts}
+              currency={currency}
+              locale={locale}
+              labels={data.labels}
+            />
+          ) : null}
+
+          {sections.includes("projection") ? (
+            <ProjectionSection
+              totals={data.totals}
+              currency={currency}
+              locale={locale}
+              labels={data.labels}
+            />
+          ) : null}
+
           <Footer project={data.project} locale={locale} labels={data.labels} />
         </Page>
       ) : null}
 
-      {/* ─── Summary (KPI) ────────────────────────────────────────── */}
-      {sections.includes("summary") ? (
-        <Page size="A4" orientation={orient("summary")} style={styles.page} experimentalPagination>
-          <SummaryKPI
-            totals={data.totals}
-            currency={currency}
-            locale={locale}
-            labels={data.labels}
-          />
-          <Footer project={data.project} locale={locale} labels={data.labels} />
-        </Page>
-      ) : null}
+      {/* ─── Table sections — each on its own page ─────────────────── */}
 
-      {/* ─── Property metadata ───────────────────────────────────── */}
-      {sections.includes("property") ? (
-        <Page size="A4" orientation={orient("property")} style={styles.page} experimentalPagination>
-          <PropertyMetadata
-            project={data.project}
-            locale={locale}
-            labels={data.labels}
-          />
-          <Footer project={data.project} locale={locale} labels={data.labels} />
-        </Page>
-      ) : null}
-
-      {/* ─── Alerts ──────────────────────────────────────────────── */}
-      {sections.includes("alerts") ? (
-        <Page size="A4" orientation={orient("alerts")} style={styles.page} experimentalPagination>
-          <AlertsSection
-            alerts={data.alerts}
-            currency={currency}
-            locale={locale}
-            labels={data.labels}
-          />
-          <Footer project={data.project} locale={locale} labels={data.labels} />
-        </Page>
-      ) : null}
-
-      {/* ─── Projection ──────────────────────────────────────────── */}
-      {sections.includes("projection") ? (
-        <Page size="A4" orientation={orient("projection")} style={styles.page} experimentalPagination>
-          <ProjectionSection
-            totals={data.totals}
-            currency={currency}
-            locale={locale}
-            labels={data.labels}
-          />
-          <Footer project={data.project} locale={locale} labels={data.labels} />
-        </Page>
-      ) : null}
-
-      {/* ─── Budget items table ──────────────────────────────────── */}
+      {/* Budget items table */}
       {sections.includes("budget_items") ? (
         <Page size="A4" orientation={orient("budget_items")} style={styles.page} experimentalPagination>
           <BudgetTable
@@ -1571,7 +1605,7 @@ export function ReportDocument({
         </Page>
       ) : null}
 
-      {/* ─── Payments table ──────────────────────────────────────── */}
+      {/* Payments table */}
       {sections.includes("payments") ? (
         <Page size="A4" orientation={orient("payments")} style={styles.page} experimentalPagination>
           <PaymentsTable
@@ -1586,7 +1620,7 @@ export function ReportDocument({
         </Page>
       ) : null}
 
-      {/* ─── Time entries table ──────────────────────────────────── */}
+      {/* Time entries table */}
       {sections.includes("time") ? (
         <Page size="A4" orientation={orient("time")} style={styles.page} experimentalPagination>
           <TimeEntriesTable
@@ -1599,7 +1633,7 @@ export function ReportDocument({
         </Page>
       ) : null}
 
-      {/* ─── Contacts table ──────────────────────────────────────── */}
+      {/* Contacts table */}
       {sections.includes("contacts") ? (
         <Page size="A4" orientation={orient("contacts")} style={styles.page} experimentalPagination>
           <ContactsTable
