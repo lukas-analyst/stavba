@@ -643,13 +643,13 @@ export function PdfExportDialog({
       <Drawer open={open} onOpenChange={onOpenChange}>
         <DrawerContent className="max-h-[92dvh] flex flex-col">
           <DrawerHeader className="shrink-0 px-5 pb-3 pr-10 text-left">
-            <DrawerTitle className="flex items-center gap-2">
+            <DrawerTitle className="flex items-center gap-2 type-headline">
               <FileDown className="h-5 w-5 text-primary" />
               {t("title")}
             </DrawerTitle>
             <DrawerDescription>{t("description")}</DrawerDescription>
           </DrawerHeader>
-          <div className="min-h-0 flex-1 overflow-y-auto scrollbar-thin px-5 py-4">
+          <div className="min-h-0 flex-1 overflow-y-auto scrollbar-thin px-5 py-5">
             {body}
           </div>
           <DrawerFooter className="shrink-0 border-t bg-background sticky bottom-0">
@@ -664,16 +664,16 @@ export function PdfExportDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="flex max-h-[90vh] w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-2xl">
         <DialogHeader className="shrink-0 px-6 pt-6 pb-4 pr-10">
-          <DialogTitle className="flex items-center gap-2">
+          <DialogTitle className="flex items-center gap-2 type-headline">
             <FileDown className="h-5 w-5 text-primary" />
             {t("title")}
           </DialogTitle>
           <DialogDescription>{t("description")}</DialogDescription>
         </DialogHeader>
-        <div className="min-h-0 flex-1 overflow-y-auto scrollbar-thin px-6 py-4">
+        <div className="min-h-0 flex-1 overflow-y-auto scrollbar-thin px-6 py-5">
           {body}
         </div>
-        <DialogFooter className="shrink-0 border-t bg-background px-6 py-4 sm:justify-between">
+        <DialogFooter className="shrink-0 border-t bg-background px-6 py-3 sm:justify-between">
           {footer}
         </DialogFooter>
       </DialogContent>
@@ -888,7 +888,7 @@ function PdfExportBody({
         {/* ═══════════════════════════════════════════════════════════ */}
         {/* Tab 1: Obsah — section picker + inline orientation toggles    */}
         {/* ═══════════════════════════════════════════════════════════ */}
-        <TabsContent value="content" className="space-y-6 pt-6">
+        <TabsContent value="content" className="space-y-5 pt-6">
           {/* Presets placeholder */}
           <div className="rounded-xl border border-dashed border-muted-foreground/30 p-4">
             <div className="flex items-center gap-2">
@@ -998,14 +998,14 @@ function PdfExportBody({
             </div>
 
             {/* Categorized section list */}
-            <div className="space-y-6">
+            <div className="space-y-5">
               {SECTION_CATEGORIES.map((category) => (
                 <div key={category.id} className="space-y-2">
                   <div className="flex items-center gap-1.5 type-overline text-muted-foreground/80">
                     <Layers className="h-3.5 w-3.5" />
                     {t(category.labelKey as never)}
                   </div>
-                  <div className="space-y-1 rounded-xl border bg-surface/50 p-1.5">
+                  <div className="space-y-1 rounded-xl border bg-muted/20 p-1.5">
                     {category.sectionIds.map((sectionId) => {
                       const meta = ALL_SECTIONS.find(
                         (s) => s.id === sectionId,
@@ -1019,7 +1019,7 @@ function PdfExportBody({
             </div>
 
             {/* Orientation hint */}
-            <div className="flex items-start gap-2 rounded-lg bg-muted/40 p-3 type-label-sm text-muted-foreground">
+            <div className="flex items-start gap-2 rounded-lg bg-muted/30 p-3 type-label-sm text-muted-foreground">
               <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" />
               <span>{t("sections.landscapeHint")}</span>
             </div>
@@ -1030,7 +1030,7 @@ function PdfExportBody({
         {/* Tab 2: Formát — language + currency + visual style           */}
         {/* (Page orientation moved to Content tab — inline per section)  */}
         {/* ═══════════════════════════════════════════════════════════ */}
-        <TabsContent value="format" className="space-y-8 pt-6">
+        <TabsContent value="format" className="space-y-5 pt-6">
           {/* Language + currency */}
           <section className="space-y-4">
             <div className="flex items-center gap-2">
@@ -1127,7 +1127,7 @@ function PdfExportBody({
               </div>
             )}
 
-            <div className="flex items-start gap-2 rounded-lg bg-muted/50 p-3 type-label text-muted-foreground">
+            <div className="flex items-start gap-2 rounded-lg bg-muted/30 p-3 type-label text-muted-foreground">
               <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" />
               <span>{t("locale.conversionHint")}</span>
             </div>
@@ -1160,7 +1160,7 @@ function PdfExportBody({
                 },
               ]}
             />
-            <div className="flex items-start gap-2 rounded-lg bg-muted/50 p-3 type-label text-muted-foreground">
+            <div className="flex items-start gap-2 rounded-lg bg-muted/30 p-3 type-label text-muted-foreground">
               <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" />
               <span>
                 {reportStyle === "minimal"
