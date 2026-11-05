@@ -643,6 +643,101 @@ const styles = StyleSheet.create({
     color: "#B00020",
     marginBottom: 2,
   },
+  // Alert group title — colored badge for each alert type.
+  colorfulAlertGroupTitle: {
+    fontSize: 11,
+    fontFamily: "Roboto",
+    fontWeight: "bold",
+    color: "#0052CC",
+    marginBottom: 4,
+  },
+  colorfulAlertItem: {
+    fontSize: 9,
+    color: "#444444",
+    marginBottom: 4,
+    paddingLeft: 8,
+  },
+  colorfulAlertEmpty: {
+    fontSize: 9,
+    color: "#1A7F37",
+    fontStyle: "italic",
+  },
+  // Property metadata — label/value with blue accent.
+  colorfulMetaRow: {
+    flexDirection: "row",
+    marginBottom: 6,
+  },
+  colorfulMetaLabel: {
+    fontSize: 9,
+    color: "#4A6FA5",
+    width: 130,
+  },
+  colorfulMetaValue: {
+    fontSize: 9,
+    flex: 1,
+    color: "#003399",
+    fontWeight: "bold",
+  },
+  // Projection — colored values for positive/negative overrun.
+  colorfulProjectionRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingTop: 8,
+    paddingBottom: 8,
+    borderBottomWidth: 0.5,
+    borderBottomColor: "#C5D9F5",
+    borderBottomStyle: "solid",
+  },
+  colorfulProjectionLabel: {
+    fontSize: 10,
+    color: "#003399",
+    fontWeight: "bold",
+  },
+  colorfulProjectionValue: {
+    fontSize: 12,
+    fontFamily: "Roboto",
+    fontWeight: "bold",
+    color: "#0052CC",
+  },
+  // Tables (Payments, Time, Contacts) — same colorful style as BudgetTable.
+  // Reuses colorfulTableHeader + colorfulTableHeaderText for the header row.
+  // Regular rows get a subtle tinted background.
+  colorfulTableRow: {
+    flexDirection: "row",
+    backgroundColor: "#F7FAFF",
+    paddingTop: 3,
+    paddingBottom: 3,
+    paddingLeft: 3,
+    paddingRight: 3,
+    borderBottomWidth: 0.5,
+    borderBottomColor: "#E0E8F5",
+    borderBottomStyle: "solid",
+  },
+  colorfulTableCell: {
+    fontSize: 9,
+    color: "#333333",
+    paddingRight: 4,
+  },
+  // Total row in tables — bold with tinted background.
+  colorfulTotalRow: {
+    flexDirection: "row",
+    backgroundColor: "#EEF4FF",
+    paddingTop: 4,
+    paddingBottom: 4,
+    paddingLeft: 3,
+    paddingRight: 3,
+    borderTopWidth: 1,
+    borderTopColor: "#0052CC",
+    borderTopStyle: "solid",
+  },
+  colorfulTotalCell: {
+    fontSize: 9,
+    fontFamily: "Roboto",
+    fontWeight: "bold",
+    color: "#003399",
+    paddingRight: 4,
+  },
   colorfulProjectionValuePositive: {
     color: "#B00020",
   },
@@ -674,30 +769,37 @@ export function Header({
   project,
   locale,
   labels,
+  reportStyle = "minimal",
 }: {
   project: PdfReportData["project"];
   locale: string;
   labels: PdfReportData["labels"];
+  reportStyle?: PdfReportStyle;
 }) {
   const generatedAt = formatDate(new Date(), locale);
   const hasStartDate = project.startDate != null;
   const hasEndDate = project.endDate != null;
+  const isColorful = reportStyle === "colorful";
+
+  const headerStyle = isColorful ? styles.colorfulHeaderBar : styles.header;
+  const nameStyle = isColorful ? styles.colorfulHeaderName : styles.headerName;
+  const metaStyle = isColorful ? styles.colorfulHeaderMeta : styles.headerMeta;
 
   return (
-    <View style={styles.header} wrap={false}>
-      <Text style={styles.headerName}>{project.name}</Text>
+    <View style={headerStyle} wrap={false}>
+      <Text style={nameStyle}>{project.name}</Text>
       {project.address ? (
-        <Text style={styles.headerMeta}>{project.address}</Text>
+        <Text style={metaStyle}>{project.address}</Text>
       ) : null}
       {project.fullAddress ? (
-        <Text style={styles.headerMeta}>{project.fullAddress}</Text>
+        <Text style={metaStyle}>{project.fullAddress}</Text>
       ) : null}
       {project.description ? (
-        <Text style={styles.headerMeta}>{project.description}</Text>
+        <Text style={metaStyle}>{project.description}</Text>
       ) : null}
-      <Text style={styles.headerMeta}>{labels.generated}: {generatedAt}</Text>
+      <Text style={metaStyle}>{labels.generated}: {generatedAt}</Text>
       {hasStartDate || hasEndDate ? (
-        <Text style={styles.headerMeta}>
+        <Text style={metaStyle}>
           {hasStartDate
             ? `${labels.startDate}: ${formatDate(project.startDate, locale)}`
             : ""}
@@ -718,34 +820,44 @@ export function SummaryKPI({
   currency,
   locale,
   labels,
+  reportStyle = "minimal",
 }: {
   totals: PdfReportData["totals"];
   currency: string;
   locale: string;
   labels: PdfReportData["labels"];
+  reportStyle?: PdfReportStyle;
 }) {
+  const isColorful = reportStyle === "colorful";
+
+  const wrapperStyle = isColorful ? styles.colorfulKpiCard : styles.section;
+  const titleStyle = isColorful ? styles.colorfulSectionTitle : styles.sectionTitle;
+  const mainStyle = isColorful ? styles.colorfulKpiMain : styles.kpiMain;
+  const subLabelStyle = isColorful ? styles.colorfulKpiSubLabel : styles.kpiSubLabel;
+  const subValueStyle = isColorful ? styles.colorfulKpiSubValue : styles.kpiSubValue;
+
   return (
-    <View style={styles.section} wrap={false}>
-      <Text style={styles.sectionTitle}>{labels.summary}</Text>
-      <Text style={styles.kpiMain}>
+    <View style={wrapperStyle} wrap={false}>
+      <Text style={titleStyle}>{labels.summary}</Text>
+      <Text style={mainStyle}>
         {formatCurrency(totals.projectedFinal, currency, locale)}
       </Text>
       <View style={styles.kpiRow}>
         <View style={styles.kpiSubItem}>
-          <Text style={styles.kpiSubLabel}>{labels.plan}</Text>
-          <Text style={styles.kpiSubValue}>
+          <Text style={subLabelStyle}>{labels.plan}</Text>
+          <Text style={subValueStyle}>
             {formatCurrency(totals.planTotal, currency, locale)}
           </Text>
         </View>
         <View style={styles.kpiSubItem}>
-          <Text style={styles.kpiSubLabel}>{labels.actual}</Text>
-          <Text style={styles.kpiSubValue}>
+          <Text style={subLabelStyle}>{labels.actual}</Text>
+          <Text style={subValueStyle}>
             {formatCurrency(totals.actualTotal, currency, locale)}
           </Text>
         </View>
         <View style={styles.kpiSubItem}>
-          <Text style={styles.kpiSubLabel}>{labels.remaining}</Text>
-          <Text style={styles.kpiSubValue}>
+          <Text style={subLabelStyle}>{labels.remaining}</Text>
+          <Text style={subValueStyle}>
             {formatCurrency(totals.remaining, currency, locale)}
           </Text>
         </View>
@@ -763,14 +875,15 @@ export function PropertyMetadata({
   project,
   locale,
   labels,
+  reportStyle = "minimal",
 }: {
   project: PdfReportData["project"];
   locale: string;
   labels: PdfReportData["labels"];
+  reportStyle?: PdfReportStyle;
 }) {
+  const isColorful = reportStyle === "colorful";
   // Build a list of [label, value] pairs for all non-null fields.
-  // The order matches the project-info-card / property-metadata-card
-  // sections in the web UI for consistency.
   const rows: Array<{ label: string; value: string }> = [];
 
   if (project.fullAddress) {
@@ -805,13 +918,18 @@ export function PropertyMetadata({
 
   if (rows.length === 0) return null;
 
+  const titleStyle = isColorful ? styles.colorfulSectionTitle : styles.sectionTitle;
+  const rowStyle = isColorful ? styles.colorfulMetaRow : styles.metaRow;
+  const labelStyle = isColorful ? styles.colorfulMetaLabel : styles.metaLabel;
+  const valueStyle = isColorful ? styles.colorfulMetaValue : styles.metaValue;
+
   return (
     <View style={styles.section} wrap={false}>
-      <Text style={styles.sectionTitle}>{labels.propertyInfo}</Text>
+      <Text style={titleStyle}>{labels.propertyInfo}</Text>
       {rows.map((row, idx) => (
-        <View key={idx} style={styles.metaRow}>
-          <Text style={styles.metaLabel}>{row.label}</Text>
-          <Text style={styles.metaValue}>{row.value}</Text>
+        <View key={idx} style={rowStyle}>
+          <Text style={labelStyle}>{row.label}</Text>
+          <Text style={valueStyle}>{row.value}</Text>
         </View>
       ))}
     </View>
@@ -1051,14 +1169,16 @@ function AlertRow({
   alert,
   currency,
   locale,
+  style,
 }: {
   alert: PdfAlertItem;
   currency: string;
   locale: string;
+  style?: object;
 }) {
   const name = alert.subcategory || alert.category;
   return (
-    <Text style={styles.alertItem}>
+    <Text style={style ?? styles.alertItem}>
       {alert.category}
       {alert.subcategory ? ` / ${alert.subcategory}` : ""} — {name}
       {alert.dateTo ? ` • termín ${formatDate(alert.dateTo, locale)}` : ""}
@@ -1075,33 +1195,41 @@ export function AlertsSection({
   currency,
   locale,
   labels,
+  reportStyle = "minimal",
 }: {
   alerts: PdfReportData["alerts"];
   currency: string;
   locale: string;
   labels: PdfReportData["labels"];
+  reportStyle?: PdfReportStyle;
 }) {
+  const isColorful = reportStyle === "colorful";
   const total =
     alerts.overdue.length +
     alerts.upcoming.length +
     alerts.overBudget.length;
 
+  const titleStyle = isColorful ? styles.colorfulSectionTitle : styles.sectionTitle;
+  const groupTitleStyle = isColorful ? styles.colorfulAlertGroupTitle : styles.alertGroupTitle;
+  const itemStyle = isColorful ? styles.colorfulAlertItem : styles.alertItem;
+  const emptyStyle = isColorful ? styles.colorfulAlertEmpty : styles.alertEmpty;
+
   if (total === 0) {
     return (
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>{labels.alerts}</Text>
-        <Text style={styles.alertEmpty}>{labels.noAlerts}</Text>
+        <Text style={titleStyle}>{labels.alerts}</Text>
+        <Text style={emptyStyle}>{labels.noAlerts}</Text>
       </View>
     );
   }
 
   return (
     <View style={styles.section}>
-      <Text style={styles.sectionTitle}>{labels.alerts}</Text>
+      <Text style={titleStyle}>{labels.alerts}</Text>
 
       {alerts.overdue.length > 0 ? (
         <View style={styles.alertGroup}>
-          <Text style={styles.alertGroupTitle}>
+          <Text style={groupTitleStyle}>
             {labels.overdue} ({alerts.overdue.length})
           </Text>
           {alerts.overdue.map((a, idx) => (
@@ -1110,6 +1238,7 @@ export function AlertsSection({
               alert={a}
               currency={currency}
               locale={locale}
+              style={itemStyle}
             />
           ))}
         </View>
@@ -1117,7 +1246,7 @@ export function AlertsSection({
 
       {alerts.upcoming.length > 0 ? (
         <View style={styles.alertGroup}>
-          <Text style={styles.alertGroupTitle}>
+          <Text style={groupTitleStyle}>
             {labels.upcoming} ({alerts.upcoming.length})
           </Text>
           {alerts.upcoming.map((a, idx) => (
@@ -1126,6 +1255,7 @@ export function AlertsSection({
               alert={a}
               currency={currency}
               locale={locale}
+              style={itemStyle}
             />
           ))}
         </View>
@@ -1133,7 +1263,7 @@ export function AlertsSection({
 
       {alerts.overBudget.length > 0 ? (
         <View style={styles.alertGroup}>
-          <Text style={styles.alertGroupTitle}>
+          <Text style={groupTitleStyle}>
             {labels.overBudget} ({alerts.overBudget.length})
           </Text>
           {alerts.overBudget.map((a, idx) => (
@@ -1142,6 +1272,7 @@ export function AlertsSection({
               alert={a}
               currency={currency}
               locale={locale}
+              style={itemStyle}
             />
           ))}
         </View>
@@ -1159,19 +1290,35 @@ export function ProjectionSection({
   currency,
   locale,
   labels,
+  reportStyle = "minimal",
 }: {
   totals: PdfReportData["totals"];
   currency: string;
   locale: string;
   labels: PdfReportData["labels"];
+  reportStyle?: PdfReportStyle;
 }) {
+  const isColorful = reportStyle === "colorful";
   const isOver = totals.projectedOverrun > 0;
   const overrunLabel = isOver
     ? labels.estimatedOverrun
     : labels.expectedSavings;
+
+  // Style selectors based on reportStyle.
+  const titleStyle = isColorful ? styles.colorfulSectionTitle : styles.sectionTitle;
+  const rowStyle = isColorful ? styles.colorfulProjectionRow : styles.projectionRow;
+  const labelStyle = isColorful ? styles.colorfulProjectionLabel : styles.projectionLabel;
+  const valueStyle = isColorful ? styles.colorfulProjectionValue : styles.projectionValue;
+  const positiveStyle = isColorful
+    ? styles.colorfulProjectionValuePositive
+    : styles.projectionValuePositive;
+  const negativeStyle = isColorful
+    ? styles.colorfulProjectionValueNegative
+    : styles.projectionValueNegative;
   const overrunValueStyle = isOver
-    ? [styles.projectionValue, styles.projectionValuePositive]
-    : [styles.projectionValue, styles.projectionValueNegative];
+    ? [valueStyle, positiveStyle]
+    : [valueStyle, negativeStyle];
+
   const overrunDisplay = `${isOver ? "+" : ""}${formatCurrency(
     totals.projectedOverrun,
     currency,
@@ -1180,21 +1327,21 @@ export function ProjectionSection({
 
   return (
     <View style={styles.section} wrap={false}>
-      <Text style={styles.sectionTitle}>{labels.projection}</Text>
-      <View style={styles.projectionRow}>
-        <Text style={styles.projectionLabel}>{labels.plannedBudget}</Text>
-        <Text style={styles.projectionValue}>
+      <Text style={titleStyle}>{labels.projection}</Text>
+      <View style={rowStyle}>
+        <Text style={labelStyle}>{labels.plannedBudget}</Text>
+        <Text style={valueStyle}>
           {formatCurrency(totals.planTotal, currency, locale)}
         </Text>
       </View>
-      <View style={styles.projectionRow}>
-        <Text style={styles.projectionLabel}>{labels.expectedTotalCosts}</Text>
-        <Text style={styles.projectionValue}>
+      <View style={rowStyle}>
+        <Text style={labelStyle}>{labels.expectedTotalCosts}</Text>
+        <Text style={valueStyle}>
           {formatCurrency(totals.projectedFinal, currency, locale)}
         </Text>
       </View>
-      <View style={styles.projectionRow}>
-        <Text style={styles.projectionLabel}>{overrunLabel}</Text>
+      <View style={rowStyle}>
+        <Text style={labelStyle}>{overrunLabel}</Text>
         <Text style={overrunValueStyle}>{overrunDisplay}</Text>
       </View>
     </View>
@@ -1241,6 +1388,7 @@ export function PaymentsTable({
   labels,
   paymentTypeTranslations,
   sort,
+  reportStyle = "minimal",
 }: {
   payments: PdfReportData["payments"];
   sections: PdfSectionId[];
@@ -1249,9 +1397,20 @@ export function PaymentsTable({
   labels: PdfReportData["labels"];
   paymentTypeTranslations: Record<string, string>;
   sort?: TableSort;
+  reportStyle?: PdfReportStyle;
 }) {
   const showPaymentType = sections.includes("payment_type");
   const showInvoice = sections.includes("invoice");
+  const isColorful = reportStyle === "colorful";
+
+  // Style selectors based on reportStyle.
+  const titleStyle = isColorful ? styles.colorfulSectionTitle : styles.sectionTitle;
+  const headerStyle = isColorful ? styles.colorfulTableHeader : styles.tableHeader;
+  const headerTextStyle = isColorful ? styles.colorfulTableHeaderText : styles.tableHeaderText;
+  const rowStyle = isColorful ? styles.colorfulTableRow : styles.tableRow;
+  const cellStyle = isColorful ? styles.colorfulTableCell : styles.tableCellText;
+  const totalRowStyle = isColorful ? styles.colorfulTotalRow : styles.tableRow;
+  const totalCellStyle = isColorful ? styles.colorfulTotalCell : styles.tableCellText;
 
   // Apply user-selected sort (default = date desc, as fetched from DB).
   const sortedPayments = sort ? sortItems(payments, sort) : payments;
@@ -1259,7 +1418,7 @@ export function PaymentsTable({
   if (!sortedPayments || sortedPayments.length === 0) {
     return (
       <View style={styles.section} wrap={false}>
-        <Text style={styles.sectionTitle}>{labels.payments}</Text>
+        <Text style={titleStyle}>{labels.payments}</Text>
         <Text style={styles.tableEmpty}>{labels.noPayments}</Text>
       </View>
     );
@@ -1284,30 +1443,30 @@ export function PaymentsTable({
 
   return (
     <View style={styles.section}>
-      <Text style={styles.sectionTitle}>
+      <Text style={titleStyle}>
         {labels.payments} ({sortedPayments.length} {labels.paymentsCount})
       </Text>
 
-      <View style={styles.tableHeader} fixed>
-        <Text style={[styles.tableHeaderText, colDate]}>
+      <View style={headerStyle} fixed>
+        <Text style={[headerTextStyle, colDate]}>
           {labels.date}
         </Text>
-        <Text style={[styles.tableHeaderText, colCategory]}>
+        <Text style={[headerTextStyle, colCategory]}>
           {labels.category}
         </Text>
-        <Text style={[styles.tableHeaderText, colVendor]}>
+        <Text style={[headerTextStyle, colVendor]}>
           {labels.vendor}
         </Text>
-        <Text style={[styles.tableHeaderText, colAmount]}>
+        <Text style={[headerTextStyle, colAmount]}>
           {labels.amount}
         </Text>
         {showPaymentType ? (
-          <Text style={[styles.tableHeaderText, colType]}>
+          <Text style={[headerTextStyle, colType]}>
             {labels.type}
           </Text>
         ) : null}
         {showInvoice ? (
-          <Text style={[styles.tableHeaderText, colInvoice]}>
+          <Text style={[headerTextStyle, colInvoice]}>
             {labels.invoice}
           </Text>
         ) : null}
@@ -1322,26 +1481,26 @@ export function PaymentsTable({
           .join(" / ");
         const vendor = payment.vendor || payment.contactName || "";
         return (
-          <View key={payment.id} style={styles.tableRow} wrap={false}>
-            <Text style={[styles.tableCellText, colDate]}>
+          <View key={payment.id} style={rowStyle} wrap={false}>
+            <Text style={[cellStyle, colDate]}>
               {formatDate(payment.date, locale)}
             </Text>
-            <Text style={[styles.tableCellText, colCategory]}>
+            <Text style={[cellStyle, colCategory]}>
               {itemLabel || "-"}
             </Text>
-            <Text style={[styles.tableCellText, colVendor]}>
+            <Text style={[cellStyle, colVendor]}>
               {vendor || "-"}
             </Text>
-            <Text style={[styles.tableCellText, colAmount]}>
+            <Text style={[cellStyle, colAmount]}>
               {formatCurrency(payment.amountConverted, currency, locale)}
             </Text>
             {showPaymentType ? (
-              <Text style={[styles.tableCellText, colType]}>
+              <Text style={[cellStyle, colType]}>
                 {paymentTypeTranslations[payment.type] || payment.type || "-"}
               </Text>
             ) : null}
             {showInvoice ? (
-              <Text style={[styles.tableCellText, colInvoice]}>
+              <Text style={[cellStyle, colInvoice]}>
                 {payment.invoiceNumber || "-"}
               </Text>
             ) : null}
@@ -1352,24 +1511,24 @@ export function PaymentsTable({
       {/* Total row */}
       <View
         style={[
-          styles.tableRow,
+          totalRowStyle,
           {
             borderTopWidth: 1,
-            borderTopColor: "#cccccc",
+            borderTopColor: isColorful ? "#0052CC" : "#cccccc",
             borderTopStyle: "solid",
             marginTop: 2,
           },
         ]}
         wrap={false}
       >
-        <Text style={[styles.tableCellText, colDate]}>
+        <Text style={[totalCellStyle, colDate]}>
           {labels.totalPayments}:
         </Text>
-        <Text style={[styles.tableCellText, colCategory]}> </Text>
-        <Text style={[styles.tableCellText, colVendor]}> </Text>
+        <Text style={[totalCellStyle, colCategory]}> </Text>
+        <Text style={[totalCellStyle, colVendor]}> </Text>
         <Text
           style={[
-            styles.tableCellText,
+            totalCellStyle,
             colAmount,
             { fontFamily: "Roboto", fontWeight: "bold" },
           ]}
@@ -1377,10 +1536,10 @@ export function PaymentsTable({
           {formatCurrency(totalAmount, currency, locale)}
         </Text>
         {showPaymentType ? (
-          <Text style={[styles.tableCellText, colType]}> </Text>
+          <Text style={[totalCellStyle, colType]}> </Text>
         ) : null}
         {showInvoice ? (
-          <Text style={[styles.tableCellText, colInvoice]}> </Text>
+          <Text style={[totalCellStyle, colInvoice]}> </Text>
         ) : null}
       </View>
     </View>
@@ -1399,15 +1558,27 @@ export function TimeEntriesTable({
   locale,
   labels,
   sort,
+  reportStyle = "minimal",
 }: {
   timeEntries: PdfReportData["timeEntries"];
   sections: PdfSectionId[];
   locale: string;
   labels: PdfReportData["labels"];
   sort?: TableSort;
+  reportStyle?: PdfReportStyle;
 }) {
   const showWorker = sections.includes("worker");
   const showHours = sections.includes("hours");
+  const isColorful = reportStyle === "colorful";
+
+  // Style selectors based on reportStyle.
+  const titleStyle = isColorful ? styles.colorfulSectionTitle : styles.sectionTitle;
+  const headerStyle = isColorful ? styles.colorfulTableHeader : styles.tableHeader;
+  const headerTextStyle = isColorful ? styles.colorfulTableHeaderText : styles.tableHeaderText;
+  const rowStyle = isColorful ? styles.colorfulTableRow : styles.tableRow;
+  const cellStyle = isColorful ? styles.colorfulTableCell : styles.tableCellText;
+  const totalRowStyle = isColorful ? styles.colorfulTotalRow : styles.tableRow;
+  const totalCellStyle = isColorful ? styles.colorfulTotalCell : styles.tableCellText;
 
   // Apply user-selected sort (default = date desc, as fetched from DB).
   const sortedTimeEntries = sort ? sortItems(timeEntries, sort) : timeEntries;
@@ -1415,7 +1586,7 @@ export function TimeEntriesTable({
   if (!sortedTimeEntries || sortedTimeEntries.length === 0) {
     return (
       <View style={styles.section} wrap={false}>
-        <Text style={styles.sectionTitle}>{labels.timeEntries}</Text>
+        <Text style={titleStyle}>{labels.timeEntries}</Text>
         <Text style={styles.tableEmpty}>{labels.noTimeEntries}</Text>
       </View>
     );
@@ -1433,24 +1604,24 @@ export function TimeEntriesTable({
 
   return (
     <View style={styles.section}>
-      <Text style={styles.sectionTitle}>
+      <Text style={titleStyle}>
         {labels.timeEntries} ({sortedTimeEntries.length} {labels.timeEntriesCount})
       </Text>
 
-      <View style={styles.tableHeader} fixed>
-        <Text style={[styles.tableHeaderText, colDate]}>
+      <View style={headerStyle} fixed>
+        <Text style={[headerTextStyle, colDate]}>
           {labels.date}
         </Text>
-        <Text style={[styles.tableHeaderText, colItem]}>
+        <Text style={[headerTextStyle, colItem]}>
           {labels.category}
         </Text>
         {showWorker ? (
-          <Text style={[styles.tableHeaderText, colWorker]}>
+          <Text style={[headerTextStyle, colWorker]}>
             {labels.worker}
           </Text>
         ) : null}
         {showHours ? (
-          <Text style={[styles.tableHeaderText, colHours]}>
+          <Text style={[headerTextStyle, colHours]}>
             {labels.hours}
           </Text>
         ) : null}
@@ -1464,20 +1635,20 @@ export function TimeEntriesTable({
           .filter(Boolean)
           .join(" / ");
         return (
-          <View key={te.id} style={styles.tableRow} wrap={false}>
-            <Text style={[styles.tableCellText, colDate]}>
+          <View key={te.id} style={rowStyle} wrap={false}>
+            <Text style={[cellStyle, colDate]}>
               {formatDate(te.date, locale)}
             </Text>
-            <Text style={[styles.tableCellText, colItem]}>
+            <Text style={[cellStyle, colItem]}>
               {itemLabel || "-"}
             </Text>
             {showWorker ? (
-              <Text style={[styles.tableCellText, colWorker]}>
+              <Text style={[cellStyle, colWorker]}>
                 {te.workerName || "-"}
               </Text>
             ) : null}
             {showHours ? (
-              <Text style={[styles.tableCellText, colHours]}>
+              <Text style={[cellStyle, colHours]}>
                 {te.hours} h
               </Text>
             ) : null}
@@ -1488,27 +1659,27 @@ export function TimeEntriesTable({
       {/* Total row */}
       <View
         style={[
-          styles.tableRow,
+          totalRowStyle,
           {
             borderTopWidth: 1,
-            borderTopColor: "#cccccc",
+            borderTopColor: isColorful ? "#0052CC" : "#cccccc",
             borderTopStyle: "solid",
             marginTop: 2,
           },
         ]}
         wrap={false}
       >
-        <Text style={[styles.tableCellText, colDate]}>
+        <Text style={[totalCellStyle, colDate]}>
           {labels.totalHours}:
         </Text>
-        <Text style={[styles.tableCellText, colItem]}> </Text>
+        <Text style={[totalCellStyle, colItem]}> </Text>
         {showWorker ? (
-          <Text style={[styles.tableCellText, colWorker]}> </Text>
+          <Text style={[totalCellStyle, colWorker]}> </Text>
         ) : null}
         {showHours ? (
           <Text
             style={[
-              styles.tableCellText,
+              totalCellStyle,
               colHours,
               { fontFamily: "Roboto", fontWeight: "bold" },
             ]}
@@ -1544,6 +1715,7 @@ export function ContactsTable({
   labels,
   contactTypeTranslations,
   sort,
+  reportStyle = "minimal",
 }: {
   contacts: PdfContact[];
   sections: PdfSectionId[];
@@ -1551,12 +1723,23 @@ export function ContactsTable({
   labels: PdfReportData["labels"];
   contactTypeTranslations: Record<string, string>;
   sort?: TableSort;
+  reportStyle?: PdfReportStyle;
 }) {
   const showType = sections.includes("contact_type");
   const showPhone = sections.includes("contact_phone");
   const showEmail = sections.includes("contact_email");
   const showIco = sections.includes("contact_ico");
   const showNotes = sections.includes("contact_notes");
+  const isColorful = reportStyle === "colorful";
+
+  // Style selectors based on reportStyle.
+  const titleStyle = isColorful ? styles.colorfulSectionTitle : styles.sectionTitle;
+  const headerStyle = isColorful ? styles.colorfulTableHeader : styles.tableHeader;
+  const headerTextStyle = isColorful ? styles.colorfulTableHeaderText : styles.tableHeaderText;
+  const rowStyle = isColorful ? styles.colorfulTableRow : styles.tableRow;
+  const cellStyle = isColorful ? styles.colorfulTableCell : styles.tableCellText;
+  const totalRowStyle = isColorful ? styles.colorfulTotalRow : styles.tableRow;
+  const totalCellStyle = isColorful ? styles.colorfulTotalCell : styles.tableCellText;
 
   // Apply user-selected sort (default = name asc, as fetched from DB).
   const sortedContacts = sort ? sortItems(contacts, sort) : contacts;
@@ -1564,7 +1747,7 @@ export function ContactsTable({
   if (!sortedContacts || sortedContacts.length === 0) {
     return (
       <View style={styles.section} wrap={false}>
-        <Text style={styles.sectionTitle}>{labels.contacts}</Text>
+        <Text style={titleStyle}>{labels.contacts}</Text>
         <Text style={styles.tableEmpty}>{labels.noContacts}</Text>
       </View>
     );
@@ -1599,45 +1782,45 @@ export function ContactsTable({
 
   return (
     <View style={styles.section}>
-      <Text style={styles.sectionTitle}>
+      <Text style={titleStyle}>
         {labels.contacts} ({sortedContacts.length} {labels.contactsCount})
       </Text>
 
-      <View style={styles.tableHeader} fixed>
-        <Text style={[styles.tableHeaderText, colName]}>
+      <View style={headerStyle} fixed>
+        <Text style={[headerTextStyle, colName]}>
           {labels.contactName}
         </Text>
         {showType ? (
-          <Text style={[styles.tableHeaderText, colType]}>
+          <Text style={[headerTextStyle, colType]}>
             {labels.contactType}
           </Text>
         ) : null}
-        <Text style={[styles.tableHeaderText, colRole]}>
+        <Text style={[headerTextStyle, colRole]}>
           {labels.role}
         </Text>
         {showPhone ? (
-          <Text style={[styles.tableHeaderText, colPhone]}>
+          <Text style={[headerTextStyle, colPhone]}>
             {labels.phone}
           </Text>
         ) : null}
         {showEmail ? (
-          <Text style={[styles.tableHeaderText, colEmail]}>
+          <Text style={[headerTextStyle, colEmail]}>
             {labels.email}
           </Text>
         ) : null}
         {showIco ? (
-          <Text style={[styles.tableHeaderText, colIco]}>
+          <Text style={[headerTextStyle, colIco]}>
             {labels.ico}
           </Text>
         ) : null}
-        <Text style={[styles.tableHeaderText, colCount]}>
+        <Text style={[headerTextStyle, colCount]}>
           {labels.paymentCount}
         </Text>
-        <Text style={[styles.tableHeaderText, colCount]}>
+        <Text style={[headerTextStyle, colCount]}>
           {labels.timeEntryCount}
         </Text>
         {showNotes ? (
-          <Text style={[styles.tableHeaderText, colNotes]}>
+          <Text style={[headerTextStyle, colNotes]}>
             {labels.contactNotes}
           </Text>
         ) : null}
@@ -1659,43 +1842,43 @@ export function ContactsTable({
         const ratingLine = renderRating(contact.rating);
 
         return (
-          <View key={contact.id} style={styles.tableRow} wrap={false}>
-            <Text style={[styles.tableCellText, colName]}>
+          <View key={contact.id} style={rowStyle} wrap={false}>
+            <Text style={[cellStyle, colName]}>
               {nameLine}
               {companyLine ? `\n${companyLine}` : ""}
               {ratingLine ? `\n${ratingLine}` : ""}
             </Text>
             {showType ? (
-              <Text style={[styles.tableCellText, colType]}>
+              <Text style={[cellStyle, colType]}>
                 {translateType(contact.type)}
               </Text>
             ) : null}
-            <Text style={[styles.tableCellText, colRole]}>
+            <Text style={[cellStyle, colRole]}>
               {contact.role || "-"}
             </Text>
             {showPhone ? (
-              <Text style={[styles.tableCellText, colPhone]}>
+              <Text style={[cellStyle, colPhone]}>
                 {contact.phone || "-"}
               </Text>
             ) : null}
             {showEmail ? (
-              <Text style={[styles.tableCellText, colEmail]}>
+              <Text style={[cellStyle, colEmail]}>
                 {contact.email || "-"}
               </Text>
             ) : null}
             {showIco ? (
-              <Text style={[styles.tableCellText, colIco]}>
+              <Text style={[cellStyle, colIco]}>
                 {icoDicText}
               </Text>
             ) : null}
-            <Text style={[styles.tableCellText, colCount]}>
+            <Text style={[cellStyle, colCount]}>
               {String(contact.paymentCount)}
             </Text>
-            <Text style={[styles.tableCellText, colCount]}>
+            <Text style={[cellStyle, colCount]}>
               {String(contact.timeEntryCount)}
             </Text>
             {showNotes ? (
-              <Text style={[styles.tableCellText, colNotes]}>
+              <Text style={[cellStyle, colNotes]}>
                 {contact.notes || "-"}
               </Text>
             ) : null}
@@ -1706,35 +1889,35 @@ export function ContactsTable({
       {/* Total row */}
       <View
         style={[
-          styles.tableRow,
+          totalRowStyle,
           {
             borderTopWidth: 1,
-            borderTopColor: "#cccccc",
+            borderTopColor: isColorful ? "#0052CC" : "#cccccc",
             borderTopStyle: "solid",
             marginTop: 2,
           },
         ]}
         wrap={false}
       >
-        <Text style={[styles.tableCellText, colName]}>
+        <Text style={[totalCellStyle, colName]}>
           {labels.totalContacts}:
         </Text>
         {showType ? (
-          <Text style={[styles.tableCellText, colType]}> </Text>
+          <Text style={[totalCellStyle, colType]}> </Text>
         ) : null}
-        <Text style={[styles.tableCellText, colRole]}> </Text>
+        <Text style={[totalCellStyle, colRole]}> </Text>
         {showPhone ? (
-          <Text style={[styles.tableCellText, colPhone]}> </Text>
+          <Text style={[totalCellStyle, colPhone]}> </Text>
         ) : null}
         {showEmail ? (
-          <Text style={[styles.tableCellText, colEmail]}> </Text>
+          <Text style={[totalCellStyle, colEmail]}> </Text>
         ) : null}
         {showIco ? (
-          <Text style={[styles.tableCellText, colIco]}> </Text>
+          <Text style={[totalCellStyle, colIco]}> </Text>
         ) : null}
         <Text
           style={[
-            styles.tableCellText,
+            totalCellStyle,
             colCount,
             { fontFamily: "Roboto", fontWeight: "bold" },
           ]}
@@ -1743,7 +1926,7 @@ export function ContactsTable({
         </Text>
         <Text
           style={[
-            styles.tableCellText,
+            totalCellStyle,
             colCount,
             { fontFamily: "Roboto", fontWeight: "bold" },
           ]}
@@ -1751,7 +1934,7 @@ export function ContactsTable({
           {String(sortedContacts.reduce((s, c) => s + c.timeEntryCount, 0))}
         </Text>
         {showNotes ? (
-          <Text style={[styles.tableCellText, colNotes]}> </Text>
+          <Text style={[totalCellStyle, colNotes]}> </Text>
         ) : null}
       </View>
     </View>
@@ -1935,7 +2118,12 @@ export function ReportDocument({
           experimentalPagination
         >
           {sections.includes("header") ? (
-            <Header project={data.project} locale={locale} labels={data.labels} />
+            <Header
+              project={data.project}
+              locale={locale}
+              labels={data.labels}
+              reportStyle={options.reportStyle}
+            />
           ) : null}
 
           {sections.includes("summary") ? (
@@ -1944,6 +2132,7 @@ export function ReportDocument({
               currency={currency}
               locale={locale}
               labels={data.labels}
+              reportStyle={options.reportStyle}
             />
           ) : null}
 
@@ -1952,6 +2141,7 @@ export function ReportDocument({
               project={data.project}
               locale={locale}
               labels={data.labels}
+              reportStyle={options.reportStyle}
             />
           ) : null}
 
@@ -1961,6 +2151,7 @@ export function ReportDocument({
               currency={currency}
               locale={locale}
               labels={data.labels}
+              reportStyle={options.reportStyle}
             />
           ) : null}
 
@@ -1970,6 +2161,7 @@ export function ReportDocument({
               currency={currency}
               locale={locale}
               labels={data.labels}
+              reportStyle={options.reportStyle}
             />
           ) : null}
 
@@ -2007,6 +2199,7 @@ export function ReportDocument({
             labels={data.labels}
             paymentTypeTranslations={data.paymentTypeTranslations}
             sort={options.tableSorts?.payments}
+            reportStyle={options.reportStyle}
           />
           <Footer project={data.project} locale={locale} labels={data.labels} />
         </Page>
@@ -2021,6 +2214,7 @@ export function ReportDocument({
             locale={locale}
             labels={data.labels}
             sort={options.tableSorts?.time}
+            reportStyle={options.reportStyle}
           />
           <Footer project={data.project} locale={locale} labels={data.labels} />
         </Page>
@@ -2036,6 +2230,7 @@ export function ReportDocument({
             labels={data.labels}
             contactTypeTranslations={data.contactTypeTranslations}
             sort={options.tableSorts?.contacts}
+            reportStyle={options.reportStyle}
           />
           <Footer project={data.project} locale={locale} labels={data.labels} />
         </Page>
