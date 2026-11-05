@@ -267,6 +267,7 @@ export type PdfReportData = {
     generated: string;
     startDate: string;
     endDate: string;
+    summary: string;
     expectedTotal: string;
     plan: string;
     actual: string;

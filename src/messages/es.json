@@ -3053,6 +3053,7 @@
     "generated": "Generado",
     "startDate": "Inicio",
     "endDate": "Fin",
+    "summary": "Resumen",
     "expectedTotal": "Costes totales previstos",
     "plan": "Plan",
     "actual": "Real",

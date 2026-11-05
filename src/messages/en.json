@@ -3056,6 +3056,7 @@
     "generated": "Generated",
     "startDate": "Start",
     "endDate": "End",
+    "summary": "Summary",
     "expectedTotal": "Expected total costs",
     "plan": "Plan",
     "actual": "Act.",

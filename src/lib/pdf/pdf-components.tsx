@@ -242,13 +242,13 @@ const styles = StyleSheet.create({
 
   // ----- Generic section wrapper -----
   section: {
-    marginBottom: 16,
+    marginBottom: 20,
   },
   sectionTitle: {
     fontSize: 12,
     fontFamily: "Roboto", fontWeight: "bold",
     color: "#333333",
-    marginBottom: 6,
+    marginBottom: 8,
     paddingBottom: 4,
     borderBottomWidth: 1,
     borderBottomColor: "#cccccc",
@@ -257,8 +257,8 @@ const styles = StyleSheet.create({
 
   // ----- Header -----
   header: {
-    marginBottom: 20,
-    paddingBottom: 10,
+    marginBottom: 24,
+    paddingBottom: 12,
     borderBottomWidth: 2,
     borderBottomColor: "#333333",
     borderBottomStyle: "solid",
@@ -267,12 +267,12 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontFamily: "Roboto", fontWeight: "bold",
     color: "#333333",
-    marginBottom: 4,
+    marginBottom: 6,
   },
   headerMeta: {
     fontSize: 10,
     color: "#555555",
-    marginBottom: 2,
+    marginBottom: 3,
   },
 
   // ----- Summary KPI -----
@@ -286,19 +286,19 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontFamily: "Roboto", fontWeight: "bold",
     color: "#333333",
-    marginBottom: 8,
+    marginBottom: 12,
   },
   kpiRow: {
     flexDirection: "row",
   },
   kpiSubItem: {
     flex: 1,
-    paddingRight: 12,
+    paddingRight: 16,
   },
   kpiSubLabel: {
-    fontSize: 8,
+    fontSize: 9,
     color: "#777777",
-    marginBottom: 2,
+    marginBottom: 3,
   },
   kpiSubValue: {
     fontSize: 12,
@@ -309,7 +309,7 @@ const styles = StyleSheet.create({
   // ----- Property metadata -----
   metaRow: {
     flexDirection: "row",
-    marginBottom: 3,
+    marginBottom: 6,
   },
   metaLabel: {
     fontSize: 9,
@@ -374,18 +374,18 @@ const styles = StyleSheet.create({
 
   // ----- Alerts -----
   alertGroup: {
-    marginBottom: 8,
+    marginBottom: 12,
   },
   alertGroupTitle: {
-    fontSize: 10,
+    fontSize: 11,
     fontFamily: "Roboto", fontWeight: "bold",
     color: "#333333",
-    marginBottom: 3,
+    marginBottom: 4,
   },
   alertItem: {
     fontSize: 9,
     color: "#444444",
-    marginBottom: 2,
+    marginBottom: 4,
   },
   alertEmpty: {
     fontSize: 9,
@@ -398,8 +398,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingTop: 5,
-    paddingBottom: 5,
+    paddingTop: 8,
+    paddingBottom: 8,
     borderBottomWidth: 0.5,
     borderBottomColor: "#eeeeee",
     borderBottomStyle: "solid",
@@ -726,7 +726,7 @@ export function SummaryKPI({
 }) {
   return (
     <View style={styles.section} wrap={false}>
-      <Text style={styles.kpiLabel}>{labels.expectedTotal}</Text>
+      <Text style={styles.sectionTitle}>{labels.summary}</Text>
       <Text style={styles.kpiMain}>
         {formatCurrency(totals.projectedFinal, currency, locale)}
       </Text>
