@@ -325,6 +325,14 @@ export async function generatePdf(options: PdfExportOptions): Promise<Buffer> {
     phaseTranslations[phase.toLowerCase()] = tPhases(phaseId);
   }
 
+  // Build payment type translation map.
+  const tPaymentTypes = await getTranslations({ locale: options.locale, namespace: "paymentTypes" });
+  const paymentTypeTranslations: Record<string, string> = {};
+  const paymentTypeKeys = ["receipt", "invoice", "work", "material", "person", "other"];
+  for (const key of paymentTypeKeys) {
+    paymentTypeTranslations[key] = tPaymentTypes(key);
+  }
+
   const labels: PdfReportData["labels"] = {
     generated: tPdf("generated"),
     startDate: tPdf("startDate"),
@@ -418,6 +426,7 @@ export async function generatePdf(options: PdfExportOptions): Promise<Buffer> {
     byPhase,
     payments,
     phaseTranslations,
+    paymentTypeTranslations,
     labels,
   };
 

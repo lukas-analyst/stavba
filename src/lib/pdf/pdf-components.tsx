@@ -848,12 +848,14 @@ export function PaymentsTable({
   currency,
   locale,
   labels,
+  paymentTypeTranslations,
 }: {
   payments: PdfReportData["payments"];
   sections: PdfSectionId[];
   currency: string;
   locale: string;
   labels: PdfReportData["labels"];
+  paymentTypeTranslations: Record<string, string>;
 }) {
   const showPaymentType = sections.includes("payment_type");
   const showInvoice = sections.includes("invoice");
@@ -939,7 +941,7 @@ export function PaymentsTable({
             </Text>
             {showPaymentType ? (
               <Text style={[styles.tableCellText, colType]}>
-                {payment.type || "-"}
+                {paymentTypeTranslations[payment.type] || payment.type || "-"}
               </Text>
             ) : null}
             {showInvoice ? (
@@ -1084,6 +1086,7 @@ export function ReportDocument({
             currency={currency}
             locale={locale}
             labels={data.labels}
+            paymentTypeTranslations={data.paymentTypeTranslations}
           />
         ) : null}
 

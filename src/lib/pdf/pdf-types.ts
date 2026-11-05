@@ -97,6 +97,8 @@ export type PdfReportData = {
   payments: PdfPayment[];
   /** Translated phase names keyed by the raw DB phase value. */
   phaseTranslations: Record<string, string>;
+  /** Translated payment type names keyed by the raw DB value. */
+  paymentTypeTranslations: Record<string, string>;
   /** UI labels translated to the target locale (for PDF text). */
   labels: {
     generated: string;
