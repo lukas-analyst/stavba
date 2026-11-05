@@ -185,8 +185,13 @@ export function PdfExportDialog({
       const next = new Set(prev);
       if (next.has(id)) {
         next.delete(id);
-        // If parent (budget_items) is unchecked, sub-sections are hidden
-        // but their state is preserved — not removed from the set.
+        // If parent (budget_items or payments) is unchecked, remove
+        // its sub-sections too so they don't persist as "phantom checked".
+        if (SUB_SECTIONS[id]) {
+          for (const subId of SUB_SECTIONS[id]) {
+            next.delete(subId);
+          }
+        }
       } else {
         next.add(id);
       }
@@ -552,9 +557,26 @@ function PdfExportBody({
                 </div>
               );
             }
-            // status, costs, dates are rendered above as sub-sections of
-            // budget_items — skip them in the top-level list.
-            if (SUB_SECTIONS.budget_items.includes(section.id)) {
+            // Render sub-sections only when payments is checked.
+            if (section.id === "payments") {
+              const showSubs = selectedSections.has("payments");
+              return (
+                <div key={section.id}>
+                  {renderSection(section)}
+                  {showSubs &&
+                    SUB_SECTIONS.payments.map((subId) => {
+                      const sub = ALL_SECTIONS.find((s) => s.id === subId);
+                      return sub ? renderSection(sub, true) : null;
+                    })}
+                </div>
+              );
+            }
+            // Skip sub-sections — they're rendered above as children of
+            // their parent (budget_items or payments).
+            const isSubSection =
+              SUB_SECTIONS.budget_items.includes(section.id) ||
+              (SUB_SECTIONS.payments && SUB_SECTIONS.payments.includes(section.id));
+            if (isSubSection) {
               return null;
             }
             return renderSection(section);
