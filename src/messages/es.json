@@ -2426,6 +2426,7 @@
         "selectAll": "Seleccionar todo",
         "selectNone": "Ninguno",
         "countSelected": "{selected} de {total} seleccionadas",
+        "count": "{count} secciones",
         "header": "Encabezado del proyecto",
         "headerDesc": "Nombre del proyecto, dirección y descripción",
         "summary": "Resumen",
@@ -2520,7 +2521,19 @@
       "presets": {
         "title": "Preajustes rápidos",
         "comingSoon": "Pronto",
-        "description": "Configuraciones preestablecidas para escenarios comunes (hipoteca, resumen, informe completo)."
+        "description": "Configuraciones preestablecidas para escenarios comunes (hipoteca, resumen, informe completo).",
+        "mortgage": {
+          "label": "Hipoteca",
+          "desc": "Informe minimalista para banco"
+        },
+        "summary": {
+          "label": "Resumen",
+          "desc": "Vista general colorida del proyecto"
+        },
+        "complete": {
+          "label": "Completo",
+          "desc": "Todas las secciones y detalles"
+        }
       },
       "style": {
         "title": "Estilo visual del informe",

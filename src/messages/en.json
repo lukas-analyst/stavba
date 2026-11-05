@@ -2429,6 +2429,7 @@
         "selectAll": "Select all",
         "selectNone": "None",
         "countSelected": "{selected} of {total} selected",
+        "count": "{count} sections",
         "header": "Project header",
         "headerDesc": "Project name, address and description",
         "summary": "Summary",
@@ -2523,7 +2524,19 @@
       "presets": {
         "title": "Quick presets",
         "comingSoon": "Soon",
-        "description": "Pre-configured layouts for common scenarios (mortgage, summary, complete report)."
+        "description": "Pre-configured layouts for common scenarios (mortgage, summary, complete report).",
+        "mortgage": {
+          "label": "Mortgage",
+          "desc": "Minimalist report for bank"
+        },
+        "summary": {
+          "label": "Summary",
+          "desc": "Colorful project overview"
+        },
+        "complete": {
+          "label": "Complete",
+          "desc": "All sections and details"
+        }
       },
       "style": {
         "title": "Report visual style",

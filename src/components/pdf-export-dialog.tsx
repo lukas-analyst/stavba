@@ -127,6 +127,92 @@ const COMMON_CURRENCIES = [
 
 const CUSTOM_CURRENCY_VALUE = "__custom__";
 
+// =====================================================================
+// PRESETS — 3 predefined configurations for common use cases.
+// =====================================================================
+type PresetConfig = {
+  id: string;
+  labelKey: string;
+  descKey: string;
+  icon: React.ComponentType<{ className?: string }>;
+  sections: PdfSectionId[];
+  reportStyle: PdfReportStyle;
+};
+
+const PRESETS: PresetConfig[] = [
+  {
+    id: "mortgage",
+    labelKey: "presets.mortgage.label",
+    descKey: "presets.mortgage.desc",
+    icon: Home,
+    sections: [
+      "header", "summary", "property", "alerts", "projection",
+      "budget_items", "plan_cost", "actual_cost", "status", "dates", "phase",
+      "payments", "invoice",
+    ],
+    reportStyle: "minimal",
+  },
+  {
+    id: "summary",
+    labelKey: "presets.summary.label",
+    descKey: "presets.summary.desc",
+    icon: ChartColumnBig,
+    sections: [
+      "header", "summary", "property", "projection",
+      "budget_items", "plan_cost", "actual_cost", "phase",
+    ],
+    reportStyle: "colorful",
+  },
+  {
+    id: "complete",
+    labelKey: "presets.complete.label",
+    descKey: "presets.complete.desc",
+    icon: ClipboardList,
+    sections: [
+      "header", "summary", "property", "alerts", "projection",
+      "budget_items", "status", "plan_cost", "actual_cost", "dates", "phase", "supplier",
+      "payments", "payment_type", "invoice",
+      "time", "worker", "hours",
+      "contacts", "contact_type", "contact_phone", "contact_email", "contact_ico",
+    ],
+    reportStyle: "colorful",
+  },
+];
+
+// =====================================================================
+// localStorage persistence — remember user's last settings
+// =====================================================================
+const STORAGE_KEY = "pdf-export-settings";
+
+type SavedSettings = {
+  sections: PdfSectionId[];
+  locale: string;
+  currency: string;
+  reportStyle: PdfReportStyle;
+  sectionOrientations: Partial<Record<string, "portrait" | "landscape">>;
+  tableSorts: Partial<Record<string, { field: string; direction: "asc" | "desc" }>>;
+};
+
+function loadSavedSettings(): SavedSettings | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw) as SavedSettings;
+  } catch {
+    return null;
+  }
+}
+
+function saveSettings(settings: SavedSettings): void {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+  } catch {
+    // ignore quota errors
+  }
+}
+
 // Default sections selected when the dialog opens. Matches the MVP set
 // supported by the backend (see export-pdf/route.ts validSections).
 const DEFAULT_SECTIONS: PdfSectionId[] = [
@@ -347,8 +433,9 @@ export function PdfExportDialog({
     Partial<Record<string, { field: string; direction: "asc" | "desc" }>>
   >({});
 
-  // Active tab in the dialog (Phase 3B).
-  const [activeTab, setActiveTab] = useState<"content" | "format" | "templates">("content");
+  // Active tab in the dialog (Phase 3B). 2 tabs: Content + Format.
+  // (Templates integrated into Content tab — no separate tab.)
+  const [activeTab, setActiveTab] = useState<"content" | "format">("content");
 
   const [isExporting, setIsExporting] = useState(false);
   const [templates, setTemplates] = useState<ExportTemplateData[]>([]);
@@ -383,21 +470,61 @@ export function PdfExportDialog({
 
   // ---------------------------------------------------------------
   // Reset to defaults + fetch templates every time dialog opens.
+  // Loads saved settings from localStorage if available.
   // ---------------------------------------------------------------
   useEffect(() => {
     if (!open) return;
-    setSelectedSections(new Set(DEFAULT_SECTIONS));
-    setLocale(currentLocale);
-    setCurrency("CZK");
-    setCustomCurrency("");
-    setIsCustomCurrency(false);
-    setSectionOrientations({});
-    setReportStyle("minimal");
-    setTableSorts({});
+    const saved = loadSavedSettings();
+    if (saved) {
+      setSelectedSections(new Set(saved.sections));
+      setLocale(saved.locale);
+      setCurrency(saved.currency);
+      setCustomCurrency("");
+      setIsCustomCurrency(false);
+      setSectionOrientations(saved.sectionOrientations ?? {});
+      setReportStyle(saved.reportStyle ?? "minimal");
+      setTableSorts(saved.tableSorts ?? {});
+    } else {
+      setSelectedSections(new Set(DEFAULT_SECTIONS));
+      setLocale(currentLocale);
+      setCurrency("CZK");
+      setCustomCurrency("");
+      setIsCustomCurrency(false);
+      setSectionOrientations({});
+      setReportStyle("minimal");
+      setTableSorts({});
+    }
     setActiveTab("content");
     setNewTemplateName("");
     void fetchTemplates();
   }, [open, currentLocale, fetchTemplates]);
+
+  // ---------------------------------------------------------------
+  // Save settings to localStorage whenever they change (debounced
+  // via the open state — only saves while dialog is open).
+  // ---------------------------------------------------------------
+  useEffect(() => {
+    if (!open) return;
+    const settings: SavedSettings = {
+      sections: Array.from(selectedSections),
+      locale,
+      currency: isCustomCurrency ? (customCurrency || "CZK") : currency,
+      reportStyle,
+      sectionOrientations,
+      tableSorts,
+    };
+    saveSettings(settings);
+  }, [open, selectedSections, locale, currency, isCustomCurrency, customCurrency, reportStyle, sectionOrientations, tableSorts]);
+
+  // ---------------------------------------------------------------
+  // Apply a preset configuration
+  // ---------------------------------------------------------------
+  const applyPreset = useCallback((preset: PresetConfig) => {
+    setSelectedSections(new Set(preset.sections));
+    setReportStyle(preset.reportStyle);
+    setSectionOrientations({});
+    setTableSorts({});
+  }, []);
 
   // ---------------------------------------------------------------
   // Section toggle handlers
@@ -637,6 +764,7 @@ export function PdfExportDialog({
       onReportStyleChange={setReportStyle}
       activeTab={activeTab}
       onActiveTabChange={setActiveTab}
+      onApplyPreset={applyPreset}
       tableSorts={tableSorts}
       onTableSortChange={(tableId, field, direction) => {
         setTableSorts((prev) => ({
@@ -740,8 +868,9 @@ type BodyProps = {
   onSetAllOrientations: (value: "auto" | "portrait" | "landscape") => void;
   reportStyle: PdfReportStyle;
   onReportStyleChange: (style: PdfReportStyle) => void;
-  activeTab: "content" | "format" | "templates";
-  onActiveTabChange: (tab: "content" | "format" | "templates") => void;
+  activeTab: "content" | "format";
+  onActiveTabChange: (tab: "content" | "format") => void;
+  onApplyPreset: (preset: PresetConfig) => void;
   tableSorts: Partial<Record<string, { field: string; direction: "asc" | "desc" }>>;
   onTableSortChange: (
     tableId: string,
@@ -779,6 +908,7 @@ function PdfExportBody({
   onReportStyleChange,
   activeTab,
   onActiveTabChange,
+  onApplyPreset,
   tableSorts,
   onTableSortChange,
   onTableSortClear,
@@ -973,7 +1103,7 @@ function PdfExportBody({
         value={activeTab}
         onValueChange={(v) => onActiveTabChange(v as typeof activeTab)}
       >
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="content">
             <Files className="h-3.5 w-3.5" />
             <span className="hidden sm:inline">{t("tabs.content")}</span>
@@ -988,33 +1118,157 @@ function PdfExportBody({
             <LayoutPanelLeft className="h-3.5 w-3.5" />
             <span className="hidden sm:inline">{t("tabs.format")}</span>
           </TabsTrigger>
-          <TabsTrigger value="templates">
-            <Save className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">{t("tabs.templates")}</span>
-          </TabsTrigger>
         </TabsList>
 
         {/* ═══════════════════════════════════════════════════════════ */}
         {/* Tab 1: Obsah — section picker + inline orientation toggles    */}
         {/* ═══════════════════════════════════════════════════════════ */}
         <TabsContent value="content" className="space-y-5 pt-6">
-          {/* Presets placeholder */}
-          <div className="rounded-xl border border-dashed border-muted-foreground/30 p-4">
+          {/* ① Šablony — user's saved templates (first, most personal) */}
+          <section className="space-y-3">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <Save className="h-4 w-4 text-primary" />
+                <h3 className="type-overline text-muted-foreground">
+                  {t("templates.title")}
+                </h3>
+              </div>
+              {/* Inline save template input */}
+              <div className="flex gap-1.5">
+                <Input
+                  value={newTemplateName}
+                  onChange={(e) => onNewTemplateNameChange(e.target.value)}
+                  placeholder={t("templates.namePlaceholder")}
+                  maxLength={100}
+                  className="h-8 w-32 type-label-sm"
+                  onKeyDown={(e) => {
+                    if (
+                      e.key === "Enter" &&
+                      !isSavingTemplate &&
+                      newTemplateName.trim()
+                    ) {
+                      e.preventDefault();
+                      onSaveTemplate();
+                    }
+                  }}
+                />
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  className="h-8 shrink-0"
+                  onClick={onSaveTemplate}
+                  disabled={isSavingTemplate || !newTemplateName.trim()}
+                >
+                  {isSavingTemplate ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <Save className="h-3.5 w-3.5" />
+                  )}
+                </Button>
+              </div>
+            </div>
+
+            {/* Templates list — horizontal scroll on mobile, grid on desktop */}
+            {isLoadingTemplates ? (
+              <div className="flex gap-2 overflow-x-auto pb-1">
+                {[1, 2].map((i) => (
+                  <div
+                    key={i}
+                    className="h-20 w-48 shrink-0 animate-pulse rounded-lg border bg-muted/40"
+                  />
+                ))}
+              </div>
+            ) : templates.length === 0 ? (
+              <div className="flex items-center gap-2 rounded-lg border border-dashed px-3 py-2 text-center">
+                <FolderOpen className="h-4 w-4 shrink-0 text-muted-foreground/50" />
+                <p className="type-label-sm text-muted-foreground">
+                  {t("templates.empty")}
+                </p>
+              </div>
+            ) : (
+              <div className="flex gap-2 overflow-x-auto pb-1">
+                {templates.map((tpl) => (
+                  <div
+                    key={tpl.id}
+                    className="group flex w-48 shrink-0 flex-col gap-1 rounded-lg border p-2.5 transition-colors hover:bg-muted/30"
+                  >
+                    <div className="flex items-start justify-between gap-1">
+                      <div className="truncate type-label font-medium">
+                        {tpl.name}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => onDeleteTemplate(tpl.id)}
+                        disabled={deletingTemplateId === tpl.id}
+                        className="shrink-0 text-muted-foreground/50 opacity-0 transition-opacity hover:text-destructive group-hover:opacity-100"
+                        aria-label={t("templates.delete")}
+                      >
+                        {deletingTemplateId === tpl.id ? (
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        ) : (
+                          <Trash2 className="h-3.5 w-3.5" />
+                        )}
+                      </button>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-1 type-label-sm text-muted-foreground">
+                      <span>{tpl.locale.toUpperCase()}</span>
+                      <span>·</span>
+                      <span>{tpl.currency}</span>
+                      <span>·</span>
+                      <span>{tpl.sections.length}</span>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="mt-1 h-7 type-label-sm"
+                      onClick={() => onLoadTemplate(tpl)}
+                    >
+                      <FolderOpen className="h-3 w-3" />
+                      {t("templates.load")}
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+
+          {/* ② Rychlé Presety — 3 predefined configurations (horizontal scroll) */}
+          <section className="space-y-3">
             <div className="flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-muted-foreground" />
+              <Sparkles className="h-4 w-4 text-primary" />
               <h3 className="type-overline text-muted-foreground">
                 {t("presets.title")}
               </h3>
-              <Badge variant="outline" className="h-4 px-1.5 type-label-sm">
-                {t("presets.comingSoon")}
-              </Badge>
             </div>
-            <p className="mt-1.5 type-label-sm text-muted-foreground">
-              {t("presets.description")}
-            </p>
-          </div>
+            <div className="flex gap-2 overflow-x-auto pb-1">
+              {PRESETS.map((preset) => (
+                <button
+                  key={preset.id}
+                  type="button"
+                  onClick={() => onApplyPreset(preset)}
+                  className="flex w-44 shrink-0 flex-col gap-1.5 rounded-lg border border-outline-variant bg-surface-container-low p-3 text-left transition-colors hover:border-primary/50 hover:bg-muted/40"
+                >
+                  <preset.icon className="h-4 w-4 text-primary" />
+                  <div className="type-label font-medium">
+                    {t(preset.labelKey as never)}
+                  </div>
+                  <div className="type-label-sm text-muted-foreground">
+                    {t(preset.descKey as never)}
+                  </div>
+                  <div className="mt-1 flex items-center gap-1 type-label-sm text-muted-foreground">
+                    <Badge variant="outline" className="h-4 px-1.5 type-label-sm">
+                      {preset.sections.length}
+                    </Badge>
+                    <span>{t("sections.count", { count: preset.sections.length })}</span>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </section>
 
-          {/* Section picker */}
+          {/* ③ Section picker */}
           <section className="space-y-4">
             {/* Header: title + count + bulk actions */}
             <div className="space-y-3">
@@ -1191,48 +1445,9 @@ function PdfExportBody({
                         <span>{c.label}</span>
                       </SelectItem>
                     ))}
-                    <SelectItem
-                      value={CUSTOM_CURRENCY_VALUE}
-                      textValue={t("locale.currency")}
-                    >
-                      <Globe className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                      <span className="text-muted-foreground italic">
-                        ISO 4217…
-                      </span>
-                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
-            </div>
-
-            {isCustomCurrency && (
-              <div className="space-y-2">
-                <Label htmlFor="pdf-currency-custom">
-                  ISO 4217
-                </Label>
-                <Input
-                  id="pdf-currency-custom"
-                  value={customCurrency}
-                  onChange={(e) =>
-                    onCustomCurrencyChange(
-                      e.target.value
-                        .toUpperCase()
-                        .replace(/[^A-Z]/g, "")
-                        .slice(0, 3),
-                    )
-                  }
-                  placeholder="JPY"
-                  maxLength={3}
-                  className="w-24 font-mono uppercase"
-                  autoComplete="off"
-                  spellCheck={false}
-                />
-              </div>
-            )}
-
-            <div className="flex items-start gap-2 rounded-lg bg-muted/30 p-3 type-label text-muted-foreground">
-              <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-              <span>{t("locale.conversionHint")}</span>
             </div>
           </section>
 
@@ -1263,154 +1478,7 @@ function PdfExportBody({
                 },
               ]}
             />
-            <div className="flex items-start gap-2 rounded-lg bg-muted/30 p-3 type-label text-muted-foreground">
-              <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-              <span>
-                {reportStyle === "minimal"
-                  ? t("style.hints.minimal")
-                  : t("style.hints.colorful")}
-              </span>
-            </div>
           </section>
-        </TabsContent>
-
-        {/* ═══════════════════════════════════════════════════════════ */}
-        {/* Tab 3: Šablony                                                */}
-        {/* ═══════════════════════════════════════════════════════════ */}
-        <TabsContent value="templates" className="space-y-4 pt-6">
-          <div className="flex items-center gap-2">
-            <Save className="h-4 w-4 text-primary" />
-            <h3 className="type-overline text-muted-foreground">
-              {t("templates.title")}
-            </h3>
-          </div>
-
-          {/* Save new template */}
-          <div className="space-y-2">
-            <Label htmlFor="pdf-template-name">
-              {t("templates.saveAs")}
-            </Label>
-            <div className="flex gap-2">
-              <Input
-                id="pdf-template-name"
-                value={newTemplateName}
-                onChange={(e) => onNewTemplateNameChange(e.target.value)}
-                placeholder={t("templates.namePlaceholder")}
-                maxLength={100}
-                onKeyDown={(e) => {
-                  if (
-                    e.key === "Enter" &&
-                    !isSavingTemplate &&
-                    newTemplateName.trim()
-                  ) {
-                    e.preventDefault();
-                    onSaveTemplate();
-                  }
-                }}
-              />
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={onSaveTemplate}
-                disabled={isSavingTemplate || !newTemplateName.trim()}
-                className="shrink-0"
-              >
-                {isSavingTemplate ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Save className="h-4 w-4" />
-                )}
-                {t("templates.save")}
-              </Button>
-            </div>
-          </div>
-
-          {/* Templates list */}
-          <div className="space-y-2">
-            <div className="type-label font-medium text-muted-foreground">
-              {t("templates.myTemplates")}
-            </div>
-
-            {isLoadingTemplates ? (
-              <div className="space-y-2">
-                {[1, 2].map((i) => (
-                  <div
-                    key={i}
-                    className="h-20 animate-pulse rounded-lg border bg-muted/40"
-                  />
-                ))}
-              </div>
-            ) : templates.length === 0 ? (
-              <div className="flex flex-col items-center justify-center gap-1.5 rounded-lg border border-dashed py-8 text-center">
-                <FolderOpen className="h-5 w-5 text-muted-foreground/50" />
-                <p className="type-label text-muted-foreground">
-                  {t("templates.empty")}
-                </p>
-              </div>
-            ) : (
-              <ul className="space-y-2">
-                {templates.map((tpl) => (
-                  <li
-                    key={tpl.id}
-                    className="rounded-xl border p-3 transition-colors hover:bg-muted/30"
-                  >
-                    <div className="flex flex-wrap items-start justify-between gap-2">
-                      <div className="min-w-0 flex-1">
-                        <div className="truncate type-body font-medium">
-                          {tpl.name}
-                        </div>
-                        <div className="mt-1.5 flex flex-wrap items-center gap-1.5 type-label text-muted-foreground">
-                          <Badge
-                            variant="outline"
-                            className="h-4 px-1.5 type-label-sm"
-                          >
-                            {tpl.locale.toUpperCase()}
-                          </Badge>
-                          <Badge
-                            variant="outline"
-                            className="h-4 px-1.5 type-label-sm"
-                          >
-                            {tpl.currency}
-                          </Badge>
-                          <span>
-                            {t("templates.sectionsCount", {
-                              count: tpl.sections.length,
-                            })}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="flex shrink-0 gap-1">
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => onLoadTemplate(tpl)}
-                        >
-                          <FolderOpen className="h-3.5 w-3.5" />
-                          {t("templates.load")}
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => onDeleteTemplate(tpl.id)}
-                          disabled={deletingTemplateId === tpl.id}
-                          aria-label={t("templates.delete")}
-                          className="text-muted-foreground hover:text-destructive"
-                        >
-                          {deletingTemplateId === tpl.id ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : (
-                            <Trash2 className="h-4 w-4" />
-                          )}
-                        </Button>
-                      </div>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
         </TabsContent>
       </Tabs>
     </div>

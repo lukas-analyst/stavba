@@ -2426,6 +2426,7 @@
         "selectAll": "Chọn tất cả",
         "selectNone": "Bỏ chọn",
         "countSelected": "Đã chọn {selected} / {total}",
+        "count": "{count} phần",
         "header": "Tiêu đề dự án",
         "headerDesc": "Tên, địa chỉ và mô tả dự án",
         "summary": "Tóm tắt",
@@ -2520,7 +2521,19 @@
       "presets": {
         "title": "Cài đặt nhanh",
         "comingSoon": "Sớm",
-        "description": "Cấu hình có sẵn cho các kịch bản phổ biến (vay thế chấp, tóm tắt, báo cáo đầy đủ)."
+        "description": "Cấu hình có sẵn cho các kịch bản phổ biến (vay thế chấp, tóm tắt, báo cáo đầy đủ).",
+        "mortgage": {
+          "label": "Vay thế chấp",
+          "desc": "Báo cáo tối giản cho ngân hàng"
+        },
+        "summary": {
+          "label": "Tóm tắt",
+          "desc": "Tổng quan dự án nhiều màu sắc"
+        },
+        "complete": {
+          "label": "Đầy đủ",
+          "desc": "Tất cả các phần và chi tiết"
+        }
       },
       "style": {
         "title": "Phong cách trực quan báo cáo",

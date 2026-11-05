@@ -2426,6 +2426,7 @@
         "selectAll": "Zaznacz wszystko",
         "selectNone": "Brak",
         "countSelected": "Zaznaczono {selected} z {total}",
+        "count": "{count} sekcji",
         "header": "Nagłówek projektu",
         "headerDesc": "Nazwa projektu, adres i opis",
         "summary": "Podsumowanie",
@@ -2520,7 +2521,19 @@
       "presets": {
         "title": "Szybkie presety",
         "comingSoon": "Wkrótce",
-        "description": "Gotowe konfiguracje dla typowych scenariuszy (hipoteka, podsumowanie, pełny raport)."
+        "description": "Gotowe konfiguracje dla typowych scenariuszy (hipoteka, podsumowanie, pełny raport).",
+        "mortgage": {
+          "label": "Hipoteka",
+          "desc": "Minimalistyczny raport dla banku"
+        },
+        "summary": {
+          "label": "Podsumowanie",
+          "desc": "Kolorowy przegląd projektu"
+        },
+        "complete": {
+          "label": "Kompletny",
+          "desc": "Wszystkie sekcje i szczegóły"
+        }
       },
       "style": {
         "title": "Styl wizualny raportu",

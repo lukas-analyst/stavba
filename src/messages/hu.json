@@ -2426,6 +2426,7 @@
         "selectAll": "Összes kijelölése",
         "selectNone": "Egyik sem",
         "countSelected": "{selected} / {total} kijelölve",
+        "count": "{count} szakasz",
         "header": "Projekt fejléc",
         "headerDesc": "Projekt neve, címe és leírása",
         "summary": "Összegzés",
@@ -2520,7 +2521,19 @@
       "presets": {
         "title": "Gyors előbeállítások",
         "comingSoon": "Hamarosan",
-        "description": "Előre beállított konfigurációk gyakori forgatókönyvekhez (jelzálog, összegzés, teljes jelentés)."
+        "description": "Előre beállított konfigurációk gyakori forgatókönyvekhez (jelzálog, összegzés, teljes jelentés).",
+        "mortgage": {
+          "label": "Jelzálog",
+          "desc": "Minimalista jelentés banknak"
+        },
+        "summary": {
+          "label": "Összegzés",
+          "desc": "Színes projekt áttekintés"
+        },
+        "complete": {
+          "label": "Teljes",
+          "desc": "Minden szakasz és részlet"
+        }
       },
       "style": {
         "title": "Jelentés vizuális stílusa",

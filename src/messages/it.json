@@ -2426,6 +2426,7 @@
         "selectAll": "Seleziona tutto",
         "selectNone": "Nessuno",
         "countSelected": "{selected} di {total} selezionate",
+        "count": "{count} sezioni",
         "header": "Intestazione del progetto",
         "headerDesc": "Nome del progetto, indirizzo e descrizione",
         "summary": "Riepilogo",
@@ -2520,7 +2521,19 @@
       "presets": {
         "title": "Preset rapidi",
         "comingSoon": "Presto",
-        "description": "Configurazioni preimpostate per scenari comuni (mutuo, riepilogo, report completo)."
+        "description": "Configurazioni preimpostate per scenari comuni (mutuo, riepilogo, report completo).",
+        "mortgage": {
+          "label": "Mutuo",
+          "desc": "Report minimalista per banca"
+        },
+        "summary": {
+          "label": "Riepilogo",
+          "desc": "Panoramica colorata del progetto"
+        },
+        "complete": {
+          "label": "Completo",
+          "desc": "Tutte le sezioni e i dettagli"
+        }
       },
       "style": {
         "title": "Stile visivo del report",
