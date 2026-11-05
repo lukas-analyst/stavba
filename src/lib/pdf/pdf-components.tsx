@@ -234,7 +234,7 @@ const styles = StyleSheet.create({
     color: "#333333",
     backgroundColor: "#ffffff",
     paddingTop: 40,
-    paddingBottom: 75, // leave room for the fixed footer (bottom: 20 + ~16pt height + margin)
+    paddingBottom: 40, // no fixed footer — symmetric with paddingTop
     paddingLeft: 40,
     paddingRight: 40,
     lineHeight: 1.4,
@@ -1349,34 +1349,6 @@ export function ProjectionSection({
 }
 
 // =====================================================================
-// Footer — appears on every page via the `fixed` prop.
-// Project name + generated date + "Strana X z Y"
-// =====================================================================
-
-export function Footer({
-  project,
-  locale,
-  labels,
-}: {
-  project: PdfReportData["project"];
-  locale: string;
-  labels: PdfReportData["labels"];
-}) {
-  const generatedDate = formatDate(new Date(), locale);
-  return (
-    <View style={styles.footer} fixed>
-      <Text>{project.name}</Text>
-      <Text>{labels.generated}: {generatedDate}</Text>
-      <Text
-        render={({ pageNumber, totalPages }) =>
-          `${labels.page} ${pageNumber} ${labels.of} ${totalPages}`
-        }
-      />
-    </View>
-  );
-}
-
-// =====================================================================
 // PaymentsTable — table of all payments.
 // =====================================================================
 
@@ -2165,7 +2137,6 @@ export function ReportDocument({
             />
           ) : null}
 
-          <Footer project={data.project} locale={locale} labels={data.labels} />
         </Page>
       ) : null}
 
@@ -2184,7 +2155,6 @@ export function ReportDocument({
             reportStyle={options.reportStyle}
             sort={options.tableSorts?.budget_items}
           />
-          <Footer project={data.project} locale={locale} labels={data.labels} />
         </Page>
       ) : null}
 
@@ -2201,7 +2171,6 @@ export function ReportDocument({
             sort={options.tableSorts?.payments}
             reportStyle={options.reportStyle}
           />
-          <Footer project={data.project} locale={locale} labels={data.labels} />
         </Page>
       ) : null}
 
@@ -2216,7 +2185,6 @@ export function ReportDocument({
             sort={options.tableSorts?.time}
             reportStyle={options.reportStyle}
           />
-          <Footer project={data.project} locale={locale} labels={data.labels} />
         </Page>
       ) : null}
 
@@ -2232,7 +2200,6 @@ export function ReportDocument({
             sort={options.tableSorts?.contacts}
             reportStyle={options.reportStyle}
           />
-          <Footer project={data.project} locale={locale} labels={data.labels} />
         </Page>
       ) : null}
     </Document>
