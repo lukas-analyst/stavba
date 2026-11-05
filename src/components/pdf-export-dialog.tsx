@@ -41,6 +41,11 @@ import {
   Coins,
   Info,
   Files,
+  LayoutPanelLeft,
+  RectangleVertical,
+  RectangleHorizontal,
+  SlidersHorizontal,
+  Sparkles,
 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useLocale, useTranslations } from "next-intl";
@@ -48,10 +53,13 @@ import { toast } from "sonner";
 import {
   ALL_SECTIONS,
   SUB_SECTIONS,
+  ORIENTABLE_SECTION_IDS,
   type PdfSectionId,
+  type PdfOrientationMode,
   type ExportTemplateData,
 } from "@/lib/pdf/pdf-types";
 import { locales, LOCALE_META, type Locale } from "@/i18n/config";
+import { SegmentedButton } from "@/components/ui/segmented-button";
 
 // =====================================================================
 // PdfExportDialog
@@ -141,6 +149,13 @@ export function PdfExportDialog({
   const [customCurrency, setCustomCurrency] = useState<string>("");
   const [isCustomCurrency, setIsCustomCurrency] = useState<boolean>(false);
 
+  // Page orientation (Phase 2G+). Default = "auto" (wide-table detection).
+  // "custom" reveals per-section Portrait/Landscape toggles.
+  const [orientationMode, setOrientationMode] = useState<PdfOrientationMode>("auto");
+  const [sectionOrientations, setSectionOrientations] = useState<
+    Partial<Record<string, "portrait" | "landscape">>
+  >({});
+
   const [isExporting, setIsExporting] = useState(false);
   const [templates, setTemplates] = useState<ExportTemplateData[]>([]);
   const [isLoadingTemplates, setIsLoadingTemplates] = useState(false);
@@ -182,6 +197,8 @@ export function PdfExportDialog({
     setCurrency("CZK");
     setCustomCurrency("");
     setIsCustomCurrency(false);
+    setOrientationMode("auto");
+    setSectionOrientations({});
     setNewTemplateName("");
     void fetchTemplates();
   }, [open, currentLocale, fetchTemplates]);
@@ -229,11 +246,22 @@ export function PdfExportDialog({
 
     try {
       const sections = Array.from(selectedSections).join(",");
+      const orientationParams = new URLSearchParams();
+      orientationParams.set("orientationMode", orientationMode);
+      if (orientationMode === "custom") {
+        for (const sectionId of ORIENTABLE_SECTION_IDS) {
+          const v = sectionOrientations[sectionId];
+          if (v === "portrait" || v === "landscape") {
+            orientationParams.set(`orientation-${sectionId}`, v);
+          }
+        }
+      }
       const url =
         `/api/projects/${projectId}/export-pdf` +
         `?locale=${encodeURIComponent(locale)}` +
         `&currency=${encodeURIComponent(effectiveCurrency)}` +
-        `&sections=${encodeURIComponent(sections)}`;
+        `&sections=${encodeURIComponent(sections)}` +
+        `&${orientationParams.toString()}`;
 
       // Use a hidden iframe instead of window.open — avoids the popup
       // blocker that triggers on some browsers (especially Safari/iOS)
@@ -259,7 +287,7 @@ export function PdfExportDialog({
       toast.error(t("toasts.error"), { id: "pdf-export" });
       setIsExporting(false);
     }
-  }, [selectedSections, projectId, locale, effectiveCurrency, t]);
+  }, [selectedSections, projectId, locale, effectiveCurrency, orientationMode, sectionOrientations, t]);
 
   // ---------------------------------------------------------------
   // Save current selection as a template
@@ -364,6 +392,15 @@ export function PdfExportDialog({
       isCustomCurrency={isCustomCurrency}
       customCurrency={customCurrency}
       onCustomCurrencyChange={setCustomCurrency}
+      orientationMode={orientationMode}
+      onOrientationModeChange={setOrientationMode}
+      sectionOrientations={sectionOrientations}
+      onSectionOrientationChange={(sectionId, value) => {
+        setSectionOrientations((prev) => ({
+          ...prev,
+          [sectionId]: value,
+        }));
+      }}
       templates={templates}
       isLoadingTemplates={isLoadingTemplates}
       newTemplateName={newTemplateName}
@@ -443,6 +480,13 @@ type BodyProps = {
   isCustomCurrency: boolean;
   customCurrency: string;
   onCustomCurrencyChange: (v: string) => void;
+  orientationMode: PdfOrientationMode;
+  onOrientationModeChange: (mode: PdfOrientationMode) => void;
+  sectionOrientations: Partial<Record<string, "portrait" | "landscape">>;
+  onSectionOrientationChange: (
+    sectionId: string,
+    value: "portrait" | "landscape",
+  ) => void;
   templates: ExportTemplateData[];
   isLoadingTemplates: boolean;
   newTemplateName: string;
@@ -464,6 +508,10 @@ function PdfExportBody({
   isCustomCurrency,
   customCurrency,
   onCustomCurrencyChange,
+  orientationMode,
+  onOrientationModeChange,
+  sectionOrientations,
+  onSectionOrientationChange,
   templates,
   isLoadingTemplates,
   newTemplateName,
@@ -731,7 +779,86 @@ function PdfExportBody({
 
       <Separator />
 
-      {/* ③ Templates */}
+      {/* ③ Page orientation (Phase 2G+) */}
+      <section className="space-y-3">
+        <div className="flex items-center gap-2">
+          <LayoutPanelLeft className="h-4 w-4 text-primary" />
+          <h3 className="type-label font-semibold uppercase tracking-wide text-muted-foreground">
+            {t("orientation.title")}
+          </h3>
+        </div>
+
+        {/* 4-way segmented control: Auto / Portrait / Landscape / Custom */}
+        <SegmentedButton
+          value={orientationMode}
+          onChange={(v) => onOrientationModeChange(v as PdfOrientationMode)}
+          className="w-full"
+          options={[
+            { value: "auto", label: t("orientation.modes.auto"), icon: Sparkles },
+            { value: "all-portrait", label: t("orientation.modes.portrait"), icon: RectangleVertical },
+            { value: "all-landscape", label: t("orientation.modes.landscape"), icon: RectangleHorizontal },
+            { value: "custom", label: t("orientation.modes.custom"), icon: SlidersHorizontal },
+          ]}
+        />
+
+        {/* Contextual hint based on the selected mode */}
+        <div className="flex items-start gap-2 rounded-md bg-muted/50 p-2.5 type-label text-muted-foreground">
+          <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+          <span>
+            {orientationMode === "auto" && t("orientation.hints.auto")}
+            {orientationMode === "all-portrait" && t("orientation.hints.allPortrait")}
+            {orientationMode === "all-landscape" && t("orientation.hints.allLandscape")}
+            {orientationMode === "custom" && t("orientation.hints.custom")}
+          </span>
+        </div>
+
+        {/* Per-section orientation toggles — only when "custom" is selected */}
+        {orientationMode === "custom" ? (
+          <div className="space-y-2 rounded-md border bg-surface p-3">
+            <div className="type-label font-medium text-muted-foreground">
+              {t("orientation.perSectionTitle")}
+            </div>
+            {ORIENTABLE_SECTION_IDS.map((sectionId) => {
+              const currentValue =
+                sectionOrientations[sectionId] ?? "portrait";
+              // Translate the section label using the existing
+              // dialogs.pdfExport.sections.* translation keys.
+              const sectionLabelKey = ALL_SECTIONS.find(
+                (s) => s.id === sectionId,
+              )?.labelKey ?? "";
+              return (
+                <div
+                  key={sectionId}
+                  className="flex items-center justify-between gap-2"
+                >
+                  <Label className="type-body font-medium">
+                    {t(sectionLabelKey as never)}
+                  </Label>
+                  <SegmentedButton
+                    value={currentValue}
+                    onChange={(v) =>
+                      onSectionOrientationChange(
+                        sectionId,
+                        v as "portrait" | "landscape",
+                      )
+                    }
+                    size="sm"
+                    className="w-44"
+                    options={[
+                      { value: "portrait", label: t("orientation.portrait"), icon: RectangleVertical },
+                      { value: "landscape", label: t("orientation.landscape"), icon: RectangleHorizontal },
+                    ]}
+                  />
+                </div>
+              );
+            })}
+          </div>
+        ) : null}
+      </section>
+
+      <Separator />
+
+      {/* ④ Templates */}
       <section className="space-y-3">
         <div className="flex items-center gap-2">
           <Save className="h-4 w-4 text-primary" />

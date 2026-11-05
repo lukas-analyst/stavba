@@ -2480,6 +2480,24 @@
         "sectionsCount": "{count} szekció",
         "empty": "Még nincsenek mentett sablonok."
       },
+      "orientation": {
+        "title": "Lap tájolása",
+        "portrait": "Álló",
+        "landscape": "Fekvő",
+        "perSectionTitle": "Tájolás szekciónként",
+        "modes": {
+          "auto": "Auto",
+          "portrait": "Mind álló",
+          "landscape": "Mind fekvő",
+          "custom": "Egyedi"
+        },
+        "hints": {
+          "auto": "A széles táblázatok (Költségvetés / Kapcsolatok az alárendelt szakaszokkal) automatikusan fekvő tájolású oldalon jelennek meg. A legtöbb jelentéshez megfelelő.",
+          "allPortrait": "Minden oldal álló tájolású lesz. Takarékosabb, de a széles táblázatok sűrű oszlopokat kaphatnak.",
+          "allLandscape": "Minden oldal fekvő tájolású lesz. Több hely az oszlopoknak, de a jelentés több oldalból áll.",
+          "custom": "Válassz tájolást minden táblázathoz külön. A kifejezetten nem választott szakaszok Auto módba váltanak vissza."
+        }
+      },
       "button": {
         "cancel": "Mégse",
         "export": "PDF exportálása",

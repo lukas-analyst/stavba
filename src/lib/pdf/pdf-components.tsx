@@ -28,6 +28,7 @@ import type {
   PdfAlertItem,
   PdfExportOptions,
   PdfContact,
+  PdfOrientationMode,
 } from "./pdf-types";
 
 // =====================================================================
@@ -1411,6 +1412,45 @@ function countContactsColumns(sections: PdfSectionId[]): number {
   return count;
 }
 
+/**
+ * Resolve the effective page orientation for a given table section,
+ * honoring the user's `orientationMode` choice.
+ *
+ * - "auto": wide-table detection (>= WIDE_*_THRESHOLD columns) → landscape
+ * - "all-portrait": always "portrait"
+ * - "all-landscape": always "landscape"
+ * - "custom": look up `sectionOrientations[sectionId]`, fall back to
+ *   auto-detection when not specified (lets users override only what
+ *   they care about and inherit sensible defaults otherwise).
+ */
+function resolveOrientation(
+  sectionId: "budget_items" | "contacts",
+  sections: PdfSectionId[],
+  mode: PdfOrientationMode | undefined,
+  sectionOrientations: Partial<Record<PdfSectionId, "portrait" | "landscape">> | undefined,
+): "portrait" | "landscape" {
+  // Mode takes precedence.
+  if (mode === "all-portrait") return "portrait";
+  if (mode === "all-landscape") return "landscape";
+
+  // Custom: per-section override wins; absent → fall through to auto.
+  if (mode === "custom") {
+    const override = sectionOrientations?.[sectionId];
+    if (override === "portrait" || override === "landscape") return override;
+  }
+
+  // Auto (default + custom fallback).
+  const colCount =
+    sectionId === "budget_items"
+      ? countBudgetColumns(sections)
+      : countContactsColumns(sections);
+  const threshold =
+    sectionId === "budget_items"
+      ? WIDE_BUDGET_THRESHOLD
+      : WIDE_CONTACTS_THRESHOLD;
+  return colCount >= threshold ? "landscape" : "portrait";
+}
+
 // =====================================================================
 // ReportDocument — the top-level <Document> that assembles all sections
 // based on the `sections` array from `options`.
@@ -1429,6 +1469,9 @@ function countContactsColumns(sections: PdfSectionId[]): number {
 // Empty pages (when all their sections are disabled) are omitted entirely
 // — react-pdf would otherwise emit a blank page with just a footer.
 // `experimentalPagination` is enabled to make `totalPages` accurate.
+//
+// Phase 2G+: orientation is now user-controllable via `orientationMode`
+// and `sectionOrientations` (see `resolveOrientation`).
 // =====================================================================
 
 export function ReportDocument({
@@ -1438,7 +1481,7 @@ export function ReportDocument({
   data: PdfReportData;
   options: PdfExportOptions;
 }) {
-  const { locale, sections, currency } = options;
+  const { locale, sections, currency, orientationMode, sectionOrientations } = options;
   const showHeader = sections.includes("header");
   const showSummary = sections.includes("summary");
   const showProperty = sections.includes("property");
@@ -1449,11 +1492,21 @@ export function ReportDocument({
   const showTime = sections.includes("time");
   const showContacts = sections.includes("contacts");
 
-  // Detect wide tables → switch to landscape orientation.
-  const budgetIsWide =
-    showBudget && countBudgetColumns(sections) >= WIDE_BUDGET_THRESHOLD;
-  const contactsAreWide =
-    showContacts && countContactsColumns(sections) >= WIDE_CONTACTS_THRESHOLD;
+  // Resolve effective page orientations from user prefs + auto fallback.
+  // Cover / payments+time stay portrait unless user forces landscape.
+  const forceAllLandscape = orientationMode === "all-landscape";
+  const budgetOrientation = resolveOrientation(
+    "budget_items",
+    sections,
+    orientationMode,
+    sectionOrientations,
+  );
+  const contactsOrientation = resolveOrientation(
+    "contacts",
+    sections,
+    orientationMode,
+    sectionOrientations,
+  );
 
   // Whether the cover page (header/summary/property/alerts/projection)
   // has any content to render. If not, we skip that page entirely.
@@ -1467,9 +1520,14 @@ export function ReportDocument({
       subject="Rozpočtová sestava projektu"
       language={locale}
     >
-      {/* ─── Cover page (portrait) ─────────────────────────────────── */}
+      {/* ─── Cover page ───────────────────────────────────────────── */}
       {hasCoverContent ? (
-        <Page size="A4" style={styles.page} experimentalPagination>
+        <Page
+          size="A4"
+          orientation={forceAllLandscape ? "landscape" : "portrait"}
+          style={styles.page}
+          experimentalPagination
+        >
           {showHeader ? (
             <Header project={data.project} locale={locale} labels={data.labels} />
           ) : null}
@@ -1513,11 +1571,11 @@ export function ReportDocument({
         </Page>
       ) : null}
 
-      {/* ─── Budget table (landscape if wide, portrait if narrow) ─── */}
+      {/* ─── Budget table ─────────────────────────────────────────── */}
       {showBudget ? (
         <Page
           size="A4"
-          orientation={budgetIsWide ? "landscape" : "portrait"}
+          orientation={budgetOrientation}
           style={styles.page}
           experimentalPagination
         >
@@ -1533,9 +1591,14 @@ export function ReportDocument({
         </Page>
       ) : null}
 
-      {/* ─── Payments + Time entries (always portrait — they fit) ──── */}
+      {/* ─── Payments + Time entries ──────────────────────────────── */}
       {showPayments || showTime ? (
-        <Page size="A4" style={styles.page} experimentalPagination>
+        <Page
+          size="A4"
+          orientation={forceAllLandscape ? "landscape" : "portrait"}
+          style={styles.page}
+          experimentalPagination
+        >
           {showPayments ? (
             <PaymentsTable
               payments={data.payments}
@@ -1560,11 +1623,11 @@ export function ReportDocument({
         </Page>
       ) : null}
 
-      {/* ─── Contacts table (landscape if wide, portrait if narrow) ─ */}
+      {/* ─── Contacts table ───────────────────────────────────────── */}
       {showContacts ? (
         <Page
           size="A4"
-          orientation={contactsAreWide ? "landscape" : "portrait"}
+          orientation={contactsOrientation}
           style={styles.page}
           experimentalPagination
         >

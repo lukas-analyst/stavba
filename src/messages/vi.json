@@ -2480,6 +2480,24 @@
         "sectionsCount": "{count} phần",
         "empty": "Chưa có mẫu nào được lưu."
       },
+      "orientation": {
+        "title": "Hướng trang",
+        "portrait": "Dọc",
+        "landscape": "Ngang",
+        "perSectionTitle": "Hướng cho từng phần",
+        "modes": {
+          "auto": "Tự động",
+          "portrait": "Tất cả dọc",
+          "landscape": "Tất cả ngang",
+          "custom": "Tùy chỉnh"
+        },
+        "hints": {
+          "auto": "Các bảng rộng (Ngân sách / Liên hệ với các phần con được bật) sẽ tự động hiển thị trên trang ngang. Phù hợp cho hầu hết các báo cáo.",
+          "allPortrait": "Tất cả các trang sẽ theo hướng dọc. Gọn hơn, nhưng các bảng rộng có thể bị chật cột.",
+          "allLandscape": "Tất cả các trang sẽ theo hướng ngang. Nhiều chỗ hơn cho các cột, nhưng báo cáo sẽ có nhiều trang hơn.",
+          "custom": "Chọn hướng cho từng bảng riêng. Các phần không chọn sẽ dùng chế độ Tự động."
+        }
+      },
       "button": {
         "cancel": "Hủy",
         "export": "Xuất PDF",

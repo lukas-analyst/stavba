@@ -2480,6 +2480,24 @@
         "sectionsCount": "{count} sezioni",
         "empty": "Nessun modello salvato."
       },
+      "orientation": {
+        "title": "Orientamento pagina",
+        "portrait": "Verticale",
+        "landscape": "Orizzontale",
+        "perSectionTitle": "Orientamento per sezione",
+        "modes": {
+          "auto": "Auto",
+          "portrait": "Tutto verticale",
+          "landscape": "Tutto orizzontale",
+          "custom": "Personalizzato"
+        },
+        "hints": {
+          "auto": "Le tabelle larghe (Budget / Contatti con sottosezioni attivate) verranno automaticamente renderizzate su pagine orizzontali. Adatto per la maggior parte dei report.",
+          "allPortrait": "Tutte le pagine saranno in orientamento verticale. Più compatto, ma le tabelle larghe possono avere colonne affollate.",
+          "allLandscape": "Tutte le pagine saranno in orientamento orizzontale. Più spazio per le colonne, ma il report avrà più pagine.",
+          "custom": "Scegli l'orientamento per ogni tabella separatamente. Le sezioni senza scelta esplicita passeranno alla modalità Auto."
+        }
+      },
       "button": {
         "cancel": "Annulla",
         "export": "Esporta PDF",

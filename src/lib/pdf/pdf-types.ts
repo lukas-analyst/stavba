@@ -76,7 +76,40 @@ export type PdfExportOptions = {
   locale: string;
   currency: string;
   sections: PdfSectionId[];
+  /**
+   * Page orientation strategy. Default = "auto".
+   *
+   * - "auto": wide tables (Budget/Contacts with 7+ columns) render on
+   *   landscape pages, narrow content stays on portrait. Recommended.
+   * - "all-portrait": force every page to portrait orientation.
+   * - "all-landscape": force every page to landscape orientation.
+   * - "custom": per-section orientation taken from `sectionOrientations`.
+   */
+  orientationMode?: PdfOrientationMode;
+  /**
+   * Per-section orientation override. Only consulted when
+   * `orientationMode === "custom"`. Keys are section IDs from the
+   * `sections` array; absent entries fall back to "auto" detection.
+   */
+  sectionOrientations?: Partial<Record<PdfSectionId, "portrait" | "landscape">>;
 };
+
+/** Page orientation strategy for PDF export. */
+export type PdfOrientationMode =
+  | "auto"
+  | "all-portrait"
+  | "all-landscape"
+  | "custom";
+
+/** Sections whose orientation can be overridden via `sectionOrientations`.
+ *  Limited to the four table-style sections — cover / payments / time
+ *  are either short or always-fit, so user override is unnecessary. */
+export const ORIENTABLE_SECTION_IDS = [
+  "budget_items",
+  "contacts",
+] as const;
+
+export type OrientableSectionId = (typeof ORIENTABLE_SECTION_IDS)[number];
 
 export type PdfReportData = {
   project: {

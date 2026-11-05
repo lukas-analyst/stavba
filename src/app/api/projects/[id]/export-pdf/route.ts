@@ -1,10 +1,14 @@
 import { NextResponse } from "next/server";
 import { getTranslations } from "next-intl/server";
-import { z } from "zod";
 import { requireProjectAccess } from "@/lib/authz";
 import { parseParam, cuidSchema } from "@/lib/api-validation";
 import { generatePdf, generateFilename } from "@/lib/pdf/pdf-generator";
-import type { PdfSectionId } from "@/lib/pdf/pdf-types";
+import type {
+  PdfSectionId,
+  PdfOrientationMode,
+  OrientableSectionId,
+} from "@/lib/pdf/pdf-types";
+import { ORIENTABLE_SECTION_IDS } from "@/lib/pdf/pdf-types";
 
 // Route config — PDF generation can be CPU-intensive, give it more time.
 export const maxDuration = 60;
@@ -16,6 +20,11 @@ const validSections = [
   "dates", "phase", "property", "alerts", "projection", "payments",
   "payment_type", "invoice", "time", "worker", "hours", "supplier",
   "contacts", "contact_type", "contact_phone", "contact_email", "contact_ico", "contact_notes",
+] as const;
+
+// Valid orientation modes — parsed from `?orientationMode=...`.
+const validOrientationModes = [
+  "auto", "all-portrait", "all-landscape", "custom",
 ] as const;
 
 // GET /api/projects/[id]/export-pdf
@@ -67,12 +76,38 @@ export async function GET(
       );
     }
 
+    // ─── Orientation mode (Phase 2G+) ───────────────────────────────
+    // ?orientationMode=auto|all-portrait|all-landscape|custom (default: auto)
+    // ?orientation-budget_items=portrait|landscape (only when orientationMode=custom)
+    // ?orientation-contacts=portrait|landscape (only when orientationMode=custom)
+    const rawMode = searchParams.get("orientationMode") || "auto";
+    const orientationMode: PdfOrientationMode = (
+      validOrientationModes.includes(rawMode as (typeof validOrientationModes)[number])
+        ? (rawMode as PdfOrientationMode)
+        : "auto"
+    );
+
+    let sectionOrientations:
+      | Partial<Record<OrientableSectionId, "portrait" | "landscape">>
+      | undefined;
+    if (orientationMode === "custom") {
+      sectionOrientations = {};
+      for (const sectionId of ORIENTABLE_SECTION_IDS) {
+        const v = searchParams.get(`orientation-${sectionId}`);
+        if (v === "portrait" || v === "landscape") {
+          sectionOrientations[sectionId] = v;
+        }
+      }
+    }
+
     // Generate PDF
     const buffer = await generatePdf({
       projectId: id,
       locale,
       currency,
       sections,
+      orientationMode,
+      sectionOrientations,
     });
 
     const filename = generateFilename(access.project.name, locale);
