@@ -270,13 +270,16 @@ function OrientationToggle({
             title={opt.label}
             onClick={() => onChange(opt.value)}
             className={cn(
-              "inline-flex h-6 w-6 items-center justify-center rounded-full transition-colors",
+              // h-8 (32px) matches SegmentedButton's sm size — meets MD3
+              // touch target floor and stays visually consistent with the
+              // rest of the app's small controls.
+              "inline-flex h-8 w-8 items-center justify-center rounded-full transition-colors",
               isActive
                 ? "bg-secondary-container text-secondary-container-foreground"
                 : "text-on-surface-variant hover:bg-surface-container-high",
             )}
           >
-            <Icon className="h-3 w-3" />
+            <Icon className="h-3.5 w-3.5" />
           </button>
         );
       })}
@@ -639,7 +642,7 @@ export function PdfExportDialog({
     return (
       <Drawer open={open} onOpenChange={onOpenChange}>
         <DrawerContent className="max-h-[92dvh] flex flex-col">
-          <DrawerHeader className="shrink-0 px-5 pb-3 text-left">
+          <DrawerHeader className="shrink-0 px-5 pb-3 pr-10 text-left">
             <DrawerTitle className="flex items-center gap-2">
               <FileDown className="h-5 w-5 text-primary" />
               {t("title")}
@@ -660,7 +663,7 @@ export function PdfExportDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="flex max-h-[90vh] w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-2xl">
-        <DialogHeader className="shrink-0 px-6 pt-6 pb-4">
+        <DialogHeader className="shrink-0 px-6 pt-6 pb-4 pr-10">
           <DialogTitle className="flex items-center gap-2">
             <FileDown className="h-5 w-5 text-primary" />
             {t("title")}
@@ -807,7 +810,7 @@ function PdfExportBody({
                 </span>
                 {disabled && (
                   <>
-                    <Lock className="h-3 w-3 text-muted-foreground" />
+                    <Lock className="h-3.5 w-3.5 text-muted-foreground" />
                     <Badge
                       variant="secondary"
                       className="h-4 px-1.5 type-label-sm"
@@ -890,7 +893,7 @@ function PdfExportBody({
           <div className="rounded-xl border border-dashed border-muted-foreground/30 p-4">
             <div className="flex items-center gap-2">
               <Sparkles className="h-4 w-4 text-muted-foreground" />
-              <h3 className="type-label font-semibold uppercase tracking-wide text-muted-foreground">
+              <h3 className="type-overline text-muted-foreground">
                 {t("presets.title")}
               </h3>
               <Badge variant="outline" className="h-4 px-1.5 type-label-sm">
@@ -909,7 +912,7 @@ function PdfExportBody({
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
                   <Files className="h-4 w-4 text-primary" />
-                  <h3 className="type-label font-semibold uppercase tracking-wide text-muted-foreground">
+                  <h3 className="type-overline text-muted-foreground">
                     {t("sections.title")}
                   </h3>
                 </div>
@@ -918,7 +921,6 @@ function PdfExportBody({
                     type="button"
                     variant="ghost"
                     size="sm"
-                    className="h-7 px-2.5 type-label-sm"
                     onClick={onSelectAll}
                     disabled={
                       selectedCount === TOP_LEVEL_SECTION_IDS.length
@@ -933,7 +935,6 @@ function PdfExportBody({
                     type="button"
                     variant="ghost"
                     size="sm"
-                    className="h-7 px-2.5 type-label-sm"
                     onClick={onSelectNone}
                     disabled={selectedCount === 0}
                   >
@@ -962,11 +963,10 @@ function PdfExportBody({
                     type="button"
                     variant="ghost"
                     size="sm"
-                    className="h-6 px-2 type-label-sm"
                     onClick={() => onSetAllOrientations("auto")}
                     disabled={customOrientationCount === 0}
                   >
-                    <Sparkles className="h-3 w-3" />
+                    <Sparkles className="h-3.5 w-3.5" />
                     <span className="hidden sm:inline">
                       {t("orientation.modes.auto")}
                     </span>
@@ -975,10 +975,9 @@ function PdfExportBody({
                     type="button"
                     variant="ghost"
                     size="sm"
-                    className="h-6 px-2 type-label-sm"
                     onClick={() => onSetAllOrientations("portrait")}
                   >
-                    <RectangleVertical className="h-3 w-3" />
+                    <RectangleVertical className="h-3.5 w-3.5" />
                     <span className="hidden sm:inline">
                       {t("orientation.portrait")}
                     </span>
@@ -987,10 +986,9 @@ function PdfExportBody({
                     type="button"
                     variant="ghost"
                     size="sm"
-                    className="h-6 px-2 type-label-sm"
                     onClick={() => onSetAllOrientations("landscape")}
                   >
-                    <RectangleHorizontal className="h-3 w-3" />
+                    <RectangleHorizontal className="h-3.5 w-3.5" />
                     <span className="hidden sm:inline">
                       {t("orientation.landscape")}
                     </span>
@@ -1003,7 +1001,7 @@ function PdfExportBody({
             <div className="space-y-6">
               {SECTION_CATEGORIES.map((category) => (
                 <div key={category.id} className="space-y-2">
-                  <div className="flex items-center gap-1.5 type-label font-semibold uppercase tracking-wide text-muted-foreground/80">
+                  <div className="flex items-center gap-1.5 type-overline text-muted-foreground/80">
                     <Layers className="h-3.5 w-3.5" />
                     {t(category.labelKey as never)}
                   </div>
@@ -1037,14 +1035,14 @@ function PdfExportBody({
           <section className="space-y-4">
             <div className="flex items-center gap-2">
               <Globe className="h-4 w-4 text-primary" />
-              <h3 className="type-label font-semibold uppercase tracking-wide text-muted-foreground">
+              <h3 className="type-overline text-muted-foreground">
                 {t("locale.title")}
               </h3>
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="pdf-locale" className="type-label">
+                <Label htmlFor="pdf-locale">
                   {t("locale.language")}
                 </Label>
                 <Select value={locale} onValueChange={onLocaleChange}>
@@ -1072,7 +1070,7 @@ function PdfExportBody({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="pdf-currency" className="type-label">
+                <Label htmlFor="pdf-currency">
                   {t("locale.currency")}
                 </Label>
                 <Select value={currency} onValueChange={onCurrencyChange}>
@@ -1106,7 +1104,7 @@ function PdfExportBody({
 
             {isCustomCurrency && (
               <div className="space-y-2">
-                <Label htmlFor="pdf-currency-custom" className="type-label">
+                <Label htmlFor="pdf-currency-custom">
                   ISO 4217
                 </Label>
                 <Input
@@ -1141,7 +1139,7 @@ function PdfExportBody({
           <section className="space-y-4">
             <div className="flex items-center gap-2">
               <Palette className="h-4 w-4 text-primary" />
-              <h3 className="type-label font-semibold uppercase tracking-wide text-muted-foreground">
+              <h3 className="type-overline text-muted-foreground">
                 {t("style.title")}
               </h3>
             </div>
@@ -1179,14 +1177,14 @@ function PdfExportBody({
         <TabsContent value="templates" className="space-y-4 pt-6">
           <div className="flex items-center gap-2">
             <Save className="h-4 w-4 text-primary" />
-            <h3 className="type-label font-semibold uppercase tracking-wide text-muted-foreground">
+            <h3 className="type-overline text-muted-foreground">
               {t("templates.title")}
             </h3>
           </div>
 
           {/* Save new template */}
           <div className="space-y-2">
-            <Label htmlFor="pdf-template-name" className="type-label">
+            <Label htmlFor="pdf-template-name">
               {t("templates.saveAs")}
             </Label>
             <div className="flex gap-2">
