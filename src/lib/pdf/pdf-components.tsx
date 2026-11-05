@@ -436,6 +436,51 @@ const styles = StyleSheet.create({
     borderTopStyle: "solid",
   },
 
+  // ----- Hierarchy (minimal mode) -----
+  // Even in the monochrome minimal report, parent (Položka) rows must
+  // be visually distinct from child (Úkol) rows so the user can tell
+  // which tasks belong to which item. We achieve this with:
+  //   - Parent: bold text + thicker top border + light gray bg
+  //   - Child: indented with left padding + "↳" prefix + lighter text
+  // These styles are used in BOTH minimal and colorful modes (the
+  // colorful variants override these via the style selectors below).
+  minimalParentRow: {
+    flexDirection: "row",
+    backgroundColor: "#f5f5f5",
+    paddingTop: 4,
+    paddingBottom: 4,
+    paddingLeft: 3,
+    paddingRight: 3,
+    borderBottomWidth: 0.5,
+    borderBottomColor: "#bbbbbb",
+    borderBottomStyle: "solid",
+    borderTopWidth: 1,
+    borderTopColor: "#999999",
+    borderTopStyle: "solid",
+  },
+  minimalParentCell: {
+    fontSize: 9,
+    fontFamily: "Roboto",
+    fontWeight: "bold",
+    color: "#1a1a1a",
+    paddingRight: 4,
+  },
+  minimalChildRow: {
+    flexDirection: "row",
+    paddingTop: 3,
+    paddingBottom: 3,
+    paddingLeft: 16,  // indent to show hierarchy under parent
+    paddingRight: 3,
+    borderBottomWidth: 0.5,
+    borderBottomColor: "#eeeeee",
+    borderBottomStyle: "solid",
+  },
+  minimalChildCell: {
+    fontSize: 8,
+    color: "#555555",
+    paddingRight: 4,
+  },
+
   // ----- Colorful mode (Phase 4) -----
   // MD3-inspired accent colors. Used only when reportStyle === "colorful".
   // Minimal mode uses the monochrome styles above.
@@ -870,15 +915,17 @@ export function BudgetTable({
   }
 
   // Style selectors based on reportStyle.
+  // In BOTH modes, parents and children get distinct styles so the
+  // hierarchy is always visible — even in the monochrome minimal report.
   const sectionTitleStyle = isColorful ? styles.colorfulSectionTitle : styles.sectionTitle;
   const tableHeaderStyle = isColorful ? styles.colorfulTableHeader : styles.tableHeader;
   const tableHeaderTextStyle = isColorful
     ? styles.colorfulTableHeaderText
     : styles.tableHeaderText;
-  const parentRowStyle = isColorful ? styles.colorfulParentRow : styles.tableRow;
-  const parentCellStyle = isColorful ? styles.colorfulParentCell : styles.tableCellText;
-  const childRowStyle = isColorful ? styles.colorfulChildRow : styles.tableRow;
-  const childCellStyle = isColorful ? styles.colorfulChildCell : styles.tableCellText;
+  const parentRowStyle = isColorful ? styles.colorfulParentRow : styles.minimalParentRow;
+  const parentCellStyle = isColorful ? styles.colorfulParentCell : styles.minimalParentCell;
+  const childRowStyle = isColorful ? styles.colorfulChildRow : styles.minimalChildRow;
+  const childCellStyle = isColorful ? styles.colorfulChildCell : styles.minimalChildCell;
 
   // Render a single row (parent or child) with all optional columns.
   const renderRow = (item: PdfBudgetItem, isParent: boolean) => {
