@@ -2446,7 +2446,9 @@
         "invoiceDesc": "Hiển thị số hóa đơn",
         "worker": "Nhân công",
         "workerType": "Loại nhân công",
-        "hours": "Giờ"
+        "hours": "Giờ",
+        "supplier": "Nhà cung cấp",
+        "supplierDesc": "Hiển thị nhà cung cấp/liên hệ được gán cho từng hạng mục ngân sách"
       },
       "locale": {
         "title": "Ngôn ngữ và tiền tệ",
@@ -3014,6 +3016,7 @@
     "hours": "Giờ",
     "workerCount": "Nhân công",
     "totalHours": "Tổng giờ",
-    "noTimeEntries": "Không có bản ghi thời gian."
+    "noTimeEntries": "Không có bản ghi thời gian.",
+    "supplier": "Nhà cung cấp"
   }
 }

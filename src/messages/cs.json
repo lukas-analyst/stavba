@@ -2449,7 +2449,9 @@
         "invoiceDesc": "Zobrazit číslo faktury",
         "worker": "Pracovník",
         "workerType": "Typ pracovníka",
-        "hours": "Hodiny"
+        "hours": "Hodiny",
+        "supplier": "Dodavatel",
+        "supplierDesc": "Zobrazit přiřazeného dodavatele/kontakt u položky rozpočtu"
       },
       "locale": {
         "title": "Jazyk a měna",
@@ -3017,6 +3019,7 @@
     "hours": "Hodiny",
     "workerCount": "Počet osob",
     "totalHours": "Celkem hodin",
-    "noTimeEntries": "Žádné časové záznamy."
+    "noTimeEntries": "Žádné časové záznamy.",
+    "supplier": "Dodavatel"
   }
 }

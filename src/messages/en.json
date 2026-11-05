@@ -2449,7 +2449,9 @@
         "invoiceDesc": "Show invoice number",
         "worker": "Worker",
         "workerType": "Worker type",
-        "hours": "Hours"
+        "hours": "Hours",
+        "supplier": "Supplier",
+        "supplierDesc": "Show assigned supplier/contact for each budget item"
       },
       "locale": {
         "title": "Language and currency",
@@ -3017,6 +3019,7 @@
     "hours": "Hours",
     "workerCount": "Workers",
     "totalHours": "Total hours",
-    "noTimeEntries": "No time entries."
+    "noTimeEntries": "No time entries.",
+    "supplier": "Supplier"
   }
 }

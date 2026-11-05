@@ -75,6 +75,9 @@ const BUDGET_ITEM_SELECT = {
   actualHours: true,
   sortOrder: true,
   parentId: true,
+  contact: {
+    select: { name: true },
+  },
 } as const;
 
 type DbBudgetItem = Awaited<
@@ -153,6 +156,7 @@ export async function generatePdf(options: PdfExportOptions): Promise<Buffer> {
         dateTo: item.dateTo,
         actualHours: item.actualHours,
         sortOrder: item.sortOrder,
+        contactName: item.contact?.name ?? null,
       };
     }),
   );
@@ -430,6 +434,7 @@ export async function generatePdf(options: PdfExportOptions): Promise<Buffer> {
     workerCount: tPdf("workerCount"),
     totalHours: tPdf("totalHours"),
     noTimeEntries: tPdf("noTimeEntries"),
+    supplier: tPdf("supplier"),
   };
 
   // ─── 7) Assemble PdfReportData ───────────────────────────────────

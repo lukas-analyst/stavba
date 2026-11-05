@@ -105,6 +105,7 @@ const DEFAULT_SECTIONS: PdfSectionId[] = [
   "actual_cost",
   "dates",
   "phase",
+  "supplier",
   "property",
   "alerts",
   "projection",

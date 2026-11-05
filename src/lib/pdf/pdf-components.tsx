@@ -565,6 +565,7 @@ export function BudgetTable({
   const showStatus = sections.includes("status");
   const showDates = sections.includes("dates");
   const showPhase = sections.includes("phase");
+  const showSupplier = sections.includes("supplier");
 
   // Effective plan cost (in target currency) for display.
   const planCostOf = (item: PdfBudgetItem) =>
@@ -604,6 +605,11 @@ export function BudgetTable({
             <Text style={[styles.tableHeaderText, styles.colDate]}>{labels.from}</Text>
             <Text style={[styles.tableHeaderText, styles.colDate]}>{labels.to}</Text>
           </>
+        ) : null}
+        {showSupplier ? (
+          <Text style={[styles.tableHeaderText, { flex: 1.2 }]}>
+            {labels.supplier}
+          </Text>
         ) : null}
       </View>
 
@@ -647,6 +653,11 @@ export function BudgetTable({
                   {formatDate(item.dateTo, locale)}
                 </Text>
               </>
+            ) : null}
+            {showSupplier ? (
+              <Text style={[styles.tableCellText, { flex: 1.2 }]}>
+                {item.contactName || "-"}
+              </Text>
             ) : null}
           </View>
         ))

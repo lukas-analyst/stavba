@@ -2446,7 +2446,9 @@
         "invoiceDesc": "Mostra numero fattura",
         "worker": "Lavoratore",
         "workerType": "Tipo di lavoratore",
-        "hours": "Ore"
+        "hours": "Ore",
+        "supplier": "Fornitore",
+        "supplierDesc": "Mostra fornitore/contatto assegnato per ogni elemento di budget"
       },
       "locale": {
         "title": "Lingua e valuta",
@@ -3014,6 +3016,7 @@
     "hours": "Ore",
     "workerCount": "Lavoratori",
     "totalHours": "Totale ore",
-    "noTimeEntries": "Nessuna registrazione di tempo."
+    "noTimeEntries": "Nessuna registrazione di tempo.",
+    "supplier": "Fornitore"
   }
 }

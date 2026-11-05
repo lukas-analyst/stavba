@@ -2446,7 +2446,9 @@
         "invoiceDesc": "Számlaszám megjelenítése",
         "worker": "Dolgozó",
         "workerType": "Dolgozó típusa",
-        "hours": "Órák"
+        "hours": "Órák",
+        "supplier": "Beszállító",
+        "supplierDesc": "Hozzárendelt beszállító/kapcsolat megjelenítése minden tételnél"
       },
       "locale": {
         "title": "Nyelv és pénznem",
@@ -3014,6 +3016,7 @@
     "hours": "Órák",
     "workerCount": "Dolgozók",
     "totalHours": "Összes óra",
-    "noTimeEntries": "Nincsenek munkaidő-bejegyzések."
+    "noTimeEntries": "Nincsenek munkaidő-bejegyzések.",
+    "supplier": "Beszállító"
   }
 }
