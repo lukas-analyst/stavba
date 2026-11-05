@@ -64,6 +64,9 @@ import {
   CreditCard,
   Clock,
   Users,
+  ArrowUp,
+  ArrowDown,
+  ArrowUpDown,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -73,6 +76,9 @@ import {
   ALL_SECTIONS,
   SUB_SECTIONS,
   ORIENTABLE_SECTION_IDS,
+  SORTABLE_TABLE_IDS,
+  SORTABLE_FIELDS_BY_TABLE,
+  DEFAULT_SORT_FIELD,
   type PdfSectionId,
   type PdfReportStyle,
   type ExportTemplateData,
@@ -335,6 +341,12 @@ export function PdfExportDialog({
   // "colorful" enables MD3-accented headers, KPI tiles, badges.
   const [reportStyle, setReportStyle] = useState<PdfReportStyle>("minimal");
 
+  // Per-table sort (Phase 4+). Keys are table section IDs.
+  // Absent entries = default ordering (sortOrder / date / name).
+  const [tableSorts, setTableSorts] = useState<
+    Partial<Record<string, { field: string; direction: "asc" | "desc" }>>
+  >({});
+
   // Active tab in the dialog (Phase 3B).
   const [activeTab, setActiveTab] = useState<"content" | "format" | "templates">("content");
 
@@ -381,6 +393,7 @@ export function PdfExportDialog({
     setIsCustomCurrency(false);
     setSectionOrientations({});
     setReportStyle("minimal");
+    setTableSorts({});
     setActiveTab("content");
     setNewTemplateName("");
     void fetchTemplates();
@@ -455,13 +468,22 @@ export function PdfExportDialog({
           orientationParams.set(`orientation-${sectionId}`, v);
         }
       }
+      // Per-table sort params (Phase 4+).
+      const sortParams = new URLSearchParams();
+      for (const [tableId, sort] of Object.entries(tableSorts)) {
+        if (sort) {
+          sortParams.set(`sort-${tableId}`, sort.field);
+          sortParams.set(`sortDir-${tableId}`, sort.direction);
+        }
+      }
       const url =
         `/api/projects/${projectId}/export-pdf` +
         `?locale=${encodeURIComponent(locale)}` +
         `&currency=${encodeURIComponent(effectiveCurrency)}` +
         `&sections=${encodeURIComponent(sections)}` +
         `&reportStyle=${encodeURIComponent(reportStyle)}` +
-        `&${orientationParams.toString()}`;
+        `&${orientationParams.toString()}` +
+        `&${sortParams.toString()}`;
 
       // Use a hidden iframe instead of window.open — avoids the popup
       // blocker that triggers on some browsers (especially Safari/iOS)
@@ -487,7 +509,7 @@ export function PdfExportDialog({
       toast.error(t("toasts.error"), { id: "pdf-export" });
       setIsExporting(false);
     }
-  }, [selectedSections, projectId, locale, effectiveCurrency, sectionOrientations, reportStyle, t]);
+  }, [selectedSections, projectId, locale, effectiveCurrency, sectionOrientations, reportStyle, tableSorts, t]);
 
   // ---------------------------------------------------------------
   // Save current selection as a template
@@ -615,6 +637,20 @@ export function PdfExportDialog({
       onReportStyleChange={setReportStyle}
       activeTab={activeTab}
       onActiveTabChange={setActiveTab}
+      tableSorts={tableSorts}
+      onTableSortChange={(tableId, field, direction) => {
+        setTableSorts((prev) => ({
+          ...prev,
+          [tableId]: { field, direction },
+        }));
+      }}
+      onTableSortClear={(tableId) => {
+        setTableSorts((prev) => {
+          const next = { ...prev };
+          delete next[tableId];
+          return next;
+        });
+      }}
       templates={templates}
       isLoadingTemplates={isLoadingTemplates}
       newTemplateName={newTemplateName}
@@ -706,6 +742,13 @@ type BodyProps = {
   onReportStyleChange: (style: PdfReportStyle) => void;
   activeTab: "content" | "format" | "templates";
   onActiveTabChange: (tab: "content" | "format" | "templates") => void;
+  tableSorts: Partial<Record<string, { field: string; direction: "asc" | "desc" }>>;
+  onTableSortChange: (
+    tableId: string,
+    field: string,
+    direction: "asc" | "desc",
+  ) => void;
+  onTableSortClear: (tableId: string) => void;
   templates: ExportTemplateData[];
   isLoadingTemplates: boolean;
   newTemplateName: string;
@@ -736,6 +779,9 @@ function PdfExportBody({
   onReportStyleChange,
   activeTab,
   onActiveTabChange,
+  tableSorts,
+  onTableSortChange,
+  onTableSortClear,
   templates,
   isLoadingTemplates,
   newTemplateName,
@@ -761,7 +807,13 @@ function PdfExportBody({
   // renderSection — one row in the section picker.
   // Top-level sections get an inline OrientationToggle (3-way icon
   // button) on the right. Sub-sections are indented without a toggle.
+  // Table sections (budget_items, payments, time, contacts) also get
+  // a SortControl row below when selected — lets the user pick which
+  // column to sort by + direction.
   // -----------------------------------------------------------------
+  const isSortableTable = (id: PdfSectionId): boolean =>
+    (SORTABLE_TABLE_IDS as readonly string[]).includes(id);
+
   const renderSection = (
     section: { id: PdfSectionId; labelKey: string; enabled: boolean },
     indent = false,
@@ -770,11 +822,15 @@ function PdfExportBody({
     const isTopLevel = !indent;
     const disabled = !section.enabled;
     const Icon = SECTION_ICONS[section.id] ?? Files;
+    const sortable = isTopLevel && !disabled && checked && isSortableTable(section.id);
 
     // Current orientation override for this section (if any).
     const explicit = sectionOrientations[section.id];
     const currentOrientation: "auto" | "portrait" | "landscape" =
       explicit === "portrait" || explicit === "landscape" ? explicit : "auto";
+
+    // Current sort for this table (if any).
+    const currentSort = tableSorts[section.id];
 
     return (
       <div
@@ -843,6 +899,59 @@ function PdfExportBody({
             />
           ) : null}
         </div>
+
+        {/* Sort control row — only for sortable table sections when checked. */}
+        {sortable ? (
+          <div className="ml-8 mt-1 flex items-center gap-2 rounded-md border border-outline-variant bg-surface-container-low/50 px-3 py-2">
+            <ArrowUpDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+            <span className="type-label-sm text-muted-foreground">
+              {t("sort.label")}:
+            </span>
+            <Select
+              value={currentSort?.field ?? DEFAULT_SORT_FIELD[section.id as "budget_items" | "payments" | "time" | "contacts"]}
+              onValueChange={(field) => {
+                onTableSortChange(
+                  section.id,
+                  field,
+                  currentSort?.direction ?? "asc",
+                );
+              }}
+            >
+              <SelectTrigger className="h-7 flex-1 gap-1 type-label-sm" size="sm">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {SORTABLE_FIELDS_BY_TABLE[section.id as "budget_items" | "payments" | "time" | "contacts"].map((f) => (
+                  <SelectItem key={f.id} value={f.id} className="type-label-sm">
+                    {t(f.labelKey as never)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {/* Direction toggle */}
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="h-7 w-7 shrink-0 p-0"
+              onClick={() => {
+                const dir = currentSort?.direction === "asc" ? "desc" : "asc";
+                onTableSortChange(
+                  section.id,
+                  currentSort?.field ?? DEFAULT_SORT_FIELD[section.id as "budget_items" | "payments" | "time" | "contacts"],
+                  dir,
+                );
+              }}
+              title={currentSort?.direction === "desc" ? t("sort.descending") : t("sort.ascending")}
+            >
+              {currentSort?.direction === "desc" ? (
+                <ArrowDown className="h-3.5 w-3.5" />
+              ) : (
+                <ArrowUp className="h-3.5 w-3.5" />
+              )}
+            </Button>
+          </div>
+        ) : null}
 
         {/* Sub-sections (indented, no orientation toggle) */}
         {isTopLevel && checked && SUB_SECTIONS[section.id]

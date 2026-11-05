@@ -2541,6 +2541,31 @@
         "description": "Každá vybraná sekce bude na vlastní stránce. Zelená = na výšku, oranžová = na šířku.",
         "empty": "Vyberte sekce reportu pro zobrazení náhledu."
       },
+      "sort": {
+        "label": "Řadit podle",
+        "ascending": "Vzestupně",
+        "descending": "Sestupně",
+        "fields": {
+          "sortOrder": "Původní pořadí",
+          "category": "Kategorie",
+          "name": "Název",
+          "phase": "Fáze",
+          "planCost": "Plánované náklady",
+          "actualCost": "Skutečné náklady",
+          "dateFrom": "Datum od",
+          "dateTo": "Datum do",
+          "status": "Stav",
+          "date": "Datum",
+          "amount": "Částka",
+          "vendor": "Dodavatel",
+          "type": "Typ",
+          "worker": "Pracovník",
+          "hours": "Hodiny",
+          "role": "Role",
+          "paymentCount": "Počet plateb",
+          "timeEntryCount": "Počet záznamů"
+        }
+      },
       "button": {
         "cancel": "Zrušit",
         "export": "Exportovat PDF",

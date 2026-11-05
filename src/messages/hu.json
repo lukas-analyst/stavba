@@ -2538,6 +2538,31 @@
         "description": "Minden kiválasztott szakasz saját oldalon lesz. Zöld = álló, narancs = fekvő.",
         "empty": "Válassz jelentés szakaszokat az előnézethez."
       },
+      "sort": {
+        "label": "Rendezés",
+        "ascending": "Növekvő",
+        "descending": "Csökkenő",
+        "fields": {
+          "sortOrder": "Eredeti sorrend",
+          "category": "Kategória",
+          "name": "Név",
+          "phase": "Fázis",
+          "planCost": "Tervezett költség",
+          "actualCost": "Tényleges költség",
+          "dateFrom": "Dátumtól",
+          "dateTo": "Dátumig",
+          "status": "Állapot",
+          "date": "Dátum",
+          "amount": "Összeg",
+          "vendor": "Beszállító",
+          "type": "Típus",
+          "worker": "Dolgozó",
+          "hours": "Órák",
+          "role": "Szerep",
+          "paymentCount": "Fizetések száma",
+          "timeEntryCount": "Bejegyzések száma"
+        }
+      },
       "button": {
         "cancel": "Mégse",
         "export": "PDF exportálása",

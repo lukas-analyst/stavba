@@ -8,8 +8,14 @@ import type {
   PdfOrientationMode,
   PdfReportStyle,
   OrientableSectionId,
+  TableSort,
+  TableSorts,
 } from "@/lib/pdf/pdf-types";
-import { ORIENTABLE_SECTION_IDS } from "@/lib/pdf/pdf-types";
+import {
+  ORIENTABLE_SECTION_IDS,
+  SORTABLE_TABLE_IDS,
+  SORTABLE_FIELDS_BY_TABLE,
+} from "@/lib/pdf/pdf-types";
 
 // Route config — PDF generation can be CPU-intensive, give it more time.
 export const maxDuration = 60;
@@ -115,6 +121,25 @@ export async function GET(
         : "minimal"
     );
 
+    // ─── Per-table sort (Phase 4+) ─────────────────────────────────
+    // ?sort-budget_items=category&sortDir-budget_items=asc
+    // ?sort-payments=date&sortDir-payments=desc
+    // ?sort-time=workerName&sortDir-time=asc
+    // ?sort-contacts=name&sortDir-contacts=asc
+    //
+    // When a sort field is provided, it's validated against the
+    // table's allowed fields. Invalid fields are silently ignored.
+    const tableSorts: TableSorts = {};
+    for (const tableId of SORTABLE_TABLE_IDS) {
+      const field = searchParams.get(`sort-${tableId}`);
+      if (!field) continue;
+      const allowedFields = SORTABLE_FIELDS_BY_TABLE[tableId];
+      if (!allowedFields.some((f) => f.id === field)) continue;
+      const dir = searchParams.get(`sortDir-${tableId}`);
+      const direction: "asc" | "desc" = dir === "desc" ? "desc" : "asc";
+      tableSorts[tableId] = { field, direction } as TableSort;
+    }
+
     // Generate PDF
     const buffer = await generatePdf({
       projectId: id,
@@ -124,6 +149,7 @@ export async function GET(
       orientationMode,
       sectionOrientations,
       reportStyle,
+      tableSorts,
     });
 
     const filename = generateFilename(access.project.name, locale);

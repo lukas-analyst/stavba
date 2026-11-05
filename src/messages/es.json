@@ -2538,6 +2538,31 @@
         "description": "Cada sección seleccionada estará en su propia página. Verde = vertical, naranja = horizontal.",
         "empty": "Selecciona secciones del informe para ver una vista previa."
       },
+      "sort": {
+        "label": "Ordenar por",
+        "ascending": "Ascendente",
+        "descending": "Descendente",
+        "fields": {
+          "sortOrder": "Orden original",
+          "category": "Categoría",
+          "name": "Nombre",
+          "phase": "Fase",
+          "planCost": "Costo planificado",
+          "actualCost": "Costo real",
+          "dateFrom": "Fecha desde",
+          "dateTo": "Fecha hasta",
+          "status": "Estado",
+          "date": "Fecha",
+          "amount": "Importe",
+          "vendor": "Proveedor",
+          "type": "Tipo",
+          "worker": "Trabajador",
+          "hours": "Horas",
+          "role": "Rol",
+          "paymentCount": "Número de pagos",
+          "timeEntryCount": "Número de entradas"
+        }
+      },
       "button": {
         "cancel": "Cancelar",
         "export": "Exportar PDF",

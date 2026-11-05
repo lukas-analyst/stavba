@@ -2538,6 +2538,31 @@
         "description": "Mỗi phần đã chọn sẽ có trang riêng. Xanh lá = dọc, cam = ngang.",
         "empty": "Chọn các phần báo cáo để xem trước."
       },
+      "sort": {
+        "label": "Sắp xếp theo",
+        "ascending": "Tăng dần",
+        "descending": "Giảm dần",
+        "fields": {
+          "sortOrder": "Thứ tự ban đầu",
+          "category": "Danh mục",
+          "name": "Tên",
+          "phase": "Giai đoạn",
+          "planCost": "Chi phí dự kiến",
+          "actualCost": "Chi phí thực tế",
+          "dateFrom": "Ngày từ",
+          "dateTo": "Ngày đến",
+          "status": "Trạng thái",
+          "date": "Ngày",
+          "amount": "Số tiền",
+          "vendor": "Nhà cung cấp",
+          "type": "Loại",
+          "worker": "Nhân công",
+          "hours": "Giờ",
+          "role": "Vai trò",
+          "paymentCount": "Số lượng thanh toán",
+          "timeEntryCount": "Số lượng mục"
+        }
+      },
       "button": {
         "cancel": "Hủy",
         "export": "Xuất PDF",

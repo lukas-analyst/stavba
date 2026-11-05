@@ -2541,6 +2541,31 @@
         "description": "Each selected section will be on its own page. Green = portrait, orange = landscape.",
         "empty": "Select report sections to see a preview."
       },
+      "sort": {
+        "label": "Sort by",
+        "ascending": "Ascending",
+        "descending": "Descending",
+        "fields": {
+          "sortOrder": "Original order",
+          "category": "Category",
+          "name": "Name",
+          "phase": "Phase",
+          "planCost": "Planned cost",
+          "actualCost": "Actual cost",
+          "dateFrom": "Date from",
+          "dateTo": "Date to",
+          "status": "Status",
+          "date": "Date",
+          "amount": "Amount",
+          "vendor": "Vendor",
+          "type": "Type",
+          "worker": "Worker",
+          "hours": "Hours",
+          "role": "Role",
+          "paymentCount": "Payment count",
+          "timeEntryCount": "Entry count"
+        }
+      },
       "button": {
         "cancel": "Cancel",
         "export": "Export PDF",

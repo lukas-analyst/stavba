@@ -2538,6 +2538,31 @@
         "description": "Każda wybrana sekcja będzie na własnej stronie. Zielony = pionowo, pomarańczowy = poziomo.",
         "empty": "Wybierz sekcje raportu, aby zobaczyć podgląd."
       },
+      "sort": {
+        "label": "Sortuj według",
+        "ascending": "Rosnąco",
+        "descending": "Malejąco",
+        "fields": {
+          "sortOrder": "Oryginalna kolejność",
+          "category": "Kategoria",
+          "name": "Nazwa",
+          "phase": "Faza",
+          "planCost": "Koszt planowany",
+          "actualCost": "Koszt rzeczywisty",
+          "dateFrom": "Data od",
+          "dateTo": "Data do",
+          "status": "Status",
+          "date": "Data",
+          "amount": "Kwota",
+          "vendor": "Dostawca",
+          "type": "Typ",
+          "worker": "Pracownik",
+          "hours": "Godziny",
+          "role": "Rola",
+          "paymentCount": "Liczba płatności",
+          "timeEntryCount": "Liczba wpisów"
+        }
+      },
       "button": {
         "cancel": "Anuluj",
         "export": "Eksportuj PDF",

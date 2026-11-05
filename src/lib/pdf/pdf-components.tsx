@@ -30,6 +30,7 @@ import type {
   PdfContact,
   PdfOrientationMode,
   PdfReportStyle,
+  TableSort,
 } from "./pdf-types";
 
 // =====================================================================
@@ -152,6 +153,62 @@ export function getStatusIcon(item: PdfBudgetItem): string {
   const plan = item.planCostConverted ?? item.planCost ?? 0;
   if (plan > 0 && item.actualCost > plan) return "!";
   return "-";
+}
+
+// =====================================================================
+// sortItems — generic comparator for table rows
+// ---------------------------------------------------------------------
+// Sorts an array of objects by a given field + direction.
+// - Strings: locale-aware comparison (case-insensitive, accent-insensitive)
+// - Numbers: numeric comparison
+// - Dates: timestamp comparison (null dates sort last in asc, first in desc)
+// - Booleans: false < true (so completed items sort last in asc)
+//
+// Returns a NEW array (does not mutate the input).
+// =====================================================================
+
+function compareValues(a: unknown, b: unknown): number {
+  // Null / undefined handling — nulls sort to the end.
+  const aIsNull = a === null || a === undefined;
+  const bIsNull = b === null || b === undefined;
+  if (aIsNull && bIsNull) return 0;
+  if (aIsNull) return 1;
+  if (bIsNull) return -1;
+
+  // Numbers
+  if (typeof a === "number" && typeof b === "number") {
+    return a - b;
+  }
+
+  // Dates (Date objects or date-like strings)
+  if (a instanceof Date && b instanceof Date) {
+    return a.getTime() - b.getTime();
+  }
+
+  // Strings — locale-aware, case-insensitive, accent-insensitive
+  if (typeof a === "string" && typeof b === "string") {
+    return a.localeCompare(b, undefined, { sensitivity: "base", numeric: true });
+  }
+
+  // Booleans (false < true)
+  if (typeof a === "boolean" && typeof b === "boolean") {
+    return (a ? 1 : 0) - (b ? 1 : 0);
+  }
+
+  // Fallback — string coercion
+  return String(a).localeCompare(String(b), undefined, { sensitivity: "base" });
+}
+
+export function sortItems<T>(items: T[], sort: TableSort | undefined): T[] {
+  if (!sort) return items;
+  const { field, direction } = sort;
+  const sorted = [...items].sort((a, b) => {
+    const aVal = (a as Record<string, unknown>)[field];
+    const bVal = (b as Record<string, unknown>)[field];
+    const cmp = compareValues(aVal, bVal);
+    return direction === "desc" ? -cmp : cmp;
+  });
+  return sorted;
 }
 
 // =====================================================================
@@ -756,6 +813,7 @@ export function BudgetTable({
   labels,
   phaseTranslations,
   reportStyle = "minimal",
+  sort,
 }: {
   items: PdfBudgetItem[];
   sections: PdfSectionId[];
@@ -764,6 +822,7 @@ export function BudgetTable({
   labels: PdfReportData["labels"];
   phaseTranslations: PdfReportData["phaseTranslations"];
   reportStyle?: PdfReportStyle;
+  sort?: TableSort;
 }) {
   const showPlanCost = sections.includes("plan_cost");
   const showActualCost = sections.includes("actual_cost");
@@ -788,9 +847,21 @@ export function BudgetTable({
   // ─── Build hierarchy ───────────────────────────────────────────
   // Split items into parents (parentId = null) and children (parentId set).
   // Then group children by their parentId for O(1) lookup.
-  const parents = items.filter((item) => !item.parentId);
+  //
+  // Sorting (Phase 4+): when `sort` is provided, parents are sorted by
+  // the chosen field, and children within each parent are sorted by the
+  // same field. This preserves the parent→child grouping while letting
+  // the user reorder rows. When sort is absent, items keep their
+  // original sortOrder (as fetched from the DB).
+  const parentsRaw = items.filter((item) => !item.parentId);
+  const childrenRaw = items.filter((item) => item.parentId);
+
+  // Sort parents and children independently.
+  const parents = sort ? sortItems(parentsRaw, sort) : parentsRaw;
+  const childrenSorted = sort ? sortItems(childrenRaw, sort) : childrenRaw;
+
   const childrenByParentId = new Map<string, PdfBudgetItem[]>();
-  for (const item of items) {
+  for (const item of childrenSorted) {
     if (item.parentId) {
       const existing = childrenByParentId.get(item.parentId) ?? [];
       existing.push(item);
@@ -1122,6 +1193,7 @@ export function PaymentsTable({
   locale,
   labels,
   paymentTypeTranslations,
+  sort,
 }: {
   payments: PdfReportData["payments"];
   sections: PdfSectionId[];
@@ -1129,11 +1201,15 @@ export function PaymentsTable({
   locale: string;
   labels: PdfReportData["labels"];
   paymentTypeTranslations: Record<string, string>;
+  sort?: TableSort;
 }) {
   const showPaymentType = sections.includes("payment_type");
   const showInvoice = sections.includes("invoice");
 
-  if (!payments || payments.length === 0) {
+  // Apply user-selected sort (default = date desc, as fetched from DB).
+  const sortedPayments = sort ? sortItems(payments, sort) : payments;
+
+  if (!sortedPayments || sortedPayments.length === 0) {
     return (
       <View style={styles.section} wrap={false}>
         <Text style={styles.sectionTitle}>{labels.payments}</Text>
@@ -1143,7 +1219,7 @@ export function PaymentsTable({
   }
 
   // Calculate total for summary row
-  const totalAmount = payments.reduce(
+  const totalAmount = sortedPayments.reduce(
     (sum, p) => sum + (p.amountConverted || 0),
     0,
   );
@@ -1162,7 +1238,7 @@ export function PaymentsTable({
   return (
     <View style={styles.section}>
       <Text style={styles.sectionTitle}>
-        {labels.payments} ({payments.length} {labels.paymentsCount})
+        {labels.payments} ({sortedPayments.length} {labels.paymentsCount})
       </Text>
 
       <View style={styles.tableHeader} fixed>
@@ -1190,7 +1266,7 @@ export function PaymentsTable({
         ) : null}
       </View>
 
-      {payments.map((payment) => {
+      {sortedPayments.map((payment) => {
         const itemLabel = [
           payment.budgetItemCategory,
           payment.budgetItemSubcategory,
@@ -1275,16 +1351,21 @@ export function TimeEntriesTable({
   sections,
   locale,
   labels,
+  sort,
 }: {
   timeEntries: PdfReportData["timeEntries"];
   sections: PdfSectionId[];
   locale: string;
   labels: PdfReportData["labels"];
+  sort?: TableSort;
 }) {
   const showWorker = sections.includes("worker");
   const showHours = sections.includes("hours");
 
-  if (!timeEntries || timeEntries.length === 0) {
+  // Apply user-selected sort (default = date desc, as fetched from DB).
+  const sortedTimeEntries = sort ? sortItems(timeEntries, sort) : timeEntries;
+
+  if (!sortedTimeEntries || sortedTimeEntries.length === 0) {
     return (
       <View style={styles.section} wrap={false}>
         <Text style={styles.sectionTitle}>{labels.timeEntries}</Text>
@@ -1293,7 +1374,7 @@ export function TimeEntriesTable({
     );
   }
 
-  const totalHours = timeEntries.reduce(
+  const totalHours = sortedTimeEntries.reduce(
     (sum, te) => sum + (te.hours * (te.workerCount || 1)),
     0,
   );
@@ -1306,7 +1387,7 @@ export function TimeEntriesTable({
   return (
     <View style={styles.section}>
       <Text style={styles.sectionTitle}>
-        {labels.timeEntries} ({timeEntries.length} {labels.timeEntriesCount})
+        {labels.timeEntries} ({sortedTimeEntries.length} {labels.timeEntriesCount})
       </Text>
 
       <View style={styles.tableHeader} fixed>
@@ -1328,7 +1409,7 @@ export function TimeEntriesTable({
         ) : null}
       </View>
 
-      {timeEntries.map((te) => {
+      {sortedTimeEntries.map((te) => {
         const itemLabel = [
           te.budgetItemCategory,
           te.budgetItemSubcategory,
@@ -1415,12 +1496,14 @@ export function ContactsTable({
   locale: _locale,
   labels,
   contactTypeTranslations,
+  sort,
 }: {
   contacts: PdfContact[];
   sections: PdfSectionId[];
   locale: string;
   labels: PdfReportData["labels"];
   contactTypeTranslations: Record<string, string>;
+  sort?: TableSort;
 }) {
   const showType = sections.includes("contact_type");
   const showPhone = sections.includes("contact_phone");
@@ -1428,7 +1511,10 @@ export function ContactsTable({
   const showIco = sections.includes("contact_ico");
   const showNotes = sections.includes("contact_notes");
 
-  if (!contacts || contacts.length === 0) {
+  // Apply user-selected sort (default = name asc, as fetched from DB).
+  const sortedContacts = sort ? sortItems(contacts, sort) : contacts;
+
+  if (!sortedContacts || sortedContacts.length === 0) {
     return (
       <View style={styles.section} wrap={false}>
         <Text style={styles.sectionTitle}>{labels.contacts}</Text>
@@ -1467,7 +1553,7 @@ export function ContactsTable({
   return (
     <View style={styles.section}>
       <Text style={styles.sectionTitle}>
-        {labels.contacts} ({contacts.length} {labels.contactsCount})
+        {labels.contacts} ({sortedContacts.length} {labels.contactsCount})
       </Text>
 
       <View style={styles.tableHeader} fixed>
@@ -1510,7 +1596,7 @@ export function ContactsTable({
         ) : null}
       </View>
 
-      {contacts.map((contact) => {
+      {sortedContacts.map((contact) => {
         // Build the IČO/DIČ cell content. When DIČ is present it is
         // shown on the same line, separated by " / ".
         const icoDicParts: string[] = [];
@@ -1606,7 +1692,7 @@ export function ContactsTable({
             { fontFamily: "Roboto", fontWeight: "bold" },
           ]}
         >
-          {String(contacts.reduce((s, c) => s + c.paymentCount, 0))}
+          {String(sortedContacts.reduce((s, c) => s + c.paymentCount, 0))}
         </Text>
         <Text
           style={[
@@ -1615,7 +1701,7 @@ export function ContactsTable({
             { fontFamily: "Roboto", fontWeight: "bold" },
           ]}
         >
-          {String(contacts.reduce((s, c) => s + c.timeEntryCount, 0))}
+          {String(sortedContacts.reduce((s, c) => s + c.timeEntryCount, 0))}
         </Text>
         {showNotes ? (
           <Text style={[styles.tableCellText, colNotes]}> </Text>
@@ -1857,6 +1943,7 @@ export function ReportDocument({
             labels={data.labels}
             phaseTranslations={data.phaseTranslations}
             reportStyle={options.reportStyle}
+            sort={options.tableSorts?.budget_items}
           />
           <Footer project={data.project} locale={locale} labels={data.labels} />
         </Page>
@@ -1872,6 +1959,7 @@ export function ReportDocument({
             locale={locale}
             labels={data.labels}
             paymentTypeTranslations={data.paymentTypeTranslations}
+            sort={options.tableSorts?.payments}
           />
           <Footer project={data.project} locale={locale} labels={data.labels} />
         </Page>
@@ -1885,6 +1973,7 @@ export function ReportDocument({
             sections={sections}
             locale={locale}
             labels={data.labels}
+            sort={options.tableSorts?.time}
           />
           <Footer project={data.project} locale={locale} labels={data.labels} />
         </Page>
@@ -1899,6 +1988,7 @@ export function ReportDocument({
             locale={locale}
             labels={data.labels}
             contactTypeTranslations={data.contactTypeTranslations}
+            sort={options.tableSorts?.contacts}
           />
           <Footer project={data.project} locale={locale} labels={data.labels} />
         </Page>

@@ -102,6 +102,89 @@ export type PdfExportOptions = {
    *   for personal use / presentations.
    */
   reportStyle?: PdfReportStyle;
+  /**
+   * Per-table sort configuration. Each key maps a table section ID to
+   * a sort spec (field + direction). Absent entries = default ordering
+   * (sortOrder for budget, date for payments/time, name for contacts).
+   */
+  tableSorts?: TableSorts;
+};
+
+/** Sort spec for a single table. */
+export type TableSort = {
+  field: string;
+  direction: "asc" | "desc";
+};
+
+/** Per-table sort map. Keys are the 4 table section IDs. */
+export type TableSorts = Partial<
+  Record<"budget_items" | "payments" | "time" | "contacts", TableSort>
+>;
+
+/** IDs of table sections that support sorting. */
+export const SORTABLE_TABLE_IDS = [
+  "budget_items",
+  "payments",
+  "time",
+  "contacts",
+] as const;
+
+export type SortableTableId = (typeof SORTABLE_TABLE_IDS)[number];
+
+/** Sortable fields for each table. `labelKey` is a translation key
+ *  under `dialogs.pdfExport.sort.fields.*` in the locale files. */
+export const SORTABLE_BUDGET_FIELDS: ReadonlyArray<{ id: string; labelKey: string }> = [
+  { id: "sortOrder", labelKey: "sort.fields.sortOrder" },
+  { id: "category", labelKey: "sort.fields.category" },
+  { id: "subcategory", labelKey: "sort.fields.name" },
+  { id: "phase", labelKey: "sort.fields.phase" },
+  { id: "planCost", labelKey: "sort.fields.planCost" },
+  { id: "actualCost", labelKey: "sort.fields.actualCost" },
+  { id: "dateFrom", labelKey: "sort.fields.dateFrom" },
+  { id: "dateTo", labelKey: "sort.fields.dateTo" },
+  { id: "completed", labelKey: "sort.fields.status" },
+];
+
+export const SORTABLE_PAYMENT_FIELDS: ReadonlyArray<{ id: string; labelKey: string }> = [
+  { id: "date", labelKey: "sort.fields.date" },
+  { id: "amount", labelKey: "sort.fields.amount" },
+  { id: "vendor", labelKey: "sort.fields.vendor" },
+  { id: "type", labelKey: "sort.fields.type" },
+  { id: "category", labelKey: "sort.fields.category" },
+];
+
+export const SORTABLE_TIME_FIELDS: ReadonlyArray<{ id: string; labelKey: string }> = [
+  { id: "date", labelKey: "sort.fields.date" },
+  { id: "workerName", labelKey: "sort.fields.worker" },
+  { id: "hours", labelKey: "sort.fields.hours" },
+  { id: "category", labelKey: "sort.fields.category" },
+];
+
+export const SORTABLE_CONTACT_FIELDS: ReadonlyArray<{ id: string; labelKey: string }> = [
+  { id: "name", labelKey: "sort.fields.name" },
+  { id: "type", labelKey: "sort.fields.type" },
+  { id: "role", labelKey: "sort.fields.role" },
+  { id: "paymentCount", labelKey: "sort.fields.paymentCount" },
+  { id: "timeEntryCount", labelKey: "sort.fields.timeEntryCount" },
+];
+
+/** Lookup map: table ID → sortable fields array. */
+export const SORTABLE_FIELDS_BY_TABLE: Record<
+  SortableTableId,
+  ReadonlyArray<{ id: string; labelKey: string }>
+> = {
+  budget_items: SORTABLE_BUDGET_FIELDS,
+  payments: SORTABLE_PAYMENT_FIELDS,
+  time: SORTABLE_TIME_FIELDS,
+  contacts: SORTABLE_CONTACT_FIELDS,
+};
+
+/** Default sort field for each table (used when no sort is specified). */
+export const DEFAULT_SORT_FIELD: Record<SortableTableId, string> = {
+  budget_items: "sortOrder",
+  payments: "date",
+  time: "date",
+  contacts: "name",
 };
 
 /** Page orientation strategy for PDF export. */
