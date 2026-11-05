@@ -46,6 +46,7 @@ import {
   RectangleHorizontal,
   SlidersHorizontal,
   Sparkles,
+  RotateCcw,
 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useLocale, useTranslations } from "next-intl";
@@ -396,10 +397,19 @@ export function PdfExportDialog({
       onOrientationModeChange={setOrientationMode}
       sectionOrientations={sectionOrientations}
       onSectionOrientationChange={(sectionId, value) => {
-        setSectionOrientations((prev) => ({
-          ...prev,
-          [sectionId]: value,
-        }));
+        if (value === "auto") {
+          // "Auto" = remove from map → falls back to auto-detection
+          setSectionOrientations((prev) => {
+            const next = { ...prev };
+            delete next[sectionId];
+            return next;
+          });
+        } else {
+          setSectionOrientations((prev) => ({
+            ...prev,
+            [sectionId]: value,
+          }));
+        }
       }}
       templates={templates}
       isLoadingTemplates={isLoadingTemplates}
@@ -485,7 +495,7 @@ type BodyProps = {
   sectionOrientations: Partial<Record<string, "portrait" | "landscape">>;
   onSectionOrientationChange: (
     sectionId: string,
-    value: "portrait" | "landscape",
+    value: "auto" | "portrait" | "landscape",
   ) => void;
   templates: ExportTemplateData[];
   isLoadingTemplates: boolean;
@@ -815,43 +825,80 @@ function PdfExportBody({
         {/* Per-section orientation toggles — only when "custom" is selected */}
         {orientationMode === "custom" ? (
           <div className="space-y-2 rounded-md border bg-surface p-3">
-            <div className="type-label font-medium text-muted-foreground">
-              {t("orientation.perSectionTitle")}
-            </div>
-            {ORIENTABLE_SECTION_IDS.map((sectionId) => {
-              const currentValue =
-                sectionOrientations[sectionId] ?? "portrait";
-              // Translate the section label using the existing
-              // dialogs.pdfExport.sections.* translation keys.
-              const sectionLabelKey = ALL_SECTIONS.find(
-                (s) => s.id === sectionId,
-              )?.labelKey ?? "";
-              return (
-                <div
-                  key={sectionId}
-                  className="flex items-center justify-between gap-2"
-                >
-                  <Label className="type-body font-medium">
-                    {t(sectionLabelKey as never)}
-                  </Label>
-                  <SegmentedButton
-                    value={currentValue}
-                    onChange={(v) =>
-                      onSectionOrientationChange(
-                        sectionId,
-                        v as "portrait" | "landscape",
-                      )
+            <div className="flex items-center justify-between gap-2">
+              <div className="type-label font-medium text-muted-foreground">
+                {t("orientation.perSectionTitle")}
+              </div>
+              {/* Reset all to Auto */}
+              {Object.keys(sectionOrientations).length > 0 ? (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 px-2 type-label-sm text-muted-foreground"
+                  onClick={() => {
+                    for (const id of ORIENTABLE_SECTION_IDS) {
+                      onSectionOrientationChange(id, "auto");
                     }
-                    size="sm"
-                    className="w-44"
-                    options={[
-                      { value: "portrait", label: t("orientation.portrait"), icon: RectangleVertical },
-                      { value: "landscape", label: t("orientation.landscape"), icon: RectangleHorizontal },
-                    ]}
-                  />
-                </div>
-              );
-            })}
+                  }}
+                >
+                  <RotateCcw className="h-3 w-3" />
+                  {t("orientation.resetAll")}
+                </Button>
+              ) : null}
+            </div>
+
+            {/* Grid of per-section 3-way toggles (Auto / Portrait / Landscape).
+                Only sections that are currently selected in the report are
+                shown — configuring orientation for a disabled section would
+                be pointless. */}
+            {ORIENTABLE_SECTION_IDS.filter((id) => selectedSections.has(id)).length === 0 ? (
+              <div className="py-3 text-center type-label text-muted-foreground italic">
+                {t("orientation.noSections")}
+              </div>
+            ) : (
+              <div className="grid gap-2 sm:grid-cols-2">
+                {ORIENTABLE_SECTION_IDS.filter((id) => selectedSections.has(id)).map((sectionId) => {
+                  // Current value: explicit override or "auto" (default).
+                  const explicit = sectionOrientations[sectionId];
+                  const currentValue: "auto" | "portrait" | "landscape" =
+                    explicit === "portrait" || explicit === "landscape"
+                      ? explicit
+                      : "auto";
+                  // Translate the section label using the existing
+                  // dialogs.pdfExport.sections.* translation keys.
+                  const sectionLabelKey = ALL_SECTIONS.find(
+                    (s) => s.id === sectionId,
+                  )?.labelKey ?? "";
+                  return (
+                    <div
+                      key={sectionId}
+                      className="flex flex-col gap-1.5 rounded-md border border-outline-variant p-2"
+                    >
+                      <Label className="type-label-sm font-medium leading-tight">
+                        {t(sectionLabelKey as never)}
+                      </Label>
+                      <SegmentedButton
+                        value={currentValue}
+                        onChange={(v) =>
+                          onSectionOrientationChange(
+                            sectionId,
+                            v as "auto" | "portrait" | "landscape",
+                          )
+                        }
+                        size="sm"
+                        className="w-full"
+                        options={[
+                          { value: "auto", label: t("orientation.modes.auto"), icon: Sparkles },
+                          { value: "portrait", label: t("orientation.portrait"), icon: RectangleVertical },
+                          { value: "landscape", label: t("orientation.landscape"), icon: RectangleHorizontal },
+                        ]}
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         ) : null}
       </section>

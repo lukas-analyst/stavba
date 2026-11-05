@@ -2488,6 +2488,8 @@
         "portrait": "Na výšku",
         "landscape": "Na šířku",
         "perSectionTitle": "Orientace pro každou sekci",
+        "resetAll": "Vše na Auto",
+        "noSections": "Nejdříve vyberte sekce reportu výše.",
         "modes": {
           "auto": "Auto",
           "portrait": "Vše na výšku",
@@ -2498,7 +2500,7 @@
           "auto": "Široké tabulky (Rozpočet / Kontakty se zapnutými podsekcemi) se automaticky vykreslí na šířku. Vhodné pro většinu reportů.",
           "allPortrait": "Všechny stránky budou na výšku. Úspornější, ale široké tabulky mohou mít zhuštěné sloupce.",
           "allLandscape": "Všechny stránky budou na šířku. Více místa pro sloupce, ale report má více stránek.",
-          "custom": "Zvolte orientaci pro každou tabulku zvlášť. Sekce bez výběru se přepnou do režimu Auto."
+          "custom": "Zvolte orientaci pro každou sekci zvlášť. Sekce bez výběru se přepnou do režimu Auto."
         }
       },
       "button": {

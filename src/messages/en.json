@@ -2488,6 +2488,8 @@
         "portrait": "Portrait",
         "landscape": "Landscape",
         "perSectionTitle": "Orientation per section",
+        "resetAll": "Reset all to Auto",
+        "noSections": "Select report sections above first.",
         "modes": {
           "auto": "Auto",
           "portrait": "All portrait",
@@ -2498,7 +2500,7 @@
           "auto": "Wide tables (Budget / Contacts with sub-sections enabled) will automatically render on landscape pages. Suitable for most reports.",
           "allPortrait": "All pages will be in portrait orientation. More compact, but wide tables may have cramped columns.",
           "allLandscape": "All pages will be in landscape orientation. More room for columns, but the report will have more pages.",
-          "custom": "Choose orientation for each table separately. Sections without an explicit choice fall back to Auto."
+          "custom": "Choose orientation for each section separately. Sections without an explicit choice fall back to Auto."
         }
       },
       "button": {

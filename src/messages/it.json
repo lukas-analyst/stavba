@@ -2485,6 +2485,8 @@
         "portrait": "Verticale",
         "landscape": "Orizzontale",
         "perSectionTitle": "Orientamento per sezione",
+        "resetAll": "Tutto su Auto",
+        "noSections": "Seleziona prima le sezioni del report sopra.",
         "modes": {
           "auto": "Auto",
           "portrait": "Tutto verticale",
@@ -2495,7 +2497,7 @@
           "auto": "Le tabelle larghe (Budget / Contatti con sottosezioni attivate) verranno automaticamente renderizzate su pagine orizzontali. Adatto per la maggior parte dei report.",
           "allPortrait": "Tutte le pagine saranno in orientamento verticale. Più compatto, ma le tabelle larghe possono avere colonne affollate.",
           "allLandscape": "Tutte le pagine saranno in orientamento orizzontale. Più spazio per le colonne, ma il report avrà più pagine.",
-          "custom": "Scegli l'orientamento per ogni tabella separatamente. Le sezioni senza scelta esplicita passeranno alla modalità Auto."
+          "custom": "Scegli l'orientamento per ogni sezione separatamente. Le sezioni senza scelta esplicita passeranno alla modalità Auto."
         }
       },
       "button": {

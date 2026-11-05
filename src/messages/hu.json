@@ -2485,6 +2485,8 @@
         "portrait": "Álló",
         "landscape": "Fekvő",
         "perSectionTitle": "Tájolás szekciónként",
+        "resetAll": "Mind Auto-ra",
+        "noSections": "Először válassz jelentés szakaszokat fent.",
         "modes": {
           "auto": "Auto",
           "portrait": "Mind álló",
@@ -2495,7 +2497,7 @@
           "auto": "A széles táblázatok (Költségvetés / Kapcsolatok az alárendelt szakaszokkal) automatikusan fekvő tájolású oldalon jelennek meg. A legtöbb jelentéshez megfelelő.",
           "allPortrait": "Minden oldal álló tájolású lesz. Takarékosabb, de a széles táblázatok sűrű oszlopokat kaphatnak.",
           "allLandscape": "Minden oldal fekvő tájolású lesz. Több hely az oszlopoknak, de a jelentés több oldalból áll.",
-          "custom": "Válassz tájolást minden táblázathoz külön. A kifejezetten nem választott szakaszok Auto módba váltanak vissza."
+          "custom": "Válassz tájolást minden szakaszhoz külön. A kifejezetten nem választott szakaszok Auto módba váltanak vissza."
         }
       },
       "button": {

@@ -102,10 +102,21 @@ export type PdfOrientationMode =
   | "custom";
 
 /** Sections whose orientation can be overridden via `sectionOrientations`.
- *  Limited to the four table-style sections — cover / payments / time
- *  are either short or always-fit, so user override is unnecessary. */
+ *  Every top-level section gets its own <Page> in the PDF, and each page's
+ *  orientation can be individually controlled by the user.
+ *
+ *  Sub-sections (status, plan_cost, contact_type, etc.) are NOT here —
+ *  they're rendered as columns within their parent's table, not as
+ *  separate pages. */
 export const ORIENTABLE_SECTION_IDS = [
+  "header",
+  "summary",
+  "property",
+  "alerts",
+  "projection",
   "budget_items",
+  "payments",
+  "time",
   "contacts",
 ] as const;
 

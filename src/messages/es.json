@@ -2485,6 +2485,8 @@
         "portrait": "Vertical",
         "landscape": "Horizontal",
         "perSectionTitle": "Orientación por sección",
+        "resetAll": "Todo a Auto",
+        "noSections": "Selecciona las secciones del informe arriba primero.",
         "modes": {
           "auto": "Auto",
           "portrait": "Todo vertical",
@@ -2495,7 +2497,7 @@
           "auto": "Las tablas anchas (Presupuesto / Contactos con subsecciones activadas) se renderizarán automáticamente en páginas horizontales. Adecuado para la mayoría de informes.",
           "allPortrait": "Todas las páginas estarán en orientación vertical. Más compacto, pero las tablas anchas pueden tener columnas apretadas.",
           "allLandscape": "Todas las páginas estarán en orientación horizontal. Más espacio para columnas, pero el informe tendrá más páginas.",
-          "custom": "Elige la orientación para cada tabla por separado. Las secciones sin elección explícita pasarán al modo Auto."
+          "custom": "Elige la orientación para cada sección por separado. Las secciones sin elección explícita pasarán al modo Auto."
         }
       },
       "button": {
