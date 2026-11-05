@@ -2411,8 +2411,23 @@
     "pdfExport": {
       "title": "Export PDF report",
       "description": "Choose sections, language and currency for your PDF report. The report is suitable for mortgage applications.",
+      "tabs": {
+        "content": "Content",
+        "format": "Format",
+        "templates": "Templates"
+      },
+      "summaryBar": {
+        "sections": "sections"
+      },
+      "categories": {
+        "overview": "Overview",
+        "tables": "Tables"
+      },
       "sections": {
         "title": "Report sections",
+        "selectAll": "Select all",
+        "selectNone": "None",
+        "countSelected": "{selected} of {total} selected",
         "header": "Project header",
         "headerDesc": "Project name, address and description",
         "summary": "Summary",
@@ -2502,6 +2517,27 @@
           "allLandscape": "All pages will be in landscape orientation. More room for columns, but the report will have more pages.",
           "custom": "Choose orientation for each section separately. Sections without an explicit choice fall back to Auto."
         }
+      },
+      "presets": {
+        "title": "Quick presets",
+        "comingSoon": "Soon",
+        "description": "Pre-configured layouts for common scenarios (mortgage, summary, complete report)."
+      },
+      "style": {
+        "title": "Report visual style",
+        "modes": {
+          "minimal": "Minimal",
+          "colorful": "Colorful"
+        },
+        "hints": {
+          "minimal": "Clean monochrome report — suitable for banks, mortgages, and official use.",
+          "colorful": "Colorful report with MD3 accents — colored section headers, KPI tiles, and phase badges. Suitable for personal use and presentations."
+        }
+      },
+      "preview": {
+        "title": "Page preview",
+        "description": "Each selected section will be on its own page. Green = portrait, orange = landscape.",
+        "empty": "Select report sections to see a preview."
       },
       "button": {
         "cancel": "Cancel",

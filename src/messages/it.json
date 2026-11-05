@@ -2408,8 +2408,23 @@
     "pdfExport": {
       "title": "Esporta rapporto PDF",
       "description": "Seleziona le sezioni, la lingua e la valuta del rapporto PDF. Il rapporto è adatto per richieste di mutuo.",
+      "tabs": {
+        "content": "Contenuto",
+        "format": "Formato",
+        "templates": "Modelli"
+      },
+      "summaryBar": {
+        "sections": "sezioni"
+      },
+      "categories": {
+        "overview": "Panoramica",
+        "tables": "Tabelle"
+      },
       "sections": {
         "title": "Sezioni del rapporto",
+        "selectAll": "Seleziona tutto",
+        "selectNone": "Nessuno",
+        "countSelected": "{selected} di {total} selezionate",
         "header": "Intestazione del progetto",
         "headerDesc": "Nome del progetto, indirizzo e descrizione",
         "summary": "Riepilogo",
@@ -2499,6 +2514,27 @@
           "allLandscape": "Tutte le pagine saranno in orientamento orizzontale. Più spazio per le colonne, ma il report avrà più pagine.",
           "custom": "Scegli l'orientamento per ogni sezione separatamente. Le sezioni senza scelta esplicita passeranno alla modalità Auto."
         }
+      },
+      "presets": {
+        "title": "Preset rapidi",
+        "comingSoon": "Presto",
+        "description": "Configurazioni preimpostate per scenari comuni (mutuo, riepilogo, report completo)."
+      },
+      "style": {
+        "title": "Stile visivo del report",
+        "modes": {
+          "minimal": "Minimalista",
+          "colorful": "Colorato"
+        },
+        "hints": {
+          "minimal": "Report monocromatico pulito — adatto per banche, mutui e uso ufficiale.",
+          "colorful": "Report colorato con accenti MD3 — intestazioni di sezione colorate, riquadri KPI e badge di fase. Adatto per uso personale e presentazioni."
+        }
+      },
+      "preview": {
+        "title": "Anteprima pagine",
+        "description": "Ogni sezione selezionata sarà su una propria pagina. Verde = verticale, arancione = orizzontale.",
+        "empty": "Seleziona le sezioni del report per vedere un'anteprima."
       },
       "button": {
         "cancel": "Annulla",

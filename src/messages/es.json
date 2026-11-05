@@ -2408,8 +2408,23 @@
     "pdfExport": {
       "title": "Exportar informe PDF",
       "description": "Selecciona las secciones, el idioma y la moneda del informe PDF. El informe es adecuado para solicitudes de hipoteca.",
+      "tabs": {
+        "content": "Contenido",
+        "format": "Formato",
+        "templates": "Plantillas"
+      },
+      "summaryBar": {
+        "sections": "secciones"
+      },
+      "categories": {
+        "overview": "Resumen",
+        "tables": "Tablas"
+      },
       "sections": {
         "title": "Secciones del informe",
+        "selectAll": "Seleccionar todo",
+        "selectNone": "Ninguno",
+        "countSelected": "{selected} de {total} seleccionadas",
         "header": "Encabezado del proyecto",
         "headerDesc": "Nombre del proyecto, dirección y descripción",
         "summary": "Resumen",
@@ -2499,6 +2514,27 @@
           "allLandscape": "Todas las páginas estarán en orientación horizontal. Más espacio para columnas, pero el informe tendrá más páginas.",
           "custom": "Elige la orientación para cada sección por separado. Las secciones sin elección explícita pasarán al modo Auto."
         }
+      },
+      "presets": {
+        "title": "Preajustes rápidos",
+        "comingSoon": "Pronto",
+        "description": "Configuraciones preestablecidas para escenarios comunes (hipoteca, resumen, informe completo)."
+      },
+      "style": {
+        "title": "Estilo visual del informe",
+        "modes": {
+          "minimal": "Minimalista",
+          "colorful": "Colorido"
+        },
+        "hints": {
+          "minimal": "Informe monocromo limpio — adecuado para bancos, hipotecas y uso oficial.",
+          "colorful": "Informe colorido con acentos MD3 — encabezados de sección coloreados, mosaicos KPI e insignias de fase. Adecuado para uso personal y presentaciones."
+        }
+      },
+      "preview": {
+        "title": "Vista previa de páginas",
+        "description": "Cada sección seleccionada estará en su propia página. Verde = vertical, naranja = horizontal.",
+        "empty": "Selecciona secciones del informe para ver una vista previa."
       },
       "button": {
         "cancel": "Cancelar",

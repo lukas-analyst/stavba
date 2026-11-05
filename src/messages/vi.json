@@ -2408,8 +2408,23 @@
     "pdfExport": {
       "title": "Xuất báo cáo PDF",
       "description": "Chọn các phần, ngôn ngữ và loại tiền tệ cho báo cáo PDF. Báo cáo phù hợp để nộp hồ sơ vay thế chấp.",
+      "tabs": {
+        "content": "Nội dung",
+        "format": "Định dạng",
+        "templates": "Mẫu"
+      },
+      "summaryBar": {
+        "sections": "phần"
+      },
+      "categories": {
+        "overview": "Tổng quan",
+        "tables": "Bảng"
+      },
       "sections": {
         "title": "Các phần báo cáo",
+        "selectAll": "Chọn tất cả",
+        "selectNone": "Bỏ chọn",
+        "countSelected": "Đã chọn {selected} / {total}",
         "header": "Tiêu đề dự án",
         "headerDesc": "Tên, địa chỉ và mô tả dự án",
         "summary": "Tóm tắt",
@@ -2499,6 +2514,27 @@
           "allLandscape": "Tất cả các trang sẽ theo hướng ngang. Nhiều chỗ hơn cho các cột, nhưng báo cáo sẽ có nhiều trang hơn.",
           "custom": "Chọn hướng cho từng phần riêng. Các phần không chọn sẽ dùng chế độ Tự động."
         }
+      },
+      "presets": {
+        "title": "Cài đặt nhanh",
+        "comingSoon": "Sớm",
+        "description": "Cấu hình có sẵn cho các kịch bản phổ biến (vay thế chấp, tóm tắt, báo cáo đầy đủ)."
+      },
+      "style": {
+        "title": "Phong cách trực quan báo cáo",
+        "modes": {
+          "minimal": "Tối giản",
+          "colorful": "Sắc màu"
+        },
+        "hints": {
+          "minimal": "Báo cáo đơn sắc sạch sẽ — phù hợp cho ngân hàng, thế chấp và mục đích hành chính.",
+          "colorful": "Báo cáo nhiều màu với điểm nhấn MD3 — tiêu đề phần màu, ô KPI và huy hiệu giai đoạn. Phù hợp cho sử dụng cá nhân và thuyết trình."
+        }
+      },
+      "preview": {
+        "title": "Xem trước trang",
+        "description": "Mỗi phần đã chọn sẽ có trang riêng. Xanh lá = dọc, cam = ngang.",
+        "empty": "Chọn các phần báo cáo để xem trước."
       },
       "button": {
         "cancel": "Hủy",

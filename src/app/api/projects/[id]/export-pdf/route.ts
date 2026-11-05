@@ -6,6 +6,7 @@ import { generatePdf, generateFilename } from "@/lib/pdf/pdf-generator";
 import type {
   PdfSectionId,
   PdfOrientationMode,
+  PdfReportStyle,
   OrientableSectionId,
 } from "@/lib/pdf/pdf-types";
 import { ORIENTABLE_SECTION_IDS } from "@/lib/pdf/pdf-types";
@@ -26,6 +27,9 @@ const validSections = [
 const validOrientationModes = [
   "auto", "all-portrait", "all-landscape", "custom",
 ] as const;
+
+// Valid report styles — parsed from `?reportStyle=...`.
+const validReportStyles = ["minimal", "colorful"] as const;
 
 // GET /api/projects/[id]/export-pdf
 // Generates a PDF report and returns it as a downloadable file.
@@ -100,6 +104,17 @@ export async function GET(
       }
     }
 
+    // ─── Report visual style (Phase 3) ──────────────────────────────
+    // ?reportStyle=minimal|colorful (default: minimal)
+    // - minimal: clean monochrome report (bank / mortgage applications)
+    // - colorful: MD3-accented report (personal use / presentations)
+    const rawStyle = searchParams.get("reportStyle") || "minimal";
+    const reportStyle: PdfReportStyle = (
+      validReportStyles.includes(rawStyle as (typeof validReportStyles)[number])
+        ? (rawStyle as PdfReportStyle)
+        : "minimal"
+    );
+
     // Generate PDF
     const buffer = await generatePdf({
       projectId: id,
@@ -108,6 +123,7 @@ export async function GET(
       sections,
       orientationMode,
       sectionOrientations,
+      reportStyle,
     });
 
     const filename = generateFilename(access.project.name, locale);

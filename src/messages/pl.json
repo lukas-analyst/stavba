@@ -2408,8 +2408,23 @@
     "pdfExport": {
       "title": "Eksportuj raport PDF",
       "description": "Wybierz sekcje, język i walutę raportu PDF. Raport nadaje się do wniosków o kredyt hipoteczny.",
+      "tabs": {
+        "content": "Treść",
+        "format": "Format",
+        "templates": "Szablony"
+      },
+      "summaryBar": {
+        "sections": "sekcji"
+      },
+      "categories": {
+        "overview": "Przegląd",
+        "tables": "Tabele"
+      },
       "sections": {
         "title": "Sekcje raportu",
+        "selectAll": "Zaznacz wszystko",
+        "selectNone": "Brak",
+        "countSelected": "Zaznaczono {selected} z {total}",
         "header": "Nagłówek projektu",
         "headerDesc": "Nazwa projektu, adres i opis",
         "summary": "Podsumowanie",
@@ -2499,6 +2514,27 @@
           "allLandscape": "Wszystkie strony będą w orientacji poziomej. Więcej miejsca na kolumny, ale raport będzie miał więcej stron.",
           "custom": "Wybierz orientację dla każdej sekcji osobno. Sekcje bez wyraźnego wyboru powrócą do trybu Auto."
         }
+      },
+      "presets": {
+        "title": "Szybkie presety",
+        "comingSoon": "Wkrótce",
+        "description": "Gotowe konfiguracje dla typowych scenariuszy (hipoteka, podsumowanie, pełny raport)."
+      },
+      "style": {
+        "title": "Styl wizualny raportu",
+        "modes": {
+          "minimal": "Minimalistyczny",
+          "colorful": "Kolorowy"
+        },
+        "hints": {
+          "minimal": "Czysty monochromatyczny raport — odpowiedni dla banków, hipotek i celów urzędowych.",
+          "colorful": "Kolorowy raport z akcentami MD3 — kolorowe nagłówki sekcji, kafelki KPI i odznaki faz. Odpowiedni do użytku osobistego i prezentacji."
+        }
+      },
+      "preview": {
+        "title": "Podgląd stron",
+        "description": "Każda wybrana sekcja będzie na własnej stronie. Zielony = pionowo, pomarańczowy = poziomo.",
+        "empty": "Wybierz sekcje raportu, aby zobaczyć podgląd."
       },
       "button": {
         "cancel": "Anuluj",

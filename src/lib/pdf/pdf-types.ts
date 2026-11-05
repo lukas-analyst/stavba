@@ -92,6 +92,16 @@ export type PdfExportOptions = {
    * `sections` array; absent entries fall back to "auto" detection.
    */
   sectionOrientations?: Partial<Record<PdfSectionId, "portrait" | "landscape">>;
+  /**
+   * Report visual style. Default = "minimal".
+   *
+   * - "minimal": clean monochrome report (current look). Recommended for
+   *   bank / mortgage applications.
+   * - "colorful": MD3-accented report with colored section headers, KPI
+   *   tiles, phase badges, and status indicators. More visually engaging
+   *   for personal use / presentations.
+   */
+  reportStyle?: PdfReportStyle;
 };
 
 /** Page orientation strategy for PDF export. */
@@ -100,6 +110,9 @@ export type PdfOrientationMode =
   | "all-portrait"
   | "all-landscape"
   | "custom";
+
+/** Report visual style — controls color usage in the PDF. */
+export type PdfReportStyle = "minimal" | "colorful";
 
 /** Sections whose orientation can be overridden via `sectionOrientations`.
  *  Every top-level section gets its own <Page> in the PDF, and each page's

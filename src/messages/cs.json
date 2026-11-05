@@ -2411,8 +2411,23 @@
     "pdfExport": {
       "title": "Exportovat PDF report",
       "description": "Vyberte sekce, jazyk a měnu pro PDF report. Report je vhodný pro žádosti o hypotéku.",
+      "tabs": {
+        "content": "Obsah",
+        "format": "Formát",
+        "templates": "Šablony"
+      },
+      "summaryBar": {
+        "sections": "sekcí"
+      },
+      "categories": {
+        "overview": "Přehled",
+        "tables": "Tabulky"
+      },
       "sections": {
         "title": "Sekce reportu",
+        "selectAll": "Vybrat vše",
+        "selectNone": "Žádné",
+        "countSelected": "{selected} z {total} vybráno",
         "header": "Hlavička projektu",
         "headerDesc": "Název projektu, adresa a popis",
         "summary": "Shrnutí",
@@ -2502,6 +2517,27 @@
           "allLandscape": "Všechny stránky budou na šířku. Více místa pro sloupce, ale report má více stránek.",
           "custom": "Zvolte orientaci pro každou sekci zvlášť. Sekce bez výběru se přepnou do režimu Auto."
         }
+      },
+      "presets": {
+        "title": "Rychlé presety",
+        "comingSoon": "Brzy",
+        "description": "Přednastavené konfigurace pro běžné scénáře (hypotéka, souhrn, kompletní report)."
+      },
+      "style": {
+        "title": "Vizuální styl reportu",
+        "modes": {
+          "minimal": "Minimalistický",
+          "colorful": "Barevný"
+        },
+        "hints": {
+          "minimal": "Čistý monochromatický report — vhodný pro banky, hypotéky a úřední účely.",
+          "colorful": "Barevný report s MD3 akcenty — barevné hlavičky sekcí, KPI dlaždice a odznaky fází. Vhodný pro osobní potřebu a prezentace."
+        }
+      },
+      "preview": {
+        "title": "Náhled stránek",
+        "description": "Každá vybraná sekce bude na vlastní stránce. Zelená = na výšku, oranžová = na šířku.",
+        "empty": "Vyberte sekce reportu pro zobrazení náhledu."
       },
       "button": {
         "cancel": "Zrušit",

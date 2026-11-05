@@ -2408,8 +2408,23 @@
     "pdfExport": {
       "title": "PDF jelentés exportálása",
       "description": "Válassza ki a szekciókat, nyelvet és pénznemet a PDF jelentéshez. A jelentés alkalmas jelzáloghitelek igényléséhez.",
+      "tabs": {
+        "content": "Tartalom",
+        "format": "Formátum",
+        "templates": "Sablonok"
+      },
+      "summaryBar": {
+        "sections": "szakasz"
+      },
+      "categories": {
+        "overview": "Áttekintés",
+        "tables": "Táblázatok"
+      },
       "sections": {
         "title": "Jelentés szekciói",
+        "selectAll": "Összes kijelölése",
+        "selectNone": "Egyik sem",
+        "countSelected": "{selected} / {total} kijelölve",
         "header": "Projekt fejléc",
         "headerDesc": "Projekt neve, címe és leírása",
         "summary": "Összegzés",
@@ -2499,6 +2514,27 @@
           "allLandscape": "Minden oldal fekvő tájolású lesz. Több hely az oszlopoknak, de a jelentés több oldalból áll.",
           "custom": "Válassz tájolást minden szakaszhoz külön. A kifejezetten nem választott szakaszok Auto módba váltanak vissza."
         }
+      },
+      "presets": {
+        "title": "Gyors előbeállítások",
+        "comingSoon": "Hamarosan",
+        "description": "Előre beállított konfigurációk gyakori forgatókönyvekhez (jelzálog, összegzés, teljes jelentés)."
+      },
+      "style": {
+        "title": "Jelentés vizuális stílusa",
+        "modes": {
+          "minimal": "Minimalista",
+          "colorful": "Színes"
+        },
+        "hints": {
+          "minimal": "Tiszta monokróm jelentés — bankok, jelzáloghitelek és hivatalos célokra alkalmas.",
+          "colorful": "Színes jelentés MD3 akcentusokkal — színes szakaszfejlécek, KPI csempék és fázisjelvények. Személyes használatra és bemutatókra alkalmas."
+        }
+      },
+      "preview": {
+        "title": "Oldal előnézete",
+        "description": "Minden kiválasztott szakasz saját oldalon lesz. Zöld = álló, narancs = fekvő.",
+        "empty": "Válassz jelentés szakaszokat az előnézethez."
       },
       "button": {
         "cancel": "Mégse",
