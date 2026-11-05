@@ -2410,8 +2410,7 @@
       "description": "Wybierz sekcje, język i walutę dla raportu PDF.",
       "tabs": {
         "content": "Treść",
-        "format": "Format",
-        "templates": "Szablony"
+        "format": "Format"
       },
       "summaryBar": {
         "sections": "sekcji",
@@ -2483,8 +2482,7 @@
       "locale": {
         "title": "Język i waluta",
         "language": "Język raportu",
-        "currency": "Waluta",
-        "conversionHint": "Kwoty są przeliczane według aktualnego kursu Czeskiego Banku Narodowego."
+        "currency": "Waluta"
       },
       "templates": {
         "title": "Szablony",
@@ -2498,30 +2496,15 @@
         "empty": "Brak zapisanych szablonów."
       },
       "orientation": {
-        "title": "Orientacja strony",
         "portrait": "Pionowa",
         "landscape": "Pozioma",
-        "perSectionTitle": "Orientacja dla każdej sekcji",
         "quickActions": "Szybka orientacja wszystkich",
-        "resetAll": "Wszystko na Auto",
-        "noSections": "Najpierw wybierz sekcje raportu powyżej.",
         "modes": {
-          "auto": "Auto",
-          "portrait": "Wszystkie pionowo",
-          "landscape": "Wszystkie poziomo",
-          "custom": "Niestandardowe"
-        },
-        "hints": {
-          "auto": "Szerokie tabele (Budżet / Kontakty z włączonymi podsekcjami) będą automatycznie renderowane w orientacji poziomej. Odpowiednie dla większości raportów.",
-          "allPortrait": "Wszystkie strony będą w orientacji pionowej. Bardziej kompaktowe, ale szerokie tabele mogą mieć ściśnięte kolumny.",
-          "allLandscape": "Wszystkie strony będą w orientacji poziomej. Więcej miejsca na kolumny, ale raport będzie miał więcej stron.",
-          "custom": "Wybierz orientację dla każdej sekcji osobno. Sekcje bez wyraźnego wyboru powrócą do trybu Auto."
+          "auto": "Auto"
         }
       },
       "presets": {
         "title": "Szybkie presety",
-        "comingSoon": "Wkrótce",
-        "description": "Gotowe konfiguracje dla typowych scenariuszy (hipoteka, podsumowanie, pełny raport).",
         "mortgage": {
           "label": "Hipoteka",
           "desc": "Minimalistyczny raport dla banku"
@@ -2540,16 +2523,13 @@
         "modes": {
           "minimal": "Minimalistyczny",
           "colorful": "Kolorowy"
-        },
-        "hints": {
-          "minimal": "Czysty monochromatyczny raport — odpowiedni dla banków, hipotek i celów urzędowych.",
-          "colorful": "Kolorowy raport z akcentami MD3 — kolorowe nagłówki sekcji, kafelki KPI i odznaki faz. Odpowiedni do użytku osobistego i prezentacji."
         }
       },
-      "preview": {
-        "title": "Podgląd stron",
-        "description": "Każda wybrana sekcja będzie na własnej stronie. Zielony = pionowo, pomarańczowy = poziomo.",
-        "empty": "Wybierz sekcje raportu, aby zobaczyć podgląd."
+      "margins": {
+        "title": "Marginesy strony",
+        "narrow": "Wąskie",
+        "normal": "Normalne",
+        "wide": "Szerokie"
       },
       "sort": {
         "label": "Sortuj według",

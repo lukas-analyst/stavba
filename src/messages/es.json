@@ -2410,8 +2410,7 @@
       "description": "Selecciona secciones, idioma y moneda para el informe PDF.",
       "tabs": {
         "content": "Contenido",
-        "format": "Formato",
-        "templates": "Plantillas"
+        "format": "Formato"
       },
       "summaryBar": {
         "sections": "secciones",
@@ -2483,8 +2482,7 @@
       "locale": {
         "title": "Idioma y moneda",
         "language": "Idioma del informe",
-        "currency": "Moneda",
-        "conversionHint": "Los importes se convierten utilizando el tipo de cambio actual del Banco Nacional Checo."
+        "currency": "Moneda"
       },
       "templates": {
         "title": "Plantillas",
@@ -2498,30 +2496,15 @@
         "empty": "Aún no hay plantillas guardadas."
       },
       "orientation": {
-        "title": "Orientación de página",
         "portrait": "Vertical",
         "landscape": "Horizontal",
-        "perSectionTitle": "Orientación por sección",
         "quickActions": "Orientación rápida para todas",
-        "resetAll": "Todo a Auto",
-        "noSections": "Selecciona las secciones del informe arriba primero.",
         "modes": {
-          "auto": "Auto",
-          "portrait": "Todo vertical",
-          "landscape": "Todo horizontal",
-          "custom": "Personalizado"
-        },
-        "hints": {
-          "auto": "Las tablas anchas (Presupuesto / Contactos con subsecciones activadas) se renderizarán automáticamente en páginas horizontales. Adecuado para la mayoría de informes.",
-          "allPortrait": "Todas las páginas estarán en orientación vertical. Más compacto, pero las tablas anchas pueden tener columnas apretadas.",
-          "allLandscape": "Todas las páginas estarán en orientación horizontal. Más espacio para columnas, pero el informe tendrá más páginas.",
-          "custom": "Elige la orientación para cada sección por separado. Las secciones sin elección explícita pasarán al modo Auto."
+          "auto": "Auto"
         }
       },
       "presets": {
         "title": "Preajustes rápidos",
-        "comingSoon": "Pronto",
-        "description": "Configuraciones preestablecidas para escenarios comunes (hipoteca, resumen, informe completo).",
         "mortgage": {
           "label": "Hipoteca",
           "desc": "Informe minimalista para banco"
@@ -2540,16 +2523,13 @@
         "modes": {
           "minimal": "Minimalista",
           "colorful": "Colorido"
-        },
-        "hints": {
-          "minimal": "Informe monocromo limpio — adecuado para bancos, hipotecas y uso oficial.",
-          "colorful": "Informe colorido con acentos MD3 — encabezados de sección coloreados, mosaicos KPI e insignias de fase. Adecuado para uso personal y presentaciones."
         }
       },
-      "preview": {
-        "title": "Vista previa de páginas",
-        "description": "Cada sección seleccionada estará en su propia página. Verde = vertical, naranja = horizontal.",
-        "empty": "Selecciona secciones del informe para ver una vista previa."
+      "margins": {
+        "title": "Márgenes de página",
+        "narrow": "Estrechos",
+        "normal": "Normales",
+        "wide": "Amplios"
       },
       "sort": {
         "label": "Ordenar por",

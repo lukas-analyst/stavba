@@ -30,6 +30,7 @@ import type {
   PdfContact,
   PdfOrientationMode,
   PdfReportStyle,
+  PdfPageMargin,
   TableSort,
 } from "./pdf-types";
 
@@ -2004,11 +2005,24 @@ export function ReportDocument({
   data: PdfReportData;
   options: PdfExportOptions;
 }) {
-  const { locale, sections, currency, orientationMode, sectionOrientations } = options;
+  const { locale, sections, currency, orientationMode, sectionOrientations, pageMargin } = options;
 
   // Helper: resolve the orientation for a given section based on user prefs.
   const orient = (sectionId: PdfSectionId): "portrait" | "landscape" =>
     resolveOrientation(sectionId, sections, orientationMode, sectionOrientations);
+
+  // Page margin override — replaces the default 40pt with the user's choice.
+  const marginValue =
+    pageMargin === "narrow" ? 20 :
+    pageMargin === "wide" ? 60 :
+    40; // normal (default)
+  const pageStyle = {
+    ...styles.page,
+    paddingTop: marginValue,
+    paddingBottom: marginValue,
+    paddingLeft: marginValue,
+    paddingRight: marginValue,
+  };
 
   // Which overview sections are actually selected? (determines whether
   // the overview page is emitted at all)
@@ -2040,7 +2054,7 @@ export function ReportDocument({
         <Page
           size="A4"
           orientation={overviewOrientation}
-          style={styles.page}
+          style={pageStyle}
           experimentalPagination
         >
           {sections.includes("header") ? (
@@ -2098,7 +2112,7 @@ export function ReportDocument({
 
       {/* Budget items table */}
       {sections.includes("budget_items") ? (
-        <Page size="A4" orientation={orient("budget_items")} style={styles.page} experimentalPagination>
+        <Page size="A4" orientation={orient("budget_items")} style={pageStyle} experimentalPagination>
           <BudgetTable
             items={data.budgetItems}
             sections={sections}
@@ -2114,7 +2128,7 @@ export function ReportDocument({
 
       {/* Payments table */}
       {sections.includes("payments") ? (
-        <Page size="A4" orientation={orient("payments")} style={styles.page} experimentalPagination>
+        <Page size="A4" orientation={orient("payments")} style={pageStyle} experimentalPagination>
           <PaymentsTable
             payments={data.payments}
             sections={sections}
@@ -2130,7 +2144,7 @@ export function ReportDocument({
 
       {/* Time entries table */}
       {sections.includes("time") ? (
-        <Page size="A4" orientation={orient("time")} style={styles.page} experimentalPagination>
+        <Page size="A4" orientation={orient("time")} style={pageStyle} experimentalPagination>
           <TimeEntriesTable
             timeEntries={data.timeEntries}
             sections={sections}
@@ -2144,7 +2158,7 @@ export function ReportDocument({
 
       {/* Contacts table */}
       {sections.includes("contacts") ? (
-        <Page size="A4" orientation={orient("contacts")} style={styles.page} experimentalPagination>
+        <Page size="A4" orientation={orient("contacts")} style={pageStyle} experimentalPagination>
           <ContactsTable
             contacts={data.contacts}
             sections={sections}

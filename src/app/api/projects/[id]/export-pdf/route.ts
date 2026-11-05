@@ -7,6 +7,7 @@ import type {
   PdfSectionId,
   PdfOrientationMode,
   PdfReportStyle,
+  PdfPageMargin,
   OrientableSectionId,
   TableSort,
   TableSorts,
@@ -36,6 +37,9 @@ const validOrientationModes = [
 
 // Valid report styles — parsed from `?reportStyle=...`.
 const validReportStyles = ["minimal", "colorful"] as const;
+
+// Valid page margins — parsed from `?pageMargin=...`.
+const validPageMargins = ["narrow", "normal", "wide"] as const;
 
 // GET /api/projects/[id]/export-pdf
 // Generates a PDF report and returns it as a downloadable file.
@@ -121,6 +125,15 @@ export async function GET(
         : "minimal"
     );
 
+    // ─── Page margins (F2) ───────────────────────────────────────────
+    // ?pageMargin=narrow|normal|wide (default: normal)
+    const rawMargin = searchParams.get("pageMargin") || "normal";
+    const pageMargin: PdfPageMargin = (
+      validPageMargins.includes(rawMargin as (typeof validPageMargins)[number])
+        ? (rawMargin as PdfPageMargin)
+        : "normal"
+    );
+
     // ─── Per-table sort (Phase 4+) ─────────────────────────────────
     // ?sort-budget_items=category&sortDir-budget_items=asc
     // ?sort-payments=date&sortDir-payments=desc
@@ -149,6 +162,7 @@ export async function GET(
       orientationMode,
       sectionOrientations,
       reportStyle,
+      pageMargin,
       tableSorts,
     });
 

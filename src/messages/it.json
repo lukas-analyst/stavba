@@ -2410,8 +2410,7 @@
       "description": "Seleziona sezioni, lingua e valuta per il report PDF.",
       "tabs": {
         "content": "Contenuto",
-        "format": "Formato",
-        "templates": "Modelli"
+        "format": "Formato"
       },
       "summaryBar": {
         "sections": "sezioni",
@@ -2483,8 +2482,7 @@
       "locale": {
         "title": "Lingua e valuta",
         "language": "Lingua del rapporto",
-        "currency": "Valuta",
-        "conversionHint": "Gli importi sono convertiti utilizzando il tasso di cambio attuale della Banca Nazionale Ceca."
+        "currency": "Valuta"
       },
       "templates": {
         "title": "Modelli",
@@ -2498,30 +2496,15 @@
         "empty": "Nessun modello salvato."
       },
       "orientation": {
-        "title": "Orientamento pagina",
         "portrait": "Verticale",
         "landscape": "Orizzontale",
-        "perSectionTitle": "Orientamento per sezione",
         "quickActions": "Orientamento rapido per tutte",
-        "resetAll": "Tutto su Auto",
-        "noSections": "Seleziona prima le sezioni del report sopra.",
         "modes": {
-          "auto": "Auto",
-          "portrait": "Tutto verticale",
-          "landscape": "Tutto orizzontale",
-          "custom": "Personalizzato"
-        },
-        "hints": {
-          "auto": "Le tabelle larghe (Budget / Contatti con sottosezioni attivate) verranno automaticamente renderizzate su pagine orizzontali. Adatto per la maggior parte dei report.",
-          "allPortrait": "Tutte le pagine saranno in orientamento verticale. Più compatto, ma le tabelle larghe possono avere colonne affollate.",
-          "allLandscape": "Tutte le pagine saranno in orientamento orizzontale. Più spazio per le colonne, ma il report avrà più pagine.",
-          "custom": "Scegli l'orientamento per ogni sezione separatamente. Le sezioni senza scelta esplicita passeranno alla modalità Auto."
+          "auto": "Auto"
         }
       },
       "presets": {
         "title": "Preset rapidi",
-        "comingSoon": "Presto",
-        "description": "Configurazioni preimpostate per scenari comuni (mutuo, riepilogo, report completo).",
         "mortgage": {
           "label": "Mutuo",
           "desc": "Report minimalista per banca"
@@ -2540,16 +2523,13 @@
         "modes": {
           "minimal": "Minimalista",
           "colorful": "Colorato"
-        },
-        "hints": {
-          "minimal": "Report monocromatico pulito — adatto per banche, mutui e uso ufficiale.",
-          "colorful": "Report colorato con accenti MD3 — intestazioni di sezione colorate, riquadri KPI e badge di fase. Adatto per uso personale e presentazioni."
         }
       },
-      "preview": {
-        "title": "Anteprima pagine",
-        "description": "Ogni sezione selezionata sarà su una propria pagina. Verde = verticale, arancione = orizzontale.",
-        "empty": "Seleziona le sezioni del report per vedere un'anteprima."
+      "margins": {
+        "title": "Margini pagina",
+        "narrow": "Stretti",
+        "normal": "Normali",
+        "wide": "Ampi"
       },
       "sort": {
         "label": "Ordina per",

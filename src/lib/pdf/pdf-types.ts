@@ -103,12 +103,23 @@ export type PdfExportOptions = {
    */
   reportStyle?: PdfReportStyle;
   /**
+   * Page margin preset. Default = "normal".
+   *
+   * - "narrow": 20pt margins (more content per page, denser layout)
+   * - "normal": 40pt margins (default, balanced)
+   * - "wide": 60pt margins (more whitespace, easier to annotate)
+   */
+  pageMargin?: PdfPageMargin;
+  /**
    * Per-table sort configuration. Each key maps a table section ID to
    * a sort spec (field + direction). Absent entries = default ordering
    * (sortOrder for budget, date for payments/time, name for contacts).
    */
   tableSorts?: TableSorts;
 };
+
+/** Page margin preset for PDF export. */
+export type PdfPageMargin = "narrow" | "normal" | "wide";
 
 /** Sort spec for a single table. */
 export type TableSort = {

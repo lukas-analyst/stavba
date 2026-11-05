@@ -2413,8 +2413,7 @@
       "description": "Vyberte sekce, jazyk a měnu pro PDF report.",
       "tabs": {
         "content": "Obsah",
-        "format": "Formát",
-        "templates": "Šablony"
+        "format": "Formát"
       },
       "summaryBar": {
         "sections": "sekcí",
@@ -2486,8 +2485,7 @@
       "locale": {
         "title": "Jazyk a měna",
         "language": "Jazyk reportu",
-        "currency": "Měna",
-        "conversionHint": "Částky jsou přepočítány podle aktuálního kurzu České národní banky."
+        "currency": "Měna"
       },
       "templates": {
         "title": "Šablony",
@@ -2501,30 +2499,15 @@
         "empty": "Zatím nejsou uloženy žádné šablony."
       },
       "orientation": {
-        "title": "Orientace stránky",
         "portrait": "Na výšku",
         "landscape": "Na šířku",
-        "perSectionTitle": "Orientace pro každou sekci",
         "quickActions": "Rychlá orientace všech",
-        "resetAll": "Vše na Auto",
-        "noSections": "Nejdříve vyberte sekce reportu výše.",
         "modes": {
-          "auto": "Auto",
-          "portrait": "Vše na výšku",
-          "landscape": "Vše na šířku",
-          "custom": "Vlastní"
-        },
-        "hints": {
-          "auto": "Široké tabulky (Rozpočet / Kontakty se zapnutými podsekcemi) se automaticky vykreslí na šířku. Vhodné pro většinu reportů.",
-          "allPortrait": "Všechny stránky budou na výšku. Úspornější, ale široké tabulky mohou mít zhuštěné sloupce.",
-          "allLandscape": "Všechny stránky budou na šířku. Více místa pro sloupce, ale report má více stránek.",
-          "custom": "Zvolte orientaci pro každou sekci zvlášť. Sekce bez výběru se přepnou do režimu Auto."
+          "auto": "Auto"
         }
       },
       "presets": {
         "title": "Rychlé presety",
-        "comingSoon": "Brzy",
-        "description": "Přednastavené konfigurace pro běžné scénáře (hypotéka, souhrn, kompletní report).",
         "mortgage": {
           "label": "Hypotéka",
           "desc": "Minimalistický report pro banku"
@@ -2543,16 +2526,13 @@
         "modes": {
           "minimal": "Minimalistický",
           "colorful": "Barevný"
-        },
-        "hints": {
-          "minimal": "Čistý monochromatický report — vhodný pro banky, hypotéky a úřední účely.",
-          "colorful": "Barevný report s MD3 akcenty — barevné hlavičky sekcí, KPI dlaždice a odznaky fází. Vhodný pro osobní potřebu a prezentace."
         }
       },
-      "preview": {
-        "title": "Náhled stránek",
-        "description": "Každá vybraná sekce bude na vlastní stránce. Zelená = na výšku, oranžová = na šířku.",
-        "empty": "Vyberte sekce reportu pro zobrazení náhledu."
+      "margins": {
+        "title": "Okraje stránky",
+        "narrow": "Úzké",
+        "normal": "Normální",
+        "wide": "Široké"
       },
       "sort": {
         "label": "Řadit podle",

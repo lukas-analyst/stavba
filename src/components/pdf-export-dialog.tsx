@@ -81,6 +81,7 @@ import {
   DEFAULT_SORT_FIELD,
   type PdfSectionId,
   type PdfReportStyle,
+  type PdfPageMargin,
   type ExportTemplateData,
 } from "@/lib/pdf/pdf-types";
 import { locales, LOCALE_META, type Locale } from "@/i18n/config";
@@ -187,6 +188,7 @@ type SavedSettings = {
   locale: string;
   currency: string;
   reportStyle: PdfReportStyle;
+  pageMargin: PdfPageMargin;
   sectionOrientations: Partial<Record<string, "portrait" | "landscape">>;
   tableSorts: Partial<Record<string, { field: string; direction: "asc" | "desc" }>>;
 };
@@ -295,17 +297,8 @@ const SECTION_CATEGORIES = [
 ] as const;
 
 // Top-level sections (excluding sub-sections — they're rendered under parents).
-const TOP_LEVEL_SECTION_IDS: PdfSectionId[] = [
-  "header",
-  "summary",
-  "property",
-  "alerts",
-  "projection",
-  "budget_items",
-  "payments",
-  "time",
-  "contacts",
-];
+// (TOP_LEVEL_SECTION_IDS was here — now unified with ORIENTABLE_SECTION_IDS
+//  from pdf-types.ts, which is the same 9 top-level sections.)
 
 // =====================================================================
 // OrientationToggle — compact 3-way icon-only segmented control
@@ -423,6 +416,9 @@ export function PdfExportDialog({
   // "colorful" enables MD3-accented headers, KPI tiles, badges.
   const [reportStyle, setReportStyle] = useState<PdfReportStyle>("minimal");
 
+  // Page margin preset (F2). Default = "normal".
+  const [pageMargin, setPageMargin] = useState<PdfPageMargin>("normal");
+
   // Per-table sort (Phase 4+). Keys are table section IDs.
   // Absent entries = default ordering (sortOrder / date / name).
   const [tableSorts, setTableSorts] = useState<
@@ -477,6 +473,7 @@ export function PdfExportDialog({
       setCurrency(saved.currency);
       setSectionOrientations(saved.sectionOrientations ?? {});
       setReportStyle(saved.reportStyle ?? "minimal");
+      setPageMargin(saved.pageMargin ?? "normal");
       setTableSorts(saved.tableSorts ?? {});
     } else {
       setSelectedSections(new Set(DEFAULT_SECTIONS));
@@ -484,6 +481,7 @@ export function PdfExportDialog({
       setCurrency("CZK");
       setSectionOrientations({});
       setReportStyle("minimal");
+      setPageMargin("normal");
       setTableSorts({});
     }
     setActiveTab("content");
@@ -502,11 +500,12 @@ export function PdfExportDialog({
       locale,
       currency: currency,
       reportStyle,
+      pageMargin,
       sectionOrientations,
       tableSorts,
     };
     saveSettings(settings);
-  }, [open, selectedSections, locale, currency, reportStyle, sectionOrientations, tableSorts]);
+  }, [open, selectedSections, locale, currency, reportStyle, pageMargin, sectionOrientations, tableSorts]);
 
   // ---------------------------------------------------------------
   // Apply a preset configuration
@@ -599,6 +598,7 @@ export function PdfExportDialog({
         `&currency=${encodeURIComponent(effectiveCurrency)}` +
         `&sections=${encodeURIComponent(sections)}` +
         `&reportStyle=${encodeURIComponent(reportStyle)}` +
+        `&pageMargin=${encodeURIComponent(pageMargin)}` +
         `&${orientationParams.toString()}` +
         `&${sortParams.toString()}`;
 
@@ -753,6 +753,8 @@ export function PdfExportDialog({
       onSetAllOrientations={setAllOrientations}
       reportStyle={reportStyle}
       onReportStyleChange={setReportStyle}
+      pageMargin={pageMargin}
+      onPageMarginChange={setPageMargin}
       activeTab={activeTab}
       onActiveTabChange={setActiveTab}
       onApplyPreset={applyPreset}
@@ -856,6 +858,8 @@ type BodyProps = {
   onSetAllOrientations: (value: "auto" | "portrait" | "landscape") => void;
   reportStyle: PdfReportStyle;
   onReportStyleChange: (style: PdfReportStyle) => void;
+  pageMargin: PdfPageMargin;
+  onPageMarginChange: (margin: PdfPageMargin) => void;
   activeTab: "content" | "format";
   onActiveTabChange: (tab: "content" | "format") => void;
   onApplyPreset: (preset: PresetConfig) => void;
@@ -891,6 +895,8 @@ function PdfExportBody({
   onSetAllOrientations,
   reportStyle,
   onReportStyleChange,
+  pageMargin,
+  onPageMarginChange,
   activeTab,
   onActiveTabChange,
   onApplyPreset,
@@ -911,7 +917,7 @@ function PdfExportBody({
 
   // Count of selected top-level sections.
   const selectedCount = useMemo(
-    () => TOP_LEVEL_SECTION_IDS.filter((id) => selectedSections.has(id)).length,
+    () => ORIENTABLE_SECTION_IDS.filter((id) => selectedSections.has(id)).length,
     [selectedSections],
   );
 
@@ -1271,7 +1277,7 @@ function PdfExportBody({
                     size="sm"
                     onClick={onSelectAll}
                     disabled={
-                      selectedCount === TOP_LEVEL_SECTION_IDS.length
+                      selectedCount === ORIENTABLE_SECTION_IDS.length
                     }
                   >
                     <ListChecks className="h-3.5 w-3.5" />
@@ -1299,7 +1305,7 @@ function PdfExportBody({
                 <span className="type-label-sm text-muted-foreground">
                   {t("sections.countSelected", {
                     selected: selectedCount,
-                    total: TOP_LEVEL_SECTION_IDS.length,
+                    total: ORIENTABLE_SECTION_IDS.length,
                   })}
                 </span>
                 {/* Quick orientation: set all at once */}
@@ -1460,6 +1466,40 @@ function PdfExportBody({
                   value: "colorful",
                   label: t("style.modes.colorful"),
                   icon: Palette,
+                },
+              ]}
+            />
+          </section>
+
+          <Separator />
+
+          {/* Page margins */}
+          <section className="space-y-4">
+            <div className="flex items-center gap-2">
+              <LayoutPanelLeft className="h-4 w-4 text-primary" />
+              <h3 className="type-overline text-muted-foreground">
+                {t("margins.title")}
+              </h3>
+            </div>
+            <SegmentedButton
+              value={pageMargin}
+              onChange={(v) => onPageMarginChange(v as PdfPageMargin)}
+              className="w-full"
+              options={[
+                {
+                  value: "narrow",
+                  label: t("margins.narrow"),
+                  icon: RectangleVertical,
+                },
+                {
+                  value: "normal",
+                  label: t("margins.normal"),
+                  icon: RectangleVertical,
+                },
+                {
+                  value: "wide",
+                  label: t("margins.wide"),
+                  icon: RectangleVertical,
                 },
               ]}
             />
