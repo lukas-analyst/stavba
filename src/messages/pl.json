@@ -2437,7 +2437,9 @@
         "comingSoon": "Wkrótce",
         "planCost": "Koszty planowane",
         "actualCost": "Koszty rzeczywiste",
-        "phase": "Faza"
+        "phase": "Faza",
+        "payments": "Płatności",
+        "paymentsDesc": "Szczegółowy przegląd wszystkich płatności i faktur"
       },
       "locale": {
         "title": "Język i waluta",
@@ -2981,6 +2983,16 @@
     "estimatedOverrun": "Szacowane przekroczenie",
     "expectedSavings": "Oczekiwane oszczędności",
     "page": "Strona",
-    "of": "z"
+    "of": "z",
+    "payments": "Płatności",
+    "paymentsCount": "płatności",
+    "date": "Data",
+    "vendor": "Dostawca",
+    "type": "Typ",
+    "amount": "Kwota",
+    "invoiceNumber": "Faktura",
+    "noPayments": "Brak płatności.",
+    "vatRate": "VAT %",
+    "vatAmount": "VAT"
   }
 }

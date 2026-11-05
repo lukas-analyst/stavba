@@ -19,7 +19,8 @@ export type PdfSectionId =
   | "workers"
   | "contacts"
   | "audit"
-  | "trend";
+  | "trend"
+  | "payments";
 
 /** All available sections in display order. */
 export const ALL_SECTIONS: { id: PdfSectionId; labelKey: string; enabled: boolean }[] = [
@@ -34,6 +35,7 @@ export const ALL_SECTIONS: { id: PdfSectionId; labelKey: string; enabled: boolea
   { id: "property", labelKey: "sections.property", enabled: true },
   { id: "alerts", labelKey: "sections.alerts", enabled: true },
   { id: "projection", labelKey: "sections.projection", enabled: true },
+  { id: "payments", labelKey: "sections.payments", enabled: true },
   { id: "time", labelKey: "sections.time", enabled: false },
   { id: "workers", labelKey: "sections.workers", enabled: false },
   { id: "contacts", labelKey: "sections.contacts", enabled: false },
@@ -87,6 +89,7 @@ export type PdfReportData = {
     overBudget: PdfAlertItem[];
   };
   byPhase: PdfPhaseSummary[];
+  payments: PdfPayment[];
   /** Translated phase names keyed by the raw DB phase value. */
   phaseTranslations: Record<string, string>;
   /** UI labels translated to the target locale (for PDF text). */
@@ -130,6 +133,16 @@ export type PdfReportData = {
     expectedSavings: string;
     page: string;
     of: string;
+    payments: string;
+    paymentsCount: string;
+    date: string;
+    vendor: string;
+    type: string;
+    amount: string;
+    invoiceNumber: string;
+    noPayments: string;
+    vatRate: string;
+    vatAmount: string;
   };
 };
 
@@ -166,6 +179,23 @@ export type PdfPhaseSummary = {
   plan: number;
   actual: number;
   hours: number;
+};
+
+export type PdfPayment = {
+  id: string;
+  date: Date;
+  amount: number;
+  amountConverted: number;
+  currency: string | null;
+  type: string;
+  vendor: string | null;
+  invoiceNumber: string | null;
+  vatRate: number | null;
+  vatAmount: number | null;
+  description: string | null;
+  budgetItemCategory: string | null;
+  budgetItemSubcategory: string | null;
+  contactName: string | null;
 };
 
 export type ExportTemplateData = {

@@ -839,6 +839,92 @@ export function Footer({
 }
 
 // =====================================================================
+// PaymentsTable — table of all payments.
+// =====================================================================
+
+export function PaymentsTable({
+  payments,
+  currency,
+  locale,
+  labels,
+}: {
+  payments: PdfReportData["payments"];
+  currency: string;
+  locale: string;
+  labels: PdfReportData["labels"];
+}) {
+  if (!payments || payments.length === 0) {
+    return (
+      <View style={styles.section} wrap={false}>
+        <Text style={styles.sectionTitle}>{labels.payments}</Text>
+        <Text style={styles.tableEmpty}>{labels.noPayments}</Text>
+      </View>
+    );
+  }
+
+  return (
+    <View style={styles.section}>
+      <Text style={styles.sectionTitle}>
+        {labels.payments} ({payments.length} {labels.paymentsCount})
+      </Text>
+
+      <View style={styles.tableHeader} fixed>
+        <Text style={[styles.tableHeaderText, { flex: 1 }]}>
+          {labels.date}
+        </Text>
+        <Text style={[styles.tableHeaderText, { flex: 1.5 }]}>
+          {labels.category}
+        </Text>
+        <Text style={[styles.tableHeaderText, { flex: 1.5 }]}>
+          {labels.vendor}
+        </Text>
+        <Text style={[styles.tableHeaderText, { flex: 1.1, textAlign: "right" }]}>
+          {labels.amount}
+        </Text>
+        <Text style={[styles.tableHeaderText, { flex: 1 }]}>
+          {labels.type}
+        </Text>
+        <Text style={[styles.tableHeaderText, { flex: 1 }]}>
+          {labels.invoiceNumber}
+        </Text>
+      </View>
+
+      {payments.map((payment) => {
+        const itemLabel = [
+          payment.budgetItemCategory,
+          payment.budgetItemSubcategory,
+        ]
+          .filter(Boolean)
+          .join(" / ");
+        const vendor = payment.vendor || payment.contactName || "";
+        return (
+          <View key={payment.id} style={styles.tableRow} wrap={false}>
+            <Text style={[styles.tableCellText, { flex: 1 }]}>
+              {formatDate(payment.date, locale)}
+            </Text>
+            <Text style={[styles.tableCellText, { flex: 1.5 }]}>
+              {itemLabel || "-"}
+            </Text>
+            <Text style={[styles.tableCellText, { flex: 1.5 }]}>
+              {vendor || "-"}
+            </Text>
+            <Text style={[styles.tableCellText, { flex: 1.1, textAlign: "right" }]}>
+              {formatCurrency(payment.amountConverted, currency, locale)}
+            </Text>
+            <Text style={[styles.tableCellText, { flex: 1 }]}>
+              {payment.type}
+            </Text>
+            <Text style={[styles.tableCellText, { flex: 1 }]}>
+              {payment.invoiceNumber || "-"}
+            </Text>
+          </View>
+        );
+      })}
+    </View>
+  );
+}
+
+// =====================================================================
 // ReportDocument — the top-level <Document> that assembles all sections
 // based on the `sections` array from `options`.
 //
@@ -862,6 +948,7 @@ export function ReportDocument({
   const showBudget = sections.includes("budget_items");
   const showAlerts = sections.includes("alerts");
   const showProjection = sections.includes("projection");
+  const showPayments = sections.includes("payments");
 
   return (
     <Document
@@ -919,6 +1006,15 @@ export function ReportDocument({
         {showProjection ? (
           <ProjectionSection
             totals={data.totals}
+            currency={currency}
+            locale={locale}
+            labels={data.labels}
+          />
+        ) : null}
+
+        {showPayments ? (
+          <PaymentsTable
+            payments={data.payments}
             currency={currency}
             locale={locale}
             labels={data.labels}

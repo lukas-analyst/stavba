@@ -2437,7 +2437,9 @@
         "comingSoon": "Próximamente",
         "planCost": "Costos planificados",
         "actualCost": "Costos reales",
-        "phase": "Fase"
+        "phase": "Fase",
+        "payments": "Pagos",
+        "paymentsDesc": "Descripción detallada de todos los pagos y facturas"
       },
       "locale": {
         "title": "Idioma y moneda",
@@ -2981,6 +2983,16 @@
     "estimatedOverrun": "Sobrecoste estimado",
     "expectedSavings": "Ahorro previsto",
     "page": "Página",
-    "of": "de"
+    "of": "de",
+    "payments": "Pagos",
+    "paymentsCount": "pagos",
+    "date": "Fecha",
+    "vendor": "Proveedor",
+    "type": "Tipo",
+    "amount": "Importe",
+    "invoiceNumber": "Factura",
+    "noPayments": "Sin pagos.",
+    "vatRate": "IVA %",
+    "vatAmount": "IVA"
   }
 }

@@ -2440,7 +2440,9 @@
         "comingSoon": "Brzy dostupné",
         "planCost": "Plánované náklady",
         "actualCost": "Skutečné náklady",
-        "phase": "Fáze"
+        "phase": "Fáze",
+        "payments": "Platby",
+        "paymentsDesc": "Detailní přehled všech plateb a faktur"
       },
       "locale": {
         "title": "Jazyk a měna",
@@ -2984,6 +2986,16 @@
     "estimatedOverrun": "Odhadované překročení",
     "expectedSavings": "Očekávaná úspora",
     "page": "Strana",
-    "of": "z"
+    "of": "z",
+    "payments": "Platby",
+    "paymentsCount": "plateb",
+    "date": "Datum",
+    "vendor": "Dodavatel",
+    "type": "Typ",
+    "amount": "Částka",
+    "invoiceNumber": "Faktura",
+    "noPayments": "Žádné platby.",
+    "vatRate": "DPH %",
+    "vatAmount": "DPH"
   }
 }

@@ -2437,7 +2437,9 @@
         "comingSoon": "Hamarosan",
         "planCost": "Tervezett költségek",
         "actualCost": "Tényleges költségek",
-        "phase": "Fázis"
+        "phase": "Fázis",
+        "payments": "Fizetések",
+        "paymentsDesc": "Minden fizetés és számla részletes áttekintése"
       },
       "locale": {
         "title": "Nyelv és pénznem",
@@ -2981,6 +2983,16 @@
     "estimatedOverrun": "Becsült többletköltség",
     "expectedSavings": "Várható megtakarítás",
     "page": "Oldal",
-    "of": "/"
+    "of": "/",
+    "payments": "Fizetések",
+    "paymentsCount": "fizetés",
+    "date": "Dátum",
+    "vendor": "Szállító",
+    "type": "Típus",
+    "amount": "Összeg",
+    "invoiceNumber": "Számla",
+    "noPayments": "Nincsenek fizetések.",
+    "vatRate": "ÁFA %",
+    "vatAmount": "ÁFA"
   }
 }

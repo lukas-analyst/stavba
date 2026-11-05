@@ -2440,7 +2440,9 @@
         "comingSoon": "Coming soon",
         "planCost": "Planned costs",
         "actualCost": "Actual costs",
-        "phase": "Phase"
+        "phase": "Phase",
+        "payments": "Payments",
+        "paymentsDesc": "Detailed overview of all payments and invoices"
       },
       "locale": {
         "title": "Language and currency",
@@ -2984,6 +2986,16 @@
     "estimatedOverrun": "Estimated overrun",
     "expectedSavings": "Expected savings",
     "page": "Page",
-    "of": "of"
+    "of": "of",
+    "payments": "Payments",
+    "paymentsCount": "payments",
+    "date": "Date",
+    "vendor": "Vendor",
+    "type": "Type",
+    "amount": "Amount",
+    "invoiceNumber": "Invoice",
+    "noPayments": "No payments.",
+    "vatRate": "VAT %",
+    "vatAmount": "VAT"
   }
 }

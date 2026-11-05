@@ -31,6 +31,7 @@ import type {
   PdfBudgetItem,
   PdfAlertItem,
   PdfPhaseSummary,
+  PdfPayment,
 } from "./pdf-types";
 
 // =====================================================================
@@ -260,6 +261,55 @@ export async function generatePdf(options: PdfExportOptions): Promise<Buffer> {
   }
   const byPhase = Array.from(byPhaseMap.values());
 
+  // ─── 6.3) Fetch payments ──────────────────────────────────────────
+  const dbPayments = await dbRead.payment.findMany({
+    where: { budgetItem: { projectId: options.projectId } },
+    orderBy: { date: "desc" },
+    select: {
+      id: true,
+      date: true,
+      amount: true,
+      amountConverted: true,
+      currency: true,
+      type: true,
+      vendor: true,
+      invoiceNumber: true,
+      vatRate: true,
+      vatAmount: true,
+      description: true,
+      budgetItem: {
+        select: { category: true, subcategory: true },
+      },
+      contact: {
+        select: { name: true },
+      },
+    },
+  });
+
+  const payments: PdfPayment[] = await Promise.all(
+    dbPayments.map(async (p): Promise<PdfPayment> => {
+      const convertedAmount = needsConversion
+        ? (await toTarget(p.amountConverted || p.amount))
+        : (p.amountConverted || p.amount);
+      return {
+        id: p.id,
+        date: p.date,
+        amount: p.amount,
+        amountConverted: convertedAmount,
+        currency: p.currency,
+        type: p.type,
+        vendor: p.vendor,
+        invoiceNumber: p.invoiceNumber,
+        vatRate: p.vatRate,
+        vatAmount: p.vatAmount,
+        description: p.description,
+        budgetItemCategory: p.budgetItem?.category ?? null,
+        budgetItemSubcategory: p.budgetItem?.subcategory ?? null,
+        contactName: p.contact?.name ?? null,
+      };
+    }),
+  );
+
   // ─── 6.5) Load i18n translations for the target locale ──────────
   // PDF components run outside of React's context system, so they can't
   // use useTranslations(). We load all needed translations server-side
@@ -315,6 +365,16 @@ export async function generatePdf(options: PdfExportOptions): Promise<Buffer> {
     expectedSavings: tPdf("expectedSavings"),
     page: tPdf("page"),
     of: tPdf("of"),
+    payments: tPdf("payments"),
+    paymentsCount: tPdf("paymentsCount"),
+    date: tPdf("date"),
+    vendor: tPdf("vendor"),
+    type: tPdf("type"),
+    amount: tPdf("amount"),
+    invoiceNumber: tPdf("invoiceNumber"),
+    noPayments: tPdf("noPayments"),
+    vatRate: tPdf("vatRate"),
+    vatAmount: tPdf("vatAmount"),
   };
 
   // ─── 7) Assemble PdfReportData ───────────────────────────────────
@@ -350,6 +410,7 @@ export async function generatePdf(options: PdfExportOptions): Promise<Buffer> {
     },
     alerts: { overdue, upcoming, overBudget },
     byPhase,
+    payments,
     phaseTranslations,
     labels,
   };

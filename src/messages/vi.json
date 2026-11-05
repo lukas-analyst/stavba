@@ -2437,7 +2437,9 @@
         "comingSoon": "Sắp ra mắt",
         "planCost": "Chi phí kế hoạch",
         "actualCost": "Chi phí thực tế",
-        "phase": "Giai đoạn"
+        "phase": "Giai đoạn",
+        "payments": "Thanh toán",
+        "paymentsDesc": "Tổng quan chi tiết về tất cả các khoản thanh toán và hóa đơn"
       },
       "locale": {
         "title": "Ngôn ngữ và tiền tệ",
@@ -2981,6 +2983,16 @@
     "estimatedOverrun": "Vượt chi phí dự kiến",
     "expectedSavings": "Tiết kiệm dự kiến",
     "page": "Trang",
-    "of": "/"
+    "of": "/",
+    "payments": "Thanh toán",
+    "paymentsCount": "thanh toán",
+    "date": "Ngày",
+    "vendor": "Nhà cung cấp",
+    "type": "Loại",
+    "amount": "Số tiền",
+    "invoiceNumber": "Hóa đơn",
+    "noPayments": "Không có thanh toán.",
+    "vatRate": "VAT %",
+    "vatAmount": "VAT"
   }
 }

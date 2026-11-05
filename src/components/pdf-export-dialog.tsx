@@ -108,6 +108,7 @@ const DEFAULT_SECTIONS: PdfSectionId[] = [
   "property",
   "alerts",
   "projection",
+  "payments",
 ];
 
 export function PdfExportDialog({
