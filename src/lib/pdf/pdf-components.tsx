@@ -30,9 +30,9 @@ import type {
   PdfContact,
   PdfOrientationMode,
   PdfReportStyle,
-  PdfPageMargin,
   TableSort,
 } from "./pdf-types";
+import { OVERVIEW_SECTION_IDS } from "./pdf-types";
 
 // =====================================================================
 // Font registration — Roboto (Unicode, supports Czech diacritics)
@@ -571,36 +571,6 @@ const styles = StyleSheet.create({
     fontSize: 8,
     color: "#444444",
     paddingRight: 4,
-  },
-  // Status badges (colorful mode replaces text status with colored dots).
-  colorfulStatusOk: {
-    fontSize: 9,
-    color: "#1A7F37",
-    fontWeight: "bold",
-  },
-  colorfulStatusOver: {
-    fontSize: 9,
-    color: "#B00020",
-    fontWeight: "bold",
-  },
-  colorfulStatusPending: {
-    fontSize: 9,
-    color: "#B45309",
-  },
-  colorfulAlertOverdue: {
-    fontSize: 9,
-    color: "#B00020",
-    marginBottom: 2,
-  },
-  colorfulAlertUpcoming: {
-    fontSize: 9,
-    color: "#B45309",
-    marginBottom: 2,
-  },
-  colorfulAlertOverBudget: {
-    fontSize: 9,
-    color: "#B00020",
-    marginBottom: 2,
   },
   // Alert group title — colored badge for each alert type.
   colorfulAlertGroupTitle: {
@@ -1980,15 +1950,6 @@ function resolveOrientation(
 // `experimentalPagination` is enabled on every page to make `totalPages`
 // accurate in the footer.
 // =====================================================================
-
-// IDs of "overview" sections that share a single page.
-const OVERVIEW_SECTION_IDS: PdfSectionId[] = [
-  "header",
-  "summary",
-  "property",
-  "alerts",
-  "projection",
-];
 
 // IDs of "table" sections that each get their own page.
 const TABLE_SECTION_IDS: PdfSectionId[] = [

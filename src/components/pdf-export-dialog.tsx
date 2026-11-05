@@ -76,6 +76,7 @@ import {
   ALL_SECTIONS,
   SUB_SECTIONS,
   ORIENTABLE_SECTION_IDS,
+  OVERVIEW_SECTION_IDS,
   SORTABLE_TABLE_IDS,
   SORTABLE_FIELDS_BY_TABLE,
   DEFAULT_SORT_FIELD,
@@ -482,7 +483,15 @@ export function PdfExportDialog({
       setSectionOrientations({});
       setReportStyle("minimal");
       setPageMargin("normal");
-      setTableSorts({});
+      // Default sort matches server-side defaults:
+      // payments/time = date desc (as fetched from DB),
+      // budget_items = sortOrder asc, contacts = name asc.
+      setTableSorts({
+        budget_items: { field: "sortOrder", direction: "asc" },
+        payments: { field: "date", direction: "desc" },
+        time: { field: "date", direction: "desc" },
+        contacts: { field: "name", direction: "asc" },
+      });
     }
     setActiveTab("content");
     setNewTemplateName("");
@@ -787,6 +796,7 @@ export function PdfExportDialog({
   const footer = (
     <PdfExportFooter
       isExporting={isExporting}
+      isExportDisabled={selectedSections.size === 0}
       onCancel={() => onOpenChange(false)}
       onExport={handleExport}
       cancelLabel={t("button.cancel")}
@@ -945,6 +955,13 @@ function PdfExportBody({
     const Icon = SECTION_ICONS[section.id] ?? Files;
     const sortable = isTopLevel && !disabled && checked && isSortableTable(section.id);
 
+    // Can orient? Table sections always can. Overview sections can only
+    // if this is the FIRST selected overview section (overview sections
+    // share one page, so only the first one's orientation is honored).
+    const isOverviewSection = (OVERVIEW_SECTION_IDS as readonly string[]).includes(section.id);
+    const firstSelectedOverview = OVERVIEW_SECTION_IDS.find((id) => selectedSections.has(id));
+    const canOrient = !isOverviewSection || section.id === firstSelectedOverview;
+
     // Current orientation override for this section (if any).
     const explicit = sectionOrientations[section.id];
     const currentOrientation: "auto" | "portrait" | "landscape" =
@@ -1006,9 +1023,10 @@ function PdfExportBody({
           </Label>
 
           {/* Right: inline orientation toggle — only for top-level,
-              enabled, checked sections. Unchecked sections don't need
-              orientation (no page = no orientation to set). */}
-          {isTopLevel && !disabled && checked ? (
+              enabled, checked sections that are NOT non-first overview
+              sections (overview sections share one page, so only the
+              first selected overview section's orientation matters). */}
+          {isTopLevel && !disabled && checked && canOrient ? (
             <OrientationToggle
               value={currentOrientation}
               onChange={(v) => onSectionOrientationChange(section.id, v)}
@@ -1515,6 +1533,7 @@ function PdfExportBody({
 // =====================================================================
 type FooterProps = {
   isExporting: boolean;
+  isExportDisabled?: boolean;
   onCancel: () => void;
   onExport: () => void;
   cancelLabel: string;
@@ -1524,6 +1543,7 @@ type FooterProps = {
 
 function PdfExportFooter({
   isExporting,
+  isExportDisabled = false,
   onCancel,
   onExport,
   cancelLabel,
@@ -1544,7 +1564,7 @@ function PdfExportFooter({
       <Button
         type="button"
         onClick={onExport}
-        disabled={isExporting}
+        disabled={isExporting || isExportDisabled}
         className="sm:flex-1 sm:max-w-[16rem]"
       >
         {isExporting ? (

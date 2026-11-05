@@ -149,7 +149,7 @@ export const SORTABLE_BUDGET_FIELDS: ReadonlyArray<{ id: string; labelKey: strin
   { id: "category", labelKey: "sort.fields.category" },
   { id: "subcategory", labelKey: "sort.fields.name" },
   { id: "phase", labelKey: "sort.fields.phase" },
-  { id: "planCost", labelKey: "sort.fields.planCost" },
+  { id: "planCostConverted", labelKey: "sort.fields.planCost" },
   { id: "actualCost", labelKey: "sort.fields.actualCost" },
   { id: "dateFrom", labelKey: "sort.fields.dateFrom" },
   { id: "dateTo", labelKey: "sort.fields.dateTo" },
@@ -158,17 +158,17 @@ export const SORTABLE_BUDGET_FIELDS: ReadonlyArray<{ id: string; labelKey: strin
 
 export const SORTABLE_PAYMENT_FIELDS: ReadonlyArray<{ id: string; labelKey: string }> = [
   { id: "date", labelKey: "sort.fields.date" },
-  { id: "amount", labelKey: "sort.fields.amount" },
+  { id: "amountConverted", labelKey: "sort.fields.amount" },
   { id: "vendor", labelKey: "sort.fields.vendor" },
   { id: "type", labelKey: "sort.fields.type" },
-  { id: "category", labelKey: "sort.fields.category" },
+  { id: "budgetItemCategory", labelKey: "sort.fields.category" },
 ];
 
 export const SORTABLE_TIME_FIELDS: ReadonlyArray<{ id: string; labelKey: string }> = [
   { id: "date", labelKey: "sort.fields.date" },
   { id: "workerName", labelKey: "sort.fields.worker" },
   { id: "hours", labelKey: "sort.fields.hours" },
-  { id: "category", labelKey: "sort.fields.category" },
+  { id: "budgetItemCategory", labelKey: "sort.fields.category" },
 ];
 
 export const SORTABLE_CONTACT_FIELDS: ReadonlyArray<{ id: string; labelKey: string }> = [
@@ -229,6 +229,18 @@ export const ORIENTABLE_SECTION_IDS = [
 
 export type OrientableSectionId = (typeof ORIENTABLE_SECTION_IDS)[number];
 
+/** Overview sections share a single <Page> in the PDF. Only the FIRST
+ *  selected overview section's orientation is honored for that page.
+ *  The dialog hides the OrientationToggle for non-first overview sections
+ *  to avoid misleading the user. */
+export const OVERVIEW_SECTION_IDS: PdfSectionId[] = [
+  "header",
+  "summary",
+  "property",
+  "alerts",
+  "projection",
+];
+
 export type PdfReportData = {
   project: {
     name: string;
@@ -279,7 +291,6 @@ export type PdfReportData = {
     startDate: string;
     endDate: string;
     summary: string;
-    expectedTotal: string;
     plan: string;
     actual: string;
     remaining: string;

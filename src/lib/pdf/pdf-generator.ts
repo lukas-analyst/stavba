@@ -432,7 +432,6 @@ export async function generatePdf(options: PdfExportOptions): Promise<Buffer> {
     startDate: tPdf("startDate"),
     endDate: tPdf("endDate"),
     summary: tPdf("summary"),
-    expectedTotal: tPdf("expectedTotal"),
     plan: tPdf("plan"),
     actual: tPdf("actual"),
     remaining: tPdf("remaining"),
