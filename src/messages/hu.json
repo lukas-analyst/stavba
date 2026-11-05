@@ -2460,7 +2460,8 @@
         "contactIco": "Adószám",
         "contactIcoDesc": "Cég adószámának megjelenítése (adós bizonylatokhoz)",
         "contactNotes": "Megjegyzések",
-        "contactNotesDesc": "Egyedi megjegyzések megjelenítése minden kapcsolatnál"
+        "contactNotesDesc": "Egyedi megjegyzések megjelenítése minden kapcsolatnál",
+        "landscapeHint": "A széles táblázatok (Költségvetés / Kapcsolatok az alárendelt szakaszokkal) az olvashatóság érdekében automatikusan külön álló tájolású (A4 landscape) oldalon jelennek meg."
       },
       "locale": {
         "title": "Nyelv és pénznem",

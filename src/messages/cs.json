@@ -2463,7 +2463,8 @@
         "contactIco": "IČO / DIČ",
         "contactIcoDesc": "Zobrazit IČO a DIČ firmy (pro daňové doklady)",
         "contactNotes": "Poznámky",
-        "contactNotesDesc": "Zobrazit volné poznámky u každého kontaktu"
+        "contactNotesDesc": "Zobrazit volné poznámky u každého kontaktu",
+        "landscapeHint": "Široké tabulky (Rozpočet / Kontakty se zapnutými podsekcemi) se automaticky vykreslí na samostatné stránce na šířku (A4 landscape) pro lepší čitelnost."
       },
       "locale": {
         "title": "Jazyk a měna",

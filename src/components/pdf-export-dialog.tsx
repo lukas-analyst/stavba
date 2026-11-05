@@ -621,6 +621,14 @@ function PdfExportBody({
             return renderSection(section);
           })}
         </div>
+
+        {/* Auto-landscape hint — informs the user that wide tables
+            (Rozpočet / Kontakty with many sub-sections) automatically
+            render on a separate A4 landscape page for readability. */}
+        <div className="flex items-start gap-2 rounded-md bg-muted/40 p-2.5 type-label-sm text-muted-foreground">
+          <Info className="mt-0.5 h-3 w-3 shrink-0" />
+          <span>{t("sections.landscapeHint")}</span>
+        </div>
       </section>
 
       <Separator />

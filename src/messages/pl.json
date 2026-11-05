@@ -2460,7 +2460,8 @@
         "contactIco": "NIP / REGON",
         "contactIcoDesc": "Pokaż NIP i REGON firmy (dla dokumentów podatkowych)",
         "contactNotes": "Notatki",
-        "contactNotesDesc": "Pokaż dowolne notatki przy każdym kontakcie"
+        "contactNotesDesc": "Pokaż dowolne notatki przy każdym kontakcie",
+        "landscapeHint": "Szerokie tabele (Budżet / Kontakty z włączonymi podsekcjami) będą automatycznie renderowane na osobnej stronie w orientacji poziomej (A4 landscape) dla lepszej czytelności."
       },
       "locale": {
         "title": "Język i waluta",

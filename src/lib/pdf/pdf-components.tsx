@@ -1369,13 +1369,66 @@ export function ContactsTable({
 }
 
 // =====================================================================
+// Wide-table detection helpers
+// ---------------------------------------------------------------------
+// Tables with too many columns for portrait A4 (≈515pt content width)
+// get rendered on a dedicated landscape page (≈762pt content width) for
+// readability. Threshold = minimum column count that triggers landscape.
+//
+// Column counts:
+//   BudgetTable: 2 base (category + name) + up to 7 sub-section columns
+//     = max 9 columns (with phase + plan + actual + status + 2 dates + supplier)
+//   ContactsTable: 4 base (name + role + payments + timeEntry counts)
+//     + up to 5 sub-section columns
+//     = max 9 columns (with type + phone + email + ico + notes)
+//
+// At 7+ columns on portrait, individual cells get cramped (~73pt each)
+// and long category/role text wraps awkwardly. Landscape gives ~108pt
+// per cell, which is much more comfortable.
+// =====================================================================
+
+const WIDE_BUDGET_THRESHOLD = 7;
+const WIDE_CONTACTS_THRESHOLD = 7;
+
+function countBudgetColumns(sections: PdfSectionId[]): number {
+  let count = 2; // category + name (always shown)
+  if (sections.includes("phase")) count++;
+  if (sections.includes("plan_cost")) count++;
+  if (sections.includes("actual_cost")) count++;
+  if (sections.includes("status")) count++;
+  if (sections.includes("dates")) count += 2; // from + to
+  if (sections.includes("supplier")) count++;
+  return count;
+}
+
+function countContactsColumns(sections: PdfSectionId[]): number {
+  let count = 4; // name + role + paymentCount + timeEntryCount (always)
+  if (sections.includes("contact_type")) count++;
+  if (sections.includes("contact_phone")) count++;
+  if (sections.includes("contact_email")) count++;
+  if (sections.includes("contact_ico")) count++;
+  if (sections.includes("contact_notes")) count++;
+  return count;
+}
+
+// =====================================================================
 // ReportDocument — the top-level <Document> that assembles all sections
 // based on the `sections` array from `options`.
 //
-// A single <Page> wraps all section content; react-pdf paginates
-// automatically when content overflows. The fixed Footer repeats on
-// every generated page. `experimentalPagination` is enabled to make
-// `totalPages` accurate (without it, totalPages is unreliable).
+// LAYOUT (Phase 2G):
+//   The report is split across multiple <Page> elements, each with its
+//   own fixed <Footer>. Wide tables (Rozpočet / Kontakty with many
+//   sub-sections enabled) get their own landscape-oriented page; other
+//   content stays on portrait pages.
+//
+//   Page 1 (portrait) — cover: header + summary + property + alerts + projection
+//   Page 2 (landscape if wide, portrait if narrow) — budget table
+//   Page 3 (portrait) — payments + time entries
+//   Page 4 (landscape if wide, portrait if narrow) — contacts table
+//
+// Empty pages (when all their sections are disabled) are omitted entirely
+// — react-pdf would otherwise emit a blank page with just a footer.
+// `experimentalPagination` is enabled to make `totalPages` accurate.
 // =====================================================================
 
 export function ReportDocument({
@@ -1396,6 +1449,17 @@ export function ReportDocument({
   const showTime = sections.includes("time");
   const showContacts = sections.includes("contacts");
 
+  // Detect wide tables → switch to landscape orientation.
+  const budgetIsWide =
+    showBudget && countBudgetColumns(sections) >= WIDE_BUDGET_THRESHOLD;
+  const contactsAreWide =
+    showContacts && countContactsColumns(sections) >= WIDE_CONTACTS_THRESHOLD;
+
+  // Whether the cover page (header/summary/property/alerts/projection)
+  // has any content to render. If not, we skip that page entirely.
+  const hasCoverContent =
+    showHeader || showSummary || showProperty || showAlerts || showProjection;
+
   return (
     <Document
       title={data.project.name}
@@ -1403,33 +1467,60 @@ export function ReportDocument({
       subject="Rozpočtová sestava projektu"
       language={locale}
     >
-      <Page
-        size="A4"
-        style={styles.page}
-        experimentalPagination
-      >
-        {showHeader ? (
-          <Header project={data.project} locale={locale} labels={data.labels} />
-        ) : null}
+      {/* ─── Cover page (portrait) ─────────────────────────────────── */}
+      {hasCoverContent ? (
+        <Page size="A4" style={styles.page} experimentalPagination>
+          {showHeader ? (
+            <Header project={data.project} locale={locale} labels={data.labels} />
+          ) : null}
 
-        {showSummary ? (
-          <SummaryKPI
-            totals={data.totals}
-            currency={currency}
-            locale={locale}
-            labels={data.labels}
-          />
-        ) : null}
+          {showSummary ? (
+            <SummaryKPI
+              totals={data.totals}
+              currency={currency}
+              locale={locale}
+              labels={data.labels}
+            />
+          ) : null}
 
-        {showProperty ? (
-          <PropertyMetadata
-            project={data.project}
-            locale={locale}
-            labels={data.labels}
-          />
-        ) : null}
+          {showProperty ? (
+            <PropertyMetadata
+              project={data.project}
+              locale={locale}
+              labels={data.labels}
+            />
+          ) : null}
 
-        {showBudget ? (
+          {showAlerts ? (
+            <AlertsSection
+              alerts={data.alerts}
+              currency={currency}
+              locale={locale}
+              labels={data.labels}
+            />
+          ) : null}
+
+          {showProjection ? (
+            <ProjectionSection
+              totals={data.totals}
+              currency={currency}
+              locale={locale}
+              labels={data.labels}
+            />
+          ) : null}
+
+          <Footer project={data.project} locale={locale} labels={data.labels} />
+        </Page>
+      ) : null}
+
+      {/* ─── Budget table (landscape if wide, portrait if narrow) ─── */}
+      {showBudget ? (
+        <Page
+          size="A4"
+          orientation={budgetIsWide ? "landscape" : "portrait"}
+          style={styles.page}
+          experimentalPagination
+        >
           <BudgetTable
             items={data.budgetItems}
             sections={sections}
@@ -1438,47 +1529,45 @@ export function ReportDocument({
             labels={data.labels}
             phaseTranslations={data.phaseTranslations}
           />
-        ) : null}
+          <Footer project={data.project} locale={locale} labels={data.labels} />
+        </Page>
+      ) : null}
 
-        {showAlerts ? (
-          <AlertsSection
-            alerts={data.alerts}
-            currency={currency}
-            locale={locale}
-            labels={data.labels}
-          />
-        ) : null}
+      {/* ─── Payments + Time entries (always portrait — they fit) ──── */}
+      {showPayments || showTime ? (
+        <Page size="A4" style={styles.page} experimentalPagination>
+          {showPayments ? (
+            <PaymentsTable
+              payments={data.payments}
+              sections={sections}
+              currency={currency}
+              locale={locale}
+              labels={data.labels}
+              paymentTypeTranslations={data.paymentTypeTranslations}
+            />
+          ) : null}
 
-        {showProjection ? (
-          <ProjectionSection
-            totals={data.totals}
-            currency={currency}
-            locale={locale}
-            labels={data.labels}
-          />
-        ) : null}
+          {showTime ? (
+            <TimeEntriesTable
+              timeEntries={data.timeEntries}
+              sections={sections}
+              locale={locale}
+              labels={data.labels}
+            />
+          ) : null}
 
-        {showPayments ? (
-          <PaymentsTable
-            payments={data.payments}
-            sections={sections}
-            currency={currency}
-            locale={locale}
-            labels={data.labels}
-            paymentTypeTranslations={data.paymentTypeTranslations}
-          />
-        ) : null}
+          <Footer project={data.project} locale={locale} labels={data.labels} />
+        </Page>
+      ) : null}
 
-        {showTime ? (
-          <TimeEntriesTable
-            timeEntries={data.timeEntries}
-            sections={sections}
-            locale={locale}
-            labels={data.labels}
-          />
-        ) : null}
-
-        {showContacts ? (
+      {/* ─── Contacts table (landscape if wide, portrait if narrow) ─ */}
+      {showContacts ? (
+        <Page
+          size="A4"
+          orientation={contactsAreWide ? "landscape" : "portrait"}
+          style={styles.page}
+          experimentalPagination
+        >
           <ContactsTable
             contacts={data.contacts}
             sections={sections}
@@ -1486,10 +1575,9 @@ export function ReportDocument({
             labels={data.labels}
             contactTypeTranslations={data.contactTypeTranslations}
           />
-        ) : null}
-
-        <Footer project={data.project} locale={locale} labels={data.labels} />
-      </Page>
+          <Footer project={data.project} locale={locale} labels={data.labels} />
+        </Page>
+      ) : null}
     </Document>
   );
 }

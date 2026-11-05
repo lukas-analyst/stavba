@@ -2460,7 +2460,8 @@
         "contactIco": "CIF/NIF",
         "contactIcoDesc": "Mostrar CIF y NIF de la empresa (para documentos fiscales)",
         "contactNotes": "Notas",
-        "contactNotesDesc": "Mostrar notas libres de cada contacto"
+        "contactNotesDesc": "Mostrar notas libres de cada contacto",
+        "landscapeHint": "Las tablas anchas (Presupuesto / Contactos con subsecciones activadas) se renderizarán automáticamente en una página separada en orientación horizontal (A4 landscape) para mejorar la legibilidad."
       },
       "locale": {
         "title": "Idioma y moneda",

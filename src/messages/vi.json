@@ -2460,7 +2460,8 @@
         "contactIco": "Mã số thuế",
         "contactIcoDesc": "Hiển thị mã số thuế doanh nghiệp (cho chứng từ thuế)",
         "contactNotes": "Ghi chú",
-        "contactNotesDesc": "Hiển thị ghi chú tự do cho mỗi liên hệ"
+        "contactNotesDesc": "Hiển thị ghi chú tự do cho mỗi liên hệ",
+        "landscapeHint": "Các bảng rộng (Ngân sách / Liên hệ với các phần con được bật) sẽ tự động được hiển thị trên một trang ngang riêng biệt (A4 landscape) để dễ đọc hơn."
       },
       "locale": {
         "title": "Ngôn ngữ và tiền tệ",

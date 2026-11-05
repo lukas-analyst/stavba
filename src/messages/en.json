@@ -2463,7 +2463,8 @@
         "contactIco": "Reg. No. / VAT",
         "contactIcoDesc": "Show company registration and tax IDs",
         "contactNotes": "Notes",
-        "contactNotesDesc": "Show free-form notes for each contact"
+        "contactNotesDesc": "Show free-form notes for each contact",
+        "landscapeHint": "Wide tables (Budget / Contacts with sub-sections enabled) will automatically render on a separate A4 landscape page for better readability."
       },
       "locale": {
         "title": "Language and currency",

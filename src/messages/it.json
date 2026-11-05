@@ -2460,7 +2460,8 @@
         "contactIco": "Partita IVA / Codice Fiscale",
         "contactIcoDesc": "Mostra Partita IVA e Codice Fiscale dell'azienda (per documenti fiscali)",
         "contactNotes": "Note",
-        "contactNotesDesc": "Mostra note libere per ogni contatto"
+        "contactNotesDesc": "Mostra note libere per ogni contatto",
+        "landscapeHint": "Le tabelle larghe (Budget / Contatti con sottosezioni attivate) verranno automaticamente renderizzate su una pagina separata in orientamento orizzontale (A4 landscape) per una migliore leggibilità."
       },
       "locale": {
         "title": "Lingua e valuta",
