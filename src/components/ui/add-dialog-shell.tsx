@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useEffect, useRef } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import {
   Dialog,
@@ -111,9 +112,21 @@ export function AddDialogShell({
     />
   );
 
+  const descriptionTextareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Auto-resize textarea when value changes (not just on user input).
+  // Without this, editing an item with a multi-line note shows only 1 row.
+  useEffect(() => {
+    const el = descriptionTextareaRef.current;
+    if (!el || !descriptionValue) return;
+    el.style.height = "auto";
+    el.style.height = `${Math.min(el.scrollHeight, (descriptionMaxRows ?? 3) * 24)}px`;
+  }, [descriptionValue, descriptionMaxRows, open]);
+
   const descriptionTextarea = onDescriptionChange ? (
     <div className="space-y-1">
       <textarea
+        ref={descriptionTextareaRef}
         value={descriptionValue ?? ""}
         onChange={(e) => onDescriptionChange(e.target.value)}
         placeholder={descriptionPlaceholder}
