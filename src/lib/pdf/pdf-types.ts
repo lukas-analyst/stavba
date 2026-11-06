@@ -28,6 +28,7 @@ export type PdfSectionId =
   | "payments"
   | "payment_type"
   | "invoice"
+  | "invoice_url"
   | "time"
   | "worker"
   | "hours"
@@ -49,6 +50,7 @@ export const ALL_SECTIONS: { id: PdfSectionId; labelKey: string; enabled: boolea
   { id: "payments", labelKey: "sections.payments", enabled: true },
   { id: "payment_type", labelKey: "sections.paymentType", enabled: true },
   { id: "invoice", labelKey: "sections.invoice", enabled: true },
+  { id: "invoice_url", labelKey: "sections.invoiceUrl", enabled: true },
   { id: "time", labelKey: "sections.time", enabled: true },
   { id: "worker", labelKey: "sections.worker", enabled: true },
   { id: "hours", labelKey: "sections.hours", enabled: true },
@@ -66,7 +68,7 @@ export const ALL_SECTIONS: { id: PdfSectionId; labelKey: string; enabled: boolea
 
 export const SUB_SECTIONS: Record<string, PdfSectionId[]> = {
   budget_items: ["status", "plan_cost", "actual_cost", "dates", "phase", "supplier"],
-  payments: ["payment_type", "invoice"],
+  payments: ["payment_type", "invoice", "invoice_url"],
   time: ["worker", "hours"],
   contacts: ["contact_type", "contact_phone", "contact_email", "contact_ico", "contact_notes"],
 };

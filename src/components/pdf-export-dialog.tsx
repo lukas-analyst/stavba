@@ -149,7 +149,7 @@ const PRESETS: PresetConfig[] = [
     sections: [
       "header", "summary", "property", "alerts", "projection",
       "budget_items", "plan_cost", "actual_cost", "status", "dates", "phase",
-      "payments", "invoice",
+      "payments", "invoice", "invoice_url",
     ],
     reportStyle: "minimal",
   },
@@ -172,7 +172,7 @@ const PRESETS: PresetConfig[] = [
     sections: [
       "header", "summary", "property", "alerts", "projection",
       "budget_items", "status", "plan_cost", "actual_cost", "dates", "phase", "supplier",
-      "payments", "payment_type", "invoice",
+      "payments", "payment_type", "invoice", "invoice_url",
       "time", "worker", "hours",
       "contacts", "contact_type", "contact_phone", "contact_email", "contact_ico",
     ],
@@ -233,6 +233,7 @@ const DEFAULT_SECTIONS: PdfSectionId[] = [
   "payments",
   "payment_type",
   "invoice",
+  "invoice_url",
   "time",
   "worker",
   "hours",

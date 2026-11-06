@@ -978,7 +978,7 @@ export function BudgetTable({
     return (
       <View key={item.id} style={rowStyle} wrap={false}>
         <Text style={[cellStyle, styles.colCategory]}>
-          {isParent ? item.category : `• ${item.subcategory || item.category}`}
+          {item.category}
         </Text>
         <Text style={[cellStyle, styles.colName]}>
           {isParent
@@ -1298,6 +1298,7 @@ export function PaymentsTable({
 }) {
   const showPaymentType = sections.includes("payment_type");
   const showInvoice = sections.includes("invoice");
+  const showInvoiceUrl = sections.includes("invoice_url");
   const isColorful = reportStyle === "colorful";
 
   // Style selectors based on reportStyle.
@@ -1399,7 +1400,7 @@ export function PaymentsTable({
             {showInvoice ? (
               <Text style={[cellStyle, colInvoice]}>
                 {payment.invoiceNumber || "-"}
-                {payment.invoiceUrl ? ` (${payment.invoiceUrl})` : ""}
+                {showInvoiceUrl && payment.invoiceUrl ? ` (${payment.invoiceUrl})` : ""}
               </Text>
             ) : null}
           </View>
