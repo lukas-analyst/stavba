@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client/wasm'
+import { PrismaClient } from '@prisma/client'
 import { PrismaPg } from '@prisma/adapter-pg'
 import { Pool } from 'pg'
 import fs from 'fs'
@@ -139,10 +139,10 @@ function createPool(connectionString: string, label: string): Pool {
 
 function createPrismaClient(pool: Pool): PrismaClient {
   const adapter = new PrismaPg(pool)
-  // WASM PrismaClient uses the driver adapter for all queries.
-  // No `log` option — WASM client doesn't support it (use console
-  // manually if needed for debugging).
-  return new PrismaClient({ adapter })
+  return new PrismaClient({
+    adapter,
+    log: process.env.NODE_ENV === 'production' ? ['error'] : ['error', 'warn'],
+  })
 }
 
 // ===== Primary client (writes + reads if no replica) =====
