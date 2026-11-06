@@ -66,18 +66,24 @@ export function MoveItemDialog({
     return ids;
   }, [item.id, allItems]);
 
-  // Candidate targets: top-level items (parentId == null) in the same
-  // project, excluding self and descendants. Grouped by category for
-  // easier scanning when there are many items.
+  // Candidate targets: top-level items (parentId is null/undefined/empty)
+  // in the same project, excluding self and descendants.
+  // Also excludes the item's current parent (no point moving to the same parent).
   const candidates = useMemo(() => {
+    if (!allItems || allItems.length === 0) return [];
+
     return allItems
-      .filter(
-        (it) =>
-          it.id !== item.id &&
-          !it.parentId &&
-          !descendantIds.has(it.id) &&
-          it.projectId === projectId,
-      )
+      .filter((it) => {
+        // Exclude self
+        if (it.id === item.id) return false;
+        // Exclude descendants (cycle prevention)
+        if (descendantIds.has(it.id)) return false;
+        // Only top-level items (parentId is null, undefined, or empty string)
+        if (it.parentId) return false;
+        // Same project
+        if (it.projectId !== projectId) return false;
+        return true;
+      })
       .sort((a, b) => {
         // Group by category, then by sortOrder
         if (a.category !== b.category) {
@@ -145,9 +151,17 @@ export function MoveItemDialog({
           )}
 
           {candidates.length === 0 ? (
-            <p className="rounded-md border border-dashed border-muted px-3 py-4 text-center type-body text-muted-foreground">
-              {t("empty")}
-            </p>
+            <div className="space-y-2 rounded-md border border-dashed border-muted px-3 py-4 text-center">
+              <p className="type-body text-muted-foreground">
+                {t("empty")}
+              </p>
+              {/* Debug info — helps diagnose data issues */}
+              <p className="type-label-sm text-muted-foreground/60">
+                {allItems?.length ?? 0} items total ·
+                {" "}{allItems?.filter((it) => !it.parentId).length ?? 0} top-level ·
+                {" "}{allItems?.filter((it) => it.projectId === projectId).length ?? 0} in project
+              </p>
+            </div>
           ) : (
             <Select
               value={selectedParentId ?? "__top__"}
