@@ -242,7 +242,7 @@ export function PropertyMetadataCard({
               <Button
                 variant="outline"
                 size="sm"
-                className="shrink-0 rounded-md gap-1.5"
+                className="shrink-0 rounded-full gap-1.5"
                 onClick={() => setEditing(true)}
               >
                 <Pencil className="h-4 w-4" /> {tCommon("edit")}

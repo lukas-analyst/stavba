@@ -35,6 +35,10 @@ type AppState = {
   // of project IDs). Hidden projects are still accessible via direct
   // URL — this is a UX declutter, not a security boundary.
   hiddenProjectIds: string[];
+  // Dialog open/close state — replaces window-event dispatch pattern.
+  // Used by ProjectDetail (listener) and ProjectManagementTab (trigger).
+  editDialogOpen: boolean;
+  auditDialogOpen: boolean;
   setSelectedProject: (id: string | null) => void;
   setSelectedProjectId: (id: string | null) => void; // sets only ID, keeps tab
   setActiveTab: (tab: TabId) => void;
@@ -43,6 +47,8 @@ type AppState = {
   toggleSidebar: () => void;
   toggleProjectHidden: (projectId: string) => void;
   setHiddenProjects: (ids: string[]) => void;
+  setEditDialogOpen: (open: boolean) => void;
+  setAuditDialogOpen: (open: boolean) => void;
 };
 
 export const useAppStore = create<AppState>((set) => ({
@@ -55,6 +61,8 @@ export const useAppStore = create<AppState>((set) => ({
   // (`stavba:hidden-projects`) on first client mount via
   // useHiddenProjectsSync() in TopBar + /auth/settings.
   hiddenProjectIds: [],
+  editDialogOpen: false,
+  auditDialogOpen: false,
   setSelectedProject: (id) =>
     set({ selectedProjectId: id, activeTab: "dashboard" }),
   setSelectedProjectId: (id) =>
@@ -82,4 +90,6 @@ export const useAppStore = create<AppState>((set) => ({
       return { hiddenProjectIds: next };
     }),
   setHiddenProjects: (ids) => set({ hiddenProjectIds: ids }),
+  setEditDialogOpen: (open) => set({ editDialogOpen: open }),
+  setAuditDialogOpen: (open) => set({ auditDialogOpen: open }),
 }));

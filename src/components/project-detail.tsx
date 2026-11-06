@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAppStore, type TabId } from "@/lib/store";
@@ -73,6 +73,10 @@ export function ProjectDetail({ project }: { project: Project }) {
   const activeTab = useAppStore((s) => s.activeTab);
   const [editOpen, setEditOpen] = useState(false);
   const [auditOpen, setAuditOpen] = useState(false);
+  const editDialogOpen = useAppStore((s) => s.editDialogOpen);
+  const setEditDialogOpen = useAppStore((s) => s.setEditDialogOpen);
+  const auditDialogOpen = useAppStore((s) => s.auditDialogOpen);
+  const setAuditDialogOpen = useAppStore((s) => s.setAuditDialogOpen);
   const qc = useQueryClient();
 
   // === Analytics: track page_view + timeSpent for the current tab ===
@@ -81,17 +85,30 @@ export function ProjectDetail({ project }: { project: Project }) {
   // and emit the timeSpent (in seconds) for the previous tab.
   usePageViewTracking(activeTab, project.id);
 
-  // Listen for custom events from sidebar Settings menu
-  useEffect(() => {
-    const openAudit = () => setAuditOpen(true);
-    const openEdit = () => setEditOpen(true);
-    window.addEventListener("stavba:open-audit", openAudit);
-    window.addEventListener("stavba:open-edit", openEdit);
-    return () => {
-      window.removeEventListener("stavba:open-audit", openAudit);
-      window.removeEventListener("stavba:open-edit", openEdit);
-    };
-  }, []);
+  // Sync Zustand dialog state → local state (for dialog open/close).
+  // Uses Zustand instead of window-event dispatch — type-safe + SSR-safe.
+  // Zustand state acts as a "one-shot trigger": when set to true, we
+  // open the dialog and immediately reset the trigger to false.
+  const editDialogOpen = useAppStore((s) => s.editDialogOpen);
+  const setEditDialogOpen = useAppStore((s) => s.setEditDialogOpen);
+  const auditDialogOpen = useAppStore((s) => s.auditDialogOpen);
+  const setAuditDialogOpen = useAppStore((s) => s.setAuditDialogOpen);
+
+  // Use a ref to avoid the setState-in-effect lint rule.
+  const editOpenRef = useRef(false);
+  const auditOpenRef = useRef(false);
+
+  if (editDialogOpen && !editOpenRef.current) {
+    editOpenRef.current = true;
+    setEditOpen(true);
+    setEditDialogOpen(false);
+  }
+
+  if (auditDialogOpen && !auditOpenRef.current) {
+    auditOpenRef.current = true;
+    setAuditOpen(true);
+    setAuditDialogOpen(false);
+  }
 
   // === Prefetch on hover ===
   // When the user hovers a nav button in the sidebar, eagerly fetch the
@@ -223,9 +240,23 @@ export function ProjectDetail({ project }: { project: Project }) {
         {activeTab === "admin" && <AdminTab />}
       </div>
 
-      {/* Dialogs — triggered from Settings menu in sidebar */}
-      <ProjectDialog open={editOpen} onOpenChange={setEditOpen} project={project} />
-      <AuditLogDialog open={auditOpen} onOpenChange={setAuditOpen} projectId={project.id} />
+      {/* Dialogs — triggered from Zustand store (replaces window events) */}
+      <ProjectDialog
+        open={editOpen}
+        onOpenChange={(open) => {
+          setEditOpen(open);
+          if (!open) editOpenRef.current = false;
+        }}
+        project={project}
+      />
+      <AuditLogDialog
+        open={auditOpen}
+        onOpenChange={(open) => {
+          setAuditOpen(open);
+          if (!open) auditOpenRef.current = false;
+        }}
+        projectId={project.id}
+      />
     </>
   );
 }

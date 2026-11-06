@@ -11,7 +11,6 @@
 // - Real-time polling every 5s while section is expanded
 //   (controlled by `isExpanded` state, toggled via Live button).
 // - Filters / sort / page-size / page changes trigger API refetch.
-// - Export CSV button → /api/projects/[id]/audit/export (new tab).
 // - entityLabel (human-readable name) shown alongside the
 //   entityType translation.
 // ============================================================
