@@ -5,9 +5,6 @@
 docs/
 README.md
 
-# Scripts (build/dev scripts, not needed at runtime)
-scripts/
-
 # Prisma raw SQL (schema.prisma IS needed, but materialized-views.sql is not)
 prisma/materialized-views.sql
 
