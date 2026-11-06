@@ -381,6 +381,8 @@ function BudgetItemForm({
       descriptionValue={isTaskMode ? undefined : note}
       onDescriptionChange={isTaskMode ? undefined : setNote}
       descriptionPlaceholder={isTaskMode ? undefined : t("placeholder.note")}
+      descriptionMaxLength={500}
+      descriptionMaxRows={5}
       contextText={isTaskMode ? t("context.taskUnderItem", { name: parentName }) : undefined}
       submitLabel={submitLabel}
       onSubmit={handleSubmit}

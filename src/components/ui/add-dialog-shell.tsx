@@ -58,6 +58,10 @@ type AddDialogShellProps = {
   descriptionValue?: string;
   onDescriptionChange?: (value: string) => void;
   descriptionPlaceholder?: string;
+  // Max characters for description (shows counter)
+  descriptionMaxLength?: number;
+  // Max visible rows before scrollbar appears
+  descriptionMaxRows?: number;
   // Optional context line (e.g. "Úkol pod položkou 'XYZ'")
   contextText?: string;
   // Submit
@@ -80,6 +84,8 @@ export function AddDialogShell({
   descriptionValue,
   onDescriptionChange,
   descriptionPlaceholder,
+  descriptionMaxLength,
+  descriptionMaxRows = 3,
   contextText,
   submitLabel,
   onSubmit,
@@ -106,13 +112,30 @@ export function AddDialogShell({
   );
 
   const descriptionTextarea = onDescriptionChange ? (
-    <textarea
-      value={descriptionValue ?? ""}
-      onChange={(e) => onDescriptionChange(e.target.value)}
-      placeholder={descriptionPlaceholder}
-      rows={1}
-      className="w-full resize-none border-0 bg-transparent px-0 type-body text-muted-foreground outline-none placeholder:text-muted-foreground/40 focus:outline-none"
-    />
+    <div className="space-y-1">
+      <textarea
+        value={descriptionValue ?? ""}
+        onChange={(e) => onDescriptionChange(e.target.value)}
+        placeholder={descriptionPlaceholder}
+        maxLength={descriptionMaxLength}
+        rows={1}
+        className="w-full resize-none border-0 bg-transparent px-0 type-body text-muted-foreground outline-none placeholder:text-muted-foreground/40 focus:outline-none"
+        style={{
+          maxHeight: `${descriptionMaxRows * 1.5}rem`,
+          overflow: "auto",
+        }}
+        onInput={(e) => {
+          const el = e.currentTarget;
+          el.style.height = "auto";
+          el.style.height = `${Math.min(el.scrollHeight, descriptionMaxRows * 24)}px`;
+        }}
+      />
+      {descriptionMaxLength && (
+        <div className="type-label-sm text-muted-foreground/50 text-right tabular-nums">
+          {(descriptionValue ?? "").length}/{descriptionMaxLength}
+        </div>
+      )}
+    </div>
   ) : null;
 
   // Header (title + description + context)
