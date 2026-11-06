@@ -94,6 +94,16 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   // Standalone output for smaller deployments (Vercel auto-detects this)
   output: "standalone",
+  // Externalize heavy native packages so they're not bundled inline
+  // into each serverless function. Reduces function storage significantly.
+  serverExternalPackages: [
+    "@prisma/client",
+    "@prisma/client/wasm",
+    "@react-pdf/renderer",
+    "pdfkit",
+    "fontkit",
+    "hyphen",
+  ],
   // Hide the `X-Powered-By: Next.js` response header (audit fix H2 —
   // cheap fingerprinting defense; without it attackers can target
   // Next.js-specific CVEs via Shodan/Censys scans).

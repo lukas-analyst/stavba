@@ -1,0 +1,19 @@
+# Vercel build context ignore — reduces upload size + build time.
+# These files are NOT needed for the Next.js build on Vercel.
+
+# Documentation
+docs/
+README.md
+
+# Scripts (build/dev scripts, not needed at runtime)
+scripts/
+
+# Prisma raw SQL (schema.prisma IS needed, but materialized-views.sql is not)
+prisma/materialized-views.sql
+
+# ESLint config (not needed at build time on Vercel — lint runs locally)
+eslint.config.mjs
+
+# Tool results / agent context (local dev artifacts)
+tool-results/
+agent-ctx/
