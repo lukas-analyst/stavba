@@ -1921,6 +1921,7 @@
           "contact": "Kontakt (volitelné)",
           "vendor": "Firma / Obchod",
           "invoiceNumber": "Číslo faktury/účtenky",
+          "invoiceUrl": "Odkaz na fakturu",
           "vatRate": "DPH sazba (%)",
           "vatCalculation": "Výpočet DPH",
           "recurring": "Opakování"
@@ -1932,7 +1933,8 @@
           "amount": "25000",
           "contact": "Bez kontaktu",
           "vendor": "např. Hornbach",
-          "invoiceNumber": "2024-001"
+          "invoiceNumber": "2024-001",
+          "invoiceUrl": "https://…"
         },
         "search": {
           "budgetItem": "Hledat položku…",

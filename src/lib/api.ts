@@ -192,6 +192,7 @@ export type Payment = {
   type: string;
   vendor: string | null;
   invoiceNumber: string | null;
+  invoiceUrl: string | null;
   description: string | null;
   // Recurring payment support — see `src/lib/recurring.ts`.
   //   recurringInterval  — "weekly" | "monthly" | "quarterly" | "yearly" | null

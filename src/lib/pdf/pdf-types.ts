@@ -419,6 +419,7 @@ export type PdfPayment = {
   type: string;
   vendor: string | null;
   invoiceNumber: string | null;
+  invoiceUrl: string | null;
   vatRate: number | null;
   vatAmount: number | null;
   description: string | null;

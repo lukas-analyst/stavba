@@ -1399,6 +1399,7 @@ export function PaymentsTable({
             {showInvoice ? (
               <Text style={[cellStyle, colInvoice]}>
                 {payment.invoiceNumber || "-"}
+                {payment.invoiceUrl ? ` (${payment.invoiceUrl})` : ""}
               </Text>
             ) : null}
           </View>

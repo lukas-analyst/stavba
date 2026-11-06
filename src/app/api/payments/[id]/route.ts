@@ -42,6 +42,7 @@ const patchPaymentBodySchema = z.object({
   type: z.string().max(50).nullish(),
   vendor: optionalNullableString.optional(),
   invoiceNumber: optionalNullableString.optional(),
+  invoiceUrl: optionalNullableString.optional(),
   description: optionalNullableString.optional(),
   recurringInterval: z.union([z.string().max(20), z.null()]).optional(),
 });
@@ -199,6 +200,7 @@ export async function PATCH(
         type: body.type !== undefined ? (body.type as string) : undefined,
         vendor: body.vendor !== undefined ? (body.vendor as string | null) : undefined,
         invoiceNumber: body.invoiceNumber !== undefined ? (body.invoiceNumber as string | null) : undefined,
+        invoiceUrl: body.invoiceUrl !== undefined ? (body.invoiceUrl as string | null) : undefined,
         description: body.description !== undefined ? (body.description as string | null) : undefined,
         vatRate: numVatRate,
         vatAmount: numVatAmount,

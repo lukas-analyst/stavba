@@ -45,6 +45,7 @@ const createPaymentBodySchema = z.object({
   type: z.string().max(50).nullish(),
   vendor: optionalNullableString.optional(),
   invoiceNumber: optionalNullableString.optional(),
+  invoiceUrl: optionalNullableString.optional(),
   description: optionalNullableString.optional(),
   recurringInterval: z.string().max(20).nullish(),
 });
@@ -68,6 +69,7 @@ const PAYMENT_SELECT = {
   type: true,
   vendor: true,
   invoiceNumber: true,
+  invoiceUrl: true,
   description: true,
   recurringInterval: true,
   recurringNextDate: true,
@@ -153,6 +155,7 @@ export async function POST(
       type,
       vendor,
       invoiceNumber,
+      invoiceUrl,
       description,
       recurringInterval: recurringIntervalInput,
     } = result.data;
@@ -237,6 +240,7 @@ export async function POST(
         type: type || "other",
         vendor: vendor ?? null,
         invoiceNumber: invoiceNumber ?? null,
+        invoiceUrl: invoiceUrl ?? null,
         description: description ?? null,
         recurringInterval,
         recurringNextDate,

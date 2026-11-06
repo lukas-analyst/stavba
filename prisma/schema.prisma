@@ -755,6 +755,8 @@ model Payment {
   vendor        String?
   /// Invoice number (e.g., "2026/0123")
   invoiceNumber String?
+  /// URL to the invoice document (external — Google Drive, Dropbox, etc.)
+  invoiceUrl    String?
   /// Free-form description of the payment
   description   String?
   /// If set, this is a "template" payment that recurs at this interval.

@@ -25,7 +25,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Pencil, MoreHorizontal, Trash2, RotateCw } from "lucide-react";
+import { Pencil, MoreHorizontal, Trash2, RotateCw, ExternalLink } from "lucide-react";
 import { formatCurrency, formatCzk, formatDate, PAYMENT_TYPES } from "@/lib/format";
 import { CURRENCY_MAP } from "@/lib/currency-config";
 import { cn } from "@/lib/utils";
@@ -222,6 +222,18 @@ export const PaymentRow = memo(function PaymentRow({
             <span className="type-label text-on-surface-variant">
               {payment.vendor}
               {payment.invoiceNumber ? ` · ${payment.invoiceNumber}` : ""}
+              {payment.invoiceUrl && (
+                <a
+                  href={payment.invoiceUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="ml-1 inline-flex items-center text-info hover:text-info-strong"
+                  title={payment.invoiceUrl}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <ExternalLink className="h-3 w-3" />
+                </a>
+              )}
             </span>
           )}
         </div>

@@ -31,6 +31,7 @@ import {
   ChevronRight,
   RotateCw,
   Plus,
+  ExternalLink,
 } from "lucide-react";
 import { formatCzk, formatDate, PAYMENT_TYPES } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -143,6 +144,9 @@ function PaymentDialogInner({
   );
   const [invoiceNumber, setInvoiceNumber] = useState(
     payment?.invoiceNumber ?? prefillParent?.invoiceNumber ?? "",
+  );
+  const [invoiceUrl, setInvoiceUrl] = useState(
+    payment?.invoiceUrl ?? "",
   );
   const [description, setDescription] = useState(
     payment?.description ?? "",
@@ -305,6 +309,7 @@ function PaymentDialogInner({
           type,
           vendor: vendor || null,
           invoiceNumber: invoiceNumber || null,
+          invoiceUrl: invoiceUrl || null,
           description: description || null,
           vatRate: vatRate || null,
           // Recurring: always send `recurringInterval` on submit — the
@@ -859,6 +864,23 @@ function PaymentDialogInner({
               placeholder={t("dialog.placeholder.invoiceNumber")}
             />
           </div>
+        </div>
+
+        {/* Invoice URL — optional link to external invoice document */}
+        <div className="space-y-2">
+          <Label htmlFor="invoiceUrl" className="flex items-center gap-1.5">
+            <ExternalLink className="h-3.5 w-3.5 text-muted-foreground" />
+            {t("dialog.label.invoiceUrl")}
+          </Label>
+          <Input
+            id="invoiceUrl"
+            type="url"
+            value={invoiceUrl}
+            onChange={(e) => setInvoiceUrl(e.target.value)}
+            placeholder={t("dialog.placeholder.invoiceUrl")}
+            inputMode="url"
+            autoComplete="off"
+          />
         </div>
 
         {/* VAT field - shown for non-invoice (standalone or edit) payments */}

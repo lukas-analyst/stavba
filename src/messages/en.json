@@ -1921,6 +1921,7 @@
           "contact": "Contact (optional)",
           "vendor": "Vendor / Store",
           "invoiceNumber": "Invoice/receipt no.",
+          "invoiceUrl": "Invoice link",
           "vatRate": "VAT rate (%)",
           "vatCalculation": "VAT calculation",
           "recurring": "Recurrence"
@@ -1932,7 +1933,8 @@
           "amount": "25000",
           "contact": "No contact",
           "vendor": "e.g. Hornbach",
-          "invoiceNumber": "2024-001"
+          "invoiceNumber": "2024-001",
+          "invoiceUrl": "https://…"
         },
         "search": {
           "budgetItem": "Search item…",
