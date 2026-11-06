@@ -96,8 +96,10 @@ const nextConfig: NextConfig = {
   output: "standalone",
   // Externalize heavy native packages so they're not bundled inline
   // into each serverless function. Reduces function storage significantly.
+  // NOTE: @prisma/client is NOT here — the WASM engine (2.2 MB) is small
+  // enough to bundle. Externalizing it breaks subpath imports like
+  // '@prisma/client/wasm' in Turbopack.
   serverExternalPackages: [
-    "@prisma/client",
     "@react-pdf/renderer",
     "pdfkit",
     "fontkit",
