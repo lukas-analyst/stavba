@@ -454,6 +454,32 @@ const styles = StyleSheet.create({
     paddingRight: 4,
   },
 
+  // ----- Category band (minimal mode) -----
+  // Full-width group header showing the category ONCE per group,
+  // replacing the per-row Category column. Položky and Úkoly under
+  // the band no longer repeat the category value.
+  minimalCategoryBand: {
+    flexDirection: "row",
+    backgroundColor: "#e8e8e8",
+    paddingTop: 5,
+    paddingBottom: 5,
+    paddingLeft: 6,
+    paddingRight: 6,
+    marginTop: 5,
+    borderTopWidth: 1,
+    borderTopColor: "#888888",
+    borderTopStyle: "solid",
+    borderBottomWidth: 0.5,
+    borderBottomColor: "#888888",
+    borderBottomStyle: "solid",
+  },
+  minimalCategoryBandText: {
+    fontSize: 9,
+    fontFamily: "Roboto",
+    fontWeight: "bold",
+    color: "#1a1a1a",
+  },
+
   // ----- Colorful mode (Phase 4) -----
   // MD3-inspired accent colors. Used only when reportStyle === "colorful".
   // Minimal mode uses the monochrome styles above.
@@ -571,6 +597,23 @@ const styles = StyleSheet.create({
     fontSize: 8,
     color: "#444444",
     paddingRight: 4,
+  },
+  // Category band (colorful mode) — MD3-accented full-width group header.
+  colorfulCategoryBand: {
+    flexDirection: "row",
+    backgroundColor: "#DCE8FF",
+    paddingTop: 5,
+    paddingBottom: 5,
+    paddingLeft: 6,
+    paddingRight: 6,
+    marginTop: 5,
+    borderRadius: 3,
+  },
+  colorfulCategoryBandText: {
+    fontSize: 9,
+    fontFamily: "Roboto",
+    fontWeight: "bold",
+    color: "#003399",
   },
   // Alert group title — colored badge for each alert type.
   colorfulAlertGroupTitle: {
@@ -957,6 +1000,35 @@ export function BudgetTable({
     }
   }
 
+  // ─── Group parents by category ───────────────────────────────
+  // Each category is rendered ONCE as a full-width band; under it,
+  // the Položky (parents) and their Úkoly (children). This avoids
+  // repeating the category on every parent row.
+  //
+  // Group order follows the (already sorted) parent order. When the
+  // user sorts by category, groups are ordered alphabetically.
+  const isCategorySort = sort && sort.field === "category";
+
+  const categoryGroups: { category: string; parents: PdfBudgetItem[] }[] = [];
+  const groupIndex = new Map<string, number>();
+  for (const parent of parents) {
+    const cat = parent.category || "—";
+    const idx = groupIndex.get(cat);
+    if (idx !== undefined) {
+      categoryGroups[idx].parents.push(parent);
+    } else {
+      groupIndex.set(cat, categoryGroups.length);
+      categoryGroups.push({ category: cat, parents: [parent] });
+    }
+  }
+
+  if (isCategorySort && sort) {
+    categoryGroups.sort((a, b) => {
+      const cmp = a.category.localeCompare(b.category, locale);
+      return sort.direction === "desc" ? -cmp : cmp;
+    });
+  }
+
   // Style selectors based on reportStyle.
   // In BOTH modes, parents and children get distinct styles so the
   // hierarchy is always visible — even in the monochrome minimal report.
@@ -969,6 +1041,12 @@ export function BudgetTable({
   const parentCellStyle = isColorful ? styles.colorfulParentCell : styles.minimalParentCell;
   const childRowStyle = isColorful ? styles.colorfulChildRow : styles.minimalChildRow;
   const childCellStyle = isColorful ? styles.colorfulChildCell : styles.minimalChildCell;
+  const categoryBandStyle = isColorful
+    ? styles.colorfulCategoryBand
+    : styles.minimalCategoryBand;
+  const categoryBandTextStyle = isColorful
+    ? styles.colorfulCategoryBandText
+    : styles.minimalCategoryBandText;
 
   // Render a single row (parent or child) with all optional columns.
   const renderRow = (item: PdfBudgetItem, isParent: boolean) => {
@@ -977,9 +1055,6 @@ export function BudgetTable({
 
     return (
       <View key={item.id} style={rowStyle} wrap={false}>
-        <Text style={[cellStyle, styles.colCategory]}>
-          {isParent ? item.category : ""}
-        </Text>
         <Text style={[cellStyle, styles.colName]}>
           {isParent
             ? (item.subcategory || item.category)
@@ -1038,9 +1113,6 @@ export function BudgetTable({
       </Text>
 
       <View style={tableHeaderStyle} fixed>
-        <Text style={[tableHeaderTextStyle, styles.colCategory]}>
-          {labels.category}
-        </Text>
         <Text style={[tableHeaderTextStyle, styles.colName]}>{labels.name}</Text>
         {showPhase ? (
           <Text style={[tableHeaderTextStyle, styles.colPhase]}>{labels.phase}</Text>
@@ -1070,16 +1142,25 @@ export function BudgetTable({
       {items.length === 0 ? (
         <Text style={styles.tableEmpty}>{labels.noItems}</Text>
       ) : (
-        // Render hierarchy: parents with their children indented underneath.
-        parents.map((parent) => {
-          const children = childrenByParentId.get(parent.id) ?? [];
-          return (
-            <View key={parent.id}>
-              {renderRow(parent, true)}
-              {children.map((child) => renderRow(child, false))}
+        // Render hierarchy: category band → Položky → Úkoly.
+        // Each category appears once as a full-width band; under it,
+        // parent items (Položky) with their child tasks (Úkoly).
+        categoryGroups.map((group, groupIdx) => (
+          <View key={`cat-${groupIdx}`}>
+            <View style={categoryBandStyle} wrap={false}>
+              <Text style={categoryBandTextStyle}>{group.category}</Text>
             </View>
-          );
-        })
+            {group.parents.map((parent) => {
+              const children = childrenByParentId.get(parent.id) ?? [];
+              return (
+                <View key={parent.id}>
+                  {renderRow(parent, true)}
+                  {children.map((child) => renderRow(child, false))}
+                </View>
+              );
+            })}
+          </View>
+        ))
       )}
     </View>
   );
