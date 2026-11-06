@@ -2093,6 +2093,7 @@
         "taskName": "Název úkolu…",
         "itemName": "Název položky…",
         "note": "Poznámka…",
+        "taskNote": "Poznámka k úkolu…",
         "newCategory": "Nová kategorie",
         "selectCategory": "Vyberte kategorii",
         "subsidyAmount": "např. 15000",

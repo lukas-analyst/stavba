@@ -2090,6 +2090,7 @@
         "taskName": "Feladat neve…",
         "itemName": "Tétel neve…",
         "note": "Jegyzet…",
+        "taskNote": "Feladat megjegyzés…",
         "newCategory": "Új kategória",
         "selectCategory": "Kategória kiválasztása",
         "subsidyAmount": "pl. 15000",

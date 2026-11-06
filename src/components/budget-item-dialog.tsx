@@ -378,9 +378,9 @@ function BudgetItemForm({
       titleValue={subcategory}
       onTitleChange={setSubcategory}
       titlePlaceholder={isTaskMode ? t("placeholder.taskName") : t("placeholder.itemName")}
-      descriptionValue={isTaskMode ? undefined : note}
-      onDescriptionChange={isTaskMode ? undefined : setNote}
-      descriptionPlaceholder={isTaskMode ? undefined : t("placeholder.note")}
+      descriptionValue={note}
+      onDescriptionChange={setNote}
+      descriptionPlaceholder={isTaskMode ? t("placeholder.taskNote") : t("placeholder.note")}
       descriptionMaxLength={500}
       descriptionMaxRows={5}
       contextText={isTaskMode ? t("context.taskUnderItem", { name: parentName }) : undefined}

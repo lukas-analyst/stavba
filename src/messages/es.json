@@ -2090,6 +2090,7 @@
         "taskName": "Nombre de la tarea…",
         "itemName": "Nombre de la partida…",
         "note": "Nota…",
+        "taskNote": "Nota de tarea…",
         "newCategory": "Nueva categoría",
         "selectCategory": "Seleccionar categoría",
         "subsidyAmount": "p. ej. 15000",

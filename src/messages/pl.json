@@ -2090,6 +2090,7 @@
         "taskName": "Nazwa zadania…",
         "itemName": "Nazwa pozycji…",
         "note": "Notatka…",
+        "taskNote": "Notatka do zadania…",
         "newCategory": "Nowa kategoria",
         "selectCategory": "Wybierz kategorię",
         "subsidyAmount": "np. 15000",

@@ -54,7 +54,7 @@ export function InlineTextarea({
         placeholder={placeholder}
         maxLength={maxLength}
         rows={3}
-        className="type-label resize-none overflow-y-auto scrollbar-thin"
+        className="type-body resize-none overflow-y-auto scrollbar-thin"
         style={{
           maxHeight: `${maxRows * 1.5}rem`,
         }}

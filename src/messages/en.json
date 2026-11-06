@@ -2093,6 +2093,7 @@
         "taskName": "Task name…",
         "itemName": "Item name…",
         "note": "Note…",
+        "taskNote": "Task note…",
         "newCategory": "New category",
         "selectCategory": "Select category",
         "subsidyAmount": "e.g. 15000",
