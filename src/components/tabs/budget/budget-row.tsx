@@ -149,7 +149,13 @@ export const BudgetRow = memo(function BudgetRow({
   const handleMove = async (newParentId: string | null) => {
     await updateItem.mutateAsync({
       id: item.id,
-      data: { parentId: newParentId || null },
+      data: {
+        parentId: newParentId || null,
+        // Explicitly preserve fields that shouldn't change during a move.
+        // The API inherits category from the new parent, but subcategory
+        // (the item's name) must be preserved.
+        subcategory: item.subcategory,
+      },
     });
     trackEvent("move_budget_item", { toTopLevel: newParentId === null });
   };
