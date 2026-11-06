@@ -1918,6 +1918,7 @@
           "contact": "Kapcsolat (opcionális)",
           "vendor": "Beszállító / Bolt",
           "invoiceNumber": "Számla/nyugta sorszáma",
+          "invoiceUrl": "Számla hivatkozás",
           "vatRate": "ÁFA kulcs (%)",
           "vatCalculation": "ÁFA számítás",
           "recurring": "Ismétlődés"
@@ -1929,7 +1930,8 @@
           "amount": "25000",
           "contact": "Nincs kapcsolat",
           "vendor": "pl. Bauhaus",
-          "invoiceNumber": "2024-001"
+          "invoiceNumber": "2024-001",
+          "invoiceUrl": "https://…"
         },
         "search": {
           "budgetItem": "Tétel keresése…",

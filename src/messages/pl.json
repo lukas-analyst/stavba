@@ -1918,6 +1918,7 @@
           "contact": "Kontakt (opcjonalnie)",
           "vendor": "Dostawca / Sklep",
           "invoiceNumber": "Nr faktury/paragonu",
+          "invoiceUrl": "Link do faktury",
           "vatRate": "Stawka VAT (%)",
           "vatCalculation": "Obliczenie VAT",
           "recurring": "Cykliczność"
@@ -1929,7 +1930,8 @@
           "amount": "25000",
           "contact": "Brak kontaktu",
           "vendor": "np. Hornbach",
-          "invoiceNumber": "2024-001"
+          "invoiceNumber": "2024-001",
+          "invoiceUrl": "https://…"
         },
         "search": {
           "budgetItem": "Szukaj pozycji…",

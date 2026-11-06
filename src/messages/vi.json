@@ -1918,6 +1918,7 @@
           "contact": "Liên hệ (tùy chọn)",
           "vendor": "Nhà cung cấp / Cửa hàng",
           "invoiceNumber": "Số hóa đơn/chứng từ",
+          "invoiceUrl": "Liên kết hóa đơn",
           "vatRate": "Tỷ lệ VAT (%)",
           "vatCalculation": "Tính VAT",
           "recurring": "Lặp lại"
@@ -1929,7 +1930,8 @@
           "amount": "25000",
           "contact": "Không có liên hệ",
           "vendor": "vd. Hornbach",
-          "invoiceNumber": "2024-001"
+          "invoiceNumber": "2024-001",
+          "invoiceUrl": "https://…"
         },
         "search": {
           "budgetItem": "Tìm hạng mục…",
