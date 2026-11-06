@@ -978,7 +978,7 @@ export function BudgetTable({
     return (
       <View key={item.id} style={rowStyle} wrap={false}>
         <Text style={[cellStyle, styles.colCategory]}>
-          {item.category}
+          {isParent ? item.category : ""}
         </Text>
         <Text style={[cellStyle, styles.colName]}>
           {isParent
