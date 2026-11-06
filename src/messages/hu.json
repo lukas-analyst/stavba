@@ -2492,6 +2492,7 @@
         "save": "Mentés",
         "myTemplates": "Saját sablonok",
         "load": "Betöltés",
+        "update": "Frissítés aktuális kijelöléssel",
         "delete": "Törlés",
         "sectionsCount": "{count} szekció",
         "empty": "Még nincsenek mentett sablonok."
@@ -2570,6 +2571,8 @@
         "templateDeleted": "Sablon törölve",
         "templateSaveError": "Nem sikerült menteni a sablont",
         "templateDeleteError": "Nem sikerült törölni a sablont",
+        "templateUpdated": "Sablon frissítve",
+        "templateUpdateError": "Nem sikerült frissíteni a sablont",
         "templateNameRequired": "Adja meg a sablon nevét",
         "templateDuplicateName": "Már létezik sablon ezzel a névvel"
       }

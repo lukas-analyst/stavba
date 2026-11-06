@@ -2492,6 +2492,7 @@
         "save": "Lưu",
         "myTemplates": "Mẫu của tôi",
         "load": "Tải",
+        "update": "Cập nhật với lựa chọn hiện tại",
         "delete": "Xóa",
         "sectionsCount": "{count} phần",
         "empty": "Chưa có mẫu nào được lưu."
@@ -2570,6 +2571,8 @@
         "templateDeleted": "Đã xóa mẫu",
         "templateSaveError": "Không thể lưu mẫu",
         "templateDeleteError": "Không thể xóa mẫu",
+        "templateUpdated": "Mẫu đã được cập nhật",
+        "templateUpdateError": "Không thể cập nhật mẫu",
         "templateNameRequired": "Nhập tên mẫu",
         "templateDuplicateName": "Mẫu với tên này đã tồn tại"
       }

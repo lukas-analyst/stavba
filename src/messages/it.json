@@ -2492,6 +2492,7 @@
         "save": "Salva",
         "myTemplates": "I miei modelli",
         "load": "Carica",
+        "update": "Aggiorna con selezione attuale",
         "delete": "Elimina",
         "sectionsCount": "{count} sezioni",
         "empty": "Nessun modello salvato."
@@ -2570,6 +2571,8 @@
         "templateDeleted": "Modello eliminato",
         "templateSaveError": "Impossibile salvare il modello",
         "templateDeleteError": "Impossibile eliminare il modello",
+        "templateUpdated": "Modello aggiornato",
+        "templateUpdateError": "Impossibile aggiornare il modello",
         "templateNameRequired": "Inserisci un nome per il modello",
         "templateDuplicateName": "Esiste già un modello con questo nome"
       }

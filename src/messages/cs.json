@@ -2495,6 +2495,7 @@
         "save": "Uložit",
         "myTemplates": "Moje šablony",
         "load": "Načíst",
+        "update": "Aktualizovat na aktuální výběr",
         "delete": "Smazat",
         "sectionsCount": "{count} sekcí",
         "empty": "Zatím nejsou uloženy žádné šablony."
@@ -2573,6 +2574,8 @@
         "templateDeleted": "Šablona smazána",
         "templateSaveError": "Nepodařilo se uložit šablonu",
         "templateDeleteError": "Nepodařilo se smazat šablonu",
+        "templateUpdated": "Šablona aktualizována",
+        "templateUpdateError": "Nepodařilo se aktualizovat šablonu",
         "templateNameRequired": "Zadejte název šablony",
         "templateDuplicateName": "Šablona s tímto názvem již existuje"
       }

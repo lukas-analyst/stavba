@@ -2492,6 +2492,7 @@
         "save": "Guardar",
         "myTemplates": "Mis plantillas",
         "load": "Cargar",
+        "update": "Actualizar con selección actual",
         "delete": "Eliminar",
         "sectionsCount": "{count} secciones",
         "empty": "Aún no hay plantillas guardadas."
@@ -2570,6 +2571,8 @@
         "templateDeleted": "Plantilla eliminada",
         "templateSaveError": "No se pudo guardar la plantilla",
         "templateDeleteError": "No se pudo eliminar la plantilla",
+        "templateUpdated": "Plantilla actualizada",
+        "templateUpdateError": "No se pudo actualizar la plantilla",
         "templateNameRequired": "Introduzca un nombre de plantilla",
         "templateDuplicateName": "Ya existe una plantilla con este nombre"
       }

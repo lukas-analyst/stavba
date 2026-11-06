@@ -67,6 +67,7 @@ import {
   ArrowUp,
   ArrowDown,
   ArrowUpDown,
+  RefreshCw,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -438,6 +439,9 @@ export function PdfExportDialog({
   const [deletingTemplateId, setDeletingTemplateId] = useState<string | null>(
     null,
   );
+  const [updatingTemplateId, setUpdatingTemplateId] = useState<string | null>(
+    null,
+  );
 
   // ---------------------------------------------------------------
   // Templates — fetched from the user profile whenever the dialog opens.
@@ -739,6 +743,57 @@ export function PdfExportDialog({
   );
 
   // ---------------------------------------------------------------
+  // Update an existing template with the current selection
+  // ---------------------------------------------------------------
+  const handleUpdateTemplate = useCallback(
+    async (templateId: string) => {
+      if (selectedSections.size === 0) return;
+      setUpdatingTemplateId(templateId);
+      try {
+        const res = await fetch(
+          `/api/users/profile/export-templates/${templateId}`,
+          {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              sections: Array.from(selectedSections),
+              locale,
+              currency: effectiveCurrency,
+              sectionOrientations:
+                Object.keys(sectionOrientations).length > 0
+                  ? sectionOrientations
+                  : undefined,
+              tableSorts:
+                Object.keys(tableSorts).length > 0
+                  ? tableSorts
+                  : undefined,
+              reportStyle,
+            }),
+          },
+        );
+        if (!res.ok) {
+          const data = (await res.json().catch(() => ({}))) as {
+            error?: string;
+          };
+          throw new Error(data.error || `HTTP ${res.status}`);
+        }
+        toast.success(t("toasts.templateUpdated"));
+        await fetchTemplates();
+      } catch (err) {
+        const message = err instanceof Error ? err.message : "";
+        if (message) {
+          toast.error(message, { duration: 8000 });
+        } else {
+          toast.error(t("toasts.templateUpdateError"));
+        }
+      } finally {
+        setUpdatingTemplateId(null);
+      }
+    },
+    [selectedSections, locale, effectiveCurrency, sectionOrientations, tableSorts, reportStyle, t, fetchTemplates],
+  );
+
+  // ---------------------------------------------------------------
   // Apply a template's selection to the current state
   // ---------------------------------------------------------------
   const handleLoadTemplate = useCallback((tpl: ExportTemplateData) => {
@@ -808,7 +863,9 @@ export function PdfExportDialog({
       isSavingTemplate={isSavingTemplate}
       onSaveTemplate={handleSaveTemplate}
       deletingTemplateId={deletingTemplateId}
+      updatingTemplateId={updatingTemplateId}
       onDeleteTemplate={handleDeleteTemplate}
+      onUpdateTemplate={handleUpdateTemplate}
       onLoadTemplate={handleLoadTemplate}
     />
   );
@@ -907,7 +964,9 @@ type BodyProps = {
   isSavingTemplate: boolean;
   onSaveTemplate: () => void;
   deletingTemplateId: string | null;
+  updatingTemplateId: string | null;
   onDeleteTemplate: (id: string) => void;
+  onUpdateTemplate: (id: string) => void;
   onLoadTemplate: (tpl: ExportTemplateData) => void;
 };
 
@@ -940,7 +999,9 @@ function PdfExportBody({
   isSavingTemplate,
   onSaveTemplate,
   deletingTemplateId,
+  updatingTemplateId,
   onDeleteTemplate,
+  onUpdateTemplate,
   onLoadTemplate,
 }: BodyProps) {
   const t = useTranslations("dialogs.pdfExport");
@@ -1220,10 +1281,10 @@ function PdfExportBody({
                 {templates.map((tpl) => (
                   <div
                     key={tpl.id}
-                    className="group flex w-48 shrink-0 flex-col gap-1 rounded-lg border p-2.5 transition-colors hover:bg-muted/30"
+                    className="group flex w-48 shrink-0 flex-col gap-1.5 rounded-lg border border-outline-variant bg-surface-container-low p-2.5 transition-colors hover:bg-muted/30"
                   >
                     <div className="flex items-start justify-between gap-1">
-                      <div className="truncate type-label font-medium">
+                      <div className="truncate type-label font-medium leading-tight">
                         {tpl.name}
                       </div>
                       <button
@@ -1241,22 +1302,42 @@ function PdfExportBody({
                       </button>
                     </div>
                     <div className="flex flex-wrap items-center gap-1 type-label-sm text-muted-foreground">
-                      <span>{tpl.locale.toUpperCase()}</span>
-                      <span>·</span>
-                      <span>{tpl.currency}</span>
-                      <span>·</span>
-                      <span>{tpl.sections.length}</span>
+                      <Badge variant="outline" className="h-4 px-1 type-label-sm">
+                        {tpl.locale.toUpperCase()}
+                      </Badge>
+                      <Badge variant="outline" className="h-4 px-1 type-label-sm">
+                        {tpl.currency}
+                      </Badge>
+                      <span>{t("templates.sectionsCount", { count: tpl.sections.length })}</span>
                     </div>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="mt-1 h-7 type-label-sm"
-                      onClick={() => onLoadTemplate(tpl)}
-                    >
-                      <FolderOpen className="h-3 w-3" />
-                      {t("templates.load")}
-                    </Button>
+                    {/* Action buttons — Load + Update side by side */}
+                    <div className="mt-auto flex gap-1 pt-1">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 flex-1 gap-1 type-label-sm"
+                        onClick={() => onLoadTemplate(tpl)}
+                      >
+                        <FolderOpen className="h-3 w-3" />
+                        {t("templates.load")}
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 w-7 shrink-0 gap-0 p-0"
+                        onClick={() => onUpdateTemplate(tpl.id)}
+                        disabled={updatingTemplateId === tpl.id}
+                        title={t("templates.update")}
+                      >
+                        {updatingTemplateId === tpl.id ? (
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        ) : (
+                          <RefreshCw className="h-3.5 w-3.5" />
+                        )}
+                      </Button>
+                    </div>
                   </div>
                 ))}
               </div>

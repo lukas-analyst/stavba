@@ -2492,6 +2492,7 @@
         "save": "Zapisz",
         "myTemplates": "Moje szablony",
         "load": "Wczytaj",
+        "update": "Zaktualizuj bieżącym wyborem",
         "delete": "Usuń",
         "sectionsCount": "{count} sekcji",
         "empty": "Brak zapisanych szablonów."
@@ -2570,6 +2571,8 @@
         "templateDeleted": "Szablon usunięty",
         "templateSaveError": "Nie udało się zapisać szablonu",
         "templateDeleteError": "Nie udało się usunąć szablonu",
+        "templateUpdated": "Szablon zaktualizowany",
+        "templateUpdateError": "Nie udało się zaktualizować szablonu",
         "templateNameRequired": "Wprowadź nazwę szablonu",
         "templateDuplicateName": "Szablon o tej nazwie już istnieje"
       }
