@@ -2566,7 +2566,11 @@
         "success": "PDF exportado correctamente",
         "error": "No se pudo generar el PDF",
         "templateSaved": "Plantilla guardada",
-        "templateDeleted": "Plantilla eliminada"
+        "templateDeleted": "Plantilla eliminada",
+        "templateSaveError": "No se pudo guardar la plantilla",
+        "templateDeleteError": "No se pudo eliminar la plantilla",
+        "templateNameRequired": "Introduzca un nombre de plantilla",
+        "templateDuplicateName": "Ya existe una plantilla con este nombre"
       }
     }
   },

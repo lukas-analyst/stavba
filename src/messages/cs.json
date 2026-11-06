@@ -2569,7 +2569,11 @@
         "success": "PDF bylo úspěšně exportováno",
         "error": "Nepodařilo se vygenerovat PDF",
         "templateSaved": "Šablona uložena",
-        "templateDeleted": "Šablona smazána"
+        "templateDeleted": "Šablona smazána",
+        "templateSaveError": "Nepodařilo se uložit šablonu",
+        "templateDeleteError": "Nepodařilo se smazat šablonu",
+        "templateNameRequired": "Zadejte název šablony",
+        "templateDuplicateName": "Šablona s tímto názvem již existuje"
       }
     }
   },

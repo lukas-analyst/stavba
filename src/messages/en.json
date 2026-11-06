@@ -2569,7 +2569,11 @@
         "success": "PDF exported successfully",
         "error": "Failed to generate PDF",
         "templateSaved": "Template saved",
-        "templateDeleted": "Template deleted"
+        "templateDeleted": "Template deleted",
+        "templateSaveError": "Failed to save template",
+        "templateDeleteError": "Failed to delete template",
+        "templateNameRequired": "Enter a template name",
+        "templateDuplicateName": "A template with this name already exists"
       }
     }
   },

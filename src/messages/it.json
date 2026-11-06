@@ -2566,7 +2566,11 @@
         "success": "PDF esportato correttamente",
         "error": "Impossibile generare il PDF",
         "templateSaved": "Modello salvato",
-        "templateDeleted": "Modello eliminato"
+        "templateDeleted": "Modello eliminato",
+        "templateSaveError": "Impossibile salvare il modello",
+        "templateDeleteError": "Impossibile eliminare il modello",
+        "templateNameRequired": "Inserisci un nome per il modello",
+        "templateDuplicateName": "Esiste già un modello con questo nome"
       }
     }
   },

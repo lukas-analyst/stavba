@@ -2566,7 +2566,11 @@
         "success": "PDF sikeresen exportálva",
         "error": "Nem sikerült létrehozni a PDF-et",
         "templateSaved": "Sablon mentve",
-        "templateDeleted": "Sablon törölve"
+        "templateDeleted": "Sablon törölve",
+        "templateSaveError": "Nem sikerült menteni a sablont",
+        "templateDeleteError": "Nem sikerült törölni a sablont",
+        "templateNameRequired": "Adja meg a sablon nevét",
+        "templateDuplicateName": "Már létezik sablon ezzel a névvel"
       }
     }
   },

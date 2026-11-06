@@ -655,7 +655,7 @@ export function PdfExportDialog({
   const handleSaveTemplate = useCallback(async () => {
     const name = newTemplateName.trim();
     if (!name) {
-      toast.error(t("toasts.error"));
+      toast.error(t("toasts.templateNameRequired"));
       return;
     }
     if (selectedSections.size === 0) return;
@@ -683,17 +683,27 @@ export function PdfExportDialog({
         const data = (await res.json().catch(() => ({}))) as {
           error?: string;
         };
-        throw new Error(data.error ?? "Failed to save template");
+        // 409 = duplicate name
+        if (res.status === 409) {
+          toast.error(t("toasts.templateDuplicateName"));
+          return;
+        }
+        throw new Error(data.error || `HTTP ${res.status}`);
       }
       toast.success(t("toasts.templateSaved"));
       setNewTemplateName("");
       await fetchTemplates();
-    } catch {
-      toast.error(t("toasts.error"));
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "";
+      toast.error(
+        message
+          ? `${t("toasts.templateSaveError")} — ${message}`
+          : t("toasts.templateSaveError"),
+      );
     } finally {
       setIsSavingTemplate(false);
     }
-  }, [newTemplateName, selectedSections, locale, effectiveCurrency, t, fetchTemplates]);
+  }, [newTemplateName, selectedSections, locale, effectiveCurrency, sectionOrientations, tableSorts, reportStyle, t, fetchTemplates]);
 
   // ---------------------------------------------------------------
   // Delete a template
@@ -706,11 +716,16 @@ export function PdfExportDialog({
           `/api/users/profile/export-templates/${templateId}`,
           { method: "DELETE" },
         );
-        if (!res.ok) throw new Error("Failed to delete template");
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
         toast.success(t("toasts.templateDeleted"));
         await fetchTemplates();
-      } catch {
-        toast.error(t("toasts.error"));
+      } catch (err) {
+        const message = err instanceof Error ? err.message : "";
+        toast.error(
+          message
+            ? `${t("toasts.templateDeleteError")} — ${message}`
+            : t("toasts.templateDeleteError"),
+        );
       } finally {
         setDeletingTemplateId(null);
       }

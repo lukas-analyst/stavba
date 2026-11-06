@@ -2566,7 +2566,11 @@
         "success": "PDF wyeksportowany pomyślnie",
         "error": "Nie udało się wygenerować pliku PDF",
         "templateSaved": "Szablon zapisany",
-        "templateDeleted": "Szablon usunięty"
+        "templateDeleted": "Szablon usunięty",
+        "templateSaveError": "Nie udało się zapisać szablonu",
+        "templateDeleteError": "Nie udało się usunąć szablonu",
+        "templateNameRequired": "Wprowadź nazwę szablonu",
+        "templateDuplicateName": "Szablon o tej nazwie już istnieje"
       }
     }
   },

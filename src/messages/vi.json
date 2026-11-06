@@ -2566,7 +2566,11 @@
         "success": "Đã xuất PDF thành công",
         "error": "Không thể tạo PDF",
         "templateSaved": "Đã lưu mẫu",
-        "templateDeleted": "Đã xóa mẫu"
+        "templateDeleted": "Đã xóa mẫu",
+        "templateSaveError": "Không thể lưu mẫu",
+        "templateDeleteError": "Không thể xóa mẫu",
+        "templateNameRequired": "Nhập tên mẫu",
+        "templateDuplicateName": "Mẫu với tên này đã tồn tại"
       }
     }
   },

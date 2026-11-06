@@ -361,7 +361,7 @@ export const authOptions: NextAuthOptions = {
         const googleSub = account.providerAccountId;
 
         // Find or create the user in our DB
-        const existing = await db.user.findUnique({
+        let existing = await db.user.findUnique({
           where: { email },
           select: {
             id: true,
@@ -380,69 +380,22 @@ export const authOptions: NextAuthOptions = {
           },
         });
 
-        if (existing) {
-          // Account is soft-deleted (in cooling-off period).
-          // Since we deleted the Google Account link during soft-delete,
-          // we reach this branch only if the cooling-off period hasn't
-          // expired AND the user is signing in with Google again.
-          // Recover the account.
-          if (existing.deletedAt) {
-            const daysSinceDeletion =
-              (Date.now() - existing.deletedAt.getTime()) / (1000 * 60 * 60 * 24);
-            const COOLING_OFF_DAYS = 7;
-            if (daysSinceDeletion < COOLING_OFF_DAYS) {
-              // Recover the account
-              await db.user.update({
-                where: { id: existing.id },
-                data: {
-                  deletedAt: null,
-                  restoredAt: new Date(),
-                  tokenVersion: { increment: 1 },
-                },
-              });
-              // Re-create the Google Account link (was deleted during soft-delete)
-              await db.account.create({
-                data: {
-                  userId: existing.id,
-                  provider: "google",
-                  providerAccountId: googleSub,
-                  access_token: account.access_token ?? null,
-                  refresh_token: account.refresh_token ?? null,
-                  expires_at: account.expires_at ?? null,
-                  token_type: account.token_type ?? null,
-                  scope: account.scope ?? null,
-                  id_token: account.id_token ?? null,
-                },
-              });
-              // Continue with sign-in (existing user flow below)
-            } else {
-              // Cooling-off period expired — account permanently anonymized.
-              // The email was changed to `deleted_<id>_<email>`, so
-              // `findUnique` wouldn't have found it. We only reach here
-              // if the cron hasn't run yet. Treat as new user.
-              // Fall through to the "else" branch (new user creation).
-            }
-          }
-
-          // User exists. Check if they already have a Google Account linked.
-          const existingGoogleAccount = existing.accounts[0];
-
-          if (existingGoogleAccount) {
-            // Already linked — verify it's the SAME Google account
-            // (prevent account takeover via creating a fake Google account
-            // with the victim's e-mail)
-            if (existingGoogleAccount.providerAccountId !== googleSub) {
-              // Different Google account for the same e-mail — reject
-              console.warn(
-                `[auth] Google sign-in rejected: e-mail ${email} is already linked to a different Google account.`,
-              );
-              return false;
-            }
-            // Same Google account — update token + profile if needed
-          } else {
-            // User exists (password-based or ghost) but no Google Account
-            // linked yet — link it now. This is safe because Google verified
-            // the e-mail.
+        // Handle soft-deleted users (in cooling-off period).
+        if (existing?.deletedAt) {
+          const daysSinceDeletion =
+            (Date.now() - existing.deletedAt.getTime()) / (1000 * 60 * 60 * 24);
+          const COOLING_OFF_DAYS = 7;
+          if (daysSinceDeletion < COOLING_OFF_DAYS) {
+            // Recover the account
+            await db.user.update({
+              where: { id: existing.id },
+              data: {
+                deletedAt: null,
+                restoredAt: new Date(),
+                tokenVersion: { increment: 1 },
+              },
+            });
+            // Re-create the Google Account link (was deleted during soft-delete)
             await db.account.create({
               data: {
                 userId: existing.id,
@@ -456,66 +409,166 @@ export const authOptions: NextAuthOptions = {
                 id_token: account.id_token ?? null,
               },
             });
+            // Continue with sign-in (existing user flow below)
+          } else {
+            // Cooling-off period expired — account should have been
+            // anonymized by the cron job, but hasn't yet.
+            // Treat this user as "not found" so we fall through to
+            // new-user creation below.
+            existing = null;
           }
-
-          // Update image/name from Google if changed
-          if (user.image && user.image !== existing.image) {
-            await db.user.update({
-              where: { id: existing.id },
-              data: { image: user.image },
-            });
-          }
-          if (user.name && !existing.name) {
-            await db.user.update({
-              where: { id: existing.id },
-              data: { name: user.name },
-            });
-          }
-          // Mark e-mail as verified if not already (Google pre-verified)
-          if (!existing.emailVerified) {
-            await db.user.update({
-              where: { id: existing.id },
-              data: { emailVerified: new Date() },
-            });
-          }
-
-          // Attach DB id + emailVerified + tokenVersion + isAdmin to JWT
-          user.id = existing.id;
-          (user as { emailVerified?: string | null }).emailVerified =
-            existing.emailVerified?.toISOString() ?? new Date().toISOString();
-          (user as { tokenVersion?: number }).tokenVersion = existing.tokenVersion;
-          (user as { isAdmin?: boolean }).isAdmin = existing.isAdmin;
-        } else {
-          // New user — create in DB + create Account record
-          const newUser = await db.user.create({
-            data: {
-              email,
-              name: user.name ?? null,
-              image: user.image ?? null,
-              emailVerified: new Date(),
-            },
-          });
-          // Create the Google Account link
-          await db.account.create({
-            data: {
-              userId: newUser.id,
-              provider: "google",
-              providerAccountId: googleSub,
-              access_token: account.access_token ?? null,
-              refresh_token: account.refresh_token ?? null,
-              expires_at: account.expires_at ?? null,
-              token_type: account.token_type ?? null,
-              scope: account.scope ?? null,
-              id_token: account.id_token ?? null,
-            },
-          });
-          user.id = newUser.id;
-          (user as { emailVerified?: string | null }).emailVerified =
-            newUser.emailVerified?.toISOString() ?? new Date().toISOString();
-          (user as { tokenVersion?: number }).tokenVersion = newUser.tokenVersion;
-          (user as { isAdmin?: boolean }).isAdmin = newUser.isAdmin;
         }
-      }
+
+        if (existing) {
+          // User exists. Check if they already have a Google Account linked.
+            const existingGoogleAccount = existing.accounts[0];
+
+            if (existingGoogleAccount) {
+              // Already linked — verify it's the SAME Google account
+              // (prevent account takeover via creating a fake Google account
+              // with the victim's e-mail)
+              if (existingGoogleAccount.providerAccountId !== googleSub) {
+                // Different Google account for the same e-mail — reject
+                console.warn(
+                  `[auth] Google sign-in rejected: e-mail ${email} is already linked to a different Google account.`,
+                );
+                return false;
+              }
+              // Same Google account — update token + profile if needed
+            } else {
+              // User exists (password-based or ghost) but no Google Account
+              // linked yet — link it now. This is safe because Google verified
+              // the e-mail.
+              await db.account.create({
+                data: {
+                  userId: existing.id,
+                  provider: "google",
+                  providerAccountId: googleSub,
+                  access_token: account.access_token ?? null,
+                  refresh_token: account.refresh_token ?? null,
+                  expires_at: account.expires_at ?? null,
+                  token_type: account.token_type ?? null,
+                  scope: account.scope ?? null,
+                  id_token: account.id_token ?? null,
+                },
+              });
+            }
+
+            // Update image/name from Google if changed
+            if (user.image && user.image !== existing.image) {
+              await db.user.update({
+                where: { id: existing.id },
+                data: { image: user.image },
+              });
+            }
+            if (user.name && !existing.name) {
+              await db.user.update({
+                where: { id: existing.id },
+                data: { name: user.name },
+              });
+            }
+            // Mark e-mail as verified if not already (Google pre-verified)
+            if (!existing.emailVerified) {
+              await db.user.update({
+                where: { id: existing.id },
+                data: { emailVerified: new Date() },
+              });
+            }
+
+            // Attach DB id + emailVerified + tokenVersion + isAdmin to JWT
+            user.id = existing.id;
+            (user as { emailVerified?: string | null }).emailVerified =
+              existing.emailVerified?.toISOString() ?? new Date().toISOString();
+            (user as { tokenVersion?: number }).tokenVersion = existing.tokenVersion;
+            (user as { isAdmin?: boolean }).isAdmin = existing.isAdmin;
+          } else {
+            // New user — create in DB + create Account record.
+            // Wrapped in try/catch to handle race condition: if a
+            // credentials registration with the same email wins the
+            // race, db.user.create throws P2002 (unique constraint).
+            // On P2002, re-fetch the existing user and link the Account.
+            try {
+              const newUser = await db.user.create({
+                data: {
+                  email,
+                  name: user.name ?? null,
+                  image: user.image ?? null,
+                  emailVerified: new Date(),
+                },
+              });
+              await db.account.create({
+                data: {
+                  userId: newUser.id,
+                  provider: "google",
+                  providerAccountId: googleSub,
+                  access_token: account.access_token ?? null,
+                  refresh_token: account.refresh_token ?? null,
+                  expires_at: account.expires_at ?? null,
+                  token_type: account.token_type ?? null,
+                  scope: account.scope ?? null,
+                  id_token: account.id_token ?? null,
+                },
+              });
+              user.id = newUser.id;
+              (user as { emailVerified?: string | null }).emailVerified =
+                newUser.emailVerified?.toISOString() ?? new Date().toISOString();
+              (user as { tokenVersion?: number }).tokenVersion = newUser.tokenVersion;
+              (user as { isAdmin?: boolean }).isAdmin = newUser.isAdmin;
+            } catch (createErr) {
+              // P2002 = unique constraint violation (race condition)
+              if (
+                createErr instanceof Error &&
+                "code" in createErr &&
+                (createErr as { code: string }).code === "P2002"
+              ) {
+                // Re-fetch the user that won the race
+                const raceUser = await db.user.findUnique({
+                  where: { email },
+                  select: {
+                    id: true,
+                    emailVerified: true,
+                    tokenVersion: true,
+                    isAdmin: true,
+                    accounts: {
+                      where: { provider: "google" },
+                      select: { providerAccountId: true },
+                      take: 1,
+                    },
+                  },
+                });
+                if (raceUser) {
+                  // Link the Google Account if not already linked
+                  if (!raceUser.accounts[0]) {
+                    await db.account.create({
+                      data: {
+                        userId: raceUser.id,
+                        provider: "google",
+                        providerAccountId: googleSub,
+                        access_token: account.access_token ?? null,
+                        refresh_token: account.refresh_token ?? null,
+                        expires_at: account.expires_at ?? null,
+                        token_type: account.token_type ?? null,
+                        scope: account.scope ?? null,
+                        id_token: account.id_token ?? null,
+                      },
+                    });
+                  }
+                  user.id = raceUser.id;
+                  (user as { emailVerified?: string | null }).emailVerified =
+                    raceUser.emailVerified?.toISOString() ?? new Date().toISOString();
+                  (user as { tokenVersion?: number }).tokenVersion = raceUser.tokenVersion;
+                  (user as { isAdmin?: boolean }).isAdmin = raceUser.isAdmin;
+                } else {
+                  // Shouldn't happen, but fall through to sign-in failure
+                  console.error("[auth] P2002 race: user not found after re-fetch");
+                  return false;
+                }
+              } else {
+                throw createErr;
+              }
+            }
+          }
+        }
 
       // ===== Auto-accept pending invitations (Credentials + Google) =====
       // Run for BOTH providers — once the user's DB id + e-mail are known,
