@@ -66,9 +66,10 @@ export function MoveItemDialog({
     return ids;
   }, [item.id, allItems]);
 
-  // Candidate targets: top-level items (parentId is null/undefined/empty)
-  // in the same project, excluding self and descendants.
-  // Also excludes the item's current parent (no point moving to the same parent).
+  // Candidate targets: top-level items (parentId is null/undefined/empty),
+  // excluding self and descendants.
+  // NOTE: We don't filter by projectId — allItems already contains only
+  // items for the current project (fetched via useBudgetItems(projectId)).
   const candidates = useMemo(() => {
     if (!allItems || allItems.length === 0) return [];
 
@@ -80,8 +81,6 @@ export function MoveItemDialog({
         if (descendantIds.has(it.id)) return false;
         // Only top-level items (parentId is null, undefined, or empty string)
         if (it.parentId) return false;
-        // Same project
-        if (it.projectId !== projectId) return false;
         return true;
       })
       .sort((a, b) => {
@@ -91,7 +90,7 @@ export function MoveItemDialog({
         }
         return (a.sortOrder ?? 0) - (b.sortOrder ?? 0);
       });
-  }, [allItems, item.id, descendantIds, projectId]);
+  }, [allItems, item.id, descendantIds]);
 
   const [selectedParentId, setSelectedParentId] = useState<string | null>(
     item.parentId ?? null,
@@ -151,17 +150,9 @@ export function MoveItemDialog({
           )}
 
           {candidates.length === 0 ? (
-            <div className="space-y-2 rounded-md border border-dashed border-muted px-3 py-4 text-center">
-              <p className="type-body text-muted-foreground">
-                {t("empty")}
-              </p>
-              {/* Debug info — helps diagnose data issues */}
-              <p className="type-label-sm text-muted-foreground/60">
-                {allItems?.length ?? 0} items total ·
-                {" "}{allItems?.filter((it) => !it.parentId).length ?? 0} top-level ·
-                {" "}{allItems?.filter((it) => it.projectId === projectId).length ?? 0} in project
-              </p>
-            </div>
+            <p className="rounded-md border border-dashed border-muted px-3 py-4 text-center type-body text-muted-foreground">
+              {t("empty")}
+            </p>
           ) : (
             <Select
               value={selectedParentId ?? "__top__"}
