@@ -694,12 +694,17 @@ export function PdfExportDialog({
       setNewTemplateName("");
       await fetchTemplates();
     } catch (err) {
+      // Show the localized error label + the actual error detail from
+      // the backend (which is now more specific — includes Prisma error
+      // codes for schema mismatches, not just "Failed to create template").
       const message = err instanceof Error ? err.message : "";
-      toast.error(
-        message
-          ? `${t("toasts.templateSaveError")} — ${message}`
-          : t("toasts.templateSaveError"),
-      );
+      if (message) {
+        // Don't concatenate two languages — just show the detail.
+        // The backend now returns helpful, actionable messages.
+        toast.error(message, { duration: 8000 });
+      } else {
+        toast.error(t("toasts.templateSaveError"));
+      }
     } finally {
       setIsSavingTemplate(false);
     }
@@ -721,11 +726,11 @@ export function PdfExportDialog({
         await fetchTemplates();
       } catch (err) {
         const message = err instanceof Error ? err.message : "";
-        toast.error(
-          message
-            ? `${t("toasts.templateDeleteError")} — ${message}`
-            : t("toasts.templateDeleteError"),
-        );
+        if (message) {
+          toast.error(message, { duration: 8000 });
+        } else {
+          toast.error(t("toasts.templateDeleteError"));
+        }
       } finally {
         setDeletingTemplateId(null);
       }

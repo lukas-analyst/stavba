@@ -120,9 +120,32 @@ export async function POST(request: Request) {
     return NextResponse.json({ template: result2 }, { status: 201 });
   } catch (error) {
     console.error("POST export-templates error:", error);
+
+    // Return a helpful error message — include the Prisma error code
+    // so the user can diagnose schema mismatches (e.g., missing columns
+    // after a schema change that hasn't been migrated yet).
+    let errorMessage = "Failed to create template";
+    let statusCode = 500;
+
+    if (error instanceof Error) {
+      // Prisma P2002 = unique constraint (shouldn't reach here — checked above)
+      // Prisma P2003 = foreign key constraint
+      // Prisma P2021 = column does not exist (schema not migrated)
+      const prismaError = error as Error & { code?: string };
+      if (prismaError.code === "P2021") {
+        errorMessage = "Database schema is out of date — run 'bunx prisma db push' to apply the latest schema changes.";
+        statusCode = 500;
+      } else if (prismaError.code === "P2002") {
+        errorMessage = "Template with this name already exists";
+        statusCode = 409;
+      } else {
+        errorMessage = prismaError.message || errorMessage;
+      }
+    }
+
     return NextResponse.json(
-      { error: "Failed to create template" },
-      { status: 500 },
+      { error: errorMessage },
+      { status: statusCode },
     );
   }
 }
