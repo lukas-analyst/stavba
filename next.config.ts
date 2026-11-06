@@ -98,7 +98,6 @@ const nextConfig: NextConfig = {
   // into each serverless function. Reduces function storage significantly.
   serverExternalPackages: [
     "@prisma/client",
-    "@prisma/client/wasm",
     "@react-pdf/renderer",
     "pdfkit",
     "fontkit",
