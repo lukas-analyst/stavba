@@ -12,13 +12,22 @@ import {
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
   Download,
+  Upload,
   Copy,
   Trash2,
   AlertTriangle,
-  Pencil,
   History,
-  FileText,
+  FileDown,
+  FileSpreadsheet,
+  ChevronDown,
   Loader2,
 } from "lucide-react";
 import {
@@ -153,12 +162,11 @@ export function ProjectManagementTab({ projectId }: { projectId: string }) {
   };
 
   // === Dialog openers ===
-  // These are dispatch-only — the dialogs themselves are mounted in
-  // `ProjectDetail` (`src/components/project-detail.tsx`), which listens
-  // for `stavba:open-*` window events. We re-dispatch from here so the
-  // buttons live next to the rest of the project management actions.
-  const openEdit = () => window.dispatchEvent(new Event("stavba:open-edit"));
-  const openAudit = () => window.dispatchEvent(new Event("stavba:open-audit"));
+  // PdfExportDialog is mounted inline below. ProjectDialog and AuditLogDialog
+  // are dispatched via window events (refactor to Zustand is planned but
+  // deferred). The redundant "Upravit projekt" and "Historie změn" buttons
+  // have been removed — inline edit is in ProjectInfoCard, audit log is
+  // rendered inline below.
 
   const handleDuplicate = async () => {
     try {
@@ -238,15 +246,11 @@ export function ProjectManagementTab({ projectId }: { projectId: string }) {
       />
 
       {/* ===== Data a exporty =====
-          Centralizované akce pro správu dat projektu — úprava projektu,
-          report PDF, audit log, plus JSON/CSV exporty a (owner/admin)
-          import JSON zpět do aplikace.
-          - Akce "Upravit projekt" / "Report PDF" / "Historie změn"
-            dispatchují window event, který naslouchá `ProjectDetail`
-            (tam jsou namontované `ProjectDialog`, `PrintReportDialog`,
-            `AuditLogDialog`).
-          - Import JSON je omezen na owner/admin (matches the API
-            endpoint `POST /api/import`, který vyžaduje admin session). */}
+          Centralizované akce pro správu dat projektu — report PDF,
+          JSON/CSV exporty a (owner/admin) import JSON.
+          Refaktorováno: 9 tlačítek → 2 viditelná + 1 dropdown menu.
+          Redundantní „Upravit projekt" a „Historie změn" odstraněny
+          (inline edit je v ProjectInfoCard, audit log je níže). */}
       <Card className="bg-surface-container-low shadow-sm">
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 type-title-lg">
@@ -258,140 +262,89 @@ export function ProjectManagementTab({ projectId }: { projectId: string }) {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* === Projektové akce ===
-              Tři hlavní akce dostupné z dřívějšího Settings menu v
-              sidebaru — nyní sdružené tady pro lepší dostupnost. */}
           <div className="flex flex-wrap items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              className="gap-2"
-              onClick={openEdit}
-              disabled={!canEditProject}
-            >
-              <Pencil className="h-3.5 w-3.5" />
-              {t("button.editProject")}
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="gap-2"
-              onClick={openAudit}
-            >
-              <History className="h-3.5 w-3.5" />
-              {t("button.auditHistory")}
-            </Button>
-            <Button
-              variant="default"
-              size="sm"
-              className="gap-2"
-              onClick={() => setPdfExportOpen(true)}
-            >
-              <FileText className="h-3.5 w-3.5" />
-              {t("button.exportPdf")}
-            </Button>
-          </div>
-
-          {/* === Export dat ===
-              JSON: kompletní stav aplikace (všechny projekty + data).
-              CSV: per-section, aktuální projekt (budget / payments / time /
-              contacts). Import JSON je owner/admin-only. */}
-          <div className="space-y-2">
-            <div className="type-label text-on-surface-variant">{t("data.export.label")}</div>
-            <div className="flex flex-wrap items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                className="gap-2"
-                onClick={handleExport}
-                disabled={exportState.isPending}
-              >
-                {exportState.isPending ? (
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                ) : (
-                  <Download className="h-3.5 w-3.5" />
-                )}
-                {t("data.export.json")}
-              </Button>
-              {/* Import JSON — owner / admin only.
-                  API (`POST /api/import`) requires admin session; we
-                  mirror that gate on the client to avoid surfacing a
-                  button that always 403s. */}
-              {canEditProject && (
+            {/* Export dropdown — replaces 6 buttons (PDF + JSON + 4× CSV) */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
                 <Button
-                  variant="outline"
+                  variant="default"
                   size="sm"
                   className="gap-2"
-                  disabled={importState.isPending}
-                  onClick={() => document.getElementById("import-json-input")?.click()}
+                  disabled={
+                    exportState.isPending ||
+                    exportCsv.isPending
+                  }
                 >
-                  {importState.isPending ? (
+                  {exportState.isPending || exportCsv.isPending ? (
                     <Loader2 className="h-3.5 w-3.5 animate-spin" />
                   ) : (
-                    <Download className="h-3.5 w-3.5 rotate-180" />
+                    <Download className="h-3.5 w-3.5" />
                   )}
-                  {t("data.export.import")}
+                  {t("data.export.button")}
+                  <ChevronDown className="h-3.5 w-3.5" />
                 </Button>
-              )}
-              {/* Skrytý file input — klik na tlačítko nad otevře
-                  nativní dialog výběru souboru. */}
-              <input
-                id="import-json-input"
-                type="file"
-                accept="application/json,.json"
-                className="hidden"
-                onChange={handleImport}
-              />
-            </div>
-          </div>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start">
+                {/* Report PDF */}
+                <DropdownMenuItem onClick={() => setPdfExportOpen(true)}>
+                  <FileDown className="h-3.5 w-3.5" />
+                  {t("button.exportPdf")}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                {/* JSON export */}
+                <DropdownMenuItem onClick={handleExport}>
+                  <Download className="h-3.5 w-3.5" />
+                  {t("data.export.json")}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                {/* CSV exports */}
+                <DropdownMenuItem onClick={() => handleCsv("budget")}>
+                  <FileSpreadsheet className="h-3.5 w-3.5" />
+                  {t("data.csv.budget")}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleCsv("payments")}>
+                  <FileSpreadsheet className="h-3.5 w-3.5" />
+                  {t("data.csv.payments")}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleCsv("time")}>
+                  <FileSpreadsheet className="h-3.5 w-3.5" />
+                  {t("data.csv.time")}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleCsv("contacts")}>
+                  <FileSpreadsheet className="h-3.5 w-3.5" />
+                  {t("data.csv.contacts")}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
 
-          {/* === CSV exporty per-section === */}
-          <div className="space-y-2">
-            <div className="type-label text-on-surface-variant">
-              {t("data.csv.label")}
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
+            {/* Import JSON — owner / admin only, separate button for clarity */}
+            {canEditProject && (
               <Button
                 variant="outline"
                 size="sm"
                 className="gap-2"
-                onClick={() => handleCsv("budget")}
-                disabled={exportCsv.isPending}
+                disabled={importState.isPending}
+                onClick={() =>
+                  document.getElementById("import-json-input")?.click()
+                }
               >
-                <FileText className="h-3.5 w-3.5" />
-                {t("data.csv.budget")}
+                {importState.isPending ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <Upload className="h-3.5 w-3.5" />
+                )}
+                {t("data.export.import")}
               </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="gap-2"
-                onClick={() => handleCsv("payments")}
-                disabled={exportCsv.isPending}
-              >
-                <FileText className="h-3.5 w-3.5" />
-                {t("data.csv.payments")}
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="gap-2"
-                onClick={() => handleCsv("time")}
-                disabled={exportCsv.isPending}
-              >
-                <FileText className="h-3.5 w-3.5" />
-                {t("data.csv.time")}
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="gap-2"
-                onClick={() => handleCsv("contacts")}
-                disabled={exportCsv.isPending}
-              >
-                <FileText className="h-3.5 w-3.5" />
-                {t("data.csv.contacts")}
-              </Button>
-            </div>
+            )}
+
+            {/* Hidden file input for JSON import */}
+            <input
+              id="import-json-input"
+              type="file"
+              accept="application/json,.json"
+              className="hidden"
+              onChange={handleImport}
+            />
           </div>
         </CardContent>
       </Card>

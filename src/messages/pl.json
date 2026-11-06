@@ -854,6 +854,7 @@
         "description": "Edycja projektu, raporty i eksporty danych w różnych formatach",
         "export": {
           "label": "Eksport danych",
+          "button": "Eksportuj",
           "json": "Eksport JSON",
           "import": "Import JSON (tylko zarządca)"
         },

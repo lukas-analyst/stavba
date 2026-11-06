@@ -854,6 +854,7 @@
         "description": "Modifica del progetto, report ed esportazioni dati in vari formati",
         "export": {
           "label": "Esportazione dati",
+          "button": "Esporta",
           "json": "Esporta JSON",
           "import": "Importa JSON (solo gestore)"
         },

@@ -854,6 +854,7 @@
         "description": "Chỉnh sửa dự án, báo cáo và xuất dữ liệu ở nhiều định dạng",
         "export": {
           "label": "Xuất dữ liệu",
+          "button": "Xuất",
           "json": "Xuất JSON",
           "import": "Nhập JSON (chỉ quản lý)"
         },

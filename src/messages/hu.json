@@ -854,6 +854,7 @@
         "description": "Projektszerkesztés, jelentések és adatexportok különböző formátumokban",
         "export": {
           "label": "Adatexport",
+          "button": "Exportálás",
           "json": "JSON exportálás",
           "import": "JSON importálás (csak kezelő)"
         },

@@ -856,6 +856,7 @@
         "description": "Project editing, reports and data exports in various formats",
         "export": {
           "label": "Data export",
+          "button": "Export",
           "json": "Export JSON",
           "import": "Import JSON (owner only)"
         },

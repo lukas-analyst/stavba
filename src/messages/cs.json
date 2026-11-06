@@ -856,6 +856,7 @@
         "description": "Úprava projektu, reporty a exporty dat do různých formátů",
         "export": {
           "label": "Export dat",
+          "button": "Exportovat",
           "json": "Export JSON",
           "import": "Import JSON (owner only)"
         },
