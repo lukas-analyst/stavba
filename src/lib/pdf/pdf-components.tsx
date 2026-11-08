@@ -1005,8 +1005,19 @@ export function BudgetTable({
   // the Položky (parents) and their Úkoly (children). This avoids
   // repeating the category on every parent row.
   //
-  // Group order follows the (already sorted) parent order. When the
-  // user sorts by category, groups are ordered alphabetically.
+  // Category group ordering (3 cases):
+  //   1. No sort (default)         → groups alphabetical asc.
+  //                                  Parents & children keep app order
+  //                                  (sortOrder). This is the clean,
+  //                                  predictable default for PDF reports.
+  //   2. Sort by "category"        → groups alphabetical asc/desc per
+  //                                  user choice. Parents & children keep
+  //                                  app order within each group.
+  //   3. Sort by any other field   → groups in first-occurrence order
+  //                                  (reflecting the sorted parent order,
+  //                                  so e.g. sorting by planCost desc puts
+  //                                  the highest-cost category first).
+  //                                  Parents & children sorted by the field.
   const isCategorySort = sort && sort.field === "category";
 
   const categoryGroups: { category: string; parents: PdfBudgetItem[] }[] = [];
@@ -1022,10 +1033,13 @@ export function BudgetTable({
     }
   }
 
-  if (isCategorySort && sort) {
+  // Apply category group ordering for cases 1 & 2 (default + explicit
+  // category sort). Case 3 keeps first-occurrence order.
+  if (!sort || isCategorySort) {
+    const direction = isCategorySort ? sort.direction : "asc";
     categoryGroups.sort((a, b) => {
       const cmp = a.category.localeCompare(b.category, locale);
-      return sort.direction === "desc" ? -cmp : cmp;
+      return direction === "desc" ? -cmp : cmp;
     });
   }
 
