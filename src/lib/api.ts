@@ -363,21 +363,6 @@ export function useUpdateProject(id: string) {
   });
 }
 
-export function useDeleteProject() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async (id: string) => {
-      const res = await fetch(`/api/projects/${id}`, { method: "DELETE" });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.error || "Failed to delete project");
-      }
-      return res.json();
-    },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["projects"] }),
-  });
-}
-
 // ===== Budget Items =====
 export function useBudgetItems(projectId: string | null) {
   return useQuery<BudgetItem[]>({
@@ -967,28 +952,6 @@ export function useCreateContactPerson(projectId: string, contactId: string) {
   });
 }
 
-export function useUpdateContactPerson(projectId: string, contactId: string) {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async ({ personId, data }: { personId: string; data: Partial<{ firstName: string; lastName: string; phone: string; email: string; role: string; sortOrder: number }> }) => {
-      const res = await fetch(`/api/contacts/${contactId}/persons/${personId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.error || "Failed to update person");
-      }
-      return res.json();
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["contacts", projectId] });
-      bustServerCache(projectId, ["dashboards", "contacts"]);
-    },
-  });
-}
-
 export function useDeleteContactPerson(projectId: string, contactId: string) {
   const qc = useQueryClient();
   return useMutation({
@@ -1110,76 +1073,6 @@ export function useAuditLog(projectId: string | null) {
       return res.json();
     },
     enabled: !!projectId,
-  });
-}
-
-// ===== Snapshots =====
-export type Snapshot = {
-  id: string;
-  projectId: string;
-  label: string;
-  planTotal: number;
-  actualTotal: number;
-  remaining: number;
-  burnRate: number;
-  hoursTotal: number;
-  daysPlanned: number;
-  itemCount: number;
-  completedCount: number;
-  savedTotal: number;
-  createdAt: string;
-};
-
-export function useSnapshots(projectId: string | null) {
-  return useQuery<Snapshot[]>({
-    queryKey: ["snapshots", projectId],
-    staleTime: 60 * 1000, // 60s — snapshots rarely change
-    queryFn: async () => {
-      const res = await fetch(`/api/projects/${projectId}/snapshots`);
-      if (!res.ok) throw new Error("Failed to load snapshots");
-      return res.json();
-    },
-    enabled: !!projectId,
-  });
-}
-
-export function useCreateSnapshot(projectId: string) {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async (label: string) => {
-      const res = await fetch(`/api/projects/${projectId}/snapshots`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ label }),
-      });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.error || "Failed to create snapshot");
-      }
-      return res.json();
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["snapshots", projectId] });
-      bustServerCache(projectId, ["dashboards", "snapshots"]);
-    },
-  });
-}
-
-export function useDeleteSnapshot(projectId: string) {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async (id: string) => {
-      const res = await fetch(`/api/snapshots/${id}`, { method: "DELETE" });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.error || "Failed to delete snapshot");
-      }
-      return res.json();
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["snapshots", projectId] });
-      bustServerCache(projectId, ["dashboards", "snapshots"]);
-    },
   });
 }
 

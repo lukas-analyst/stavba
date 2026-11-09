@@ -99,21 +99,6 @@ export function formatCurrency(
 // Date formatting
 // ───────────────────────────────────────────────────────────────
 
-/**
- * Extract YYYY-MM-DD from a date string or Date object, treating the
- * date as UTC (not local timezone). This prevents dates from shifting
- * back by one day in negative-offset timezones.
- *
- * Use this instead of `date.substring(0, 10)` for all date input fields
- * (`<input type="date">`).
- */
-export function toDateInputValue(date: Date | string | null | undefined): string {
-  if (!date) return "";
-  const d = typeof date === "string" ? new Date(date) : date;
-  if (isNaN(d.getTime())) return "";
-  return d.toISOString().substring(0, 10);
-}
-
 export function formatDate(
   date: Date | string | null | undefined,
   opts?: Intl.DateTimeFormatOptions,
@@ -139,41 +124,6 @@ export function formatDateShort(
     day: "2-digit",
     month: "2-digit",
   }).format(d);
-}
-
-// ───────────────────────────────────────────────────────────────
-// Date math (locale-independent, kept as-is)
-// ───────────────────────────────────────────────────────────────
-
-export function daysUntil(target: Date | string | null | undefined): number | null {
-  if (!target) return null;
-  const d = typeof target === "string" ? new Date(target) : target;
-  if (isNaN(d.getTime())) return null;
-  const now = new Date();
-  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const startOfTarget = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-  return Math.round((startOfTarget.getTime() - startOfToday.getTime()) / (1000 * 60 * 60 * 24));
-}
-
-// NOTE: `daysUntilLabel` returns Czech strings today. It will be migrated
-// to message keys in a follow-up (the label is used in many places and
-// needs the locale to be threaded through). For now it stays as-is.
-export function daysUntilLabel(target: Date | string | null | undefined): { text: string; tone: "past" | "today" | "soon" | "future" | "none"; days: number | null } {
-  const days = daysUntil(target);
-  if (days === null) return { text: "", tone: "none", days: null };
-  if (days === 0) return { text: "dnes", tone: "today", days };
-  if (days < 0) {
-    const abs = Math.abs(days);
-    return {
-      text: abs === 1 ? "včera" : `před ${abs} dny`,
-      tone: "past",
-      days,
-    };
-  }
-  if (days <= 7) return { text: `za ${days} ${days === 1 ? "den" : days < 5 ? "dny" : "dní"}`, tone: "soon", days };
-  if (days <= 30) return { text: `za ${days} dní`, tone: "future", days };
-  if (days <= 365) return { text: `za ${Math.round(days / 30)} měs.`, tone: "future", days };
-  return { text: `za ${Math.round(days / 365)} rok${Math.round(days / 365) === 1 ? "" : "y"}`, tone: "future", days };
 }
 
 export function burnRate(actual: number, plan: number | null): number | null {
@@ -324,23 +274,6 @@ export const PHASE_COLORS: Record<PhaseId, string> = {
   unspecified: "bg-muted text-muted-foreground border-border dark:bg-muted dark:text-muted-foreground dark:border-border",
 };
 
-export const PHASE_BORDER_COLORS: Record<PhaseId, string> = {
-  preparation: "border-l-info",
-  demolition: "border-l-danger",
-  earthworks: "border-l-warning",
-  foundation: "border-l-border",
-  shell: "border-l-warning",
-  installations: "border-l-info",
-  finishing: "border-l-success",
-  facade: "border-l-warning",
-  roof: "border-l-danger",
-  interior: "border-l-success",
-  exterior: "border-l-success",
-  final_inspection: "border-l-primary",
-  future: "border-l-time",
-  unspecified: "border-l-border",
-};
-
 export const PHASE_BG_COLORS: Record<PhaseId, string> = {
   preparation: "bg-info",
   demolition: "bg-danger",
@@ -375,47 +308,6 @@ export const PHASE_DOT_COLORS: Record<PhaseId, string> = {
   unspecified: "bg-muted-foreground",
 };
 
-// CSS custom properties for charts. Reuses existing semantic CSS vars
-// (--info, --warning, --danger, --success, --time, --primary,
-// --muted-foreground) so charts automatically adapt to light/dark mode
-// via the variables defined in globals.css.
-export const PHASE_CSS_VARS: Record<string, string> = {
-  preparation: "var(--info)",
-  demolition: "var(--danger)",
-  earthworks: "var(--warning)",
-  foundation: "var(--muted-foreground)",
-  shell: "var(--warning)",
-  installations: "var(--info)",
-  finishing: "var(--success)",
-  facade: "var(--warning)",
-  roof: "var(--danger)",
-  interior: "var(--success)",
-  exterior: "var(--success)",
-  final_inspection: "var(--time)",
-  future: "var(--time)",
-  unspecified: "var(--muted-foreground)",
-  // Rejected items use danger regardless of phase
-  rose: "var(--danger)",
-};
-
-// Convenience: color by raw phase value (auto-normalizes legacy Czech).
-// Use this in components that receive `item.phase` directly from the DB.
-export function phaseColor(rawPhase: string | null | undefined): string {
-  return PHASE_COLORS[normalizePhase(rawPhase)];
-}
-export function phaseBorderColor(rawPhase: string | null | undefined): string {
-  return PHASE_BORDER_COLORS[normalizePhase(rawPhase)];
-}
-export function phaseBgColor(rawPhase: string | null | undefined): string {
-  return PHASE_BG_COLORS[normalizePhase(rawPhase)];
-}
-export function phaseDotColor(rawPhase: string | null | undefined): string {
-  return PHASE_DOT_COLORS[normalizePhase(rawPhase)];
-}
-export function phaseCssVar(rawPhase: string | null | undefined): string {
-  return PHASE_CSS_VARS[normalizePhase(rawPhase)] ?? PHASE_CSS_VARS.unspecified;
-}
-
 // ───────────────────────────────────────────────────────────────
 // Status labels — keyed by ENGLISH ID (already stable, no legacy)
 // ---------------------------------------------------------------------
@@ -426,8 +318,6 @@ export function phaseCssVar(rawPhase: string | null | undefined): string {
 // ───────────────────────────────────────────────────────────────
 
 export type StatusId = "active" | "planning" | "completed" | "paused";
-
-export const STATUS_IDS: StatusId[] = ["active", "planning", "completed", "paused"];
 
 // Colors/dots are locale-independent (CSS classes).
 // LABEL is now in messages → t(`statuses.${status}`)
@@ -527,18 +417,6 @@ export const WORKER_TYPES: { value: WorkerTypeId; emoji: string }[] = [
 // ───────────────────────────────────────────────────────────────
 
 type Translator = (key: string) => string;
-
-export function contactTypeLabel(
-  type: string,
-  t?: Translator,
-): { label: string; emoji: string } {
-  const found = CONTACT_TYPES.find((c) => c.value === type);
-  if (!found) return { label: type, emoji: "•" };
-  return {
-    emoji: found.emoji,
-    label: t ? t(`contactTypes.${type}`) : type,
-  };
-}
 
 export function paymentTypeLabel(
   type: string,

@@ -383,13 +383,3 @@ export async function verifyResetToken(token: string): Promise<
 
   return { success: true, userId: user.id, email: user.email };
 }
-
-/**
- * Clear the password-reset token after a successful password change.
- */
-export async function clearResetToken(userId: string): Promise<void> {
-  await db.user.update({
-    where: { id: userId },
-    data: { passwordResetToken: null, passwordResetExpiry: null },
-  });
-}

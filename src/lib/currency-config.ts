@@ -39,17 +39,3 @@ export const SUPPORTED_CURRENCIES: CurrencyMeta[] = [
 export const CURRENCY_MAP: Record<string, CurrencyMeta> = Object.fromEntries(
   SUPPORTED_CURRENCIES.map((c) => [c.code, c]),
 );
-
-export function getCurrencyMeta(code: string | null | undefined): CurrencyMeta | null {
-  if (!code) return null;
-  return CURRENCY_MAP[code] ?? null;
-}
-
-export const DEFAULT_CURRENCY: CurrencyCode = "CZK";
-
-/**
- * Check if a currency is supported.
- */
-export function isSupportedCurrency(code: string): code is CurrencyCode {
-  return code in CURRENCY_MAP;
-}

@@ -32,7 +32,7 @@ const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 //     attributes (used widely in our UI) + recharts `dangerouslySetInnerHTML`
 //     for chart styles. Without 'unsafe-inline' these would be blocked.
 //   - img-src 'self' data: blob: — supports user avatar from data URL,
-//     blob: URLs from canvas (floorplan), and same-origin images.
+//     blob: URLs for PDF/CSV export downloads, and same-origin images.
 //   - font-src 'self' — next/font/google fonts are self-hosted after
 //     build (downloaded at build time, served from /_next/static/media).
 //     No external font CDN.
@@ -160,21 +160,12 @@ const nextConfig: NextConfig = {
       "@radix-ui/react-toast",
       "@radix-ui/react-avatar",
       "@radix-ui/react-alert-dialog",
-      "@radix-ui/react-context-menu",
-      "@radix-ui/react-hover-card",
       "@radix-ui/react-label",
-      "@radix-ui/react-progress",
-      "@radix-ui/react-radio-group",
       "@radix-ui/react-scroll-area",
       "@radix-ui/react-separator",
-      "@radix-ui/react-slider",
       "@radix-ui/react-slot",
       "@radix-ui/react-switch",
       "@radix-ui/react-toggle",
-      "@radix-ui/react-toggle-group",
-      "@radix-ui/react-navigation-menu",
-      "@radix-ui/react-menubar",
-      "@radix-ui/react-aspect-ratio",
       "@dnd-kit/core",
       "@dnd-kit/sortable",
       "@dnd-kit/utilities",

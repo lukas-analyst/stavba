@@ -29,23 +29,3 @@ export function reportError(error: Error | unknown, context?: Record<string, unk
 
   return payload;
 }
-
-export function reportWarning(message: string, context?: Record<string, unknown>) {
-  const payload = {
-    level: "warning",
-    message,
-    context: context ?? {},
-    timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV,
-  };
-  console.warn("[error-reporting]", payload);
-
-  const webhookUrl = process.env.ERROR_REPORTING_WEBHOOK_URL;
-  if (webhookUrl) {
-    fetch(webhookUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    }).catch(() => {});
-  }
-}

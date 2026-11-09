@@ -185,11 +185,3 @@ const dbRead = useReadReplica
   : db
 
 export { db, dbRead, primaryPool }
-
-// For scripts that need to disconnect cleanly (e.g. migrations)
-export async function disconnectPrisma() {
-  await Promise.all([
-    db.$disconnect(),
-    useReadReplica ? dbRead.$disconnect() : Promise.resolve(),
-  ])
-}

@@ -72,11 +72,6 @@ export const NAV_SECTIONS: { id: NavSection; labelKey: string }[] = [
   { id: "organization", labelKey: "organization" },
 ];
 
-// Quick lookup for prefetching and validation.
-// NOTE: this intentionally EXCLUDES the `admin` tab — that one is only
-// reachable from the TopBar account dropdown, never from the sidebar.
-export const NAV_IDS = NAV_ITEMS.map((t) => t.id);
-
 // =====================================================================
 // useLocalizedNav — resolves NAV_ITEMS / NAV_SECTIONS with current locale
 // ---------------------------------------------------------------------

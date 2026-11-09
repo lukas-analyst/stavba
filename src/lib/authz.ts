@@ -6,8 +6,7 @@ import { db } from "@/lib/db";
 // =====================================================================
 // Authorization helpers for API routes
 // ---------------------------------------------------------------------
-// These helpers replace the old `getDefaultOwnerId()` pattern and
-// enforce proper authorization:
+// Enforce proper authorization:
 //
 //   1. requireUser() — must be authenticated (JWT valid)
 //   2. requireVerifiedUser() — must be authenticated + e-mail verified
