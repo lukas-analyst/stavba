@@ -682,7 +682,9 @@
         "rejected": "Từ chối"
       },
       "filter": {
-        "phase": "Giai đoạn:"
+        "phase": "Giai đoạn:",
+        "all": "Tất cả",
+        "clear": "Xóa bộ lọc"
       },
       "toolbar": {
         "search": "Tìm kiếm ngân sách…",
@@ -1766,6 +1768,7 @@
         "title": "Sự kiện gần đây",
         "description": "{shown} trên tổng số {total} sự kiện",
         "empty": "Không có sự kiện cho bộ lọc đã chọn.",
+        "emptyFiltered": "Không có sự kiện phù hợp với bộ lọc đã chọn.",
         "column": {
           "date": "Ngày",
           "time": "Giờ",

@@ -5,7 +5,7 @@ import { db, dbRead } from "@/lib/db";
 import { logChanges } from "@/lib/audit";
 import { recalcParentDates } from "@/lib/recalc-parent-dates";
 import { requireProjectAccess } from "@/lib/authz";
-import { convertAmount } from "@/lib/currency";
+import { convertAmount, getExchangeRates } from "@/lib/currency";
 import {
   parseBody,
   parseParam,
@@ -138,38 +138,66 @@ export async function GET(
     // we recompute planCostConverted using today's exchange rate.
     // Completed items keep their frozen planCostConverted (set when
     // completed=true was saved).
+    //
+    // Optimization: previously this called `convertAmount()` per item
+    // (N+1 queries — up to 2 DB hits × N items). Now we batch-fetch
+    // all distinct foreign-currency rates in ONE query and convert
+    // in-memory. Falls back to per-item `convertAmount()` only if a
+    // rate is missing from the batch (e.g. currency not in ČNB table).
     const project = await dbRead.project.findUnique({
       where: { id },
       select: { currency: true },
     });
     const projectCurrency = project?.currency ?? "CZK";
+    const conversionDate = new Date();
 
-    const convertedItems = await Promise.all(
-      items.map(async (item) => {
-        // No foreign currency → no conversion needed
-        if (!item.planCostCurrency || item.planCostCurrency === projectCurrency) {
-          return { ...item, planCostConverted: item.planCost };
-        }
-        // Completed items → use frozen value (already stored)
-        if (item.completed && item.completedAt) {
-          return item;
-        }
-        // Incomplete items → recompute with today's rate
-        if (item.planCost != null) {
-          const conversion = await convertAmount(
-            item.planCost,
-            item.planCostCurrency,
-            projectCurrency,
-            new Date(),
-          );
-          if (conversion) {
-            return { ...item, planCostConverted: conversion.converted };
-          }
-        }
-        // Fallback: return as-is
-        return item;
-      }),
+    // Collect the distinct foreign currencies that need conversion.
+    const foreignCurrencies = new Set<string>();
+    for (const item of items) {
+      if (
+        item.planCostCurrency &&
+        item.planCostCurrency !== projectCurrency &&
+        !(item.completed && item.completedAt) &&
+        item.planCost != null
+      ) {
+        foreignCurrencies.add(item.planCostCurrency);
+      }
+    }
+    // Single batched query for all foreign rates (1 query total,
+    // regardless of how many distinct currencies are involved).
+    const rateMap = await getExchangeRates(
+      [...foreignCurrencies],
+      conversionDate,
     );
+    // Also need the project currency rate (for the cross-rate).
+    if (projectCurrency !== "CZK") {
+      const projRate = await getExchangeRates([projectCurrency], conversionDate);
+      for (const [k, v] of projRate) rateMap.set(k, v);
+    }
+
+    const convertedItems = items.map((item) => {
+      // No foreign currency → no conversion needed
+      if (!item.planCostCurrency || item.planCostCurrency === projectCurrency) {
+        return { ...item, planCostConverted: item.planCost };
+      }
+      // Completed items → use frozen value (already stored)
+      if (item.completed && item.completedAt) {
+        return item;
+      }
+      // Incomplete items with a planCost → recompute in-memory using
+      // the batched rates.
+      if (item.planCost != null) {
+        const fromRate = rateMap.get(item.planCostCurrency)?.rate;
+        const toRate = rateMap.get(projectCurrency)?.rate ?? 1.0;
+        if (fromRate != null) {
+          const amountInCzk = item.planCost * fromRate;
+          const converted = amountInCzk / toRate;
+          return { ...item, planCostConverted: converted };
+        }
+      }
+      // Fallback: return as-is (no rate available)
+      return item;
+    });
 
     return NextResponse.json(convertedItems);
   } catch (error) {

@@ -682,7 +682,9 @@
         "rejected": "Elutasítva"
       },
       "filter": {
-        "phase": "Fázis:"
+        "phase": "Fázis:",
+        "all": "Összes",
+        "clear": "Szűrő törlése"
       },
       "toolbar": {
         "search": "Keresés a költségvetésben…",
@@ -1766,6 +1768,7 @@
         "title": "Legutóbbi események",
         "description": "Utolsó {shown} a {total} összes eseményből",
         "empty": "Nincsenek események a kiválasztott szűrőhöz.",
+        "emptyFiltered": "Nincsenek a kiválasztott szűrőknek megfelelő események.",
         "column": {
           "date": "Dátum",
           "time": "Idő",

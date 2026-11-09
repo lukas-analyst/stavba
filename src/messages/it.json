@@ -682,7 +682,9 @@
         "rejected": "Rifiutate"
       },
       "filter": {
-        "phase": "Fase:"
+        "phase": "Fase:",
+        "all": "Tutto",
+        "clear": "Cancella filtro"
       },
       "toolbar": {
         "search": "Cerca nel budget…",
@@ -1766,6 +1768,7 @@
         "title": "Eventi recenti",
         "description": "Ultimi {shown} di {total} eventi totali",
         "empty": "Nessun evento per il filtro selezionato.",
+        "emptyFiltered": "Nessun evento corrisponde ai filtri selezionati.",
         "column": {
           "date": "Data",
           "time": "Ora",

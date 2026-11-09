@@ -682,7 +682,9 @@
         "rejected": "Rechazados"
       },
       "filter": {
-        "phase": "Fase:"
+        "phase": "Fase:",
+        "all": "Todo",
+        "clear": "Borrar filtro"
       },
       "toolbar": {
         "search": "Buscar en presupuesto…",
@@ -1766,6 +1768,7 @@
         "title": "Eventos recientes",
         "description": "Últimos {shown} de {total} eventos totales",
         "empty": "No hay eventos para el filtro seleccionado.",
+        "emptyFiltered": "Ningún evento coincide con los filtros seleccionados.",
         "column": {
           "date": "Fecha",
           "time": "Hora",

@@ -94,10 +94,21 @@ export default function ResetPasswordPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        // Token validity check: API returns error strings that indicate
-        // expired/used tokens. We detect this via substring match (legacy —
-        // TODO: API should return error codes, see Phase F backlog).
-        if (data.error?.includes("vypršel") || data.error?.includes("použit") || data.error?.includes("expired") || data.error?.includes("used")) {
+        // Token validity check: API now returns a machine-readable `code`
+        // field ("TOKEN_EXPIRED", "TOKEN_USED", "TOKEN_INVALID") for
+        // expired/used tokens. We fall back to substring matching only
+        // for legacy responses without a code field.
+        const code = data.code as string | undefined;
+        const isInvalidToken =
+          code === "TOKEN_EXPIRED" ||
+          code === "TOKEN_USED" ||
+          code === "TOKEN_INVALID" ||
+          (!code &&
+            (data.error?.includes("vypršel") ||
+              data.error?.includes("použit") ||
+              data.error?.includes("expired") ||
+              data.error?.includes("used")));
+        if (isInvalidToken) {
           setError(data.error);
           setTokenState("invalid");
         } else {

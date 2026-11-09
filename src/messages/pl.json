@@ -682,7 +682,9 @@
         "rejected": "Odrzucone"
       },
       "filter": {
-        "phase": "Etap:"
+        "phase": "Etap:",
+        "all": "Wszystko",
+        "clear": "Wyczyść filtr"
       },
       "toolbar": {
         "search": "Szukaj w budżecie…",
@@ -1766,6 +1768,7 @@
         "title": "Ostatnie zdarzenia",
         "description": "Ostatnie {shown} z {total} łącznie zdarzeń",
         "empty": "Brak zdarzeń dla wybranego filtra.",
+        "emptyFiltered": "Brak zdarzeń pasujących do wybranych filtrów.",
         "column": {
           "date": "Data",
           "time": "Czas",

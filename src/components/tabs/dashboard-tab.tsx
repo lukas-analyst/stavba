@@ -64,7 +64,7 @@ import {
 } from "recharts";
 
 // =====================================================================
-// DashboardTestTab — enhanced dashboard v2 with:
+// DashboardTab — enhanced dashboard with:
 //   - Hero KPI section with dynamic colors (green=done, red=over, etc.)
 //   - Display-only charts (no cross-filtering)
 //   - "Plán" section: timeline items sorted by start date (active/next week/

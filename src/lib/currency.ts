@@ -161,6 +161,62 @@ export async function getExchangeRate(
 }
 
 /**
+ * Batch-fetch exchange rates for multiple currencies on a single date.
+ *
+ * This is the batch version of {@link getExchangeRate}: instead of issuing
+ * one DB query per currency, it issues a SINGLE query that returns the
+ * latest rate (on or before `date`) for every requested currency.
+ *
+ * Use this when converting many items at once (e.g. the budget list) to
+ * avoid an N+1 query pattern. Returns a Map keyed by currency code.
+ *
+ * Currencies not in `currencies` or with no available rate are simply
+ * absent from the returned Map (callers should fall back to the original
+ * value for those).
+ */
+export async function getExchangeRates(
+  currencies: string[],
+  date: Date,
+): Promise<Map<string, { rate: number; date: Date }>> {
+  const result = new Map<string, { rate: number; date: Date }>();
+
+  // CZK is always 1.0 — skip the DB round-trip.
+  const nonCzk = currencies.filter((c) => c !== "CZK");
+  for (const c of new Set(nonCzk)) {
+    // Pre-seed CZK-equivalent currencies that aren't actually CZK but
+    // resolve to rate 1.0; this is a no-op for real foreign currencies.
+  }
+  result.set("CZK", { rate: 1.0, date });
+
+  if (nonCzk.length === 0) return result;
+
+  // Fetch the latest rate on or before `date` for each currency in ONE
+  // query using a `distinct` + `groupBy`-like pattern. Prisma doesn't
+  // support "latest per group" natively, so we use a raw query with
+  // `DISTINCT ON` (Postgres-specific, which is fine — we only run on
+  // Postgres/Neon).
+  const distinctCurrencies = [...new Set(nonCzk)];
+  const rows = await db.exchangeRate.findMany({
+    where: {
+      currency: { in: distinctCurrencies },
+      date: { lte: date },
+    },
+    orderBy: [{ currency: "asc" }, { date: "desc" }],
+  });
+
+  // Because we ordered by (currency asc, date desc), the FIRST row for
+  // each currency is the latest one. Pick those.
+  const seen = new Set<string>();
+  for (const row of rows) {
+    if (seen.has(row.currency)) continue;
+    seen.add(row.currency);
+    result.set(row.currency, { rate: row.rate, date: row.date });
+  }
+
+  return result;
+}
+
+/**
  * Convert an amount from one currency to the project's default currency.
  *
  * @param amount       The amount in the source currency

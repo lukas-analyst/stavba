@@ -45,11 +45,13 @@ export async function POST(request: Request) {
     const tokenResult = await verifyResetToken(token);
 
     if (!tokenResult.success) {
+      const code =
+        tokenResult.reason === "expired" ? "TOKEN_EXPIRED" : "TOKEN_INVALID";
       const message =
         tokenResult.reason === "expired"
           ? t("auth.resetLinkExpired")
           : t("auth.invalidResetLink");
-      return NextResponse.json({ error: message }, { status: 400 });
+      return NextResponse.json({ error: message, code }, { status: 400 });
     }
 
     // Set the new password + clear reset token + increment tokenVersion
@@ -78,7 +80,7 @@ export async function POST(request: Request) {
     if (result2.count === 0) {
       // Token was used by another request between our verify and update
       return NextResponse.json(
-        { error: t("auth.resetLinkUsed") },
+        { error: t("auth.resetLinkUsed"), code: "TOKEN_USED" },
         { status: 400 },
       );
     }
