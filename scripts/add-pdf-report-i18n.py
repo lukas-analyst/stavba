@@ -1,0 +1,352 @@
+#!/usr/bin/env python3
+# =====================================================================
+# add-pdf-report-i18n.py
+# ---------------------------------------------------------------------
+# Adds a new top-level `pdfReport` namespace to all 7 next-intl message
+# files:
+#   src/messages/{cs,en,es,hu,it,pl,vi}.json
+#
+# This namespace contains the labels used inside the GENERATED PDF
+# document (rendered by `src/lib/pdf/pdf-components.tsx`), NOT the
+# labels used in the export dialog (those live under
+# `dialogs.pdfExport.*`, see `add-pdf-export-i18n.py`).
+#
+# The `pdfReport` key is added at the TOP LEVEL of each message file,
+# next to `Meta`, `common`, `nav`, `phases`, etc. If the key already
+# exists, it is overwritten with the canonical translations below.
+#
+# Usage:
+#   python3 scripts/add-pdf-report-i18n.py
+# =====================================================================
+
+import json
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent
+MESSAGES_DIR = ROOT / "src" / "messages"
+
+# ---------------------------------------------------------------------
+# Translations per locale.
+# Context: construction project management app ("Stavba") — labels
+# rendered INSIDE the generated PDF report.
+# ---------------------------------------------------------------------
+TRANSLATIONS: dict[str, dict] = {
+    "cs": {
+        "generated": "Vygenerováno",
+        "startDate": "Začátek",
+        "endDate": "Konec",
+        "expectedTotal": "Očekávané celkové náklady",
+        "plan": "Plán",
+        "actual": "Skut.",
+        "remaining": "Zbývá",
+        "propertyInfo": "Informace o nemovitosti",
+        "fullAddress": "Přesná adresa",
+        "address": "Adresa",
+        "floorArea": "Zastavěná plocha",
+        "floors": "Počet podlaží",
+        "energyRating": "Energetický štítek",
+        "heatLoss": "Tepelná ztráta",
+        "propertyNote": "Poznámka",
+        "budgetItems": "Rozpočet",
+        "items": "položek",
+        "item": "položka",
+        "category": "Kategorie",
+        "name": "Název",
+        "phase": "Fáze",
+        "planCost": "Plán",
+        "actualCost": "Skut.",
+        "status": "Stav",
+        "from": "Od",
+        "to": "Do",
+        "noItems": "Žádné položky rozpočtu.",
+        "alerts": "Upozornění",
+        "noAlerts": "Žádná aktivní upozornění.",
+        "overdue": "Po termínu",
+        "upcoming": "Blížící se termíny",
+        "overBudget": "Nad rozpočtem",
+        "projection": "Projekce nákladů",
+        "plannedBudget": "Plánovaný rozpočet",
+        "expectedTotalCosts": "Očekávané celkové náklady",
+        "estimatedOverrun": "Odhadované překročení",
+        "expectedSavings": "Očekávaná úspora",
+        "page": "Strana",
+        "of": "z",
+    },
+    "en": {
+        "generated": "Generated",
+        "startDate": "Start",
+        "endDate": "End",
+        "expectedTotal": "Expected total costs",
+        "plan": "Plan",
+        "actual": "Act.",
+        "remaining": "Remaining",
+        "propertyInfo": "Property information",
+        "fullAddress": "Full address",
+        "address": "Address",
+        "floorArea": "Floor area",
+        "floors": "Number of floors",
+        "energyRating": "Energy rating",
+        "heatLoss": "Heat loss",
+        "propertyNote": "Note",
+        "budgetItems": "Budget",
+        "items": "items",
+        "item": "item",
+        "category": "Category",
+        "name": "Name",
+        "phase": "Phase",
+        "planCost": "Plan",
+        "actualCost": "Act.",
+        "status": "Status",
+        "from": "From",
+        "to": "To",
+        "noItems": "No budget items.",
+        "alerts": "Alerts",
+        "noAlerts": "No active alerts.",
+        "overdue": "Overdue",
+        "upcoming": "Upcoming deadlines",
+        "overBudget": "Over budget",
+        "projection": "Cost projection",
+        "plannedBudget": "Planned budget",
+        "expectedTotalCosts": "Expected total costs",
+        "estimatedOverrun": "Estimated overrun",
+        "expectedSavings": "Expected savings",
+        "page": "Page",
+        "of": "of",
+    },
+    "es": {
+        "generated": "Generado",
+        "startDate": "Inicio",
+        "endDate": "Fin",
+        "expectedTotal": "Costes totales previstos",
+        "plan": "Plan",
+        "actual": "Real",
+        "remaining": "Restante",
+        "propertyInfo": "Información de la propiedad",
+        "fullAddress": "Dirección completa",
+        "address": "Dirección",
+        "floorArea": "Superficie",
+        "floors": "Número de plantas",
+        "energyRating": "Certificado energético",
+        "heatLoss": "Pérdida de calor",
+        "propertyNote": "Nota",
+        "budgetItems": "Presupuesto",
+        "items": "partidas",
+        "item": "partida",
+        "category": "Categoría",
+        "name": "Nombre",
+        "phase": "Fase",
+        "planCost": "Plan",
+        "actualCost": "Real",
+        "status": "Estado",
+        "from": "Desde",
+        "to": "Hasta",
+        "noItems": "No hay partidas de presupuesto.",
+        "alerts": "Alertas",
+        "noAlerts": "No hay alertas activas.",
+        "overdue": "Vencidas",
+        "upcoming": "Próximos vencimientos",
+        "overBudget": "Sobre presupuesto",
+        "projection": "Proyección de costes",
+        "plannedBudget": "Presupuesto planificado",
+        "expectedTotalCosts": "Costes totales previstos",
+        "estimatedOverrun": "Sobrecoste estimado",
+        "expectedSavings": "Ahorro previsto",
+        "page": "Página",
+        "of": "de",
+    },
+    "hu": {
+        "generated": "Generálva",
+        "startDate": "Kezdet",
+        "endDate": "Vég",
+        "expectedTotal": "Várható összköltség",
+        "plan": "Terv",
+        "actual": "Tény",
+        "remaining": "Maradék",
+        "propertyInfo": "Ingatlan adatai",
+        "fullAddress": "Teljes cím",
+        "address": "Cím",
+        "floorArea": "Beépített terület",
+        "floors": "Emeletek száma",
+        "energyRating": "Energiatanúsítvány",
+        "heatLoss": "Hőveszteség",
+        "propertyNote": "Megjegyzés",
+        "budgetItems": "Költségvetés",
+        "items": "tétel",
+        "item": "tétel",
+        "category": "Kategória",
+        "name": "Név",
+        "phase": "Fázis",
+        "planCost": "Terv",
+        "actualCost": "Tény",
+        "status": "Állapot",
+        "from": "Ettől",
+        "to": "Eddig",
+        "noItems": "Nincsenek költségvetési tételek.",
+        "alerts": "Értesítések",
+        "noAlerts": "Nincsenek aktív értesítések.",
+        "overdue": "Késésben",
+        "upcoming": "Közelgő határidők",
+        "overBudget": "Túlköltekezés",
+        "projection": "Költségelőrejelzés",
+        "plannedBudget": "Tervezett költségvetés",
+        "expectedTotalCosts": "Várható összköltség",
+        "estimatedOverrun": "Becsült többletköltség",
+        "expectedSavings": "Várható megtakarítás",
+        "page": "Oldal",
+        "of": "/",
+    },
+    "it": {
+        "generated": "Generato",
+        "startDate": "Inizio",
+        "endDate": "Fine",
+        "expectedTotal": "Costi totali previsti",
+        "plan": "Piano",
+        "actual": "Eff.",
+        "remaining": "Rimanente",
+        "propertyInfo": "Informazioni immobile",
+        "fullAddress": "Indirizzo completo",
+        "address": "Indirizzo",
+        "floorArea": "Superficie",
+        "floors": "Numero di piani",
+        "energyRating": "Certificazione energetica",
+        "heatLoss": "Dispersione termica",
+        "propertyNote": "Nota",
+        "budgetItems": "Budget",
+        "items": "voci",
+        "item": "voce",
+        "category": "Categoria",
+        "name": "Nome",
+        "phase": "Fase",
+        "planCost": "Piano",
+        "actualCost": "Eff.",
+        "status": "Stato",
+        "from": "Dal",
+        "to": "Al",
+        "noItems": "Nessuna voce di budget.",
+        "alerts": "Avvisi",
+        "noAlerts": "Nessun avviso attivo.",
+        "overdue": "In ritardo",
+        "upcoming": "Scadenze imminenti",
+        "overBudget": "Fuori budget",
+        "projection": "Proiezione dei costi",
+        "plannedBudget": "Budget pianificato",
+        "expectedTotalCosts": "Costi totali previsti",
+        "estimatedOverrun": "Sopraccosto stimato",
+        "expectedSavings": "Risparmio previsto",
+        "page": "Pagina",
+        "of": "di",
+    },
+    "pl": {
+        "generated": "Wygenerowano",
+        "startDate": "Początek",
+        "endDate": "Koniec",
+        "expectedTotal": "Szacowane koszty całkowite",
+        "plan": "Plan",
+        "actual": "Faktycz.",
+        "remaining": "Pozostało",
+        "propertyInfo": "Informacje o nieruchomości",
+        "fullAddress": "Pełny adres",
+        "address": "Adres",
+        "floorArea": "Powierzchnia zabudowy",
+        "floors": "Liczba pięter",
+        "energyRating": "Świadectwo energetyczne",
+        "heatLoss": "Straty ciepła",
+        "propertyNote": "Notatka",
+        "budgetItems": "Budżet",
+        "items": "pozycji",
+        "item": "pozycja",
+        "category": "Kategoria",
+        "name": "Nazwa",
+        "phase": "Faza",
+        "planCost": "Plan",
+        "actualCost": "Faktycz.",
+        "status": "Status",
+        "from": "Od",
+        "to": "Do",
+        "noItems": "Brak pozycji budżetu.",
+        "alerts": "Alerty",
+        "noAlerts": "Brak aktywnych alertów.",
+        "overdue": "Po terminie",
+        "upcoming": "Nadchodzące terminy",
+        "overBudget": "Ponad budżetem",
+        "projection": "Projekcja kosztów",
+        "plannedBudget": "Planowany budżet",
+        "expectedTotalCosts": "Szacowane koszty całkowite",
+        "estimatedOverrun": "Szacowane przekroczenie",
+        "expectedSavings": "Oczekiwane oszczędności",
+        "page": "Strona",
+        "of": "z",
+    },
+    "vi": {
+        "generated": "Đã tạo",
+        "startDate": "Bắt đầu",
+        "endDate": "Kết thúc",
+        "expectedTotal": "Chi phí dự kiến",
+        "plan": "Kế hoạch",
+        "actual": "Thực tế",
+        "remaining": "Còn lại",
+        "propertyInfo": "Thông tin bất động sản",
+        "fullAddress": "Địa chỉ đầy đủ",
+        "address": "Địa chỉ",
+        "floorArea": "Diện tích sàn",
+        "floors": "Số tầng",
+        "energyRating": "Chứng nhận năng lượng",
+        "heatLoss": "Thất thoát nhiệt",
+        "propertyNote": "Ghi chú",
+        "budgetItems": "Ngân sách",
+        "items": "hạng mục",
+        "item": "hạng mục",
+        "category": "Hạng mục",
+        "name": "Tên",
+        "phase": "Giai đoạn",
+        "planCost": "Kế hoạch",
+        "actualCost": "Thực tế",
+        "status": "Trạng thái",
+        "from": "Từ",
+        "to": "Đến",
+        "noItems": "Không có hạng mục ngân sách.",
+        "alerts": "Cảnh báo",
+        "noAlerts": "Không có cảnh báo đang hoạt động.",
+        "overdue": "Quá hạn",
+        "upcoming": "Sắp đến hạn",
+        "overBudget": "Vượt ngân sách",
+        "projection": "Dự toán chi phí",
+        "plannedBudget": "Ngân sách kế hoạch",
+        "expectedTotalCosts": "Chi phí dự kiến",
+        "estimatedOverrun": "Vượt chi phí dự kiến",
+        "expectedSavings": "Tiết kiệm dự kiến",
+        "page": "Trang",
+        "of": "/",
+    },
+}
+
+
+def update_file(locale: str, data: dict) -> None:
+    """Insert/overwrite the top-level `pdfReport` key in a message file."""
+    path = MESSAGES_DIR / f"{locale}.json"
+    if not path.exists():
+        raise FileNotFoundError(f"Missing message file: {path}")
+
+    # Always overwrite with canonical translations (idempotent).
+    data["pdfReport"] = TRANSLATIONS[locale]
+
+    # Write back with UTF-8 + 2-space indent (matches next-intl convention)
+    path.write_text(
+        json.dumps(data, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
+    print(f"  ✓ Updated {path.relative_to(ROOT)}")
+
+
+def main() -> None:
+    print("Adding top-level `pdfReport` namespace to all 7 language files…")
+    for locale in TRANSLATIONS:
+        path = MESSAGES_DIR / f"{locale}.json"
+        with path.open(encoding="utf-8") as fh:
+            data = json.load(fh)
+        update_file(locale, data)
+    print("Done.")
+
+
+if __name__ == "__main__":
+    main()
