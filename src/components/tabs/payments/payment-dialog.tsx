@@ -764,7 +764,7 @@ function PaymentDialogInner({
       </div>
 
       {/* ===== DETAILS (optional) ===== */}
-      <CollapsibleSection title={t("dialog.section.details")}>
+      <CollapsibleSection title={t("dialog.section.details")} defaultOpen={true}>
         {/* Installment toggle - only in create mode (not editing existing
             payments) and not when prefilling an installment (that flow
             doesn't allow creating a NEW invoice — it links to an existing one). */}

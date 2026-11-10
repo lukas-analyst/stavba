@@ -1353,7 +1353,7 @@ function TimeDialogInner({
       </div>
 
       {/* ===== DETAILY (volitelné) ===== */}
-      <CollapsibleSection title={t("form.section.details")}>
+      <CollapsibleSection title={t("form.section.details")} defaultOpen={true}>
         {/* Typ pracovníka */}
         <div className="space-y-2">
           <Label htmlFor="workerType">{t("form.label.workerType")}</Label>
