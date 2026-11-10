@@ -1,189 +1,104 @@
 # Stavba — Správa rozpočtu staveb
 
-Aplikace pro komplexní správu rozpočtu, nákladů a času pro stavby a rekonstrukce.
+Aplikace pro komplexní správu rozpočtu, nákladů a času staveb a rekonstrukcí.
 
-## 🚀 Nasazení na Vercel — Kompletní návod
+## Přehled
 
-### Co potřebujete
-- GitHub účet (už máte ✅)
-- Vercel účet (už máte ✅)
-- Neon PostgreSQL databázi (už máme ✅)
+Stavba je webová aplikace postavená na Next.js 16, která umožňuje:
 
----
+- **Hierarchické rozpočtové položky** — Kategorie → Položka → Úkol s drag-and-drop řazením
+- **Multi-měnové operace** — automatický přepočet pomocí denních kurzů ČNB
+- **PDF reporty** — 2 vizuální styly (minimal/colorful), per-section orientace, per-table řazení, uložitelné šablony
+- **Správa plateb** — faktury, opakující se platby, DPH, odkazy na faktury
+- **Časové záznamy** — sledování práce dle pracovníka
+- **Kontakty** — firmy + osoby, ARES IČO lookup, hodnocení
+- **Sdílení projektů** — role-based (owner/editor/viewer), pozvánky
+- **Audit logování** — sledování klíčových akcí
+- **7 jazyků** — cs, en, pl, vi, hu, es, it
 
-### Krok 1: Synchronizace kódu s GitHub
+## Technologický stack
 
-#### 1a. Vytvořte nový repozitář na GitHub
+| Vrstva | Technologie |
+|--------|-------------|
+| Framework | Next.js 16 (App Router, Turbopack) |
+| Jazyk | TypeScript 5 (strict) |
+| Databáze | PostgreSQL (Neon) + Prisma 6 ORM |
+| Styling | Tailwind CSS 4 + shadcn/ui |
+| State | Zustand (klient) + TanStack Query (server) |
+| Auth | NextAuth v4 (JWT, Credentials + Google OAuth) |
+| i18n | next-intl (7 lokalit) |
+| PDF | @react-pdf/renderer (server-side) |
+| Hosting | Vercel |
 
-1. Jděte na **https://github.com/new**
-2. **Repository name:** `stavba`
-3. Nastavte na **Private** (soukromý)
-4. **NEzaškrtávejte** „Add a README" ani „.gitignore" (už je v kódu)
-5. Klikněte **„Create repository"**
-6. GitHub vám ukáže URL — uložte si ho (např. `https://github.com/vas-ucet/stavba.git`)
+## Integrace
 
-#### 1b. Nainstalujte Git (pokud nemáte)
+- **Neon PostgreSQL** — databáze s PgBouncer connection pooling
+- **ČNB** — denní kurzy měn (cron job)
+- **Brevo** — transakční e-maily
+- **Google OAuth** — sociální přihlášení (volitelné)
+- **ARES** — český registr firem (IČO lookup)
 
-**Mac:** `brew install git` nebo stáhněte z https://git-scm.com/download/mac
-**Windows:** Stáhněte z https://git-scm.com/download/win
-**Linux:** `sudo apt install git`
-
-Ověřte: `git --version`
-
-#### 1c. Přihlaste se do Gitu (pokud ještě ne)
-
-Otevřete **Terminal** (Mac) nebo **Git Bash** (Windows) a zadejte:
-
-```bash
-git config --global user.name "Vaše Jméno"
-git config --global user.email "vas@email.cz"
-```
-
-#### 1d. Připojte GitHub jako remote
-
-V terminálu jděte do složky projektu a přidejte GitHub remote:
+## Lokální vývoj
 
 ```bash
-# Jděte do složky projektu (nahraďte cestou k projektu)
-cd /cesta/k/projektu
+# Instalace závislostí
+bun install
 
-# Přidejte GitHub remote (nahraďte URL vaším)
-git remote add origin https://github.com/vas-ucet/stavba.git
+# Nastavení env (vytvoř .env.local s Neon DATABASE_URL + NEXTAUTH_SECRET)
+# Viz .env.example pro seznam všech proměnných
 
-# Ověřte
-git remote -v
-# Mělo by ukázat: origin  https://github.com/vas-ucet/stavba.git
+# Spuštění dev serveru
+bun run dev
+
+# Lint + type check
+bun run lint
+npx tsc --noEmit
 ```
 
-#### 1e. Nahrajte kód na GitHub
+## Produkční nasazení
 
-```bash
-# Přidejte všechny soubory
-git add -A
+Aplikace je nasazena na Vercel — auto-deploy z `main` větve.
 
-# Vytvořte commit
-git commit -m "Aplikace Stavba — připraveno na Vercel"
+### Požadované env proměnné (Vercel dashboard)
 
-# Nahrajte na GitHub (poprvé může trvat pár minut)
-git push -u origin main
-```
+| Proměnná | Popis |
+|----------|-------|
+| `DATABASE_URL` | Neon PostgreSQL connection string (pooler hostname) |
+| `NEXTAUTH_SECRET` | JWT secret (`openssl rand -base64 32`) |
+| `NEXTAUTH_URL` | Produkční URL |
+| `BREVO_API_KEY` | Brevo API klíč (volitelné — bez něj se e-maily neposílají) |
+| `EMAIL_FROM` | Odesílatel e-mailů |
+| `GOOGLE_CLIENT_ID` | Google OAuth (volitelné) |
+| `GOOGLE_CLIENT_SECRET` | Google OAuth (volitelné) |
+| `CRON_SECRET` | Autentizace Vercel Cron jobs |
 
-**⚠️ Důležité:** `.env` soubor je v `.gitignore` — **heslo k databázi se nenahraje na GitHub**. To je správně! Heslo nastavíme později ve Vercelu.
+### Cron jobs
 
-#### 1f. Ověřte na GitHub
+| Schedule | Path | Účel |
+|----------|------|------|
+| `0 3 * * *` | `/api/cron/finalize-deletions` | Trvalé smazání soft-deleted účtů |
+| `0 15 * * 1-5` | `/api/cron/fetch-exchange-rates` | Fetch ČNB kurzů |
+| `0 4 * * *` | `/api/cron/process-recurring-payments` | Opakující se platby |
 
-Jděte na `https://github.com/vas-ucet/stavba` — měli byste vidět všechny soubory projektu.
-
----
-
-### Krok 2: Nasazení na Vercel
-
-#### 2a. Import projektu
-
-1. Jděte na **https://vercel.com/new**
-2. V sekci „Import Git Repository" najděte váš repozitář `stavba`
-3. Klikněte **„Import"**
-
-#### 2b. Nastavení projektu
-
-Vercel automaticky detekuje Next.js. Nastavte:
-
-| Pole | Hodnota |
-|------|---------|
-| **Framework Preset** | Next.js (automaticky) |
-| **Root Directory** | `./` (default) |
-| **Build Command** | `prisma generate && next build` (už v package.json) |
-| **Output Directory** | `.next` (automaticky) |
-| **Install Command** | `npm install` (nechte default) |
-
-#### 2c. Nastavení Environment Variables (KRITICKÉ!)
-
-V sekci **„Environment Variables"** přidejte:
-
-| Name | Value |
-|------|-------|
-| `DATABASE_URL` | `postgresql://USER:PASSWORD@HOST/DATABASE?sslmode=require` (z Neon dashboardu) |
-| `NEXTAUTH_SECRET` | náhodný base64 string (např. `openssl rand -base64 32`) |
-| `NEXTAUTH_URL` | `https://VAŠE-PRODUKČNÍ-URL.vercel.app` |
-
-**⚠️ Nikdy necommitujte skutečné credentials do gitu.** Pro lokální vývoj si vytvořte `.env.local` (gitignored) s těmito proměnnými.
-
-#### 2d. Deploy!
-
-1. Klikněte **„Deploy"**
-2. Počkejte 2-3 minuty (Vercel buildí aplikaci)
-3. Až uvidíte **„Congratulations!"** — aplikace je živá!
-4. URL bude něco jako `https://stavba-xxxx.vercel.app`
-
-#### 2e. Ověřte
-
-Otevřete svou Vercel URL v prohlížeči:
-- Měli byste vidět aplikaci „Stavba"
-- Projekt „Troja" s 49 položkami rozpočtu
-- Data pocházejí z Neon PostgreSQL
-
----
-
-### Krok 3: Automatické nasazení (volitelné)
-
-Od teď, kdyžkoli nahrajete kód na GitHub:
-
-```bash
-git add -A
-git commit -m "popis změny"
-git push
-```
-
-Vercel **automaticky** rebuildí a nasadí aplikaci. Trvá to 2-3 minuty.
-
----
-
-## 🔧 Řešení problémů
-
-### „Can't reach database server"
-→ Ověřte, že `DATABASE_URL` ve Vercelu je správně (zkopírujte celý Neon connection string včetně `?sslmode=require`)
-
-### „Prisma Client not found"
-→ Vercel build automaticky spouští `postinstall: prisma generate` (nastaveno v package.json)
-
-### „Build failed"
-→ Zkontrolujte build logy ve Vercel dashboardu → záložka „Build Logs"
-
-### „Application error"
-→ Zkontrolujte runtime logy ve Vercel dashboardu → záložka „Runtime Logs"
-
----
-
-## 📂 Struktura projektu
+## Struktura projektu
 
 ```
 src/
-├── app/                    # Next.js App Router
-│   ├── api/               # API routes (Prisma → Neon)
-│   ├── page.tsx           # Hlavní stránka
-│   ├── layout.tsx         # Root layout
-│   └── globals.css        # Globální styly
-├── components/             # React komponenty
-│   ├── tabs/              # 7 tabů (Přehled, Rozpočet, Platby, Čas, Kontakty, Časová osa, Poznámky)
-│   ├── ui/                # shadcn/ui komponenty
-│   └── ...
-├── lib/                    # Utility
-│   ├── api.ts             # React Query hooks
-│   ├── db.ts              # Prisma client
-│   ├── format.ts          # Formátování (Kč, datumy)
-│   └── ...
-├── hooks/                  # Custom hooks
-└── prisma/
-    └── schema.prisma       # Databázové schéma
-
+├── app/
+│   ├── [locale]/       # i18n routes (auth pages)
+│   └── api/            # REST API (67 routes)
+├── components/
+│   ├── ui/             # shadcn/ui komponenty
+│   ├── tabs/           # 12 hlavních tabů
+│   └── pdf-export/     # modularizovaný PDF export
+├── hooks/              # 12 custom hooks
+├── lib/                # služby (auth, db, currency, email, ...)
+└── messages/           # 7 locale JSON souborů
 prisma/
-└── schema.prisma           # Databázové schéma (PostgreSQL)
+└── schema.prisma       # 18 modelů, 894 řádků
 ```
 
-## 🛠 Tech Stack
+## Dokumentace
 
-- **Frontend:** Next.js 16, React 19, TypeScript, Tailwind CSS 4, shadcn/ui
-- **Backend:** Next.js API Routes, Prisma ORM
-- **Databáze:** Neon PostgreSQL (cloud, free 3GB)
-- **Hosting:** Vercel (free, globální Edge Network)
-- **State:** React Query (server state), Zustand (client state)
+- `docs/FINALIZATION-SUMMARY-BASELINE.md` — audit aplikace před finalizačním procesem
+- `docs/ARCHIVE/` — archiv zavržených feature plánů (FLOORPLAN modul)

@@ -11,6 +11,14 @@ prisma/materialized-views.sql
 # ESLint config (not needed at build time on Vercel — lint runs locally)
 eslint.config.mjs
 
+# One-time migration / dev-only scripts (generate-version.ts IS needed)
+scripts/archive/
+scripts/seed*.ts
+scripts/restore-troja-test.ts
+scripts/backup.ts
+scripts/setup-materialized-views.ts
+scripts/migrate-*.sh
+
 # Tool results / agent context (local dev artifacts)
 tool-results/
 agent-ctx/
