@@ -458,6 +458,7 @@ export function PaymentsTab({ projectId }: { projectId: string }) {
                       projectCurrency={projectCurrency}
                       onEdit={() => setEditPayment(parent)}
                       updatePayment={updatePayment}
+                      onAddInstallment={() => setInstallmentPrefillParent(parent)}
                       onDelete={async () => {
                         try {
                           await deletePayment.mutateAsync(parent.id);

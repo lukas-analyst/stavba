@@ -1867,6 +1867,7 @@
         "ofInvoiceTotal": "z {invoiceTotal}",
         "menu": {
           "edit": "Upravit",
+          "addInstallment": "Přidat splátku",
           "delete": "Smazat"
         },
         "delete": {

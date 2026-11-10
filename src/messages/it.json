@@ -1867,6 +1867,7 @@
         "ofInvoiceTotal": "di {invoiceTotal}",
         "menu": {
           "edit": "Modifica",
+          "addInstallment": "Aggiungi rata",
           "delete": "Elimina"
         },
         "delete": {

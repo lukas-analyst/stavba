@@ -25,7 +25,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Pencil, MoreHorizontal, Trash2, RotateCw, ExternalLink } from "lucide-react";
+import { Pencil, MoreHorizontal, Trash2, RotateCw, ExternalLink, Plus } from "lucide-react";
 import { formatCurrency, formatCzk, formatDate, PAYMENT_TYPES } from "@/lib/format";
 import { CURRENCY_MAP } from "@/lib/currency-config";
 import { cn } from "@/lib/utils";
@@ -46,6 +46,7 @@ export const PaymentRow = memo(function PaymentRow({
   projectCurrency = "CZK",
   onEdit,
   onDelete,
+  onAddInstallment,
   updatePayment,
 }: {
   payment: Payment;
@@ -58,6 +59,8 @@ export const PaymentRow = memo(function PaymentRow({
   projectCurrency?: string;
   onEdit: () => void;
   onDelete: () => void;
+  // Show "Add installment" menu item — only for installment-parent rows.
+  onAddInstallment?: () => void;
   updatePayment?: ReturnType<typeof useUpdatePayment>;
 }) {
   const [confirm, setConfirm] = useState(false);
@@ -300,7 +303,7 @@ export const PaymentRow = memo(function PaymentRow({
       <TableCell className={cn(childIndent, rowBg)} onClick={(e) => e.stopPropagation()}>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" aria-label="More options" className="h-8 w-8 opacity-0 group-hover:opacity-100">
+            <Button variant="ghost" size="icon" aria-label="More options" className="h-8 w-8 opacity-100 sm:opacity-0 sm:group-hover:opacity-100">
               <MoreHorizontal className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
@@ -308,6 +311,11 @@ export const PaymentRow = memo(function PaymentRow({
             <DropdownMenuItem onClick={onEdit}>
               <Pencil className="mr-2 h-3.5 w-3.5" /> {t("row.menu.edit")}
             </DropdownMenuItem>
+            {isParent && onAddInstallment && (
+              <DropdownMenuItem onClick={onAddInstallment}>
+                <Plus className="mr-2 h-3.5 w-3.5" /> {t("row.menu.addInstallment")}
+              </DropdownMenuItem>
+            )}
             <DropdownMenuItem
               className="text-destructive focus:text-destructive"
               onClick={() => setConfirm(true)}

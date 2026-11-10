@@ -1867,6 +1867,7 @@
         "ofInvoiceTotal": "de {invoiceTotal}",
         "menu": {
           "edit": "Editar",
+          "addInstallment": "Añadir cuota",
           "delete": "Eliminar"
         },
         "delete": {

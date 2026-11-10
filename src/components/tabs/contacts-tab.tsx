@@ -272,7 +272,7 @@ function ContactCard({
                 variant="ghost"
                 size="icon"
                 aria-label="More options"
-                className="h-7 w-7 rounded-full state-layer-on-surface opacity-0 group-hover:opacity-100"
+                className="h-7 w-7 rounded-full state-layer-on-surface opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
                 onClick={(e) => e.stopPropagation()}
               >
                 <MoreHorizontal className="h-4 w-4" />
@@ -692,7 +692,7 @@ function ContactPersonsSection({
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-7 w-7 shrink-0 rounded-full state-layer-on-surface opacity-0 group-hover:opacity-100"
+                  className="h-7 w-7 shrink-0 rounded-full state-layer-on-surface opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
                   onClick={() => handleDelete(p.id, `${p.firstName} ${p.lastName}`)}
                   disabled={deletePerson.isPending}
                   aria-label={t("persons.aria.delete", { firstName: p.firstName, lastName: p.lastName })}

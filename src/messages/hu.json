@@ -1867,6 +1867,7 @@
         "ofInvoiceTotal": "{invoiceTotal} -ból",
         "menu": {
           "edit": "Szerkesztés",
+          "addInstallment": "Részlet hozzáadása",
           "delete": "Törlés"
         },
         "delete": {

@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import {
   Dialog,
@@ -97,6 +97,49 @@ export function AddDialogShell({
 }: AddDialogShellProps) {
   const isMobile = useIsMobile();
   const tc = useTranslations("common");
+
+  // ─── Mobile keyboard handling ──────────────────────────────────
+  // When the soft keyboard opens on mobile, the visualViewport
+  // shrinks. We track its height and use it to set the drawer's
+  // max-height, so the footer (sticky bottom) stays visible above
+  // the keyboard. Without this, the sticky footer gets hidden
+  // behind the keyboard on iOS Safari.
+  const [viewportHeight, setViewportHeight] = useState<number | null>(null);
+  useEffect(() => {
+    if (!isMobile || !open) return;
+    const vv = window.visualViewport;
+    if (!vv) return;
+    const update = () => setViewportHeight(vv.height);
+    update();
+    vv.addEventListener("resize", update);
+    vv.addEventListener("scroll", update);
+    return () => {
+      vv.removeEventListener("resize", update);
+      vv.removeEventListener("scroll", update);
+    };
+  }, [isMobile, open]);
+
+  // Scroll the focused input/textarea/select into view when the
+  // keyboard appears, so the active field isn't covered.
+  useEffect(() => {
+    if (!isMobile || !open) return;
+    const onFocusIn = (e: FocusEvent) => {
+      const target = e.target as HTMLElement;
+      if (
+        target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA" ||
+        target.tagName === "SELECT" ||
+        target.isContentEditable
+      ) {
+        // Defer to allow the keyboard to finish animating.
+        setTimeout(() => {
+          target.scrollIntoView({ block: "center", behavior: "smooth" });
+        }, 300);
+      }
+    };
+    document.addEventListener("focusin", onFocusIn);
+    return () => document.removeEventListener("focusin", onFocusIn);
+  }, [isMobile, open]);
 
   // Title input — works at ALL breakpoints because we override
   // both base AND md: variants. The Input component has
@@ -197,9 +240,16 @@ export function AddDialogShell({
   );
 
   if (isMobile) {
+    // When the keyboard is open, use the visualViewport height
+    // (smaller than dvh) so the drawer fits above the keyboard.
+    // Otherwise fall back to 92dvh (full height minus safe area).
+    const drawerMaxHeight = viewportHeight != null ? `${viewportHeight}px` : "92dvh";
     return (
       <Drawer open={open} onOpenChange={onOpenChange}>
-        <DrawerContent className={cn("flex max-h-[92dvh] flex-col", maxWidth)}>
+        <DrawerContent
+          className={cn("flex flex-col", maxWidth)}
+          style={{ maxHeight: drawerMaxHeight }}
+        >
           {header}
           {body}
           {footer}

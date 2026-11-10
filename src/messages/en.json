@@ -1867,6 +1867,7 @@
         "ofInvoiceTotal": "of {invoiceTotal}",
         "menu": {
           "edit": "Edit",
+          "addInstallment": "Add installment",
           "delete": "Delete"
         },
         "delete": {

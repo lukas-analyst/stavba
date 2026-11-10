@@ -1867,6 +1867,7 @@
         "ofInvoiceTotal": "trên {invoiceTotal}",
         "menu": {
           "edit": "Chỉnh sửa",
+          "addInstallment": "Thêm đợt thanh toán",
           "delete": "Xóa"
         },
         "delete": {

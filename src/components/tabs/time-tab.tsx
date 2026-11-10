@@ -1013,7 +1013,7 @@ function TimeRow({
               variant="ghost"
               size="icon"
               aria-label="More options"
-              className="h-8 w-8 opacity-0 group-hover:opacity-100"
+              className="h-8 w-8 opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
               onClick={(e) => e.stopPropagation()}
             >
               <MoreHorizontal className="h-4 w-4" />
