@@ -182,19 +182,14 @@ export async function getExchangeRates(
 
   // CZK is always 1.0 — skip the DB round-trip.
   const nonCzk = currencies.filter((c) => c !== "CZK");
-  for (const c of new Set(nonCzk)) {
-    // Pre-seed CZK-equivalent currencies that aren't actually CZK but
-    // resolve to rate 1.0; this is a no-op for real foreign currencies.
-  }
   result.set("CZK", { rate: 1.0, date });
 
   if (nonCzk.length === 0) return result;
 
   // Fetch the latest rate on or before `date` for each currency in ONE
-  // query using a `distinct` + `groupBy`-like pattern. Prisma doesn't
-  // support "latest per group" natively, so we use a raw query with
-  // `DISTINCT ON` (Postgres-specific, which is fine — we only run on
-  // Postgres/Neon).
+  // query. Prisma doesn't support "latest per group" natively, so we
+  // fetch all matching rows ordered by (currency asc, date desc) and
+  // pick the first (latest) row per currency below.
   const distinctCurrencies = [...new Set(nonCzk)];
   const rows = await db.exchangeRate.findMany({
     where: {

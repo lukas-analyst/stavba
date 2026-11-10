@@ -87,12 +87,19 @@ export function formatCurrency(
   // HUF, VND: 0 decimals (high denomination currencies)
   // EUR, USD, GBP, PLN, AUD: 2 decimals
   const decimals = currency === "CZK" || currency === "HUF" || currency === "VND" ? 0 : 2;
-  return new Intl.NumberFormat(toBcp47(locale), {
-    style: "currency",
-    currency,
-    minimumFractionDigits: decimals,
-    maximumFractionDigits: decimals,
-  }).format(amount);
+  try {
+    return new Intl.NumberFormat(toBcp47(locale), {
+      style: "currency",
+      currency,
+      minimumFractionDigits: decimals,
+      maximumFractionDigits: decimals,
+    }).format(amount);
+  } catch {
+    // Invalid currency code → fall back to plain number formatting.
+    return new Intl.NumberFormat(toBcp47(locale), {
+      maximumFractionDigits: decimals,
+    }).format(amount);
+  }
 }
 
 // ───────────────────────────────────────────────────────────────

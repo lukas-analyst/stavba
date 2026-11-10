@@ -22,7 +22,7 @@ import { createElement, type ReactElement } from "react";
 import { renderToBuffer, type DocumentProps } from "@react-pdf/renderer";
 import { getTranslations } from "next-intl/server";
 import { dbRead } from "@/lib/db";
-import { convertAmount } from "@/lib/currency";
+import { getExchangeRates } from "@/lib/currency";
 import { PHASES, normalizePhase } from "@/lib/format";
 import { ReportDocument } from "./pdf-components";
 import type {
@@ -111,57 +111,69 @@ export async function generatePdf(options: PdfExportOptions): Promise<Buffer> {
   // If options.currency differs from project.currency, convert every
   // plan + actual amount from project.currency → options.currency
   // using today's exchange rate. Falls back to the original amount
-  // when no rate is available (convertAmount returns null).
+  // when no rate is available.
   //
   // NOTE: `planCostConverted` is already in project.currency (computed
   // at item-save time). We use it as the source amount for conversion,
   // falling back to `planCost` if it's null (which happens when the
   // item's planCostCurrency equals the project currency — in which case
   // planCostConverted was set equal to planCost at save time anyway).
+  //
+  // Optimization: the conversion rate is the SAME for all items (it
+  // depends only on projectCurrency → targetCurrency, not on the item).
+  // We fetch it ONCE and reuse it in-memory. This avoids an N+1 query
+  // pattern (previously: 2 DB queries × N items for the same rate).
   const targetCurrency = options.currency;
   const projectCurrency = project.currency;
   const needsConversion = targetCurrency !== projectCurrency;
   const today = new Date();
 
-  const toTarget = async (amountInProjectCurrency: number): Promise<number> => {
-    if (!needsConversion) return amountInProjectCurrency;
-    const conversion = await convertAmount(
-      amountInProjectCurrency,
-      projectCurrency,
-      targetCurrency,
+  // Pre-fetch the single cross-rate (projectCurrency → targetCurrency).
+  // Both are fetched in ONE batch query (getExchangeRates).
+  let crossRate: number | null = null;
+  if (needsConversion) {
+    const rateMap = await getExchangeRates(
+      [projectCurrency, targetCurrency],
       today,
     );
-    return conversion?.converted ?? amountInProjectCurrency;
+    const fromRate = rateMap.get(projectCurrency)?.rate ?? 1.0;
+    const toRate = rateMap.get(targetCurrency)?.rate;
+    if (toRate != null) {
+      crossRate = fromRate / toRate;
+    }
+  }
+
+  const toTarget = (amountInProjectCurrency: number): number => {
+    if (!needsConversion || crossRate == null) return amountInProjectCurrency;
+    return amountInProjectCurrency * crossRate;
   };
 
-  const convertedItems: PdfBudgetItem[] = await Promise.all(
-    dbItems.map(async (item: DbBudgetItem): Promise<PdfBudgetItem> => {
-      const planInProject = item.planCostConverted ?? item.planCost ?? 0;
-      const planInTarget = await toTarget(planInProject);
-      const actualInTarget = await toTarget(item.actualCost ?? 0);
-      return {
-        id: item.id,
-        category: item.category,
-        subcategory: item.subcategory,
-        element: item.element,
-        phase: item.phase,
-        // Keep original planCost + planCostCurrency for reference.
-        planCost: item.planCost,
-        actualCost: actualInTarget,
-        planCostCurrency: item.planCostCurrency,
-        // planCostConverted is now in the TARGET currency (for display).
-        planCostConverted: planInTarget,
-        completed: item.completed,
-        rejected: item.rejected,
-        dateFrom: item.dateFrom,
-        dateTo: item.dateTo,
-        actualHours: item.actualHours,
-        sortOrder: item.sortOrder,
-        contactName: item.contact?.name ?? null,
-        parentId: item.parentId,
-      };
-    }),
-  );
+  const convertedItems: PdfBudgetItem[] = dbItems.map((item: DbBudgetItem): PdfBudgetItem => {
+    const planInProject = item.planCostConverted ?? item.planCost ?? 0;
+    const planInTarget = toTarget(planInProject);
+    const actualInTarget = toTarget(item.actualCost ?? 0);
+    return {
+      id: item.id,
+      category: item.category,
+      subcategory: item.subcategory,
+      element: item.element,
+      phase: item.phase,
+      // Keep original planCost + planCostCurrency for reference.
+      planCost: item.planCost,
+      actualCost: actualInTarget,
+      planCostCurrency: item.planCostCurrency,
+      // planCostConverted is now in the TARGET currency (for display).
+      planCostConverted: planInTarget,
+      completed: item.completed,
+      rejected: item.rejected,
+      dateFrom: item.dateFrom,
+      dateTo: item.dateTo,
+      actualHours: item.actualHours,
+      sortOrder: item.sortOrder,
+      contactName: item.contact?.name ?? null,
+      parentId: item.parentId,
+    };
+  });
 
   // ─── 4) Compute totals ──────────────────────────────────────────
   let planTotal = 0;
@@ -294,30 +306,28 @@ export async function generatePdf(options: PdfExportOptions): Promise<Buffer> {
     },
   });
 
-  const payments: PdfPayment[] = await Promise.all(
-    dbPayments.map(async (p): Promise<PdfPayment> => {
-      const convertedAmount = needsConversion
-        ? (await toTarget(p.amountConverted || p.amount))
-        : (p.amountConverted || p.amount);
-      return {
-        id: p.id,
-        date: p.date,
-        amount: p.amount,
-        amountConverted: convertedAmount,
-        currency: p.currency,
-        type: p.type,
-        vendor: p.vendor,
-        invoiceNumber: p.invoiceNumber,
-        invoiceUrl: p.invoiceUrl,
-        vatRate: p.vatRate,
-        vatAmount: p.vatAmount,
-        description: p.description,
-        budgetItemCategory: p.budgetItem?.category ?? null,
-        budgetItemSubcategory: p.budgetItem?.subcategory ?? null,
-        contactName: p.contact?.name ?? null,
-      };
-    }),
-  );
+  const payments: PdfPayment[] = dbPayments.map((p): PdfPayment => {
+    const convertedAmount = needsConversion
+      ? toTarget(p.amountConverted || p.amount)
+      : (p.amountConverted || p.amount);
+    return {
+      id: p.id,
+      date: p.date,
+      amount: p.amount,
+      amountConverted: convertedAmount,
+      currency: p.currency,
+      type: p.type,
+      vendor: p.vendor,
+      invoiceNumber: p.invoiceNumber,
+      invoiceUrl: p.invoiceUrl,
+      vatRate: p.vatRate,
+      vatAmount: p.vatAmount,
+      description: p.description,
+      budgetItemCategory: p.budgetItem?.category ?? null,
+      budgetItemSubcategory: p.budgetItem?.subcategory ?? null,
+      contactName: p.contact?.name ?? null,
+    };
+  });
 
   // ─── 6.4) Fetch time entries ─────────────────────────────────────
   const dbTimeEntries = await dbRead.timeEntry.findMany({
