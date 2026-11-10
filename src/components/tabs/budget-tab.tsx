@@ -95,6 +95,7 @@ import {
   CategorySelectAllCheckbox,
 } from "./budget/sortable-category-card";
 import { SortableBudgetItemRows } from "./budget/sortable-budget-item-rows";
+import { QueryError } from "@/components/ui/query-error";
 
 // =====================================================================
 // DnD layer for the Budget tab
@@ -169,7 +170,7 @@ function BudgetTab({ projectId, dragEndHandlerRef }: { projectId: string; dragEn
   const tPhases = useTranslations("phases");
   const tCommon = useTranslations("common");
   const qc = useQueryClient();
-  const { data: items, isLoading } = useBudgetItems(projectId);
+  const { data: items, isLoading, isError, refetch } = useBudgetItems(projectId);
   const { data: projects } = useProjects();
   const project = projects?.find((p) => p.id === projectId);
   const reorder = useReorder(projectId);
@@ -648,6 +649,8 @@ function BudgetTab({ projectId, dragEndHandlerRef }: { projectId: string; dragEn
     dragEndHandlerRef.current = handler;
     return () => { dragEndHandlerRef.current = null; };
   }, [grouped, reorder]);
+
+  if (isError) return <QueryError onRetry={() => refetch()} />;
 
   if (isLoading) {
     return <TabSkeleton />;

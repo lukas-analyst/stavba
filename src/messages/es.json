@@ -29,7 +29,9 @@
       "placeholder": "Seleccionar…",
       "search": "Buscar…",
       "noResults": "Sin resultados"
-    }
+    },
+    "loadError": "No se pudieron cargar los datos. Inténtelo de nuevo.",
+    "retry": "Reintentar"
   },
   "nav": {
     "sections": {

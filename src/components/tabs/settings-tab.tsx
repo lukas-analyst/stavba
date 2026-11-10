@@ -29,6 +29,7 @@ import {
   GIT_BRANCH,
   VERSION_LABEL,
 } from "@/generated/version";
+import { QueryError } from "@/components/ui/query-error";
 
 // =====================================================================
 // SettingsTab — global user settings (in-app tab, not standalone page)
@@ -50,7 +51,7 @@ export function SettingsTab() {
   const toggleProjectHidden = useAppStore((s) => s.toggleProjectHidden);
   useHiddenProjectsSync();
 
-  const { data: projects, isLoading: loadingProjects } = useProjects();
+  const { data: projects, isLoading: loadingProjects, isError, refetch } = useProjects();
   const { data: session } = useSession();
 
   const { data: profile } = useQuery({
@@ -72,6 +73,8 @@ export function SettingsTab() {
         timeStyle: "short",
       })
     : null;
+
+  if (isError) return <QueryError onRetry={() => refetch()} />;
 
   return (
     <div className="space-y-6 p-4 md:p-6">

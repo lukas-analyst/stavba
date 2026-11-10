@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext } from "react";
-import type { useSortable } from "@dnd-kit/sortable";
+import type { DraggableAttributes, useSortable } from "@dnd-kit/sortable";
 
 // RowDragContext lets the sortable wrappers (SortableBudgetItemRows &
 // SortableChildRow) hand their dnd-kit listeners, ref callback, style and
@@ -15,7 +15,7 @@ export const RowDragContext = createContext<{
   isDragging: boolean;
   sortableRef: (el: HTMLElement | null) => void;
   sortableStyle: React.CSSProperties;
-  sortableAttributes: Record<string, unknown>;
+  sortableAttributes: DraggableAttributes;
 } | null>(null);
 
 // Convenience hook so consumers don't need to import createContext themselves.

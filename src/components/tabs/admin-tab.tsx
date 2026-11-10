@@ -1051,7 +1051,7 @@ export function StatsSection({ currentUser }: { currentUser: CurrentUser }) {
   const [selectedProjectId, setSelectedProjectId] = useState<string>("all");
   const t = useTranslations("tabs.admin.stats");
   const tNav = useTranslations();
-  const tRel = useTranslations("relativeTime");
+  const tRel = useTranslations("relativeTime") as (key: string, params?: Record<string, unknown>) => string;
   const tEventTypes = useTranslations("analytics.eventTypes");
 
   // Fetch projects for the dropdown

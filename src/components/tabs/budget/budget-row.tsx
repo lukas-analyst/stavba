@@ -162,7 +162,7 @@ export const BudgetRow = memo(function BudgetRow({
     trackEvent("move_budget_item", { toTopLevel: newParentId === null });
   };
 
-  const displayPlanCost = childCount > 0 ? rolled.planCost : item.planCost;
+  const displayPlanCost = childCount > 0 ? rolled.planCost : (item.planCost ?? 0);
   const displayPlanDays = childCount > 0 ? rolled.planDays : item.planDays;
   const displayActualCost = childCount > 0 ? rolled.actualCost : item.actualCost;
   const displayActualHours = childCount > 0 ? rolled.actualHours : item.actualHours;

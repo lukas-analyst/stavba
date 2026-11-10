@@ -29,7 +29,9 @@
       "placeholder": "Válasszon…",
       "search": "Keresés…",
       "noResults": "Nincs találat"
-    }
+    },
+    "loadError": "Nem sikerült betölteni az adatokat. Próbálja újra.",
+    "retry": "Újrapróbálás"
   },
   "nav": {
     "sections": {

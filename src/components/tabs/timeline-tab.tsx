@@ -28,6 +28,7 @@ import { formatDate, formatCzk, PHASE_COLORS } from "@/lib/format";
 import { useFormatter, useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { EmptyStateBox } from "@/components/empty-state-box";
+import { QueryError } from "@/components/ui/query-error";
 
 type ZoomLevel = "days" | "months" | "quarters" | "years";
 
@@ -90,7 +91,7 @@ function isMilestoneItem(item: { dateFrom: string | null; dateTo: string | null 
 }
 
 export function TimelineTab({ projectId }: { projectId: string }) {
-  const { data, isLoading } = useDashboard(projectId);
+  const { data, isLoading, isError, refetch } = useDashboard(projectId);
   const t = useTranslations("tabs.timeline");
   const tc = useTranslations("common");
   const tPhases = useTranslations("phases");
@@ -360,6 +361,8 @@ export function TimelineTab({ projectId }: { projectId: string }) {
     }
     return arrows;
   }, [items, itemPositions]);
+
+  if (isError) return <QueryError onRetry={() => refetch()} />;
 
   if (isLoading) {
     return (

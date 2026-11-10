@@ -53,6 +53,7 @@ import {
   SORT_LABEL_KEYS,
   type SortKey,
 } from "./payments/types";
+import { QueryError } from "@/components/ui/query-error";
 
 // ===== Sorting =====
 // `sortPayments` is kept here in the main tab file (per task spec:
@@ -93,7 +94,7 @@ function sortPayments(a: Payment, b: Payment, key: SortKey, locale: Locale): num
 }
 
 export function PaymentsTab({ projectId }: { projectId: string }) {
-  const { data: payments, isLoading } = usePayments(projectId);
+  const { data: payments, isLoading, isError, refetch } = usePayments(projectId);
   const { data: budgetItems } = useBudgetItems(projectId);
   const { data: contacts } = useContacts(projectId);
   const { data: projects } = useProjects();
@@ -279,6 +280,8 @@ export function PaymentsTab({ projectId }: { projectId: string }) {
   const visibleBlocks = renderBlocks.slice(0, renderLimit);
   const remainingCount = Math.max(0, renderBlocks.length - renderLimit);
   const nextBatchCount = Math.min(50, remainingCount);
+
+  if (isError) return <QueryError onRetry={() => refetch()} />;
 
   return (
     <div id="payments-root" className="space-y-4">

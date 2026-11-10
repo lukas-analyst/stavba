@@ -62,6 +62,7 @@ import {
   ComposedChart,
   Line,
 } from "recharts";
+import { QueryError } from "@/components/ui/query-error";
 
 // =====================================================================
 // DashboardTab — enhanced dashboard with:
@@ -96,7 +97,7 @@ type TimelineItem = {
 };
 
 export function DashboardTab({ projectId }: { projectId: string }) {
-  const { data, isLoading } = useDashboard(projectId);
+  const { data, isLoading, isError, refetch } = useDashboard(projectId);
   const { data: trend } = useSpendingTrend(projectId);
   const { data: projects } = useProjects();
   const setActiveTab = useAppStore((s) => s.setActiveTab);
@@ -186,6 +187,8 @@ export function DashboardTab({ projectId }: { projectId: string }) {
       })
       .slice(0, 15);
   }, [timeline]);
+
+  if (isError) return <QueryError onRetry={() => refetch()} />;
 
   if (isLoading || !data) {
     return <DashboardTestSkeleton />;

@@ -95,9 +95,10 @@ import { toast } from "sonner";
 import { EmptyStateBox } from "@/components/empty-state-box";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAnalytics } from "@/hooks/use-analytics";
+import { QueryError } from "@/components/ui/query-error";
 
 export function ContactsTab({ projectId }: { projectId: string }) {
-  const { data: contacts, isLoading } = useContacts(projectId);
+  const { data: contacts, isLoading, isError, refetch } = useContacts(projectId);
   const { data: statsData } = useContactStats(projectId);
   const createContact = useCreateContact(projectId);
   const [addOpen, setAddOpen] = useState(false);
@@ -124,6 +125,8 @@ export function ContactsTab({ projectId }: { projectId: string }) {
       statsByContactId.set(s.contactId, s);
     }
   }
+
+  if (isError) return <QueryError onRetry={() => refetch()} />;
 
   return (
     <div id="contacts-root" className="space-y-4">

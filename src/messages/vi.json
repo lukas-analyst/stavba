@@ -29,7 +29,9 @@
       "placeholder": "Chọn…",
       "search": "Tìm kiếm…",
       "noResults": "Không có kết quả"
-    }
+    },
+    "loadError": "Không thể tải dữ liệu. Vui lòng thử lại.",
+    "retry": "Thử lại"
   },
   "nav": {
     "sections": {

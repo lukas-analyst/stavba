@@ -29,7 +29,9 @@
       "placeholder": "Vyberte…",
       "search": "Hledat…",
       "noResults": "Žádné výsledky"
-    }
+    },
+    "loadError": "Data se nepodařilo načíst. Zkuste to prosím znovu.",
+    "retry": "Zkusit znovu"
   },
   "nav": {
     "sections": {

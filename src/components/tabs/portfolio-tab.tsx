@@ -51,6 +51,7 @@ import {
 import type { Locale } from "@/i18n/config";
 import { useAppStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
+import { QueryError } from "@/components/ui/query-error";
 
 // =====================================================================
 // PortfolioTab — cross-project overview
@@ -87,7 +88,7 @@ export function PortfolioTab() {
   const tStatuses = useTranslations("statuses");
   const locale = useLocale() as Locale;
 
-  const { data: projects, isLoading } = useProjects();
+  const { data: projects, isLoading, isError, refetch } = useProjects();
   const setSelectedProject = useAppStore((s) => s.setSelectedProject);
   const setActiveTab = useAppStore((s) => s.setActiveTab);
 
@@ -175,6 +176,8 @@ export function PortfolioTab() {
     setSelectedProject(projectId);
     setActiveTab("dashboard");
   };
+
+  if (isError) return <QueryError onRetry={() => refetch()} />;
 
   if (isLoading) {
     return <PortfolioSkeleton />;

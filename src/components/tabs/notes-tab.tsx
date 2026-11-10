@@ -30,6 +30,7 @@ import { toast } from "sonner";
 import { EmptyStateBox } from "@/components/empty-state-box";
 import { useAnalytics } from "@/hooks/use-analytics";
 import { useTranslations } from "next-intl";
+import { QueryError } from "@/components/ui/query-error";
 
 // localStorage key for remembering the user's chosen author name across
 // sessions and across projects.
@@ -51,7 +52,7 @@ function readSavedAuthor(): string {
 export function NotesTab({ projectId }: { projectId: string }) {
   const t = useTranslations("tabs.notes");
   const tc = useTranslations("common");
-  const { data: notes, isLoading } = useNotes(projectId);
+  const { data: notes, isLoading, isError, refetch } = useNotes(projectId);
   const createNote = useCreateNote(projectId);
   const deleteNote = useDeleteNote(projectId);
   const updateNote = useUpdateNote(projectId);
@@ -137,6 +138,8 @@ export function NotesTab({ projectId }: { projectId: string }) {
       handleSubmit();
     }
   };
+
+  if (isError) return <QueryError onRetry={() => refetch()} />;
 
   return (
     <div id="notes-root" className="space-y-4">

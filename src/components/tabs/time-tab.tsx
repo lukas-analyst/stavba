@@ -75,6 +75,7 @@ import { cn } from "@/lib/utils";
 import { useLocale, useTranslations } from "next-intl";
 import type { Locale } from "@/i18n/config";
 import { SegmentedButton } from "@/components/ui/segmented-button";
+import { QueryError } from "@/components/ui/query-error";
 
 type SortKey = "date" | "worker" | "hours" | "workerType";
 
@@ -91,7 +92,7 @@ const SORT_OPTIONS: { value: SortKey }[] = [
 ];
 
 export function TimeTab({ projectId }: { projectId: string }) {
-  const { data: entries, isLoading } = useTimeEntries(projectId);
+  const { data: entries, isLoading, isError, refetch } = useTimeEntries(projectId);
   const { data: budgetItems } = useBudgetItems(projectId);
   const { data: contacts } = useContacts(projectId);
   const createTimeEntry = useCreateTimeEntry(projectId);
@@ -213,6 +214,8 @@ export function TimeTab({ projectId }: { projectId: string }) {
     }
     return Array.from(map.entries()).sort((a, b) => b[1].hours - a[1].hours);
   }, [entries]);
+
+  if (isError) return <QueryError onRetry={() => refetch()} />;
 
   return (
     <div id="time-root" className="space-y-4">
