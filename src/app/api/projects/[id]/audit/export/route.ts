@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 import { dbRead } from "@/lib/db";
 import { requireProjectAccess } from "@/lib/authz";
 
+// Audit log export iterates all entries — needs more than 10s for large projects
+export const maxDuration = 30;
+
 // GET /api/projects/[id]/audit/export
 // Exports the full audit log as CSV (for compliance, archiving).
 // Returns a CSV file with all entries, most recent first.

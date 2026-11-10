@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 import { dbRead } from "@/lib/db";
 import { requireProjectAccess } from "@/lib/authz";
 
+// CSV export iterates all project data — needs more than the 10s default
+export const maxDuration = 30;
+
 // GET /api/projects/[id]/export-csv?type=budget|payments|time
 // Optional query params (budget type only):
 //   ?phase=Příprava       — filter by phase

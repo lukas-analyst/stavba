@@ -6,6 +6,9 @@ import { requireUser } from "@/lib/authz";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 import { parseParam, tokenSchema } from "@/lib/api-validation";
 
+// Sends Brevo email on accept — external API call may be slow
+export const maxDuration = 30;
+
 // =====================================================================
 // POST /api/invitations/[token]/accept
 // ---------------------------------------------------------------------

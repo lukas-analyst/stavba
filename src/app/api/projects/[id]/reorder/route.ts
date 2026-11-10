@@ -10,6 +10,9 @@ import {
   nonEmptyString,
 } from "@/lib/api-validation";
 
+// Reorder uses a transaction with multiple updates — needs more than 10s for large lists
+export const maxDuration = 30;
+
 // PATCH /api/projects/[id]/reorder
 // Body: { items: [{ id, sortOrder }], categoryOrder?: string[] (JSON-serializable) }
 // Updates sortOrder of items and optionally the category order stored on the project.

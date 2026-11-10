@@ -4,6 +4,9 @@ import { requireVerifiedUser } from "@/lib/authz";
 
 export const dynamic = "force-dynamic";
 
+// Bulk import creates multiple records — needs up to 60s for large imports
+export const maxDuration = 60;
+
 type Maybe<T> = T | null | undefined;
 
 // Date fields per model — used to convert ISO strings back into Date objects
