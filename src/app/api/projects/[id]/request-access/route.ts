@@ -133,7 +133,7 @@ export async function POST(
 
     return NextResponse.json({ ok: true, projectId: project.id });
   } catch (error) {
-    console.error("POST /api/projects/[slug]/request-access error:", error);
+    console.error("POST /api/projects/[id]/request-access error:", error);
     return NextResponse.json(
       { error: t("project.requestAccessFailed") },
       { status: 500 },

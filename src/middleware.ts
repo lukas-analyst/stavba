@@ -35,7 +35,7 @@ import { routing } from "@/i18n/routing";
 // Public paths (no auth required, BUT intl routing still applies):
 //   - /auth/*          (login, register, forgot-password, …)
 //   - /api/auth/*      (NextAuth endpoints — NextAuth has its own CSRF)
-//   - /api/projects/[slug]/public  (public project API)
+//   - /api/projects/[id]/public  (public project API — [id] accepts slug or cuid)
 //   - /p/*             (public project pages — see note below)
 //   - /invite/*        (invitation accept page)
 //   - /api/health      (public health check)

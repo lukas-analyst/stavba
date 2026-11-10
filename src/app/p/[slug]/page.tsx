@@ -44,7 +44,8 @@ import { toast } from "sonner";
 // PublicProjectPage — read-only dashboard for a public project
 // ---------------------------------------------------------------------
 // Reachable at `/p/[slug]` without authentication (middleware lets
-// `/p/*` through). The page fetches `/api/projects/[slug]/public`,
+// `/p/*` through). The page fetches `/api/projects/[slug]/public`
+// (matched by the `[id]` route, which accepts both slug and cuid),
 // which returns a SAFE subset of project data (no PII — no contacts,
 // notes, audit log, vendor names, worker names, etc.).
 //
