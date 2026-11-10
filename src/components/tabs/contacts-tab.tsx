@@ -1139,7 +1139,7 @@ function ContactForm({
         </div>
 
         {/* Detaily (volitelné) */}
-        <CollapsibleSection title={t("form.section.details")}>
+        <CollapsibleSection title={t("form.section.details")} defaultOpen={true}>
           {/* Firma */}
           <div className="space-y-2">
             <Label htmlFor="company">{t("form.field.company")}</Label>
