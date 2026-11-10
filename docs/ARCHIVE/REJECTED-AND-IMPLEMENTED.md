@@ -144,3 +144,26 @@ Aplikace má připravený error reporting webhook (Sentry/Slack/Discord). Stač�
 
 **Proč zatím nekonfigurováno:**
 Vyžaduje rozhodnutí o cílové službě (Sentry vs Slack vs Discord) a vytvoření webhook endpointu.
+
+---
+
+### 9. Začlenění AI skills do projektu
+
+**Status:** 🔮 Zvažováno (otázka k zodpovězení v budoucnu)
+**Lokace:** `skills/` (aktuálně gitignored)
+
+**Popis:**
+Složka `skills/` obsahuje 18 vývojářských nástrojů (ASR, LLM, TTS, VLM, agent-browser, charts, docx, fullstack-dev, image-edit, image-generation, image-search, pdf, pptx, skill-creator, skill-finder-cn, task-review, video-understand, xlsx) — celkem 80+ SKILL.md souborů. Tyto skills používá AI asistent (Z.ai Code) při vývoji aplikace.
+
+**Aktuální stav:**
+- `skills/` je v `.gitignore` (není sledováno gitem)
+- Nenahraje se na GitHub ani na Vercel
+- Nejsou součástí aplikace — jsou to environment-specific vývojářské nástroje
+
+**Otázky k zodpovězení v budoucnu:**
+1. Měli bychom vytvořit `docs/DEV-ENVIRONMENT.md` s dokumentací použitých AI skills?
+2. Měli bychom některé skills zveřejnit jako reference pro jiné vývojáře?
+3. Jak zachovat kontinuitu znalostí při předání projektu jinému týmu?
+
+**Proč zatím nezačleněno:**
+Skills jsou generické (nesouvisí se Stavbou), environment-specific (jen Z.ai Code sandbox) a zbytečně by zvětšily repozitář. Ponecháno jako otázka k budoucímu rozhodnutí.

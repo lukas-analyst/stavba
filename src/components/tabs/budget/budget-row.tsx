@@ -52,6 +52,8 @@ import {
   PHASES,
   PHASE_COLORS,
   PHASE_BG_COLORS,
+  PHASE_HEX_COLORS,
+  REJECTED_HEX_COLOR,
 } from "@/lib/format";
 import { CURRENCY_MAP } from "@/lib/currency-config";
 import { cn } from "@/lib/utils";
@@ -298,30 +300,18 @@ export const BudgetRow = memo(function BudgetRow({
               opacity: 0.15,
             }}
             data-phase-color={
-              item.rejected ? "rose" : item.phase
+              item.rejected ? "rejected" : item.phase
             }
             ref={(el) => {
               if (!el) return;
-              // Set CSS variable from PHASE_BG_COLORS
-              const colorMap: Record<string, string> = {
-                "preparation": "#a78bfa",
-                "demolition": "#f87171",
-                "earthworks": "#8b6f47",
-                "foundation": "#6b7280",
-                "shell": "#fbbf24",
-                "installations": "#3b82f6",
-                "finishing": "#34d399",
-                "facade": "#f59e0b",
-                "roof": "#ef4444",
-                "interior": "#10b981",
-                "exterior": "#84cc16",
-                "final_inspection": "#a855f7",
-                "future": "#60a5fa",
-                "unspecified": "#a1a1aa",
-                "rose": "#f43f5e",
-              };
-              const key = el.getAttribute("data-phase-color") ?? "";
-              el.style.setProperty("--phase-color", colorMap[key] ?? "#a1a1aa");
+              // Set CSS variable from centralized PHASE_HEX_COLORS.
+              // Rejected items use a special rose color that overlays
+              // the phase color.
+              const key = el.getAttribute("data-phase-color");
+              const color = key === "rejected"
+                ? REJECTED_HEX_COLOR
+                : PHASE_HEX_COLORS[key as keyof typeof PHASE_HEX_COLORS] ?? PHASE_HEX_COLORS.unspecified;
+              el.style.setProperty("--phase-color", color);
             }}
           />
           <span aria-hidden className="relative select-none text-muted-foreground/60">

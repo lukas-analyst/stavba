@@ -309,6 +309,35 @@ export const PHASE_DOT_COLORS: Record<PhaseId, string> = {
 };
 
 // ───────────────────────────────────────────────────────────────
+// Phase HEX colors — raw color values for CSS variables / canvas / SVG
+// ---------------------------------------------------------------------
+// Used where Tailwind CSS classes can't be applied (e.g. inline
+// `style={{ background: linear-gradient(...) }}` or CSS custom
+// properties). Kept in sync with PHASE_DOT_COLORS above.
+// ───────────────────────────────────────────────────────────────
+
+export const PHASE_HEX_COLORS: Record<PhaseId, string> = {
+  preparation: "#a78bfa",      // violet (info)
+  demolition: "#f87171",       // red (danger)
+  earthworks: "#8b6f47",       // brown (earth)
+  foundation: "#6b7280",      // gray (muted)
+  shell: "#fbbf24",            // amber (warning)
+  installations: "#3b82f6",    // blue (info)
+  finishing: "#34d399",        // emerald (success)
+  facade: "#f59e0b",           // orange (warning)
+  roof: "#ef4444",             // red (danger)
+  interior: "#10b981",         // green (success)
+  exterior: "#84cc16",         // lime (success)
+  final_inspection: "#a855f7", // purple (primary)
+  future: "#60a5fa",           // sky (time)
+  unspecified: "#a1a1aa",      // zinc (muted)
+};
+
+// Special hex color for rejected items (overlays the phase color).
+// Used as a CSS variable value when `item.rejected === true`.
+export const REJECTED_HEX_COLOR = "#f43f5e"; // rose
+
+// ───────────────────────────────────────────────────────────────
 // Status labels — keyed by ENGLISH ID (already stable, no legacy)
 // ---------------------------------------------------------------------
 // `status` is already stored as English ID in the DB ("active", "planning",

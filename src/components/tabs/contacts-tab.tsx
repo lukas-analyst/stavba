@@ -271,6 +271,7 @@ function ContactCard({
               <Button
                 variant="ghost"
                 size="icon"
+                aria-label="More options"
                 className="h-7 w-7 rounded-full state-layer-on-surface opacity-0 group-hover:opacity-100"
                 onClick={(e) => e.stopPropagation()}
               >

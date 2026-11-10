@@ -10,6 +10,7 @@ import {
   Link as LinkIcon,
   User,
 } from "lucide-react";
+import { PHASE_HEX_COLORS, REJECTED_HEX_COLOR } from "@/lib/format";
 import { InlineTextarea } from "./inline-textarea";
 
 // DetailPanelRow — expandable panel rendered below a parent budget item row
@@ -23,8 +24,8 @@ import { InlineTextarea } from "./inline-textarea";
 //
 // A subtle phase-colored gradient is painted on the left edge to visually
 // tie the panel back to the phase of the parent item (same treatment as
-// child task rows). The gradient is set via a CSS variable from a hardcoded
-// color map keyed by phase id — see `colorMap` below.
+// child task rows). The gradient is set via a CSS variable from the
+// centralized PHASE_HEX_COLORS map (see src/lib/format.ts).
 export function DetailPanelRow({
   item,
   projectId,
@@ -56,28 +57,16 @@ export function DetailPanelRow({
             background: `linear-gradient(to right, var(--phase-color, transparent) 0%, transparent 100%)`,
             opacity: 0.12,
           }}
-          data-phase-color={item.rejected ? "rose" : item.phase}
+          data-phase-color={item.rejected ? "rejected" : item.phase}
           ref={(el) => {
             if (!el) return;
-            const colorMap: Record<string, string> = {
-              "preparation": "#a78bfa",
-              "demolition": "#f87171",
-              "earthworks": "#8b6f47",
-              "foundation": "#6b7280",
-              "shell": "#fbbf24",
-              "installations": "#3b82f6",
-              "finishing": "#34d399",
-              "facade": "#f59e0b",
-              "roof": "#ef4444",
-              "interior": "#10b981",
-              "exterior": "#84cc16",
-              "final_inspection": "#a855f7",
-              "future": "#60a5fa",
-              "unspecified": "#a1a1aa",
-              "rose": "#f43f5e",
-            };
-            const key = el.getAttribute("data-phase-color") ?? "";
-            el.style.setProperty("--phase-color", colorMap[key] ?? "#a1a1aa");
+            // Set CSS variable from centralized PHASE_HEX_COLORS.
+            // Rejected items use a special rose color.
+            const key = el.getAttribute("data-phase-color");
+            const color = key === "rejected"
+              ? REJECTED_HEX_COLOR
+              : PHASE_HEX_COLORS[key as keyof typeof PHASE_HEX_COLORS] ?? PHASE_HEX_COLORS.unspecified;
+            el.style.setProperty("--phase-color", color);
           }}
         />
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
