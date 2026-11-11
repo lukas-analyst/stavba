@@ -2738,14 +2738,14 @@
         "invalidEmailFormat": "Nieprawidłowy format e-maila.",
         "invalidTokenFormat": "Nieprawidłowy format tokenu.",
         "emailAlreadyVerified": "Twój e-mail jest już zweryfikowany. Możesz się zalogować.",
-        "verifyEmailFailed": "Nie udało się wysłać e-maila weryfikacyjnego.",
+        "verifyEmailFailed": "Nie udało się wysłać e-maila weryfikacyjnego. Spróbuj ponownie.",
         "forgotPasswordSent": "Jeśli konto istnieje, wysłano e-mail z linkiem resetującym.",
         "tokenAndPasswordRequired": "Token i nowe hasło są wymagane.",
         "invalidResetLink": "Nieprawidłowy link do resetowania hasła.",
         "resetLinkExpired": "Ten link do resetowania hasła wygasł. Poproś o nowy.",
         "resetLinkUsed": "Ten link do resetowania hasła został już użyty. Poproś o nowy.",
         "resetSuccess": "Twoje hasło zostało zmienione. Możesz się zalogować.",
-        "resetFailed": "Resetowanie hasła nie powiodło się.",
+        "resetFailed": "Resetowanie hasła nie powiodło się. Spróbuj ponownie.",
         "typeAndTokenRequired": "typ i token są wymagane.",
         "invalidTokenType": "Nieprawidłowy typ tokenu.",
         "unknownAuthAction": "Nieznana akcja uwierzytelniania.",
@@ -2761,15 +2761,15 @@
         "alreadyUsed": "Zaproszenie zostało już użyte.",
         "expired": "Zaproszenie wygasło.",
         "notYourEmail": "To zaproszenie nie jest dla Twojego e-maila.",
-        "acceptFailed": "Nie udało się zaakceptować zaproszenia.",
-        "rejectFailed": "Nie udało się odrzucić zaproszenia.",
-        "loadFailed": "Nie udało się załadować zaproszeń.",
+        "acceptFailed": "Nie udało się zaakceptować zaproszenia. Spróbuj ponownie.",
+        "rejectFailed": "Nie udało się odrzucić zaproszenia. Spróbuj ponownie.",
+        "loadFailed": "Nie udało się załadować zaproszeń. Spróbuj ponownie.",
         "invalidRequestJson": "Nieprawidłowe żądanie — oczekiwano obiektu JSON.",
         "invalidEmailFormat": "Nieprawidłowy format e-maila.",
         "alreadyOwner": "Ten użytkownik jest już zarządcą projektu.",
         "alreadyMember": "Ten użytkownik jest już członkiem projektu.",
-        "createFailed": "Nie udało się utworzyć zaproszenia.",
-        "cancelFailed": "Nie udało się cofnąć zaproszenia."
+        "createFailed": "Nie udało się utworzyć zaproszenia. Spróbuj ponownie.",
+        "cancelFailed": "Nie udało się cofnąć zaproszenia. Spróbuj ponownie."
       },
       "budget": {
         "cannotMoveToSelf": "Pozycja nie może być przeniesiona pod siebie.",
@@ -2780,10 +2780,10 @@
         "parentNotFound": "Element nadrzędny nie został znaleziony w tym projekcie.",
         "dependsOnNotFound": "Element odniesienia (dependsOnId) nie został znaleziony w tym projekcie.",
         "notFound": "Element budżetu nie został znaleziony.",
-        "createFailed": "Utworzenie elementu budżetu nie powiodło się.",
-        "updateFailed": "Aktualizacja elementu budżetu nie powiodła się.",
-        "deleteFailed": "Usunięcie elementu budżetu nie powiodło się.",
-        "fetchFailed": "Pobranie elementów budżetu nie powiodło się.",
+        "createFailed": "Utworzenie elementu budżetu nie powiodło się. Spróbuj ponownie.",
+        "updateFailed": "Aktualizacja elementu budżetu nie powiodła się. Spróbuj ponownie.",
+        "deleteFailed": "Usunięcie elementu budżetu nie powiodło się. Spróbuj ponownie.",
+        "fetchFailed": "Pobranie elementów budżetu nie powiodło się. Spróbuj ponownie.",
         "invalidAmount": "Nieprawidłowa kwota.",
         "invalidPlanCost": "Nieprawidłowy planowany koszt.",
         "invalidFlexibilityPercent": "Nieprawidłowy procent elastyczności.",
@@ -2806,8 +2806,8 @@
         "nameInvalidChars": "Nazwa zawiera nieprawidłowe znaki.",
         "nameRequired": "Nazwa nie może być pusta.",
         "noUpdatableFields": "Nie podano żadnych pól do aktualizacji (name, isAdmin).",
-        "fetchFailed": "Pobranie użytkownika nie powiodło się.",
-        "updateFailed": "Aktualizacja użytkownika nie powiodła się."
+        "fetchFailed": "Pobranie użytkownika nie powiodło się. Spróbuj ponownie.",
+        "updateFailed": "Aktualizacja użytkownika nie powiodła się. Spróbuj ponownie."
       },
       "password": {
         "currentRequired": "Aktualne hasło jest wymagane.",
@@ -2825,8 +2825,8 @@
       },
       "project": {
         "notFoundOrNotPublic": "Nie znaleziono projektu lub nie jest publiczny.",
-        "requestAccessFailed": "Nie udało się nadać dostępu.",
-        "publicLoadFailed": "Nie udało się załadować danych publicznego projektu.",
+        "requestAccessFailed": "Nie udało się nadać dostępu. Spróbuj ponownie.",
+        "publicLoadFailed": "Nie udało się załadować danych publicznego projektu. Spróbuj ponownie.",
         "nameRequired": "Nazwa projektu jest wymagana.",
         "notFound": "Projekt nie został znaleziony.",
         "newOwnerNotFound": "Nowy właściciel nie został znaleziony.",
@@ -2842,16 +2842,16 @@
         "invalidFloorArea": "Nieprawidłowa powierzchnia podłogi.",
         "invalidFloors": "Nieprawidłowa liczba pięter.",
         "invalidOwner": "Nieprawidłowy identyfikator właściciela.",
-        "createFailed": "Utworzenie projektu nie powiodło się.",
-        "updateFailed": "Aktualizacja projektu nie powiodła się.",
-        "deleteFailed": "Usunięcie projektu nie powiodło się.",
-        "fromTemplateFailed": "Utworzenie projektu z szablonu nie powiodło się.",
-        "fetchFailed": "Pobranie projektu nie powiodło się.",
-        "fetchAllFailed": "Pobranie projektów nie powiodło się."
+        "createFailed": "Utworzenie projektu nie powiodło się. Spróbuj ponownie.",
+        "updateFailed": "Aktualizacja projektu nie powiodła się. Spróbuj ponownie.",
+        "deleteFailed": "Usunięcie projektu nie powiodło się. Spróbuj ponownie.",
+        "fromTemplateFailed": "Utworzenie projektu z szablonu nie powiodło się. Spróbuj ponownie.",
+        "fetchFailed": "Pobranie projektu nie powiodło się. Spróbuj ponownie.",
+        "fetchAllFailed": "Pobranie projektów nie powiodło się. Spróbuj ponownie."
       },
       "ares": {
         "apiUnavailable": "API ARES niedostępne.",
-        "searchError": "Błąd wyszukiwania.",
+        "searchError": "Błąd wyszukiwania. Spróbuj ponownie.",
         "apiKeyMissing": "Klucz API ARES nie jest skonfigurowany. Możesz wprowadzić dane firmy ręcznie."
       },
       "notes": {
@@ -2882,7 +2882,7 @@
       "reorder": {
         "invalidItems": "Elementy muszą być tablicą obiektów {id, sortOrder}.",
         "invalidCategoryOrder": "Kolejność kategorii musi być tablicą ciągów znaków.",
-        "failed": "Zmiana kolejności nie powiodła się."
+        "failed": "Zmiana kolejności nie powiodła się. Spróbuj ponownie."
       },
       "payment": {
         "budgetItemIdRequired": "ID elementu budżetu jest wymagane.",
@@ -2892,10 +2892,10 @@
         "parentNotFound": "Płatność nadrzędna nie została znaleziona.",
         "newBudgetItemNotFound": "Nowy element budżetu nie został znaleziony.",
         "cannotMoveAcrossProjects": "Nie można przenieść płatności do elementu budżetu w innym projekcie.",
-        "createFailed": "Utworzenie płatności nie powiodło się.",
-        "updateFailed": "Aktualizacja płatności nie powiodła się.",
-        "deleteFailed": "Usunięcie płatności nie powiodło się.",
-        "fetchFailed": "Pobranie płatności nie powiodło się.",
+        "createFailed": "Utworzenie płatności nie powiodło się. Spróbuj ponownie.",
+        "updateFailed": "Aktualizacja płatności nie powiodła się. Spróbuj ponownie.",
+        "deleteFailed": "Usunięcie płatności nie powiodło się. Spróbuj ponownie.",
+        "fetchFailed": "Pobranie płatności nie powiodło się. Spróbuj ponownie.",
         "invalidAmount": "Nieprawidłowa kwota.",
         "invalidVatRate": "Nieprawidłowa stawka VAT.",
         "invalidInvoiceTotal": "Nieprawidłowy całkowity wynik faktury.",
@@ -2903,8 +2903,8 @@
       },
       "snapshot": {
         "labelRequired": "Etykieta jest wymagana.",
-        "createFailed": "Utworzenie migawki nie powiodło się.",
-        "fetchFailed": "Pobranie migawek nie powiodło się."
+        "createFailed": "Utworzenie migawki nie powiodło się. Spróbuj ponownie.",
+        "fetchFailed": "Pobranie migawek nie powiodło się. Spróbuj ponownie."
       },
       "time": {
         "budgetItemIdRequired": "ID elementu budżetu jest wymagane.",
@@ -2914,10 +2914,10 @@
         "notFound": "Wpis czasu nie został znaleziony.",
         "newBudgetItemNotFound": "Nowy element budżetu nie został znaleziony.",
         "cannotMoveAcrossProjects": "Nie można przenieść wpisu czasu do elementu budżetu w innym projekcie.",
-        "createFailed": "Utworzenie wpisu czasu nie powiodło się.",
-        "updateFailed": "Aktualizacja wpisu czasu nie powiodła się.",
-        "deleteFailed": "Usunięcie wpisu czasu nie powiodło się.",
-        "fetchFailed": "Pobranie wpisów czasu nie powiodło się.",
+        "createFailed": "Utworzenie wpisu czasu nie powiodło się. Spróbuj ponownie.",
+        "updateFailed": "Aktualizacja wpisu czasu nie powiodła się. Spróbuj ponownie.",
+        "deleteFailed": "Usunięcie wpisu czasu nie powiodło się. Spróbuj ponownie.",
+        "fetchFailed": "Pobranie wpisów czasu nie powiodło się. Spróbuj ponownie.",
         "invalidHours": "Nieprawidłowe godziny.",
         "invalidWorkerCount": "Nieprawidłowa liczba pracowników.",
         "invalidDate": "Nieprawidłowa data."
@@ -2927,40 +2927,40 @@
         "textEmpty": "Tekst nie może być pusty.",
         "nothingToUpdate": "Nic do aktualizacji — podaj tekst lub autora.",
         "notFound": "Notatka nie została znaleziona.",
-        "createFailed": "Utworzenie notatki nie powiodło się.",
-        "updateFailed": "Aktualizacja notatki nie powiodła się.",
-        "deleteFailed": "Usunięcie notatki nie powiodło się.",
-        "fetchFailed": "Pobranie notatek nie powiodło się."
+        "createFailed": "Utworzenie notatki nie powiodło się. Spróbuj ponownie.",
+        "updateFailed": "Aktualizacja notatki nie powiodła się. Spróbuj ponownie.",
+        "deleteFailed": "Usunięcie notatki nie powiodło się. Spróbuj ponownie.",
+        "fetchFailed": "Pobranie notatek nie powiodło się. Spróbuj ponownie."
       },
       "comment": {
         "textRequired": "Tekst jest wymagany.",
         "budgetItemNotFound": "Element budżetu nie został znaleziony.",
-        "createFailed": "Utworzenie komentarza nie powiodło się.",
-        "fetchFailed": "Pobranie komentarzy nie powiodło się.",
+        "createFailed": "Utworzenie komentarza nie powiodło się. Spróbuj ponownie.",
+        "fetchFailed": "Pobranie komentarzy nie powiodło się. Spróbuj ponownie.",
         "notFound": "Komentarz nie został znaleziony.",
         "cannotDeleteOthers": "Możesz usuwać tylko swoje komentarze.",
-        "deleteFailed": "Usunięcie komentarza nie powiodło się."
+        "deleteFailed": "Usunięcie komentarza nie powiodło się. Spróbuj ponownie."
       },
       "audit": {
         "entityTypeAndActionRequired": "Typ jednostki i akcja są wymagane.",
-        "createFailed": "Utworzenie wpisu audytu nie powiodło się.",
-        "fetchFailed": "Pobranie dziennika audytu nie powiodło się."
+        "createFailed": "Utworzenie wpisu audytu nie powiodło się. Spróbuj ponownie.",
+        "fetchFailed": "Pobranie dziennika audytu nie powiodło się. Spróbuj ponownie."
       },
       "contact": {
         "nameRequired": "Nazwa kontaktu jest wymagana.",
         "notFound": "Kontakt nie został znaleziony.",
-        "createFailed": "Utworzenie kontaktu nie powiodło się.",
-        "updateFailed": "Aktualizacja kontaktu nie powiodła się.",
-        "deleteFailed": "Usunięcie kontaktu nie powiodło się.",
-        "fetchFailed": "Pobranie kontaktów nie powiodło się.",
+        "createFailed": "Utworzenie kontaktu nie powiodło się. Spróbuj ponownie.",
+        "updateFailed": "Aktualizacja kontaktu nie powiodła się. Spróbuj ponownie.",
+        "deleteFailed": "Usunięcie kontaktu nie powiodło się. Spróbuj ponownie.",
+        "fetchFailed": "Pobranie kontaktów nie powiodło się. Spróbuj ponownie.",
         "invalidRating": "Nieprawidłowa ocena (1-5).",
         "firstNameRequired": "Imię jest wymagane.",
         "lastNameRequired": "Nazwisko jest wymagane.",
         "personNotFound": "Osoba kontaktowa nie została znaleziona.",
-        "personCreateFailed": "Utworzenie osoby kontaktowej nie powiodło się.",
-        "personUpdateFailed": "Aktualizacja osoby kontaktowej nie powiodła się.",
-        "personDeleteFailed": "Usunięcie osoby kontaktowej nie powiodło się.",
-        "personFetchFailed": "Pobranie osób kontaktowych nie powiodło się."
+        "personCreateFailed": "Utworzenie osoby kontaktowej nie powiodło się. Spróbuj ponownie.",
+        "personUpdateFailed": "Aktualizacja osoby kontaktowej nie powiodła się. Spróbuj ponownie.",
+        "personDeleteFailed": "Usunięcie osoby kontaktowej nie powiodło się. Spróbuj ponownie.",
+        "personFetchFailed": "Pobranie osób kontaktowych nie powiodło się. Spróbuj ponownie."
       },
       "member": {
         "emailRequired": "E-mail jest wymagany.",
@@ -2970,23 +2970,23 @@
         "ownerRoleRequired": "Ta akcja wymaga roli „owner\".",
         "pendingInvitationExists": "Na ten e-mail czeka już oczekujące zaproszenie.",
         "invitationCreated": "Nie ma jeszcze zarejestrowanego użytkownika z tym e-mailem. Wysłano zaproszenie — po rejestracji automatycznie stanie się członkiem projektu.",
-        "createFailed": "Dodanie członka nie powiodło się.",
-        "updateFailed": "Aktualizacja członka nie powiodła się.",
-        "deleteFailed": "Usunięcie członka nie powiodło się.",
-        "fetchFailed": "Pobranie członków nie powiodło się."
+        "createFailed": "Dodanie członka nie powiodło się. Spróbuj ponownie.",
+        "updateFailed": "Aktualizacja członka nie powiodła się. Spróbuj ponownie.",
+        "deleteFailed": "Usunięcie członka nie powiodło się. Spróbuj ponownie.",
+        "fetchFailed": "Pobranie członków nie powiodło się. Spróbuj ponownie."
       },
       "revalidate": {
         "noTagsProvided": "Nie podano tagów.",
         "tagNotAllowed": "Tag niedozwolony: {tag}.",
-        "failed": "Rewalidacja nie powiodła się."
+        "failed": "Rewalidacja nie powiodła się. Spróbuj ponownie."
       },
       "analytics": {
         "eventTypeRequired": "Typ zdarzenia jest wymagany.",
-        "createFailed": "Rejestrowanie zdarzenia analitycznego nie powiodło się.",
-        "fetchFailed": "Pobranie analityki nie powiodło się."
+        "createFailed": "Rejestrowanie zdarzenia analitycznego nie powiodło się. Spróbuj ponownie.",
+        "fetchFailed": "Pobranie analityki nie powiodło się. Spróbuj ponownie."
       },
       "admin": {
-        "backfillFailed": "Backfill nie powiódł się.",
+        "backfillFailed": "Backfill nie powiódł się. Spróbuj ponownie.",
         "adminOnly": "Tylko administrator."
       }
     }

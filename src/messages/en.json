@@ -2738,14 +2738,14 @@
         "invalidEmailFormat": "Invalid email format.",
         "invalidTokenFormat": "Invalid token format.",
         "emailAlreadyVerified": "Your email is already verified. You can log in.",
-        "verifyEmailFailed": "Failed to send verification email.",
+        "verifyEmailFailed": "Failed to send verification email. Please try again.",
         "forgotPasswordSent": "If the account exists, an email with a reset link has been sent.",
         "tokenAndPasswordRequired": "Token and new password are required.",
         "invalidResetLink": "Invalid password reset link.",
         "resetLinkExpired": "This password reset link has expired. Request a new one.",
         "resetLinkUsed": "This password reset link has already been used. Request a new one.",
         "resetSuccess": "Your password has been changed successfully. You can log in.",
-        "resetFailed": "Password reset failed.",
+        "resetFailed": "Password reset failed. Please try again.",
         "typeAndTokenRequired": "type and token are required.",
         "invalidTokenType": "Invalid token type.",
         "unknownAuthAction": "Unknown auth action.",
@@ -2761,15 +2761,15 @@
         "alreadyUsed": "Invitation has already been used.",
         "expired": "Invitation has expired.",
         "notYourEmail": "This invitation is not for your email.",
-        "acceptFailed": "Failed to accept invitation.",
-        "rejectFailed": "Failed to reject invitation.",
-        "loadFailed": "Failed to load invitations.",
+        "acceptFailed": "Failed to accept invitation. Please try again.",
+        "rejectFailed": "Failed to reject invitation. Please try again.",
+        "loadFailed": "Failed to load invitations. Please try again.",
         "invalidRequestJson": "Invalid request — expected a JSON object.",
         "invalidEmailFormat": "Invalid email format.",
         "alreadyOwner": "This user is already the project owner.",
         "alreadyMember": "This user is already a member of the project.",
-        "createFailed": "Failed to create invitation.",
-        "cancelFailed": "Failed to revoke invitation."
+        "createFailed": "Failed to create invitation. Please try again.",
+        "cancelFailed": "Failed to revoke invitation. Please try again."
       },
       "budget": {
         "cannotMoveToSelf": "An item cannot be moved under itself.",
@@ -2780,10 +2780,10 @@
         "parentNotFound": "Parent item not found in this project.",
         "dependsOnNotFound": "Referenced item (dependsOnId) not found in this project.",
         "notFound": "Budget item not found.",
-        "createFailed": "Failed to create budget item.",
-        "updateFailed": "Failed to update budget item.",
-        "deleteFailed": "Failed to delete budget item.",
-        "fetchFailed": "Failed to fetch budget items.",
+        "createFailed": "Failed to create budget item. Please try again.",
+        "updateFailed": "Failed to update budget item. Please try again.",
+        "deleteFailed": "Failed to delete budget item. Please try again.",
+        "fetchFailed": "Failed to fetch budget items. Please try again.",
         "invalidAmount": "Invalid amount.",
         "invalidPlanCost": "Invalid planned cost.",
         "invalidFlexibilityPercent": "Invalid flexibility percentage.",
@@ -2806,8 +2806,8 @@
         "nameInvalidChars": "Name contains invalid characters.",
         "nameRequired": "Name must not be empty.",
         "noUpdatableFields": "No updatable fields provided (name, isAdmin).",
-        "fetchFailed": "Failed to fetch user.",
-        "updateFailed": "Failed to update user."
+        "fetchFailed": "Failed to fetch user. Please try again.",
+        "updateFailed": "Failed to update user. Please try again."
       },
       "password": {
         "currentRequired": "Current password is required.",
@@ -2825,8 +2825,8 @@
       },
       "project": {
         "notFoundOrNotPublic": "Project not found or not public.",
-        "requestAccessFailed": "Failed to grant access.",
-        "publicLoadFailed": "Failed to load public project data.",
+        "requestAccessFailed": "Failed to grant access. Please try again.",
+        "publicLoadFailed": "Failed to load public project data. Please try again.",
         "nameRequired": "Project name is required.",
         "notFound": "Project not found.",
         "newOwnerNotFound": "New owner not found.",
@@ -2842,16 +2842,16 @@
         "invalidFloorArea": "Invalid floor area.",
         "invalidFloors": "Invalid number of floors.",
         "invalidOwner": "Invalid owner identifier.",
-        "createFailed": "Failed to create project.",
-        "updateFailed": "Failed to update project.",
-        "deleteFailed": "Failed to delete project.",
-        "fromTemplateFailed": "Failed to create project from template.",
-        "fetchFailed": "Failed to fetch project.",
-        "fetchAllFailed": "Failed to fetch projects."
+        "createFailed": "Failed to create project. Please try again.",
+        "updateFailed": "Failed to update project. Please try again.",
+        "deleteFailed": "Failed to delete project. Please try again.",
+        "fromTemplateFailed": "Failed to create project from template. Please try again.",
+        "fetchFailed": "Failed to fetch project. Please try again.",
+        "fetchAllFailed": "Failed to fetch projects. Please try again."
       },
       "ares": {
         "apiUnavailable": "ARES API unavailable.",
-        "searchError": "Search error.",
+        "searchError": "Search error. Please try again.",
         "apiKeyMissing": "ARES API key is not configured. You can enter company details manually."
       },
       "notes": {
@@ -2882,7 +2882,7 @@
       "reorder": {
         "invalidItems": "Items must be an array of {id, sortOrder} objects.",
         "invalidCategoryOrder": "Category order must be an array of strings.",
-        "failed": "Reorder failed."
+        "failed": "Reorder failed. Please try again."
       },
       "payment": {
         "budgetItemIdRequired": "Budget item ID is required.",
@@ -2892,10 +2892,10 @@
         "parentNotFound": "Parent payment not found.",
         "newBudgetItemNotFound": "New budget item not found.",
         "cannotMoveAcrossProjects": "Cannot move payment to a budget item in a different project.",
-        "createFailed": "Failed to create payment.",
-        "updateFailed": "Failed to update payment.",
-        "deleteFailed": "Failed to delete payment.",
-        "fetchFailed": "Failed to fetch payments.",
+        "createFailed": "Failed to create payment. Please try again.",
+        "updateFailed": "Failed to update payment. Please try again.",
+        "deleteFailed": "Failed to delete payment. Please try again.",
+        "fetchFailed": "Failed to fetch payments. Please try again.",
         "invalidAmount": "Invalid amount.",
         "invalidVatRate": "Invalid VAT rate.",
         "invalidInvoiceTotal": "Invalid invoice total.",
@@ -2903,8 +2903,8 @@
       },
       "snapshot": {
         "labelRequired": "Label is required.",
-        "createFailed": "Failed to create snapshot.",
-        "fetchFailed": "Failed to fetch snapshots."
+        "createFailed": "Failed to create snapshot. Please try again.",
+        "fetchFailed": "Failed to fetch snapshots. Please try again."
       },
       "time": {
         "budgetItemIdRequired": "Budget item ID is required.",
@@ -2914,10 +2914,10 @@
         "notFound": "Time entry not found.",
         "newBudgetItemNotFound": "New budget item not found.",
         "cannotMoveAcrossProjects": "Cannot move time entry to a budget item in a different project.",
-        "createFailed": "Failed to create time entry.",
-        "updateFailed": "Failed to update time entry.",
-        "deleteFailed": "Failed to delete time entry.",
-        "fetchFailed": "Failed to fetch time entries.",
+        "createFailed": "Failed to create time entry. Please try again.",
+        "updateFailed": "Failed to update time entry. Please try again.",
+        "deleteFailed": "Failed to delete time entry. Please try again.",
+        "fetchFailed": "Failed to fetch time entries. Please try again.",
         "invalidHours": "Invalid hours.",
         "invalidWorkerCount": "Invalid worker count.",
         "invalidDate": "Invalid date."
@@ -2927,24 +2927,24 @@
         "textEmpty": "Text cannot be empty.",
         "nothingToUpdate": "Nothing to update — provide text or author.",
         "notFound": "Note not found.",
-        "createFailed": "Failed to create note.",
-        "updateFailed": "Failed to update note.",
-        "deleteFailed": "Failed to delete note.",
-        "fetchFailed": "Failed to fetch notes."
+        "createFailed": "Failed to create note. Please try again.",
+        "updateFailed": "Failed to update note. Please try again.",
+        "deleteFailed": "Failed to delete note. Please try again.",
+        "fetchFailed": "Failed to fetch notes. Please try again."
       },
       "comment": {
         "textRequired": "Text is required.",
         "budgetItemNotFound": "Budget item not found.",
-        "createFailed": "Failed to create comment.",
-        "fetchFailed": "Failed to fetch comments.",
+        "createFailed": "Failed to create comment. Please try again.",
+        "fetchFailed": "Failed to fetch comments. Please try again.",
         "notFound": "Comment not found.",
         "cannotDeleteOthers": "You can only delete your own comments.",
-        "deleteFailed": "Failed to delete comment."
+        "deleteFailed": "Failed to delete comment. Please try again."
       },
       "audit": {
         "entityTypeAndActionRequired": "Entity type and action are required.",
-        "createFailed": "Failed to create audit entry.",
-        "fetchFailed": "Failed to fetch audit log."
+        "createFailed": "Failed to create audit entry. Please try again.",
+        "fetchFailed": "Failed to fetch audit log. Please try again."
       },
       "contact": {
         "nameRequired": "Contact name is required.",
@@ -2970,23 +2970,23 @@
         "ownerRoleRequired": "This action requires the „owner\" role.",
         "pendingInvitationExists": "A pending invitation already exists for this email.",
         "invitationCreated": "No user with this email is registered yet. An invitation has been sent — they will automatically become a project member after registering.",
-        "createFailed": "Failed to add member.",
-        "updateFailed": "Failed to update member.",
-        "deleteFailed": "Failed to remove member.",
-        "fetchFailed": "Failed to fetch members."
+        "createFailed": "Failed to add member. Please try again.",
+        "updateFailed": "Failed to update member. Please try again.",
+        "deleteFailed": "Failed to remove member. Please try again.",
+        "fetchFailed": "Failed to fetch members. Please try again."
       },
       "revalidate": {
         "noTagsProvided": "No tags provided.",
         "tagNotAllowed": "Tag not allowed: {tag}.",
-        "failed": "Revalidation failed."
+        "failed": "Revalidation failed. Please try again."
       },
       "analytics": {
         "eventTypeRequired": "Event type is required.",
-        "createFailed": "Failed to log analytics event.",
-        "fetchFailed": "Failed to fetch analytics."
+        "createFailed": "Failed to log analytics event. Please try again.",
+        "fetchFailed": "Failed to fetch analytics. Please try again."
       },
       "admin": {
-        "backfillFailed": "Backfill failed.",
+        "backfillFailed": "Backfill failed. Please try again.",
         "adminOnly": "Admin only."
       }
     }

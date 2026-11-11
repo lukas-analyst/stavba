@@ -2731,21 +2731,21 @@
         "notAuthenticated": "Nincs hitelesítve.",
         "emailAndPasswordRequired": "Az e-mail és jelszó kötelező.",
         "accountExists": "Ezzel az e-maillel már létezik fiók. Jelentkezzen be, vagy állítsa vissza a jelszavát.",
-        "registerWarningEmailFailed": "A regisztráció sikerült, de a hitelesítő e-mailt nem sikerült elküldeni. Kérhet újat.",
+        "registerWarningEmailFailed": "A regisztráció sikerült, de a hitelesítő e-mailt nem sikerült elküldeni. Kérhet újat. Kérjük, próbálja újra.",
         "registerSuccess": "A regisztráció sikeres. Ellenőrizze az e-mailjeit a fiók hitelesítéséhez.",
         "registerFailed": "A regisztráció sikertelen. Próbálja újra.",
         "emailRequired": "Az e-mail kötelező.",
         "invalidEmailFormat": "Érvénytelen e-mail formátum.",
         "invalidTokenFormat": "Érvénytelen token formátum.",
         "emailAlreadyVerified": "Az e-mailje már hitelesítve van. Bejelentkezhet.",
-        "verifyEmailFailed": "Nem sikerült elküldeni a hitelesítő e-mailt.",
+        "verifyEmailFailed": "Nem sikerült elküldeni a hitelesítő e-mailt. Kérjük, próbálja újra.",
         "forgotPasswordSent": "Ha a fiók létezik, egy visszaállító linket tartalmazó e-mailt küldtünk.",
         "tokenAndPasswordRequired": "A token és az új jelszó kötelező.",
         "invalidResetLink": "Érvénytelen jelszó-visszaállító hivatkozás.",
         "resetLinkExpired": "Ez a jelszó-visszaállító hivatkozás lejárt. Kérjen újat.",
         "resetLinkUsed": "Ezt a jelszó-visszaállító hivatkozást már használták. Kérjen újat.",
         "resetSuccess": "A jelszava sikeresen módosítva. Bejelentkezhet.",
-        "resetFailed": "A jelszó-visszaállítás sikertelen.",
+        "resetFailed": "A jelszó-visszaállítás sikertelen. Kérjük, próbálja újra.",
         "typeAndTokenRequired": "a típus és a token kötelező.",
         "invalidTokenType": "Érvénytelen token típus.",
         "unknownAuthAction": "Ismeretlen hitelesítési művelet.",
@@ -2761,15 +2761,15 @@
         "alreadyUsed": "A meghívót már felhasználták.",
         "expired": "A meghívó lejárt.",
         "notYourEmail": "Ez a meghívó nem az Ön e-mailje számára szól.",
-        "acceptFailed": "Nem sikerült elfogadni a meghívót.",
-        "rejectFailed": "Nem sikerült elutasítani a meghívót.",
-        "loadFailed": "Nem sikerült betölteni a meghívókat.",
+        "acceptFailed": "Nem sikerült elfogadni a meghívót. Kérjük, próbálja újra.",
+        "rejectFailed": "Nem sikerült elutasítani a meghívót. Kérjük, próbálja újra.",
+        "loadFailed": "Nem sikerült betölteni a meghívókat. Kérjük, próbálja újra.",
         "invalidRequestJson": "Érvénytelen kérés — JSON objektum várva.",
         "invalidEmailFormat": "Érvénytelen e-mail formátum.",
         "alreadyOwner": "Ez a felhasználó már a projekt tulajdonosa.",
         "alreadyMember": "Ez a felhasználó már tagja a projektnek.",
-        "createFailed": "Nem sikerült létrehozni a meghívót.",
-        "cancelFailed": "Nem sikerült visszavonni a meghívót."
+        "createFailed": "Nem sikerült létrehozni a meghívót. Kérjük, próbálja újra.",
+        "cancelFailed": "Nem sikerült visszavonni a meghívót. Kérjük, próbálja újra."
       },
       "budget": {
         "cannotMoveToSelf": "Egy tétel nem helyezhető át önmaga alá.",
@@ -2780,10 +2780,10 @@
         "parentNotFound": "A szülő elem nem található ebben a projektben.",
         "dependsOnNotFound": "A hivatkozott elem (dependsOnId) nem található ebben a projektben.",
         "notFound": "A költségkeret elem nem található.",
-        "createFailed": "A költségkeret elem létrehozása sikertelen.",
-        "updateFailed": "A költségkeret elem frissítése sikertelen.",
-        "deleteFailed": "A költségkeret elem törlése sikertelen.",
-        "fetchFailed": "A költségkeret elemek lekérése sikertelen.",
+        "createFailed": "A költségkeret elem létrehozása sikertelen. Kérjük, próbálja újra.",
+        "updateFailed": "A költségkeret elem frissítése sikertelen. Kérjük, próbálja újra.",
+        "deleteFailed": "A költségkeret elem törlése sikertelen. Kérjük, próbálja újra.",
+        "fetchFailed": "A költségkeret elemek lekérése sikertelen. Kérjük, próbálja újra.",
         "invalidAmount": "Érvénytelen összeg.",
         "invalidPlanCost": "Érvénytelen tervezett költség.",
         "invalidFlexibilityPercent": "Érvénytelen rugalmassági százalék.",
@@ -2806,8 +2806,8 @@
         "nameInvalidChars": "A név érvénytelen karaktereket tartalmaz.",
         "nameRequired": "A név nem lehet üres.",
         "noUpdatableFields": "Nincsenek frissíthető mezők (name, isAdmin).",
-        "fetchFailed": "A felhasználó lekérése sikertelen.",
-        "updateFailed": "A felhasználó frissítése sikertelen."
+        "fetchFailed": "A felhasználó lekérése sikertelen. Kérjük, próbálja újra.",
+        "updateFailed": "A felhasználó frissítése sikertelen. Kérjük, próbálja újra."
       },
       "password": {
         "currentRequired": "A jelenlegi jelszó kötelező.",
@@ -2825,8 +2825,8 @@
       },
       "project": {
         "notFoundOrNotPublic": "A projekt nem található vagy nem nyilvános.",
-        "requestAccessFailed": "Nem sikerült hozzáférést biztosítani.",
-        "publicLoadFailed": "Nem sikerült betölteni a nyilvános projekt adatait.",
+        "requestAccessFailed": "Nem sikerült hozzáférést biztosítani. Kérjük, próbálja újra.",
+        "publicLoadFailed": "Nem sikerült betölteni a nyilvános projekt adatait. Kérjük, próbálja újra.",
         "nameRequired": "A projekt neve kötelező.",
         "notFound": "A projekt nem található.",
         "newOwnerNotFound": "Az új tulajdonos nem található.",
@@ -2842,16 +2842,16 @@
         "invalidFloorArea": "Érvénytelen alapterület.",
         "invalidFloors": "Érvénytelen szintek száma.",
         "invalidOwner": "Érvénytelen tulajdonos-azonosító.",
-        "createFailed": "A projekt létrehozása sikertelen.",
-        "updateFailed": "A projekt frissítése sikertelen.",
-        "deleteFailed": "A projekt törlése sikertelen.",
-        "fromTemplateFailed": "A projekt sablonból való létrehozása sikertelen.",
-        "fetchFailed": "A projekt lekérése sikertelen.",
-        "fetchAllFailed": "A projektek lekérése sikertelen."
+        "createFailed": "A projekt létrehozása sikertelen. Kérjük, próbálja újra.",
+        "updateFailed": "A projekt frissítése sikertelen. Kérjük, próbálja újra.",
+        "deleteFailed": "A projekt törlése sikertelen. Kérjük, próbálja újra.",
+        "fromTemplateFailed": "A projekt sablonból való létrehozása sikertelen. Kérjük, próbálja újra.",
+        "fetchFailed": "A projekt lekérése sikertelen. Kérjük, próbálja újra.",
+        "fetchAllFailed": "A projektek lekérése sikertelen. Kérjük, próbálja újra."
       },
       "ares": {
         "apiUnavailable": "Az ARES API nem érhető el.",
-        "searchError": "Keresési hiba.",
+        "searchError": "Keresési hiba. Kérjük, próbálja újra.",
         "apiKeyMissing": "Az ARES API-kulcs nincs konfigurálva. A céges adatokat kézzel is megadhatja."
       },
       "notes": {
@@ -2882,7 +2882,7 @@
       "reorder": {
         "invalidItems": "Az elemek {id, sortOrder} objektumok tömbje kell legyenek.",
         "invalidCategoryOrder": "A kategóriák sorrendje karakterláncok tömbje kell legyen.",
-        "failed": "Az átrendezés sikertelen."
+        "failed": "Az átrendezés sikertelen. Kérjük, próbálja újra."
       },
       "payment": {
         "budgetItemIdRequired": "A költségkeret elem azonosítója kötelező.",
@@ -2892,10 +2892,10 @@
         "parentNotFound": "A szülő fizetés nem található.",
         "newBudgetItemNotFound": "Az új költségkeret elem nem található.",
         "cannotMoveAcrossProjects": "A fizetés nem mozgatható másik projekt költségkeret elemébe.",
-        "createFailed": "A fizetés létrehozása sikertelen.",
-        "updateFailed": "A fizetés frissítése sikertelen.",
-        "deleteFailed": "A fizetés törlése sikertelen.",
-        "fetchFailed": "A fizetések lekérése sikertelen.",
+        "createFailed": "A fizetés létrehozása sikertelen. Kérjük, próbálja újra.",
+        "updateFailed": "A fizetés frissítése sikertelen. Kérjük, próbálja újra.",
+        "deleteFailed": "A fizetés törlése sikertelen. Kérjük, próbálja újra.",
+        "fetchFailed": "A fizetések lekérése sikertelen. Kérjük, próbálja újra.",
         "invalidAmount": "Érvénytelen összeg.",
         "invalidVatRate": "Érvénytelen ÁFA kulcs.",
         "invalidInvoiceTotal": "Érvénytelen számla végösszeg.",
@@ -2903,8 +2903,8 @@
       },
       "snapshot": {
         "labelRequired": "A címke kötelező.",
-        "createFailed": "A pillanatkép létrehozása sikertelen.",
-        "fetchFailed": "A pillanatképek lekérése sikertelen."
+        "createFailed": "A pillanatkép létrehozása sikertelen. Kérjük, próbálja újra.",
+        "fetchFailed": "A pillanatképek lekérése sikertelen. Kérjük, próbálja újra."
       },
       "time": {
         "budgetItemIdRequired": "A költségkeret elem azonosítója kötelező.",
@@ -2914,10 +2914,10 @@
         "notFound": "Az időbejegyzés nem található.",
         "newBudgetItemNotFound": "Az új költségkeret elem nem található.",
         "cannotMoveAcrossProjects": "Az időbejegyzés nem mozgatható másik projekt költségkeret elemébe.",
-        "createFailed": "Az időbejegyzés létrehozása sikertelen.",
-        "updateFailed": "Az időbejegyzés frissítése sikertelen.",
-        "deleteFailed": "Az időbejegyzés törlése sikertelen.",
-        "fetchFailed": "Az időbejegyzések lekérése sikertelen.",
+        "createFailed": "Az időbejegyzés létrehozása sikertelen. Kérjük, próbálja újra.",
+        "updateFailed": "Az időbejegyzés frissítése sikertelen. Kérjük, próbálja újra.",
+        "deleteFailed": "Az időbejegyzés törlése sikertelen. Kérjük, próbálja újra.",
+        "fetchFailed": "Az időbejegyzések lekérése sikertelen. Kérjük, próbálja újra.",
         "invalidHours": "Érvénytelen órák.",
         "invalidWorkerCount": "Érvénytelen munkavállalók száma.",
         "invalidDate": "Érvénytelen dátum."
@@ -2927,40 +2927,40 @@
         "textEmpty": "A szöveg nem lehet üres.",
         "nothingToUpdate": "Nincs frissítendő — adjon meg szöveget vagy szerzőt.",
         "notFound": "A jegyzet nem található.",
-        "createFailed": "A jegyzet létrehozása sikertelen.",
-        "updateFailed": "A jegyzet frissítése sikertelen.",
-        "deleteFailed": "A jegyzet törlése sikertelen.",
-        "fetchFailed": "A jegyzetek lekérése sikertelen."
+        "createFailed": "A jegyzet létrehozása sikertelen. Kérjük, próbálja újra.",
+        "updateFailed": "A jegyzet frissítése sikertelen. Kérjük, próbálja újra.",
+        "deleteFailed": "A jegyzet törlése sikertelen. Kérjük, próbálja újra.",
+        "fetchFailed": "A jegyzetek lekérése sikertelen. Kérjük, próbálja újra."
       },
       "comment": {
         "textRequired": "A szöveg kötelező.",
         "budgetItemNotFound": "A költségkeret elem nem található.",
-        "createFailed": "A megjegyzés létrehozása sikertelen.",
-        "fetchFailed": "A megjegyzések lekérése sikertelen.",
+        "createFailed": "A megjegyzés létrehozása sikertelen. Kérjük, próbálja újra.",
+        "fetchFailed": "A megjegyzések lekérése sikertelen. Kérjük, próbálja újra.",
         "notFound": "A megjegyzés nem található.",
         "cannotDeleteOthers": "Csak a saját megjegyzéseit törölheti.",
-        "deleteFailed": "A megjegyzés törlése sikertelen."
+        "deleteFailed": "A megjegyzés törlése sikertelen. Kérjük, próbálja újra."
       },
       "audit": {
         "entityTypeAndActionRequired": "Az entitástípus és a művelet kötelező.",
-        "createFailed": "A naplóbejegyzés létrehozása sikertelen.",
-        "fetchFailed": "A napló lekérése sikertelen."
+        "createFailed": "A naplóbejegyzés létrehozása sikertelen. Kérjük, próbálja újra.",
+        "fetchFailed": "A napló lekérése sikertelen. Kérjük, próbálja újra."
       },
       "contact": {
         "nameRequired": "A kapcsolattartó neve kötelező.",
         "notFound": "A kapcsolattartó nem található.",
-        "createFailed": "A kapcsolattartó létrehozása sikertelen.",
-        "updateFailed": "A kapcsolattartó frissítése sikertelen.",
-        "deleteFailed": "A kapcsolattartó törlése sikertelen.",
-        "fetchFailed": "A kapcsolattartók lekérése sikertelen.",
+        "createFailed": "A kapcsolattartó létrehozása sikertelen. Kérjük, próbálja újra.",
+        "updateFailed": "A kapcsolattartó frissítése sikertelen. Kérjük, próbálja újra.",
+        "deleteFailed": "A kapcsolattartó törlése sikertelen. Kérjük, próbálja újra.",
+        "fetchFailed": "A kapcsolattartók lekérése sikertelen. Kérjük, próbálja újra.",
         "invalidRating": "Érvénytelen értékelés (1-5).",
         "firstNameRequired": "A keresztnév kötelező.",
         "lastNameRequired": "A vezetéknév kötelező.",
         "personNotFound": "A kapcsolattartó személy nem található.",
-        "personCreateFailed": "A kapcsolattartó személy létrehozása sikertelen.",
-        "personUpdateFailed": "A kapcsolattartó személy frissítése sikertelen.",
-        "personDeleteFailed": "A kapcsolattartó személy törlése sikertelen.",
-        "personFetchFailed": "A kapcsolattartó személyek lekérése sikertelen."
+        "personCreateFailed": "A kapcsolattartó személy létrehozása sikertelen. Kérjük, próbálja újra.",
+        "personUpdateFailed": "A kapcsolattartó személy frissítése sikertelen. Kérjük, próbálja újra.",
+        "personDeleteFailed": "A kapcsolattartó személy törlése sikertelen. Kérjük, próbálja újra.",
+        "personFetchFailed": "A kapcsolattartó személyek lekérése sikertelen. Kérjük, próbálja újra."
       },
       "member": {
         "emailRequired": "Az e-mail kötelező.",
@@ -2970,23 +2970,23 @@
         "ownerRoleRequired": "Ehhez a művelethez „owner\" szerepkör szükséges.",
         "pendingInvitationExists": "Már van függőben lévő meghívó ehhez az e-mailhez.",
         "invitationCreated": "Még nincs regisztrált felhasználó ezzel az e-maillel. Meghívó lett elküldve — regisztráció után automatikusan projekttaggá válik.",
-        "createFailed": "A tag hozzáadása sikertelen.",
-        "updateFailed": "A tag frissítése sikertelen.",
-        "deleteFailed": "A tag eltávolítása sikertelen.",
-        "fetchFailed": "A tagok lekérése sikertelen."
+        "createFailed": "A tag hozzáadása sikertelen. Kérjük, próbálja újra.",
+        "updateFailed": "A tag frissítése sikertelen. Kérjük, próbálja újra.",
+        "deleteFailed": "A tag eltávolítása sikertelen. Kérjük, próbálja újra.",
+        "fetchFailed": "A tagok lekérése sikertelen. Kérjük, próbálja újra."
       },
       "revalidate": {
         "noTagsProvided": "Nincsenek megadva tag-ek.",
         "tagNotAllowed": "Tag nem engedélyezett: {tag}.",
-        "failed": "Revalidáció sikertelen."
+        "failed": "Revalidáció sikertelen. Kérjük, próbálja újra."
       },
       "analytics": {
         "eventTypeRequired": "Az esemény típusa kötelező.",
-        "createFailed": "Az analitikai esemény naplózása sikertelen.",
-        "fetchFailed": "Az analitika lekérése sikertelen."
+        "createFailed": "Az analitikai esemény naplózása sikertelen. Kérjük, próbálja újra.",
+        "fetchFailed": "Az analitika lekérése sikertelen. Kérjük, próbálja újra."
       },
       "admin": {
-        "backfillFailed": "Backfill sikertelen.",
+        "backfillFailed": "Backfill sikertelen. Kérjük, próbálja újra.",
         "adminOnly": "Csak rendszergazda."
       }
     }

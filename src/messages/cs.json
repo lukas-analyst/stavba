@@ -2738,14 +2738,14 @@
         "invalidEmailFormat": "Neplatný formát e-mailu.",
         "invalidTokenFormat": "Neplatný formát tokenu.",
         "emailAlreadyVerified": "Váš e-mail je již ověřen. Můžete se přihlásit.",
-        "verifyEmailFailed": "Odeslání verifikačního e-mailu selhalo.",
+        "verifyEmailFailed": "Odeslání verifikačního e-mailu selhalo. Zkuste to prosím znovu.",
         "forgotPasswordSent": "Pokud účet existuje, e-mail s odkazem pro reset byl odeslán.",
         "tokenAndPasswordRequired": "Token a nové heslo jsou povinné.",
         "invalidResetLink": "Neplatný odkaz pro reset hesla.",
         "resetLinkExpired": "Odkaz pro reset hesla vypršel. Vyžádejte si nový.",
         "resetLinkUsed": "Odkaz pro reset hesla byl již použit. Vyžádejte si nový.",
         "resetSuccess": "Heslo bylo úspěšně změněno. Můžete se přihlásit.",
-        "resetFailed": "Reset hesla selhal.",
+        "resetFailed": "Reset hesla selhal. Zkuste to prosím znovu.",
         "typeAndTokenRequired": "type a token jsou povinné.",
         "invalidTokenType": "Neplatný typ tokenu.",
         "unknownAuthAction": "Neznámá auth akce.",
@@ -2761,15 +2761,15 @@
         "alreadyUsed": "Pozvánka již byla použita.",
         "expired": "Pozvánka vypršela.",
         "notYourEmail": "Tato pozvánka není pro váš e-mail.",
-        "acceptFailed": "Nepodařilo se přijmout pozvánku.",
-        "rejectFailed": "Nepodařilo se odmítnout pozvánku.",
-        "loadFailed": "Nepodařilo se načíst pozvánky.",
+        "acceptFailed": "Nepodařilo se přijmout pozvánku. Zkuste to prosím znovu.",
+        "rejectFailed": "Nepodařilo se odmítnout pozvánku. Zkuste to prosím znovu.",
+        "loadFailed": "Nepodařilo se načíst pozvánky. Zkuste to prosím znovu.",
         "invalidRequestJson": "Neplatný požadavek — očekáván JSON objekt.",
         "invalidEmailFormat": "Neplatný formát e-mailu.",
         "alreadyOwner": "Tento uživatel je již správcem projektu.",
         "alreadyMember": "Tento uživatel je již členem projektu.",
-        "createFailed": "Nepodařilo se vytvořit pozvánku.",
-        "cancelFailed": "Nepodařilo se zrušit pozvánku."
+        "createFailed": "Nepodařilo se vytvořit pozvánku. Zkuste to prosím znovu.",
+        "cancelFailed": "Nepodařilo se zrušit pozvánku. Zkuste to prosím znovu."
       },
       "budget": {
         "cannotMoveToSelf": "Položku nelze přesunout pod ni samotnou.",
@@ -2780,10 +2780,10 @@
         "parentNotFound": "Nadřazená položka v tomto projektu nebyla nalezena.",
         "dependsOnNotFound": "Odkazovaná položka (dependsOnId) v tomto projektu nebyla nalezena.",
         "notFound": "Položka rozpočtu nebyla nalezena.",
-        "createFailed": "Vytvoření položky rozpočtu selhalo.",
-        "updateFailed": "Aktualizace položky rozpočtu selhala.",
-        "deleteFailed": "Smazání položky rozpočtu selhalo.",
-        "fetchFailed": "Načtení položek rozpočtu selhalo.",
+        "createFailed": "Vytvoření položky rozpočtu selhalo. Zkuste to prosím znovu.",
+        "updateFailed": "Aktualizace položky rozpočtu selhala. Zkuste to prosím znovu.",
+        "deleteFailed": "Smazání položky rozpočtu selhalo. Zkuste to prosím znovu.",
+        "fetchFailed": "Načtení položek rozpočtu selhalo. Zkuste to prosím znovu.",
         "invalidAmount": "Neplatná částka.",
         "invalidPlanCost": "Neplatné plánované náklady.",
         "invalidFlexibilityPercent": "Neplatné procento flexibility.",
@@ -2806,8 +2806,8 @@
         "nameInvalidChars": "Jméno obsahuje neplatné znaky.",
         "nameRequired": "Jméno nesmí být prázdné.",
         "noUpdatableFields": "Nebyla poskytnuta žádná aktualizovatelná pole (name, isAdmin).",
-        "fetchFailed": "Načtení uživatele selhalo.",
-        "updateFailed": "Aktualizace uživatele selhala."
+        "fetchFailed": "Načtení uživatele selhalo. Zkuste to prosím znovu.",
+        "updateFailed": "Aktualizace uživatele selhala. Zkuste to prosím znovu."
       },
       "password": {
         "currentRequired": "Aktuální heslo je povinné.",
@@ -2825,8 +2825,8 @@
       },
       "project": {
         "notFoundOrNotPublic": "Projekt nebyl nalezen nebo není veřejný.",
-        "requestAccessFailed": "Nepodařilo se udělit přístup.",
-        "publicLoadFailed": "Nepodařilo se načíst veřejná data projektu.",
+        "requestAccessFailed": "Nepodařilo se udělit přístup. Zkuste to prosím znovu.",
+        "publicLoadFailed": "Nepodařilo se načíst veřejná data projektu. Zkuste to prosím znovu.",
         "nameRequired": "Název projektu je povinný.",
         "notFound": "Projekt nebyl nalezen.",
         "newOwnerNotFound": "Nový vlastník nebyl nalezen.",
@@ -2842,16 +2842,16 @@
         "invalidFloorArea": "Neplatná podlahová plocha.",
         "invalidFloors": "Neplatný počet podlaží.",
         "invalidOwner": "Neplatný identifikátor vlastníka.",
-        "createFailed": "Vytvoření projektu selhalo.",
-        "updateFailed": "Aktualizace projektu selhala.",
-        "deleteFailed": "Smazání projektu selhalo.",
-        "fromTemplateFailed": "Vytvoření projektu ze šablony selhalo.",
-        "fetchFailed": "Načtení projektu selhalo.",
-        "fetchAllFailed": "Načtení projektů selhalo."
+        "createFailed": "Vytvoření projektu selhalo. Zkuste to prosím znovu.",
+        "updateFailed": "Aktualizace projektu selhala. Zkuste to prosím znovu.",
+        "deleteFailed": "Smazání projektu selhalo. Zkuste to prosím znovu.",
+        "fromTemplateFailed": "Vytvoření projektu ze šablony selhalo. Zkuste to prosím znovu.",
+        "fetchFailed": "Načtení projektu selhalo. Zkuste to prosím znovu.",
+        "fetchAllFailed": "Načtení projektů selhalo. Zkuste to prosím znovu."
       },
       "ares": {
         "apiUnavailable": "ARES API nedostupné.",
-        "searchError": "Chyba při vyhledávání.",
+        "searchError": "Chyba při vyhledávání. Zkuste to prosím znovu.",
         "apiKeyMissing": "ARES API klíč není nastaven. Firmy lze zadat manuálně."
       },
       "notes": {
@@ -2882,7 +2882,7 @@
       "reorder": {
         "invalidItems": "Položky musí být pole objektů {id, sortOrder}.",
         "invalidCategoryOrder": "Pořadí kategorií musí být pole řetězců.",
-        "failed": "Přeuspořádání selhalo."
+        "failed": "Přeuspořádání selhalo. Zkuste to prosím znovu."
       },
       "payment": {
         "budgetItemIdRequired": "ID položky rozpočtu je povinné.",
@@ -2892,10 +2892,10 @@
         "parentNotFound": "Nadřazená platba nebyla nalezena.",
         "newBudgetItemNotFound": "Nová položka rozpočtu nebyla nalezena.",
         "cannotMoveAcrossProjects": "Platbu nelze přesunout do položky rozpočtu v jiném projektu.",
-        "createFailed": "Vytvoření platby selhalo.",
-        "updateFailed": "Aktualizace platby selhala.",
-        "deleteFailed": "Smazání platby selhalo.",
-        "fetchFailed": "Načtení plateb selhalo.",
+        "createFailed": "Vytvoření platby selhalo. Zkuste to prosím znovu.",
+        "updateFailed": "Aktualizace platby selhala. Zkuste to prosím znovu.",
+        "deleteFailed": "Smazání platby selhalo. Zkuste to prosím znovu.",
+        "fetchFailed": "Načtení plateb selhalo. Zkuste to prosím znovu.",
         "invalidAmount": "Neplatná částka.",
         "invalidVatRate": "Neplatná sazba DPH.",
         "invalidInvoiceTotal": "Neplatná celková faktura.",
@@ -2903,8 +2903,8 @@
       },
       "snapshot": {
         "labelRequired": "Popisek je povinný.",
-        "createFailed": "Vytvoření snímku selhalo.",
-        "fetchFailed": "Načtení snímků selhalo."
+        "createFailed": "Vytvoření snímku selhalo. Zkuste to prosím znovu.",
+        "fetchFailed": "Načtení snímků selhalo. Zkuste to prosím znovu."
       },
       "time": {
         "budgetItemIdRequired": "ID položky rozpočtu je povinné.",
@@ -2914,10 +2914,10 @@
         "notFound": "Časový záznam nebyl nalezen.",
         "newBudgetItemNotFound": "Nová položka rozpočtu nebyla nalezena.",
         "cannotMoveAcrossProjects": "Časový záznam nelze přesunout do položky rozpočtu v jiném projektu.",
-        "createFailed": "Vytvoření časového záznamu selhalo.",
-        "updateFailed": "Aktualizace časového záznamu selhala.",
-        "deleteFailed": "Smazání časového záznamu selhalo.",
-        "fetchFailed": "Načtení časových záznamů selhalo.",
+        "createFailed": "Vytvoření časového záznamu selhalo. Zkuste to prosím znovu.",
+        "updateFailed": "Aktualizace časového záznamu selhala. Zkuste to prosím znovu.",
+        "deleteFailed": "Smazání časového záznamu selhalo. Zkuste to prosím znovu.",
+        "fetchFailed": "Načtení časových záznamů selhalo. Zkuste to prosím znovu.",
         "invalidHours": "Neplatný počet hodin.",
         "invalidWorkerCount": "Neplatný počet pracovníků.",
         "invalidDate": "Neplatné datum."
@@ -2927,40 +2927,40 @@
         "textEmpty": "Text nemůže být prázdný.",
         "nothingToUpdate": "Nic k aktualizaci — poskytněte text nebo autora.",
         "notFound": "Poznámka nebyla nalezena.",
-        "createFailed": "Vytvoření poznámky selhalo.",
-        "updateFailed": "Aktualizace poznámky selhala.",
-        "deleteFailed": "Smazání poznámky selhalo.",
-        "fetchFailed": "Načtení poznámek selhalo."
+        "createFailed": "Vytvoření poznámky selhalo. Zkuste to prosím znovu.",
+        "updateFailed": "Aktualizace poznámky selhala. Zkuste to prosím znovu.",
+        "deleteFailed": "Smazání poznámky selhalo. Zkuste to prosím znovu.",
+        "fetchFailed": "Načtení poznámek selhalo. Zkuste to prosím znovu."
       },
       "comment": {
         "textRequired": "Text je povinný.",
         "budgetItemNotFound": "Položka rozpočtu nebyla nalezena.",
-        "createFailed": "Vytvoření komentáře selhalo.",
-        "fetchFailed": "Načtení komentářů selhalo.",
+        "createFailed": "Vytvoření komentáře selhalo. Zkuste to prosím znovu.",
+        "fetchFailed": "Načtení komentářů selhalo. Zkuste to prosím znovu.",
         "notFound": "Komentář nebyl nalezen.",
         "cannotDeleteOthers": "Můžete mazat pouze své komentáře.",
-        "deleteFailed": "Smazání komentáře selhalo."
+        "deleteFailed": "Smazání komentáře selhalo. Zkuste to prosím znovu."
       },
       "audit": {
         "entityTypeAndActionRequired": "Typ entity a akce jsou povinné.",
-        "createFailed": "Vytvoření záznamu auditu selhalo.",
-        "fetchFailed": "Načtení audit logu selhalo."
+        "createFailed": "Vytvoření záznamu auditu selhalo. Zkuste to prosím znovu.",
+        "fetchFailed": "Načtení audit logu selhalo. Zkuste to prosím znovu."
       },
       "contact": {
         "nameRequired": "Jméno kontaktu je povinné.",
         "notFound": "Kontakt nebyl nalezen.",
-        "createFailed": "Vytvoření kontaktu selhalo.",
-        "updateFailed": "Aktualizace kontaktu selhala.",
-        "deleteFailed": "Smazání kontaktu selhalo.",
-        "fetchFailed": "Načtení kontaktů selhalo.",
+        "createFailed": "Vytvoření kontaktu selhalo. Zkuste to prosím znovu.",
+        "updateFailed": "Aktualizace kontaktu selhala. Zkuste to prosím znovu.",
+        "deleteFailed": "Smazání kontaktu selhalo. Zkuste to prosím znovu.",
+        "fetchFailed": "Načtení kontaktů selhalo. Zkuste to prosím znovu.",
         "invalidRating": "Neplatné hodnocení (1-5).",
         "firstNameRequired": "Křestní jméno je povinné.",
         "lastNameRequired": "Příjmení je povinné.",
         "personNotFound": "Kontaktní osoba nebyla nalezena.",
-        "personCreateFailed": "Vytvoření kontaktní osoby selhalo.",
-        "personUpdateFailed": "Aktualizace kontaktní osoby selhala.",
-        "personDeleteFailed": "Smazání kontaktní osoby selhalo.",
-        "personFetchFailed": "Načtení kontaktních osob selhalo."
+        "personCreateFailed": "Vytvoření kontaktní osoby selhalo. Zkuste to prosím znovu.",
+        "personUpdateFailed": "Aktualizace kontaktní osoby selhala. Zkuste to prosím znovu.",
+        "personDeleteFailed": "Smazání kontaktní osoby selhalo. Zkuste to prosím znovu.",
+        "personFetchFailed": "Načtení kontaktních osob selhalo. Zkuste to prosím znovu."
       },
       "member": {
         "emailRequired": "E-mail je povinný.",
@@ -2970,23 +2970,23 @@
         "ownerRoleRequired": "Pro tuto akci je vyžadována role „owner\".",
         "pendingInvitationExists": "Na tento e-mail již čeká nepotvrzená pozvánka.",
         "invitationCreated": "Uživatel s tímto e-mailem ještě není registrován. Byla mu odeslána pozvánka — po registraci se automaticky stane členem projektu.",
-        "createFailed": "Přidání člena selhalo.",
-        "updateFailed": "Aktualizace člena selhala.",
-        "deleteFailed": "Odebrání člena selhalo.",
-        "fetchFailed": "Načtení členů selhalo."
+        "createFailed": "Přidání člena selhalo. Zkuste to prosím znovu.",
+        "updateFailed": "Aktualizace člena selhala. Zkuste to prosím znovu.",
+        "deleteFailed": "Odebrání člena selhalo. Zkuste to prosím znovu.",
+        "fetchFailed": "Načtení členů selhalo. Zkuste to prosím znovu."
       },
       "revalidate": {
         "noTagsProvided": "Nebyly zadány žádné tagy.",
         "tagNotAllowed": "Tag není povolen: {tag}.",
-        "failed": "Revalidace selhala."
+        "failed": "Revalidace selhala. Zkuste to prosím znovu."
       },
       "analytics": {
         "eventTypeRequired": "Typ události je povinný.",
-        "createFailed": "Záznam analytiky selhal.",
-        "fetchFailed": "Načtení analytiky selhalo."
+        "createFailed": "Záznam analytiky selhal. Zkuste to prosím znovu.",
+        "fetchFailed": "Načtení analytiky selhalo. Zkuste to prosím znovu."
       },
       "admin": {
-        "backfillFailed": "Backfill selhal.",
+        "backfillFailed": "Backfill selhal. Zkuste to prosím znovu.",
         "adminOnly": "Pouze administrátor."
       }
     }

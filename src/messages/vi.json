@@ -2738,14 +2738,14 @@
         "invalidEmailFormat": "Định dạng email không hợp lệ.",
         "invalidTokenFormat": "Định dạng token không hợp lệ.",
         "emailAlreadyVerified": "Email của bạn đã được xác thực. Bạn có thể đăng nhập.",
-        "verifyEmailFailed": "Không thể gửi email xác thực.",
+        "verifyEmailFailed": "Không thể gửi email xác thực. Vui lòng thử lại.",
         "forgotPasswordSent": "Nếu tài khoản tồn tại, email với link đặt lại đã được gửi.",
         "tokenAndPasswordRequired": "Token và mật khẩu mới là bắt buộc.",
         "invalidResetLink": "Link đặt lại mật khẩu không hợp lệ.",
         "resetLinkExpired": "Link đặt lại mật khẩu này đã hết hạn. Vui lòng yêu cầu link mới.",
         "resetLinkUsed": "Link đặt lại mật khẩu này đã được sử dụng. Vui lòng yêu cầu link mới.",
         "resetSuccess": "Mật khẩu của bạn đã được đổi thành công. Bạn có thể đăng nhập.",
-        "resetFailed": "Đặt lại mật khẩu thất bại.",
+        "resetFailed": "Đặt lại mật khẩu thất bại. Vui lòng thử lại.",
         "typeAndTokenRequired": "type và token là bắt buộc.",
         "invalidTokenType": "Loại token không hợp lệ.",
         "unknownAuthAction": "Hành động xác thực không xác định.",
@@ -2761,15 +2761,15 @@
         "alreadyUsed": "Lời mời đã được sử dụng.",
         "expired": "Lời mời đã hết hạn.",
         "notYourEmail": "Lời mời này không dành cho email của bạn.",
-        "acceptFailed": "Không thể chấp nhận lời mời.",
-        "rejectFailed": "Không thể từ chối lời mời.",
-        "loadFailed": "Không thể tải lời mời.",
+        "acceptFailed": "Không thể chấp nhận lời mời. Vui lòng thử lại.",
+        "rejectFailed": "Không thể từ chối lời mời. Vui lòng thử lại.",
+        "loadFailed": "Không thể tải lời mời. Vui lòng thử lại.",
         "invalidRequestJson": "Yêu cầu không hợp lệ — cần một đối tượng JSON.",
         "invalidEmailFormat": "Định dạng email không hợp lệ.",
         "alreadyOwner": "Người dùng này đã là quản lý dự án.",
         "alreadyMember": "Người dùng này đã là thành viên của dự án.",
-        "createFailed": "Không thể tạo lời mời.",
-        "cancelFailed": "Không thể thu hồi lời mời."
+        "createFailed": "Không thể tạo lời mời. Vui lòng thử lại.",
+        "cancelFailed": "Không thể thu hồi lời mời. Vui lòng thử lại."
       },
       "budget": {
         "cannotMoveToSelf": "Một hạng mục không thể được di chuyển dưới chính nó.",
@@ -2780,10 +2780,10 @@
         "parentNotFound": "Không tìm thấy mục cha trong dự án này.",
         "dependsOnNotFound": "Không tìm thấy mục tham chiếu (dependsOnId) trong dự án này.",
         "notFound": "Không tìm thấy mục ngân sách.",
-        "createFailed": "Tạo mục ngân sách thất bại.",
-        "updateFailed": "Cập nhật mục ngân sách thất bại.",
-        "deleteFailed": "Xóa mục ngân sách thất bại.",
-        "fetchFailed": "Tải các mục ngân sách thất bại.",
+        "createFailed": "Tạo mục ngân sách thất bại. Vui lòng thử lại.",
+        "updateFailed": "Cập nhật mục ngân sách thất bại. Vui lòng thử lại.",
+        "deleteFailed": "Xóa mục ngân sách thất bại. Vui lòng thử lại.",
+        "fetchFailed": "Tải các mục ngân sách thất bại. Vui lòng thử lại.",
         "invalidAmount": "Số tiền không hợp lệ.",
         "invalidPlanCost": "Chi phí kế hoạch không hợp lệ.",
         "invalidFlexibilityPercent": "Phần trăm linh hoạt không hợp lệ.",
@@ -2806,8 +2806,8 @@
         "nameInvalidChars": "Tên chứa ký tự không hợp lệ.",
         "nameRequired": "Tên không được để trống.",
         "noUpdatableFields": "Không có trường nào có thể cập nhật (name, isAdmin).",
-        "fetchFailed": "Tải người dùng thất bại.",
-        "updateFailed": "Cập nhật người dùng thất bại."
+        "fetchFailed": "Tải người dùng thất bại. Vui lòng thử lại.",
+        "updateFailed": "Cập nhật người dùng thất bại. Vui lòng thử lại."
       },
       "password": {
         "currentRequired": "Mật khẩu hiện tại là bắt buộc.",
@@ -2825,8 +2825,8 @@
       },
       "project": {
         "notFoundOrNotPublic": "Không tìm thấy dự án hoặc không công khai.",
-        "requestAccessFailed": "Không thể cấp quyền truy cập.",
-        "publicLoadFailed": "Không thể tải dữ liệu dự án công khai.",
+        "requestAccessFailed": "Không thể cấp quyền truy cập. Vui lòng thử lại.",
+        "publicLoadFailed": "Không thể tải dữ liệu dự án công khai. Vui lòng thử lại.",
         "nameRequired": "Tên dự án là bắt buộc.",
         "notFound": "Không tìm thấy dự án.",
         "newOwnerNotFound": "Không tìm thấy chủ sở hữu mới.",
@@ -2842,16 +2842,16 @@
         "invalidFloorArea": "Diện tích sàn không hợp lệ.",
         "invalidFloors": "Số tầng không hợp lệ.",
         "invalidOwner": "Định danh chủ sở hữu không hợp lệ.",
-        "createFailed": "Tạo dự án thất bại.",
-        "updateFailed": "Cập nhật dự án thất bại.",
-        "deleteFailed": "Xóa dự án thất bại.",
-        "fromTemplateFailed": "Tạo dự án từ mẫu thất bại.",
-        "fetchFailed": "Tải dự án thất bại.",
-        "fetchAllFailed": "Tải danh sách dự án thất bại."
+        "createFailed": "Tạo dự án thất bại. Vui lòng thử lại.",
+        "updateFailed": "Cập nhật dự án thất bại. Vui lòng thử lại.",
+        "deleteFailed": "Xóa dự án thất bại. Vui lòng thử lại.",
+        "fromTemplateFailed": "Tạo dự án từ mẫu thất bại. Vui lòng thử lại.",
+        "fetchFailed": "Tải dự án thất bại. Vui lòng thử lại.",
+        "fetchAllFailed": "Tải danh sách dự án thất bại. Vui lòng thử lại."
       },
       "ares": {
         "apiUnavailable": "API ARES không khả dụng.",
-        "searchError": "Lỗi tìm kiếm.",
+        "searchError": "Lỗi tìm kiếm. Vui lòng thử lại.",
         "apiKeyMissing": "Chưa cấu hình API key ARES. Bạn có thể nhập chi tiết công ty thủ công."
       },
       "notes": {
@@ -2882,7 +2882,7 @@
       "reorder": {
         "invalidItems": "Các mục phải là mảng các đối tượng {id, sortOrder}.",
         "invalidCategoryOrder": "Thứ tự danh mục phải là mảng chuỗi.",
-        "failed": "Sắp xếp lại thất bại."
+        "failed": "Sắp xếp lại thất bại. Vui lòng thử lại."
       },
       "payment": {
         "budgetItemIdRequired": "ID mục ngân sách là bắt buộc.",
@@ -2892,10 +2892,10 @@
         "parentNotFound": "Không tìm thấy khoản thanh toán gốc.",
         "newBudgetItemNotFound": "Không tìm thấy mục ngân sách mới.",
         "cannotMoveAcrossProjects": "Không thể chuyển thanh toán sang mục ngân sách của dự án khác.",
-        "createFailed": "Tạo khoản thanh toán thất bại.",
-        "updateFailed": "Cập nhật khoản thanh toán thất bại.",
-        "deleteFailed": "Xóa khoản thanh toán thất bại.",
-        "fetchFailed": "Tải khoản thanh toán thất bại.",
+        "createFailed": "Tạo khoản thanh toán thất bại. Vui lòng thử lại.",
+        "updateFailed": "Cập nhật khoản thanh toán thất bại. Vui lòng thử lại.",
+        "deleteFailed": "Xóa khoản thanh toán thất bại. Vui lòng thử lại.",
+        "fetchFailed": "Tải khoản thanh toán thất bại. Vui lòng thử lại.",
         "invalidAmount": "Số tiền không hợp lệ.",
         "invalidVatRate": "Tỷ lệ thuế GTGT không hợp lệ.",
         "invalidInvoiceTotal": "Tổng hóa đơn không hợp lệ.",
@@ -2903,8 +2903,8 @@
       },
       "snapshot": {
         "labelRequired": "Nhãn là bắt buộc.",
-        "createFailed": "Tạo ảnh chụp thất bại.",
-        "fetchFailed": "Tải ảnh chụp thất bại."
+        "createFailed": "Tạo ảnh chụp thất bại. Vui lòng thử lại.",
+        "fetchFailed": "Tải ảnh chụp thất bại. Vui lòng thử lại."
       },
       "time": {
         "budgetItemIdRequired": "ID mục ngân sách là bắt buộc.",
@@ -2914,10 +2914,10 @@
         "notFound": "Không tìm thấy mục thời gian.",
         "newBudgetItemNotFound": "Không tìm thấy mục ngân sách mới.",
         "cannotMoveAcrossProjects": "Không thể chuyển mục thời gian sang mục ngân sách của dự án khác.",
-        "createFailed": "Tạo mục thời gian thất bại.",
-        "updateFailed": "Cập nhật mục thời gian thất bại.",
-        "deleteFailed": "Xóa mục thời gian thất bại.",
-        "fetchFailed": "Tải mục thời gian thất bại.",
+        "createFailed": "Tạo mục thời gian thất bại. Vui lòng thử lại.",
+        "updateFailed": "Cập nhật mục thời gian thất bại. Vui lòng thử lại.",
+        "deleteFailed": "Xóa mục thời gian thất bại. Vui lòng thử lại.",
+        "fetchFailed": "Tải mục thời gian thất bại. Vui lòng thử lại.",
         "invalidHours": "Số giờ không hợp lệ.",
         "invalidWorkerCount": "Số nhân công không hợp lệ.",
         "invalidDate": "Ngày không hợp lệ."
@@ -2927,40 +2927,40 @@
         "textEmpty": "Văn bản không được để trống.",
         "nothingToUpdate": "Không có gì để cập nhật — cung cấp văn bản hoặc tác giả.",
         "notFound": "Không tìm thấy ghi chú.",
-        "createFailed": "Tạo ghi chú thất bại.",
-        "updateFailed": "Cập nhật ghi chú thất bại.",
-        "deleteFailed": "Xóa ghi chú thất bại.",
-        "fetchFailed": "Tải ghi chú thất bại."
+        "createFailed": "Tạo ghi chú thất bại. Vui lòng thử lại.",
+        "updateFailed": "Cập nhật ghi chú thất bại. Vui lòng thử lại.",
+        "deleteFailed": "Xóa ghi chú thất bại. Vui lòng thử lại.",
+        "fetchFailed": "Tải ghi chú thất bại. Vui lòng thử lại."
       },
       "comment": {
         "textRequired": "Văn bản là bắt buộc.",
         "budgetItemNotFound": "Không tìm thấy mục ngân sách.",
-        "createFailed": "Tạo bình luận thất bại.",
-        "fetchFailed": "Tải bình luận thất bại.",
+        "createFailed": "Tạo bình luận thất bại. Vui lòng thử lại.",
+        "fetchFailed": "Tải bình luận thất bại. Vui lòng thử lại.",
         "notFound": "Không tìm thấy bình luận.",
         "cannotDeleteOthers": "Bạn chỉ có thể xóa bình luận của mình.",
-        "deleteFailed": "Xóa bình luận thất bại."
+        "deleteFailed": "Xóa bình luận thất bại. Vui lòng thử lại."
       },
       "audit": {
         "entityTypeAndActionRequired": "Loại thực thể và hành động là bắt buộc.",
-        "createFailed": "Tạo mục kiểm toán thất bại.",
-        "fetchFailed": "Tải nhật ký kiểm toán thất bại."
+        "createFailed": "Tạo mục kiểm toán thất bại. Vui lòng thử lại.",
+        "fetchFailed": "Tải nhật ký kiểm toán thất bại. Vui lòng thử lại."
       },
       "contact": {
         "nameRequired": "Tên liên hệ là bắt buộc.",
         "notFound": "Không tìm thấy liên hệ.",
-        "createFailed": "Tạo liên hệ thất bại.",
-        "updateFailed": "Cập nhật liên hệ thất bại.",
-        "deleteFailed": "Xóa liên hệ thất bại.",
-        "fetchFailed": "Tải liên hệ thất bại.",
+        "createFailed": "Tạo liên hệ thất bại. Vui lòng thử lại.",
+        "updateFailed": "Cập nhật liên hệ thất bại. Vui lòng thử lại.",
+        "deleteFailed": "Xóa liên hệ thất bại. Vui lòng thử lại.",
+        "fetchFailed": "Tải liên hệ thất bại. Vui lòng thử lại.",
         "invalidRating": "Đánh giá không hợp lệ (1-5).",
         "firstNameRequired": "Tên là bắt buộc.",
         "lastNameRequired": "Họ là bắt buộc.",
         "personNotFound": "Không tìm thấy người liên hệ.",
-        "personCreateFailed": "Tạo người liên hệ thất bại.",
-        "personUpdateFailed": "Cập nhật người liên hệ thất bại.",
-        "personDeleteFailed": "Xóa người liên hệ thất bại.",
-        "personFetchFailed": "Tải người liên hệ thất bại."
+        "personCreateFailed": "Tạo người liên hệ thất bại. Vui lòng thử lại.",
+        "personUpdateFailed": "Cập nhật người liên hệ thất bại. Vui lòng thử lại.",
+        "personDeleteFailed": "Xóa người liên hệ thất bại. Vui lòng thử lại.",
+        "personFetchFailed": "Tải người liên hệ thất bại. Vui lòng thử lại."
       },
       "member": {
         "emailRequired": "Email là bắt buộc.",
@@ -2970,23 +2970,23 @@
         "ownerRoleRequired": "Hành động này yêu cầu vai trò „owner\".",
         "pendingInvitationExists": "Đã có lời mời đang chờ cho email này.",
         "invitationCreated": "Chưa có người dùng đăng ký với email này. Đã gửi lời mời — họ sẽ tự động trở thành thành viên dự án sau khi đăng ký.",
-        "createFailed": "Thêm thành viên thất bại.",
-        "updateFailed": "Cập nhật thành viên thất bại.",
-        "deleteFailed": "Xóa thành viên thất bại.",
-        "fetchFailed": "Tải thành viên thất bại."
+        "createFailed": "Thêm thành viên thất bại. Vui lòng thử lại.",
+        "updateFailed": "Cập nhật thành viên thất bại. Vui lòng thử lại.",
+        "deleteFailed": "Xóa thành viên thất bại. Vui lòng thử lại.",
+        "fetchFailed": "Tải thành viên thất bại. Vui lòng thử lại."
       },
       "revalidate": {
         "noTagsProvided": "Không có tag nào được cung cấp.",
         "tagNotAllowed": "Tag không được phép: {tag}.",
-        "failed": "Tái xác thực thất bại."
+        "failed": "Tái xác thực thất bại. Vui lòng thử lại."
       },
       "analytics": {
         "eventTypeRequired": "Loại sự kiện là bắt buộc.",
-        "createFailed": "Ghi sự kiện phân tích thất bại.",
-        "fetchFailed": "Tải phân tích thất bại."
+        "createFailed": "Ghi sự kiện phân tích thất bại. Vui lòng thử lại.",
+        "fetchFailed": "Tải phân tích thất bại. Vui lòng thử lại."
       },
       "admin": {
-        "backfillFailed": "Backfill thất bại.",
+        "backfillFailed": "Backfill thất bại. Vui lòng thử lại.",
         "adminOnly": "Chỉ quản trị viên."
       }
     }

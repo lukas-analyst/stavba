@@ -2738,14 +2738,14 @@
         "invalidEmailFormat": "Formato email non valido.",
         "invalidTokenFormat": "Formato token non valido.",
         "emailAlreadyVerified": "La tua email è già verificata. Puoi accedere.",
-        "verifyEmailFailed": "Invio dell'email di verifica non riuscito.",
+        "verifyEmailFailed": "Invio dell'email di verifica non riuscito. Riprova.",
         "forgotPasswordSent": "Se l'account esiste, è stata inviata un'email con un link di reimpostamento.",
         "tokenAndPasswordRequired": "Token e nuova password sono obbligatori.",
         "invalidResetLink": "Link di reimpostamento della password non valido.",
         "resetLinkExpired": "Questo link di reimpostamento della password è scaduto. Richiedine uno nuovo.",
         "resetLinkUsed": "Questo link di reimpostamento della password è già stato usato. Richiedine uno nuovo.",
         "resetSuccess": "La tua password è stata cambiata con successo. Puoi accedere.",
-        "resetFailed": "Reimpostamento della password non riuscito.",
+        "resetFailed": "Reimpostamento della password non riuscito. Riprova.",
         "typeAndTokenRequired": "type e token sono obbligatori.",
         "invalidTokenType": "Tipo di token non valido.",
         "unknownAuthAction": "Azione di autenticazione sconosciuta.",
@@ -2761,15 +2761,15 @@
         "alreadyUsed": "L'invito è già stato usato.",
         "expired": "L'invito è scaduto.",
         "notYourEmail": "Questo invito non è per la tua email.",
-        "acceptFailed": "Accettazione dell'invito non riuscita.",
-        "rejectFailed": "Rifiuto dell'invito non riuscito.",
-        "loadFailed": "Caricamento degli inviti non riuscito.",
+        "acceptFailed": "Accettazione dell'invito non riuscita. Riprova.",
+        "rejectFailed": "Rifiuto dell'invito non riuscito. Riprova.",
+        "loadFailed": "Caricamento degli inviti non riuscito. Riprova.",
         "invalidRequestJson": "Richiesta non valida — previsto un oggetto JSON.",
         "invalidEmailFormat": "Formato email non valido.",
         "alreadyOwner": "Questo utente è già il gestore del progetto.",
         "alreadyMember": "Questo utente è già membro del progetto.",
-        "createFailed": "Creazione dell'invito non riuscita.",
-        "cancelFailed": "Revoca dell'invito non riuscita."
+        "createFailed": "Creazione dell'invito non riuscita. Riprova.",
+        "cancelFailed": "Revoca dell'invito non riuscita. Riprova."
       },
       "budget": {
         "cannotMoveToSelf": "Una voce non può essere spostata sotto se stessa.",
@@ -2780,10 +2780,10 @@
         "parentNotFound": "Elemento principale non trovato in questo progetto.",
         "dependsOnNotFound": "Elemento di riferimento (dependsOnId) non trovato in questo progetto.",
         "notFound": "Elemento di budget non trovato.",
-        "createFailed": "Creazione dell'elemento di budget non riuscita.",
-        "updateFailed": "Aggiornamento dell'elemento di budget non riuscito.",
-        "deleteFailed": "Eliminazione dell'elemento di budget non riuscita.",
-        "fetchFailed": "Recupero degli elementi di budget non riuscito.",
+        "createFailed": "Creazione dell'elemento di budget non riuscita. Riprova.",
+        "updateFailed": "Aggiornamento dell'elemento di budget non riuscito. Riprova.",
+        "deleteFailed": "Eliminazione dell'elemento di budget non riuscita. Riprova.",
+        "fetchFailed": "Recupero degli elementi di budget non riuscito. Riprova.",
         "invalidAmount": "Importo non valido.",
         "invalidPlanCost": "Costo pianificato non valido.",
         "invalidFlexibilityPercent": "Percentuale di flessibilità non valida.",
@@ -2806,8 +2806,8 @@
         "nameInvalidChars": "Il nome contiene caratteri non validi.",
         "nameRequired": "Il nome non deve essere vuoto.",
         "noUpdatableFields": "Nessun campo aggiornabile fornito (name, isAdmin).",
-        "fetchFailed": "Recupero dell'utente non riuscito.",
-        "updateFailed": "Aggiornamento dell'utente non riuscito."
+        "fetchFailed": "Recupero dell'utente non riuscito. Riprova.",
+        "updateFailed": "Aggiornamento dell'utente non riuscito. Riprova."
       },
       "password": {
         "currentRequired": "La password attuale è obbligatoria.",
@@ -2825,8 +2825,8 @@
       },
       "project": {
         "notFoundOrNotPublic": "Progetto non trovato o non pubblico.",
-        "requestAccessFailed": "Concessione dell'accesso non riuscita.",
-        "publicLoadFailed": "Caricamento dei dati del progetto pubblico non riuscito.",
+        "requestAccessFailed": "Concessione dell'accesso non riuscita. Riprova.",
+        "publicLoadFailed": "Caricamento dei dati del progetto pubblico non riuscito. Riprova.",
         "nameRequired": "Il nome del progetto è obbligatorio.",
         "notFound": "Progetto non trovato.",
         "newOwnerNotFound": "Nuovo proprietario non trovato.",
@@ -2842,16 +2842,16 @@
         "invalidFloorArea": "Area pavimento non valida.",
         "invalidFloors": "Numero di piani non valido.",
         "invalidOwner": "Identificatore proprietario non valido.",
-        "createFailed": "Creazione del progetto non riuscita.",
-        "updateFailed": "Aggiornamento del progetto non riuscito.",
-        "deleteFailed": "Eliminazione del progetto non riuscita.",
-        "fromTemplateFailed": "Creazione del progetto da modello non riuscita.",
-        "fetchFailed": "Recupero del progetto non riuscito.",
-        "fetchAllFailed": "Recupero dei progetti non riuscito."
+        "createFailed": "Creazione del progetto non riuscita. Riprova.",
+        "updateFailed": "Aggiornamento del progetto non riuscito. Riprova.",
+        "deleteFailed": "Eliminazione del progetto non riuscita. Riprova.",
+        "fromTemplateFailed": "Creazione del progetto da modello non riuscita. Riprova.",
+        "fetchFailed": "Recupero del progetto non riuscito. Riprova.",
+        "fetchAllFailed": "Recupero dei progetti non riuscito. Riprova."
       },
       "ares": {
         "apiUnavailable": "API ARES non disponibile.",
-        "searchError": "Errore di ricerca.",
+        "searchError": "Errore di ricerca. Riprova.",
         "apiKeyMissing": "La API key di ARES non è configurata. Puoi inserire i dati dell'azienda manualmente."
       },
       "notes": {
@@ -2882,7 +2882,7 @@
       "reorder": {
         "invalidItems": "Gli elementi devono essere un array di oggetti {id, sortOrder}.",
         "invalidCategoryOrder": "L'ordine delle categorie deve essere un array di stringhe.",
-        "failed": "Riordino non riuscito."
+        "failed": "Riordino non riuscito. Riprova."
       },
       "payment": {
         "budgetItemIdRequired": "L'ID dell'elemento di budget è obbligatorio.",
@@ -2892,10 +2892,10 @@
         "parentNotFound": "Pagamento principale non trovato.",
         "newBudgetItemNotFound": "Nuovo elemento di budget non trovato.",
         "cannotMoveAcrossProjects": "Impossibile spostare il pagamento in un elemento di budget di un altro progetto.",
-        "createFailed": "Creazione del pagamento non riuscita.",
-        "updateFailed": "Aggiornamento del pagamento non riuscito.",
-        "deleteFailed": "Eliminazione del pagamento non riuscita.",
-        "fetchFailed": "Recupero dei pagamenti non riuscito.",
+        "createFailed": "Creazione del pagamento non riuscita. Riprova.",
+        "updateFailed": "Aggiornamento del pagamento non riuscito. Riprova.",
+        "deleteFailed": "Eliminazione del pagamento non riuscita. Riprova.",
+        "fetchFailed": "Recupero dei pagamenti non riuscito. Riprova.",
         "invalidAmount": "Importo non valido.",
         "invalidVatRate": "Aliquota IVA non valida.",
         "invalidInvoiceTotal": "Totale fattura non valido.",
@@ -2903,8 +2903,8 @@
       },
       "snapshot": {
         "labelRequired": "L'etichetta è obbligatoria.",
-        "createFailed": "Creazione dell'istantanea non riuscita.",
-        "fetchFailed": "Recupero delle istantanee non riuscito."
+        "createFailed": "Creazione dell'istantanea non riuscita. Riprova.",
+        "fetchFailed": "Recupero delle istantanee non riuscito. Riprova."
       },
       "time": {
         "budgetItemIdRequired": "L'ID dell'elemento di budget è obbligatorio.",
@@ -2914,10 +2914,10 @@
         "notFound": "Voce di tempo non trovata.",
         "newBudgetItemNotFound": "Nuovo elemento di budget non trovato.",
         "cannotMoveAcrossProjects": "Impossibile spostare la voce di tempo in un elemento di budget di un altro progetto.",
-        "createFailed": "Creazione della voce di tempo non riuscita.",
-        "updateFailed": "Aggiornamento della voce di tempo non riuscito.",
-        "deleteFailed": "Eliminazione della voce di tempo non riuscita.",
-        "fetchFailed": "Recupero delle voci di tempo non riuscito.",
+        "createFailed": "Creazione della voce di tempo non riuscita. Riprova.",
+        "updateFailed": "Aggiornamento della voce di tempo non riuscito. Riprova.",
+        "deleteFailed": "Eliminazione della voce di tempo non riuscita. Riprova.",
+        "fetchFailed": "Recupero delle voci di tempo non riuscito. Riprova.",
         "invalidHours": "Ore non valide.",
         "invalidWorkerCount": "Numero di lavoratori non valido.",
         "invalidDate": "Data non valida."
@@ -2927,40 +2927,40 @@
         "textEmpty": "Il testo non può essere vuoto.",
         "nothingToUpdate": "Nulla da aggiornare — fornisci testo o autore.",
         "notFound": "Nota non trovata.",
-        "createFailed": "Creazione della nota non riuscita.",
-        "updateFailed": "Aggiornamento della nota non riuscito.",
-        "deleteFailed": "Eliminazione della nota non riuscita.",
-        "fetchFailed": "Recupero delle note non riuscito."
+        "createFailed": "Creazione della nota non riuscita. Riprova.",
+        "updateFailed": "Aggiornamento della nota non riuscito. Riprova.",
+        "deleteFailed": "Eliminazione della nota non riuscita. Riprova.",
+        "fetchFailed": "Recupero delle note non riuscito. Riprova."
       },
       "comment": {
         "textRequired": "Il testo è obbligatorio.",
         "budgetItemNotFound": "Elemento di budget non trovato.",
-        "createFailed": "Creazione del commento non riuscita.",
-        "fetchFailed": "Recupero dei commenti non riuscito.",
+        "createFailed": "Creazione del commento non riuscita. Riprova.",
+        "fetchFailed": "Recupero dei commenti non riuscito. Riprova.",
         "notFound": "Commento non trovato.",
         "cannotDeleteOthers": "Puoi eliminare solo i tuoi commenti.",
-        "deleteFailed": "Eliminazione del commento non riuscita."
+        "deleteFailed": "Eliminazione del commento non riuscita. Riprova."
       },
       "audit": {
         "entityTypeAndActionRequired": "Il tipo di entità e l'azione sono obbligatori.",
-        "createFailed": "Creazione della voce di audit non riuscita.",
-        "fetchFailed": "Recupero del registro di audit non riuscito."
+        "createFailed": "Creazione della voce di audit non riuscita. Riprova.",
+        "fetchFailed": "Recupero del registro di audit non riuscito. Riprova."
       },
       "contact": {
         "nameRequired": "Il nome del contatto è obbligatorio.",
         "notFound": "Contatto non trovato.",
-        "createFailed": "Creazione del contatto non riuscita.",
-        "updateFailed": "Aggiornamento del contatto non riuscito.",
-        "deleteFailed": "Eliminazione del contatto non riuscita.",
-        "fetchFailed": "Recupero dei contatti non riuscito.",
+        "createFailed": "Creazione del contatto non riuscita. Riprova.",
+        "updateFailed": "Aggiornamento del contatto non riuscito. Riprova.",
+        "deleteFailed": "Eliminazione del contatto non riuscita. Riprova.",
+        "fetchFailed": "Recupero dei contatti non riuscito. Riprova.",
         "invalidRating": "Valutazione non valida (1-5).",
         "firstNameRequired": "Il nome è obbligatorio.",
         "lastNameRequired": "Il cognome è obbligatorio.",
         "personNotFound": "Persona di contatto non trovata.",
-        "personCreateFailed": "Creazione della persona di contatto non riuscita.",
-        "personUpdateFailed": "Aggiornamento della persona di contatto non riuscito.",
-        "personDeleteFailed": "Eliminazione della persona di contatto non riuscita.",
-        "personFetchFailed": "Recupero delle persone di contatto non riuscito."
+        "personCreateFailed": "Creazione della persona di contatto non riuscita. Riprova.",
+        "personUpdateFailed": "Aggiornamento della persona di contatto non riuscito. Riprova.",
+        "personDeleteFailed": "Eliminazione della persona di contatto non riuscita. Riprova.",
+        "personFetchFailed": "Recupero delle persone di contatto non riuscito. Riprova."
       },
       "member": {
         "emailRequired": "L'email è obbligatoria.",
@@ -2970,23 +2970,23 @@
         "ownerRoleRequired": "Questa azione richiede il ruolo „owner\".",
         "pendingInvitationExists": "Esiste già un invito in sospeso per questa email.",
         "invitationCreated": "Nessun utente registrato con questa email. È stato inviato un invito — diventerà automaticamente membro del progetto dopo la registrazione.",
-        "createFailed": "Aggiunta del membro non riuscita.",
-        "updateFailed": "Aggiornamento del membro non riuscito.",
-        "deleteFailed": "Rimozione del membro non riuscita.",
-        "fetchFailed": "Recupero dei membri non riuscito."
+        "createFailed": "Aggiunta del membro non riuscita. Riprova.",
+        "updateFailed": "Aggiornamento del membro non riuscito. Riprova.",
+        "deleteFailed": "Rimozione del membro non riuscita. Riprova.",
+        "fetchFailed": "Recupero dei membri non riuscito. Riprova."
       },
       "revalidate": {
         "noTagsProvided": "Nessun tag fornito.",
         "tagNotAllowed": "Tag non consentito: {tag}.",
-        "failed": "Revalidazione non riuscita."
+        "failed": "Revalidazione non riuscita. Riprova."
       },
       "analytics": {
         "eventTypeRequired": "Il tipo di evento è obbligatorio.",
-        "createFailed": "Registrazione dell'evento di analisi non riuscita.",
-        "fetchFailed": "Recupero dell'analisi non riuscito."
+        "createFailed": "Registrazione dell'evento di analisi non riuscita. Riprova.",
+        "fetchFailed": "Recupero dell'analisi non riuscito. Riprova."
       },
       "admin": {
-        "backfillFailed": "Backfill non riuscito.",
+        "backfillFailed": "Backfill non riuscito. Riprova.",
         "adminOnly": "Solo amministratore."
       }
     }
