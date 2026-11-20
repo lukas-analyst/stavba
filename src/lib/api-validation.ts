@@ -81,9 +81,16 @@ export const passwordSchema = z.string().superRefine((password, ctx) => {
  */
 export const optionalNameSchema = z
   .union([z.string(), z.null(), z.undefined()])
-  .transform((v) => (v == null ? null : v.trim() || null))
+  .transform((v) => {
+    // Key missing → undefined → don't touch this field in PATCH
+    if (v === undefined) return undefined;
+    // Explicit null or empty string → null
+    if (v == null) return null;
+    const trimmed = v.trim();
+    return trimmed || null;
+  })
   .superRefine((name, ctx) => {
-    if (name === null) return; // empty is valid (name is optional)
+    if (name === null || name === undefined) return; // empty/missing is valid
     const err = validateName(name);
     if (err !== null) {
       ctx.addIssue({
@@ -149,10 +156,21 @@ export const nonEmptyString = z.string().trim().min(1);
  *
  * The `.optional()` makes the field itself omittable (key can be missing
  * from the JSON body → returns `undefined`).
+ *
+ * CRITICAL: `undefined` (key missing) must stay `undefined`, NOT `null`.
+ * Otherwise PATCH handlers can't distinguish "don't change this field"
+ * from "set this field to null" — leading to accidental data erasure.
  */
 export const optionalNullableString = z
   .union([z.string(), z.null(), z.undefined()])
-  .transform((v) => (v == null ? null : v.trim() || null))
+  .transform((v) => {
+    // Key missing → undefined → don't touch this field in PATCH
+    if (v === undefined) return undefined;
+    // Explicit null or empty string → null
+    if (v == null) return null;
+    const trimmed = v.trim();
+    return trimmed || null;
+  })
   .optional();
 
 /**
