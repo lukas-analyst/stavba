@@ -844,6 +844,9 @@
           "movedToTop": "Attività spostata al livello superiore",
           "error": "Spostamento non riuscito"
         }
+      },
+      "placeholder": {
+        "noName": "(senza nome)"
       }
     },
     "management": {

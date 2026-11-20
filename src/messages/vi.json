@@ -844,6 +844,9 @@
           "movedToTop": "Đã di chuyển công việc lên cấp cao nhất",
           "error": "Di chuyển thất bại"
         }
+      },
+      "placeholder": {
+        "noName": "(không tên)"
       }
     },
     "management": {

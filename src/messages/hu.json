@@ -844,6 +844,9 @@
           "movedToTop": "Feladat felső szintre helyezve",
           "error": "Az áthelyezés sikertelen"
         }
+      },
+      "placeholder": {
+        "noName": "(névtelen)"
       }
     },
     "management": {

@@ -844,6 +844,9 @@
           "movedToTop": "Task moved to top level",
           "error": "Move failed"
         }
+      },
+      "placeholder": {
+        "noName": "(unnamed)"
       }
     },
     "management": {

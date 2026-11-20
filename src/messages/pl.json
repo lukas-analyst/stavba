@@ -844,6 +844,9 @@
           "movedToTop": "Zadanie przeniesione na poziom najwyższy",
           "error": "Przeniesienie nie powiodło się"
         }
+      },
+      "placeholder": {
+        "noName": "(bez nazwy)"
       }
     },
     "management": {

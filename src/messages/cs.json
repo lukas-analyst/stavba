@@ -844,6 +844,9 @@
           "movedToTop": "Úkol přesunut na nejvyšší úroveň",
           "error": "Přesun se nezdařil"
         }
+      },
+      "placeholder": {
+        "noName": "(bez názvu)"
       }
     },
     "management": {

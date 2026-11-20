@@ -424,7 +424,7 @@ function ReportBody({
           </thead>
           <tbody>
             {budgetItems.map((it) => {
-              const name = it.subcategory || t("fallback.noName");
+              const name = it.subcategory || it.element || t("fallback.noName");
               const status = it.rejected
                 ? t("status.rejected")
                 : it.completed

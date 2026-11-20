@@ -143,7 +143,7 @@ export function DetailPanelRow({
                   .map((child) => (
                     <div key={child.id} className="space-y-0.5">
                       <div className="type-label-sm text-muted-foreground/70">
-                        └ {child.subcategory || t("placeholder.noName")}
+                        └ {child.subcategory || child.element || t("placeholder.noName")}
                       </div>
                       <ul className="space-y-0.5 pl-3">
                         {child.links!.map((link) => (

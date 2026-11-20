@@ -176,7 +176,7 @@ export function MoveItemDialog({
                       <span className="text-muted-foreground">{c.category}</span>
                       <span className="text-muted-foreground/50">›</span>
                       <span className="font-medium">
-                        {c.subcategory || t("placeholder.noName")}
+                        {c.subcategory || c.element || t("placeholder.noName")}
                       </span>
                     </span>
                   </SelectItem>

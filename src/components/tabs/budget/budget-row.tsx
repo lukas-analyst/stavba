@@ -381,7 +381,7 @@ export const BudgetRow = memo(function BudgetRow({
                 childCount > 0 && "font-semibold",
               )}
             >
-              {item.subcategory || t("placeholder.noName")}
+              {item.subcategory || item.element || t("placeholder.noName")}
             </span>
             {item.rejected && (
               <Badge variant="outline" className="type-label-sm h-4 px-1 text-danger dark:text-danger/60">

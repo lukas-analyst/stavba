@@ -844,6 +844,9 @@
           "movedToTop": "Tarea movida al nivel superior",
           "error": "Falló el movimiento"
         }
+      },
+      "placeholder": {
+        "noName": "(sin nombre)"
       }
     },
     "management": {
