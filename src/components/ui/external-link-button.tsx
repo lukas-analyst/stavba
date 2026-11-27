@@ -44,9 +44,9 @@ export function ExternalLinkButton({
   const displayLabel = label ?? (type === "custom" ? undefined : t(type === "study" ? "studyUrl" : type === "documentation" ? "documentationUrl" : "mapUrl"));
 
   const sizeClasses = {
-    xs: "h-7 px-2 text-xs gap-1",
-    sm: "h-8 px-2.5 text-sm gap-1.5",
-    md: "h-9 px-3 text-sm gap-1.5",
+    xs: "h-7 px-2 type-label gap-1",
+    sm: "h-8 px-2.5 type-label gap-1.5",
+    md: "h-9 px-3 type-body gap-1.5",
   }[size];
 
   const iconSize = size === "xs" ? "h-3 w-3" : "h-3.5 w-3.5";

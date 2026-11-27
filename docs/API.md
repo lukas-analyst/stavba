@@ -321,6 +321,10 @@ Detail projektu.
   "isPublic": false,
   "startDate": "2026-03-01T00:00:00.000Z",
   "endDate": "2026-12-31T00:00:00.000Z",
+  "fullAddress": "Národní 25, 110 00 Praha 1",
+  "studyUrl": "https://drive.google.com/...",
+  "documentationUrl": "https://drive.google.com/...",
+  "mapUrl": "https://maps.google.com/...",
   "floorArea": "120",
   "floors": "2",
   "energyRating": "B",
@@ -351,6 +355,10 @@ Aktualizace projektu. Změna vlastníka (`ownerId`) vyžaduje owner roli.
   "ownerId": "cly987...",
   "startDate": "2026-04-01",
   "endDate": "2026-11-30",
+  "fullAddress": "Národní 25, 110 00 Praha 1",
+  "studyUrl": "https://drive.google.com/...",
+  "documentationUrl": "https://drive.google.com/...",
+  "mapUrl": "https://maps.google.com/...",
   "floorArea": "125",
   "floors": "2",
   "energyRating": "A",
@@ -358,6 +366,25 @@ Aktualizace projektu. Změna vlastníka (`ownerId`) vyžaduje owner roli.
   "propertyNote": "Aktualizovaná poznámka"
 }
 ```
+
+| Pole | Typ | Povinné | Validace |
+|------|-----|---------|----------|
+| `name` | `string` | ❌ | 1-200 znaků |
+| `address` | `string?` | ❌ | Max 500 znaků |
+| `fullAddress` | `string?` | ❌ | Přesná adresa (pro mapy) |
+| `studyUrl` | `string?` | ❌ | Validní http(s) URL |
+| `documentationUrl` | `string?` | ❌ | Validní http(s) URL |
+| `mapUrl` | `string?` | ❌ | Vlastní odkaz na mapu; pokud prázdné, generuje se z `fullAddress` |
+| `status` | `enum?` | ❌ | `planning` \| `active` \| `paused` \| `completed` |
+| `currency` | `enum?` | ❌ | ISO 4217 |
+| `starred` | `boolean?` | ❌ | |
+| `ownerId` | `cuid?` | ❌ | Pouze owner může změnit |
+| `isPublic` | `boolean?` | ❌ | Veřejný přístup k projektu |
+| `floorArea` | `number?` | ❌ | m² |
+| `floors` | `int?` | ❌ | Počet podlaží |
+| `energyRating` | `enum?` | ❌ | A-G |
+| `heatLoss` | `number?` | ❌ | W/K |
+| `propertyNote` | `string?` | ❌ | Volná poznámka |
 
 **Response 200:** Aktualizovaný projekt (stejný formát jako GET)
 

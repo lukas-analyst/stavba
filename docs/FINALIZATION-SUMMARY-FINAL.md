@@ -137,7 +137,7 @@
 | **Build projde bez chyb** | ✅ | Vercel auto-deploy z `main` |
 | **ESLint clean** | ✅ | 0 errors, 0 warnings |
 | **TypeScript clean** | ✅ | 0 errors in `src/` |
-| **DB migrace** | ⚠️ | `invoiceUrl` + `export_templates` 3 sloupce — skripty připraveny v `scripts/` |
+| **DB migrace** | ⚠️ | `invoiceUrl`, `export_templates` 3 sloupce, `mapUrl` — skripty připraveny v `scripts/` |
 | **Env variables** | ✅ | Viz `.env.example` — DATABASE_URL, NEXTAUTH_SECRET, BREVO_API_KEY, CRON_SECRET |
 | **Cron jobs aktivní** | ✅ | 3 cron jobs (ČNB, finalize-deletions, recurring-payments) |
 | **Error reporting** | ⚠️ | `ERROR_REPORTING_WEBHOOK_URL` připraveno, neproduváno |
