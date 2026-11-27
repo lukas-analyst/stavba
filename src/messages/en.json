@@ -1575,7 +1575,8 @@
           "empty": "No time entries yet.",
           "fallback": "Work"
         }
-      }
+      },
+      "mapLink": "Location on map"
     },
     "contacts": {
       "header": {

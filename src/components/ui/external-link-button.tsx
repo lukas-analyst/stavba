@@ -69,10 +69,13 @@ export function ExternalLinkButton({
 }
 
 // ============================================================
-// Helper: build Google Maps URL from address
+// Helper: build map URL with priority
 // ------------------------------------------------------------
-// If mapUrl is explicitly set, use it. Otherwise, auto-generate
-// from fullAddress (or address as fallback).
+// Priority:
+//   1. mapUrl (custom URL) — if set, use as-is
+//   2. fullAddress — Google Maps search URL
+//   3. address — Google Maps search URL
+// Returns null if none are available.
 // ============================================================
 
 export function buildMapUrl(opts: {
@@ -81,7 +84,9 @@ export function buildMapUrl(opts: {
   address?: string | null;
 }): string | null {
   const { mapUrl, fullAddress, address } = opts;
+  // 1. Custom mapUrl takes priority
   if (mapUrl && mapUrl.trim()) return mapUrl.trim();
+  // 2. fullAddress → Google Maps search
   const query = fullAddress?.trim() || address?.trim();
   if (!query) return null;
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;

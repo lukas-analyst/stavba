@@ -263,13 +263,26 @@ export function DashboardTab({ projectId }: { projectId: string }) {
         {project.description && (
           <p className="type-body text-on-surface-variant">{project.description}</p>
         )}
-        {(project.address || project.fullAddress) && (() => {
+        {/* Adresa z "Detaily projektu" (project.address) — vždy zobrazena, pokud je vyplněná */}
+        {project.address && (
+          <p className="type-label text-muted-foreground">{project.address}</p>
+        )}
+        {/* Map odkaz — priorita: mapUrl > fullAddress > address */}
+        {(() => {
           const mapHref = buildMapUrl({
             mapUrl: project.mapUrl,
             fullAddress: project.fullAddress,
             address: project.address,
           });
-          return mapHref ? (
+          // Zobrazit map odkaz pouze pokud:
+          // - existuje mapHref (nějaká adresa nebo URL)
+          // - A zároveň je vyplněné mapUrl NEBO fullAddress
+          //   (pokud je jen address, už je zobrazena výše jako text)
+          const hasMapUrl = !!project.mapUrl?.trim();
+          const hasFullAddress = !!project.fullAddress?.trim();
+          if (!mapHref || (!hasMapUrl && !hasFullAddress)) return null;
+
+          return (
             <a
               href={mapHref}
               target="_blank"
@@ -277,10 +290,10 @@ export function DashboardTab({ projectId }: { projectId: string }) {
               className="inline-flex items-center gap-1 type-label text-muted-foreground hover:text-on-surface transition-colors"
             >
               <MapPin className="h-3.5 w-3.5" />
-              {project.fullAddress || project.address}
+              {hasMapUrl
+                ? t("mapLink")
+                : project.fullAddress || project.address}
             </a>
-          ) : (
-            <p className="type-label text-muted-foreground">{project.fullAddress || project.address}</p>
           );
         })()}
         {(project.studyUrl || project.documentationUrl) && (

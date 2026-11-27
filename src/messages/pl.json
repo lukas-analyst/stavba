@@ -1575,7 +1575,8 @@
           "empty": "Brak wpisów czasu.",
           "fallback": "Praca"
         }
-      }
+      },
+      "mapLink": "Lokalizacja na mapie"
     },
     "contacts": {
       "header": {
