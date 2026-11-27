@@ -73,6 +73,23 @@ function dateToOffset(date: Date, zoom: ZoomLevel, rangeStart: Date): number {
   }
 }
 
+// ===== Convert a pixel offset back to a date (module-level for GanttBar) =====
+function offsetToDate(offset: number, zoom: ZoomLevel, rangeStart: Date): Date {
+  if (zoom === "days") {
+    return new Date(rangeStart.getTime() + Math.round(offset) * DAY_MS);
+  } else if (zoom === "months") {
+    const months = Math.floor(offset);
+    const dayInMonth = Math.round((offset - months) * 30) + 1;
+    const d = new Date(rangeStart.getFullYear(), rangeStart.getMonth() + months, 1);
+    const lastDay = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+    return new Date(d.getFullYear(), d.getMonth(), Math.min(dayInMonth, lastDay));
+  } else if (zoom === "quarters") {
+    return new Date(rangeStart.getTime() + Math.round(offset * 90) * DAY_MS);
+  } else {
+    return new Date(rangeStart.getTime() + Math.round(offset * 365) * DAY_MS);
+  }
+}
+
 // ===== Dependency arrow (computed after layout measurement) =====
 // Each arrow is an L-shaped SVG path from the end of bar B (the dependency)
 // to the start of bar A (the dependent item). Coordinates are in pixels,
@@ -94,6 +111,7 @@ function isMilestoneItem(item: { dateFrom: string | null; dateTo: string | null 
 
 export function TimelineTab({ projectId }: { projectId: string }) {
   const { data, isLoading, isError, refetch } = useDashboard(projectId);
+  const updateItem = useUpdateBudgetItem(projectId);
   const t = useTranslations("tabs.timeline");
   const tc = useTranslations("common");
   const tPhases = useTranslations("phases");
@@ -157,22 +175,8 @@ export function TimelineTab({ projectId }: { projectId: string }) {
     return { items: sorted, rangeStart: start, rangeEnd: end, totalUnits: units };
   }, [data, zoom]);
 
-  // Convert a pixel offset back to a date
-  const offsetToDate = (offset: number) => {
-    if (zoom === "days") {
-      return new Date(rangeStart.getTime() + Math.round(offset) * DAY_MS);
-    } else if (zoom === "months") {
-      const months = Math.floor(offset);
-      const dayInMonth = Math.round((offset - months) * 30) + 1;
-      const d = new Date(rangeStart.getFullYear(), rangeStart.getMonth() + months, 1);
-      const lastDay = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
-      return new Date(d.getFullYear(), d.getMonth(), Math.min(dayInMonth, lastDay));
-    } else if (zoom === "quarters") {
-      return new Date(rangeStart.getTime() + Math.round(offset * 90) * DAY_MS);
-    } else {
-      return new Date(rangeStart.getTime() + Math.round(offset * 365) * DAY_MS);
-    }
-  };
+  // Convert a pixel offset back to a date (delegates to module-level function)
+  const offsetToDateLocal = (offset: number) => offsetToDate(offset, zoom, rangeStart);
 
   // Header cells
   const headerCells = useMemo(() => {
@@ -607,6 +611,7 @@ export function TimelineTab({ projectId }: { projectId: string }) {
                               isFuture={isFuture}
                               isCritical={criticalPath.has(it.id)}
                               zoom={zoom}
+                              rangeStart={rangeStart}
                               onDoubleClick={() => setEditingItem({
                                 id: it.id,
                                 dateFrom: it.dateFrom,
@@ -614,6 +619,12 @@ export function TimelineTab({ projectId }: { projectId: string }) {
                                 subcategory: it.subcategory,
                                 category: it.category,
                               })}
+                              onDragEnd={(newFrom, newTo) => {
+                                const dragData: Record<string, unknown> = {};
+                                if (newFrom) dragData.dateFrom = newFrom.toISOString();
+                                if (newTo) dragData.dateTo = newTo.toISOString();
+                                updateItem.mutate({ id: it.id, data: dragData });
+                              }}
                             />
                           </div>
                         </div>
@@ -737,7 +748,9 @@ function GanttBar({
   unitW,
   isActive,
   isCritical,
+  rangeStart,
   onDoubleClick,
+  onDragEnd,
 }: {
   item: {
     id: string;
@@ -757,7 +770,9 @@ function GanttBar({
   isFuture: boolean;
   isCritical: boolean;
   zoom: ZoomLevel;
+  rangeStart: Date;
   onDoubleClick: () => void;
+  onDragEnd: (newDateFrom: Date | null, newDateTo: Date | null) => void;
 }) {
   const t = useTranslations("tabs.timeline");
   const width = widthUnits * unitW;
@@ -766,9 +781,63 @@ function GanttBar({
   const milestone = isMilestoneItem(item);
   const titleText = `${item.subcategory || item.category}\n${formatDate(item.dateFrom)} — ${formatDate(item.dateTo)}\n${formatCzk(item.planCost)}${item.completed ? t("suffix.completed") : ""}${milestone ? ` · ${t("legend.milestone")}` : ""}${isCritical ? ` · ${t("legend.criticalPath")}` : ""}`;
 
+  // ===== Drag + resize state =====
+  const [dragState, setDragState] = useState<{
+    mode: "move" | "resize-left" | "resize-right";
+    startX: number;
+    origStartOffset: number;
+    origWidthUnits: number;
+  } | null>(null);
+
+  const handleMouseDown = (e: React.MouseEvent, mode: "move" | "resize-left" | "resize-right") => {
+    e.stopPropagation();
+    e.preventDefault();
+    setDragState({
+      mode,
+      startX: e.clientX,
+      origStartOffset: startOffset,
+      origWidthUnits: widthUnits,
+    });
+  };
+
+  useEffect(() => {
+    if (!dragState) return;
+    const handleMouseMove = (e: MouseEvent) => {
+      // Visual feedback handled by dragState — GanttBar re-renders with new left/width
+    };
+    const handleMouseUp = (e: MouseEvent) => {
+      const deltaX = e.clientX - dragState.startX;
+      const deltaUnits = Math.round(deltaX / unitW);
+
+      if (dragState.mode === "move") {
+        // Move both dates by same delta
+        const newStartOffset = dragState.origStartOffset + deltaUnits;
+        const newEndOffset = newStartOffset + dragState.origWidthUnits;
+        const newFrom = offsetToDate(newStartOffset, zoom, rangeStart);
+        const newTo = offsetToDate(newEndOffset, zoom, rangeStart);
+        onDragEnd(newFrom, newTo);
+      } else if (dragState.mode === "resize-left") {
+        // Change dateFrom (keep dateTo)
+        const newStartOffset = dragState.origStartOffset + deltaUnits;
+        const newFrom = offsetToDate(newStartOffset, zoom, rangeStart);
+        onDragEnd(newFrom, null);
+      } else if (dragState.mode === "resize-right") {
+        // Change dateTo (keep dateFrom)
+        const newEndOffset = dragState.origStartOffset + dragState.origWidthUnits + deltaUnits;
+        const newTo = offsetToDate(newEndOffset, zoom, rangeStart);
+        onDragEnd(null, newTo);
+      }
+      setDragState(null);
+    };
+    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mouseup", handleMouseUp);
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, [dragState, unitW, zoom, rangeStart, onDragEnd]);
+
   // ===== Milestone: render as a diamond (rotated square) =====
-  // A milestone is a zero-duration item (dateFrom === dateTo). The diamond
-  // is centered on the date, with a small label below.
   if (milestone) {
     return (
       <div
@@ -798,31 +867,44 @@ function GanttBar({
     );
   }
 
-  // ===== Regular bar =====
+  // ===== Regular bar with drag + resize =====
+  const isDragging = dragState !== null;
   return (
     <div
       className={cn(
-        "absolute top-1/2 flex h-7 -translate-y-1/2 cursor-pointer items-center overflow-hidden rounded-md border shadow-sm transition-shadow hover:shadow-md hover:brightness-105",
+        "absolute top-1/2 flex h-7 -translate-y-1/2 cursor-grab items-center overflow-hidden rounded-md border shadow-sm transition-shadow hover:shadow-md hover:brightness-105",
         barColor,
         isActive && "ring-2 ring-offset-1",
         isCritical && "!border-2 !border-amber-500",
         item.completed && "opacity-70",
+        isDragging && "cursor-grabbing !shadow-lg !brightness-110 z-20",
       )}
       style={{
         left: `${left}px`,
         width: `${Math.max(width, 24)}px`,
         minWidth: 24,
       }}
+      onMouseDown={(e) => handleMouseDown(e, "move")}
       onDoubleClick={(e) => {
         e.stopPropagation();
         onDoubleClick();
       }}
       title={titleText}
     >
-      <span className="flex-1 truncate px-1.5 type-label-sm font-medium">
+      {/* Left resize handle */}
+      <div
+        className="absolute left-0 top-0 h-full w-1.5 cursor-ew-resize hover:bg-foreground/20"
+        onMouseDown={(e) => handleMouseDown(e, "resize-left")}
+      />
+      <span className="flex-1 truncate px-1.5 type-label-sm font-medium pointer-events-none">
         {item.subcategory || item.category}
         {item.completed && " ✓"}
       </span>
+      {/* Right resize handle */}
+      <div
+        className="absolute right-0 top-0 h-full w-1.5 cursor-ew-resize hover:bg-foreground/20"
+        onMouseDown={(e) => handleMouseDown(e, "resize-right")}
+      />
     </div>
   );
 }
