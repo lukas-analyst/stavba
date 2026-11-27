@@ -207,6 +207,9 @@ model Project {
   studyUrl         String?
   /// Odkaz na projektovou dokumentaci (URL)
   documentationUrl String?
+  /// Vlastní odkaz na mapu (Google Maps, Mapy.cz, ...). Pokud není nastaven,
+  /// generuje se automaticky z `fullAddress` (Google Maps search URL).
+  mapUrl           String?
   /// Tepelná ztráta domu (W/K) — pro energetické hodnocení
   heatLoss         Float?
   /// Energetický štítek (A-G, volný text)

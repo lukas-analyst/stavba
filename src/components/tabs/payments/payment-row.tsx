@@ -67,6 +67,7 @@ export const PaymentRow = memo(function PaymentRow({
   const { trackEvent } = useAnalytics(projectId);
   const t = useTranslations("tabs.payments");
   const tPaymentTypes = useTranslations("paymentTypes");
+  const tCommon = useTranslations("common");
   const locale = useLocale() as Locale;
   const paymentTypeInfo = PAYMENT_TYPES.find((pt) => pt.value === payment.type);
   const paymentTypeEmoji = paymentTypeInfo?.emoji ?? "•";
@@ -224,23 +225,35 @@ export const PaymentRow = memo(function PaymentRow({
           {payment.vendor && (
             <span className="type-label text-on-surface-variant">
               {payment.vendor}
-              {payment.invoiceNumber ? ` · ${payment.invoiceNumber}` : ""}
-              {payment.invoiceUrl && (
-                <a
-                  href={payment.invoiceUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="ml-1 inline-flex items-center text-info hover:text-info-strong"
-                  title={payment.invoiceUrl}
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <ExternalLink className="h-3 w-3" />
-                </a>
-              )}
             </span>
           )}
         </div>
       </TableCell>
+
+      {/* Faktura — invoice number as link (or "Link" placeholder) */}
+      <TableCell className={cn(childIndent, rowBg)} onClick={(e) => e.stopPropagation()}>
+        {payment.invoiceUrl ? (
+          <a
+            href={payment.invoiceUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 type-label text-info hover:text-info-strong transition-colors"
+            title={payment.invoiceUrl}
+          >
+            <ExternalLink className="h-4 w-4 shrink-0" />
+            <span className="truncate max-w-[100px]">
+              {payment.invoiceNumber || tCommon("invoiceLink")}
+            </span>
+          </a>
+        ) : payment.invoiceNumber ? (
+          <span className="type-label text-muted-foreground truncate">
+            {payment.invoiceNumber}
+          </span>
+        ) : (
+          <span className="type-label text-muted-foreground">—</span>
+        )}
+      </TableCell>
+
       <TableCell className={cn(childIndent, rowBg)} onClick={(e) => e.stopPropagation()}>
         <Select value={payment.type} onValueChange={(v) => update("type", v)}>
           <SelectTrigger className="h-7 w-auto border-0 px-1 type-label-sm shadow-none hover:bg-surface-container-high gap-1">

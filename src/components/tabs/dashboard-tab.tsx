@@ -30,6 +30,7 @@ import {
   CalendarDays,
   ListChecks,
   Coins,
+  MapPin,
 } from "lucide-react";
 import {
   formatCzk,
@@ -45,6 +46,7 @@ import { useLocale } from "next-intl";
 import type { Locale } from "@/i18n/config";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/lib/store";
+import { ExternalLinkButton, buildMapUrl } from "@/components/ui/external-link-button";
 import {
   Bar,
   BarChart,
@@ -261,8 +263,35 @@ export function DashboardTab({ projectId }: { projectId: string }) {
         {project.description && (
           <p className="type-body text-on-surface-variant">{project.description}</p>
         )}
-        {project.address && (
-          <p className="type-label text-muted-foreground">{project.address}</p>
+        {(project.address || project.fullAddress) && (() => {
+          const mapHref = buildMapUrl({
+            mapUrl: project.mapUrl,
+            fullAddress: project.fullAddress,
+            address: project.address,
+          });
+          return mapHref ? (
+            <a
+              href={mapHref}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 type-label text-muted-foreground hover:text-on-surface transition-colors"
+            >
+              <MapPin className="h-3.5 w-3.5" />
+              {project.fullAddress || project.address}
+            </a>
+          ) : (
+            <p className="type-label text-muted-foreground">{project.fullAddress || project.address}</p>
+          );
+        })()}
+        {(project.studyUrl || project.documentationUrl) && (
+          <div className="flex flex-wrap items-center gap-2 pt-1">
+            {project.studyUrl && (
+              <ExternalLinkButton href={project.studyUrl} type="study" size="xs" />
+            )}
+            {project.documentationUrl && (
+              <ExternalLinkButton href={project.documentationUrl} type="documentation" size="xs" />
+            )}
+          </div>
         )}
       </div>
 

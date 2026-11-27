@@ -31,7 +31,14 @@
       "noResults": "No results"
     },
     "loadError": "Failed to load data. Please try again.",
-    "retry": "Try again"
+    "retry": "Try again",
+    "links": {
+      "studyUrl": "Architectural Study",
+      "documentationUrl": "Project Documentation",
+      "mapUrl": "Location on Map",
+      "addressMap": "Show on map"
+    },
+    "invoiceLink": "Link"
   },
   "nav": {
     "sections": {
@@ -947,14 +954,16 @@
           "energyRating": "Energy rating",
           "studyUrl": "Architectural study link",
           "documentationUrl": "Project documentation link",
-          "note": "Note"
+          "note": "Note",
+          "mapUrl": "Map link"
         },
         "placeholder": {
           "fullAddress": "e.g. 12 Pražská, 110 00 Prague 1",
           "floorArea": "e.g. 120",
           "floors": "e.g. 2",
           "heatLoss": "e.g. 85",
-          "note": "Free-form note about the property…"
+          "note": "Free-form note about the property…",
+          "mapUrl": "https://maps.google.com/…"
         },
         "error": {
           "url": "Enter a valid URL (http:// or https://)."
@@ -970,12 +979,16 @@
           "energyRating": "Energy rating",
           "studyUrl": "Architectural study",
           "documentationUrl": "Project documentation",
-          "note": "Note"
+          "note": "Note",
+          "externalLinks": "External links"
         },
         "toasts": {
           "urlError": "Links must be valid URLs (http:// or https://).",
           "saveSuccess": "Property information saved",
           "saveError": "Failed to save property information"
+        },
+        "hint": {
+          "mapUrl": "If empty, generated automatically from address."
         }
       },
       "sharing": {
@@ -1853,7 +1866,8 @@
         "description": "Description",
         "type": "Type",
         "contact": "Contact",
-        "amount": "Amount"
+        "amount": "Amount",
+        "invoice": "Invoice"
       },
       "row": {
         "aria": {

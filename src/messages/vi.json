@@ -31,7 +31,14 @@
       "noResults": "Không có kết quả"
     },
     "loadError": "Không thể tải dữ liệu. Vui lòng thử lại.",
-    "retry": "Thử lại"
+    "retry": "Thử lại",
+    "links": {
+      "studyUrl": "Nghiên cứu kiến trúc",
+      "documentationUrl": "Tài liệu dự án",
+      "mapUrl": "Vị trí trên bản đồ",
+      "addressMap": "Xem trên bản đồ"
+    },
+    "invoiceLink": "Liên kết"
   },
   "nav": {
     "sections": {
@@ -947,14 +954,16 @@
           "energyRating": "Phân cấp năng lượng",
           "studyUrl": "Liên kết nghiên cứu kiến trúc",
           "documentationUrl": "Liên kết tài liệu dự án",
-          "note": "Ghi chú"
+          "note": "Ghi chú",
+          "mapUrl": "Liên kết bản đồ"
         },
         "placeholder": {
           "fullAddress": "vd. 12 Pražská, 110 00 Prague 1",
           "floorArea": "vd. 120",
           "floors": "vd. 2",
           "heatLoss": "vd. 85",
-          "note": "Ghi chú tự do về bất động sản…"
+          "note": "Ghi chú tự do về bất động sản…",
+          "mapUrl": "https://maps.google.com/…"
         },
         "error": {
           "url": "Vui lòng nhập URL hợp lệ (http:// hoặc https://)."
@@ -970,12 +979,16 @@
           "energyRating": "Phân cấp năng lượng",
           "studyUrl": "Nghiên cứu kiến trúc",
           "documentationUrl": "Tài liệu dự án",
-          "note": "Ghi chú"
+          "note": "Ghi chú",
+          "externalLinks": "Liên kết ngoài"
         },
         "toasts": {
           "urlError": "Liên kết phải là URL hợp lệ (http:// hoặc https://).",
           "saveSuccess": "Đã lưu thông tin bất động sản",
           "saveError": "Không thể lưu thông tin bất động sản"
+        },
+        "hint": {
+          "mapUrl": "Nếu để trống, sẽ tự động tạo từ địa chỉ."
         }
       },
       "sharing": {
@@ -1853,7 +1866,8 @@
         "description": "Mô tả",
         "type": "Loại",
         "contact": "Liên hệ",
-        "amount": "Số tiền"
+        "amount": "Số tiền",
+        "invoice": "Hóa đơn"
       },
       "row": {
         "aria": {

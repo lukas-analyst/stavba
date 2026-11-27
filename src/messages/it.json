@@ -31,7 +31,14 @@
       "noResults": "Nessun risultato"
     },
     "loadError": "Impossibile caricare i dati. Riprova.",
-    "retry": "Riprova"
+    "retry": "Riprova",
+    "links": {
+      "studyUrl": "Studio architettonico",
+      "documentationUrl": "Documentazione del progetto",
+      "mapUrl": "Posizione sulla mappa",
+      "addressMap": "Vedi sulla mappa"
+    },
+    "invoiceLink": "Collegamento"
   },
   "nav": {
     "sections": {
@@ -947,14 +954,16 @@
           "energyRating": "Classe energetica",
           "studyUrl": "Link allo studio architettonico",
           "documentationUrl": "Link alla documentazione del progetto",
-          "note": "Nota"
+          "note": "Nota",
+          "mapUrl": "Link mappa"
         },
         "placeholder": {
           "fullAddress": "es. 12 Pražská, 110 00 Praga 1",
           "floorArea": "es. 120",
           "floors": "es. 2",
           "heatLoss": "es. 85",
-          "note": "Nota libera sull'immobile…"
+          "note": "Nota libera sull'immobile…",
+          "mapUrl": "https://maps.google.com/…"
         },
         "error": {
           "url": "Inserisci una URL valida (http:// o https://)."
@@ -970,12 +979,16 @@
           "energyRating": "Classe energetica",
           "studyUrl": "Studio architettonico",
           "documentationUrl": "Documentazione del progetto",
-          "note": "Nota"
+          "note": "Nota",
+          "externalLinks": "Collegamenti esterni"
         },
         "toasts": {
           "urlError": "I link devono essere URL validi (http:// o https://).",
           "saveSuccess": "Informazioni dell'immobile salvate",
           "saveError": "Salvataggio delle informazioni dell'immobile non riuscito"
+        },
+        "hint": {
+          "mapUrl": "Se vuoto, generato automaticamente dall'indirizzo."
         }
       },
       "sharing": {
@@ -1853,7 +1866,8 @@
         "description": "Descrizione",
         "type": "Tipo",
         "contact": "Contatto",
-        "amount": "Importo"
+        "amount": "Importo",
+        "invoice": "Fattura"
       },
       "row": {
         "aria": {

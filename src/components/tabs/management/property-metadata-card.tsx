@@ -65,6 +65,7 @@ import {
 } from "lucide-react";
 import { useUpdateProject, type Project } from "@/lib/api";
 import { cn } from "@/lib/utils";
+import { ExternalLinkButton, buildMapUrl } from "@/components/ui/external-link-button";
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";
 import type { EditableProps } from "./types";
@@ -123,6 +124,7 @@ export function PropertyMetadataCard({
   const [documentationUrl, setDocumentationUrl] = useState(
     project.documentationUrl ?? "",
   );
+  const [mapUrl, setMapUrl] = useState(project.mapUrl ?? "");
   const [propertyNote, setPropertyNote] = useState(project.propertyNote ?? "");
   const t = useTranslations("tabs.management.property");
   const tCommon = useTranslations("common");
@@ -138,6 +140,7 @@ export function PropertyMetadataCard({
     project.energyRating ?? "",
     project.studyUrl ?? "",
     project.documentationUrl ?? "",
+    project.mapUrl ?? "",
     project.propertyNote ?? "",
   ].join("\u0000");
   const [lastSyncKey, setLastSyncKey] = useState(syncKey);
@@ -150,14 +153,16 @@ export function PropertyMetadataCard({
     setEnergyRating(project.energyRating ?? "");
     setStudyUrl(project.studyUrl ?? "");
     setDocumentationUrl(project.documentationUrl ?? "");
+    setMapUrl(project.mapUrl ?? "");
     setPropertyNote(project.propertyNote ?? "");
   }
 
   const studyUrlValid = isValidUrl(studyUrl.trim());
   const docUrlValid = isValidUrl(documentationUrl.trim());
+  const mapUrlValid = mapUrl.trim() === "" || isValidUrl(mapUrl.trim());
 
   const handleSave = async () => {
-    if (!studyUrlValid || !docUrlValid) {
+    if (!studyUrlValid || !docUrlValid || !mapUrlValid) {
       toast.error(t("toasts.urlError"));
       return;
     }
@@ -166,6 +171,7 @@ export function PropertyMetadataCard({
         fullAddress: fullAddress.trim() || null,
         studyUrl: studyUrl.trim() || null,
         documentationUrl: documentationUrl.trim() || null,
+        mapUrl: mapUrl.trim() || null,
         heatLoss: heatLoss === "" ? null : Number(heatLoss),
         energyRating: energyRating || null,
         floorArea: floorArea === "" ? null : Number(floorArea),
@@ -191,6 +197,7 @@ export function PropertyMetadataCard({
     setEnergyRating(project.energyRating ?? "");
     setStudyUrl(project.studyUrl ?? "");
     setDocumentationUrl(project.documentationUrl ?? "");
+    setMapUrl(project.mapUrl ?? "");
     setPropertyNote(project.propertyNote ?? "");
     setEditing(false);
   };
@@ -379,6 +386,30 @@ export function PropertyMetadataCard({
               )}
             </div>
             <div className="space-y-1">
+              <Label htmlFor="mgmt-mapurl" className="type-label font-medium text-on-surface-variant">
+                {t("label.mapUrl")}
+              </Label>
+              <div className="relative">
+                <Input
+                  id="mgmt-mapurl"
+                  type="url"
+                  value={mapUrl}
+                  onChange={(e) => setMapUrl(e.target.value)}
+                  placeholder={t("placeholder.mapUrl")}
+                  className={cn("h-9 rounded-md border-outline-variant bg-surface-container-low pr-9", !mapUrlValid && "border-danger")}
+                />
+                <MapPin className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+              </div>
+              {!mapUrlValid && (
+                <p className="type-label text-danger">
+                  {t("error.url")}
+                </p>
+              )}
+              <p className="type-label-sm text-muted-foreground">
+                {t("hint.mapUrl")}
+              </p>
+            </div>
+            <div className="space-y-1">
               <Label htmlFor="mgmt-propnote" className="type-label font-medium text-on-surface-variant">
                 {t("label.note")}
               </Label>
@@ -443,18 +474,30 @@ export function PropertyMetadataCard({
                 )}
               </dd>
             </div>
-            <PropertyMetadataItem
-              icon={FileText}
-              label={t("readOnly.studyUrl")}
-              value={project.studyUrl}
-              href={project.studyUrl}
-            />
-            <PropertyMetadataItem
-              icon={FileText}
-              label={t("readOnly.documentationUrl")}
-              value={project.documentationUrl}
-              href={project.documentationUrl}
-            />
+            {/* Externí odkazy — hezké názvy (ExternalLinkButton s i18n labely) */}
+            {(project.studyUrl || project.documentationUrl || buildMapUrl({ mapUrl: project.mapUrl, fullAddress: project.fullAddress, address: project.address })) && (
+              <div className="sm:col-span-2 space-y-2">
+                <dt className="flex items-center gap-1 type-label font-medium text-on-surface-variant">
+                  <ExternalLink className="h-3 w-3" /> {t("readOnly.externalLinks")}
+                </dt>
+                <dd>
+                  <div className="flex flex-wrap items-center gap-2">
+                    {project.studyUrl && (
+                      <ExternalLinkButton href={project.studyUrl} type="study" size="sm" />
+                    )}
+                    {project.documentationUrl && (
+                      <ExternalLinkButton href={project.documentationUrl} type="documentation" size="sm" />
+                    )}
+                    {(() => {
+                      const mapHref = buildMapUrl({ mapUrl: project.mapUrl, fullAddress: project.fullAddress, address: project.address });
+                      return mapHref ? (
+                        <ExternalLinkButton href={mapHref} type="map" size="sm" />
+                      ) : null;
+                    })()}
+                  </div>
+                </dd>
+              </div>
+            )}
             <div className="sm:col-span-2 space-y-2">
               <dt className="flex items-center gap-1 type-label font-medium text-on-surface-variant">
                 <StickyNote className="h-3 w-3" /> {t("readOnly.note")}

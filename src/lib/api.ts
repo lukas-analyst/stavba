@@ -51,6 +51,7 @@ export type Project = {
   fullAddress: string | null;
   studyUrl: string | null;
   documentationUrl: string | null;
+  mapUrl: string | null;
   heatLoss: number | null;
   energyRating: string | null;
   floorArea: number | null;

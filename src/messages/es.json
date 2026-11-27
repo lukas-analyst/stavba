@@ -31,7 +31,14 @@
       "noResults": "Sin resultados"
     },
     "loadError": "No se pudieron cargar los datos. Inténtelo de nuevo.",
-    "retry": "Reintentar"
+    "retry": "Reintentar",
+    "links": {
+      "studyUrl": "Estudio arquitectónico",
+      "documentationUrl": "Documentación del proyecto",
+      "mapUrl": "Ubicación en el mapa",
+      "addressMap": "Ver en el mapa"
+    },
+    "invoiceLink": "Enlace"
   },
   "nav": {
     "sections": {
@@ -947,14 +954,16 @@
           "energyRating": "Certificación energética",
           "studyUrl": "Enlace al estudio arquitectónico",
           "documentationUrl": "Enlace a la documentación del proyecto",
-          "note": "Nota"
+          "note": "Nota",
+          "mapUrl": "Enlace del mapa"
         },
         "placeholder": {
           "fullAddress": "p. ej. 12 Pražská, 110 00 Praga 1",
           "floorArea": "p. ej. 120",
           "floors": "p. ej. 2",
           "heatLoss": "p. ej. 85",
-          "note": "Nota libre sobre la propiedad…"
+          "note": "Nota libre sobre la propiedad…",
+          "mapUrl": "https://maps.google.com/…"
         },
         "error": {
           "url": "Introduce una URL válida (http:// o https://)."
@@ -970,12 +979,16 @@
           "energyRating": "Certificación energética",
           "studyUrl": "Estudio arquitectónico",
           "documentationUrl": "Documentación del proyecto",
-          "note": "Nota"
+          "note": "Nota",
+          "externalLinks": "Enlaces externos"
         },
         "toasts": {
           "urlError": "Los enlaces deben ser URLs válidas (http:// o https://).",
           "saveSuccess": "Información de la propiedad guardada",
           "saveError": "No se pudo guardar la información de la propiedad"
+        },
+        "hint": {
+          "mapUrl": "Si está vacío, se genera automáticamente desde la dirección."
         }
       },
       "sharing": {
@@ -1853,7 +1866,8 @@
         "description": "Descripción",
         "type": "Tipo",
         "contact": "Contacto",
-        "amount": "Importe"
+        "amount": "Importe",
+        "invoice": "Factura"
       },
       "row": {
         "aria": {

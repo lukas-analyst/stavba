@@ -47,6 +47,7 @@ const patchProjectBodySchema = z.object({
   fullAddress: optionalNullableString.optional(),
   studyUrl: optionalNullableString.optional(),
   documentationUrl: optionalNullableString.optional(),
+  mapUrl: optionalNullableString.optional(),
   heatLoss: optionalNumberOrNull,
   energyRating: optionalNullableString.optional(),
   floorArea: optionalNumberOrNull,
@@ -91,6 +92,7 @@ export async function GET(
         fullAddress: true,
         studyUrl: true,
         documentationUrl: true,
+        mapUrl: true,
         heatLoss: true,
         energyRating: true,
         floorArea: true,
@@ -137,7 +139,7 @@ export async function PATCH(
     const result = await parseBody(patchProjectBodySchema, request, t);
     if (!result.success) return result.response;
     const body = result.data;
-    const { name, address, description, starred, status, currency, startDate, endDate, notes, ownerId, isPublic, fullAddress, studyUrl, documentationUrl, heatLoss, energyRating, floorArea, floors, propertyNote, totalBudget } = body;
+    const { name, address, description, starred, status, currency, startDate, endDate, notes, ownerId, isPublic, fullAddress, studyUrl, documentationUrl, mapUrl, heatLoss, energyRating, floorArea, floors, propertyNote, totalBudget } = body;
 
     const existing = await db.project.findUnique({ where: { id } });
     if (!existing) {
@@ -212,6 +214,7 @@ export async function PATCH(
         fullAddress: fullAddress !== undefined ? fullAddress : undefined,
         studyUrl: studyUrl !== undefined ? studyUrl : undefined,
         documentationUrl: documentationUrl !== undefined ? documentationUrl : undefined,
+        mapUrl: mapUrl !== undefined ? mapUrl : undefined,
         heatLoss: heatLoss !== undefined ? heatLoss : undefined,
         energyRating: energyRating !== undefined ? energyRating : undefined,
         floorArea: floorArea !== undefined ? floorArea : undefined,

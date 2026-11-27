@@ -402,13 +402,14 @@ export function PaymentsTab({ projectId }: { projectId: string }) {
 
           {/* Unified payments table — standalone + installment invoices merged */}
           <div className="overflow-x-auto scrollbar-thin rounded-lg border border-outline-variant bg-card">
-            <Table className="min-w-[900px]">
+            <Table className="min-w-[1000px]">
               <TableHeader>
                 <TableRow className="sticky top-0 z-30 bg-surface-container-high">
                   <TableHead className="w-16"></TableHead>
                   <TableHead className="w-28">{t("column.date")}</TableHead>
                   <TableHead className="min-w-[220px]">{t("column.budgetItem")}</TableHead>
                   <TableHead className="min-w-[160px]">{t("column.description")}</TableHead>
+                  <TableHead className="min-w-[120px]">{t("column.invoice")}</TableHead>
                   <TableHead className="w-32">{t("column.type")}</TableHead>
                   <TableHead>{t("column.contact")}</TableHead>
                   <TableHead className="text-right">{t("column.amount")}</TableHead>

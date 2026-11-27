@@ -31,7 +31,14 @@
       "noResults": "Nincs találat"
     },
     "loadError": "Nem sikerült betölteni az adatokat. Próbálja újra.",
-    "retry": "Újrapróbálás"
+    "retry": "Újrapróbálás",
+    "links": {
+      "studyUrl": "Építészeti tanulmány",
+      "documentationUrl": "Projektdokumentáció",
+      "mapUrl": "Helyszín a térképen",
+      "addressMap": "Mutasd a térképen"
+    },
+    "invoiceLink": "Hivatkozás"
   },
   "nav": {
     "sections": {
@@ -947,14 +954,16 @@
           "energyRating": "Energetikai besorolás",
           "studyUrl": "Építészeti tanulmány hivatkozása",
           "documentationUrl": "Projektdokumentáció hivatkozása",
-          "note": "Jegyzet"
+          "note": "Jegyzet",
+          "mapUrl": "Térkép hivatkozás"
         },
         "placeholder": {
           "fullAddress": "pl. 12 Példa utca, 1000 Budapest",
           "floorArea": "pl. 120",
           "floors": "pl. 2",
           "heatLoss": "pl. 85",
-          "note": "Szabad formátumú jegyzet az ingatlanról…"
+          "note": "Szabad formátumú jegyzet az ingatlanról…",
+          "mapUrl": "https://maps.google.com/…"
         },
         "error": {
           "url": "Adjon meg érvényes URL-t (http:// vagy https://)."
@@ -970,12 +979,16 @@
           "energyRating": "Energetikai besorolás",
           "studyUrl": "Építészeti tanulmány",
           "documentationUrl": "Projektdokumentáció",
-          "note": "Jegyzet"
+          "note": "Jegyzet",
+          "externalLinks": "Külső hivatkozások"
         },
         "toasts": {
           "urlError": "A hivatkozások érvényes URL-ek kell legyenek (http:// vagy https://).",
           "saveSuccess": "Ingatlaninformációk elmentve",
           "saveError": "Nem sikerült elmenteni az ingatlaninformációkat"
+        },
+        "hint": {
+          "mapUrl": "Ha üres, automatikusan generálva a címből."
         }
       },
       "sharing": {
@@ -1853,7 +1866,8 @@
         "description": "Leírás",
         "type": "Típus",
         "contact": "Kapcsolat",
-        "amount": "Összeg"
+        "amount": "Összeg",
+        "invoice": "Számla"
       },
       "row": {
         "aria": {

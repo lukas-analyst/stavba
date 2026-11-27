@@ -31,7 +31,14 @@
       "noResults": "Brak wyników"
     },
     "loadError": "Nie udało się wczytać danych. Spróbuj ponownie.",
-    "retry": "Spróbuj ponownie"
+    "retry": "Spróbuj ponownie",
+    "links": {
+      "studyUrl": "Studia architektoniczna",
+      "documentationUrl": "Dokumentacja projektu",
+      "mapUrl": "Lokalizacja na mapie",
+      "addressMap": "Pokaż na mapie"
+    },
+    "invoiceLink": "Link"
   },
   "nav": {
     "sections": {
@@ -947,14 +954,16 @@
           "energyRating": "Klasa energetyczna",
           "studyUrl": "Link do projektu architektonicznego",
           "documentationUrl": "Link do dokumentacji projektu",
-          "note": "Notatka"
+          "note": "Notatka",
+          "mapUrl": "Link do mapy"
         },
         "placeholder": {
           "fullAddress": "np. Pražská 12, 110 00 Praga 1",
           "floorArea": "np. 120",
           "floors": "np. 2",
           "heatLoss": "np. 85",
-          "note": "Dowolna notatka o nieruchomości…"
+          "note": "Dowolna notatka o nieruchomości…",
+          "mapUrl": "https://maps.google.com/…"
         },
         "error": {
           "url": "Wprowadź prawidłowy URL (http:// lub https://)."
@@ -970,12 +979,16 @@
           "energyRating": "Klasa energetyczna",
           "studyUrl": "Projekt architektoniczny",
           "documentationUrl": "Dokumentacja projektu",
-          "note": "Notatka"
+          "note": "Notatka",
+          "externalLinks": "Linki zewnętrzne"
         },
         "toasts": {
           "urlError": "Linki muszą być prawidłowymi URL (http:// lub https://).",
           "saveSuccess": "Informacje o nieruchomości zapisane",
           "saveError": "Nie udało się zapisać informacji o nieruchomości"
+        },
+        "hint": {
+          "mapUrl": "Jeśli puste, generowane automatycznie z adresu."
         }
       },
       "sharing": {
@@ -1853,7 +1866,8 @@
         "description": "Opis",
         "type": "Typ",
         "contact": "Kontakt",
-        "amount": "Kwota"
+        "amount": "Kwota",
+        "invoice": "Faktura"
       },
       "row": {
         "aria": {

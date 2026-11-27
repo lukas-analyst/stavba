@@ -22,7 +22,7 @@ export function AddInstallmentRow({
   const t = useTranslations("tabs.payments");
   return (
     <TableRow className="group hover:bg-muted/20">
-      <TableCell colSpan={8} className="py-0.5 pl-2">
+      <TableCell colSpan={9} className="py-0.5 pl-2">
         <button
           type="button"
           onClick={onAdd}
