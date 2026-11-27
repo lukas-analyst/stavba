@@ -748,6 +748,7 @@ function GanttBar({
   unitW,
   isActive,
   isCritical,
+  zoom,
   rangeStart,
   onDoubleClick,
   onDragEnd,
