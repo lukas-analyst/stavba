@@ -1312,7 +1312,8 @@
         "label": {
           "dateFrom": "Datum od",
           "dateTo": "Datum do"
-        }
+        },
+        "editFullItem": "Upravit položku"
       }
     },
     "time": {

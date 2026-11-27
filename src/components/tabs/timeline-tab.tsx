@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import { useDashboard, useUpdateBudgetItem } from "@/lib/api";
+import { useDashboard, useUpdateBudgetItem, useBudgetItems } from "@/lib/api";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -23,6 +23,8 @@ import {
   Milestone,
   GitBranch,
   AlertTriangle,
+  Loader2,
+  Pencil,
 } from "lucide-react";
 import { formatDate, formatCzk, PHASE_COLORS } from "@/lib/format";
 import { useFormatter, useTranslations } from "next-intl";
@@ -97,7 +99,13 @@ export function TimelineTab({ projectId }: { projectId: string }) {
   const tPhases = useTranslations("phases");
   const format = useFormatter();
   const [zoom, setZoom] = useState<ZoomLevel>("months");
-  const [editingItem, setEditingItem] = useState<string | null>(null);
+  const [editingItem, setEditingItem] = useState<{
+    id: string;
+    dateFrom: string | null;
+    dateTo: string | null;
+    subcategory: string | null;
+    category: string;
+  } | null>(null);
 
   // Compute the date range that covers all timeline items
   const { items, rangeStart, rangeEnd, totalUnits } = useMemo(() => {
@@ -599,7 +607,13 @@ export function TimelineTab({ projectId }: { projectId: string }) {
                               isFuture={isFuture}
                               isCritical={criticalPath.has(it.id)}
                               zoom={zoom}
-                              onDoubleClick={() => setEditingItem(it.id)}
+                              onDoubleClick={() => setEditingItem({
+                                id: it.id,
+                                dateFrom: it.dateFrom,
+                                dateTo: it.dateTo,
+                                subcategory: it.subcategory,
+                                category: it.category,
+                              })}
                             />
                           </div>
                         </div>
@@ -705,7 +719,7 @@ export function TimelineTab({ projectId }: { projectId: string }) {
       {/* Date edit dialog */}
       {editingItem && (
         <DateEditDialog
-          itemId={editingItem}
+          item={editingItem}
           projectId={projectId}
           onClose={() => setEditingItem(null)}
         />
@@ -815,39 +829,35 @@ function GanttBar({
 
 // ===== Date edit dialog (double-click) =====
 function DateEditDialog({
-  itemId,
+  item,
   projectId,
   onClose,
 }: {
-  itemId: string;
+  item: {
+    id: string;
+    dateFrom: string | null;
+    dateTo: string | null;
+    subcategory: string | null;
+    category: string;
+  };
   projectId: string;
   onClose: () => void;
 }) {
   const t = useTranslations("tabs.timeline");
   const tc = useTranslations("common");
-  // We need the item's current dates. Reuse the dashboard data via a lightweight fetch.
   const updateItem = useUpdateBudgetItem(projectId);
-  const [dateFrom, setDateFrom] = useState("");
-  const [dateTo, setDateTo] = useState("");
-  const [loaded, setLoaded] = useState(false);
-
-  useEffect(() => {
-    // Fetch the single item
-    fetch(`/api/projects/${projectId}/budget`)
-      .then((r) => r.json())
-      .then((items: { id: string; dateFrom: string | null; dateTo: string | null }[]) => {
-        const it = items.find((i) => i.id === itemId);
-        if (it) {
-          setDateFrom(it.dateFrom ? it.dateFrom.substring(0, 10) : "");
-          setDateTo(it.dateTo ? it.dateTo.substring(0, 10) : "");
-        }
-        setLoaded(true);
-      });
-  }, [itemId, projectId]);
+  const [dateFrom, setDateFrom] = useState(
+    item.dateFrom ? item.dateFrom.substring(0, 10) : "",
+  );
+  const [dateTo, setDateTo] = useState(
+    item.dateTo ? item.dateTo.substring(0, 10) : "",
+  );
+  // State for opening the full BudgetItemDialog
+  const [showFullDialog, setShowFullDialog] = useState(false);
 
   const handleSave = async () => {
     await updateItem.mutateAsync({
-      id: itemId,
+      id: item.id,
       data: {
         dateFrom: dateFrom ? new Date(dateFrom).toISOString() : null,
         dateTo: dateTo ? new Date(dateTo).toISOString() : null,
@@ -856,7 +866,20 @@ function DateEditDialog({
     onClose();
   };
 
-  if (!loaded) return null;
+  // If full BudgetItemDialog is open, render it instead
+  // (lazy import to avoid loading the heavy dialog component for every timeline render)
+  if (showFullDialog) {
+    return (
+      <BudgetItemDialogLazy
+        projectId={projectId}
+        itemId={item.id}
+        onClose={() => {
+          setShowFullDialog(false);
+          onClose();
+        }}
+      />
+    );
+  }
 
   return (
     <Dialog open={true} onOpenChange={(o) => !o && onClose()}>
@@ -864,7 +887,7 @@ function DateEditDialog({
         <DialogHeader>
           <DialogTitle>{t("dialog.title")}</DialogTitle>
           <DialogDescription>
-            {t("dialog.description")}
+            {item.subcategory || item.category}
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-3">
@@ -888,13 +911,71 @@ function DateEditDialog({
             />
           </div>
         </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose}>{tc("cancel")}</Button>
-          <Button onClick={handleSave} disabled={updateItem.isPending}>
-            {tc("save")}
+        <DialogFooter className="sm:justify-between">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowFullDialog(true)}
+          >
+            <Pencil className="mr-1.5 h-3.5 w-3.5" />
+            {t("dialog.editFullItem")}
           </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={onClose}>{tc("cancel")}</Button>
+            <Button onClick={handleSave} disabled={updateItem.isPending}>
+              {tc("save")}
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>
+  );
+}
+
+// ===== Lazy-loaded BudgetItemDialog wrapper =====
+// Fetches the full budget item from cache (useBudgetItems) and opens
+// the BudgetItemDialog for editing all fields.
+function BudgetItemDialogLazy({
+  projectId,
+  itemId,
+  onClose,
+}: {
+  projectId: string;
+  itemId: string;
+  onClose: () => void;
+}) {
+  const { data: items, isLoading } = useBudgetItems(projectId);
+  const item = items?.find((i) => i.id === itemId) ?? null;
+
+  // Dynamic import of BudgetItemDialog (heavy component with many fields)
+  const [DialogComponent, setDialogComponent] = useState<
+    React.ComponentType<Record<string, unknown>> | null
+  >(null);
+  useEffect(() => {
+    import("@/components/budget-item-dialog").then((mod) => {
+      setDialogComponent(() => mod.BudgetItemDialog);
+    });
+  }, []);
+
+  if (!DialogComponent || isLoading) {
+    return (
+      <Dialog open={true} onOpenChange={(o) => !o && onClose()}>
+        <DialogContent className="max-w-sm">
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
+  return (
+    <DialogComponent
+      open={true}
+      onOpenChange={(o) => !o && onClose()}
+      projectId={projectId}
+      item={item}
+      onSubmitted={() => onClose()}
+    />
   );
 }

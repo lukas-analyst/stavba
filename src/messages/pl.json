@@ -1312,7 +1312,8 @@
         "label": {
           "dateFrom": "Data od",
           "dateTo": "Data do"
-        }
+        },
+        "editFullItem": "Edytuj pozycję"
       }
     },
     "time": {

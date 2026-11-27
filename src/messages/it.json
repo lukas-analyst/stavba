@@ -1312,7 +1312,8 @@
         "label": {
           "dateFrom": "Dal",
           "dateTo": "Al"
-        }
+        },
+        "editFullItem": "Modifica elemento"
       }
     },
     "time": {

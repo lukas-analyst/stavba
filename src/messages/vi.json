@@ -1312,7 +1312,8 @@
         "label": {
           "dateFrom": "Từ ngày",
           "dateTo": "Đến ngày"
-        }
+        },
+        "editFullItem": "Chỉnh sửa mục"
       }
     },
     "time": {

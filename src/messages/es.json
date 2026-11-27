@@ -1312,7 +1312,8 @@
         "label": {
           "dateFrom": "Desde",
           "dateTo": "Hasta"
-        }
+        },
+        "editFullItem": "Editar elemento"
       }
     },
     "time": {
