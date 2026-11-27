@@ -407,18 +407,44 @@ export function useUpdateBudgetItem(projectId: string) {
     onMutate: async ({ id, data }) => {
       // Cancel outgoing refetches so they don't overwrite our optimistic update
       await qc.cancelQueries({ queryKey: ["budget", projectId] });
-      // Snapshot previous value for rollback
+      await qc.cancelQueries({ queryKey: ["dashboard", projectId] });
+      // Snapshot previous values for rollback
       const previousItems = qc.getQueryData<BudgetItem[]>(["budget", projectId]);
-      // Optimistically update the matching item in the cache
+      const previousDashboard = qc.getQueryData<Dashboard>(["dashboard", projectId]);
+      // Optimistically update the matching item in the budget cache
       qc.setQueryData<BudgetItem[]>(["budget", projectId], (old) =>
         old?.map((item) => (item.id === id ? { ...item, ...data } : item))
       );
-      return { previousItems };
+      // Optimistically update the matching item in the dashboard timeline cache.
+      // Timeline tab reads from `useDashboard`, not `useBudgetItems`, so without
+      // this, drag/resize would show a 5s delay before the bar moves to its
+      // new position (server-side cache TTL + revalidate round-trip).
+      if (previousDashboard && (data.dateFrom !== undefined || data.dateTo !== undefined)) {
+        qc.setQueryData<Dashboard>(["dashboard", projectId], (old) => {
+          if (!old) return old;
+          return {
+            ...old,
+            timeline: old.timeline.map((item) =>
+              item.id === id
+                ? {
+                    ...item,
+                    dateFrom: data.dateFrom !== undefined ? (data.dateFrom as string | null) : item.dateFrom,
+                    dateTo: data.dateTo !== undefined ? (data.dateTo as string | null) : item.dateTo,
+                  }
+                : item
+            ),
+          };
+        });
+      }
+      return { previousItems, previousDashboard };
     },
     onError: (_err, _vars, context) => {
       // Rollback to the snapshot on failure
       if (context?.previousItems) {
         qc.setQueryData(["budget", projectId], context.previousItems);
+      }
+      if (context?.previousDashboard) {
+        qc.setQueryData(["dashboard", projectId], context.previousDashboard);
       }
     },
     onSettled: () => {
