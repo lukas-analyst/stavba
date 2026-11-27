@@ -739,7 +739,7 @@ export function TimelineTab({ projectId }: { projectId: string }) {
   );
 }
 
-// ===== Gantt bar (double-click only — no drag/resize) =====
+// ===== Gantt bar (drag-to-move + resize + double-click dialog) =====
 
 function GanttBar({
   item,
@@ -776,60 +776,73 @@ function GanttBar({
   onDragEnd: (newDateFrom: Date | null, newDateTo: Date | null) => void;
 }) {
   const t = useTranslations("tabs.timeline");
-  const width = widthUnits * unitW;
-  const left = startOffset * unitW;
   const barColor = PHASE_COLORS[item.phase] ?? "";
   const milestone = isMilestoneItem(item);
-  const titleText = `${item.subcategory || item.category}\n${formatDate(item.dateFrom)} — ${formatDate(item.dateTo)}\n${formatCzk(item.planCost)}${item.completed ? t("suffix.completed") : ""}${milestone ? ` · ${t("legend.milestone")}` : ""}${isCritical ? ` · ${t("legend.criticalPath")}` : ""}`;
 
-  // ===== Drag + resize state =====
+  // ===== Drag state =====
+  // `dragDelta` is the pixel offset from the original position, updated
+  // in real-time on mousemove so the bar follows the cursor.
   const [dragState, setDragState] = useState<{
     mode: "move" | "resize-left" | "resize-right";
     startX: number;
     origStartOffset: number;
     origWidthUnits: number;
+    deltaPx: number; // live pixel delta for visual feedback
   } | null>(null);
 
+  // Threshold: only treat as drag if mouse moved more than 3px.
+  // Below this, it's a click (don't start drag, allow double-click).
+  const DRAG_THRESHOLD = 3;
+
   const handleMouseDown = (e: React.MouseEvent, mode: "move" | "resize-left" | "resize-right") => {
+    // Don't preventDefault yet — let double-click work.
+    // Only start drag tracking; actual drag begins after threshold.
     e.stopPropagation();
-    e.preventDefault();
     setDragState({
       mode,
       startX: e.clientX,
       origStartOffset: startOffset,
       origWidthUnits: widthUnits,
+      deltaPx: 0,
     });
   };
 
   useEffect(() => {
     if (!dragState) return;
-    const handleMouseMove = (e: MouseEvent) => {
-      // Visual feedback handled by dragState — GanttBar re-renders with new left/width
-    };
-    const handleMouseUp = (e: MouseEvent) => {
-      const deltaX = e.clientX - dragState.startX;
-      const deltaUnits = Math.round(deltaX / unitW);
 
-      if (dragState.mode === "move") {
-        // Move both dates by same delta
-        const newStartOffset = dragState.origStartOffset + deltaUnits;
-        const newEndOffset = newStartOffset + dragState.origWidthUnits;
-        const newFrom = offsetToDate(newStartOffset, zoom, rangeStart);
-        const newTo = offsetToDate(newEndOffset, zoom, rangeStart);
-        onDragEnd(newFrom, newTo);
-      } else if (dragState.mode === "resize-left") {
-        // Change dateFrom (keep dateTo)
-        const newStartOffset = dragState.origStartOffset + deltaUnits;
-        const newFrom = offsetToDate(newStartOffset, zoom, rangeStart);
-        onDragEnd(newFrom, null);
-      } else if (dragState.mode === "resize-right") {
-        // Change dateTo (keep dateFrom)
-        const newEndOffset = dragState.origStartOffset + dragState.origWidthUnits + deltaUnits;
-        const newTo = offsetToDate(newEndOffset, zoom, rangeStart);
-        onDragEnd(null, newTo);
+    const handleMouseMove = (e: MouseEvent) => {
+      const deltaPx = e.clientX - dragState.startX;
+      // Only update visual position if past threshold
+      if (Math.abs(deltaPx) >= DRAG_THRESHOLD) {
+        setDragState((prev) => prev ? { ...prev, deltaPx } : null);
+      }
+    };
+
+    const handleMouseUp = (e: MouseEvent) => {
+      const deltaPx = e.clientX - dragState.startX;
+      const deltaUnits = Math.round(deltaPx / unitW);
+
+      // Only call onDragEnd if the mouse actually moved enough
+      if (Math.abs(deltaPx) >= DRAG_THRESHOLD && deltaUnits !== 0) {
+        if (dragState.mode === "move") {
+          const newStartOffset = dragState.origStartOffset + deltaUnits;
+          const newEndOffset = newStartOffset + dragState.origWidthUnits;
+          const newFrom = offsetToDate(newStartOffset, zoom, rangeStart);
+          const newTo = offsetToDate(newEndOffset, zoom, rangeStart);
+          onDragEnd(newFrom, newTo);
+        } else if (dragState.mode === "resize-left") {
+          const newStartOffset = dragState.origStartOffset + deltaUnits;
+          const newFrom = offsetToDate(newStartOffset, zoom, rangeStart);
+          onDragEnd(newFrom, null);
+        } else if (dragState.mode === "resize-right") {
+          const newEndOffset = dragState.origStartOffset + dragState.origWidthUnits + deltaUnits;
+          const newTo = offsetToDate(newEndOffset, zoom, rangeStart);
+          onDragEnd(null, newTo);
+        }
       }
       setDragState(null);
     };
+
     window.addEventListener("mousemove", handleMouseMove);
     window.addEventListener("mouseup", handleMouseUp);
     return () => {
@@ -838,13 +851,34 @@ function GanttBar({
     };
   }, [dragState, unitW, zoom, rangeStart, onDragEnd]);
 
-  // ===== Milestone: render as a diamond (rotated square) =====
+  // ===== Calculate visual position during drag =====
+  // When dragging, the bar follows the cursor in real-time.
+  const dragDeltaUnits = dragState ? Math.round(dragState.deltaPx / unitW) : 0;
+  const visualLeft =
+    dragState
+      ? dragState.mode === "move" || dragState.mode === "resize-left"
+        ? (dragState.origStartOffset + dragDeltaUnits) * unitW
+        : startOffset * unitW
+      : startOffset * unitW;
+  const visualWidthUnits =
+    dragState
+      ? dragState.mode === "resize-left"
+        ? Math.max(dragState.origWidthUnits - dragDeltaUnits, 0.5)
+        : dragState.mode === "resize-right"
+        ? Math.max(dragState.origWidthUnits + dragDeltaUnits, 0.5)
+        : dragState.origWidthUnits
+      : widthUnits;
+  const visualWidth = visualWidthUnits * unitW;
+
+  const titleText = `${item.subcategory || item.category}\n${formatDate(item.dateFrom)} — ${formatDate(item.dateTo)}\n${formatCzk(item.planCost)}${item.completed ? t("suffix.completed") : ""}${milestone ? ` · ${t("legend.milestone")}` : ""}${isCritical ? ` · ${t("legend.criticalPath")}` : ""}`;
+
+  // ===== Milestone: render as a diamond (no drag — zero duration) =====
   if (milestone) {
     return (
       <div
         className="absolute top-1/2 cursor-pointer"
         style={{
-          left: `${left}px`,
+          left: `${startOffset * unitW}px`,
           transform: "translate(-50%, -50%)",
         }}
         onDoubleClick={(e) => {
@@ -869,7 +903,7 @@ function GanttBar({
   }
 
   // ===== Regular bar with drag + resize =====
-  const isDragging = dragState !== null;
+  const isDragging = dragState !== null && Math.abs(dragState.deltaPx) >= DRAG_THRESHOLD;
   return (
     <div
       className={cn(
@@ -881,8 +915,8 @@ function GanttBar({
         isDragging && "cursor-grabbing !shadow-lg !brightness-110 z-20",
       )}
       style={{
-        left: `${left}px`,
-        width: `${Math.max(width, 24)}px`,
+        left: `${visualLeft}px`,
+        width: `${Math.max(visualWidth, 24)}px`,
         minWidth: 24,
       }}
       onMouseDown={(e) => handleMouseDown(e, "move")}
@@ -894,16 +928,16 @@ function GanttBar({
     >
       {/* Left resize handle */}
       <div
-        className="absolute left-0 top-0 h-full w-1.5 cursor-ew-resize hover:bg-foreground/20"
+        className="absolute left-0 top-0 z-10 h-full w-2 cursor-ew-resize hover:bg-foreground/20"
         onMouseDown={(e) => handleMouseDown(e, "resize-left")}
       />
-      <span className="flex-1 truncate px-1.5 type-label-sm font-medium pointer-events-none">
+      <span className="flex-1 truncate px-2 type-label-sm font-medium pointer-events-none">
         {item.subcategory || item.category}
         {item.completed && " ✓"}
       </span>
       {/* Right resize handle */}
       <div
-        className="absolute right-0 top-0 h-full w-1.5 cursor-ew-resize hover:bg-foreground/20"
+        className="absolute right-0 top-0 z-10 h-full w-2 cursor-ew-resize hover:bg-foreground/20"
         onMouseDown={(e) => handleMouseDown(e, "resize-right")}
       />
     </div>
